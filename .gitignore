@@ -1,0 +1,39 @@
+# --- Node.js (discord/) ---
+node_modules/
+dist/
+build/
+coverage/
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+.npm/
+.eslintcache
+
+# Prisma
+prisma/*.db
+prisma/migrations/dev.db*
+
+# --- Lua / WoW addons (addons/) ---
+*.lua.bak
+*.wbt
+.luarc.json.bak
+/addons/**/.release/
+/addons/**/*.zip
+
+# WoW addon manager caches
+.wowup/
+.curseforge/
+
+# --- Editors / OS ---
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.swp

@@ -1,0 +1,42 @@
+// Placeholder schema — will evolve once the domain model is fleshed out.
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Faction {
+  ALLIANCE
+  HORDE
+}
+
+model Guild {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String
+  realm     String
+  faction   Faction
+  players   Player[]
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([name, realm])
+  @@map("guilds")
+}
+
+model Player {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String
+  realm     String
+  class     String
+  level     Int      @default(1)
+  faction   Faction
+  guildId   String?  @map("guild_id") @db.Uuid
+  guild     Guild?   @relation(fields: [guildId], references: [id])
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([name, realm])
+  @@map("players")
+}
