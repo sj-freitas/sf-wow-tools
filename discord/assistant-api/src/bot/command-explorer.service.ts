@@ -1,6 +1,10 @@
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { DiscoveryService, MetadataScanner, Reflector } from '@nestjs/core';
-import { COMMAND_METADATA } from './decorators/command.decorator';
+import {
+  COMMAND_METADATA,
+  COMMAND_OPTIONS_METADATA,
+  type CommandOptions,
+} from './decorators/command.decorator';
 import { CommandRegistryService } from './command-registry.service';
 
 /**
@@ -53,6 +57,7 @@ export class CommandExplorerService implements OnApplicationBootstrap {
       return;
     }
 
-    this.commandRegistry.register(commandName, instance, methodName);
+    const options = this.reflector.get<CommandOptions | undefined>(COMMAND_OPTIONS_METADATA, method);
+    this.commandRegistry.register(commandName, instance, methodName, options);
   }
 }

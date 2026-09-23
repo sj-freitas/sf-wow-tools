@@ -6,7 +6,7 @@ import { PlayersService } from './players.service';
 export class PlayersCommand {
   constructor(private readonly playersService: PlayersService) {}
 
-  @Command('list-players')
+  @Command('list-players', { ephemeral: true })
   async listPlayers(): Promise<string> {
     const players = await this.playersService.findAll();
     const names = players.map((player) => player.name);

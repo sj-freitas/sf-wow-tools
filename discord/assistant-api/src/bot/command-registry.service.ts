@@ -1,9 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import type { DiscordInteraction } from './discord-interaction.types';
+import type { CommandOptions } from './decorators/command.decorator';
 
 export interface CommandHandlerRef {
   instance: object;
   methodName: string;
+  options: CommandOptions;
 }
 
 export type CommandHandlerFn = (interaction: DiscordInteraction) => Promise<string> | string;
@@ -18,18 +20,22 @@ export class CommandRegistryService {
   private readonly logger = new Logger(CommandRegistryService.name);
   private readonly handlers = new Map<string, CommandHandlerRef>();
 
-  register(name: string, instance: object, methodName: string): void {
+  register(name: string, instance: object, methodName: string, options: CommandOptions = {}): void {
     if (this.handlers.has(name)) {
       throw new Error(
         `Command "${name}" is already registered to ${this.handlers.get(name)?.instance.constructor.name}`,
       );
     }
     this.logger.log(`Registered command "${name}" -> ${instance.constructor.name}#${methodName}`);
-    this.handlers.set(name, { instance, methodName });
+    this.handlers.set(name, { instance, methodName, options });
   }
 
   has(name: string): boolean {
     return this.handlers.has(name);
+  }
+
+  isEphemeral(name: string): boolean {
+    return this.handlers.get(name)?.options.ephemeral ?? false;
   }
 
   getCommandNames(): string[] {

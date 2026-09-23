@@ -12,14 +12,19 @@ import {
 } from '@nestjs/common';
 import type { RawBodyRequest } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { InteractionResponseType, InteractionType, verifyKey } from 'discord-interactions';
+import {
+  InteractionResponseFlags,
+  InteractionResponseType,
+  InteractionType,
+  verifyKey,
+} from 'discord-interactions';
 import type { Request } from 'express';
 import { CommandRegistryService } from './command-registry.service';
 import type { DiscordInteraction } from './discord-interaction.types';
 
 interface InteractionResponse {
   type: InteractionResponseType;
-  data?: { content: string };
+  data?: { content: string; flags?: number };
 }
 
 /**
@@ -69,7 +74,12 @@ export class DiscordInteractionsController {
 
       return {
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-        data: { content: await this.runCommand(commandName, interaction) },
+        data: {
+          content: await this.runCommand(commandName, interaction),
+          ...(this.commandRegistry.isEphemeral(commandName) && {
+            flags: InteractionResponseFlags.EPHEMERAL,
+          }),
+        },
       };
     }
 
