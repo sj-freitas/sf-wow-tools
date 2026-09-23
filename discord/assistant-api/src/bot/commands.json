@@ -3,5 +3,108 @@
     "name": "list-players",
     "description": "Lists all tracked WoW players",
     "options": []
+  },
+  {
+    "name": "character-add",
+    "description": "Registers one of your characters in this server's guild",
+    "options": [
+      {
+        "name": "name",
+        "description": "Character name: Name or Name-Lastname (dash between first and last name, last name optional)",
+        "type": 3,
+        "required": true
+      },
+      {
+        "name": "class",
+        "description": "The character's class",
+        "type": 3,
+        "required": true,
+        "choices": [
+          {
+            "name": "Druid",
+            "value": "Druid"
+          },
+          {
+            "name": "Hunter",
+            "value": "Hunter"
+          },
+          {
+            "name": "Mage",
+            "value": "Mage"
+          },
+          {
+            "name": "Paladin",
+            "value": "Paladin"
+          },
+          {
+            "name": "Priest",
+            "value": "Priest"
+          },
+          {
+            "name": "Rogue",
+            "value": "Rogue"
+          },
+          {
+            "name": "Shaman",
+            "value": "Shaman"
+          },
+          {
+            "name": "Warlock",
+            "value": "Warlock"
+          },
+          {
+            "name": "Warrior",
+            "value": "Warrior"
+          }
+        ]
+      },
+      {
+        "name": "role",
+        "description": "The role this character plays",
+        "type": 3,
+        "required": true,
+        "choices": [
+          {
+            "name": "Tank",
+            "value": "TANK"
+          },
+          {
+            "name": "Healer",
+            "value": "HEALER"
+          },
+          {
+            "name": "Melee DPS",
+            "value": "MELEE_DPS"
+          },
+          {
+            "name": "Ranged DPS",
+            "value": "RANGED_DPS"
+          }
+        ]
+      },
+      {
+        "name": "main",
+        "description": "Is this one of your main characters? (default: no)",
+        "type": 5,
+        "required": false
+      }
+    ]
+  },
+  {
+    "name": "character-list",
+    "description": "Lists your registered characters",
+    "options": []
+  },
+  {
+    "name": "character-remove",
+    "description": "Removes one of your registered characters",
+    "options": [
+      {
+        "name": "name",
+        "description": "Character name: Name or Name-Lastname (dash between first and last name)",
+        "type": 3,
+        "required": true
+      }
+    ]
   }
 ]

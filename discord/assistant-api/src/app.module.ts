@@ -4,7 +4,9 @@ import { ConfigModule } from '@nestjs/config';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { AuthModule } from './auth/auth.module';
 import { BotModule } from './bot/bot.module';
+import { CharactersModule } from './characters/characters.module';
 import { DatabaseModule } from './database/database.module';
+import { GuildsModule } from './guilds/guilds.module';
 import { PlayersModule } from './players/players.module';
 
 @Module({
@@ -21,6 +23,8 @@ import { PlayersModule } from './players/players.module';
     AuthModule,
     BotModule,
     PlayersModule,
+    CharactersModule,
+    GuildsModule,
   ],
 })
 export class AppModule {}

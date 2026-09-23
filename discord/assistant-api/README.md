@@ -92,6 +92,35 @@ just another controller.
    `https://<your-deployment>/api/discord/interactions`. Discord will immediately send a test
    `PING` to verify it — the app must already be deployed and reachable for this to succeed.
 
+### Backoffice admins (the `Guild-Assistant` role)
+
+Anyone who holds a Discord role named exactly `Guild-Assistant` in **every** Discord server
+associated with a guild can add, edit and remove that guild's characters in the backoffice (`POST /api/guilds/:id/characters`,
+`PATCH`/`DELETE /api/characters/:id`). Everyone else in the guild is read-only. At login the API uses
+the user's token (scope `guilds.members.read`) to read their role ids and the bot token
+(`DISCORD_TOKEN`) to read the server's role list, and stores the result as `guild_members.is_admin`.
+It is only refreshed at login, so role changes apply after logging in again. The bot must be in the
+server for the role lookup to work; if the lookup fails the user is simply not an admin.
+
+### Character commands
+
+Run inside a Discord server linked to a guild (a `DiscordServer` row). The first `/character-add`
+registers you as a player of that guild. Realm and faction come from the guild. All replies are
+ephemeral (only you see them).
+
+| Command             | Options                                            | Purpose                          |
+| ------------------- | -------------------------------------------------- | -------------------------------- |
+| `/character-add`    | `name`, `class`, `role`, optional `main` (boolean) | Registers one of your characters |
+| `/character-list`   | —                                                  | Lists your characters            |
+| `/character-remove` | `name`                                             | Removes one of your characters   |
+
+**Name format:** `Name` or `Name-Lastname` — a dash separates first and last name, and the last
+name is optional. Letters only, 2-12 per part; casing is normalized (`arthas-menethil` →
+`Arthas Menethil`). You can mark several characters as `main`.
+
+After changing `src/bot/commands.json`, run `npm run commands:register`. Class choices live in both
+`commands.json` and `src/game/wow-class.ts` — keep them in sync.
+
 ## Database
 
 Postgres, hosted on [Supabase](https://supabase.com/), accessed through [Prisma](https://www.prisma.io/)

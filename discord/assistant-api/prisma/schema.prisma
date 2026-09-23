@@ -100,10 +100,12 @@ model User {
 // Which tracked guilds a user belongs to. Rebuilt from Discord's
 // /users/@me/guilds on every login; only guilds that exist in `guilds` get a row.
 model GuildMember {
-  userId  String @map("user_id") @db.Uuid
-  guildId String @map("guild_id") @db.Uuid
-  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  guild   Guild  @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  userId  String  @map("user_id") @db.Uuid
+  guildId String  @map("guild_id") @db.Uuid
+  // Holds the "Guild-Assistant" role in every one of the guild's Discord servers.
+  isAdmin Boolean @default(false) @map("is_admin")
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  guild   Guild   @relation(fields: [guildId], references: [id], onDelete: Cascade)
 
   @@id([userId, guildId])
   @@map("guild_members")

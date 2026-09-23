@@ -1,19 +1,36 @@
 import { useEffect, useState } from 'react';
-import { fetchCurrentUser, logout } from './api';
-import { PlayersPage } from './PlayersPage';
-import type { User } from './types';
+import { fetchCurrentUser, fetchGuilds, logout } from './api';
+import { DiscordMark } from './DiscordMark';
+import { GuildsPage } from './GuildsPage';
+import { LoginScreen } from './LoginScreen';
+import type { Guild, User } from './types';
 
 type AuthState =
   | { status: 'loading' }
   | { status: 'error'; message: string }
-  | { status: 'ready'; user: User | null };
+  | { status: 'ready'; user: User | null; guilds: Guild[] };
+
+function Avatar({ user }: { user: User }) {
+  if (user.avatar) {
+    return (
+      <img
+        className="avatar"
+        src={`https://cdn.discordapp.com/avatars/${user.discordId}/${user.avatar}.png?size=64`}
+        alt=""
+      />
+    );
+  }
+  return <span className="avatar">{user.username.charAt(0).toUpperCase()}</span>;
+}
 
 export function App() {
   const [auth, setAuth] = useState<AuthState>({ status: 'loading' });
 
   useEffect(() => {
     fetchCurrentUser()
-      .then((user) => setAuth({ status: 'ready', user }))
+      .then(async (user) =>
+        setAuth({ status: 'ready', user, guilds: user ? await fetchGuilds() : [] }),
+      )
       .catch((err: unknown) =>
         setAuth({ status: 'error', message: err instanceof Error ? err.message : String(err) }),
       );
@@ -28,29 +45,33 @@ export function App() {
   }
 
   if (!auth.user) {
-    return (
-      <main>
-        <h1>Guild Assistant</h1>
-        {/* Full-page navigation: the API redirects to Discord and back. */}
-        <a href="/api/auth/login">Log in with Discord</a>
-      </main>
-    );
+    return <LoginScreen />;
   }
 
   const handleLogout = () => {
-    void logout().then(() => setAuth({ status: 'ready', user: null }));
+    void logout().then(() => setAuth({ status: 'ready', user: null, guilds: [] }));
   };
 
   return (
-    <main>
-      <header>
-        <span>{auth.user.username}</span>
-        <button type="button" onClick={handleLogout}>
-          Log out
-        </button>
+    <>
+      <header className="header">
+        <div className="brand">
+          <span className="brand-mark">
+            <DiscordMark size={20} />
+          </span>
+          Guild Assistant
+        </div>
+        <div className="header-user">
+          <Avatar user={auth.user} />
+          <span className="username">{auth.user.username}</span>
+          <button type="button" className="btn btn-sm" onClick={handleLogout}>
+            Log out
+          </button>
+        </div>
       </header>
-      <h1>Players</h1>
-      <PlayersPage />
-    </main>
+      <main className="page">
+        <GuildsPage guilds={auth.guilds} />
+      </main>
+    </>
   );
 }

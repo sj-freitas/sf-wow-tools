@@ -37,10 +37,10 @@ export class AuthController {
   }
 
   @Get('login')
-  login(@Res() res: Response): void {
+  login(@Res() res: Response, @Query('prompt') prompt?: string): void {
     const state = randomBytes(16).toString('base64url');
     res.cookie(STATE_COOKIE, state, { ...this.cookieOptions, maxAge: 10 * 60 * 1000 });
-    res.redirect(this.discord.buildAuthorizeUrl(state));
+    res.redirect(this.discord.buildAuthorizeUrl(state, prompt === 'consent' ? 'consent' : 'none'));
   }
 
   @Get('callback')
@@ -49,7 +49,13 @@ export class AuthController {
     @Res() res: Response,
     @Query('code') code?: string,
     @Query('state') state?: string,
+    @Query('error') error?: string,
   ): Promise<void> {
+    // `prompt=none` fails for users who haven't yet approved the requested scopes.
+    if (error === 'consent_required') {
+      res.redirect('/api/auth/login?prompt=consent');
+      return;
+    }
     const expectedState = readCookie(req, STATE_COOKIE);
     if (!code || !state || !expectedState || !statesMatch(state, expectedState)) {
       throw new UnauthorizedException('Invalid login state');
