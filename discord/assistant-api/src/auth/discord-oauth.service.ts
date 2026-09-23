@@ -46,7 +46,7 @@ export class DiscordOAuthService {
     return `https://discord.com/oauth2/authorize?${params.toString()}`;
   }
 
-  async exchangeCode(code: string): Promise<string> {
+  async exchangeCode(code: string): Promise<{ accessToken: string; expiresIn: number }> {
     const response = await fetch(`${DISCORD_API}/oauth2/token`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -61,8 +61,8 @@ export class DiscordOAuthService {
     if (!response.ok) {
       throw new UnauthorizedException('Discord rejected the login code');
     }
-    const body = (await response.json()) as { access_token: string };
-    return body.access_token;
+    const body = (await response.json()) as { access_token: string; expires_in: number };
+    return { accessToken: body.access_token, expiresIn: body.expires_in };
   }
 
   fetchUser(accessToken: string): Promise<DiscordUser> {

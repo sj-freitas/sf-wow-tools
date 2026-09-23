@@ -129,12 +129,19 @@ model UserAdminServer {
 // Server-side login session. The cookie holds a random token; only its
 // SHA-256 hash is stored, so a database leak can't be replayed as cookies.
 model Session {
-  id        String   @id @default(uuid()) @db.Uuid
-  tokenHash String   @unique @map("token_hash")
-  userId    String   @map("user_id") @db.Uuid
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  expiresAt DateTime @map("expires_at")
-  createdAt DateTime @default(now()) @map("created_at")
+  id                    String    @id @default(uuid()) @db.Uuid
+  tokenHash             String    @unique @map("token_hash")
+  // The user's Discord OAuth access token (AES-256-GCM encrypted, see
+  // auth/token-crypto.ts), kept so we can re-read their servers and roles on
+  // demand. Null for sessions created before this existed.
+  discordAccessToken    String?   @map("discord_access_token")
+  discordTokenExpiresAt DateTime? @map("discord_token_expires_at")
+  // Last time servers/roles were synced from Discord for this session.
+  discordSyncedAt       DateTime  @default(now()) @map("discord_synced_at")
+  userId                String    @map("user_id") @db.Uuid
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt             DateTime  @map("expires_at")
+  createdAt             DateTime  @default(now()) @map("created_at")
 
   @@map("sessions")
 }

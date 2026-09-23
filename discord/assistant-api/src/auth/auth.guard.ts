@@ -14,10 +14,12 @@ export class AuthGuard implements CanActivate {
     const req = context.switchToHttp().getRequest<Request>();
     const token = readCookie(req, SESSION_COOKIE);
     const user = token ? await this.authService.findUserBySessionToken(token) : null;
-    if (!user) {
+    if (!token || !user) {
       throw new UnauthorizedException('Not logged in');
     }
+    await this.authService.refreshIfStale(token);
     (req as AuthenticatedRequest).user = user;
+    (req as AuthenticatedRequest).sessionToken = token;
     return true;
   }
 }

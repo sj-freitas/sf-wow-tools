@@ -113,6 +113,25 @@ The admin role name is a single setting, `adminRoleName` in `src/config/app.conf
   `guild_access.is_admin` and `user_admin_servers`, so it only refreshes at login: after gaining or
   losing the role, log out and back in.
 
+### Fresh Discord data and live updates
+
+- **Stored token:** at login the user's Discord access token is stored, AES-256-GCM encrypted with
+  `SESSION_ENCRYPTION_KEY`, on their session (valid about 7 days, like the session). It is used to
+  re-read their servers and roles later.
+- **Refresh:** opening "Create guild" always re-reads the user's servers first
+  (`GET /api/guilds/eligible-servers`). Any authenticated request also re-syncs servers, roles and
+  `guild_access` if the last sync is older than 5 minutes (`discordSyncMaxAgeMs` in
+  `app.config.ts`), so a lost role stops working within minutes. If the token is missing or
+  rejected the user is asked to log in again.
+- **Bot requirement:** the bot must be in a server for its roles to be read. The backoffice shows
+  the setup steps and the invite link (`GET /api/guilds/setup-info`, built from
+  `DISCORD_APPLICATION_ID` and `botInvitePermissions`).
+- **Live updates:** `GET /api/events` is a Server-Sent Events stream. Character changes (from the
+  bot or the backoffice) and server removals are published on an in-memory bus
+  (`realtime.service.ts`) and forwarded to users with access to that guild; the backoffice reloads
+  on each event. The bus is per-process, so running several API instances would need a shared one
+  (Redis or Postgres `LISTEN/NOTIFY`).
+
 ### Character commands
 
 Run inside a Discord server linked to a guild (a `DiscordServer` row). The first `/character-add`

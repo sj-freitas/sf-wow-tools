@@ -11,7 +11,10 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { AuthGuard } from '../auth/auth.guard';
+import { AuthService } from '../auth/auth.service';
+import { APP_CONFIG } from '../config/app.config';
 import type { AuthenticatedRequest } from '../auth/auth.types';
 import { GuildAccessService } from '../auth/guild-access.service';
 import {
@@ -19,16 +22,23 @@ import {
   isGameVersion,
   type CreateGuildInput,
   type EligibleServersDto,
+  type SetupInfoDto,
   type UserGuildDto,
 } from './guilds.service';
 
 @Controller('guilds')
 @UseGuards(AuthGuard)
 export class GuildsController {
+  private readonly applicationId: string;
+
   constructor(
     private readonly guildsService: GuildsService,
     private readonly guildAccess: GuildAccessService,
-  ) {}
+    private readonly authService: AuthService,
+    configService: ConfigService,
+  ) {
+    this.applicationId = configService.getOrThrow<string>('DISCORD_APPLICATION_ID');
+  }
 
   /** Guilds the logged-in user belongs to, with whether they can manage them. */
   @Get()
@@ -36,8 +46,24 @@ export class GuildsController {
     return this.guildsService.findForUser(req.user.id);
   }
 
+  /** How to get a server ready for Guild Assistant, including the bot invite link. */
+  @Get('setup-info')
+  setupInfo(): SetupInfoDto {
+    const params = new URLSearchParams({
+      client_id: this.applicationId,
+      scope: 'bot applications.commands',
+      permissions: APP_CONFIG.botInvitePermissions,
+    });
+    return {
+      adminRoleName: APP_CONFIG.adminRoleName,
+      botInviteUrl: `https://discord.com/oauth2/authorize?${params.toString()}`,
+    };
+  }
+
+  /** Re-reads the user's servers and roles from Discord first, so the list is current. */
   @Get('eligible-servers')
-  eligibleServers(@Req() req: AuthenticatedRequest): Promise<EligibleServersDto> {
+  async eligibleServers(@Req() req: AuthenticatedRequest): Promise<EligibleServersDto> {
+    await this.authService.refresh(req.sessionToken, { force: true });
     return this.guildsService.findEligibleServers(req.user.id);
   }
 

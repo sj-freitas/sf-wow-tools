@@ -1,15 +1,17 @@
-import { Fragment, useCallback, useEffect, useState } from 'react';
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import { deleteCharacter, fetchPlayers, removeGuildServer } from './api';
 import { CharacterForm } from './CharacterForm';
 import { CreateGuildForm } from './CreateGuildForm';
-import { ROLE_LABELS, type Guild, type Player } from './types';
+import { SetupInstructions } from './SetupInstructions';
+import { ROLE_LABELS, type Guild, type Player, type SetupInfo } from './types';
 
 interface Props {
   guilds: Guild[];
+  setup: SetupInfo;
   onGuildsChanged: () => Promise<void>;
 }
 
-export function GuildsPage({ guilds, onGuildsChanged }: Props) {
+export function GuildsPage({ guilds, setup, onGuildsChanged }: Props) {
   const [players, setPlayers] = useState<Player[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState(guilds[0]?.id);
@@ -25,6 +27,22 @@ export function GuildsPage({ guilds, onGuildsChanged }: Props) {
 
   useEffect(load, [load]);
 
+  const guildsChanged = useRef(onGuildsChanged);
+  useEffect(() => {
+    guildsChanged.current = onGuildsChanged;
+  }, [onGuildsChanged]);
+
+  // Live updates: the API pushes an event whenever a guild we can see changes.
+  useEffect(() => {
+    const source = new EventSource('/api/events');
+    source.addEventListener('characters', load);
+    source.addEventListener('guild', () => {
+      load();
+      guildsChanged.current().catch(() => undefined);
+    });
+    return () => source.close();
+  }, [load]);
+
   const run = (action: Promise<void>) => {
     action
       .then(load)
@@ -35,6 +53,7 @@ export function GuildsPage({ guilds, onGuildsChanged }: Props) {
 
   const createGuildPanel = creating && (
     <CreateGuildForm
+      setup={setup}
       onCancel={() => setCreating(false)}
       onCreated={(created) => {
         setCreating(false);
@@ -54,6 +73,7 @@ export function GuildsPage({ guilds, onGuildsChanged }: Props) {
               None of your Discord servers belong to a guild that uses Guild Assistant yet. Create
               one to get started.
             </p>
+            <SetupInstructions setup={setup} />
             <button type="button" className="btn btn-primary" onClick={() => setCreating(true)}>
               + Create guild
             </button>

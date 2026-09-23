@@ -8,6 +8,7 @@ import { Prisma } from '@prisma/client';
 import { APP_CONFIG } from '../config/app.config';
 import { PrismaService } from '../database/prisma.service';
 import { GAME_VERSIONS } from '../game/game-version';
+import { RealtimeService } from '../realtime/realtime.service';
 
 export interface GuildServerDto {
   discordId: string;
@@ -25,8 +26,12 @@ export interface UserGuildDto {
 }
 
 export interface EligibleServersDto {
-  adminRoleName: string;
   servers: GuildServerDto[];
+}
+
+export interface SetupInfoDto {
+  adminRoleName: string;
+  botInviteUrl: string;
 }
 
 export interface CreateGuildInput {
@@ -48,7 +53,10 @@ const guildSelect = {
 
 @Injectable()
 export class GuildsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly realtime: RealtimeService,
+  ) {}
 
   async findForUser(userId: string): Promise<UserGuildDto[]> {
     const memberships = await this.prisma.guildAccess.findMany({
@@ -71,7 +79,6 @@ export class GuildsService {
     });
     const takenIds = new Set(taken.map((server) => server.discordId));
     return {
-      adminRoleName: APP_CONFIG.adminRoleName,
       servers: servers
         .filter((server) => !takenIds.has(server.discordId))
         .map(({ discordId, name }) => ({ discordId, name })),
@@ -124,6 +131,7 @@ export class GuildsService {
       throw new BadRequestException('A guild needs at least one Discord server');
     }
     await this.prisma.discordServer.delete({ where: { discordId: discordServerId } });
+    this.realtime.publish(guildId, 'guild');
   }
 }
 

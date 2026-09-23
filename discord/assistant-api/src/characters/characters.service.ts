@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma, type Role } from '@prisma/client';
 import { PrismaService } from '../database/prisma.service';
+import { RealtimeService } from '../realtime/realtime.service';
 import type { CharacterName } from './character-name';
 
 export interface CharacterOwner {
@@ -32,7 +33,10 @@ export interface CharacterSummary extends CharacterName {
 
 @Injectable()
 export class CharactersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly realtime: RealtimeService,
+  ) {}
 
   /**
    * Adds a character for the user, registering them as a player of the
@@ -66,11 +70,20 @@ export class CharactersService {
   }
 
   async update(characterId: string, patch: CharacterUpdate): Promise<void> {
-    await this.prisma.character.update({ where: { id: characterId }, data: patch });
+    const { player } = await this.prisma.character.update({
+      where: { id: characterId },
+      data: patch,
+      select: { player: { select: { guildId: true } } },
+    });
+    this.realtime.publish(player.guildId, 'characters');
   }
 
   async removeById(characterId: string): Promise<void> {
-    await this.prisma.character.delete({ where: { id: characterId } });
+    const { player } = await this.prisma.character.delete({
+      where: { id: characterId },
+      select: { player: { select: { guildId: true } } },
+    });
+    this.realtime.publish(player.guildId, 'characters');
   }
 
   async findGuildIdOfCharacter(characterId: string): Promise<string> {
@@ -107,6 +120,7 @@ export class CharactersService {
           level: character.level,
         },
       });
+      this.realtime.publish(guild.id, 'characters');
       return 'created';
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
@@ -151,7 +165,11 @@ export class CharactersService {
         player: { guildId: guild.id, discordUserId: owner.discordUserId },
       },
     });
-    return count > 0 ? 'removed' : 'not-found';
+    if (count === 0) {
+      return 'not-found';
+    }
+    this.realtime.publish(guild.id, 'characters');
+    return 'removed';
   }
 
   private findGuild(discordServerId: string) {

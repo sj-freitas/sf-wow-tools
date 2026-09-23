@@ -7,4 +7,4 @@ export interface SessionUser {
   avatar: string | null;
 }
 
-export type AuthenticatedRequest = Request & { user: SessionUser };
+export type AuthenticatedRequest = Request & { user: SessionUser; sessionToken: string };

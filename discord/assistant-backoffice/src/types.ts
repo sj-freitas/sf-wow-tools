@@ -42,8 +42,12 @@ export interface GuildServer {
 }
 
 export interface EligibleServers {
-  adminRoleName: string;
   servers: GuildServer[];
+}
+
+export interface SetupInfo {
+  adminRoleName: string;
+  botInviteUrl: string;
 }
 
 // Keep in sync with assistant-api/src/game/game-version.ts.

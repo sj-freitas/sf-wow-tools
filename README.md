@@ -113,3 +113,6 @@ the Pre-Deploy migration command each time); re-run step 6 only when `commands.j
   application you're configuring.
 - Render's default health check (`GET /`) hits the backoffice's `index.html`, which is enough to
   confirm the process is up; there's no separate `/health` endpoint (yet).
+
+
+Bot invite link: https://discord.com/oauth2/authorize?client_id=1549424151243137145&scope=bot%20applications.commands&permissions=3960426119822455

@@ -1,13 +1,21 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { createGuild, fetchEligibleServers } from './api';
-import { GAME_VERSIONS, type EligibleServers, type Faction, type Guild } from './types';
+import { SetupInstructions } from './SetupInstructions';
+import {
+  GAME_VERSIONS,
+  type EligibleServers,
+  type Faction,
+  type Guild,
+  type SetupInfo,
+} from './types';
 
 interface Props {
+  setup: SetupInfo;
   onCreated: (guild: Guild) => void;
   onCancel: () => void;
 }
 
-export function CreateGuildForm({ onCreated, onCancel }: Props) {
+export function CreateGuildForm({ setup, onCreated, onCancel }: Props) {
   const [eligible, setEligible] = useState<EligibleServers | null>(null);
   const [name, setName] = useState('');
   const [realm, setRealm] = useState('');
@@ -47,6 +55,7 @@ export function CreateGuildForm({ onCreated, onCancel }: Props) {
         <h2>Create guild</h2>
       </div>
       <form className="card-body" onSubmit={handleSubmit}>
+        <SetupInstructions setup={setup} />
         <div className="form-grid">
           <label className="field">
             Guild name
@@ -83,9 +92,9 @@ export function CreateGuildForm({ onCreated, onCancel }: Props) {
           {!eligible && !error && <span>Loading your servers…</span>}
           {eligible && eligible.servers.length === 0 && (
             <span className="muted">
-              No servers available. You need the <strong>{eligible.adminRoleName}</strong> role in a
-              server where the bot is installed, and the server must not belong to a guild yet. Log
-              out and back in if you were just given the role.
+              No servers available. Follow the steps above: the bot must be in the server, you need
+              the <strong>{setup.adminRoleName}</strong> role there, and the server must not belong
+              to a guild yet. This list was just refreshed from Discord.
             </span>
           )}
           {eligible && eligible.servers.length > 0 && (

@@ -5,6 +5,7 @@ import type {
   NewCharacterInput,
   NewGuildInput,
   Player,
+  SetupInfo,
   User,
 } from './types';
 
@@ -17,12 +18,10 @@ async function request<T>(method: string, url: string, body?: unknown): Promise<
     body: body === undefined ? undefined : JSON.stringify(body),
   });
 
-  if (response.status === 401) {
-    throw new UnauthorizedError('Not logged in');
-  }
   if (!response.ok) {
     const detail = (await response.json().catch(() => null)) as { message?: string } | null;
-    throw new Error(detail?.message ?? `${method} ${url} failed with status ${response.status}`);
+    const message = detail?.message ?? `${method} ${url} failed with status ${response.status}`;
+    throw response.status === 401 ? new UnauthorizedError(message) : new Error(message);
   }
 
   return response.status === 204 ? (undefined as T) : ((await response.json()) as T);
@@ -31,6 +30,8 @@ async function request<T>(method: string, url: string, body?: unknown): Promise<
 export const fetchPlayers = (): Promise<Player[]> => request('GET', '/api/players');
 
 export const fetchGuilds = (): Promise<Guild[]> => request('GET', '/api/guilds');
+
+export const fetchSetupInfo = (): Promise<SetupInfo> => request('GET', '/api/guilds/setup-info');
 
 export const fetchEligibleServers = (): Promise<EligibleServers> =>
   request('GET', '/api/guilds/eligible-servers');

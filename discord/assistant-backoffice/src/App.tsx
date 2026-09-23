@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
-import { fetchCurrentUser, fetchGuilds, logout } from './api';
+import { fetchCurrentUser, fetchGuilds, fetchSetupInfo, logout } from './api';
 import { GuildsPage } from './GuildsPage';
 import { LoginScreen } from './LoginScreen';
-import type { Guild, User } from './types';
+import type { Guild, SetupInfo, User } from './types';
 
 type AuthState =
   | { status: 'loading' }
   | { status: 'error'; message: string }
-  | { status: 'ready'; user: User | null; guilds: Guild[] };
+  | { status: 'ready'; user: User | null; guilds: Guild[]; setup: SetupInfo | null };
 
 function Avatar({ user }: { user: User }) {
   if (user.avatar) {
@@ -27,9 +27,12 @@ export function App() {
 
   useEffect(() => {
     fetchCurrentUser()
-      .then(async (user) =>
-        setAuth({ status: 'ready', user, guilds: user ? await fetchGuilds() : [] }),
-      )
+      .then(async (user) => {
+        const [guilds, setup] = user
+          ? await Promise.all([fetchGuilds(), fetchSetupInfo()])
+          : [[], null];
+        setAuth({ status: 'ready', user, guilds, setup });
+      })
       .catch((err: unknown) =>
         setAuth({ status: 'error', message: err instanceof Error ? err.message : String(err) }),
       );
@@ -53,7 +56,7 @@ export function App() {
   }
 
   const handleLogout = () => {
-    void logout().then(() => setAuth({ status: 'ready', user: null, guilds: [] }));
+    void logout().then(() => setAuth({ status: 'ready', user: null, guilds: [], setup: null }));
   };
 
   return (
@@ -74,7 +77,9 @@ export function App() {
         </div>
       </header>
       <main className="page">
-        <GuildsPage guilds={auth.guilds} onGuildsChanged={reloadGuilds} />
+        {auth.setup && (
+          <GuildsPage guilds={auth.guilds} setup={auth.setup} onGuildsChanged={reloadGuilds} />
+        )}
       </main>
     </>
   );

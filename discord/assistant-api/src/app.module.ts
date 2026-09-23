@@ -7,6 +7,7 @@ import { BotModule } from './bot/bot.module';
 import { CharactersModule } from './characters/characters.module';
 import { DatabaseModule } from './database/database.module';
 import { GuildsModule } from './guilds/guilds.module';
+import { RealtimeModule } from './realtime/realtime.module';
 import { PlayersModule } from './players/players.module';
 
 @Module({
@@ -25,6 +26,7 @@ import { PlayersModule } from './players/players.module';
     PlayersModule,
     CharactersModule,
     GuildsModule,
+    RealtimeModule,
   ],
 })
 export class AppModule {}
