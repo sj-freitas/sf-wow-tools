@@ -32,16 +32,21 @@ npm run start:dev
 
 ## Endpoints
 
-| Method | Path                        | Purpose                                                        |
-| ------ | --------------------------- | -------------------------------------------------------------- |
-| GET    | `/api/players`              | All tracked players, as `PlayerDto[]` — used by the backoffice |
-| POST   | `/api/discord/interactions` | Discord's HTTP Interactions Endpoint — see below               |
+| Method | Path                        | Purpose                                                                |
+| ------ | --------------------------- | ---------------------------------------------------------------------- |
+| GET    | `/api/players`              | Players in the guilds the logged-in user belongs to (session required) |
+| GET    | `/api/auth/login`           | Starts "Login with Discord" (OAuth2, scopes `identify guilds`)         |
+| GET    | `/api/auth/callback`        | OAuth2 redirect target; creates the session cookie                     |
+| GET    | `/api/auth/me`              | Current user, or 401                                                   |
+| POST   | `/api/auth/logout`          | Destroys the session                                                   |
+| POST   | `/api/discord/interactions` | Discord's HTTP Interactions Endpoint — see below                       |
 
-No auth on `/api/players` yet — it's open. The backoffice will eventually need Discord-login-gated
-write endpoints; none exist yet, only the read-only `list-players` slice. `/api/discord/interactions`
-has its own, different auth: every request is signature-verified against `DISCORD_PUBLIC_KEY`
-(see below) — that's what "different modules for different types of authentication" looks like
-here, even though both live in this one project.
+Backoffice auth: Discord OAuth2 login using the **same Discord application** as the bot (add the
+redirect URI under OAuth2 → Redirects; set `DISCORD_CLIENT_SECRET` and
+`DISCORD_OAUTH_REDIRECT_URI`). On login, the user's Discord guilds are intersected with the `guilds`
+table and stored in `guild_members`; a 7-day server-side session (`sessions`, httpOnly cookie) is
+created. Guild membership is only refreshed at login. `/api/discord/interactions` has its own,
+different auth: every request is signature-verified against `DISCORD_PUBLIC_KEY` (see below).
 
 Everything not matching `/api/*` falls through to serving `assistant-backoffice`'s static build
 (`public/`, populated by the root `Dockerfile`) — see `ServeStaticModule` in `app.module.ts`.

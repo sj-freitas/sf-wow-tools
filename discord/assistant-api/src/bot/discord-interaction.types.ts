@@ -8,6 +8,8 @@ import type { InteractionType } from 'discord-interactions';
  */
 export interface DiscordInteraction {
   type: InteractionType;
+  /** Absent when the command was invoked in a DM. */
+  guild_id?: string;
   data?: {
     name: string;
   };

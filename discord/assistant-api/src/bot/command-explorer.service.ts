@@ -57,7 +57,10 @@ export class CommandExplorerService implements OnApplicationBootstrap {
       return;
     }
 
-    const options = this.reflector.get<CommandOptions | undefined>(COMMAND_OPTIONS_METADATA, method);
+    const options = this.reflector.get<CommandOptions | undefined>(
+      COMMAND_OPTIONS_METADATA,
+      method,
+    );
     this.commandRegistry.register(commandName, instance, methodName, options);
   }
 }

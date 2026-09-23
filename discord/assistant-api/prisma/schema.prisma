@@ -1,4 +1,3 @@
-// Placeholder schema — will evolve once the domain model is fleshed out.
 generator client {
   provider = "prisma-client-js"
 }
@@ -12,31 +11,113 @@ enum Faction {
   HORDE
 }
 
-model Guild {
-  id        String   @id @default(uuid()) @db.Uuid
-  name      String
-  realm     String
-  faction   Faction
-  players   Player[]
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+enum Role {
+  HEALER
+  TANK
+  MELEE_DPS
+  RANGED_DPS
+}
 
-  @@unique([name, realm])
+// A WoW guild. It can be managed from more than one Discord server.
+model Guild {
+  id          String          @id @default(uuid()) @db.Uuid
+  name        String
+  realm       String
+  faction     Faction
+  // One of GAME_VERSIONS (src/game/game-version.ts); a string so adding a
+  // version doesn't need a migration.
+  gameVersion String          @map("game_version")
+  servers     DiscordServer[]
+  players     Player[]
+  members     GuildMember[]
+  createdAt   DateTime        @default(now()) @map("created_at")
+  updatedAt   DateTime        @updatedAt @map("updated_at")
+
+  @@unique([name, realm, gameVersion])
   @@map("guilds")
 }
 
-model Player {
+model DiscordServer {
   id        String   @id @default(uuid()) @db.Uuid
-  name      String
-  realm     String
+  // Discord's server (a.k.a. guild) snowflake id.
+  discordId String   @unique @map("discord_id")
+  guildId   String   @map("guild_id") @db.Uuid
+  guild     Guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("discord_servers")
+}
+
+// A member of a guild, 1:1 with a Discord user (who may never log in to the
+// backoffice, hence no FK to User).
+model Player {
+  id            String      @id @default(uuid()) @db.Uuid
+  discordUserId String      @map("discord_user_id")
+  guildId       String      @map("guild_id") @db.Uuid
+  guild         Guild       @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  characters    Character[]
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
+
+  @@unique([guildId, discordUserId])
+  @@map("players")
+}
+
+model Character {
+  id        String   @id @default(uuid()) @db.Uuid
+  playerId  String   @map("player_id") @db.Uuid
+  player    Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  // A WoW class name, locked to a known set in code like gameVersion.
   class     String
+  roles     Role[]
+  firstName String   @map("first_name")
+  lastName  String   @default("") @map("last_name")
+  isMain    Boolean  @default(false) @map("is_main")
   level     Int      @default(1)
   faction   Faction
-  guildId   String?  @map("guild_id") @db.Uuid
-  guild     Guild?   @relation(fields: [guildId], references: [id])
+  realm     String
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@unique([name, realm])
-  @@map("players")
+  @@unique([playerId, firstName, lastName, realm])
+  @@map("characters")
+}
+
+// A backoffice user, created on first Discord login.
+model User {
+  id        String        @id @default(uuid()) @db.Uuid
+  discordId String        @unique @map("discord_id")
+  username  String
+  avatar    String?
+  guilds    GuildMember[]
+  sessions  Session[]
+  createdAt DateTime      @default(now()) @map("created_at")
+  updatedAt DateTime      @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+// Which tracked guilds a user belongs to. Rebuilt from Discord's
+// /users/@me/guilds on every login; only guilds that exist in `guilds` get a row.
+model GuildMember {
+  userId  String @map("user_id") @db.Uuid
+  guildId String @map("guild_id") @db.Uuid
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  guild   Guild  @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@id([userId, guildId])
+  @@map("guild_members")
+}
+
+// Server-side login session. The cookie holds a random token; only its
+// SHA-256 hash is stored, so a database leak can't be replayed as cookies.
+model Session {
+  id        String   @id @default(uuid()) @db.Uuid
+  tokenHash String   @unique @map("token_hash")
+  userId    String   @map("user_id") @db.Uuid
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("sessions")
 }

@@ -28,23 +28,27 @@ export function PlayersPage() {
     <table>
       <thead>
         <tr>
-          <th>Name</th>
-          <th>Realm</th>
-          <th>Class</th>
-          <th>Level</th>
-          <th>Faction</th>
+          <th>Discord user</th>
+          <th>Mains</th>
+          <th>Characters</th>
         </tr>
       </thead>
       <tbody>
-        {players.map((player) => (
-          <tr key={player.id}>
-            <td>{player.name}</td>
-            <td>{player.realm}</td>
-            <td>{player.class}</td>
-            <td>{player.level}</td>
-            <td>{player.faction}</td>
-          </tr>
-        ))}
+        {players.map((player) => {
+          const mains = player.characters
+            .filter((character) => character.isMain)
+            .map(
+              (character) =>
+                `${`${character.firstName} ${character.lastName}`.trim()} (${character.class} ${character.level})`,
+            );
+          return (
+            <tr key={player.id}>
+              <td>{player.discordUserId}</td>
+              <td>{mains.length > 0 ? mains.join(', ') : '—'}</td>
+              <td>{player.characters.length}</td>
+            </tr>
+          );
+        })}
       </tbody>
     </table>
   );

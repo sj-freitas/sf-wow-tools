@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ServeStaticModule } from '@nestjs/serve-static';
+import { AuthModule } from './auth/auth.module';
 import { BotModule } from './bot/bot.module';
 import { DatabaseModule } from './database/database.module';
 import { PlayersModule } from './players/players.module';
@@ -17,6 +18,7 @@ import { PlayersModule } from './players/players.module';
       exclude: ['/api/{*splat}'],
     }),
     DatabaseModule,
+    AuthModule,
     BotModule,
     PlayersModule,
   ],
