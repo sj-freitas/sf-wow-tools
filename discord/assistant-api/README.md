@@ -92,15 +92,26 @@ just another controller.
    `https://<your-deployment>/api/discord/interactions`. Discord will immediately send a test
    `PING` to verify it — the app must already be deployed and reachable for this to succeed.
 
-### Backoffice admins (the `Guild-Assistant` role)
+### Guilds and backoffice admins
 
-Anyone who holds a Discord role named exactly `Guild-Assistant` in **every** Discord server
-associated with a guild can add, edit and remove that guild's characters in the backoffice (`POST /api/guilds/:id/characters`,
-`PATCH`/`DELETE /api/characters/:id`). Everyone else in the guild is read-only. At login the API uses
-the user's token (scope `guilds.members.read`) to read their role ids and the bot token
-(`DISCORD_TOKEN`) to read the server's role list, and stores the result as `guild_members.is_admin`.
-It is only refreshed at login, so role changes apply after logging in again. The bot must be in the
-server for the role lookup to work; if the lookup fails the user is simply not an admin.
+The admin role name is a single setting, `adminRoleName` in `src/config/app.config.ts`
+(`Guild-Assistant`).
+
+- **Creating a guild:** any logged-in user can hit "Create guild" in the backoffice
+  (`POST /api/guilds`). They pick the name, realm, faction, game version and the Discord servers to
+  attach. Only servers where the user holds the admin role, the bot is installed, and that don't
+  belong to a guild yet are offered (`GET /api/guilds/eligible-servers`). The creator becomes an
+  admin of the new guild.
+- **Managing a guild:** a user is admin of a guild if they hold the role in **every** Discord server
+  attached to it. Admins can add, edit and remove characters (`POST /api/guilds/:id/characters`,
+  `PATCH`/`DELETE /api/characters/:id`) and remove servers from the guild
+  (`DELETE /api/guilds/:id/servers/:discordServerId`; a guild always keeps at least one server).
+  Everyone else in the guild is read-only.
+- **How roles are read:** at login the API lists the bot's servers (bot token), and for each of the
+  user's servers that the bot is in, reads the user's role ids (their token, scope
+  `guilds.members.read`) and the server's roles (bot token). The result is stored in
+  `guild_members.is_admin` and `user_admin_servers`, so it only refreshes at login: after gaining or
+  losing the role, log out and back in.
 
 ### Character commands
 

@@ -33,8 +33,30 @@ export interface Guild {
   realm: string;
   faction: Faction;
   gameVersion: string;
-  /** Holds the Guild-Assistant role: can manage this guild's characters. */
+  /** Holds the admin role in all of the guild's servers: can manage it. */
   isAdmin: boolean;
+  servers: GuildServer[];
+}
+
+export interface GuildServer {
+  discordId: string;
+  name: string;
+}
+
+export interface EligibleServers {
+  adminRoleName: string;
+  servers: GuildServer[];
+}
+
+// Keep in sync with assistant-api/src/game/game-version.ts.
+export const GAME_VERSIONS = ['Forever'] as const;
+
+export interface NewGuildInput {
+  name: string;
+  realm: string;
+  faction: Faction;
+  gameVersion: string;
+  discordServerIds: string[];
 }
 
 // Keep in sync with assistant-api/src/game/wow-class.ts.

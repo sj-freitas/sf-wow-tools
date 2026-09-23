@@ -1,13 +1,20 @@
 import { useCallback, useEffect, useState } from 'react';
-import { deleteCharacter, fetchPlayers, updateCharacter } from './api';
+import { deleteCharacter, fetchPlayers, removeGuildServer, updateCharacter } from './api';
 import { AddCharacterForm } from './AddCharacterForm';
+import { CreateGuildForm } from './CreateGuildForm';
 import { ROLE_LABELS, type Guild, type Player } from './types';
 
-export function GuildsPage({ guilds }: { guilds: Guild[] }) {
+interface Props {
+  guilds: Guild[];
+  onGuildsChanged: () => Promise<void>;
+}
+
+export function GuildsPage({ guilds, onGuildsChanged }: Props) {
   const [players, setPlayers] = useState<Player[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState(guilds[0]?.id);
   const [adding, setAdding] = useState(false);
+  const [creating, setCreating] = useState(false);
 
   const load = useCallback(() => {
     fetchPlayers()
@@ -23,13 +30,35 @@ export function GuildsPage({ guilds }: { guilds: Guild[] }) {
       .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)));
   };
 
-  const guild = guilds.find((g) => g.id === selectedId);
+  const guild = guilds.find((g) => g.id === selectedId) ?? guilds[0];
+
+  const createGuildPanel = creating && (
+    <CreateGuildForm
+      onCancel={() => setCreating(false)}
+      onCreated={(created) => {
+        setCreating(false);
+        setSelectedId(created.id);
+        run(onGuildsChanged());
+      }}
+    />
+  );
 
   if (!guild) {
     return (
-      <p className="empty card">
-        None of your Discord servers belong to a guild that uses Guild Assistant yet.
-      </p>
+      <>
+        {createGuildPanel}
+        {!creating && (
+          <div className="card empty">
+            <p>
+              None of your Discord servers belong to a guild that uses Guild Assistant yet. Create
+              one to get started.
+            </p>
+            <button type="button" className="btn btn-primary" onClick={() => setCreating(true)}>
+              + Create guild
+            </button>
+          </div>
+        )}
+      </>
     );
   }
   if (error) {
@@ -46,23 +75,31 @@ export function GuildsPage({ guilds }: { guilds: Guild[] }) {
 
   return (
     <>
-      <div className="tabs" role="tablist">
-        {guilds.map((g) => (
-          <button
-            key={g.id}
-            type="button"
-            role="tab"
-            className="tab"
-            aria-selected={g.id === guild.id}
-            onClick={() => {
-              setSelectedId(g.id);
-              setAdding(false);
-            }}
-          >
-            {g.name}
+      <div className="topbar">
+        <div className="tabs" role="tablist">
+          {guilds.map((g) => (
+            <button
+              key={g.id}
+              type="button"
+              role="tab"
+              className="tab"
+              aria-selected={g.id === guild.id}
+              onClick={() => {
+                setSelectedId(g.id);
+                setAdding(false);
+              }}
+            >
+              {g.name}
+            </button>
+          ))}
+        </div>
+        {!creating && (
+          <button type="button" className="btn" onClick={() => setCreating(true)}>
+            + Create guild
           </button>
-        ))}
+        )}
       </div>
+      {createGuildPanel}
 
       <section className="card">
         <div className="card-header">
@@ -84,6 +121,32 @@ export function GuildsPage({ guilds }: { guilds: Guild[] }) {
               + Add character
             </button>
           )}
+        </div>
+
+        <div className="server-list">
+          {guild.servers.map((server) => (
+            <span key={server.discordId} className="server-chip">
+              {server.name || server.discordId}
+              {guild.isAdmin && (
+                <button
+                  type="button"
+                  className="chip-remove"
+                  aria-label={`Remove server ${server.name}`}
+                  title={
+                    guild.servers.length === 1
+                      ? 'A guild needs at least one server'
+                      : 'Remove this server from the guild'
+                  }
+                  disabled={guild.servers.length === 1}
+                  onClick={() =>
+                    run(removeGuildServer(guild.id, server.discordId).then(onGuildsChanged))
+                  }
+                >
+                  ×
+                </button>
+              )}
+            </span>
+          ))}
         </div>
 
         {adding && (

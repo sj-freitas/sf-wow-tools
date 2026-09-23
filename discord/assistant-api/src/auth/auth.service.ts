@@ -1,10 +1,9 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { Injectable, Logger } from '@nestjs/common';
+import { APP_CONFIG } from '../config/app.config';
 import { PrismaService } from '../database/prisma.service';
 import type { SessionUser } from './auth.types';
-import { DiscordOAuthService } from './discord-oauth.service';
-
-export const ADMIN_ROLE_NAME = 'Guild-Assistant';
+import { DiscordOAuthService, type DiscordPartialGuild } from './discord-oauth.service';
 
 export const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -37,12 +36,21 @@ export class AuthService {
       update: { username: discordUser.username, avatar: discordUser.avatar },
     });
 
-    const userServerIds = new Set(discordGuilds.map((guild) => guild.id));
+    const adminServers = await this.findAdminServers(accessToken, discordGuilds);
+    const adminServerIds = new Set(adminServers.map((server) => server.id));
+    const userServerIds = discordGuilds.map((guild) => guild.id);
+
     const guilds = await this.prisma.guild.findMany({
-      where: { servers: { some: { discordId: { in: [...userServerIds] } } } },
+      where: { servers: { some: { discordId: { in: userServerIds } } } },
       select: { id: true, servers: { select: { discordId: true } } },
     });
-    const adminGuildIds = await this.findAdminGuildIds(accessToken, guilds, userServerIds);
+    // Admin of a guild = holds the role in *every* one of its Discord servers.
+    const adminGuildIds = new Set(
+      guilds
+        .filter((guild) => guild.servers.every((server) => adminServerIds.has(server.discordId)))
+        .map((guild) => guild.id),
+    );
+
     await this.prisma.$transaction([
       this.prisma.guildMember.deleteMany({ where: { userId: user.id } }),
       this.prisma.guildMember.createMany({
@@ -52,6 +60,20 @@ export class AuthService {
           isAdmin: adminGuildIds.has(guild.id),
         })),
       }),
+      this.prisma.userAdminServer.deleteMany({ where: { userId: user.id } }),
+      this.prisma.userAdminServer.createMany({
+        data: adminServers.map((server) => ({
+          userId: user.id,
+          discordId: server.id,
+          name: server.name,
+        })),
+      }),
+      ...discordGuilds.map((guild) =>
+        this.prisma.discordServer.updateMany({
+          where: { discordId: guild.id },
+          data: { name: guild.name },
+        }),
+      ),
     ]);
 
     const token = randomBytes(32).toString('base64url');
@@ -66,27 +88,26 @@ export class AuthService {
   }
 
   /**
-   * Guilds where the user holds the ADMIN_ROLE_NAME role in *every* Discord
-   * server the guild is associated with (a server they're not in counts as no).
+   * Servers (among the user's) where the bot is present and the user holds the
+   * admin role. The bot must be present to read the server's role list.
    */
-  private async findAdminGuildIds(
+  private async findAdminServers(
     accessToken: string,
-    guilds: { id: string; servers: { discordId: string }[] }[],
-    userServerIds: Set<string>,
-  ): Promise<Set<string>> {
+    userServers: DiscordPartialGuild[],
+  ): Promise<DiscordPartialGuild[]> {
+    let botServerIds: Set<string>;
+    try {
+      botServerIds = await this.discord.fetchBotGuildIds();
+    } catch (error) {
+      this.logger.warn(`Could not list the bot's servers: ${String(error)}`);
+      return [];
+    }
     const results = await Promise.all(
-      guilds.map(async (guild) => {
-        const hasRole = await Promise.all(
-          guild.servers.map(
-            async (server) =>
-              userServerIds.has(server.discordId) &&
-              (await this.hasAdminRole(accessToken, server.discordId)),
-          ),
-        );
-        return hasRole.every(Boolean) ? guild.id : null;
-      }),
+      userServers
+        .filter((server) => botServerIds.has(server.id))
+        .map(async (server) => ((await this.hasAdminRole(accessToken, server.id)) ? server : null)),
     );
-    return new Set(results.filter((guildId): guildId is string => guildId !== null));
+    return results.filter((server): server is DiscordPartialGuild => server !== null);
   }
 
   private async hasAdminRole(accessToken: string, discordServerId: string): Promise<boolean> {
@@ -95,11 +116,11 @@ export class AuthService {
         this.discord.fetchGuildMember(accessToken, discordServerId),
         this.discord.fetchGuildRoles(discordServerId),
       ]);
-      const adminRole = roles.find((role) => role.name === ADMIN_ROLE_NAME);
+      const adminRole = roles.find((role) => role.name === APP_CONFIG.adminRoleName);
       return adminRole !== undefined && member.roles.includes(adminRole.id);
     } catch (error) {
       this.logger.warn(
-        `Could not check ${ADMIN_ROLE_NAME} role in server ${discordServerId}: ${String(error)}`,
+        `Could not check ${APP_CONFIG.adminRoleName} role in server ${discordServerId}: ${String(error)}`,
       );
       return false;
     }

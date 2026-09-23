@@ -11,6 +11,7 @@ export interface DiscordUser {
 
 export interface DiscordPartialGuild {
   id: string;
+  name: string;
 }
 
 export interface DiscordRole {
@@ -70,6 +71,24 @@ export class DiscordOAuthService {
 
   fetchGuilds(accessToken: string): Promise<DiscordPartialGuild[]> {
     return this.get<DiscordPartialGuild[]>('/users/@me/guilds', `Bearer ${accessToken}`);
+  }
+
+  /** Ids of every server the bot is in (paginated, 200 per page). */
+  async fetchBotGuildIds(): Promise<Set<string>> {
+    const ids = new Set<string>();
+    let after: string | undefined;
+    for (;;) {
+      const query = new URLSearchParams({ limit: '200', ...(after && { after }) });
+      const page = await this.get<DiscordPartialGuild[]>(
+        `/users/@me/guilds?${query.toString()}`,
+        `Bot ${this.botToken}`,
+      );
+      page.forEach((guild) => ids.add(guild.id));
+      if (page.length < 200) {
+        return ids;
+      }
+      after = page[page.length - 1].id;
+    }
   }
 
   /** The user's own member record (role ids) in a server. Needs `guilds.members.read`. */

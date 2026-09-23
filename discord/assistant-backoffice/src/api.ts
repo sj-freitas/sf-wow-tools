@@ -1,4 +1,12 @@
-import type { Character, Guild, NewCharacterInput, Player, User } from './types';
+import type {
+  Character,
+  EligibleServers,
+  Guild,
+  NewCharacterInput,
+  NewGuildInput,
+  Player,
+  User,
+} from './types';
 
 export class UnauthorizedError extends Error {}
 
@@ -23,6 +31,15 @@ async function request<T>(method: string, url: string, body?: unknown): Promise<
 export const fetchPlayers = (): Promise<Player[]> => request('GET', '/api/players');
 
 export const fetchGuilds = (): Promise<Guild[]> => request('GET', '/api/guilds');
+
+export const fetchEligibleServers = (): Promise<EligibleServers> =>
+  request('GET', '/api/guilds/eligible-servers');
+
+export const createGuild = (input: NewGuildInput): Promise<Guild> =>
+  request('POST', '/api/guilds', input);
+
+export const removeGuildServer = (guildId: string, discordServerId: string): Promise<void> =>
+  request('DELETE', `/api/guilds/${guildId}/servers/${discordServerId}`);
 
 export const createCharacter = (guildId: string, input: NewCharacterInput): Promise<void> =>
   request('POST', `/api/guilds/${guildId}/characters`, input);

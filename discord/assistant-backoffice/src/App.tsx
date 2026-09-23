@@ -36,6 +36,11 @@ export function App() {
       );
   }, []);
 
+  const reloadGuilds = async () => {
+    const guilds = await fetchGuilds();
+    setAuth((current) => (current.status === 'ready' ? { ...current, guilds } : current));
+  };
+
   if (auth.status === 'loading') {
     return <p className="status">Loading…</p>;
   }
@@ -70,7 +75,7 @@ export function App() {
         </div>
       </header>
       <main className="page">
-        <GuildsPage guilds={auth.guilds} />
+        <GuildsPage guilds={auth.guilds} onGuildsChanged={reloadGuilds} />
       </main>
     </>
   );
