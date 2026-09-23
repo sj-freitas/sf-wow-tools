@@ -15,7 +15,9 @@ export interface NewCharacter extends CharacterName {
   level?: number;
 }
 
-export type CharacterUpdate = Partial<Pick<NewCharacter, 'class' | 'roles' | 'isMain' | 'level'>>;
+export type CharacterUpdate = Partial<
+  Pick<NewCharacter, 'class' | 'roles' | 'isMain' | 'level' | 'firstName' | 'lastName'>
+>;
 
 interface GuildRef {
   id: string;

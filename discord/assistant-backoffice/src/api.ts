@@ -1,5 +1,5 @@
 import type {
-  Character,
+  CharacterPatch,
   EligibleServers,
   Guild,
   NewCharacterInput,
@@ -44,10 +44,8 @@ export const removeGuildServer = (guildId: string, discordServerId: string): Pro
 export const createCharacter = (guildId: string, input: NewCharacterInput): Promise<void> =>
   request('POST', `/api/guilds/${guildId}/characters`, input);
 
-export const updateCharacter = (
-  id: string,
-  patch: Partial<Pick<Character, 'isMain' | 'level'>>,
-): Promise<void> => request('PATCH', `/api/characters/${id}`, patch);
+export const updateCharacter = (id: string, patch: CharacterPatch): Promise<void> =>
+  request('PATCH', `/api/characters/${id}`, patch);
 
 export const deleteCharacter = (id: string): Promise<void> =>
   request('DELETE', `/api/characters/${id}`);

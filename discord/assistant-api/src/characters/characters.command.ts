@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Command } from '../bot/decorators/command.decorator';
 import {
   getBooleanOption,
+  getNumberOption,
   getInvokerId,
   getStringOption,
   type DiscordInteraction,
@@ -49,6 +50,7 @@ export class CharactersCommand {
       class: characterClass,
       roles: [role],
       isMain: getBooleanOption(interaction, 'main'),
+      level: getNumberOption(interaction, 'level'),
     });
     const label = formatCharacterName(name);
     if (result === 'no-guild') return NO_GUILD;

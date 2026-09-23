@@ -77,6 +77,15 @@ export const ROLE_LABELS: Record<Role, string> = {
   RANGED_DPS: 'Ranged DPS',
 };
 
+export interface CharacterPatch {
+  /** `Name` or `Name-Lastname`. */
+  name?: string;
+  class?: string;
+  roles?: Role[];
+  isMain?: boolean;
+  level?: number;
+}
+
 export interface NewCharacterInput {
   discordUserId: string;
   /** `Name` or `Name-Lastname`. */

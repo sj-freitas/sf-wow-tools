@@ -33,6 +33,11 @@ export function getStringOption(interaction: DiscordInteraction, name: string): 
   return typeof value === 'string' ? value : undefined;
 }
 
+export function getNumberOption(interaction: DiscordInteraction, name: string): number | undefined {
+  const value = interaction.data?.options?.find((option) => option.name === name)?.value;
+  return typeof value === 'number' ? value : undefined;
+}
+
 export function getBooleanOption(interaction: DiscordInteraction, name: string): boolean {
   const value = interaction.data?.options?.find((option) => option.name === name)?.value;
   return value === true;

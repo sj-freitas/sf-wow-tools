@@ -1,20 +1,26 @@
 import { useState, type FormEvent } from 'react';
-import { createCharacter } from './api';
-import { ROLE_LABELS, WOW_CLASSES, type Guild, type Role } from './types';
+import { createCharacter, updateCharacter } from './api';
+import { ROLE_LABELS, WOW_CLASSES, type Character, type Guild, type Role } from './types';
 
 interface Props {
   guild: Guild;
-  onAdded: () => void;
+  /** When set the form edits this character (of the given Discord user) instead of adding one. */
+  editing?: { character: Character; discordUserId: string };
+  onSaved: () => void;
   onCancel: () => void;
 }
 
-export function AddCharacterForm({ guild, onAdded, onCancel }: Props) {
-  const [discordUserId, setDiscordUserId] = useState('');
-  const [name, setName] = useState('');
-  const [characterClass, setCharacterClass] = useState<string>(WOW_CLASSES[0]);
-  const [roles, setRoles] = useState<Role[]>(['TANK']);
-  const [level, setLevel] = useState('');
-  const [isMain, setIsMain] = useState(false);
+const fullName = (character: Character) =>
+  `${character.firstName}-${character.lastName}`.replace(/-$/, '');
+
+export function CharacterForm({ guild, editing, onSaved, onCancel }: Props) {
+  const initial = editing?.character;
+  const [discordUserId, setDiscordUserId] = useState(editing?.discordUserId ?? '');
+  const [name, setName] = useState(initial ? fullName(initial) : '');
+  const [characterClass, setCharacterClass] = useState<string>(initial?.class ?? WOW_CLASSES[0]);
+  const [roles, setRoles] = useState<Role[]>(initial?.roles ?? ['TANK']);
+  const [level, setLevel] = useState(initial ? String(initial.level) : '');
+  const [isMain, setIsMain] = useState(initial?.isMain ?? false);
   const [error, setError] = useState<string | null>(null);
 
   const toggleRole = (role: Role) =>
@@ -25,15 +31,18 @@ export function AddCharacterForm({ guild, onAdded, onCancel }: Props) {
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
     setError(null);
-    createCharacter(guild.id, {
-      discordUserId: discordUserId.trim(),
+    const fields = {
       name: name.trim(),
       class: characterClass,
       roles,
       isMain,
       level: level === '' ? undefined : Number(level),
-    })
-      .then(onAdded)
+    };
+    (initial
+      ? updateCharacter(initial.id, fields)
+      : createCharacter(guild.id, { ...fields, discordUserId: discordUserId.trim() })
+    )
+      .then(onSaved)
       .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)));
   };
 
@@ -46,6 +55,7 @@ export function AddCharacterForm({ guild, onAdded, onCancel }: Props) {
             value={discordUserId}
             onChange={(e) => setDiscordUserId(e.target.value)}
             inputMode="numeric"
+            disabled={editing !== undefined}
             required
           />
         </label>
@@ -108,7 +118,7 @@ export function AddCharacterForm({ guild, onAdded, onCancel }: Props) {
       {error && <p className="status-error">{error}</p>}
       <div className="form-actions">
         <button type="submit" className="btn btn-primary" disabled={roles.length === 0}>
-          Add character
+          {initial ? 'Save changes' : 'Add character'}
         </button>
         <button type="button" className="btn" onClick={onCancel}>
           Cancel

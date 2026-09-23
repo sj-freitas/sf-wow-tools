@@ -5,7 +5,7 @@ export function LoginScreen() {
     <div className="login">
       <div className="login-card">
         <div className="login-logo">
-          <DiscordMark size={52} />
+          <img src="/logo.png" alt="Guild Assistant" />
         </div>
         <h1>Guild Assistant</h1>
         <p>

@@ -93,13 +93,19 @@ h3 {
   box-shadow: 0 20px 60px rgb(0 0 0 / 35%);
 }
 .login-logo {
-  width: 88px;
-  height: 88px;
+  width: 104px;
+  height: 104px;
   margin: 0 auto 1.25rem;
   display: grid;
   place-items: center;
   border-radius: 24px;
-  background: var(--blurple);
+  background: #fff;
+  box-shadow: 0 0 0 1px var(--border);
+}
+.login-logo img {
+  width: 88px;
+  height: 88px;
+  object-fit: contain;
 }
 .login-card h1 {
   font-size: 1.6rem;
@@ -134,12 +140,18 @@ h3 {
   font-weight: 700;
 }
 .brand-mark {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   display: grid;
   place-items: center;
   border-radius: 8px;
-  background: var(--blurple);
+  background: #fff;
+  box-shadow: 0 0 0 1px var(--border);
+}
+.brand-mark img {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
 }
 .header-user {
   display: flex;
@@ -385,4 +397,10 @@ tbody tr:last-child td {
 .chip-remove:disabled {
   opacity: 0.35;
   cursor: not-allowed;
+}
+
+.edit-row td {
+  padding: 0;
+  white-space: normal;
+  background: var(--surface-2);
 }

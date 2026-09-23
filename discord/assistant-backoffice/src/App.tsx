@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { fetchCurrentUser, fetchGuilds, logout } from './api';
-import { DiscordMark } from './DiscordMark';
 import { GuildsPage } from './GuildsPage';
 import { LoginScreen } from './LoginScreen';
 import type { Guild, User } from './types';
@@ -62,7 +61,7 @@ export function App() {
       <header className="header">
         <div className="brand">
           <span className="brand-mark">
-            <DiscordMark size={20} />
+            <img src="/logo.png" alt="" />
           </span>
           Guild Assistant
         </div>

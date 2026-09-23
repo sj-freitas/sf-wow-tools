@@ -119,11 +119,11 @@ Run inside a Discord server linked to a guild (a `DiscordServer` row). The first
 registers you as a player of that guild. A character's realm and faction are its guild's. All replies are
 ephemeral (only you see them).
 
-| Command             | Options                                            | Purpose                          |
-| ------------------- | -------------------------------------------------- | -------------------------------- |
-| `/character-add`    | `name`, `class`, `role`, optional `main` (boolean) | Registers one of your characters |
-| `/character-list`   | —                                                  | Lists your characters            |
-| `/character-remove` | `name`                                             | Removes one of your characters   |
+| Command             | Options                                                                      | Purpose                          |
+| ------------------- | ---------------------------------------------------------------------------- | -------------------------------- |
+| `/character-add`    | `name`, `class`, `role`, optional `level` (1-100), optional `main` (boolean) | Registers one of your characters |
+| `/character-list`   | —                                                                            | Lists your characters            |
+| `/character-remove` | `name`                                                                       | Removes one of your characters   |
 
 **Name format:** `Name` or `Name-Lastname` — a dash separates first and last name, and the last
 name is optional. Letters only, 2-12 per part; casing is normalized (`arthas-menethil` →

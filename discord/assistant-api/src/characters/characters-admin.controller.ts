@@ -74,7 +74,22 @@ export class CharactersAdminController {
     @Body() body: Record<string, unknown>,
   ): Promise<void> {
     await this.assertCanManage(req.user.id, id);
-    await this.charactersService.update(id, parseFields(body, { partial: true }));
+    const patch = parseFields(body, { partial: true });
+    if (body.name !== undefined) {
+      const name = parseCharacterName(typeof body.name === 'string' ? body.name : '');
+      if (!name) {
+        throw new BadRequestException('name must be Name or Name-Lastname (letters, 2-12 each)');
+      }
+      Object.assign(patch, name);
+    }
+    try {
+      await this.charactersService.update(id, patch);
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        throw new ConflictException('That player already has a character with this name');
+      }
+      throw error;
+    }
   }
 
   @Delete('characters/:id')

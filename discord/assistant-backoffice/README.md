@@ -31,3 +31,14 @@ npm run dev   # requires assistant-api running on :3000 (see ../assistant-api)
 | `npm run preview`                 | Preview the production build locally                  |
 | `npm run lint` / `lint:fix`       | ESLint (flat config, typescript-eslint + react-hooks) |
 | `npm run format` / `format:check` | Prettier                                              |
+
+## Logo
+
+The source artwork is `../static/logo.png`. `public/logo.png` (256px, used in the header and login
+card on a white tile) and `public/favicon.png` (64px, transparent) are resized copies, regenerated
+with:
+
+```bash
+sips -Z 256 ../static/logo.png --out public/logo.png
+sips -Z 64 ../static/logo.png --out public/favicon.png
+```
