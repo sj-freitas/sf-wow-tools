@@ -7,7 +7,7 @@ export class GuildAccessService {
   constructor(private readonly prisma: PrismaService) {}
 
   async assertAdmin(userId: string, guildId: string): Promise<void> {
-    const membership = await this.prisma.guildMember.findUnique({
+    const membership = await this.prisma.guildAccess.findUnique({
       where: { userId_guildId: { userId, guildId } },
       select: { isAdmin: true },
     });

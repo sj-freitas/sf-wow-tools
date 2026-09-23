@@ -9,7 +9,7 @@ export class PlayersService {
 
   /** Players in guilds the given backoffice user belongs to. */
   findForUser(userId: string): Promise<PlayerDto[]> {
-    return this.findMany({ guild: { members: { some: { userId } } } });
+    return this.findMany({ guild: { access: { some: { userId } } } });
   }
 
   /** Players in the guild managed from the given Discord server (by Discord id). */
@@ -35,8 +35,6 @@ export class PlayersService {
             lastName: true,
             isMain: true,
             level: true,
-            faction: true,
-            realm: true,
           },
         },
       },

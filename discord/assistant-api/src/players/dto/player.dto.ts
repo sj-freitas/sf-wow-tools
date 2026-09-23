@@ -1,4 +1,3 @@
-export type Faction = 'ALLIANCE' | 'HORDE';
 export type Role = 'HEALER' | 'TANK' | 'MELEE_DPS' | 'RANGED_DPS';
 
 export class CharacterDto {
@@ -9,8 +8,6 @@ export class CharacterDto {
   lastName!: string;
   isMain!: boolean;
   level!: number;
-  faction!: Faction;
-  realm!: string;
 }
 
 export class PlayerDto {

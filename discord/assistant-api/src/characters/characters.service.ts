@@ -19,8 +19,6 @@ export type CharacterUpdate = Partial<Pick<NewCharacter, 'class' | 'roles' | 'is
 
 interface GuildRef {
   id: string;
-  realm: string;
-  faction: 'ALLIANCE' | 'HORDE';
 }
 
 export interface CharacterSummary extends CharacterName {
@@ -36,8 +34,7 @@ export class CharactersService {
 
   /**
    * Adds a character for the user, registering them as a player of the
-   * guild managed by this Discord server on first use. Realm and faction
-   * come from the guild.
+   * guild managed by this Discord server on first use.
    */
   async add(
     owner: CharacterOwner,
@@ -58,7 +55,7 @@ export class CharactersService {
   ): Promise<'created' | 'duplicate' | 'no-guild'> {
     const guild = await this.prisma.guild.findUnique({
       where: { id: guildId },
-      select: { id: true, realm: true, faction: true },
+      select: { id: true },
     });
     if (!guild) {
       return 'no-guild';
@@ -106,8 +103,6 @@ export class CharactersService {
           lastName: character.lastName,
           isMain: character.isMain,
           level: character.level,
-          faction: guild.faction,
-          realm: guild.realm,
         },
       });
       return 'created';
@@ -160,7 +155,7 @@ export class CharactersService {
   private findGuild(discordServerId: string) {
     return this.prisma.guild.findFirst({
       where: { servers: { some: { discordId: discordServerId } } },
-      select: { id: true, realm: true, faction: true },
+      select: { id: true },
     });
   }
 }

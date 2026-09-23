@@ -9,8 +9,6 @@ export interface Character {
   lastName: string;
   isMain: boolean;
   level: number;
-  faction: Faction;
-  realm: string;
 }
 
 export interface Player {

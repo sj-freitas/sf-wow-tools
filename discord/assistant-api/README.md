@@ -44,7 +44,7 @@ npm run start:dev
 Backoffice auth: Discord OAuth2 login using the **same Discord application** as the bot (add the
 redirect URI under OAuth2 → Redirects; set `DISCORD_CLIENT_SECRET` and
 `DISCORD_OAUTH_REDIRECT_URI`). On login, the user's Discord guilds are intersected with the `guilds`
-table and stored in `guild_members`; a 7-day server-side session (`sessions`, httpOnly cookie) is
+table and stored in `guild_access`; a 7-day server-side session (`sessions`, httpOnly cookie) is
 created. Guild membership is only refreshed at login. `/api/discord/interactions` has its own,
 different auth: every request is signature-verified against `DISCORD_PUBLIC_KEY` (see below).
 
@@ -110,13 +110,13 @@ The admin role name is a single setting, `adminRoleName` in `src/config/app.conf
 - **How roles are read:** at login the API lists the bot's servers (bot token), and for each of the
   user's servers that the bot is in, reads the user's role ids (their token, scope
   `guilds.members.read`) and the server's roles (bot token). The result is stored in
-  `guild_members.is_admin` and `user_admin_servers`, so it only refreshes at login: after gaining or
+  `guild_access.is_admin` and `user_admin_servers`, so it only refreshes at login: after gaining or
   losing the role, log out and back in.
 
 ### Character commands
 
 Run inside a Discord server linked to a guild (a `DiscordServer` row). The first `/character-add`
-registers you as a player of that guild. Realm and faction come from the guild. All replies are
+registers you as a player of that guild. A character's realm and faction are its guild's. All replies are
 ephemeral (only you see them).
 
 | Command             | Options                                            | Purpose                          |

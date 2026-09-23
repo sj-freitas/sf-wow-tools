@@ -51,7 +51,7 @@ export class GuildsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async findForUser(userId: string): Promise<UserGuildDto[]> {
-    const memberships = await this.prisma.guildMember.findMany({
+    const memberships = await this.prisma.guildAccess.findMany({
       where: { userId },
       orderBy: { guild: { name: 'asc' } },
       select: { isAdmin: true, guild: { select: guildSelect } },
@@ -96,7 +96,7 @@ export class GuildsService {
           faction: input.faction,
           gameVersion: input.gameVersion,
           servers: { create: chosen.map((server) => ({ ...server! })) },
-          members: { create: { userId, isAdmin: true } },
+          access: { create: { userId, isAdmin: true } },
         },
         select: guildSelect,
       });

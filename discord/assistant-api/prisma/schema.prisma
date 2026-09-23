@@ -29,7 +29,7 @@ model Guild {
   gameVersion String          @map("game_version")
   servers     DiscordServer[]
   players     Player[]
-  members     GuildMember[]
+  access      GuildAccess[]
   createdAt   DateTime        @default(now()) @map("created_at")
   updatedAt   DateTime        @updatedAt @map("updated_at")
 
@@ -50,8 +50,9 @@ model DiscordServer {
   @@map("discord_servers")
 }
 
-// A member of a guild, 1:1 with a Discord user (who may never log in to the
-// backoffice, hence no FK to User).
+// A Discord user's membership in one guild: one Player per (guild, Discord
+// user), so a user in several guilds has several Players. Not linked to User,
+// since players may never log in to the backoffice.
 model Player {
   id            String      @id @default(uuid()) @db.Uuid
   discordUserId String      @map("discord_user_id")
@@ -69,6 +70,7 @@ model Character {
   id        String   @id @default(uuid()) @db.Uuid
   playerId  String   @map("player_id") @db.Uuid
   player    Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  // Faction and realm are the owning guild's (player.guild).
   // A WoW class name, locked to a known set in code like gameVersion.
   class     String
   roles     Role[]
@@ -76,12 +78,10 @@ model Character {
   lastName  String   @default("") @map("last_name")
   isMain    Boolean  @default(false) @map("is_main")
   level     Int      @default(1)
-  faction   Faction
-  realm     String
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@unique([playerId, firstName, lastName, realm])
+  @@unique([playerId, firstName, lastName])
   @@map("characters")
 }
 
@@ -91,7 +91,7 @@ model User {
   discordId    String            @unique @map("discord_id")
   username     String
   avatar       String?
-  guilds       GuildMember[]
+  guildAccess  GuildAccess[]
   adminServers UserAdminServer[]
   sessions     Session[]
   createdAt    DateTime          @default(now()) @map("created_at")
@@ -100,9 +100,9 @@ model User {
   @@map("users")
 }
 
-// Which tracked guilds a user belongs to. Rebuilt from Discord's
-// /users/@me/guilds on every login; only guilds that exist in `guilds` get a row.
-model GuildMember {
+// Which guilds a backoffice user can see (and whether they can manage them).
+// Rebuilt from Discord on every login; only guilds that exist in `guilds` get a row.
+model GuildAccess {
   userId  String  @map("user_id") @db.Uuid
   guildId String  @map("guild_id") @db.Uuid
   // Holds the "Guild-Assistant" role in every one of the guild's Discord servers.
@@ -111,7 +111,7 @@ model GuildMember {
   guild   Guild   @relation(fields: [guildId], references: [id], onDelete: Cascade)
 
   @@id([userId, guildId])
-  @@map("guild_members")
+  @@map("guild_access")
 }
 
 // Discord servers where the user holds the admin role and the bot is present,

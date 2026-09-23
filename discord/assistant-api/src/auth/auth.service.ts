@@ -52,8 +52,8 @@ export class AuthService {
     );
 
     await this.prisma.$transaction([
-      this.prisma.guildMember.deleteMany({ where: { userId: user.id } }),
-      this.prisma.guildMember.createMany({
+      this.prisma.guildAccess.deleteMany({ where: { userId: user.id } }),
+      this.prisma.guildAccess.createMany({
         data: guilds.map((guild) => ({
           userId: user.id,
           guildId: guild.id,
@@ -76,6 +76,7 @@ export class AuthService {
       ),
     ]);
 
+    await this.prisma.session.deleteMany({ where: { expiresAt: { lt: new Date() } } });
     const token = randomBytes(32).toString('base64url');
     await this.prisma.session.create({
       data: {
