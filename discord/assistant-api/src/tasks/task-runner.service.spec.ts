@@ -152,6 +152,24 @@ describe('TaskRunnerService', () => {
     });
   });
 
+  describe('one message per post', () => {
+    it('refuses to post again while the previous message is live', async () => {
+      await runner.run(baseTask({ state: { messageId: 'm0', channelId: 'c' } }), NOW);
+      assert.equal(posted.length, 0);
+      assert.equal(update.lastStatus, 'FAILED');
+      assert.match(update.lastError, /already in Discord/);
+    });
+
+    it('posts again when the previous message was deleted', async () => {
+      await runner.run(
+        baseTask({ state: { messageId: 'm0', channelId: 'c', messageDeleted: true } }),
+        NOW,
+      );
+      assert.equal(posted.length, 1);
+      assert.equal(update.state.messageId, 'msg1');
+    });
+  });
+
   describe('a failed run', () => {
     beforeEach(() => {
       failPost = true;

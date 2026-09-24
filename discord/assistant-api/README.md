@@ -155,10 +155,11 @@ server can't be removed directly.
   `guilds.members.read`) and the server's roles (bot token). Officer status only needs the user's
   role ids in the main server. Results are stored in `guild_access` and `user_admin_servers`.
 
-### Background worker, scheduled tasks and honeypots
+### Background worker, posts and honeypots
 
-Officers manage these in the backoffice under **Posts and Tasks** (Officers only). The worker that
-runs them is internal: officers never see it.
+Officers manage these in the backoffice under the **Posts** and **Honeypots** tabs of a guild
+(Officers only); more features will get tabs of their own. The worker that runs them is internal:
+officers never see it.
 
 **Running the worker.** `src/worker.ts` is a second entrypoint of the same codebase: a Nest
 application context (no HTTP, no login) that needs only `DATABASE_URL` and `DISCORD_TOKEN`.
@@ -167,29 +168,37 @@ application context (no HTTP, no login) that needs only `DATABASE_URL` and `DISC
 - On Render: a Background Worker (or any always-on service) built from the same Dockerfile with the
   start command `node dist/worker.js`.
 - On a single instance you can instead set `WORKER_IN_PROCESS=true` on the web service and it runs
-  inside the API process.
+  inside the API process. Do not do both: two gateway connections would double-handle honeypots.
 
-**Scheduler.** Every minute the worker claims due rows of `scheduled_tasks` in the database
-(`FOR UPDATE SKIP LOCKED` plus a 5-minute lease), so several workers can run safely. Schedules are
-stored as once / daily / weekly wall-clock times and read in the guild's region timezone
-(`src/config/regions.ts`; DST-aware). Missed runs are never dropped: at start-up and on every tick
-whatever is overdue runs, late rather than never. A recurring task catches up with one run and the
-occurrences it skipped are recorded as `MISSED` in `task_runs`. A failed run is retried after 5
-minutes, up to 3 attempts, and the error is shown to the officer. Each run is at-least-once: if the
-worker dies between posting and saving, one post can be repeated after the lease expires.
+**Scheduler.** The worker checks for due work right at start-up and then every 60 seconds (a post
+due at 20:00 goes out between 20:00 and 20:01). Due rows of `scheduled_tasks` are claimed in the
+database (`FOR UPDATE SKIP LOCKED` plus a 5-minute lease), so several workers can run safely.
+Times are entered and shown in the guild's region timezone (`src/config/regions.ts`, DST-aware).
+Nothing is dropped: whatever is overdue runs, late rather than never. A failed run is retried after
+5 minutes, up to 3 attempts, and the error is shown to the officer. Runs are at-least-once: if the
+worker dies between posting and saving, one post can be repeated after the lease expires. The
+schedule engine (`src/tasks/schedule.ts`, the catch-up of recurring tasks) also supports daily and
+weekly schedules, unused by posts, for the planned channel cleanup.
 
-**Scheduled post.** Markdown text posted to a channel of one of the guild's servers, once, daily or
-weekly, with an optional set of reactions added by the bot (polls). The backoffice previews the
-markdown (mentions shown with their names). The bot remembers the message it posted:
+**Posts.** A post is sent **once**, as **one message**, and one database row tracks it (recurring
+events will be a separate flow). Markdown text goes to a channel of one of the guild's servers at a
+chosen date and time, with optional reactions added by the bot (polls); the backoffice previews the
+markdown with mentions shown by name. A post moves through these states:
 
-- saving new text edits that Discord message (if it was deleted, the next run posts a new one);
-- `GET /api/tasks/:id/reactions` reads the live reaction counts (the backoffice polls it every 5 s);
-- "Post now" makes the task due immediately;
-- **Delete post** (`POST /api/tasks/:id/delete-post`) removes the message from Discord but keeps the
-  task, so it can be posted again later (its schedule, "Post now", or a new date);
-- **Untrack** (`DELETE /api/tasks/:id`) removes the task and its history from the backoffice and the
-  database and stops its schedule; whatever it posted stays in Discord and can no longer be deleted
-  from the backoffice (the UI warns about this). Delete the post first if it should go too.
+- _Scheduled_: not sent yet. The date can be changed, "Post now" sends it right away, "Pause" holds it
+  (resuming one whose time has passed sends it immediately).
+- _Posted_: the message is in Discord. Saving new text edits that message; the reactions panel
+  (`GET /api/tasks/:id/reactions`, polled every 5 s, without the bot's own vote) shows live counts.
+  While it is live it cannot be sent again or moved to a new date.
+- _Deleted from Discord_ (**Delete post**, `POST /api/tasks/:id/delete-post`): the message is removed
+  but the post stays, so it can be sent again with "Post now" or a new date.
+- _Untracked_ (**Untrack**, `DELETE /api/tasks/:id`): the row and its history are removed from the
+  backoffice and the database. Whatever it posted stays in Discord and can no longer be deleted from
+  the backoffice (the UI warns about this; delete the post first if it should go too).
+
+The list (`GET /api/guilds/:id/tasks?query=&page=`) shows ten posts to a page, newest date first.
+The search covers every page: each word must appear in the name or the text (case-insensitive,
+partial words count). Pagination is by offset, so a post added while you browse can shift a page.
 
 Posts never ping `@everyone`/`@here` (only user and role mentions are allowed).
 

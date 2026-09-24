@@ -8,6 +8,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -19,6 +20,7 @@ import {
   type ReactionDto,
   type ServerChannelsDto,
   type TaskDto,
+  type TaskPageDto,
   type TaskInput,
 } from './tasks.service';
 
@@ -34,13 +36,16 @@ export class TasksController {
     private readonly guildAccess: GuildAccessService,
   ) {}
 
+  /** `page` from 1, ten posts to a page; `query` searches every page by name and text. */
   @Get('guilds/:guildId/tasks')
   async list(
     @Req() req: AuthenticatedRequest,
     @Param('guildId') guildId: string,
-  ): Promise<TaskDto[]> {
+    @Query('query') query?: string,
+    @Query('page') page?: string,
+  ): Promise<TaskPageDto> {
     await this.guildAccess.assertOfficer(req.user.id, guildId);
-    return this.tasks.list(guildId);
+    return this.tasks.list(guildId, { query, page });
   }
 
   @Get('guilds/:guildId/channels')

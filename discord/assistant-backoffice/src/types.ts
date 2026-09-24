@@ -151,7 +151,6 @@ export interface NewCharacterInput {
 
 // ---- scheduled tasks and honeypots ----
 
-export type ScheduleKind = 'ONCE' | 'DAILY' | 'WEEKLY';
 export type TaskRunStatus = 'SUCCESS' | 'FAILED' | 'MISSED';
 
 export interface ScheduledPost {
@@ -160,12 +159,10 @@ export interface ScheduledPost {
   type: 'POST';
   enabled: boolean;
   schedule: {
-    kind: ScheduleKind;
+    /** When the post goes out. */
     runAt: string | null;
-    /** For datetime-local inputs: the one-time date in the guild's timezone. */
+    /** For datetime-local inputs: the same moment in the guild's timezone. */
     runAtLocal: string | null;
-    timeOfDay: string | null;
-    weekday: number | null;
     description: string;
   };
   timezone: string;
@@ -184,17 +181,24 @@ export interface ScheduledPost {
 
 export interface PostInput {
   name: string;
-  enabled: boolean;
-  kind: ScheduleKind;
+  enabled?: boolean;
+  /** When to post, in the guild's timezone ("yyyy-MM-ddTHH:mm"). */
   runAtLocal?: string;
-  timeOfDay?: string;
-  weekday?: number;
+  /** Post right away instead of at a date. */
+  postNow?: boolean;
   serverId: string;
   channelId: string;
   content: string;
   seedReactions: string[];
-  /** Editing a post that is already in Discord: apply the text at the next run, not now. */
-  applyOnNextRun?: boolean;
+}
+
+/** One page of the guild's posts. */
+export interface PostsPage {
+  items: ScheduledPost[];
+  /** All posts matching the search, over every page. */
+  total: number;
+  page: number;
+  pageSize: number;
 }
 
 export interface ServerChannels {

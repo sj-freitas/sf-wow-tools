@@ -14,6 +14,7 @@ import type {
   NewGuildInput,
   People,
   Player,
+  PostsPage,
   Ranks,
   RoleOption,
   SetupInfo,
@@ -115,8 +116,16 @@ export const updateCharacter = (id: string, patch: CharacterPatch): Promise<void
 export const deleteCharacter = (id: string): Promise<void> =>
   request('DELETE', `/api/characters/${id}`);
 
-export const fetchTasks = (guildId: string): Promise<ScheduledPost[]> =>
-  request('GET', `/api/guilds/${guildId}/tasks`);
+export const fetchTasks = (
+  guildId: string,
+  options: { query?: string; page?: number } = {},
+): Promise<PostsPage> => {
+  const params = new URLSearchParams();
+  if (options.query) params.set('query', options.query);
+  if (options.page && options.page > 1) params.set('page', String(options.page));
+  const search = params.toString();
+  return request('GET', `/api/guilds/${guildId}/tasks${search ? `?${search}` : ''}`);
+};
 
 export const fetchChannels = (guildId: string): Promise<ServerChannels[]> =>
   request('GET', `/api/guilds/${guildId}/channels`);

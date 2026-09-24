@@ -95,7 +95,11 @@ export class TaskRunnerService {
   }
 
   private async execute(task: ScheduledTask): Promise<PostState> {
-    // POST is the only task type so far.
+    // POST is the only task type so far. A post is one message: never send a second one.
+    const previous = task.state as PostState;
+    if (previous.messageId && !previous.messageDeleted) {
+      throw new Error('This post is already in Discord. Delete it first to post it again.');
+    }
     const config = task.config as unknown as PostConfig;
     const messageId = await this.bot.postMessage(config.channelId, config.content);
     const state: PostState = {

@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import type { Prisma, ScheduledTask, ScheduleKind, TaskRunStatus } from '@prisma/client';
+import { Prisma, type ScheduledTask, type TaskRunStatus } from '@prisma/client';
 import { DEFAULT_REGION, timezoneOfRegion } from '../config/regions';
 import { PrismaService } from '../database/prisma.service';
 import { describeDiscordError, isDiscordError, UNKNOWN_MESSAGE } from '../discord/discord-errors';
@@ -16,13 +16,8 @@ import {
   type PostConfig,
   type PostState,
 } from './post-task';
-import {
-  describeSchedule,
-  instantFromLocal,
-  nextOccurrence,
-  validateSchedule,
-  type Schedule,
-} from './schedule';
+import { clampPage, likePattern, PAGE_SIZE, searchTerms } from './post-search';
+import { describeSchedule, instantFromLocal } from './schedule';
 
 export interface TaskDto {
   id: string;
@@ -30,16 +25,14 @@ export interface TaskDto {
   type: 'POST';
   enabled: boolean;
   schedule: {
-    kind: ScheduleKind;
-    /** ONCE: the instant, ISO. */
+    /** When the post goes out, ISO. */
     runAt: string | null;
-    /** ONCE: the same instant as wall-clock "yyyy-MM-ddTHH:mm" in the guild's timezone. */
+    /** The same instant as wall-clock "yyyy-MM-ddTHH:mm" in the guild's timezone. */
     runAtLocal: string | null;
-    timeOfDay: string | null;
-    weekday: number | null;
     description: string;
   };
   timezone: string;
+  /** When the worker will post it; null once posted, paused, deleted or given up on. */
   nextRunAt: string | null;
   lastRunAt: string | null;
   lastStatus: TaskRunStatus | null;
@@ -53,6 +46,15 @@ export interface TaskDto {
   };
 }
 
+/** One page of the guild's posts, newest date first. */
+export interface TaskPageDto {
+  items: TaskDto[];
+  /** All posts matching the search, over every page. */
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
 export interface ServerChannelsDto {
   serverId: string;
   serverName: string;
@@ -64,19 +66,14 @@ export interface ServerChannelsDto {
 export interface TaskInput {
   name?: unknown;
   enabled?: unknown;
-  kind?: unknown;
+  /** When to post, as wall-clock "yyyy-MM-ddTHH:mm" in the guild's timezone. */
   runAtLocal?: unknown;
-  timeOfDay?: unknown;
-  weekday?: unknown;
+  /** Post right away instead of at `runAtLocal`. */
+  postNow?: unknown;
   serverId?: unknown;
   channelId?: unknown;
   content?: unknown;
   seedReactions?: unknown;
-  /**
-   * Editing only: keep the text change for the next scheduled run instead of editing the
-   * message that is already in Discord right now.
-   */
-  applyOnNextRun?: unknown;
 }
 
 export interface ReactionDto extends MessageReaction {
@@ -84,7 +81,23 @@ export interface ReactionDto extends MessageReaction {
   imageUrl: string | null;
 }
 
-const KINDS: readonly ScheduleKind[] = ['ONCE', 'DAILY', 'WEEKLY'];
+const ALREADY_POSTED =
+  'This post is already in Discord. Edit it there, or delete it first to post it again.';
+
+/** A post that is in Discord right now. */
+const isLive = (state: PostState): boolean => Boolean(state.messageId) && !state.messageDeleted;
+
+/**
+ * When the worker should post next. A post goes out once: never while it is live or paused,
+ * and after it was deleted only at a new future date. One that never went out and whose time
+ * has passed goes out now, late rather than never.
+ */
+function nextRunFor(state: PostState, runAt: Date, enabled: boolean, now: Date): Date | null {
+  if (!enabled || isLive(state)) return null;
+  const future = runAt.getTime() > now.getTime();
+  if (state.messageId) return future ? runAt : null;
+  return future ? runAt : now;
+}
 
 @Injectable()
 export class TasksService {
@@ -93,13 +106,64 @@ export class TasksService {
     private readonly bot: DiscordBotService,
   ) {}
 
-  async list(guildId: string): Promise<TaskDto[]> {
+  /**
+   * A page of the guild's posts, ordered by date (newest first, so upcoming posts lead).
+   * The search covers every page: each word must appear in the name or the text.
+   */
+  async list(
+    guildId: string,
+    options: { query?: string; page?: unknown } = {},
+  ): Promise<TaskPageDto> {
     const timezone = await this.timezoneOf(guildId);
-    const tasks = await this.prisma.scheduledTask.findMany({
-      where: { guildId },
-      orderBy: { createdAt: 'asc' },
-    });
-    return tasks.map((task) => this.toDto(task, timezone));
+    const page = clampPage(options.page);
+    const skip = (page - 1) * PAGE_SIZE;
+    const terms = searchTerms(options.query);
+
+    let total: number;
+    let tasks: ScheduledTask[];
+    if (terms.length === 0) {
+      [total, tasks] = await Promise.all([
+        this.prisma.scheduledTask.count({ where: { guildId } }),
+        this.prisma.scheduledTask.findMany({
+          where: { guildId },
+          orderBy: [{ runAt: 'desc' }, { id: 'asc' }],
+          skip,
+          take: PAGE_SIZE,
+        }),
+      ]);
+    } else {
+      // The post text lives in JSON, so the search is plain SQL over name and text.
+      const matches = Prisma.join(
+        terms.map((term) => {
+          const pattern = likePattern(term);
+          return Prisma.sql`(name ILIKE ${pattern} OR config->>'content' ILIKE ${pattern})`;
+        }),
+        ' AND ',
+      );
+      const where = Prisma.sql`guild_id = ${guildId}::uuid AND ${matches}`;
+      const [ids, counted] = await Promise.all([
+        this.prisma.$queryRaw<{ id: string }[]>(
+          Prisma.sql`SELECT id FROM scheduled_tasks WHERE ${where}
+            ORDER BY run_at DESC NULLS LAST, id
+            LIMIT ${Prisma.raw(String(PAGE_SIZE))} OFFSET ${Prisma.raw(String(skip))}`,
+        ),
+        this.prisma.$queryRaw<{ total: number }[]>(
+          Prisma.sql`SELECT count(*)::int AS total FROM scheduled_tasks WHERE ${where}`,
+        ),
+      ]);
+      total = counted[0]?.total ?? 0;
+      const found = await this.prisma.scheduledTask.findMany({
+        where: { id: { in: ids.map((row) => row.id) } },
+      });
+      const byId = new Map(found.map((task) => [task.id, task]));
+      tasks = ids.flatMap((row) => byId.get(row.id) ?? []);
+    }
+    return {
+      items: tasks.map((task) => this.toDto(task, timezone)),
+      total,
+      page,
+      pageSize: PAGE_SIZE,
+    };
   }
 
   /** Text channels of every server of the guild, for the channel pickers. */
@@ -135,20 +199,20 @@ export class TasksService {
 
   async create(guildId: string, userId: string, input: TaskInput): Promise<TaskDto> {
     const timezone = await this.timezoneOf(guildId);
-    const schedule = this.parseSchedule(input, timezone, undefined);
+    const now = new Date();
+    const postNow = input.postNow === true;
+    const runAt = postNow ? now : this.parseFutureDate(input.runAtLocal, timezone, now);
     const config = await this.parsePostConfig(guildId, input, undefined);
-    const enabled = input.enabled === undefined ? true : input.enabled === true;
+    const enabled = postNow || input.enabled !== false;
     const task = await this.prisma.scheduledTask.create({
       data: {
         guildId,
         type: 'POST',
         name: this.parseName(input.name, undefined),
         enabled,
-        scheduleKind: schedule.kind,
-        runAt: schedule.runAt ?? null,
-        timeOfDay: schedule.timeOfDay ?? null,
-        weekday: schedule.weekday ?? null,
-        nextRunAt: enabled ? nextOccurrence(schedule, timezone, new Date()) : null,
+        scheduleKind: 'ONCE',
+        runAt,
+        nextRunAt: nextRunFor({}, runAt, enabled, now),
         config: config as unknown as Prisma.InputJsonValue,
         createdById: userId,
       },
@@ -158,37 +222,40 @@ export class TasksService {
 
   /**
    * Saving changes to a post that is already in Discord edits that message (live edit). If
-   * Discord refuses, nothing is saved, so Discord and the backoffice never disagree. With
-   * `applyOnNextRun` the message is left alone and the new text goes out on the next run.
+   * Discord refuses, nothing is saved, so Discord and the backoffice never disagree. A post
+   * is one message: while it is in Discord it cannot be posted again or moved to a new date.
    */
   async update(taskId: string, input: TaskInput): Promise<TaskDto> {
     const task = await this.find(taskId);
     const timezone = await this.timezoneOf(task.guildId);
+    const now = new Date();
     const oldConfig = task.config as unknown as PostConfig;
     const state = task.state as PostState;
-
-    const schedule = this.parseSchedule(input, timezone, task);
     const config = await this.parsePostConfig(task.guildId, input, oldConfig);
-    // Only a real change reschedules; the form sends the current schedule on every save.
-    const scheduleChanged =
-      schedule.kind !== task.scheduleKind ||
-      (schedule.runAt?.getTime() ?? null) !== (task.runAt?.getTime() ?? null) ||
-      (schedule.timeOfDay ?? null) !== task.timeOfDay ||
-      (schedule.weekday ?? null) !== task.weekday;
     const enabled = input.enabled === undefined ? task.enabled : input.enabled === true;
 
+    let runAt = task.runAt ?? now;
+    let rescheduled = false;
+    if (input.postNow === true) {
+      if (isLive(state)) throw new BadRequestException(ALREADY_POSTED);
+      runAt = now;
+      rescheduled = true;
+    } else if (typeof input.runAtLocal === 'string') {
+      const requested = instantFromLocal(input.runAtLocal, timezone);
+      // A date that is unchanged may be in the past (it already went out); a new one may not.
+      if (requested && requested.getTime() !== task.runAt?.getTime()) {
+        if (isLive(state)) throw new BadRequestException(ALREADY_POSTED);
+        runAt = this.parseFutureDate(input.runAtLocal, timezone, now);
+        rescheduled = true;
+      }
+    }
+
     let newState = state;
-    const editNow = input.applyOnNextRun !== true;
-    if (
-      editNow &&
-      config.content !== oldConfig.content &&
-      state.messageId &&
-      !state.messageDeleted
-    ) {
+    if (config.content !== oldConfig.content && isLive(state)) {
       try {
         await this.bot.editMessage(
           state.channelId ?? oldConfig.channelId,
-          state.messageId,
+          state.messageId as string,
           config.content,
         );
       } catch (error) {
@@ -202,18 +269,14 @@ export class TasksService {
       }
     }
 
-    const reschedule = scheduleChanged || (enabled && !task.enabled);
     const updated = await this.prisma.scheduledTask.update({
       where: { id: taskId },
       data: {
         name: this.parseName(input.name, task.name),
         enabled,
-        scheduleKind: schedule.kind,
-        runAt: schedule.runAt ?? null,
-        timeOfDay: schedule.timeOfDay ?? null,
-        weekday: schedule.weekday ?? null,
-        ...(reschedule || !enabled
-          ? { nextRunAt: enabled ? nextOccurrence(schedule, timezone, new Date()) : null }
+        runAt,
+        ...(rescheduled || enabled !== task.enabled
+          ? { nextRunAt: nextRunFor(newState, runAt, enabled, now) }
           : {}),
         config: config as unknown as Prisma.InputJsonValue,
         state: newState as unknown as Prisma.InputJsonValue,
@@ -257,15 +320,19 @@ export class TasksService {
     await this.prisma.scheduledTask.delete({ where: { id: taskId } });
   }
 
-  /** Makes the task due now; the worker picks it up within a minute. */
+  /** Makes the post due now; the worker picks it up within a minute. */
   async runNow(taskId: string): Promise<void> {
     const task = await this.find(taskId);
-    if (!task.enabled) {
-      throw new BadRequestException('Enable the task first.');
+    if (isLive(task.state as PostState)) {
+      throw new BadRequestException(ALREADY_POSTED);
     }
+    if (!task.enabled) {
+      throw new BadRequestException('Resume the post first.');
+    }
+    const now = new Date();
     await this.prisma.scheduledTask.update({
       where: { id: taskId },
-      data: { nextRunAt: new Date() },
+      data: { runAt: now, nextRunAt: now },
     });
   }
 
@@ -304,19 +371,15 @@ export class TasksService {
   toDto(task: ScheduledTask, timezone: string): TaskDto {
     const config = task.config as unknown as PostConfig;
     const state = task.state as PostState;
-    const schedule = this.scheduleOf(task);
     return {
       id: task.id,
       name: task.name,
       type: 'POST',
       enabled: task.enabled,
       schedule: {
-        kind: task.scheduleKind,
         runAt: task.runAt?.toISOString() ?? null,
         runAtLocal: task.runAt ? localWallClock(task.runAt, timezone) : null,
-        timeOfDay: task.timeOfDay,
-        weekday: task.weekday,
-        description: describeSchedule(schedule, timezone),
+        description: describeSchedule({ kind: 'ONCE', runAt: task.runAt }, timezone),
       },
       timezone,
       nextRunAt: task.nextRunAt?.toISOString() ?? null,
@@ -345,15 +408,6 @@ export class TasksService {
     };
   }
 
-  scheduleOf(task: ScheduledTask): Schedule {
-    return {
-      kind: task.scheduleKind,
-      runAt: task.runAt,
-      timeOfDay: task.timeOfDay,
-      weekday: task.weekday,
-    };
-  }
-
   private async find(taskId: string): Promise<ScheduledTask> {
     const task = await this.prisma.scheduledTask.findUnique({ where: { id: taskId } });
     if (!task) {
@@ -379,47 +433,16 @@ export class TasksService {
     return name;
   }
 
-  /** The schedule from the input, falling back to the existing task's values when editing. */
-  private parseSchedule(
-    input: TaskInput,
-    timezone: string,
-    existing: ScheduledTask | undefined,
-  ): Schedule {
-    const kind = (input.kind ?? existing?.scheduleKind) as ScheduleKind;
-    if (!KINDS.includes(kind)) {
-      throw new BadRequestException('Choose once, daily or weekly.');
+  /** A date and time in the future, read as wall-clock time in the guild's timezone. */
+  private parseFutureDate(value: unknown, timezone: string, now: Date): Date {
+    const runAt = typeof value === 'string' ? instantFromLocal(value, timezone) : null;
+    if (!runAt) {
+      throw new BadRequestException('Pick the date and time to post.');
     }
-    const schedule: Schedule = { kind };
-    if (kind === 'ONCE') {
-      schedule.runAt =
-        input.runAtLocal === undefined
-          ? existing?.runAt
-          : typeof input.runAtLocal === 'string'
-            ? instantFromLocal(input.runAtLocal, timezone)
-            : null;
-      // A date that is unchanged may be in the past (the post already went out); a new one may not.
-      const changed = schedule.runAt?.getTime() !== existing?.runAt?.getTime();
-      if (
-        input.runAtLocal !== undefined &&
-        changed &&
-        schedule.runAt &&
-        schedule.runAt.getTime() <= Date.now()
-      ) {
-        throw new BadRequestException('Pick a date and time in the future.');
-      }
-    } else {
-      schedule.timeOfDay =
-        typeof input.timeOfDay === 'string' ? input.timeOfDay : (existing?.timeOfDay ?? null);
-      if (kind === 'WEEKLY') {
-        schedule.weekday =
-          typeof input.weekday === 'number' ? input.weekday : (existing?.weekday ?? null);
-      }
+    if (runAt.getTime() <= now.getTime()) {
+      throw new BadRequestException('Pick a date and time in the future.');
     }
-    const problems = validateSchedule(schedule);
-    if (problems.length > 0) {
-      throw new BadRequestException(problems.join(' '));
-    }
-    return schedule;
+    return runAt;
   }
 
   /** Validates the post fields, and that the channel really belongs to one of the guild's servers. */

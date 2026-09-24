@@ -12,7 +12,8 @@ import { CreateGuildForm } from './CreateGuildForm';
 import { playerLabel } from './format';
 import { GuildSettings } from './GuildSettings';
 import { SetupInstructions } from './SetupInstructions';
-import { TasksPage } from './TasksPage';
+import { HoneypotsPage } from './HoneypotsPage';
+import { PostsPage } from './PostsPage';
 import {
   ROLE_LABELS,
   type Guild,
@@ -39,7 +40,7 @@ export function GuildsPage({ guilds, setup, currentUser, onGuildsChanged }: Prop
   const [editingId, setEditingId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [managing, setManaging] = useState(false);
-  const [view, setView] = useState<'roster' | 'tasks'>('roster');
+  const [view, setView] = useState<'roster' | 'posts' | 'honeypots'>('roster');
 
   const load = useCallback(() => {
     fetchPlayers()
@@ -280,10 +281,18 @@ export function GuildsPage({ guilds, setup, currentUser, onGuildsChanged }: Prop
             <button
               type="button"
               role="tab"
-              aria-selected={view === 'tasks'}
-              onClick={() => setView('tasks')}
+              aria-selected={view === 'posts'}
+              onClick={() => setView('posts')}
             >
-              Posts and Tasks
+              Posts
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={view === 'honeypots'}
+              onClick={() => setView('honeypots')}
+            >
+              Honeypots
             </button>
           </div>
         )}
@@ -301,12 +310,24 @@ export function GuildsPage({ guilds, setup, currentUser, onGuildsChanged }: Prop
           />
         )}
 
-        {view === 'tasks' && guild.isOfficer ? (
-          <TasksPage
-            key={guild.id}
-            guild={guild}
-            timezone={setup.regions.find((region) => region.id === guild.region)?.timezone ?? 'UTC'}
-          />
+        {view !== 'roster' && guild.isOfficer ? (
+          view === 'posts' ? (
+            <PostsPage
+              key={guild.id}
+              guild={guild}
+              timezone={
+                setup.regions.find((region) => region.id === guild.region)?.timezone ?? 'UTC'
+              }
+            />
+          ) : (
+            <HoneypotsPage
+              key={guild.id}
+              guild={guild}
+              timezone={
+                setup.regions.find((region) => region.id === guild.region)?.timezone ?? 'UTC'
+              }
+            />
+          )
         ) : (
           <>
             {adding && (

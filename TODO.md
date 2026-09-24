@@ -30,11 +30,10 @@ Notes:
 # Background worker + scheduled tasks (Guild Assistant)
 
 Status: scheduled post (phase 1 and 2) and honeypot (phase 4, test mode by default) are built; channel cleanup (phase 3) and the raid (phase 5) are not. See discord/assistant-api/README.md.
-Design first: propose the design and confirm it, then implement one phase at a time.
 
 ## Context
 - Monorepo: `discord/assistant-api` (NestJS 12, Prisma/Postgres on Supabase, discord bot via HTTP
-  Interactions, no gateway today), `discord/assistant-backoffice` (React/Vite). Deployed as one web
+  Interactions; the worker adds a gateway connection for honeypots), `discord/assistant-backoffice` (React/Vite). Deployed as one web
   service on Render (root Dockerfile).
 - Existing concepts to reuse: Guild (name, realm, faction, gameVersion), DiscordServer with a "main"
   server, Guild-Assistant role (creates/configures guilds), Officer role (mapped to a Discord role in
@@ -73,17 +72,19 @@ mechanism: officers only ever see tasks described in their own terms (what, wher
   a default IANA timezone. EU = `Europe/Paris`, US = `America/Los_Angeles`. All schedules are
   interpreted in the guild's region timezone (DST handled). Editable by Officers.
 
-## Backoffice: "Posts and Tasks"
-- Per guild: a list and a "Create" button. Officers only (Guild-Assistants who are not Officers
-  cannot create tasks). The list shows name, type, human-readable schedule, next run, last result,
-  enable toggle, edit/delete.
+## Backoffice: one tab per feature ("Posts", "Honeypots", later more)
+- Per guild, Officers only (Guild-Assistants who are not Officers cannot create them). Posts are
+  listed ten to a page, newest date first, with a search over name and text across all pages.
 - Pickers (channels, roles) are fed by the bot's REST access.
 - Later: before saving, check the bot has the permissions the task needs in that channel and say
   what is missing.
 
 ## Task types
-### 1. Scheduled post
-- Markdown message posted to a chosen channel: one-time or recurring (daily/weekly).
+### 1. Post
+- Markdown message posted once to a chosen channel at a chosen time. One post = one database row =
+  one Discord message; no recurring posts (recurring events are a separate, future flow).
+- Actions: Post now, Pause/Resume, Edit (live edit while posted), Delete post (removes the Discord
+  message, keeps the post), Untrack (removes it from the database; the message stays in Discord).
 - Editor with a Discord-markdown preview (render user/role/channel mentions where known).
 - After posting, the bot stores the message id and tracks it:
   - Live edit: saving new text in the backoffice edits the Discord message. If it was deleted in

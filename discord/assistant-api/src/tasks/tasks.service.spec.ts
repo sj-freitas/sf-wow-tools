@@ -12,15 +12,17 @@ const unknownMessage = () =>
   new DiscordAPIError({ message: 'Unknown Message', code: 10008 }, 10008, 404, 'PATCH', 'u', {});
 
 const validInput = {
-  name: 'Weekly reminder',
-  kind: 'WEEKLY',
-  weekday: 2,
-  timeOfDay: '20:00',
+  name: 'Raid announcement',
+  runAtLocal: '2099-10-01T20:00',
   serverId: SERVER,
   channelId: CHANNEL,
   content: 'Raid tonight',
   seedReactions: ['👍'],
 };
+
+const PAST = new Date('2020-01-01T18:00:00Z');
+const FUTURE_LOCAL = '2099-11-05T21:00';
+const FUTURE_UTC = '2099-11-05T20:00:00.000Z'; // Paris is UTC+1 in November
 
 describe('TasksService', () => {
   let task: any;
@@ -34,6 +36,10 @@ describe('TasksService', () => {
   let deleteError: Error | null;
   let removed: boolean;
   let reactionsResult: any[];
+  let listArgs: any;
+  let listResult: any[] | null;
+  let rawQueries: any[];
+  let rawIds: { id: string }[];
   let service: TasksService;
 
   beforeEach(() => {
@@ -47,19 +53,24 @@ describe('TasksService', () => {
     deleteError = null;
     removed = false;
     reactionsResult = [{ emoji: '👍', emojiId: null, count: 3 }];
+    listArgs = null;
+    listResult = null;
+    rawQueries = [];
+    rawIds = [];
+    // A post that already went out: its message is live in Discord.
     task = {
       id: 't1',
       guildId: 'g',
-      name: 'Weekly reminder',
+      name: 'Raid announcement',
       type: 'POST',
       enabled: true,
-      scheduleKind: 'WEEKLY',
-      runAt: null,
-      timeOfDay: '20:00',
-      weekday: 2,
-      nextRunAt: new Date('2026-10-06T18:00:00Z'),
-      lastRunAt: null,
-      lastStatus: null,
+      scheduleKind: 'ONCE',
+      runAt: PAST,
+      timeOfDay: null,
+      weekday: null,
+      nextRunAt: null,
+      lastRunAt: PAST,
+      lastStatus: 'SUCCESS',
       lastError: null,
       config: {
         serverId: SERVER,
@@ -71,19 +82,27 @@ describe('TasksService', () => {
         messageId: 'm1',
         channelId: CHANNEL,
         serverId: SERVER,
-        postedAt: '2026-10-01T18:00:00Z',
+        postedAt: PAST.toISOString(),
       },
       createdAt: new Date(),
     };
     const prisma = {
       guild: { findUnique: async () => ({ region: 'EU' }) },
+      $queryRaw: async (sql: any) => {
+        rawQueries.push(sql);
+        return sql.sql.includes('count(') ? [{ total: 14 }] : rawIds;
+      },
       discordServer: { findFirst: async () => (serverInGuild ? { id: 'row' } : null) },
       scheduledTask: {
         findUnique: async () => task,
-        findMany: async () => [task],
+        findMany: async (args: any) => {
+          listArgs = args;
+          return listResult ?? [task];
+        },
+        count: async () => 23,
         create: async (args: any) => {
           created = args.data;
-          return { ...task, ...args.data, id: 'new' };
+          return { ...task, ...args.data, id: 'new', state: {} };
         },
         update: async (args: any) => {
           updated = args.data;
@@ -107,20 +126,86 @@ describe('TasksService', () => {
     service = new TasksService(prisma, bot);
   });
 
+  describe('listing (ten to a page, searchable)', () => {
+    it('lists the newest date first, ten at a time, with the total', async () => {
+      const page = await service.list('g', { page: '3' });
+      assert.deepEqual(listArgs.orderBy, [{ runAt: 'desc' }, { id: 'asc' }]);
+      assert.equal(listArgs.skip, 20);
+      assert.equal(listArgs.take, 10);
+      assert.deepEqual([page.total, page.page, page.pageSize, page.items.length], [23, 3, 10, 1]);
+    });
+
+    it('starts at the first page for a missing or bad page', async () => {
+      await service.list('g', { page: 'abc' });
+      assert.equal(listArgs.skip, 0);
+    });
+
+    it('searches every page by name and text, all words required, and returns the match total', async () => {
+      rawIds = [{ id: 't1' }];
+      const page = await service.list('g', { query: 'raid TONIGHT', page: 2 });
+      const [listQuery] = rawQueries;
+      assert.match(listQuery.sql, /name ILIKE .* OR config->>'content' ILIKE .* AND .*ILIKE/s);
+      assert.match(listQuery.sql, /LIMIT 10 OFFSET 10/);
+      assert.ok(listQuery.values.includes('%raid%') && listQuery.values.includes('%TONIGHT%'));
+      assert.equal(page.total, 14);
+      assert.deepEqual(
+        page.items.map((item) => item.id),
+        ['t1'],
+      );
+    });
+
+    it('keeps the order the search returned', async () => {
+      const other = { ...task, id: 't2' };
+      rawIds = [{ id: 't2' }, { id: 't1' }];
+      listResult = [task, other];
+      const page = await service.list('g', { query: 'raid' });
+      assert.deepEqual(
+        page.items.map((item) => item.id),
+        ['t2', 't1'],
+      );
+    });
+
+    it('does not use the search query without search words', async () => {
+      await service.list('g', { query: '   ' });
+      assert.deepEqual(rawQueries, []);
+    });
+  });
+
   describe('create', () => {
-    it('creates a task and schedules its first run in the guild timezone', async () => {
-      const dto = await service.create('g', 'u', validInput);
-      assert.equal(created.type, 'POST');
-      assert.equal(created.scheduleKind, 'WEEKLY');
+    it('schedules a one-time post at the chosen time in the guild timezone (Paris, UTC+2 in October)', async () => {
+      const dto = await service.create('g', 'u', { ...validInput, runAtLocal: '2099-10-01T20:00' });
+      assert.equal(created.scheduleKind, 'ONCE');
+      assert.equal(created.runAt.toISOString(), '2099-10-01T18:00:00.000Z');
+      assert.equal(created.nextRunAt.toISOString(), '2099-10-01T18:00:00.000Z');
       assert.equal(created.createdById, 'u');
-      assert.ok(created.nextRunAt > new Date());
-      assert.equal(dto.schedule.description, 'Every Tuesday at 20:00');
+      assert.equal(dto.schedule.description, 'Once on 2099-10-01 at 20:00');
       assert.equal(dto.timezone, 'Europe/Paris');
     });
 
-    it('does not schedule a disabled task', async () => {
+    it('can post right away, without a date', async () => {
+      await service.create('g', 'u', { ...validInput, runAtLocal: undefined, postNow: true });
+      assert.ok(created.nextRunAt <= new Date());
+      assert.equal(created.enabled, true);
+    });
+
+    it('does not schedule a paused post', async () => {
       await service.create('g', 'u', { ...validInput, enabled: false });
       assert.equal(created.nextRunAt, null);
+    });
+
+    it('needs a date in the future', async () => {
+      await assert.rejects(
+        service.create('g', 'u', { ...validInput, runAtLocal: '2020-01-01T20:00' }),
+        /future/,
+      );
+      await assert.rejects(
+        service.create('g', 'u', { ...validInput, runAtLocal: undefined }),
+        /Pick the date/,
+      );
+      await assert.rejects(
+        service.create('g', 'u', { ...validInput, runAtLocal: 'soon' }),
+        BadRequestException,
+      );
     });
 
     it('rejects a server that is not part of the guild', async () => {
@@ -134,21 +219,6 @@ describe('TasksService', () => {
       await assert.rejects(service.create('g', 'u', validInput), /not in the chosen server/);
     });
 
-    it('rejects a one-time task in the past and bad schedules', async () => {
-      await assert.rejects(
-        service.create('g', 'u', { ...validInput, kind: 'ONCE', runAtLocal: '2020-01-01T20:00' }),
-        /future/,
-      );
-      await assert.rejects(
-        service.create('g', 'u', { ...validInput, timeOfDay: '25:00' }),
-        BadRequestException,
-      );
-      await assert.rejects(
-        service.create('g', 'u', { ...validInput, kind: 'HOURLY' }),
-        BadRequestException,
-      );
-    });
-
     it('rejects missing name or text', async () => {
       await assert.rejects(
         service.create('g', 'u', { ...validInput, name: ' ' }),
@@ -159,30 +229,13 @@ describe('TasksService', () => {
         BadRequestException,
       );
     });
-
-    it('reads a one-time date as wall-clock time in the guild timezone', async () => {
-      await service.create('g', 'u', {
-        ...validInput,
-        kind: 'ONCE',
-        runAtLocal: '2099-10-01T20:00',
-      });
-      assert.equal(created.runAt.toISOString(), '2099-10-01T18:00:00.000Z');
-      assert.equal(created.nextRunAt.toISOString(), '2099-10-01T18:00:00.000Z');
-    });
   });
 
-  describe('live edit', () => {
-    it('edits the Discord message when the text changes', async () => {
+  describe('a post that is live in Discord', () => {
+    it('edits the Discord message when the text changes (live edit)', async () => {
       await service.update('t1', { content: 'Raid moved to 21:00' });
       assert.deepEqual(edits, [[CHANNEL, 'm1', 'Raid moved to 21:00']]);
       assert.equal(updated.config.content, 'Raid moved to 21:00');
-    });
-
-    it('leaves the message alone, but saves the text, when the change is for the next run', async () => {
-      await service.update('t1', { content: 'For next week', applyOnNextRun: true });
-      assert.deepEqual(edits, []);
-      assert.equal(updated.config.content, 'For next week');
-      assert.equal('nextRunAt' in updated, false);
     });
 
     it('does not touch Discord when the text is unchanged', async () => {
@@ -191,13 +244,7 @@ describe('TasksService', () => {
       assert.equal(updated.name, 'Renamed');
     });
 
-    it('does not touch Discord when nothing was posted yet', async () => {
-      task.state = {};
-      await service.update('t1', { content: 'New text' });
-      assert.deepEqual(edits, []);
-    });
-
-    it('still saves when the message was deleted in Discord, and marks it', async () => {
+    it('still saves when the message was deleted in Discord meanwhile, and marks it', async () => {
       editError = unknownMessage();
       await service.update('t1', { content: 'New text' });
       assert.equal(updated.state.messageDeleted, true);
@@ -212,61 +259,73 @@ describe('TasksService', () => {
       );
       assert.equal(updated, null);
     });
-  });
 
-  describe('scheduling changes', () => {
-    it('reschedules when the schedule changes', async () => {
-      await service.update('t1', { kind: 'DAILY', timeOfDay: '08:00' });
-      assert.equal(updated.scheduleKind, 'DAILY');
-      assert.ok(updated.nextRunAt instanceof Date);
+    it('cannot be posted again or moved to a new date: it is one message', async () => {
+      await assert.rejects(service.update('t1', { postNow: true }), /already in Discord/);
+      await assert.rejects(
+        service.update('t1', { runAtLocal: FUTURE_LOCAL }),
+        /already in Discord/,
+      );
+      await assert.rejects(service.runNow('t1'), /already in Discord/);
+      assert.equal(updated, null);
     });
 
-    it('keeps the next run when only the text changes', async () => {
-      await service.update('t1', { content: 'x' });
+    it('accepts the form sending its unchanged (past) date back', async () => {
+      await service.update('t1', { runAtLocal: '2020-01-01T19:00', name: 'Renamed' });
+      assert.equal(updated.name, 'Renamed');
       assert.equal('nextRunAt' in updated, false);
     });
 
-    it('clears the next run when disabled and restores it when enabled again', async () => {
+    it('stays unscheduled when resumed after being paused', async () => {
+      task.enabled = false;
+      await service.update('t1', { enabled: true });
+      assert.equal(updated.nextRunAt, null);
+    });
+  });
+
+  describe('a post that has not gone out yet', () => {
+    beforeEach(() => {
+      task.state = {};
+      task.lastRunAt = null;
+      task.lastStatus = null;
+      task.runAt = new Date('2099-10-01T18:00:00Z');
+      task.nextRunAt = task.runAt;
+    });
+
+    it('moves to a new date', async () => {
+      await service.update('t1', { runAtLocal: FUTURE_LOCAL });
+      assert.equal(updated.runAt.toISOString(), FUTURE_UTC);
+      assert.equal(updated.nextRunAt.toISOString(), FUTURE_UTC);
+    });
+
+    it('rejects a new date in the past', async () => {
+      await assert.rejects(service.update('t1', { runAtLocal: '2021-01-01T20:00' }), /future/);
+    });
+
+    it('can be posted right away', async () => {
+      await service.update('t1', { postNow: true });
+      assert.ok(updated.nextRunAt <= new Date());
+    });
+
+    it('keeps its schedule when only the text changes, and does not touch Discord', async () => {
+      await service.update('t1', { content: 'x' });
+      assert.equal('nextRunAt' in updated, false);
+      assert.deepEqual(edits, []);
+    });
+
+    it('is unscheduled when paused, and goes out on resume even if its time passed (late rather than never)', async () => {
       await service.update('t1', { enabled: false });
       assert.equal(updated.nextRunAt, null);
       task.enabled = false;
+      task.runAt = new Date('2020-01-01T18:00:00Z');
+      task.nextRunAt = null;
       await service.update('t1', { enabled: true });
-      assert.ok(updated.nextRunAt instanceof Date);
+      assert.ok(updated.nextRunAt <= new Date());
     });
   });
 
-  describe('run now', () => {
-    it('makes an enabled task due immediately', async () => {
-      await service.runNow('t1');
-      assert.ok(updated.nextRunAt instanceof Date && updated.nextRunAt <= new Date());
-    });
-
-    it('refuses a disabled task', async () => {
-      task.enabled = false;
-      await assert.rejects(service.runNow('t1'), /Enable the task first/);
-    });
-  });
-
-  describe('reactions', () => {
-    it('returns the live counts of the current post', async () => {
-      assert.deepEqual(await service.reactions('t1'), [
-        { emoji: '👍', emojiId: null, count: 3, imageUrl: null },
-      ]);
-    });
-
-    it('returns nothing before the first post', async () => {
-      task.state = {};
-      assert.deepEqual(await service.reactions('t1'), []);
-    });
-  });
-
-  it('404s for unknown tasks', async () => {
-    task = null;
-    await assert.rejects(service.remove('nope'), NotFoundException);
-  });
-
-  describe('delete post (removes the message, keeps the task)', () => {
-    it('deletes the Discord message and marks the task’s post as deleted', async () => {
+  describe('delete post (removes the message, keeps the post)', () => {
+    it('deletes the Discord message and marks the post as deleted', async () => {
       await service.deletePost('t1');
       assert.deepEqual(deletedMessages, [[CHANNEL, 'm1']]);
       assert.equal(updated.state.messageDeleted, true);
@@ -274,7 +333,7 @@ describe('TasksService', () => {
       assert.equal(removed, false);
     });
 
-    it('leaves the schedule alone so it can be posted again', async () => {
+    it('leaves the schedule alone', async () => {
       await service.deletePost('t1');
       assert.equal('nextRunAt' in updated, false);
       assert.equal('enabled' in updated, false);
@@ -301,44 +360,75 @@ describe('TasksService', () => {
     });
   });
 
-  describe('untrack (removes the task, keeps the message)', () => {
-    it('removes the task without touching the Discord message', async () => {
+  describe('a post whose message was deleted', () => {
+    beforeEach(() => {
+      task.state = { messageId: 'm1', channelId: CHANNEL, serverId: SERVER, messageDeleted: true };
+    });
+
+    it('can be scheduled again for a new date', async () => {
+      await service.update('t1', { runAtLocal: FUTURE_LOCAL });
+      assert.equal(updated.nextRunAt.toISOString(), FUTURE_UTC);
+    });
+
+    it('can be posted again right away', async () => {
+      await service.update('t1', { postNow: true });
+      assert.ok(updated.nextRunAt <= new Date());
+      await service.runNow('t1');
+      assert.ok(updated.nextRunAt <= new Date());
+    });
+
+    it('is not posted again on its own when resumed with a date in the past', async () => {
+      task.enabled = false;
+      await service.update('t1', { enabled: true });
+      assert.equal(updated.nextRunAt, null);
+    });
+
+    it('lets its text be edited without touching Discord', async () => {
+      await service.update('t1', { content: 'Rewritten' });
+      assert.deepEqual(edits, []);
+      assert.equal(updated.config.content, 'Rewritten');
+    });
+  });
+
+  describe('post now', () => {
+    it('makes a post that has not gone out due immediately', async () => {
+      task.state = {};
+      await service.runNow('t1');
+      assert.ok(updated.nextRunAt <= new Date());
+    });
+
+    it('refuses a paused post', async () => {
+      task.state = {};
+      task.enabled = false;
+      await assert.rejects(service.runNow('t1'), /Resume the post first/);
+    });
+  });
+
+  describe('untrack (removes the post, keeps the message)', () => {
+    it('removes the row without touching the Discord message', async () => {
       await service.remove('t1');
       assert.equal(removed, true);
       assert.deepEqual(deletedMessages, []);
     });
   });
 
-  describe('rescheduling after the post went out', () => {
-    beforeEach(() => {
-      task.scheduleKind = 'ONCE';
-      task.runAt = new Date('2020-01-01T18:00:00Z');
-      task.timeOfDay = null;
-      task.weekday = null;
-      task.nextRunAt = null;
+  describe('reactions', () => {
+    it('returns the live counts of the current post', async () => {
+      assert.deepEqual(await service.reactions('t1'), [
+        { emoji: '👍', emojiId: null, count: 3, imageUrl: null },
+      ]);
     });
 
-    it('lets a finished one-time post be edited without picking a new date', async () => {
-      await service.update('t1', { kind: 'ONCE', runAtLocal: '2020-01-01T19:00', name: 'Renamed' });
-      assert.equal(updated.name, 'Renamed');
-      assert.equal('nextRunAt' in updated, false);
-    });
-
-    it('reschedules it when a new future date is picked', async () => {
-      await service.update('t1', { kind: 'ONCE', runAtLocal: '2099-10-01T20:00' });
-      assert.equal(updated.nextRunAt.toISOString(), '2099-10-01T18:00:00.000Z');
-    });
-
-    it('still rejects a new date in the past', async () => {
-      await assert.rejects(
-        service.update('t1', { kind: 'ONCE', runAtLocal: '2021-01-01T20:00' }),
-        /future/,
-      );
+    it('returns nothing before the post went out or after it was deleted', async () => {
+      task.state = {};
+      assert.deepEqual(await service.reactions('t1'), []);
+      task.state = { messageId: 'm1', channelId: CHANNEL, messageDeleted: true };
+      assert.deepEqual(await service.reactions('t1'), []);
     });
   });
 
-  it('does not reschedule when the form sends the same schedule again', async () => {
-    await service.update('t1', { kind: 'WEEKLY', weekday: 2, timeOfDay: '20:00', name: 'Renamed' });
-    assert.equal('nextRunAt' in updated, false);
+  it('404s for unknown posts', async () => {
+    task = null;
+    await assert.rejects(service.remove('nope'), NotFoundException);
   });
 });
