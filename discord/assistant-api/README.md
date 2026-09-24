@@ -157,7 +157,7 @@ server can't be removed directly.
 
 ### Background worker, scheduled tasks and honeypots
 
-Officers manage these in the backoffice under **Scheduled tasks** (Officers only). The worker that
+Officers manage these in the backoffice under **Posts and Tasks** (Officers only). The worker that
 runs them is internal: officers never see it.
 
 **Running the worker.** `src/worker.ts` is a second entrypoint of the same codebase: a Nest

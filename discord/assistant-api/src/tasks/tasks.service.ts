@@ -118,7 +118,10 @@ export class TasksService {
             serverId: server.discordId,
             serverName: server.name || server.discordId,
             channels: [],
-            error: describeDiscordError(error),
+            // Listing a server's channels fails with "Missing Access" when the bot isn't in it.
+            error: isDiscordError(error, 50001)
+              ? 'The bot is not in this server. Add it with the invite link in the setup steps (it needs the "bot" scope, not just slash commands).'
+              : describeDiscordError(error),
           };
         }
       }),

@@ -73,7 +73,7 @@ mechanism: officers only ever see tasks described in their own terms (what, wher
   a default IANA timezone. EU = `Europe/Paris`, US = `America/Los_Angeles`. All schedules are
   interpreted in the guild's region timezone (DST handled). Editable by Officers.
 
-## Backoffice: "Scheduled tasks"
+## Backoffice: "Posts and Tasks"
 - Per guild: a list and a "Create" button. Officers only (Guild-Assistants who are not Officers
   cannot create tasks). The list shows name, type, human-readable schedule, next run, last result,
   enable toggle, edit/delete.

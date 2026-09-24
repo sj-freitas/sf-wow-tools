@@ -283,7 +283,7 @@ export function GuildsPage({ guilds, setup, currentUser, onGuildsChanged }: Prop
               aria-selected={view === 'tasks'}
               onClick={() => setView('tasks')}
             >
-              Scheduled tasks
+              Posts and Tasks
             </button>
           </div>
         )}

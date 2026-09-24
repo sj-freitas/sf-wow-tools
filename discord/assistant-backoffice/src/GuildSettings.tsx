@@ -12,6 +12,7 @@ import {
   updateGuild,
 } from './api';
 import { RegionSelect } from './RegionSelect';
+import { useConfirm } from './useConfirm';
 import {
   GAME_VERSIONS,
   type EligibleServers,
@@ -31,6 +32,7 @@ interface Props {
 
 export function GuildSettings({ guild, regions, onChanged, onClose }: Props) {
   const [error, setError] = useState<string | null>(null);
+  const { confirm, dialog } = useConfirm();
 
   const run = (action: Promise<unknown>) => {
     setError(null);
@@ -41,6 +43,7 @@ export function GuildSettings({ guild, regions, onChanged, onClose }: Props) {
 
   return (
     <div className="settings">
+      {dialog}
       <div className="settings-header">
         <h3>Manage guild</h3>
         <button type="button" className="btn btn-sm" onClick={onClose}>
@@ -62,15 +65,16 @@ export function GuildSettings({ guild, regions, onChanged, onClose }: Props) {
         <button
           type="button"
           className="btn btn-danger"
-          onClick={() => {
-            if (
-              window.confirm(
-                `Delete "${guild.name}" and all of its characters? This cannot be undone.`,
-              )
-            ) {
-              void run(deleteGuild(guild.id).then(onClose));
-            }
-          }}
+          onClick={() =>
+            void confirm({
+              title: 'Delete guild',
+              message: `Delete "${guild.name}" and all of its characters? This cannot be undone.`,
+              confirmLabel: 'Delete guild',
+              danger: true,
+            }).then((ok) => {
+              if (ok) void run(deleteGuild(guild.id).then(onClose));
+            })
+          }
         >
           Delete guild
         </button>

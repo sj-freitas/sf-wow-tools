@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   deleteHoneypot,
   deleteTask,
@@ -12,6 +12,7 @@ import {
 } from './api';
 import { HoneypotForm } from './HoneypotForm';
 import { PostTaskForm } from './PostTaskForm';
+import { useConfirm } from './useConfirm';
 import type { Guild, Honeypot, Reaction, ScheduledPost, ServerChannels } from './types';
 
 interface Props {
@@ -21,6 +22,23 @@ interface Props {
 }
 
 const REFRESH_MS = 15_000;
+/** While a post is waiting for the worker, check back often so the result shows up quickly. */
+const QUEUED_REFRESH_MS = 3_000;
+const FLASH_MS = 8_000;
+
+/** A post whose next run is now or in the past is waiting for the worker's next check. */
+const isQueued = (post: ScheduledPost): boolean =>
+  post.enabled && post.nextRunAt !== null && new Date(post.nextRunAt).getTime() <= Date.now();
+
+function timeAgo(iso: string): string {
+  const seconds = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000));
+  if (seconds < 60) return 'just now';
+  const minutes = Math.round(seconds / 60);
+  if (minutes < 60) return `${minutes} min ago`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 48) return `${hours} h ago`;
+  return `${Math.round(hours / 24)} days ago`;
+}
 
 function formatWhen(iso: string | null, timezone: string): string {
   if (!iso) return '—';
@@ -76,22 +94,53 @@ export function TasksPage({ guild, timezone }: Props) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [reactionsFor, setReactionsFor] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { confirm, dialog } = useConfirm();
+  // Posts the user just asked to run, until the server shows them as queued.
+  const [starting, setStarting] = useState<Set<string>>(new Set());
+  // Result of a run that just finished, shown for a few seconds.
+  const [flash, setFlash] = useState<Record<string, { ok: boolean; text: string }>>({});
+  const lastRuns = useRef<Map<string, string | null>>(new Map());
 
   const load = useCallback(() => {
     Promise.all([fetchTasks(guild.id), fetchHoneypots(guild.id)])
       .then(([loadedPosts, loadedHoneypots]) => {
+        for (const post of loadedPosts) {
+          const before = lastRuns.current.get(post.id);
+          if (before !== undefined && post.lastRunAt && post.lastRunAt !== before) {
+            const ok = post.lastStatus !== 'FAILED';
+            setFlash((current) => ({
+              ...current,
+              [post.id]: {
+                ok,
+                text: ok ? 'Posted just now' : (post.lastError ?? 'The run failed'),
+              },
+            }));
+            setTimeout(
+              () =>
+                setFlash((current) => {
+                  const rest = { ...current };
+                  delete rest[post.id];
+                  return rest;
+                }),
+              FLASH_MS,
+            );
+          }
+          lastRuns.current.set(post.id, post.lastRunAt);
+        }
         setPosts(loadedPosts);
         setHoneypots(loadedHoneypots);
+        setStarting(new Set());
       })
       .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)));
   }, [guild.id]);
 
   // The list refreshes by itself, so results of runs that happen in the background show up.
+  const anyQueued = starting.size > 0 || (posts?.some(isQueued) ?? false);
   useEffect(() => {
     load();
-    const timer = setInterval(load, REFRESH_MS);
+    const timer = setInterval(load, anyQueued ? QUEUED_REFRESH_MS : REFRESH_MS);
     return () => clearInterval(timer);
-  }, [load]);
+  }, [load, anyQueued]);
 
   useEffect(() => {
     fetchChannels(guild.id)
@@ -111,6 +160,21 @@ export function TasksPage({ guild, timezone }: Props) {
       .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)));
   };
 
+  const postNow = (postId: string) => {
+    setError(null);
+    setStarting((current) => new Set(current).add(postId));
+    runTaskNow(postId)
+      .then(load)
+      .catch((err: unknown) => {
+        setStarting((current) => {
+          const next = new Set(current);
+          next.delete(postId);
+          return next;
+        });
+        setError(err instanceof Error ? err.message : String(err));
+      });
+  };
+
   const saved = () => {
     setCreating(null);
     setEditingId(null);
@@ -119,9 +183,10 @@ export function TasksPage({ guild, timezone }: Props) {
 
   return (
     <div className="tasks">
+      {dialog}
       <div className="tasks-head">
         <div>
-          <h3>Scheduled tasks</h3>
+          <h3>Posts and Tasks</h3>
           <span className="muted">Times are in {timezone}.</span>
         </div>
         <div className="settings-actions">
@@ -203,15 +268,43 @@ export function TasksPage({ guild, timezone }: Props) {
                     {post.schedule.description}
                   </div>
                   <div className="muted">
-                    Next: {formatWhen(post.nextRunAt, timezone)} · Last:{' '}
-                    {post.lastStatus === 'FAILED' ? (
-                      <span className="status-error">failed</span>
-                    ) : post.lastStatus ? (
-                      `posted ${formatWhen(post.lastRunAt, timezone)}`
+                    Next:{' '}
+                    {isQueued(post)
+                      ? 'waiting for the next check'
+                      : formatWhen(post.nextRunAt, timezone)}
+                  </div>
+                  <div className="muted">
+                    Last ran:{' '}
+                    {post.lastRunAt ? (
+                      <>
+                        {formatWhen(post.lastRunAt, timezone)} ({timeAgo(post.lastRunAt)}) ·{' '}
+                        {post.lastStatus === 'FAILED' ? (
+                          <span className="status-error">failed</span>
+                        ) : (
+                          'posted'
+                        )}
+                      </>
                     ) : (
-                      'not yet'
+                      'never'
                     )}
                   </div>
+                  {(starting.has(post.id) || isQueued(post)) && (
+                    <div className="run-status" role="status">
+                      <span className="spinner" aria-hidden="true" /> Queued: it will be posted
+                      within a minute.
+                    </div>
+                  )}
+                  {flash[post.id] && (
+                    <div
+                      className={
+                        flash[post.id].ok ? 'run-status run-ok' : 'run-status status-error'
+                      }
+                      role="status"
+                    >
+                      {flash[post.id].ok ? '✓ ' : ''}
+                      {flash[post.id].text}
+                    </div>
+                  )}
                   {post.lastStatus === 'FAILED' && post.lastError && (
                     <div className="status-error">{post.lastError}</div>
                   )}
@@ -246,9 +339,10 @@ export function TasksPage({ guild, timezone }: Props) {
                       type="button"
                       className="btn btn-sm"
                       title="Post it now instead of waiting for the schedule"
-                      onClick={() => run(runTaskNow(post.id))}
+                      disabled={starting.has(post.id) || isQueued(post)}
+                      onClick={() => postNow(post.id)}
                     >
-                      Post now
+                      {starting.has(post.id) || isQueued(post) ? 'Queued…' : 'Post now'}
                     </button>
                   )}
                   <button
@@ -271,11 +365,14 @@ export function TasksPage({ guild, timezone }: Props) {
                   <button
                     type="button"
                     className="btn btn-sm btn-danger"
-                    onClick={() => {
-                      if (window.confirm(`Delete "${post.name}"? Posts already in Discord stay.`)) {
-                        run(deleteTask(post.id));
-                      }
-                    }}
+                    onClick={() =>
+                      void confirm({
+                        title: 'Delete scheduled post',
+                        message: `Delete "${post.name}"? Posts already in Discord stay.`,
+                        confirmLabel: 'Delete',
+                        danger: true,
+                      }).then((ok) => ok && run(deleteTask(post.id)))
+                    }
                   >
                     Delete
                   </button>
@@ -315,15 +412,18 @@ export function TasksPage({ guild, timezone }: Props) {
                   <button
                     type="button"
                     className="btn btn-sm"
-                    onClick={() => {
-                      if (
-                        window.confirm(
-                          'Switch to live mode? People who post in the channel will be permanently banned.',
-                        )
-                      ) {
-                        run(updateHoneypot(honeypot.id, { testMode: false, confirmLive: true }));
-                      }
-                    }}
+                    onClick={() =>
+                      void confirm({
+                        title: 'Switch to live mode?',
+                        message: `People who post in the honeypot "${honeypot.name}" will be permanently banned, and their messages from the last hour deleted.`,
+                        confirmLabel: 'Go live',
+                        danger: true,
+                      }).then(
+                        (ok) =>
+                          ok &&
+                          run(updateHoneypot(honeypot.id, { testMode: false, confirmLive: true })),
+                      )
+                    }
                   >
                     Go live
                   </button>
@@ -346,15 +446,14 @@ export function TasksPage({ guild, timezone }: Props) {
                 <button
                   type="button"
                   className="btn btn-sm btn-danger"
-                  onClick={() => {
-                    if (
-                      window.confirm(
-                        `Remove the honeypot "${honeypot.name}"? The channel itself stays.`,
-                      )
-                    ) {
-                      run(deleteHoneypot(honeypot.id));
-                    }
-                  }}
+                  onClick={() =>
+                    void confirm({
+                      title: 'Remove honeypot',
+                      message: `Remove the honeypot "${honeypot.name}"? The channel itself stays in Discord.`,
+                      confirmLabel: 'Remove',
+                      danger: true,
+                    }).then((ok) => ok && run(deleteHoneypot(honeypot.id)))
+                  }
                 >
                   Remove
                 </button>
