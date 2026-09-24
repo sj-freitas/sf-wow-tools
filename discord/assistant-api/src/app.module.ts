@@ -12,6 +12,7 @@ import { CharactersModule } from './characters/characters.module';
 import { DatabaseModule } from './database/database.module';
 import { GuildsModule } from './guilds/guilds.module';
 import { RealtimeModule } from './realtime/realtime.module';
+import { OfficerRequestsModule } from './officer-requests/officer-requests.module';
 import { PlayersModule } from './players/players.module';
 
 @Module({
@@ -34,6 +35,7 @@ import { PlayersModule } from './players/players.module';
     RealtimeModule,
     TasksModule,
     HoneypotModule,
+    OfficerRequestsModule,
     WorkerModule,
   ],
 })

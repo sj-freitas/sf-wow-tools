@@ -5,6 +5,7 @@ import {
   ChannelType,
   Routes,
   type APIChannel,
+  type APIEmbed,
   type APIGuildMember,
   type APIMessage,
   type APIReaction,
@@ -98,6 +99,37 @@ export class DiscordBotService {
       body: { content, allowed_mentions: { parse: [] } },
     })) as APIMessage;
     return message.id;
+  }
+
+  /**
+   * Posts an embed. Mentions inside never ping anyone. With `replyTo` it shows as a reply to that
+   * message (and still posts if that message was deleted).
+   */
+  async postEmbed(
+    channelId: string,
+    embed: APIEmbed,
+    options: { replyTo?: string } = {},
+  ): Promise<string> {
+    const message = (await this.rest.post(Routes.channelMessages(channelId), {
+      body: {
+        embeds: [embed],
+        allowed_mentions: { parse: [] },
+        ...(options.replyTo
+          ? { message_reference: { message_id: options.replyTo, fail_if_not_exists: false } }
+          : {}),
+      },
+    })) as APIMessage;
+    return message.id;
+  }
+
+  /** Sends a direct message. Fails (Discord error 50007) when the user does not accept DMs. */
+  async sendDirectMessage(userId: string, embed: APIEmbed): Promise<void> {
+    const dm = (await this.rest.post(Routes.userChannels(), {
+      body: { recipient_id: userId },
+    })) as APIChannel;
+    await this.rest.post(Routes.channelMessages(dm.id), {
+      body: { embeds: [embed], allowed_mentions: { parse: [] } },
+    });
   }
 
   async editMessage(channelId: string, messageId: string, content: string): Promise<void> {

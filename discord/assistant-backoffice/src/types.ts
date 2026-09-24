@@ -35,6 +35,8 @@ export interface Guild {
   gameVersion: string;
   region: string;
   servers: GuildServer[];
+  /** Where members' messages to the officers are posted; null until set. */
+  officerRequestChannel: { serverId: string; channelId: string } | null;
   /** Role in the main server whose holders manage the guild's characters and settings. */
   officerRole: { id: string; name: string } | null;
   /** Optional roles in the main server standing for Raider and Social, for roster setup. */
@@ -260,4 +262,47 @@ export interface HoneypotInput {
   initialPost?: string;
   logServerId: string;
   logChannelId: string;
+}
+
+// ---- officer requests (members writing to the officers with /contact-officer) ----
+
+export interface ConversationSummary {
+  /** The 8-digit conversation id. */
+  publicId: number;
+  isAnonymous: boolean;
+  /** The member's name; null for an anonymous conversation. */
+  requesterName: string | null;
+  preview: string;
+  messageCount: number;
+  createdAt: string;
+  lastActivityAt: string;
+  /** The member wrote last: no officer has answered yet. */
+  awaitingReply: boolean;
+}
+
+export interface ConversationsPage {
+  items: ConversationSummary[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+export interface ConversationMessage {
+  id: string;
+  author: 'USER' | 'OFFICER';
+  /** Member messages: their name, only if not anonymous. Officer messages: the officer's name. */
+  authorName: string | null;
+  officerDiscordId: string | null;
+  content: string;
+  createdAt: string;
+  /** Officer replies: whether the DM reached the member. */
+  dmDelivered: boolean | null;
+}
+
+export interface Conversation {
+  publicId: number;
+  isAnonymous: boolean;
+  requester: { name: string; discordId: string } | null;
+  createdAt: string;
+  messages: ConversationMessage[];
 }

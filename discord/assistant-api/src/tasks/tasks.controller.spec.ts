@@ -18,11 +18,14 @@ describe('TasksController is for Officers only', () => {
     officer = true;
     checkedGuilds = [];
     calls = [];
+    const check = async (_user: string, guildId: string) => {
+      checkedGuilds.push(guildId);
+      if (!officer) throw new ForbiddenException();
+    };
+    // The channel list is also for Guild-Assistants (they pick the officer request channel).
     const guildAccess = {
-      assertOfficer: async (_user: string, guildId: string) => {
-        checkedGuilds.push(guildId);
-        if (!officer) throw new ForbiddenException();
-      },
+      assertOfficer: check,
+      assertCanConfigure: check,
     } as unknown as GuildAccessService;
     const tasks = {
       guildIdOf: async () => 'guild-of-task',

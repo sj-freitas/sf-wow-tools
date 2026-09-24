@@ -1,0 +1,306 @@
+import { randomInt } from 'node:crypto';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../database/prisma.service';
+import { DiscordBotService } from '../discord/discord-bot.service';
+import { describeDiscordError } from '../discord/discord-errors';
+import { memberDmEmbed, officerReplyEmbed, requestEmbed } from './officer-request-embeds';
+
+/** Who used the command, as Discord tells us. */
+export interface Invoker {
+  id: string;
+  /** Server nickname, else display name, else username. */
+  name: string;
+  /** Their role ids in the server the command was used in, when Discord included them. */
+  roleIds?: readonly string[];
+}
+
+export const MAX_MESSAGE_LENGTH = 3500;
+/** A member has to wait this long between two messages to the officers. */
+export const MESSAGE_COOLDOWN_MS = 30_000;
+const ID_ATTEMPTS = 8;
+
+export const MESSAGES = {
+  serverOnly: 'This command can only be used inside a server.',
+  notLinked: "This server isn't linked to a guild yet.",
+  channelNotSet:
+    'The Officer Request Channel is not setup for your guild, please contact an officer to set it up.',
+  cooldown: 'Please wait a few seconds before sending another message.',
+  conversationNotFound:
+    "I couldn't find that conversation. Check the conversation ID: only the member who started a conversation can continue it.",
+  officerConversationNotFound: 'There is no conversation with that ID in this guild.',
+  notOfficer: "You don't have permission to use this command. Only officers can reply to requests.",
+  noOfficerRole:
+    'This guild has no Officer role set up, so nobody can reply yet. A Guild-Assistant can set it in the guild settings.',
+  deliveryFailed:
+    'Something went wrong delivering your message to the officers. Please try again later, or contact an officer directly.',
+} as const;
+
+@Injectable()
+export class OfficerRequestsService {
+  private readonly logger = new Logger(OfficerRequestsService.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly bot: DiscordBotService,
+  ) {}
+
+  /**
+   * `/contact-officer`: posts the member's message in the guild's Officer Request Channel. The
+   * first message of a conversation decides whether the member is anonymous; follow-ups (with
+   * the conversation id) ignore the `anonymous` option. Returns the private answer for the member.
+   */
+  async contact(input: {
+    serverId: string;
+    invoker: Invoker;
+    message: string;
+    anonymous?: boolean;
+    conversationId?: number;
+  }): Promise<string> {
+    const guild = await this.findGuildOfServer(input.serverId);
+    if (!guild) return MESSAGES.notLinked;
+    if (!guild.officerRequestChannelId) return MESSAGES.channelNotSet;
+
+    const recent = await this.prisma.officerMessage.findFirst({
+      where: {
+        author: 'USER',
+        createdAt: { gt: new Date(Date.now() - MESSAGE_COOLDOWN_MS) },
+        conversation: { guildId: guild.id, userDiscordId: input.invoker.id },
+      },
+      select: { id: true },
+    });
+    if (recent) return MESSAGES.cooldown;
+
+    // Only whoever started a conversation can continue it; anyone else is told it doesn't exist.
+    const existing =
+      input.conversationId === undefined
+        ? null
+        : await this.prisma.officerConversation.findFirst({
+            where: {
+              guildId: guild.id,
+              publicId: input.conversationId,
+              userDiscordId: input.invoker.id,
+            },
+            include: { messages: { orderBy: { createdAt: 'asc' }, take: 1 } },
+          });
+    if (input.conversationId !== undefined && !existing) return MESSAGES.conversationNotFound;
+
+    const isAnonymous = existing ? existing.isAnonymous : (input.anonymous ?? true);
+    const publicId = existing?.publicId ?? (await this.newPublicId(guild.id));
+
+    let discordMessageId: string;
+    try {
+      discordMessageId = await this.bot.postEmbed(
+        guild.officerRequestChannelId,
+        requestEmbed({
+          publicId,
+          content: input.message,
+          isAnonymous,
+          userId: input.invoker.id,
+          followUp: existing !== null,
+        }),
+        { replyTo: existing?.messages[0]?.discordMessageId ?? undefined },
+      );
+    } catch (error) {
+      this.logger.warn(
+        `Could not post to the officer request channel: ${describeDiscordError(error)}`,
+      );
+      return MESSAGES.deliveryFailed;
+    }
+
+    const message = {
+      author: 'USER' as const,
+      content: input.message,
+      discordMessageId,
+    };
+    if (existing) {
+      await this.prisma.officerMessage.create({
+        data: { ...message, conversationId: existing.id },
+      });
+      await this.prisma.officerConversation.update({
+        where: { id: existing.id },
+        data: { updatedAt: new Date() },
+      });
+    } else {
+      await this.prisma.officerConversation.create({
+        data: {
+          guildId: guild.id,
+          publicId,
+          isAnonymous,
+          userDiscordId: input.invoker.id,
+          userName: isAnonymous ? null : input.invoker.name,
+          messages: { create: message },
+        },
+      });
+    }
+
+    return [
+      existing
+        ? `Your follow-up was sent to the officers of ${guild.name}.`
+        : `Your message was sent to the officers of ${guild.name}${isAnonymous ? ', anonymously' : ', with your name'}.`,
+      `Conversation ID: **${publicId}**. Keep it: officers reply to you by DM, and you can write again with /contact-officer and this conversation ID.`,
+    ].join('\n');
+  }
+
+  /**
+   * `/contact-officer-reply`: an officer answers a conversation. The reply is posted in the
+   * request channel (showing which officer wrote it), saved, and sent to the member by DM.
+   * Returns the private answer for the officer.
+   */
+  async reply(input: {
+    serverId: string;
+    invoker: Invoker;
+    conversationId: number;
+    message: string;
+  }): Promise<string> {
+    const guild = await this.findGuildOfServer(input.serverId);
+    if (!guild) return MESSAGES.notLinked;
+    if (!guild.officerRoleId) return MESSAGES.noOfficerRole;
+    if (!(await this.isOfficer(guild, input.serverId, input.invoker))) return MESSAGES.notOfficer;
+
+    const conversation = await this.prisma.officerConversation.findUnique({
+      where: { guildId_publicId: { guildId: guild.id, publicId: input.conversationId } },
+      include: { messages: { orderBy: { createdAt: 'asc' } } },
+    });
+    if (!conversation) return MESSAGES.officerConversationNotFound;
+
+    const firstRequest = conversation.messages.find((m) => m.author === 'USER');
+    let discordMessageId: string | null = null;
+    if (guild.officerRequestChannelId) {
+      try {
+        discordMessageId = await this.bot.postEmbed(
+          guild.officerRequestChannelId,
+          officerReplyEmbed({
+            publicId: conversation.publicId,
+            officerName: input.invoker.name,
+            content: input.message,
+          }),
+          { replyTo: firstRequest?.discordMessageId ?? undefined },
+        );
+      } catch (error) {
+        // The reply still counts: it is saved and the member still gets it.
+        this.logger.warn(
+          `Could not post the reply in the request channel: ${describeDiscordError(error)}`,
+        );
+      }
+    }
+
+    let dmDelivered = true;
+    try {
+      await this.bot.sendDirectMessage(
+        conversation.userDiscordId,
+        memberDmEmbed({
+          guildName: guild.name,
+          guildRealm: guild.realm,
+          publicId: conversation.publicId,
+          officerName: input.invoker.name,
+          originalRequest: firstRequest?.content ?? '',
+          reply: input.message,
+        }),
+      );
+    } catch (error) {
+      dmDelivered = false;
+      this.logger.warn(`Could not DM a reply: ${describeDiscordError(error)}`);
+    }
+
+    await this.prisma.officerMessage.create({
+      data: {
+        conversationId: conversation.id,
+        author: 'OFFICER',
+        officerDiscordId: input.invoker.id,
+        officerName: input.invoker.name,
+        content: input.message,
+        discordMessageId,
+        dmDelivered,
+      },
+    });
+    await this.prisma.officerConversation.update({
+      where: { id: conversation.id },
+      data: { updatedAt: new Date() },
+    });
+
+    return dmDelivered
+      ? `Your reply to conversation #${conversation.publicId} was sent to the member by DM and posted in the request channel.`
+      : `Your reply to conversation #${conversation.publicId} was saved and posted, but the member could not be reached by DM (they may have DMs closed). Consider reaching out to them directly.`;
+  }
+
+  /**
+   * Sets (or, with null, clears) the guild's Officer Request Channel. The channel must be in one
+   * of the guild's servers, and the bot posts a short note there to prove it can write.
+   */
+  async setChannel(
+    guildId: string,
+    target: { serverId: string; channelId: string } | null,
+  ): Promise<void> {
+    if (target) {
+      const server = await this.prisma.discordServer.findFirst({
+        where: { guildId, discordId: target.serverId },
+        select: { id: true },
+      });
+      if (!server) throw new BadRequestException('That server is not part of this guild.');
+      try {
+        const channels = await this.bot.listTextChannels(target.serverId);
+        if (!channels.some((channel) => channel.id === target.channelId)) {
+          throw new BadRequestException('That channel is not in the chosen server.');
+        }
+        await this.bot.postMessage(
+          target.channelId,
+          "This is now the Officer Request Channel: members' messages sent with /contact-officer will appear here. Reply with /contact-officer-reply.",
+        );
+      } catch (error) {
+        if (error instanceof BadRequestException) throw error;
+        throw new BadRequestException(
+          `The bot could not write in that channel: ${describeDiscordError(error)}`,
+        );
+      }
+    }
+    await this.prisma.guild.update({
+      where: { id: guildId },
+      data: {
+        officerRequestServerId: target?.serverId ?? null,
+        officerRequestChannelId: target?.channelId ?? null,
+      },
+    });
+  }
+
+  private findGuildOfServer(serverId: string) {
+    return this.prisma.guild.findFirst({
+      where: { servers: { some: { discordId: serverId } } },
+      select: {
+        id: true,
+        name: true,
+        realm: true,
+        officerRoleId: true,
+        officerRequestChannelId: true,
+        servers: { where: { isMain: true }, select: { discordId: true } },
+      },
+    });
+  }
+
+  /** Officers hold the guild's Officer role in its main server. */
+  private async isOfficer(
+    guild: { officerRoleId: string | null; servers: { discordId: string }[] },
+    serverId: string,
+    invoker: Invoker,
+  ): Promise<boolean> {
+    const main = guild.servers[0]?.discordId;
+    if (!guild.officerRoleId || !main) return false;
+    const roles =
+      main === serverId && invoker.roleIds
+        ? invoker.roleIds
+        : await this.bot.fetchMemberRoles(main, invoker.id);
+    return roles.includes(guild.officerRoleId);
+  }
+
+  /** A random 8-digit id that no conversation of the guild uses yet. */
+  private async newPublicId(guildId: string): Promise<number> {
+    for (let attempt = 0; attempt < ID_ATTEMPTS; attempt++) {
+      const candidate = randomInt(10_000_000, 100_000_000);
+      const taken = await this.prisma.officerConversation.findUnique({
+        where: { guildId_publicId: { guildId, publicId: candidate } },
+        select: { id: true },
+      });
+      if (!taken) return candidate;
+    }
+    throw new NotFoundException('Could not find a free conversation id');
+  }
+}

@@ -22,7 +22,7 @@ export interface DiscordInteraction {
   /** Absent when the command was invoked in a DM. */
   guild_id?: string;
   /** Present for invocations inside a server. */
-  member?: { nick?: string | null; user: DiscordInteractionUser };
+  member?: { nick?: string | null; roles?: string[]; user: DiscordInteractionUser };
   /** Present for invocations in a DM. */
   user?: DiscordInteractionUser;
   data?: {
@@ -42,6 +42,15 @@ export function getStringOption(interaction: DiscordInteraction, name: string): 
 export function getNumberOption(interaction: DiscordInteraction, name: string): number | undefined {
   const value = interaction.data?.options?.find((option) => option.name === name)?.value;
   return typeof value === 'number' ? value : undefined;
+}
+
+/** A yes/no option that may have been left out (Discord has no default for these). */
+export function getOptionalBooleanOption(
+  interaction: DiscordInteraction,
+  name: string,
+): boolean | undefined {
+  const value = interaction.data?.options?.find((option) => option.name === name)?.value;
+  return typeof value === 'boolean' ? value : undefined;
 }
 
 export function getBooleanOption(interaction: DiscordInteraction, name: string): boolean {

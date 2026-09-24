@@ -5,6 +5,7 @@ import { subscribeEvents } from './events';
 import { canConfigure } from './guildAccess';
 import { HomeEditPage, HomePage } from './HomePage';
 import { HoneypotCreatePage, HoneypotsPage } from './HoneypotsPage';
+import { ConversationPage, OfficerRequestsPage } from './OfficerRequestsPage';
 import { PostEditorPage } from './PostEditorPage';
 import { PostsPage } from './PostsPage';
 import { RequireAccess } from './RequireAccess';
@@ -43,6 +44,8 @@ function readSelectedGuild(): string | undefined {
  *   /posts/edit/:id    edit a post                Officers
  *   /honeypots         honeypot channels          Officers
  *   /honeypots/create  new honeypot               Officers
+ *   /officer-requests  what members wrote to the officers    Officers
+ *   /officer-requests/:conversationId   one conversation, read-only   Officers
  *   /settings          guild settings             Guild-Assistants and Officers
  *   /guilds/create     set up a new guild         anyone
  */
@@ -159,6 +162,22 @@ export function GuildShell({ guilds, setup, currentUser, onGuildsChanged }: Prop
           />
           <Route path="honeypot" element={<Navigate to="/honeypots" replace />} />
           <Route
+            path="officer-requests"
+            element={
+              <RequireAccess allowed={guild.isOfficer}>
+                <OfficerRequestsPage guild={guild} timezone={timezone} />
+              </RequireAccess>
+            }
+          />
+          <Route
+            path="officer-requests/:conversationId"
+            element={
+              <RequireAccess allowed={guild.isOfficer}>
+                <ConversationPage guild={guild} timezone={timezone} />
+              </RequireAccess>
+            }
+          />
+          <Route
             path="settings"
             element={
               <RequireAccess allowed={canConfigure(guild)}>
@@ -274,6 +293,7 @@ function GuildFrame({ guilds, guild, setup, onSelect }: FrameProps) {
           <NavLink to="/roster">Roster</NavLink>
           {guild.isOfficer && <NavLink to="/posts">Posts</NavLink>}
           {guild.isOfficer && <NavLink to="/honeypots">Honeypots</NavLink>}
+          {guild.isOfficer && <NavLink to="/officer-requests">Officer requests</NavLink>}
           {canConfigure(guild) && <NavLink to="/settings">Settings</NavLink>}
         </nav>
 

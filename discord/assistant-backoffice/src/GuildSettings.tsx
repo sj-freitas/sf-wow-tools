@@ -2,15 +2,19 @@ import { useEffect, useState, type FormEvent } from 'react';
 import {
   addGuildServer,
   deleteGuild,
+  fetchChannels,
   fetchEligibleServers,
   fetchRoleOptions,
   removeGuildServer,
   syncDiscord,
   setMainServer,
+  setOfficerRequestChannel,
   setOfficerRole,
   setRoleMapping,
   updateGuild,
 } from './api';
+import { channelKey, splitChannelKey } from './channelKey';
+import { ChannelSelect } from './ChannelSelect';
 import { RegionSelect } from './RegionSelect';
 import { useConfirm } from './useConfirm';
 import {
@@ -20,6 +24,7 @@ import {
   type Guild,
   type Region,
   type RoleOption,
+  type ServerChannels,
 } from './types';
 
 interface Props {
@@ -55,6 +60,7 @@ export function GuildSettings({ guild, regions, onChanged, onClose }: Props) {
       <DetailsSection guild={guild} regions={regions} run={run} />
       <ServersSection guild={guild} run={run} />
       <RolesSection guild={guild} run={run} />
+      <RequestChannelSection guild={guild} run={run} />
 
       <section className="settings-section danger-zone">
         <h4>Delete guild</h4>
@@ -329,5 +335,76 @@ function RoleRow({ title, hint, current, options, editable, onSave }: RoleRowPro
         </span>
       )}
     </div>
+  );
+}
+
+/**
+ * Where members' messages to the officers go (/contact-officer). Until it is set, the command
+ * tells members to contact an officer.
+ */
+function RequestChannelSection({ guild, run }: SectionProps) {
+  const [channels, setChannels] = useState<ServerChannels[] | null>(null);
+  const current = guild.officerRequestChannel
+    ? channelKey(guild.officerRequestChannel.serverId, guild.officerRequestChannel.channelId)
+    : '';
+  const [selected, setSelected] = useState(current);
+
+  useEffect(() => {
+    fetchChannels(guild.id)
+      .then(setChannels)
+      .catch(() => setChannels([]));
+  }, [guild.id]);
+  useEffect(() => setSelected(current), [current]);
+
+  const currentName = guild.officerRequestChannel
+    ? channels
+        ?.find((group) => group.serverId === guild.officerRequestChannel?.serverId)
+        ?.channels.find((channel) => channel.id === guild.officerRequestChannel?.channelId)?.name
+    : undefined;
+
+  return (
+    <section className="settings-section">
+      <h4>Officer Request Channel</h4>
+      <p className="muted">
+        Members write to the officers with <code>/contact-officer</code>, and their messages are
+        posted here. Pick a channel only officers can see. The bot needs to see it and be allowed to
+        send messages and embeds there; it posts a short note when you save. Until a channel is set,
+        the command tells members to contact an officer.
+      </p>
+      <p>
+        Current channel:{' '}
+        <strong>
+          {guild.officerRequestChannel ? `#${currentName ?? 'unknown channel'}` : 'not set'}
+        </strong>
+      </p>
+      <div className="inline-form">
+        {channels === null ? (
+          <select disabled>
+            <option>Loading channels…</option>
+          </select>
+        ) : (
+          <div className="inline-select">
+            <ChannelSelect groups={channels} value={selected} onChange={setSelected} />
+          </div>
+        )}
+        <button
+          type="button"
+          className="btn"
+          disabled={selected === '' || selected === current}
+          onClick={() => void run(setOfficerRequestChannel(guild.id, splitChannelKey(selected)))}
+        >
+          Save channel
+        </button>
+        {guild.officerRequestChannel && (
+          <button
+            type="button"
+            className="btn btn-danger"
+            onClick={() => void run(setOfficerRequestChannel(guild.id, null))}
+          >
+            Clear
+          </button>
+        )}
+      </div>
+    </section>
   );
 }

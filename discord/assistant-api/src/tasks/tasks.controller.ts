@@ -53,7 +53,7 @@ export class TasksController {
     @Req() req: AuthenticatedRequest,
     @Param('guildId') guildId: string,
   ): Promise<ServerChannelsDto[]> {
-    await this.guildAccess.assertOfficer(req.user.id, guildId);
+    await this.guildAccess.assertCanConfigure(req.user.id, guildId);
     return this.tasks.listChannels(guildId);
   }
 

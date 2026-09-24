@@ -1,5 +1,7 @@
 import type {
   CharacterPatch,
+  Conversation,
+  ConversationsPage,
   Honeypot,
   HoneypotInput,
   PostInput,
@@ -141,6 +143,27 @@ export const updateCharacter = (id: string, patch: CharacterPatch): Promise<void
 
 export const deleteCharacter = (id: string): Promise<void> =>
   request('DELETE', `/api/characters/${id}`);
+
+export const fetchOfficerRequests = (
+  guildId: string,
+  options: { query?: string; page?: number } = {},
+): Promise<ConversationsPage> => {
+  const params = new URLSearchParams();
+  if (options.query) params.set('query', options.query);
+  if (options.page && options.page > 1) params.set('page', String(options.page));
+  const search = params.toString();
+  return request('GET', `/api/guilds/${guildId}/officer-requests${search ? `?${search}` : ''}`);
+};
+
+export const fetchOfficerRequest = (guildId: string, publicId: string): Promise<Conversation> =>
+  request('GET', `/api/guilds/${guildId}/officer-requests/${publicId}`);
+
+/** `null` clears the channel. */
+export const setOfficerRequestChannel = (
+  guildId: string,
+  target: { serverId: string; channelId: string } | null,
+): Promise<void> =>
+  request('PUT', `/api/guilds/${guildId}/officer-request-channel`, target ?? { channelId: null });
 
 export const fetchHome = (guildId: string): Promise<GuildHome> =>
   request('GET', `/api/guilds/${guildId}/home`);

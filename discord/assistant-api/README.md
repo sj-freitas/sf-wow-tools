@@ -183,6 +183,40 @@ Officers only (`PUT /api/guilds/:id/home`, up to 10,000 characters; an empty tex
 rendered with `react-markdown` (GitHub flavour) which only builds elements and never raw HTML, so
 what an Officer writes can't inject scripts into what members see.
 
+### Contacting the officers (`/contact-officer`)
+
+Members write to the officers privately with the bot; officers answer from Discord and read the
+history in the backoffice. Every answer the bot gives is ephemeral (only the person who used the
+command sees it).
+
+- **Channel.** A Guild-Assistant or Officer picks the **Officer Request Channel** in guild Settings
+  (`PUT /api/guilds/:id/officer-request-channel`; the bot posts a short note there to prove it can
+  write). Until it is set, `/contact-officer` answers "The Officer Request Channel is not setup for
+  your guild, please contact an officer to set it up."
+- **`/contact-officer message [anonymous] [conversation-id]`.** Posts an embed in the request
+  channel. The first message creates a conversation with a random **8-digit id, unique within the
+  guild**, and decides for good whether the member is anonymous (default: yes); later messages
+  ignore `anonymous`. An anonymous member is shown as "Anonymous member"; otherwise as a profile
+  link (no ping). The member is told the id and how to continue. Continuing needs `conversation-id`
+  and only works for the member who started it (anyone else is told it doesn't exist). A member can
+  send one message every 30 seconds.
+- **`/contact-officer-reply conversation-id message`.** Only for holders of the guild's Officer role
+  (checked in the main server); everyone else is told they don't have permission. The reply is
+  posted in the channel as a reply to the request, showing the officer, saved, and sent to the
+  member by **DM**: it names the guild, the officer, quotes the original request, and explains how to
+  answer (`/contact-officer` with the conversation id). If the DM can't be delivered (DMs closed) the
+  reply is still saved and posted, and the officer is told.
+- **Privacy.** The member's Discord id is stored (the bot needs it to DM and to check who may
+  continue a conversation) but is never returned by the API for an anonymous conversation: the
+  conversation is fetched by its id, and the DTO leaves out the member entirely (unit tested). Officers
+  are never anonymous.
+- **Backoffice** (Officers only): **Officer requests** lists conversations, most recently active
+  first, ten to a page, with a search by id or text (`/officer-requests?q=&page=`) and an "Awaiting
+  reply" badge. `/officer-requests/:conversationId` shows the whole conversation read-only, each
+  message labelled as the member (anonymous or by name) or as an officer, by name.
+
+Not built yet: closing a conversation, deleting old ones after a while, and blocking a sender.
+
 ### Background worker, posts and honeypots
 
 Officers manage these in the backoffice under the **Posts** and **Honeypots** tabs of a guild

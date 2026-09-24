@@ -29,6 +29,8 @@ export interface UserGuildDto {
   region: string;
   servers: GuildServerDto[];
   officerRole: { id: string; name: string } | null;
+  /** Where members' messages to the officers are posted; null until set. */
+  officerRequestChannel: { serverId: string; channelId: string } | null;
   /** Optional Discord roles (in the main server) standing for Raider and Social, for roster setup. */
   roleMappings: RoleMappingsDto;
   /** Holds Guild-Assistant in every server: configures the guild (details, servers, Officer role). */
@@ -107,6 +109,8 @@ const guildSelect = {
   region: true,
   officerRoleId: true,
   officerRoleName: true,
+  officerRequestServerId: true,
+  officerRequestChannelId: true,
   servers: {
     select: { discordId: true, name: true, isMain: true },
     orderBy: [{ isMain: 'desc' }, { name: 'asc' }],
@@ -117,7 +121,14 @@ const guildSelect = {
 type GuildRow = Prisma.GuildGetPayload<{ select: typeof guildSelect }>;
 
 function toDto(guild: GuildRow, isAdmin: boolean, isOfficer: boolean): UserGuildDto {
-  const { officerRoleId, officerRoleName, roleMappings, ...rest } = guild;
+  const {
+    officerRoleId,
+    officerRoleName,
+    officerRequestServerId,
+    officerRequestChannelId,
+    roleMappings,
+    ...rest
+  } = guild;
   const mapped = (key: GuildRoleKey) => {
     const mapping = roleMappings.find((m) => m.guildRole === key);
     return mapping ? { id: mapping.discordRoleId, name: mapping.discordRoleName } : null;
@@ -125,6 +136,10 @@ function toDto(guild: GuildRow, isAdmin: boolean, isOfficer: boolean): UserGuild
   return {
     ...rest,
     roleMappings: { RAIDER: mapped('RAIDER'), SOCIAL: mapped('SOCIAL') },
+    officerRequestChannel:
+      officerRequestServerId && officerRequestChannelId
+        ? { serverId: officerRequestServerId, channelId: officerRequestChannelId }
+        : null,
     officerRole:
       officerRoleId && officerRoleName ? { id: officerRoleId, name: officerRoleName } : null,
     isAdmin,

@@ -42,6 +42,11 @@ enum TaskRunStatus {
   MISSED
 }
 
+enum OfficerMessageAuthor {
+  USER
+  OFFICER
+}
+
 enum HoneypotAction {
   // Test mode: what the bot would have done.
   WOULD_BAN
@@ -51,31 +56,35 @@ enum HoneypotAction {
 
 // A WoW guild. It can be managed from more than one Discord server.
 model Guild {
-  id              String             @id @default(uuid()) @db.Uuid
-  name            String
-  realm           String
-  faction         Faction
+  id                      String                @id @default(uuid()) @db.Uuid
+  name                    String
+  realm                   String
+  faction                 Faction
   // One of GAME_VERSIONS (src/game/game-version.ts); a string so adding a
   // version doesn't need a migration.
-  gameVersion     String             @map("game_version")
+  gameVersion             String                @map("game_version")
   // Officers hold this role in the guild's main server (see DiscordServer.isMain)
   // and can manage the guild like a Guild-Assistant. Null = no officer role set.
-  officerRoleId   String?            @map("officer_role_id")
-  officerRoleName String?            @map("officer_role_name")
+  officerRoleId           String?               @map("officer_role_id")
+  officerRoleName         String?               @map("officer_role_name")
   // One of the keys of REGIONS (src/config/regions.ts); decides the timezone schedules run in.
-  region          String             @default("EU")
+  region                  String                @default("EU")
   // Optional welcome post (markdown) shown on the guild's home page; null = none written yet.
-  homeMarkdown    String?            @map("home_markdown")
-  homeUpdatedAt   DateTime?          @map("home_updated_at")
-  homeUpdatedById String?            @map("home_updated_by_id") @db.Uuid
-  scheduledTasks  ScheduledTask[]
-  honeypots       Honeypot[]
-  servers         DiscordServer[]
-  roleMappings    GuildRoleMapping[]
-  players         Player[]
-  access          GuildAccess[]
-  createdAt       DateTime           @default(now()) @map("created_at")
-  updatedAt       DateTime           @updatedAt @map("updated_at")
+  homeMarkdown            String?               @map("home_markdown")
+  homeUpdatedAt           DateTime?             @map("home_updated_at")
+  homeUpdatedById         String?               @map("home_updated_by_id") @db.Uuid
+  // Where members' messages to the officers are posted; null until set in the guild settings.
+  officerRequestServerId  String?               @map("officer_request_server_id")
+  officerRequestChannelId String?               @map("officer_request_channel_id")
+  officerConversations    OfficerConversation[]
+  scheduledTasks          ScheduledTask[]
+  honeypots               Honeypot[]
+  servers                 DiscordServer[]
+  roleMappings            GuildRoleMapping[]
+  players                 Player[]
+  access                  GuildAccess[]
+  createdAt               DateTime              @default(now()) @map("created_at")
+  updatedAt               DateTime              @updatedAt @map("updated_at")
 
   @@unique([name, realm, gameVersion])
   @@map("guilds")
@@ -295,4 +304,46 @@ model HoneypotEvent {
 
   @@index([honeypotId, createdAt])
   @@map("honeypot_events")
+}
+
+// A member's conversation with the officers (/contact-officer). The first message decides whether
+// the member stays anonymous. `userDiscordId` is only for the bot (to DM replies and to check that
+// whoever continues a conversation started it); it is never returned for an anonymous conversation.
+model OfficerConversation {
+  id            String           @id @default(uuid()) @db.Uuid
+  guildId       String           @map("guild_id") @db.Uuid
+  guild         Guild            @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  // The 8-digit id members and officers use, unique within the guild.
+  publicId      Int              @map("public_id")
+  isAnonymous   Boolean          @map("is_anonymous")
+  userDiscordId String           @map("user_discord_id")
+  // The member's name at the time; only kept when the conversation is not anonymous.
+  userName      String?          @map("user_name")
+  messages      OfficerMessage[]
+  createdAt     DateTime         @default(now()) @map("created_at")
+  // Bumped by every message, so it is the "last activity".
+  updatedAt     DateTime         @updatedAt @map("updated_at")
+
+  @@unique([guildId, publicId])
+  @@index([guildId, updatedAt])
+  @@map("officer_conversations")
+}
+
+model OfficerMessage {
+  id               String               @id @default(uuid()) @db.Uuid
+  conversationId   String               @map("conversation_id") @db.Uuid
+  conversation     OfficerConversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  author           OfficerMessageAuthor
+  // Officer replies only: officers are never anonymous.
+  officerDiscordId String?              @map("officer_discord_id")
+  officerName      String?              @map("officer_name")
+  content          String
+  // The post in the officer channel, so follow-ups can reply to it.
+  discordMessageId String?              @map("discord_message_id")
+  // Officer replies only: whether the DM reached the member.
+  dmDelivered      Boolean?             @map("dm_delivered")
+  createdAt        DateTime             @default(now()) @map("created_at")
+
+  @@index([conversationId, createdAt])
+  @@map("officer_messages")
 }

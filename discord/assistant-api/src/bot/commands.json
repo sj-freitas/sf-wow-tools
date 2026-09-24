@@ -114,5 +114,53 @@
         "required": true
       }
     ]
+  },
+  {
+    "name": "contact-officer",
+    "description": "Send a private message to the guild's officers",
+    "options": [
+      {
+        "name": "message",
+        "description": "What you want to tell the officers",
+        "type": 3,
+        "required": true,
+        "max_length": 3500
+      },
+      {
+        "name": "anonymous",
+        "description": "Stay anonymous to the officers (default: yes). Only the first message of a conversation counts",
+        "type": 5,
+        "required": false
+      },
+      {
+        "name": "conversation-id",
+        "description": "Continue an earlier conversation (the ID you were given)",
+        "type": 4,
+        "required": false,
+        "min_value": 10000000,
+        "max_value": 99999999
+      }
+    ]
+  },
+  {
+    "name": "contact-officer-reply",
+    "description": "Officers only: reply to a member's conversation",
+    "options": [
+      {
+        "name": "conversation-id",
+        "description": "The conversation ID shown on the request",
+        "type": 4,
+        "required": true,
+        "min_value": 10000000,
+        "max_value": 99999999
+      },
+      {
+        "name": "message",
+        "description": "Your reply (the member gets it by DM)",
+        "type": 3,
+        "required": true,
+        "max_length": 3500
+      }
+    ]
   }
 ]
