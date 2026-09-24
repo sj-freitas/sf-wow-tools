@@ -1,11 +1,13 @@
 import { useState, type FormEvent } from 'react';
 import { createCharacter, updateCharacter } from './api';
+import { MultiSelect } from './MultiSelect';
+import { PlayerPicker } from './PlayerPicker';
 import { ROLE_LABELS, WOW_CLASSES, type Character, type Guild, type Role } from './types';
 
 interface Props {
   guild: Guild;
-  /** When set the form edits this character (of the given Discord user) instead of adding one. */
-  editing?: { character: Character; discordUserId: string };
+  /** When set the form edits this character instead of adding one. */
+  editing?: { character: Character; playerLabel: string };
   onSaved: () => void;
   onCancel: () => void;
 }
@@ -13,9 +15,14 @@ interface Props {
 const fullName = (character: Character) =>
   `${character.firstName}-${character.lastName}`.replace(/-$/, '');
 
+const ROLE_OPTIONS = (Object.keys(ROLE_LABELS) as Role[]).map((role) => ({
+  value: role,
+  label: ROLE_LABELS[role],
+}));
+
 export function CharacterForm({ guild, editing, onSaved, onCancel }: Props) {
   const initial = editing?.character;
-  const [discordUserId, setDiscordUserId] = useState(editing?.discordUserId ?? '');
+  const [discordUserId, setDiscordUserId] = useState('');
   const [name, setName] = useState(initial ? fullName(initial) : '');
   const [characterClass, setCharacterClass] = useState<string>(initial?.class ?? WOW_CLASSES[0]);
   const [roles, setRoles] = useState<Role[]>(initial?.roles ?? ['TANK']);
@@ -23,14 +30,13 @@ export function CharacterForm({ guild, editing, onSaved, onCancel }: Props) {
   const [isMain, setIsMain] = useState(initial?.isMain ?? false);
   const [error, setError] = useState<string | null>(null);
 
-  const toggleRole = (role: Role) =>
-    setRoles((current) =>
-      current.includes(role) ? current.filter((r) => r !== role) : [...current, role],
-    );
-
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
     setError(null);
+    if (!initial && discordUserId === '') {
+      setError('Pick a player from the list, or paste their Discord user ID.');
+      return;
+    }
     const fields = {
       name: name.trim(),
       class: characterClass,
@@ -40,7 +46,7 @@ export function CharacterForm({ guild, editing, onSaved, onCancel }: Props) {
     };
     (initial
       ? updateCharacter(initial.id, fields)
-      : createCharacter(guild.id, { ...fields, discordUserId: discordUserId.trim() })
+      : createCharacter(guild.id, { ...fields, discordUserId })
     )
       .then(onSaved)
       .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)));
@@ -49,16 +55,14 @@ export function CharacterForm({ guild, editing, onSaved, onCancel }: Props) {
   return (
     <form className="card-body" onSubmit={handleSubmit}>
       <div className="form-grid">
-        <label className="field">
-          Discord user ID
-          <input
-            value={discordUserId}
-            onChange={(e) => setDiscordUserId(e.target.value)}
-            inputMode="numeric"
-            disabled={editing !== undefined}
-            required
-          />
-        </label>
+        <div className="field">
+          Discord user
+          {editing ? (
+            <input value={editing.playerLabel} disabled />
+          ) : (
+            <PlayerPicker guildId={guild.id} value={discordUserId} onChange={setDiscordUserId} />
+          )}
+        </div>
         <label className="field">
           Character name
           <input
@@ -76,6 +80,15 @@ export function CharacterForm({ guild, editing, onSaved, onCancel }: Props) {
             ))}
           </select>
         </label>
+        <div className="field">
+          Roles
+          <MultiSelect
+            options={ROLE_OPTIONS}
+            value={roles}
+            onChange={setRoles}
+            placeholder="Select roles"
+          />
+        </div>
         <label className="field">
           Level (optional)
           <input
@@ -86,21 +99,6 @@ export function CharacterForm({ guild, editing, onSaved, onCancel }: Props) {
             onChange={(e) => setLevel(e.target.value)}
           />
         </label>
-        <div className="field">
-          Roles
-          <div className="checks">
-            {(Object.keys(ROLE_LABELS) as Role[]).map((role) => (
-              <label key={role}>
-                <input
-                  type="checkbox"
-                  checked={roles.includes(role)}
-                  onChange={() => toggleRole(role)}
-                />
-                {ROLE_LABELS[role]}
-              </label>
-            ))}
-          </div>
-        </div>
         <div className="field">
           Main character
           <div className="checks">

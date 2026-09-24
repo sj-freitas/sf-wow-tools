@@ -118,13 +118,23 @@ export class AuthService {
 
     const guilds = await this.prisma.guild.findMany({
       where: { servers: { some: { discordId: { in: userServerIds } } } },
-      select: { id: true, servers: { select: { discordId: true } } },
+      select: {
+        id: true,
+        officerRoleId: true,
+        servers: { select: { discordId: true, isMain: true } },
+      },
     });
     // Admin of a guild = holds the role in *every* one of its Discord servers.
     const adminGuildIds = new Set(
       guilds
         .filter((guild) => guild.servers.every((server) => adminServerIds.has(server.discordId)))
         .map((guild) => guild.id),
+    );
+
+    const officerGuildIds = await this.findOfficerGuildIds(
+      accessToken,
+      guilds,
+      new Set(userServerIds),
     );
 
     await this.prisma.$transaction([
@@ -134,6 +144,7 @@ export class AuthService {
           userId,
           guildId: guild.id,
           isAdmin: adminGuildIds.has(guild.id),
+          isOfficer: officerGuildIds.has(guild.id),
         })),
       }),
       this.prisma.userAdminServer.deleteMany({ where: { userId } }),
@@ -174,6 +185,36 @@ export class AuthService {
         .map(async (server) => ((await this.hasAdminRole(accessToken, server.id)) ? server : null)),
     );
     return results.filter((server): server is DiscordPartialGuild => server !== null);
+  }
+
+  /** Guilds where the user holds the guild's officer role in its main server. */
+  private async findOfficerGuildIds(
+    accessToken: string,
+    guilds: {
+      id: string;
+      officerRoleId: string | null;
+      servers: { discordId: string; isMain: boolean }[];
+    }[],
+    userServerIds: Set<string>,
+  ): Promise<Set<string>> {
+    const results = await Promise.all(
+      guilds.map(async (guild) => {
+        const main = guild.servers.find((server) => server.isMain);
+        if (!guild.officerRoleId || !main || !userServerIds.has(main.discordId)) {
+          return null;
+        }
+        try {
+          const member = await this.discord.fetchGuildMember(accessToken, main.discordId);
+          return member.roles.includes(guild.officerRoleId) ? guild.id : null;
+        } catch (error) {
+          this.logger.warn(
+            `Could not check officer role in server ${main.discordId}: ${String(error)}`,
+          );
+          return null;
+        }
+      }),
+    );
+    return new Set(results.filter((guildId): guildId is string => guildId !== null));
   }
 
   private async hasAdminRole(accessToken: string, discordServerId: string): Promise<boolean> {

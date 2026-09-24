@@ -14,6 +14,8 @@ export interface Character {
 export interface Player {
   id: string;
   discordUserId: string;
+  discordUsername: string | null;
+  discordDisplayName: string | null;
   guildId: string;
   characters: Character[];
 }
@@ -31,18 +33,43 @@ export interface Guild {
   realm: string;
   faction: Faction;
   gameVersion: string;
-  /** Holds the admin role in all of the guild's servers: can manage it. */
-  isAdmin: boolean;
   servers: GuildServer[];
+  /** Role in the main server whose holders can manage the guild. */
+  officerRole: { id: string; name: string } | null;
+  /** Holds the admin role in all servers: can also set the main server and Officer role. */
+  isAdmin: boolean;
+  isOfficer: boolean;
+  /** isAdmin || isOfficer: can manage characters, servers and the guild. */
+  canManage: boolean;
 }
 
 export interface GuildServer {
   discordId: string;
   name: string;
+  isMain: boolean;
+}
+
+export interface GuildDetails {
+  name: string;
+  realm: string;
+  faction: Faction;
+  gameVersion: string;
+}
+
+export interface RoleOption {
+  id: string;
+  name: string;
+}
+
+export interface Person {
+  discordUserId: string;
+  username: string | null;
+  displayName: string | null;
+  characterNames: string[];
 }
 
 export interface EligibleServers {
-  servers: GuildServer[];
+  servers: { discordId: string; name: string }[];
 }
 
 export interface SetupInfo {
@@ -53,12 +80,9 @@ export interface SetupInfo {
 // Keep in sync with assistant-api/src/game/game-version.ts.
 export const GAME_VERSIONS = ['Forever'] as const;
 
-export interface NewGuildInput {
-  name: string;
-  realm: string;
-  faction: Faction;
-  gameVersion: string;
+export interface NewGuildInput extends GuildDetails {
   discordServerIds: string[];
+  mainServerId: string;
 }
 
 // Keep in sync with assistant-api/src/game/wow-class.ts.

@@ -14,6 +14,17 @@ export interface DiscordPartialGuild {
   name: string;
 }
 
+export interface DiscordProfile {
+  id: string;
+  username: string;
+  global_name: string | null;
+}
+
+export interface DiscordServerMember {
+  nick: string | null;
+  user: DiscordProfile;
+}
+
 export interface DiscordRole {
   id: string;
   name: string;
@@ -89,6 +100,22 @@ export class DiscordOAuthService {
       }
       after = page[page.length - 1].id;
     }
+  }
+
+  /** Any user's public profile by id, read with the bot token (no intent needed). */
+  fetchUserById(userId: string): Promise<DiscordProfile> {
+    return this.get<DiscordProfile>(`/users/${userId}`, `Bot ${this.botToken}`);
+  }
+
+  /**
+   * A user's member record in a server, read with the bot token. Fails (404)
+   * when the user isn't in the server; needs the bot to be in the server.
+   */
+  fetchServerMember(serverId: string, userId: string): Promise<DiscordServerMember> {
+    return this.get<DiscordServerMember>(
+      `/guilds/${serverId}/members/${userId}`,
+      `Bot ${this.botToken}`,
+    );
   }
 
   /** The user's own member record (role ids) in a server. Needs `guilds.members.read`. */

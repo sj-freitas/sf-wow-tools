@@ -1,10 +1,16 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma, type Role } from '@prisma/client';
+import { DiscordOAuthService } from '../auth/discord-oauth.service';
 import { PrismaService } from '../database/prisma.service';
 import { RealtimeService } from '../realtime/realtime.service';
 import type { CharacterName } from './character-name';
 
-export interface CharacterOwner {
+export interface DiscordNames {
+  username?: string;
+  displayName?: string | null;
+}
+
+export interface CharacterOwner extends DiscordNames {
   discordServerId: string;
   discordUserId: string;
 }
@@ -36,6 +42,7 @@ export class CharactersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly realtime: RealtimeService,
+    private readonly discord: DiscordOAuthService,
   ) {}
 
   /**
@@ -50,7 +57,7 @@ export class CharactersService {
     if (!guild) {
       return 'no-guild';
     }
-    return this.createForPlayer(guild, owner.discordUserId, character);
+    return this.createForPlayer(guild, owner.discordUserId, character, owner);
   }
 
   /** Same as `add`, addressed by guild id (used by the backoffice). */
@@ -58,6 +65,7 @@ export class CharactersService {
     guildId: string,
     discordUserId: string,
     character: NewCharacter,
+    names?: DiscordNames,
   ): Promise<'created' | 'duplicate' | 'no-guild'> {
     const guild = await this.prisma.guild.findUnique({
       where: { id: guildId },
@@ -66,7 +74,31 @@ export class CharactersService {
     if (!guild) {
       return 'no-guild';
     }
-    return this.createForPlayer(guild, discordUserId, character);
+    return this.createForPlayer(guild, discordUserId, character, names);
+  }
+
+  /**
+   * Discord names of the user if they are a member of at least one of the
+   * guild's Discord servers, otherwise null.
+   */
+  async findGuildMemberNames(
+    guildId: string,
+    discordUserId: string,
+  ): Promise<Required<DiscordNames> | null> {
+    const servers = await this.prisma.discordServer.findMany({
+      where: { guildId },
+      select: { discordId: true },
+    });
+    const lookups = await Promise.allSettled(
+      servers.map((server) => this.discord.fetchServerMember(server.discordId, discordUserId)),
+    );
+    for (const lookup of lookups) {
+      if (lookup.status === 'fulfilled') {
+        const { nick, user } = lookup.value;
+        return { username: user.username, displayName: nick ?? user.global_name };
+      }
+    }
+    return null;
   }
 
   async update(characterId: string, patch: CharacterUpdate): Promise<void> {
@@ -101,11 +133,20 @@ export class CharactersService {
     guild: GuildRef,
     discordUserId: string,
     character: NewCharacter,
+    names?: DiscordNames,
   ): Promise<'created' | 'duplicate'> {
     const player = await this.prisma.player.upsert({
       where: { guildId_discordUserId: { guildId: guild.id, discordUserId } },
-      create: { guildId: guild.id, discordUserId },
-      update: {},
+      create: {
+        guildId: guild.id,
+        discordUserId,
+        discordUsername: names?.username,
+        discordDisplayName: names?.displayName,
+      },
+      update: {
+        discordUsername: names?.username,
+        discordDisplayName: names?.displayName,
+      },
     });
 
     try {

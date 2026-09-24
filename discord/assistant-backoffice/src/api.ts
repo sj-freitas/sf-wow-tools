@@ -2,9 +2,12 @@ import type {
   CharacterPatch,
   EligibleServers,
   Guild,
+  GuildDetails,
   NewCharacterInput,
   NewGuildInput,
+  Person,
   Player,
+  RoleOption,
   SetupInfo,
   User,
 } from './types';
@@ -41,6 +44,27 @@ export const createGuild = (input: NewGuildInput): Promise<Guild> =>
 
 export const removeGuildServer = (guildId: string, discordServerId: string): Promise<void> =>
   request('DELETE', `/api/guilds/${guildId}/servers/${discordServerId}`);
+
+export const updateGuild = (guildId: string, details: GuildDetails): Promise<void> =>
+  request('PATCH', `/api/guilds/${guildId}`, details);
+
+export const deleteGuild = (guildId: string): Promise<void> =>
+  request('DELETE', `/api/guilds/${guildId}`);
+
+export const addGuildServer = (guildId: string, discordServerId: string): Promise<void> =>
+  request('POST', `/api/guilds/${guildId}/servers`, { discordServerId });
+
+export const setMainServer = (guildId: string, discordServerId: string): Promise<void> =>
+  request('PUT', `/api/guilds/${guildId}/main-server`, { discordServerId });
+
+export const fetchOfficerRoleOptions = (guildId: string): Promise<RoleOption[]> =>
+  request('GET', `/api/guilds/${guildId}/officer-role-options`);
+
+export const setOfficerRole = (guildId: string, roleId: string | null): Promise<void> =>
+  request('PUT', `/api/guilds/${guildId}/officer-role`, { roleId });
+
+export const fetchPeople = (guildId: string): Promise<Person[]> =>
+  request('GET', `/api/guilds/${guildId}/people`);
 
 export const createCharacter = (guildId: string, input: NewCharacterInput): Promise<void> =>
   request('POST', `/api/guilds/${guildId}/characters`, input);

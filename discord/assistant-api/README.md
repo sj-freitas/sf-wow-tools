@@ -92,26 +92,37 @@ just another controller.
    `https://<your-deployment>/api/discord/interactions`. Discord will immediately send a test
    `PING` to verify it — the app must already be deployed and reachable for this to succeed.
 
-### Guilds and backoffice admins
+### Guilds, admins and officers
 
 The admin role name is a single setting, `adminRoleName` in `src/config/app.config.ts`
-(`Guild-Assistant`).
+(`Guild-Assistant`). There are two levels of access to a guild:
 
-- **Creating a guild:** any logged-in user can hit "Create guild" in the backoffice
-  (`POST /api/guilds`). They pick the name, realm, faction, game version and the Discord servers to
-  attach. Only servers where the user holds the admin role, the bot is installed, and that don't
-  belong to a guild yet are offered (`GET /api/guilds/eligible-servers`). The creator becomes an
-  admin of the new guild.
-- **Managing a guild:** a user is admin of a guild if they hold the role in **every** Discord server
-  attached to it. Admins can add, edit and remove characters (`POST /api/guilds/:id/characters`,
-  `PATCH`/`DELETE /api/characters/:id`) and remove servers from the guild
-  (`DELETE /api/guilds/:id/servers/:discordServerId`; a guild always keeps at least one server).
-  Everyone else in the guild is read-only.
+- **Guild-Assistant** (`guild_access.is_admin`): holds the role in **every** Discord server attached
+  to the guild.
+- **Officer** (`guild_access.is_officer`): holds the guild's Officer role in its **main** server.
+  The Guild-Assistant picks that role (from the main server's role list) in "Manage guild".
+
+Both can manage the guild: add/edit/remove characters (`/api/guilds/:id/characters`,
+`/api/characters/:id`), edit its details, delete it, and add/remove Discord servers (a guild always
+keeps at least one, and its main server can't be removed). Only Guild-Assistant holders can change
+the **main server** (`PUT /api/guilds/:id/main-server`, which also clears the Officer role, since
+roles belong to a server) and the **Officer role** (`PUT /api/guilds/:id/officer-role`). Everyone else
+in the guild is read-only.
+
+- **Creating a guild:** any logged-in user (`POST /api/guilds`) picks name, realm, faction, game
+  version and the Discord servers to attach, and which one is main. Only servers where the user holds
+  the admin role, the bot is installed, and that don't belong to a guild yet are offered
+  (`GET /api/guilds/eligible-servers`). The creator becomes a Guild-Assistant of the new guild.
+- **Player search:** `GET /api/guilds/:id/people` lists players and backoffice users of the guild
+  with their Discord names and character names; the backoffice searches it (typo tolerant) when adding
+  a character. Adding by Discord ID only works for members of at least one of the guild's servers
+  (checked with the bot token, which also gives the username). Discord usernames are stored on
+  `players` when the bot sees the user, when a character is added, and lazily when players are
+  listed.
 - **How roles are read:** at login the API lists the bot's servers (bot token), and for each of the
   user's servers that the bot is in, reads the user's role ids (their token, scope
-  `guilds.members.read`) and the server's roles (bot token). The result is stored in
-  `guild_access.is_admin` and `user_admin_servers`, so it only refreshes at login: after gaining or
-  losing the role, log out and back in.
+  `guilds.members.read`) and the server's roles (bot token). Officer status only needs the user's
+  role ids in the main server. Results are stored in `guild_access` and `user_admin_servers`.
 
 ### Fresh Discord data and live updates
 

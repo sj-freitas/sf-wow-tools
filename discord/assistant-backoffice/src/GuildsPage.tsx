@@ -1,7 +1,9 @@
 import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
-import { deleteCharacter, fetchPlayers, removeGuildServer } from './api';
+import { deleteCharacter, fetchPlayers } from './api';
 import { CharacterForm } from './CharacterForm';
 import { CreateGuildForm } from './CreateGuildForm';
+import { playerLabel } from './format';
+import { GuildSettings } from './GuildSettings';
 import { SetupInstructions } from './SetupInstructions';
 import { ROLE_LABELS, type Guild, type Player, type SetupInfo } from './types';
 
@@ -18,6 +20,7 @@ export function GuildsPage({ guilds, setup, onGuildsChanged }: Props) {
   const [adding, setAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
+  const [managing, setManaging] = useState(false);
 
   const load = useCallback(() => {
     fetchPlayers()
@@ -94,6 +97,21 @@ export function GuildsPage({ guilds, setup, onGuildsChanged }: Props) {
     player.characters.map((character) => ({ player, character })),
   );
 
+  const access = guild.isAdmin
+    ? {
+        label: setup.adminRoleName,
+        hint: `You hold ${setup.adminRoleName} in every server of this guild: full control, including the main server and Officer role.`,
+      }
+    : guild.isOfficer
+      ? {
+          label: 'Officer',
+          hint: `You hold the guild's Officer role (${guild.officerRole?.name ?? ''}): you can manage the guild, except for the main server and Officer role.`,
+        }
+      : {
+          label: 'Member',
+          hint: 'You can view this guild. Managing it needs the Officer role, or the Guild-Assistant role in all its servers.',
+        };
+
   return (
     <>
       <div className="topbar">
@@ -108,6 +126,8 @@ export function GuildsPage({ guilds, setup, onGuildsChanged }: Props) {
               onClick={() => {
                 setSelectedId(g.id);
                 setAdding(false);
+                setEditingId(null);
+                setManaging(false);
               }}
             >
               {g.name}
@@ -128,8 +148,8 @@ export function GuildsPage({ guilds, setup, onGuildsChanged }: Props) {
             <div className="card-title">
               <h2>{guild.name}</h2>
               <span className={`badge badge-${guild.faction.toLowerCase()}`}>{guild.faction}</span>
-              <span className={`badge ${guild.isAdmin ? 'badge-admin' : ''}`}>
-                {guild.isAdmin ? 'Guild Assistant' : 'Member'}
+              <span className={`badge ${guild.canManage ? 'badge-admin' : ''}`} title={access.hint}>
+                Your access: {access.label}
               </span>
             </div>
             <div className="card-meta">
@@ -137,17 +157,28 @@ export function GuildsPage({ guilds, setup, onGuildsChanged }: Props) {
               {guildPlayers.length === 1 ? '' : 's'}
             </div>
           </div>
-          {guild.isAdmin && !adding && (
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={() => {
-                setEditingId(null);
-                setAdding(true);
-              }}
-            >
-              + Add character
-            </button>
+          {guild.canManage && (
+            <div className="settings-actions">
+              <button
+                type="button"
+                className="btn"
+                onClick={() => setManaging((current) => !current)}
+              >
+                {managing ? 'Hide settings' : 'Manage guild'}
+              </button>
+              {!adding && (
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => {
+                    setEditingId(null);
+                    setAdding(true);
+                  }}
+                >
+                  + Add character
+                </button>
+              )}
+            </div>
           )}
         </div>
 
@@ -155,27 +186,22 @@ export function GuildsPage({ guilds, setup, onGuildsChanged }: Props) {
           {guild.servers.map((server) => (
             <span key={server.discordId} className="server-chip">
               {server.name || server.discordId}
-              {guild.isAdmin && (
-                <button
-                  type="button"
-                  className="chip-remove"
-                  aria-label={`Remove server ${server.name}`}
-                  title={
-                    guild.servers.length === 1
-                      ? 'A guild needs at least one server'
-                      : 'Remove this server from the guild'
-                  }
-                  disabled={guild.servers.length === 1}
-                  onClick={() =>
-                    run(removeGuildServer(guild.id, server.discordId).then(onGuildsChanged))
-                  }
-                >
-                  ×
-                </button>
-              )}
+              {server.isMain && guild.servers.length > 1 && <span className="badge">Main</span>}
             </span>
           ))}
         </div>
+
+        {managing && guild.canManage && (
+          <GuildSettings
+            key={guild.id}
+            guild={guild}
+            onChanged={async () => {
+              await onGuildsChanged();
+              load();
+            }}
+            onClose={() => setManaging(false)}
+          />
+        )}
 
         {adding && (
           <CharacterForm
@@ -200,7 +226,7 @@ export function GuildsPage({ guilds, setup, onGuildsChanged }: Props) {
                   <th>Roles</th>
                   <th>Level</th>
                   <th>Discord user</th>
-                  {guild.isAdmin && <th />}
+                  {guild.canManage && <th />}
                 </tr>
               </thead>
               <tbody>
@@ -214,8 +240,13 @@ export function GuildsPage({ guilds, setup, onGuildsChanged }: Props) {
                       <td>{character.class}</td>
                       <td>{character.roles.map((role) => ROLE_LABELS[role]).join(', ')}</td>
                       <td>{character.level}</td>
-                      <td className="muted">{player.discordUserId}</td>
-                      {guild.isAdmin && (
+                      <td>
+                        {playerLabel(player)}
+                        {playerLabel(player) !== player.discordUserId && (
+                          <span className="muted"> · {player.discordUserId}</span>
+                        )}
+                      </td>
+                      {guild.canManage && (
                         <td className="cell-actions">
                           <button
                             type="button"
@@ -242,7 +273,7 @@ export function GuildsPage({ guilds, setup, onGuildsChanged }: Props) {
                         <td colSpan={6}>
                           <CharacterForm
                             guild={guild}
-                            editing={{ character, discordUserId: player.discordUserId }}
+                            editing={{ character, playerLabel: playerLabel(player) }}
                             onSaved={() => {
                               setEditingId(null);
                               load();

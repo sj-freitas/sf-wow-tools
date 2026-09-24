@@ -22,6 +22,7 @@ export function CreateGuildForm({ setup, onCreated, onCancel }: Props) {
   const [faction, setFaction] = useState<Faction>('ALLIANCE');
   const [gameVersion, setGameVersion] = useState<string>(GAME_VERSIONS[0]);
   const [selected, setSelected] = useState<string[]>([]);
+  const [mainId, setMainId] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -35,6 +36,8 @@ export function CreateGuildForm({ setup, onCreated, onCancel }: Props) {
       current.includes(id) ? current.filter((s) => s !== id) : [...current, id],
     );
 
+  const effectiveMain = selected.includes(mainId) ? mainId : selected[0];
+
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
     setError(null);
@@ -44,6 +47,7 @@ export function CreateGuildForm({ setup, onCreated, onCancel }: Props) {
       faction,
       gameVersion,
       discordServerIds: selected,
+      mainServerId: effectiveMain,
     })
       .then(onCreated)
       .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)));
@@ -100,14 +104,27 @@ export function CreateGuildForm({ setup, onCreated, onCancel }: Props) {
           {eligible && eligible.servers.length > 0 && (
             <div className="checks checks-column">
               {eligible.servers.map((server) => (
-                <label key={server.discordId}>
-                  <input
-                    type="checkbox"
-                    checked={selected.includes(server.discordId)}
-                    onChange={() => toggle(server.discordId)}
-                  />
-                  {server.name}
-                </label>
+                <div key={server.discordId} className="server-row">
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={selected.includes(server.discordId)}
+                      onChange={() => toggle(server.discordId)}
+                    />
+                    {server.name}
+                  </label>
+                  {selected.length > 1 && selected.includes(server.discordId) && (
+                    <label className="main-pick">
+                      <input
+                        type="radio"
+                        name="main-server"
+                        checked={effectiveMain === server.discordId}
+                        onChange={() => setMainId(server.discordId)}
+                      />
+                      Main server
+                    </label>
+                  )}
+                </div>
               ))}
             </div>
           )}

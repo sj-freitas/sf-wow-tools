@@ -5,28 +5,37 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import { DiscordOAuthService } from '../auth/discord-oauth.service';
 import { APP_CONFIG } from '../config/app.config';
 import { PrismaService } from '../database/prisma.service';
 import { GAME_VERSIONS } from '../game/game-version';
 import { RealtimeService } from '../realtime/realtime.service';
 
+export type Faction = 'ALLIANCE' | 'HORDE';
+
 export interface GuildServerDto {
   discordId: string;
   name: string;
+  isMain: boolean;
 }
 
 export interface UserGuildDto {
   id: string;
   name: string;
   realm: string;
-  faction: 'ALLIANCE' | 'HORDE';
+  faction: Faction;
   gameVersion: string;
-  isAdmin: boolean;
   servers: GuildServerDto[];
+  officerRole: { id: string; name: string } | null;
+  /** Holds Guild-Assistant in every server: can also configure main server and Officer role. */
+  isAdmin: boolean;
+  isOfficer: boolean;
+  /** isAdmin || isOfficer: can manage characters, servers and the guild itself. */
+  canManage: boolean;
 }
 
 export interface EligibleServersDto {
-  servers: GuildServerDto[];
+  servers: { discordId: string; name: string }[];
 }
 
 export interface SetupInfoDto {
@@ -34,12 +43,28 @@ export interface SetupInfoDto {
   botInviteUrl: string;
 }
 
-export interface CreateGuildInput {
+export interface RoleOptionDto {
+  id: string;
+  name: string;
+}
+
+export interface PersonDto {
+  discordUserId: string;
+  username: string | null;
+  displayName: string | null;
+  characterNames: string[];
+}
+
+export interface CreateGuildInput extends GuildDetails {
+  discordServerIds: string[];
+  mainServerId: string;
+}
+
+export interface GuildDetails {
   name: string;
   realm: string;
-  faction: 'ALLIANCE' | 'HORDE';
+  faction: Faction;
   gameVersion: string;
-  discordServerIds: string[];
 }
 
 const guildSelect = {
@@ -48,23 +73,46 @@ const guildSelect = {
   realm: true,
   faction: true,
   gameVersion: true,
-  servers: { select: { discordId: true, name: true }, orderBy: { name: 'asc' } },
+  officerRoleId: true,
+  officerRoleName: true,
+  servers: {
+    select: { discordId: true, name: true, isMain: true },
+    orderBy: [{ isMain: 'desc' }, { name: 'asc' }],
+  },
 } satisfies Prisma.GuildSelect;
+
+type GuildRow = Prisma.GuildGetPayload<{ select: typeof guildSelect }>;
+
+function toDto(guild: GuildRow, isAdmin: boolean, isOfficer: boolean): UserGuildDto {
+  const { officerRoleId, officerRoleName, ...rest } = guild;
+  return {
+    ...rest,
+    officerRole:
+      officerRoleId && officerRoleName ? { id: officerRoleId, name: officerRoleName } : null,
+    isAdmin,
+    isOfficer,
+    canManage: isAdmin || isOfficer,
+  };
+}
+
+const isUniqueViolation = (error: unknown): boolean =>
+  error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002';
 
 @Injectable()
 export class GuildsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly realtime: RealtimeService,
+    private readonly discord: DiscordOAuthService,
   ) {}
 
   async findForUser(userId: string): Promise<UserGuildDto[]> {
-    const memberships = await this.prisma.guildAccess.findMany({
+    const access = await this.prisma.guildAccess.findMany({
       where: { userId },
       orderBy: { guild: { name: 'asc' } },
-      select: { isAdmin: true, guild: { select: guildSelect } },
+      select: { isAdmin: true, isOfficer: true, guild: { select: guildSelect } },
     });
-    return memberships.map(({ isAdmin, guild }) => ({ ...guild, isAdmin }));
+    return access.map(({ isAdmin, isOfficer, guild }) => toDto(guild, isAdmin, isOfficer));
   }
 
   /** Servers where the user holds the admin role and that don't belong to a guild yet. */
@@ -94,6 +142,9 @@ export class GuildsService {
         `You can only pick servers where you hold the ${APP_CONFIG.adminRoleName} role and that have no guild yet`,
       );
     }
+    if (!input.discordServerIds.includes(input.mainServerId)) {
+      throw new BadRequestException('The main server must be one of the selected servers');
+    }
 
     try {
       const guild = await this.prisma.guild.create({
@@ -102,14 +153,19 @@ export class GuildsService {
           realm: input.realm,
           faction: input.faction,
           gameVersion: input.gameVersion,
-          servers: { create: chosen.map((server) => ({ ...server! })) },
+          servers: {
+            create: chosen.map((server) => ({
+              ...server!,
+              isMain: server!.discordId === input.mainServerId,
+            })),
+          },
           access: { create: { userId, isAdmin: true } },
         },
         select: guildSelect,
       });
-      return { ...guild, isAdmin: true };
+      return toDto(guild, true, false);
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+      if (isUniqueViolation(error)) {
         throw new ConflictException(
           'A guild with this name, realm and game version already exists, or a server is already taken',
         );
@@ -118,20 +174,179 @@ export class GuildsService {
     }
   }
 
-  /** A guild must keep at least one server, otherwise nobody could reach it. */
+  async update(guildId: string, details: Partial<GuildDetails>): Promise<void> {
+    try {
+      await this.prisma.guild.update({ where: { id: guildId }, data: details });
+    } catch (error) {
+      if (isUniqueViolation(error)) {
+        throw new ConflictException(
+          'A guild with this name, realm and game version already exists',
+        );
+      }
+      throw error;
+    }
+    this.realtime.publish(guildId, 'guild');
+  }
+
+  async delete(guildId: string): Promise<void> {
+    // Access rows disappear with the guild, so remember who to notify.
+    const access = await this.prisma.guildAccess.findMany({
+      where: { guildId },
+      select: { userId: true },
+    });
+    await this.prisma.guild.delete({ where: { id: guildId } });
+    this.realtime.publish(
+      guildId,
+      'guild',
+      access.map((row) => row.userId),
+    );
+  }
+
+  /** Adds a server the user holds the admin role in (i.e. one that is eligible for them). */
+  async addServer(userId: string, guildId: string, discordServerId: string): Promise<void> {
+    const eligible = await this.findEligibleServers(userId);
+    const server = eligible.servers.find((candidate) => candidate.discordId === discordServerId);
+    if (!server) {
+      throw new BadRequestException(
+        `You can only add servers where you hold the ${APP_CONFIG.adminRoleName} role and that have no guild yet`,
+      );
+    }
+    try {
+      await this.prisma.discordServer.create({
+        data: { guildId, discordId: server.discordId, name: server.name, isMain: false },
+      });
+    } catch (error) {
+      if (isUniqueViolation(error)) {
+        throw new ConflictException('That server already belongs to a guild');
+      }
+      throw error;
+    }
+    this.realtime.publish(guildId, 'guild');
+  }
+
+  /** A guild keeps at least one server, and its main server can't be removed directly. */
   async removeServer(guildId: string, discordServerId: string): Promise<void> {
     const servers = await this.prisma.discordServer.findMany({
       where: { guildId },
-      select: { discordId: true },
+      select: { discordId: true, isMain: true },
     });
-    if (!servers.some((server) => server.discordId === discordServerId)) {
+    const target = servers.find((server) => server.discordId === discordServerId);
+    if (!target) {
       throw new NotFoundException('Server is not part of this guild');
     }
     if (servers.length === 1) {
       throw new BadRequestException('A guild needs at least one Discord server');
     }
+    if (target.isMain) {
+      throw new BadRequestException('Make another server the main one before removing this one');
+    }
     await this.prisma.discordServer.delete({ where: { discordId: discordServerId } });
     this.realtime.publish(guildId, 'guild');
+  }
+
+  /** Changing the main server clears the Officer role, since roles belong to a server. */
+  async setMainServer(guildId: string, discordServerId: string): Promise<void> {
+    const server = await this.prisma.discordServer.findFirst({
+      where: { guildId, discordId: discordServerId },
+      select: { id: true },
+    });
+    if (!server) {
+      throw new NotFoundException('Server is not part of this guild');
+    }
+    await this.prisma.$transaction([
+      this.prisma.discordServer.updateMany({ where: { guildId }, data: { isMain: false } }),
+      this.prisma.discordServer.update({ where: { id: server.id }, data: { isMain: true } }),
+      this.prisma.guild.update({
+        where: { id: guildId },
+        data: { officerRoleId: null, officerRoleName: null },
+      }),
+    ]);
+    this.realtime.publish(guildId, 'guild');
+  }
+
+  /** Roles of the main server, for picking the Officer role. */
+  async listOfficerRoleOptions(guildId: string): Promise<RoleOptionDto[]> {
+    const roles = await this.readMainServerRoles(guildId);
+    return roles.sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  async setOfficerRole(guildId: string, roleId: string | null): Promise<void> {
+    let data: { officerRoleId: string | null; officerRoleName: string | null } = {
+      officerRoleId: null,
+      officerRoleName: null,
+    };
+    if (roleId !== null) {
+      const role = (await this.readMainServerRoles(guildId)).find((r) => r.id === roleId);
+      if (!role) {
+        throw new BadRequestException('That role does not exist in the main server');
+      }
+      data = { officerRoleId: role.id, officerRoleName: role.name };
+    }
+    await this.prisma.guild.update({ where: { id: guildId }, data });
+    this.realtime.publish(guildId, 'guild');
+  }
+
+  /** Everyone we know by name in this guild: registered players and backoffice users. */
+  async findPeople(guildId: string): Promise<PersonDto[]> {
+    const [players, access] = await Promise.all([
+      this.prisma.player.findMany({
+        where: { guildId },
+        select: {
+          discordUserId: true,
+          discordUsername: true,
+          discordDisplayName: true,
+          characters: { select: { firstName: true, lastName: true } },
+        },
+      }),
+      this.prisma.guildAccess.findMany({
+        where: { guildId },
+        select: { user: { select: { discordId: true, username: true } } },
+      }),
+    ]);
+
+    const people = new Map<string, PersonDto>();
+    for (const player of players) {
+      people.set(player.discordUserId, {
+        discordUserId: player.discordUserId,
+        username: player.discordUsername,
+        displayName: player.discordDisplayName,
+        characterNames: player.characters.map((c) => `${c.firstName} ${c.lastName}`.trim()),
+      });
+    }
+    for (const { user } of access) {
+      const existing = people.get(user.discordId);
+      if (existing) {
+        existing.username ??= user.username;
+      } else {
+        people.set(user.discordId, {
+          discordUserId: user.discordId,
+          username: user.username,
+          displayName: null,
+          characterNames: [],
+        });
+      }
+    }
+    return [...people.values()];
+  }
+
+  private async readMainServerRoles(guildId: string): Promise<RoleOptionDto[]> {
+    const main = await this.prisma.discordServer.findFirst({
+      where: { guildId, isMain: true },
+      select: { discordId: true },
+    });
+    if (!main) {
+      throw new NotFoundException('The guild has no main server');
+    }
+    try {
+      const roles = await this.discord.fetchGuildRoles(main.discordId);
+      return roles
+        .filter((role) => role.id !== main.discordId) // @everyone shares the server's id
+        .map(({ id, name }) => ({ id, name }));
+    } catch {
+      throw new BadRequestException(
+        "Could not read the main server's roles. Is the bot in that server?",
+      );
+    }
   }
 }
 

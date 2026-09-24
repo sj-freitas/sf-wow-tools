@@ -11,14 +11,20 @@ export interface DiscordInteractionOption {
   value?: string | number | boolean;
 }
 
+export interface DiscordInteractionUser {
+  id: string;
+  username?: string;
+  global_name?: string | null;
+}
+
 export interface DiscordInteraction {
   type: InteractionType;
   /** Absent when the command was invoked in a DM. */
   guild_id?: string;
   /** Present for invocations inside a server. */
-  member?: { user: { id: string } };
+  member?: { nick?: string | null; user: DiscordInteractionUser };
   /** Present for invocations in a DM. */
-  user?: { id: string };
+  user?: DiscordInteractionUser;
   data?: {
     name: string;
     options?: DiscordInteractionOption[];

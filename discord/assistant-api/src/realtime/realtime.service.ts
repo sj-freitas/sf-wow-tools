@@ -5,6 +5,8 @@ export interface GuildEvent {
   guildId: string;
   /** `characters`: players/characters changed. `guild`: the guild itself (servers) changed. */
   type: 'characters' | 'guild';
+  /** When set, only these users get the event (used when their access rows no longer exist). */
+  userIds?: string[];
 }
 
 /**
@@ -16,7 +18,7 @@ export interface GuildEvent {
 export class RealtimeService {
   readonly events = new Subject<GuildEvent>();
 
-  publish(guildId: string, type: GuildEvent['type']): void {
-    this.events.next({ guildId, type });
+  publish(guildId: string, type: GuildEvent['type'], userIds?: string[]): void {
+    this.events.next({ guildId, type, userIds });
   }
 }

@@ -13,6 +13,8 @@ export class CharacterDto {
 export class PlayerDto {
   id!: string;
   discordUserId!: string;
+  discordUsername!: string | null;
+  discordDisplayName!: string | null;
   guildId!: string;
   characters!: CharacterDto[];
 }

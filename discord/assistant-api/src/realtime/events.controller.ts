@@ -25,6 +25,9 @@ export class EventsController {
 
     const changes = this.realtime.events.pipe(
       mergeMap(async (event) => {
+        if (event.userIds) {
+          return event.userIds.includes(userId) ? event : null;
+        }
         const access = await this.prisma.guildAccess.findUnique({
           where: { userId_guildId: { userId, guildId: event.guildId } },
           select: { userId: true },

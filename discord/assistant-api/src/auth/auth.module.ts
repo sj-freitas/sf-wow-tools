@@ -8,6 +8,6 @@ import { DiscordOAuthService } from './discord-oauth.service';
 @Module({
   controllers: [AuthController],
   providers: [AuthService, DiscordOAuthService, AuthGuard, GuildAccessService],
-  exports: [AuthService, AuthGuard, GuildAccessService],
+  exports: [AuthService, AuthGuard, GuildAccessService, DiscordOAuthService],
 })
 export class AuthModule {}

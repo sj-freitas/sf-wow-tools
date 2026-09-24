@@ -101,5 +101,11 @@ function ownerOf(interaction: DiscordInteraction): CharacterOwner | null {
   if (!interaction.guild_id || !discordUserId) {
     return null;
   }
-  return { discordServerId: interaction.guild_id, discordUserId };
+  const user = interaction.member?.user ?? interaction.user;
+  return {
+    discordServerId: interaction.guild_id,
+    discordUserId,
+    username: user?.username,
+    displayName: interaction.member?.nick ?? user?.global_name,
+  };
 }

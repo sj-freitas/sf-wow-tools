@@ -19,7 +19,12 @@ export function SetupInstructions({ setup }: { setup: SetupInfo }) {
         </li>
         <li>
           Come back here and pick the server below. A guild with several servers needs the role in
-          every one of them to be managed.
+          every one of them to be managed, and one of them is the <strong>main</strong> server.
+        </li>
+        <li>
+          Optional: after creating the guild, open <strong>Manage guild</strong> and choose which
+          role in the main server is your guild&apos;s <strong>Officer</strong> role. Officers can
+          then manage the guild without holding {setup.adminRoleName}.
         </li>
       </ol>
     </div>

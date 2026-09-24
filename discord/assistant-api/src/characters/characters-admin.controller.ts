@@ -39,7 +39,7 @@ export class CharactersAdminController {
     @Param('guildId') guildId: string,
     @Body() body: Record<string, unknown>,
   ): Promise<void> {
-    await this.guildAccess.assertAdmin(req.user.id, guildId);
+    await this.guildAccess.assertCanManage(req.user.id, guildId);
 
     const discordUserId = body.discordUserId;
     if (typeof discordUserId !== 'string' || !/^\d{15,25}$/.test(discordUserId)) {
@@ -51,13 +51,25 @@ export class CharactersAdminController {
     }
     const fields = parseFields(body, { partial: false });
 
-    const result = await this.charactersService.addToGuild(guildId, discordUserId, {
-      ...name,
-      class: fields.class as string,
-      roles: fields.roles as Role[],
-      isMain: fields.isMain ?? false,
-      level: fields.level,
-    });
+    const names = await this.charactersService.findGuildMemberNames(guildId, discordUserId);
+    if (!names) {
+      throw new BadRequestException(
+        "That user is not a member of any of this guild's Discord servers",
+      );
+    }
+
+    const result = await this.charactersService.addToGuild(
+      guildId,
+      discordUserId,
+      {
+        ...name,
+        class: fields.class as string,
+        roles: fields.roles as Role[],
+        isMain: fields.isMain ?? false,
+        level: fields.level,
+      },
+      names,
+    );
     if (result === 'duplicate') {
       throw new ConflictException('That player already has a character with this name');
     }
@@ -108,7 +120,7 @@ export class CharactersAdminController {
 
   private async assertCanManage(userId: string, characterId: string): Promise<void> {
     const guildId = await this.charactersService.findGuildIdOfCharacter(characterId);
-    await this.guildAccess.assertAdmin(userId, guildId);
+    await this.guildAccess.assertCanManage(userId, guildId);
   }
 }
 

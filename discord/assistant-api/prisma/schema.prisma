@@ -20,18 +20,22 @@ enum Role {
 
 // A WoW guild. It can be managed from more than one Discord server.
 model Guild {
-  id          String          @id @default(uuid()) @db.Uuid
-  name        String
-  realm       String
-  faction     Faction
+  id              String          @id @default(uuid()) @db.Uuid
+  name            String
+  realm           String
+  faction         Faction
   // One of GAME_VERSIONS (src/game/game-version.ts); a string so adding a
   // version doesn't need a migration.
-  gameVersion String          @map("game_version")
-  servers     DiscordServer[]
-  players     Player[]
-  access      GuildAccess[]
-  createdAt   DateTime        @default(now()) @map("created_at")
-  updatedAt   DateTime        @updatedAt @map("updated_at")
+  gameVersion     String          @map("game_version")
+  // Officers hold this role in the guild's main server (see DiscordServer.isMain)
+  // and can manage the guild like a Guild-Assistant. Null = no officer role set.
+  officerRoleId   String?         @map("officer_role_id")
+  officerRoleName String?         @map("officer_role_name")
+  servers         DiscordServer[]
+  players         Player[]
+  access          GuildAccess[]
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
 
   @@unique([name, realm, gameVersion])
   @@map("guilds")
@@ -43,6 +47,8 @@ model DiscordServer {
   discordId String   @unique @map("discord_id")
   // Display name, refreshed whenever a member logs in; empty until then.
   name      String   @default("")
+  // Exactly one server per guild is the main one; kept in sync by GuildsService.
+  isMain    Boolean  @default(false) @map("is_main")
   guildId   String   @map("guild_id") @db.Uuid
   guild     Guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now()) @map("created_at")
@@ -54,13 +60,16 @@ model DiscordServer {
 // user), so a user in several guilds has several Players. Not linked to User,
 // since players may never log in to the backoffice.
 model Player {
-  id            String      @id @default(uuid()) @db.Uuid
-  discordUserId String      @map("discord_user_id")
-  guildId       String      @map("guild_id") @db.Uuid
-  guild         Guild       @relation(fields: [guildId], references: [id], onDelete: Cascade)
-  characters    Character[]
-  createdAt     DateTime    @default(now()) @map("created_at")
-  updatedAt     DateTime    @updatedAt @map("updated_at")
+  id                 String      @id @default(uuid()) @db.Uuid
+  discordUserId      String      @map("discord_user_id")
+  // Best-effort display info; null until the user is seen by the bot or looked up.
+  discordUsername    String?     @map("discord_username")
+  discordDisplayName String?     @map("discord_display_name")
+  guildId            String      @map("guild_id") @db.Uuid
+  guild              Guild       @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  characters         Character[]
+  createdAt          DateTime    @default(now()) @map("created_at")
+  updatedAt          DateTime    @updatedAt @map("updated_at")
 
   @@unique([guildId, discordUserId])
   @@map("players")
@@ -103,12 +112,14 @@ model User {
 // Which guilds a backoffice user can see (and whether they can manage them).
 // Rebuilt from Discord on every login; only guilds that exist in `guilds` get a row.
 model GuildAccess {
-  userId  String  @map("user_id") @db.Uuid
-  guildId String  @map("guild_id") @db.Uuid
+  userId    String  @map("user_id") @db.Uuid
+  guildId   String  @map("guild_id") @db.Uuid
   // Holds the "Guild-Assistant" role in every one of the guild's Discord servers.
-  isAdmin Boolean @default(false) @map("is_admin")
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  guild   Guild   @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  isAdmin   Boolean @default(false) @map("is_admin")
+  // Holds the guild's officer role in its main server.
+  isOfficer Boolean @default(false) @map("is_officer")
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  guild     Guild   @relation(fields: [guildId], references: [id], onDelete: Cascade)
 
   @@id([userId, guildId])
   @@map("guild_access")
