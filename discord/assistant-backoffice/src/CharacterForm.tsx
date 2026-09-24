@@ -33,7 +33,7 @@ export function CharacterForm({ guild, editing, onSaved, onCancel }: Props) {
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
     setError(null);
-    if (!initial && discordUserId === '') {
+    if (!initial && guild.isOfficer && discordUserId === '') {
       setError('Pick a player from the list, or paste their Discord user ID.');
       return;
     }
@@ -46,7 +46,7 @@ export function CharacterForm({ guild, editing, onSaved, onCancel }: Props) {
     };
     (initial
       ? updateCharacter(initial.id, fields)
-      : createCharacter(guild.id, { ...fields, discordUserId })
+      : createCharacter(guild.id, { ...fields, discordUserId: discordUserId || undefined })
     )
       .then(onSaved)
       .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)));
@@ -55,14 +55,16 @@ export function CharacterForm({ guild, editing, onSaved, onCancel }: Props) {
   return (
     <form className="card-body" onSubmit={handleSubmit}>
       <div className="form-grid">
-        <div className="field">
-          Discord user
-          {editing ? (
-            <input value={editing.playerLabel} disabled />
-          ) : (
-            <PlayerPicker guildId={guild.id} value={discordUserId} onChange={setDiscordUserId} />
-          )}
-        </div>
+        {(editing || guild.isOfficer) && (
+          <div className="field">
+            Discord user
+            {editing ? (
+              <input value={editing.playerLabel} disabled />
+            ) : (
+              <PlayerPicker guildId={guild.id} value={discordUserId} onChange={setDiscordUserId} />
+            )}
+          </div>
+        )}
         <label className="field">
           Character name
           <input

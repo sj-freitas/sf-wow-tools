@@ -4,6 +4,16 @@ import { ConfigService } from '@nestjs/config';
 const DISCORD_API = 'https://discord.com/api/v10';
 const MAX_MEMBER_PAGES = 10;
 
+/** A failed Discord API call. Status 401 means the access token was rejected. */
+export class DiscordApiError extends UnauthorizedException {
+  constructor(
+    readonly discordStatus: number,
+    message: string,
+  ) {
+    super(message);
+  }
+}
+
 export interface DiscordUser {
   id: string;
   username: string;
@@ -160,7 +170,10 @@ export class DiscordOAuthService {
       headers: { Authorization: authorization },
     });
     if (!response.ok) {
-      throw new UnauthorizedException(`Discord request ${path} failed (${response.status})`);
+      throw new DiscordApiError(
+        response.status,
+        `Discord request ${path} failed (${response.status})`,
+      );
     }
     return (await response.json()) as T;
   }

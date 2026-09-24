@@ -36,11 +36,10 @@ export interface Guild {
   servers: GuildServer[];
   /** Role in the main server whose holders can manage the guild. */
   officerRole: { id: string; name: string } | null;
-  /** Holds the admin role in all servers: can also set the main server and Officer role. */
+  /** Holds the admin role in all servers: configures the guild (details, servers, Officer role). */
   isAdmin: boolean;
+  /** Holds the Officer role in the main server: manages every player's characters. */
   isOfficer: boolean;
-  /** isAdmin || isOfficer: can manage characters, servers and the guild. */
-  canManage: boolean;
 }
 
 export interface GuildServer {
@@ -121,7 +120,8 @@ export interface CharacterPatch {
 }
 
 export interface NewCharacterInput {
-  discordUserId: string;
+  /** Officers only: add for someone else. Omitted = the logged-in user. */
+  discordUserId?: string;
   /** `Name` or `Name-Lastname`. */
   name: string;
   class: string;

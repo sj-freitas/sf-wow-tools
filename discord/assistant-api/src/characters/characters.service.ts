@@ -118,15 +118,15 @@ export class CharactersService {
     this.realtime.publish(player.guildId, 'characters');
   }
 
-  async findGuildIdOfCharacter(characterId: string): Promise<string> {
+  async findOwnership(characterId: string): Promise<{ guildId: string; discordUserId: string }> {
     const character = await this.prisma.character.findUnique({
       where: { id: characterId },
-      select: { player: { select: { guildId: true } } },
+      select: { player: { select: { guildId: true, discordUserId: true } } },
     });
     if (!character) {
       throw new NotFoundException('Character not found');
     }
-    return character.player.guildId;
+    return character.player;
   }
 
   private async createForPlayer(

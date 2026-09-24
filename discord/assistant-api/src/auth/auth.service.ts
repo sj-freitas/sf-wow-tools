@@ -1,10 +1,14 @@
 import { createHash, randomBytes } from 'node:crypto';
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { BadGatewayException, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { APP_CONFIG } from '../config/app.config';
 import { PrismaService } from '../database/prisma.service';
 import type { SessionUser } from './auth.types';
-import { DiscordOAuthService, type DiscordPartialGuild } from './discord-oauth.service';
+import {
+  DiscordApiError,
+  DiscordOAuthService,
+  type DiscordPartialGuild,
+} from './discord-oauth.service';
 import { TokenCrypto } from './token-crypto';
 
 export const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
@@ -77,37 +81,56 @@ export class AuthService {
       !session.discordAccessToken ||
       (session.discordTokenExpiresAt && session.discordTokenExpiresAt < new Date())
     ) {
+      await this.endSession(session.id);
       throw new UnauthorizedException(REAUTH_MESSAGE);
     }
 
     let sync = this.inFlightSyncs.get(session.userId);
     if (!sync) {
       const accessToken = this.crypto.decrypt(session.discordAccessToken);
-      sync = this.syncFromDiscord(session.userId, accessToken)
-        .catch(() => {
-          throw new UnauthorizedException(REAUTH_MESSAGE);
-        })
-        .finally(() => this.inFlightSyncs.delete(session.userId));
+      sync = this.syncFromDiscord(session.userId, accessToken).finally(() =>
+        this.inFlightSyncs.delete(session.userId),
+      );
       this.inFlightSyncs.set(session.userId, sync);
     }
-    await sync;
+    try {
+      await sync;
+    } catch (error) {
+      if (error instanceof DiscordApiError && error.discordStatus === 401) {
+        // Discord no longer accepts the token: end the session so the user logs in again.
+        await this.endSession(session.id);
+        throw new UnauthorizedException(REAUTH_MESSAGE);
+      }
+      throw new BadGatewayException('Could not reach Discord. Try again in a moment.');
+    }
     await this.prisma.session.update({
       where: { id: session.id },
       data: { discordSyncedAt: new Date() },
     });
   }
 
-  /** Best-effort refresh for ordinary requests; failures only delay the next attempt. */
+  /**
+   * Refresh for ordinary requests. If the session can no longer be used (Discord
+   * token expired or revoked) this throws Unauthorized so the caller must log in
+   * again; other failures only delay the next attempt.
+   */
   async refreshIfStale(sessionToken: string): Promise<void> {
     try {
       await this.refresh(sessionToken, { force: false });
     } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
       this.logger.warn(`Discord re-sync failed: ${String(error)}`);
       await this.prisma.session.updateMany({
         where: { tokenHash: hashToken(sessionToken) },
         data: { discordSyncedAt: new Date() },
       });
     }
+  }
+
+  private async endSession(sessionId: string): Promise<void> {
+    await this.prisma.session.deleteMany({ where: { id: sessionId } });
   }
 
   private async syncFromDiscord(userId: string, accessToken: string): Promise<void> {

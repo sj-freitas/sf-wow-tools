@@ -87,14 +87,14 @@ export class GuildsController {
     @Param('guildId') guildId: string,
     @Body() body: Payload,
   ): Promise<void> {
-    await this.guildAccess.assertCanManage(req.user.id, guildId);
+    await this.guildAccess.assertAdmin(req.user.id, guildId);
     await this.guildsService.update(guildId, parseGuildDetails(body));
   }
 
   @Delete(':guildId')
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Req() req: AuthenticatedRequest, @Param('guildId') guildId: string): Promise<void> {
-    await this.guildAccess.assertCanManage(req.user.id, guildId);
+    await this.guildAccess.assertAdmin(req.user.id, guildId);
     await this.guildsService.delete(guildId);
   }
 
@@ -105,7 +105,7 @@ export class GuildsController {
     @Param('guildId') guildId: string,
     @Body() body: Payload,
   ): Promise<void> {
-    await this.guildAccess.assertCanManage(req.user.id, guildId);
+    await this.guildAccess.assertAdmin(req.user.id, guildId);
     await this.guildsService.addServer(
       req.user.id,
       guildId,
@@ -120,7 +120,7 @@ export class GuildsController {
     @Param('guildId') guildId: string,
     @Param('discordServerId') discordServerId: string,
   ): Promise<void> {
-    await this.guildAccess.assertCanManage(req.user.id, guildId);
+    await this.guildAccess.assertAdmin(req.user.id, guildId);
     await this.guildsService.removeServer(guildId, discordServerId);
   }
 
@@ -160,13 +160,13 @@ export class GuildsController {
     );
   }
 
-  /** Candidates for the "add character" player search. */
+  /** Officers only: candidates for the "add character for a player" search. */
   @Get(':guildId/people')
   async people(
     @Req() req: AuthenticatedRequest,
     @Param('guildId') guildId: string,
   ): Promise<PeopleDto> {
-    await this.guildAccess.assertCanManage(req.user.id, guildId);
+    await this.guildAccess.assertOfficer(req.user.id, guildId);
     return this.guildsService.findPeople(guildId);
   }
 }

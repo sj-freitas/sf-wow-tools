@@ -78,7 +78,12 @@ export function App() {
       </header>
       <main className="page">
         {auth.setup && (
-          <GuildsPage guilds={auth.guilds} setup={auth.setup} onGuildsChanged={reloadGuilds} />
+          <GuildsPage
+            guilds={auth.guilds}
+            setup={auth.setup}
+            currentUser={auth.user}
+            onGuildsChanged={reloadGuilds}
+          />
         )}
       </main>
     </>

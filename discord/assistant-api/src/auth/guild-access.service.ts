@@ -14,17 +14,16 @@ export class GuildAccessService {
     }
   }
 
-  /** Guild-Assistant or Officer: day-to-day management of the guild. */
-  async assertCanManage(userId: string, guildId: string): Promise<void> {
+  /** Officer of the guild: manages every player's characters. */
+  async assertOfficer(userId: string, guildId: string): Promise<void> {
     const access = await this.find(userId, guildId);
-    if (!access?.isAdmin && !access?.isOfficer) {
-      throw new ForbiddenException(
-        `Requires the ${APP_CONFIG.adminRoleName} or the guild's Officer role`,
-      );
+    if (!access?.isOfficer) {
+      throw new ForbiddenException("Requires the guild's Officer role");
     }
   }
 
-  private find(userId: string, guildId: string) {
+  /** Whether the user is in one of the guild's Discord servers, and whether they're an Officer. */
+  find(userId: string, guildId: string) {
     return this.prisma.guildAccess.findUnique({
       where: { userId_guildId: { userId, guildId } },
       select: { isAdmin: true, isOfficer: true },

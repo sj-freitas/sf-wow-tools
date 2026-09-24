@@ -3,6 +3,7 @@ import {
   Body,
   ConflictException,
   Controller,
+  ForbiddenException,
   Delete,
   HttpCode,
   HttpStatus,
@@ -15,7 +16,7 @@ import {
 } from '@nestjs/common';
 import { Prisma, type Role } from '@prisma/client';
 import { AuthGuard } from '../auth/auth.guard';
-import type { AuthenticatedRequest } from '../auth/auth.types';
+import type { AuthenticatedRequest, SessionUser } from '../auth/auth.types';
 import { GuildAccessService } from '../auth/guild-access.service';
 import { isWowClass } from '../game/wow-class';
 import { parseCharacterName } from './character-name';
@@ -23,7 +24,10 @@ import { CharactersService, type CharacterUpdate } from './characters.service';
 
 const ROLES: readonly Role[] = ['TANK', 'HEALER', 'MELEE_DPS', 'RANGED_DPS'];
 
-/** Backoffice character management; every route requires the Guild-Assistant role. */
+/**
+ * Backoffice character management. Officers manage every player's characters;
+ * any other member of the guild (one of its Discord servers) manages only their own.
+ */
 @Controller()
 @UseGuards(AuthGuard)
 export class CharactersAdminController {
@@ -39,23 +43,38 @@ export class CharactersAdminController {
     @Param('guildId') guildId: string,
     @Body() body: Record<string, unknown>,
   ): Promise<void> {
-    await this.guildAccess.assertCanManage(req.user.id, guildId);
-
-    const discordUserId = body.discordUserId;
-    if (typeof discordUserId !== 'string' || !/^\d{15,25}$/.test(discordUserId)) {
-      throw new BadRequestException('discordUserId must be a Discord user id (digits)');
+    const access = await this.guildAccess.find(req.user.id, guildId);
+    if (!access) {
+      throw new ForbiddenException('You are not a member of this guild');
     }
+
     const name = parseCharacterName(typeof body.name === 'string' ? body.name : '');
     if (!name) {
       throw new BadRequestException('name must be Name or Name-Lastname (letters, 2-12 each)');
     }
     const fields = parseFields(body, { partial: false });
 
-    const names = await this.charactersService.findGuildMemberNames(guildId, discordUserId);
-    if (!names) {
-      throw new BadRequestException(
-        "That user is not a member of any of this guild's Discord servers",
-      );
+    let discordUserId = req.user.discordId;
+    let names: { username: string; displayName: string | null } | null = {
+      username: req.user.username,
+      displayName: null,
+    };
+    if (access.isOfficer) {
+      // Officers may add characters for any member of the guild's servers (default: themselves).
+      if (body.discordUserId !== undefined && body.discordUserId !== req.user.discordId) {
+        if (typeof body.discordUserId !== 'string' || !/^\d{15,25}$/.test(body.discordUserId)) {
+          throw new BadRequestException('discordUserId must be a Discord user id (digits)');
+        }
+        discordUserId = body.discordUserId;
+        names = await this.charactersService.findGuildMemberNames(guildId, discordUserId);
+        if (!names) {
+          throw new BadRequestException(
+            "That user is not a member of any of this guild's Discord servers",
+          );
+        }
+      }
+    } else if (body.discordUserId !== undefined && body.discordUserId !== req.user.discordId) {
+      throw new ForbiddenException('You can only add your own characters');
     }
 
     const result = await this.charactersService.addToGuild(
@@ -85,7 +104,7 @@ export class CharactersAdminController {
     @Param('id') id: string,
     @Body() body: Record<string, unknown>,
   ): Promise<void> {
-    await this.assertCanManage(req.user.id, id);
+    await this.assertCanEdit(req.user, id);
     const patch = parseFields(body, { partial: true });
     if (body.name !== undefined) {
       const name = parseCharacterName(typeof body.name === 'string' ? body.name : '');
@@ -107,7 +126,7 @@ export class CharactersAdminController {
   @Delete('characters/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Req() req: AuthenticatedRequest, @Param('id') id: string): Promise<void> {
-    await this.assertCanManage(req.user.id, id);
+    await this.assertCanEdit(req.user, id);
     try {
       await this.charactersService.removeById(id);
     } catch (error) {
@@ -118,9 +137,13 @@ export class CharactersAdminController {
     }
   }
 
-  private async assertCanManage(userId: string, characterId: string): Promise<void> {
-    const guildId = await this.charactersService.findGuildIdOfCharacter(characterId);
-    await this.guildAccess.assertCanManage(userId, guildId);
+  /** Officers can edit any character of their guild; members only their own. */
+  private async assertCanEdit(user: SessionUser, characterId: string): Promise<void> {
+    const { guildId, discordUserId } = await this.charactersService.findOwnership(characterId);
+    const access = await this.guildAccess.find(user.id, guildId);
+    if (!access || !(access.isOfficer || discordUserId === user.discordId)) {
+      throw new ForbiddenException('You can only change your own characters');
+    }
   }
 }
 

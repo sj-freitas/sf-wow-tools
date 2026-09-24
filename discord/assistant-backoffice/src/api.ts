@@ -14,7 +14,15 @@ import type {
 
 export class UnauthorizedError extends Error {}
 
-async function request<T>(method: string, url: string, body?: unknown): Promise<T> {
+/** Full-page navigation: the API redirects to Discord (no consent screen when already approved) and back. */
+export const redirectToLogin = (): void => window.location.assign('/api/auth/login');
+
+async function request<T>(
+  method: string,
+  url: string,
+  body?: unknown,
+  { redirectOn401 = true }: { redirectOn401?: boolean } = {},
+): Promise<T> {
   const response = await fetch(url, {
     method,
     headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
@@ -24,7 +32,14 @@ async function request<T>(method: string, url: string, body?: unknown): Promise<
   if (!response.ok) {
     const detail = (await response.json().catch(() => null)) as { message?: string } | null;
     const message = detail?.message ?? `${method} ${url} failed with status ${response.status}`;
-    throw response.status === 401 ? new UnauthorizedError(message) : new Error(message);
+    if (response.status === 401) {
+      // Session or Discord authorization expired: send the user through login again.
+      if (redirectOn401) {
+        redirectToLogin();
+      }
+      throw new UnauthorizedError(message);
+    }
+    throw new Error(message);
   }
 
   return response.status === 204 ? (undefined as T) : ((await response.json()) as T);
@@ -78,7 +93,7 @@ export const deleteCharacter = (id: string): Promise<void> =>
 /** Returns the logged-in user, or null when there's no valid session. */
 export async function fetchCurrentUser(): Promise<User | null> {
   try {
-    return await request<User>('GET', '/api/auth/me');
+    return await request<User>('GET', '/api/auth/me', undefined, { redirectOn401: false });
   } catch (error) {
     if (error instanceof UnauthorizedError) {
       return null;

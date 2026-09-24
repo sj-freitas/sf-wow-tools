@@ -92,23 +92,24 @@ just another controller.
    `https://<your-deployment>/api/discord/interactions`. Discord will immediately send a test
    `PING` to verify it — the app must already be deployed and reachable for this to succeed.
 
-### Guilds, admins and officers
+### Guilds and access levels
 
 The admin role name is a single setting, `adminRoleName` in `src/config/app.config.ts`
-(`Guild-Assistant`). There are two levels of access to a guild:
+(`Guild-Assistant`). Access to a guild has three levels, combinable per user:
 
-- **Guild-Assistant** (`guild_access.is_admin`): holds the role in **every** Discord server attached
-  to the guild.
-- **Officer** (`guild_access.is_officer`): holds the guild's Officer role in its **main** server.
-  The Guild-Assistant picks that role (from the main server's role list) in "Manage guild".
+| Level                                         | How you get it                                                                            | What you can do                                                                                                                  |
+| --------------------------------------------- | ----------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| **Guild-Assistant** (`guild_access.is_admin`) | Hold the role in **every** Discord server of the guild                                    | Create guilds; configure them: details, delete, add/remove servers, main server, Officer role. **Not** other people's characters |
+| **Officer** (`guild_access.is_officer`)       | Hold the guild's Officer role in its **main** server (the Guild-Assistant picks the role) | Add, edit and remove **every** player's characters                                                                               |
+| **Member** (any `guild_access` row)           | Be in any Discord server attached to the guild; no role needed                            | Add, edit and remove **your own** characters                                                                                     |
 
-Both can manage the guild: add/edit/remove characters (`/api/guilds/:id/characters`,
-`/api/characters/:id`), edit its details, delete it, and add/remove Discord servers (a guild always
-keeps at least one, and its main server can't be removed). Only Guild-Assistant holders can change
-the **main server** (`PUT /api/guilds/:id/main-server`, which also clears the Officer role, since
-roles belong to a server) and the **Officer role** (`PUT /api/guilds/:id/officer-role`). Everyone else
-in the guild is read-only.
+Everyone with a `guild_access` row can see the guild's players. Changing the main server clears the
+Officer role, since roles belong to a server. A guild always keeps at least one server and its main
+server can't be removed directly.
 
+- **Expired login:** if the session or the stored Discord token expires or Discord rejects it, the API
+  ends the session and answers 401, and the backoffice sends the user through Discord login again
+  (no consent screen if already approved). Transient Discord errors don't log anyone out.
 - **Creating a guild:** any logged-in user (`POST /api/guilds`) picks name, realm, faction, game
   version and the Discord servers to attach, and which one is main. Only servers where the user holds
   the admin role, the bot is installed, and that don't belong to a guild yet are offered

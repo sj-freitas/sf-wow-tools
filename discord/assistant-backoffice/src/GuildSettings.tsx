@@ -155,11 +155,10 @@ function ServersSection({ guild, run }: SectionProps) {
               {server.isMain && <span className="badge badge-admin">Main</span>}
             </span>
             <span className="settings-actions">
-              {!server.isMain && guild.isAdmin && (
+              {!server.isMain && (
                 <button
                   type="button"
                   className="btn btn-sm"
-                  title="Only Guild-Assistant holders can change the main server"
                   onClick={() => void run(setMainServer(guild.id, server.discordId))}
                 >
                   Make main
@@ -220,11 +219,10 @@ function OfficerSection({ guild, run }: SectionProps) {
   const mainServer = guild.servers.find((server) => server.isMain);
 
   useEffect(() => {
-    if (!guild.isAdmin) return;
     fetchOfficerRoleOptions(guild.id)
       .then(setOptions)
       .catch((err: unknown) => setLoadError(err instanceof Error ? err.message : String(err)));
-  }, [guild.id, guild.isAdmin, mainServer?.discordId]);
+  }, [guild.id, mainServer?.discordId]);
 
   useEffect(() => setRoleId(guild.officerRole?.id ?? ''), [guild.officerRole?.id]);
 
@@ -232,16 +230,11 @@ function OfficerSection({ guild, run }: SectionProps) {
     <section className="settings-section">
       <h4>Officer role</h4>
       <p className="muted">
-        Members holding this role in the main server ({mainServer?.name ?? 'none'}) can manage the
-        guild just like Guild-Assistant holders, except for choosing the main server and this role.
-        Changes reach officers within a few minutes.
+        Members holding this role in the main server ({mainServer?.name ?? 'none'}) are the guild's
+        Officers: they can add, edit and remove every player's characters. Changes reach officers
+        within a few minutes.
       </p>
-      {!guild.isAdmin ? (
-        <p>
-          Current Officer role: <strong>{guild.officerRole?.name ?? 'not set'}</strong>
-          <span className="muted"> (only Guild-Assistant holders can change it)</span>
-        </p>
-      ) : loadError ? (
+      {loadError ? (
         <p className="status-error">{loadError}</p>
       ) : (
         <div className="inline-form">

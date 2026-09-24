@@ -27,11 +27,10 @@ export interface UserGuildDto {
   gameVersion: string;
   servers: GuildServerDto[];
   officerRole: { id: string; name: string } | null;
-  /** Holds Guild-Assistant in every server: can also configure main server and Officer role. */
+  /** Holds Guild-Assistant in every server: configures the guild (details, servers, Officer role). */
   isAdmin: boolean;
+  /** Holds the Officer role in the main server: manages every player's characters. */
   isOfficer: boolean;
-  /** isAdmin || isOfficer: can manage characters, servers and the guild itself. */
-  canManage: boolean;
 }
 
 export interface EligibleServersDto {
@@ -100,7 +99,6 @@ function toDto(guild: GuildRow, isAdmin: boolean, isOfficer: boolean): UserGuild
       officerRoleId && officerRoleName ? { id: officerRoleId, name: officerRoleName } : null,
     isAdmin,
     isOfficer,
-    canManage: isAdmin || isOfficer,
   };
 }
 
