@@ -7,6 +7,7 @@ import {
   type APIChannel,
   type APIGuildMember,
   type APIMessage,
+  type APIReaction,
   type APIUser,
 } from 'discord-api-types/v10';
 
@@ -21,6 +22,21 @@ export interface MessageReaction {
   /** Set for custom emojis; used to show their image. */
   emojiId: string | null;
   count: number;
+}
+
+/**
+ * Reaction counts without the bot's own vote. The bot adds each seed reaction itself so people
+ * can click it, which would otherwise make every option start at 1. Options the bot seeded stay
+ * in the list even at 0, so a poll shows all its choices.
+ */
+export function humanReactions(reactions: APIReaction[]): MessageReaction[] {
+  return reactions.map((reaction) => ({
+    emoji: reaction.emoji.id
+      ? `${reaction.emoji.name ?? 'emoji'}:${reaction.emoji.id}`
+      : (reaction.emoji.name ?? '?'),
+    emojiId: reaction.emoji.id,
+    count: reaction.me ? Math.max(0, reaction.count - 1) : reaction.count,
+  }));
 }
 
 /** Text channels: regular and announcement. */
@@ -90,6 +106,10 @@ export class DiscordBotService {
     });
   }
 
+  async deleteMessage(channelId: string, messageId: string): Promise<void> {
+    await this.rest.delete(Routes.channelMessage(channelId, messageId));
+  }
+
   async addReaction(channelId: string, messageId: string, emoji: string): Promise<void> {
     await this.rest.put(
       Routes.channelMessageOwnReaction(channelId, messageId, encodeURIComponent(emoji)),
@@ -100,13 +120,7 @@ export class DiscordBotService {
     const message = (await this.rest.get(
       Routes.channelMessage(channelId, messageId),
     )) as APIMessage;
-    return (message.reactions ?? []).map((reaction) => ({
-      emoji: reaction.emoji.id
-        ? `${reaction.emoji.name ?? 'emoji'}:${reaction.emoji.id}`
-        : (reaction.emoji.name ?? '?'),
-      emojiId: reaction.emoji.id,
-      count: reaction.count,
-    }));
+    return humanReactions(message.reactions ?? []);
   }
 
   /** Role ids of a member of the server; an empty list if they are not in it. */

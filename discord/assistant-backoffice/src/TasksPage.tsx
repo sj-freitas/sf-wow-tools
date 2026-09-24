@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   deleteHoneypot,
+  deletePostMessage,
   deleteTask,
   fetchChannels,
   fetchHoneypots,
@@ -310,7 +311,9 @@ export function TasksPage({ guild, timezone }: Props) {
                   )}
                   {post.post.posted?.messageDeleted && (
                     <div className="status-error">
-                      The post was deleted in Discord; the next run posts a new one.
+                      {post.nextRunAt
+                        ? 'The post was deleted from Discord. The next run posts it again.'
+                        : 'The post was deleted from Discord. Use Post now or pick a new date to post it again.'}
                     </div>
                   )}
                 </div>
@@ -362,19 +365,40 @@ export function TasksPage({ guild, timezone }: Props) {
                   >
                     Edit
                   </button>
+                  {post.post.posted && !post.post.posted.messageDeleted && (
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-danger"
+                      title="Removes the message from Discord. The post stays here, so it can be posted again later."
+                      onClick={() =>
+                        void confirm({
+                          title: 'Delete the post from Discord?',
+                          message: `The message in #${channelName(post.post.serverId, post.post.channelId) ?? 'the channel'} is removed. "${post.name}" stays here, so you can post it again later with Post now, its schedule, or a new date.`,
+                          confirmLabel: 'Delete post',
+                          danger: true,
+                        }).then((ok) => ok && run(deletePostMessage(post.id)))
+                      }
+                    >
+                      Delete post
+                    </button>
+                  )}
                   <button
                     type="button"
                     className="btn btn-sm btn-danger"
-                    onClick={() =>
+                    title="Stops tracking this post here and removes it from the database. Whatever is in Discord stays."
+                    onClick={() => {
+                      const inDiscord = post.post.posted && !post.post.posted.messageDeleted;
                       void confirm({
-                        title: 'Delete scheduled post',
-                        message: `Delete "${post.name}"? Posts already in Discord stay.`,
-                        confirmLabel: 'Delete',
+                        title: 'Untrack this post?',
+                        message: inDiscord
+                          ? `"${post.name}" is removed from Posts and Tasks and from the database, and its schedule stops. The message stays in Discord and can no longer be deleted from the backoffice. To remove it from Discord too, cancel and use Delete post first.`
+                          : `"${post.name}" is removed from Posts and Tasks and from the database, and its schedule stops. Nothing is left in Discord to delete.`,
+                        confirmLabel: inDiscord ? 'Untrack anyway' : 'Untrack',
                         danger: true,
-                      }).then((ok) => ok && run(deleteTask(post.id)))
-                    }
+                      }).then((ok) => ok && run(deleteTask(post.id)));
+                    }}
                   >
-                    Delete
+                    Untrack
                   </button>
                 </div>
               </div>

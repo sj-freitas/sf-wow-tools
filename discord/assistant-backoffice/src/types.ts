@@ -193,6 +193,8 @@ export interface PostInput {
   channelId: string;
   content: string;
   seedReactions: string[];
+  /** Editing a post that is already in Discord: apply the text at the next run, not now. */
+  applyOnNextRun?: boolean;
 }
 
 export interface ServerChannels {

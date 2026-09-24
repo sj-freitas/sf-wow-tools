@@ -906,3 +906,13 @@ tbody tr:last-child td {
     transform: rotate(360deg);
   }
 }
+
+.next-run-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+  cursor: help;
+}

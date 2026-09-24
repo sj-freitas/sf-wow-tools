@@ -184,7 +184,12 @@ markdown (mentions shown with their names). The bot remembers the message it pos
 
 - saving new text edits that Discord message (if it was deleted, the next run posts a new one);
 - `GET /api/tasks/:id/reactions` reads the live reaction counts (the backoffice polls it every 5 s);
-- "Post now" makes the task due immediately.
+- "Post now" makes the task due immediately;
+- **Delete post** (`POST /api/tasks/:id/delete-post`) removes the message from Discord but keeps the
+  task, so it can be posted again later (its schedule, "Post now", or a new date);
+- **Untrack** (`DELETE /api/tasks/:id`) removes the task and its history from the backoffice and the
+  database and stops its schedule; whatever it posted stays in Discord and can no longer be deleted
+  from the backoffice (the UI warns about this). Delete the post first if it should go too.
 
 Posts never ping `@everyone`/`@here` (only user and role mentions are allowed).
 

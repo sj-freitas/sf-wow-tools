@@ -31,6 +31,7 @@ describe('TasksController is for Officers only', () => {
       create: async () => void calls.push('create'),
       update: async () => void calls.push('update'),
       remove: async () => void calls.push('remove'),
+      deletePost: async () => void calls.push('deletePost'),
       runNow: async () => void calls.push('runNow'),
       reactions: async () => void calls.push('reactions'),
     } as unknown as TasksService;
@@ -43,6 +44,7 @@ describe('TasksController is for Officers only', () => {
     await controller.create(req, 'g', {});
     await controller.update(req, 't', {});
     await controller.remove(req, 't');
+    await controller.deletePost(req, 't');
     await controller.runNow(req, 't');
     await controller.reactions(req, 't');
     assert.deepEqual(calls, [
@@ -51,6 +53,7 @@ describe('TasksController is for Officers only', () => {
       'create',
       'update',
       'remove',
+      'deletePost',
       'runNow',
       'reactions',
     ]);
@@ -64,6 +67,7 @@ describe('TasksController is for Officers only', () => {
       () => controller.create(req, 'g', {}),
       () => controller.update(req, 't', {}),
       () => controller.remove(req, 't'),
+      () => controller.deletePost(req, 't'),
       () => controller.runNow(req, 't'),
       () => controller.reactions(req, 't'),
     ]) {

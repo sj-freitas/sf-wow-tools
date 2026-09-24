@@ -129,6 +129,10 @@ export const updateTask = (id: string, input: Partial<PostInput>): Promise<Sched
 
 export const deleteTask = (id: string): Promise<void> => request('DELETE', `/api/tasks/${id}`);
 
+/** Removes the message from Discord. The task stays and can be posted again. */
+export const deletePostMessage = (id: string): Promise<void> =>
+  request('POST', `/api/tasks/${id}/delete-post`);
+
 export const runTaskNow = (id: string): Promise<void> =>
   request('POST', `/api/tasks/${id}/run-now`);
 

@@ -73,6 +73,15 @@ export class TasksController {
     return this.tasks.update(id, body);
   }
 
+  /** Deletes the message from Discord; the task stays and can be posted again. */
+  @Post('tasks/:id/delete-post')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deletePost(@Req() req: AuthenticatedRequest, @Param('id') id: string): Promise<void> {
+    await this.assertOfficerOfTask(req, id);
+    await this.tasks.deletePost(id);
+  }
+
+  /** Untrack: removes the task from the backoffice and database; the Discord message stays. */
   @Delete('tasks/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Req() req: AuthenticatedRequest, @Param('id') id: string): Promise<void> {

@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { createTask, fetchPeople, fetchRoleOptions, updateTask } from './api';
+import { createTask, fetchPeople, fetchRoleOptions, runTaskNow, updateTask } from './api';
 import { channelKey, splitChannelKey } from './channelKey';
 import { ChannelSelect } from './ChannelSelect';
 import { DiscordMarkdown, type MentionNames } from './DiscordMarkdown';
@@ -36,6 +36,8 @@ export function PostTaskForm({ guild, channels, editing, timezone, onSaved, onCa
   const [content, setContent] = useState(editing?.post.content ?? '');
   const [reactions, setReactions] = useState(editing?.post.seedReactions.join(' ') ?? '');
   const [enabled, setEnabled] = useState(editing?.enabled ?? true);
+  const [forNextRun, setForNextRun] = useState(false);
+  const [busy, setBusy] = useState(false);
   const [preview, setPreview] = useState(false);
   const [names, setNames] = useState<MentionNames>(emptyNames);
   const [error, setError] = useState<string | null>(null);
@@ -67,8 +69,7 @@ export function PostTaskForm({ guild, channels, editing, timezone, onSaved, onCa
     setPreview((current) => !current);
   };
 
-  const handleSubmit = (event: FormEvent) => {
-    event.preventDefault();
+  const submit = (thenPostNow: boolean) => {
     setError(null);
     const { serverId, channelId } = splitChannelKey(channel);
     const input = {
@@ -81,10 +82,20 @@ export function PostTaskForm({ guild, channels, editing, timezone, onSaved, onCa
       channelId,
       content,
       seedReactions: reactions.split(/[\s,]+/).filter(Boolean),
+      // Posting a new message right away makes editing the old one pointless.
+      applyOnNextRun: forNextRun || thenPostNow,
     };
+    setBusy(true);
     (editing ? updateTask(editing.id, input) : createTask(guild.id, input))
+      .then((saved) => (thenPostNow ? runTaskNow(saved.id) : undefined))
       .then(onSaved)
-      .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)));
+      .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)))
+      .finally(() => setBusy(false));
+  };
+
+  const handleSubmit = (event: FormEvent) => {
+    event.preventDefault();
+    submit(false);
   };
 
   const posted = editing?.post.posted && !editing.post.posted.messageDeleted;
@@ -184,19 +195,44 @@ export function PostTaskForm({ guild, channels, editing, timezone, onSaved, onCa
           </button>
           {posted && (
             <span className="muted">
-              This post is already in Discord: saving new text updates that message.
+              This post is already in Discord: saving new text updates that message right away.
             </span>
           )}
         </div>
         {preview && <DiscordMarkdown text={content} names={names} />}
       </div>
 
+      {posted && (
+        <label
+          className="next-run-option"
+          title="Normally, saving edits the message that is already in Discord straight away. Tick this to keep the change for the next scheduled post instead: the message in Discord stays as it is until then."
+        >
+          <input
+            type="checkbox"
+            checked={forNextRun}
+            onChange={(e) => setForNextRun(e.target.checked)}
+          />
+          Apply the new text at the next scheduled post instead <span aria-hidden="true">ⓘ</span>
+        </label>
+      )}
+
       {error && <p className="status-error">{error}</p>}
       <div className="form-actions">
-        <button type="submit" className="btn btn-primary">
-          {editing ? 'Save changes' : 'Create post'}
+        <button type="submit" className="btn btn-primary" disabled={busy}>
+          {busy ? 'Saving…' : editing ? 'Save changes' : 'Create post'}
         </button>
-        <button type="button" className="btn" onClick={onCancel}>
+        {enabled && (
+          <button
+            type="button"
+            className="btn"
+            disabled={busy}
+            title="Saves, then posts a new message right away without waiting for the schedule. The next scheduled post is not affected."
+            onClick={() => submit(true)}
+          >
+            {editing ? 'Save and post now' : 'Create and post now'}
+          </button>
+        )}
+        <button type="button" className="btn" onClick={onCancel} disabled={busy}>
           Cancel
         </button>
       </div>

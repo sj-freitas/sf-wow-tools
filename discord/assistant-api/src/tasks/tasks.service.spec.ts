@@ -30,6 +30,9 @@ describe('TasksService', () => {
   let channelsInServer: { id: string; name: string }[];
   let edits: any[];
   let editError: Error | null;
+  let deletedMessages: unknown[][];
+  let deleteError: Error | null;
+  let removed: boolean;
   let reactionsResult: any[];
   let service: TasksService;
 
@@ -40,6 +43,9 @@ describe('TasksService', () => {
     updated = null;
     edits = [];
     editError = null;
+    deletedMessages = [];
+    deleteError = null;
+    removed = false;
     reactionsResult = [{ emoji: '👍', emojiId: null, count: 3 }];
     task = {
       id: 't1',
@@ -83,7 +89,7 @@ describe('TasksService', () => {
           updated = args.data;
           return { ...task, ...args.data };
         },
-        delete: async () => undefined,
+        delete: async () => void (removed = true),
       },
     } as unknown as PrismaService;
     const bot = {
@@ -93,6 +99,10 @@ describe('TasksService', () => {
         edits.push(args);
       },
       getReactions: async () => reactionsResult,
+      deleteMessage: async (...args: unknown[]) => {
+        if (deleteError) throw deleteError;
+        deletedMessages.push(args);
+      },
     } as unknown as DiscordBotService;
     service = new TasksService(prisma, bot);
   });
@@ -166,6 +176,13 @@ describe('TasksService', () => {
       await service.update('t1', { content: 'Raid moved to 21:00' });
       assert.deepEqual(edits, [[CHANNEL, 'm1', 'Raid moved to 21:00']]);
       assert.equal(updated.config.content, 'Raid moved to 21:00');
+    });
+
+    it('leaves the message alone, but saves the text, when the change is for the next run', async () => {
+      await service.update('t1', { content: 'For next week', applyOnNextRun: true });
+      assert.deepEqual(edits, []);
+      assert.equal(updated.config.content, 'For next week');
+      assert.equal('nextRunAt' in updated, false);
     });
 
     it('does not touch Discord when the text is unchanged', async () => {
@@ -246,5 +263,82 @@ describe('TasksService', () => {
   it('404s for unknown tasks', async () => {
     task = null;
     await assert.rejects(service.remove('nope'), NotFoundException);
+  });
+
+  describe('delete post (removes the message, keeps the task)', () => {
+    it('deletes the Discord message and marks the task’s post as deleted', async () => {
+      await service.deletePost('t1');
+      assert.deepEqual(deletedMessages, [[CHANNEL, 'm1']]);
+      assert.equal(updated.state.messageDeleted, true);
+      assert.equal(updated.state.messageId, 'm1');
+      assert.equal(removed, false);
+    });
+
+    it('leaves the schedule alone so it can be posted again', async () => {
+      await service.deletePost('t1');
+      assert.equal('nextRunAt' in updated, false);
+      assert.equal('enabled' in updated, false);
+    });
+
+    it('treats a message that is already gone as deleted', async () => {
+      deleteError = unknownMessage();
+      await service.deletePost('t1');
+      assert.equal(updated.state.messageDeleted, true);
+    });
+
+    it('changes nothing when Discord refuses', async () => {
+      deleteError = new Error('Missing Permissions');
+      await assert.rejects(service.deletePost('t1'), /Could not delete the post in Discord/);
+      assert.equal(updated, null);
+    });
+
+    it('refuses when there is no post in Discord', async () => {
+      task.state = {};
+      await assert.rejects(service.deletePost('t1'), /no post in Discord/);
+      task.state = { messageId: 'm1', channelId: CHANNEL, messageDeleted: true };
+      await assert.rejects(service.deletePost('t1'), /no post in Discord/);
+      assert.deepEqual(deletedMessages, []);
+    });
+  });
+
+  describe('untrack (removes the task, keeps the message)', () => {
+    it('removes the task without touching the Discord message', async () => {
+      await service.remove('t1');
+      assert.equal(removed, true);
+      assert.deepEqual(deletedMessages, []);
+    });
+  });
+
+  describe('rescheduling after the post went out', () => {
+    beforeEach(() => {
+      task.scheduleKind = 'ONCE';
+      task.runAt = new Date('2020-01-01T18:00:00Z');
+      task.timeOfDay = null;
+      task.weekday = null;
+      task.nextRunAt = null;
+    });
+
+    it('lets a finished one-time post be edited without picking a new date', async () => {
+      await service.update('t1', { kind: 'ONCE', runAtLocal: '2020-01-01T19:00', name: 'Renamed' });
+      assert.equal(updated.name, 'Renamed');
+      assert.equal('nextRunAt' in updated, false);
+    });
+
+    it('reschedules it when a new future date is picked', async () => {
+      await service.update('t1', { kind: 'ONCE', runAtLocal: '2099-10-01T20:00' });
+      assert.equal(updated.nextRunAt.toISOString(), '2099-10-01T18:00:00.000Z');
+    });
+
+    it('still rejects a new date in the past', async () => {
+      await assert.rejects(
+        service.update('t1', { kind: 'ONCE', runAtLocal: '2021-01-01T20:00' }),
+        /future/,
+      );
+    });
+  });
+
+  it('does not reschedule when the form sends the same schedule again', async () => {
+    await service.update('t1', { kind: 'WEEKLY', weekday: 2, timeOfDay: '20:00', name: 'Renamed' });
+    assert.equal('nextRunAt' in updated, false);
   });
 });

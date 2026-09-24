@@ -72,6 +72,11 @@ export interface TaskInput {
   channelId?: unknown;
   content?: unknown;
   seedReactions?: unknown;
+  /**
+   * Editing only: keep the text change for the next scheduled run instead of editing the
+   * message that is already in Discord right now.
+   */
+  applyOnNextRun?: unknown;
 }
 
 export interface ReactionDto extends MessageReaction {
@@ -153,7 +158,8 @@ export class TasksService {
 
   /**
    * Saving changes to a post that is already in Discord edits that message (live edit). If
-   * Discord refuses, nothing is saved, so Discord and the backoffice never disagree.
+   * Discord refuses, nothing is saved, so Discord and the backoffice never disagree. With
+   * `applyOnNextRun` the message is left alone and the new text goes out on the next run.
    */
   async update(taskId: string, input: TaskInput): Promise<TaskDto> {
     const task = await this.find(taskId);
@@ -163,15 +169,22 @@ export class TasksService {
 
     const schedule = this.parseSchedule(input, timezone, task);
     const config = await this.parsePostConfig(task.guildId, input, oldConfig);
+    // Only a real change reschedules; the form sends the current schedule on every save.
     const scheduleChanged =
-      input.kind !== undefined ||
-      input.runAtLocal !== undefined ||
-      input.timeOfDay !== undefined ||
-      input.weekday !== undefined;
+      schedule.kind !== task.scheduleKind ||
+      (schedule.runAt?.getTime() ?? null) !== (task.runAt?.getTime() ?? null) ||
+      (schedule.timeOfDay ?? null) !== task.timeOfDay ||
+      (schedule.weekday ?? null) !== task.weekday;
     const enabled = input.enabled === undefined ? task.enabled : input.enabled === true;
 
     let newState = state;
-    if (config.content !== oldConfig.content && state.messageId && !state.messageDeleted) {
+    const editNow = input.applyOnNextRun !== true;
+    if (
+      editNow &&
+      config.content !== oldConfig.content &&
+      state.messageId &&
+      !state.messageDeleted
+    ) {
       try {
         await this.bot.editMessage(
           state.channelId ?? oldConfig.channelId,
@@ -209,6 +222,36 @@ export class TasksService {
     return this.toDto(updated, timezone);
   }
 
+  /**
+   * Deletes the message this task last posted, from Discord. The task stays (schedule, text,
+   * everything), so it can be posted again later: by its schedule, "Post now", or a new date.
+   */
+  async deletePost(taskId: string): Promise<void> {
+    const task = await this.find(taskId);
+    const state = task.state as PostState;
+    if (!state.messageId || !state.channelId || state.messageDeleted) {
+      throw new BadRequestException('There is no post in Discord to delete.');
+    }
+    try {
+      await this.bot.deleteMessage(state.channelId, state.messageId);
+    } catch (error) {
+      // Already gone from Discord counts as deleted.
+      if (!isDiscordError(error, UNKNOWN_MESSAGE)) {
+        throw new BadRequestException(
+          `Could not delete the post in Discord: ${describeDiscordError(error)}`,
+        );
+      }
+    }
+    await this.prisma.scheduledTask.update({
+      where: { id: taskId },
+      data: { state: { ...state, messageDeleted: true } },
+    });
+  }
+
+  /**
+   * Stops tracking the task: removes it, and its history, from the backoffice and the
+   * database. Whatever it posted stays in Discord and can no longer be deleted from here.
+   */
   async remove(taskId: string): Promise<void> {
     await this.find(taskId);
     await this.prisma.scheduledTask.delete({ where: { id: taskId } });
@@ -354,8 +397,11 @@ export class TasksService {
           : typeof input.runAtLocal === 'string'
             ? instantFromLocal(input.runAtLocal, timezone)
             : null;
+      // A date that is unchanged may be in the past (the post already went out); a new one may not.
+      const changed = schedule.runAt?.getTime() !== existing?.runAt?.getTime();
       if (
         input.runAtLocal !== undefined &&
+        changed &&
         schedule.runAt &&
         schedule.runAt.getTime() <= Date.now()
       ) {
