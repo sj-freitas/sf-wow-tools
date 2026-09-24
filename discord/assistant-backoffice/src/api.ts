@@ -44,7 +44,9 @@ async function request<T>(
     throw new Error(message);
   }
 
-  return response.status === 204 ? (undefined as T) : ((await response.json()) as T);
+  // Some endpoints answer with no body (204, or 201 for creates), which json() can't parse.
+  const text = await response.text();
+  return (text === '' ? undefined : JSON.parse(text)) as T;
 }
 
 export const fetchPlayers = (): Promise<Player[]> => request('GET', '/api/players');
