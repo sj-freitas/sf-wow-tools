@@ -82,73 +82,20 @@ export function HoneypotsPage({ guild, timezone }: Props) {
       ) : (
         honeypots.map((honeypot) => (
           <div key={honeypot.id} className="task-card">
-            <div className="task-card-main">
-              <div>
-                <strong>{honeypot.name}</strong>{' '}
-                <span className={honeypot.testMode ? 'badge' : 'badge badge-live'}>
-                  {honeypot.testMode ? 'Test mode' : 'Live'}
-                </span>{' '}
-                {!honeypot.enabled && <span className="badge">Paused</span>}
-                <div className="muted">
-                  #{channelName(honeypot.serverId, honeypot.channelId) ?? honeypot.channelId}
-                  {honeypot.createdChannel ? ' (created by the bot)' : ''} · logs to #
-                  {channelName(honeypot.serverId, honeypot.logChannelId) ??
-                    channels
-                      .flatMap((group) => group.channels)
-                      .find((channel) => channel.id === honeypot.logChannelId)?.name ??
-                    honeypot.logChannelId}
-                </div>
-              </div>
-              <div className="settings-actions">
-                {honeypot.testMode ? (
-                  <button
-                    type="button"
-                    className="btn btn-sm"
-                    onClick={() =>
-                      void confirm({
-                        title: 'Switch to live mode?',
-                        message: `People who post in the honeypot "${honeypot.name}" will be permanently banned, and their messages from the last hour deleted.`,
-                        confirmLabel: 'Go live',
-                        danger: true,
-                      }).then(
-                        (ok) =>
-                          ok &&
-                          run(updateHoneypot(honeypot.id, { testMode: false, confirmLive: true })),
-                      )
-                    }
-                  >
-                    Go live
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    className="btn btn-sm"
-                    onClick={() => run(updateHoneypot(honeypot.id, { testMode: true }))}
-                  >
-                    Back to test mode
-                  </button>
-                )}
-                <button
-                  type="button"
-                  className="btn btn-sm"
-                  onClick={() => run(updateHoneypot(honeypot.id, { enabled: !honeypot.enabled }))}
-                >
-                  {honeypot.enabled ? 'Pause' : 'Resume'}
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-sm btn-danger"
-                  onClick={() =>
-                    void confirm({
-                      title: 'Remove honeypot',
-                      message: `Remove the honeypot "${honeypot.name}"? The channel itself stays in Discord.`,
-                      confirmLabel: 'Remove',
-                      danger: true,
-                    }).then((ok) => ok && run(deleteHoneypot(honeypot.id)))
-                  }
-                >
-                  Remove
-                </button>
+            <div>
+              <strong>{honeypot.name}</strong>{' '}
+              <span className={honeypot.testMode ? 'badge' : 'badge badge-live'}>
+                {honeypot.testMode ? 'Test mode' : 'Live'}
+              </span>{' '}
+              {!honeypot.enabled && <span className="badge">Paused</span>}
+              <div className="muted">
+                #{channelName(honeypot.serverId, honeypot.channelId) ?? honeypot.channelId}
+                {honeypot.createdChannel ? ' (created by the bot)' : ''} · logs to #
+                {channelName(honeypot.serverId, honeypot.logChannelId) ??
+                  channels
+                    .flatMap((group) => group.channels)
+                    .find((channel) => channel.id === honeypot.logChannelId)?.name ??
+                  honeypot.logChannelId}
               </div>
             </div>
             {honeypot.recentEvents.length > 0 && (
@@ -165,6 +112,57 @@ export function HoneypotsPage({ guild, timezone }: Props) {
                 ))}
               </ul>
             )}
+            <div className="settings-actions task-actions">
+              {honeypot.testMode ? (
+                <button
+                  type="button"
+                  className="btn btn-sm"
+                  onClick={() =>
+                    void confirm({
+                      title: 'Switch to live mode?',
+                      message: `People who post in the honeypot "${honeypot.name}" will be permanently banned, and their messages from the last hour deleted.`,
+                      confirmLabel: 'Go live',
+                      danger: true,
+                    }).then(
+                      (ok) =>
+                        ok &&
+                        run(updateHoneypot(honeypot.id, { testMode: false, confirmLive: true })),
+                    )
+                  }
+                >
+                  Go live
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="btn btn-sm"
+                  onClick={() => run(updateHoneypot(honeypot.id, { testMode: true }))}
+                >
+                  Back to test mode
+                </button>
+              )}
+              <button
+                type="button"
+                className="btn btn-sm"
+                onClick={() => run(updateHoneypot(honeypot.id, { enabled: !honeypot.enabled }))}
+              >
+                {honeypot.enabled ? 'Pause' : 'Resume'}
+              </button>
+              <button
+                type="button"
+                className="btn btn-sm btn-danger"
+                onClick={() =>
+                  void confirm({
+                    title: 'Remove honeypot',
+                    message: `Remove the honeypot "${honeypot.name}"? The channel itself stays in Discord.`,
+                    confirmLabel: 'Remove',
+                    danger: true,
+                  }).then((ok) => ok && run(deleteHoneypot(honeypot.id)))
+                }
+              >
+                Remove
+              </button>
+            </div>
           </div>
         ))
       )}

@@ -50,7 +50,6 @@ export function PostsPage({ guild, timezone }: Props) {
   const [page, setPage] = useState(1);
   const [creating, setCreating] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [reactionsFor, setReactionsFor] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   // Posts the user just asked to send, until the server shows them as queued.
   const [starting, setStarting] = useState<Set<string>>(new Set());
@@ -219,160 +218,147 @@ export function PostsPage({ guild, timezone }: Props) {
             />
           ) : (
             <div key={post.id} className="task-card">
-              <div className="task-card-main">
-                <div>
-                  <strong>{post.name}</strong>{' '}
-                  <span
-                    className={
-                      isLive(post)
-                        ? 'badge badge-main'
-                        : post.lastStatus === 'FAILED' && !post.nextRunAt
-                          ? 'badge badge-live'
-                          : 'badge'
-                    }
-                  >
-                    {statusLabel(post)}
-                  </span>
-                  <div className="muted">
-                    #{channelName(post.post.serverId, post.post.channelId) ?? post.post.channelId} ·{' '}
-                    {isLive(post) ? (
-                      <>
-                        Posted {formatWhen(post.lastRunAt, timezone)}
-                        {post.lastRunAt && ` (${timeAgo(post.lastRunAt)})`}
-                      </>
-                    ) : wasDeleted(post) ? (
-                      'Deleted from Discord. Edit it to pick a new date, or use Post now.'
-                    ) : post.nextRunAt ? (
-                      isQueued(post) ? (
-                        'Waiting for the next check'
-                      ) : (
-                        `Scheduled for ${formatWhen(post.nextRunAt, timezone)}`
-                      )
-                    ) : post.enabled ? (
-                      'Not scheduled. Edit it to pick a new date, or use Post now.'
+              <div>
+                <strong>{post.name}</strong>{' '}
+                <span
+                  className={
+                    isLive(post)
+                      ? 'badge badge-main'
+                      : post.lastStatus === 'FAILED' && !post.nextRunAt
+                        ? 'badge badge-live'
+                        : 'badge'
+                  }
+                >
+                  {statusLabel(post)}
+                </span>
+                <div className="muted">
+                  #{channelName(post.post.serverId, post.post.channelId) ?? post.post.channelId} ·{' '}
+                  {isLive(post) ? (
+                    <>
+                      Posted {formatWhen(post.lastRunAt, timezone)}
+                      {post.lastRunAt && ` (${timeAgo(post.lastRunAt)})`}
+                    </>
+                  ) : wasDeleted(post) ? (
+                    'Deleted from Discord. Edit it to pick a new date, or use Post now.'
+                  ) : post.nextRunAt ? (
+                    isQueued(post) ? (
+                      'Waiting for the next check'
                     ) : (
-                      `Paused. It was set for ${formatWhen(post.schedule.runAt, timezone)}.`
-                    )}
-                  </div>
-                  <div className="post-snippet">{snippet(post.post.content)}</div>
-                  {post.lastRunAt && !isLive(post) && (
-                    <div className="muted">
-                      Last ran: {formatWhen(post.lastRunAt, timezone)} ({timeAgo(post.lastRunAt)}) ·{' '}
-                      {post.lastStatus === 'FAILED' ? (
-                        <span className="status-error">failed</span>
-                      ) : (
-                        'posted'
-                      )}
-                    </div>
-                  )}
-                  {post.lastStatus === 'FAILED' && post.lastError && !isLive(post) && (
-                    <div className="status-error">{post.lastError}</div>
-                  )}
-                  {(starting.has(post.id) || isQueued(post)) && (
-                    <div className="run-status" role="status">
-                      <span className="spinner" aria-hidden="true" /> Queued: it will be posted
-                      within a minute.
-                    </div>
-                  )}
-                  {flash[post.id] && (
-                    <div
-                      className={
-                        flash[post.id].ok ? 'run-status run-ok' : 'run-status status-error'
-                      }
-                      role="status"
-                    >
-                      {flash[post.id].ok ? '✓ ' : ''}
-                      {flash[post.id].text}
-                    </div>
+                      `Scheduled for ${formatWhen(post.nextRunAt, timezone)}`
+                    )
+                  ) : post.enabled ? (
+                    'Not scheduled. Edit it to pick a new date, or use Post now.'
+                  ) : (
+                    `Paused. It was set for ${formatWhen(post.schedule.runAt, timezone)}.`
                   )}
                 </div>
-                <div className="settings-actions">
-                  {post.post.posted && isLive(post) && (
-                    <>
-                      <a
-                        className="btn btn-sm"
-                        href={post.post.posted.url}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        View in Discord
-                      </a>
-                      <button
-                        type="button"
-                        className="btn btn-sm"
-                        onClick={() => setReactionsFor(reactionsFor === post.id ? null : post.id)}
-                      >
-                        {reactionsFor === post.id ? 'Hide reactions' : 'Reactions'}
-                      </button>
-                    </>
-                  )}
-                  {!isLive(post) && post.enabled && (
-                    <button
-                      type="button"
-                      className="btn btn-sm"
-                      title="Send it now instead of waiting for its time"
-                      disabled={starting.has(post.id) || isQueued(post)}
-                      onClick={() => postNow(post.id)}
-                    >
-                      {starting.has(post.id) || isQueued(post) ? 'Queued…' : 'Post now'}
-                    </button>
-                  )}
-                  {!isLive(post) && !wasDeleted(post) && (
-                    <button
-                      type="button"
-                      className="btn btn-sm"
-                      onClick={() => run(updateTask(post.id, { enabled: !post.enabled }))}
-                    >
-                      {post.enabled ? 'Pause' : 'Resume'}
-                    </button>
-                  )}
+                <div className="post-snippet">{snippet(post.post.content)}</div>
+                {post.lastRunAt && !isLive(post) && (
+                  <div className="muted">
+                    Last ran: {formatWhen(post.lastRunAt, timezone)} ({timeAgo(post.lastRunAt)}) ·{' '}
+                    {post.lastStatus === 'FAILED' ? (
+                      <span className="status-error">failed</span>
+                    ) : (
+                      'posted'
+                    )}
+                  </div>
+                )}
+                {post.lastStatus === 'FAILED' && post.lastError && !isLive(post) && (
+                  <div className="status-error">{post.lastError}</div>
+                )}
+                {(starting.has(post.id) || isQueued(post)) && (
+                  <div className="run-status" role="status">
+                    <span className="spinner" aria-hidden="true" /> Queued: it will be posted within
+                    a minute.
+                  </div>
+                )}
+                {flash[post.id] && (
+                  <div
+                    className={flash[post.id].ok ? 'run-status run-ok' : 'run-status status-error'}
+                    role="status"
+                  >
+                    {flash[post.id].ok ? '✓ ' : ''}
+                    {flash[post.id].text}
+                  </div>
+                )}
+              </div>
+              {isLive(post) && <ReactionsPanel taskId={post.id} />}
+              <div className="settings-actions task-actions">
+                {post.post.posted && isLive(post) && (
+                  <a
+                    className="btn btn-sm"
+                    href={post.post.posted.url}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    View in Discord
+                  </a>
+                )}
+                {!isLive(post) && post.enabled && (
                   <button
                     type="button"
                     className="btn btn-sm"
-                    onClick={() => {
-                      setCreating(false);
-                      setEditingId(post.id);
-                    }}
+                    title="Send it now instead of waiting for its time"
+                    disabled={starting.has(post.id) || isQueued(post)}
+                    onClick={() => postNow(post.id)}
                   >
-                    Edit
+                    {starting.has(post.id) || isQueued(post) ? 'Queued…' : 'Post now'}
                   </button>
-                  {isLive(post) && (
-                    <button
-                      type="button"
-                      className="btn btn-sm btn-danger"
-                      title="Removes the message from Discord. The post stays here, so it can be sent again later."
-                      onClick={() =>
-                        void confirm({
-                          title: 'Delete the post from Discord?',
-                          message: `The message in #${channelName(post.post.serverId, post.post.channelId) ?? 'the channel'} is removed${post.post.seedReactions.length > 0 ? ', with its reactions' : ''}. "${post.name}" stays here, so you can send it again later with Post now or a new date.`,
-                          confirmLabel: 'Delete post',
-                          danger: true,
-                        }).then((ok) => ok && run(deletePostMessage(post.id)))
-                      }
-                    >
-                      Delete post
-                    </button>
-                  )}
+                )}
+                {!isLive(post) && !wasDeleted(post) && (
+                  <button
+                    type="button"
+                    className="btn btn-sm"
+                    onClick={() => run(updateTask(post.id, { enabled: !post.enabled }))}
+                  >
+                    {post.enabled ? 'Pause' : 'Resume'}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className="btn btn-sm"
+                  onClick={() => {
+                    setCreating(false);
+                    setEditingId(post.id);
+                  }}
+                >
+                  Edit
+                </button>
+                {isLive(post) && (
                   <button
                     type="button"
                     className="btn btn-sm btn-danger"
-                    title="Stops tracking this post here and removes it from the database. Whatever is in Discord stays."
+                    title="Removes the message from Discord. The post stays here, so it can be sent again later."
                     onClick={() =>
                       void confirm({
-                        title: 'Untrack this post?',
-                        message: isLive(post)
-                          ? `"${post.name}" is removed from Posts and from the database. The message stays in Discord and can no longer be deleted from the backoffice. To remove it from Discord too, cancel and use Delete post first.`
-                          : `"${post.name}" is removed from Posts and from the database. Nothing is left in Discord to delete.`,
-                        confirmLabel: isLive(post) ? 'Untrack anyway' : 'Untrack',
+                        title: 'Delete the post from Discord?',
+                        message: `The message in #${channelName(post.post.serverId, post.post.channelId) ?? 'the channel'} is removed${post.post.seedReactions.length > 0 ? ', with its reactions' : ''}. "${post.name}" stays here, so you can send it again later with Post now or a new date.`,
+                        confirmLabel: 'Delete post',
                         danger: true,
-                      }).then((ok) => ok && run(deleteTask(post.id)))
+                      }).then((ok) => ok && run(deletePostMessage(post.id)))
                     }
                   >
-                    Untrack
+                    Delete post
                   </button>
-                </div>
+                )}
+                <button
+                  type="button"
+                  className="btn btn-sm btn-danger"
+                  title="Stops tracking this post here and removes it from the database. Whatever is in Discord stays."
+                  onClick={() =>
+                    void confirm({
+                      title: 'Untrack this post?',
+                      message: isLive(post)
+                        ? `"${post.name}" is removed from Posts and from the database. The message stays in Discord and can no longer be deleted from the backoffice. To remove it from Discord too, cancel and use Delete post first.`
+                        : `"${post.name}" is removed from Posts and from the database. Nothing is left in Discord to delete.`,
+                      confirmLabel: isLive(post) ? 'Untrack anyway' : 'Untrack',
+                      danger: true,
+                    }).then((ok) => ok && run(deleteTask(post.id)))
+                  }
+                >
+                  Untrack
+                </button>
               </div>
-              {reactionsFor === post.id && <ReactionsPanel taskId={post.id} />}
             </div>
           ),
         )

@@ -187,8 +187,9 @@ markdown with mentions shown by name. A post moves through these states:
 
 - _Scheduled_: not sent yet. The date can be changed, "Post now" sends it right away, "Pause" holds it
   (resuming one whose time has passed sends it immediately).
-- _Posted_: the message is in Discord. Saving new text edits that message; the reactions panel
-  (`GET /api/tasks/:id/reactions`, polled every 5 s, without the bot's own vote) shows live counts.
+- _Posted_: the message is in Discord. Saving new text edits that message; its live reaction
+  counts (`GET /api/tasks/:id/reactions`, without the bot's own vote) show right on the post and
+  refresh every 10 s while the page is visible.
   While it is live it cannot be sent again or moved to a new date.
 - _Deleted from Discord_ (**Delete post**, `POST /api/tasks/:id/delete-post`): the message is removed
   but the post stays, so it can be sent again with "Post now" or a new date.

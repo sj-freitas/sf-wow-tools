@@ -592,6 +592,7 @@ tbody tr:last-child td {
 }
 .settings-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.4rem;
 }
 .inline-form {
@@ -685,13 +686,6 @@ tbody tr:last-child td {
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--surface-2);
-}
-.task-card-main {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.75rem;
 }
 .task-form {
   border: 1px solid var(--border);
