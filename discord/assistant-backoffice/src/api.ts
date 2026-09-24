@@ -1,5 +1,11 @@
 import type {
   CharacterPatch,
+  Honeypot,
+  HoneypotInput,
+  PostInput,
+  Reaction,
+  ScheduledPost,
+  ServerChannels,
   EligibleServers,
   Guild,
   GuildDetails,
@@ -108,6 +114,40 @@ export const updateCharacter = (id: string, patch: CharacterPatch): Promise<void
 
 export const deleteCharacter = (id: string): Promise<void> =>
   request('DELETE', `/api/characters/${id}`);
+
+export const fetchTasks = (guildId: string): Promise<ScheduledPost[]> =>
+  request('GET', `/api/guilds/${guildId}/tasks`);
+
+export const fetchChannels = (guildId: string): Promise<ServerChannels[]> =>
+  request('GET', `/api/guilds/${guildId}/channels`);
+
+export const createTask = (guildId: string, input: PostInput): Promise<ScheduledPost> =>
+  request('POST', `/api/guilds/${guildId}/tasks`, input);
+
+export const updateTask = (id: string, input: Partial<PostInput>): Promise<ScheduledPost> =>
+  request('PATCH', `/api/tasks/${id}`, input);
+
+export const deleteTask = (id: string): Promise<void> => request('DELETE', `/api/tasks/${id}`);
+
+export const runTaskNow = (id: string): Promise<void> =>
+  request('POST', `/api/tasks/${id}/run-now`);
+
+export const fetchTaskReactions = (id: string): Promise<Reaction[]> =>
+  request('GET', `/api/tasks/${id}/reactions`);
+
+export const fetchHoneypots = (guildId: string): Promise<Honeypot[]> =>
+  request('GET', `/api/guilds/${guildId}/honeypots`);
+
+export const createHoneypot = (guildId: string, input: HoneypotInput): Promise<Honeypot> =>
+  request('POST', `/api/guilds/${guildId}/honeypots`, input);
+
+export const updateHoneypot = (
+  id: string,
+  input: { name?: string; enabled?: boolean; testMode?: boolean; confirmLive?: boolean },
+): Promise<Honeypot> => request('PATCH', `/api/honeypots/${id}`, input);
+
+export const deleteHoneypot = (id: string): Promise<void> =>
+  request('DELETE', `/api/honeypots/${id}`);
 
 /** Returns the logged-in user, or null when there's no valid session. */
 export async function fetchCurrentUser(): Promise<User | null> {

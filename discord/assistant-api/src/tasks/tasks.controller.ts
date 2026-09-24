@@ -1,0 +1,102 @@
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
+import { AuthGuard } from '../auth/auth.guard';
+import type { AuthenticatedRequest } from '../auth/auth.types';
+import { GuildAccessService } from '../auth/guild-access.service';
+import {
+  TasksService,
+  type ReactionDto,
+  type ServerChannelsDto,
+  type TaskDto,
+  type TaskInput,
+} from './tasks.service';
+
+/**
+ * Scheduled tasks, for Officers only. The background worker that runs them is an
+ * implementation detail: nothing here mentions it.
+ */
+@Controller()
+@UseGuards(AuthGuard)
+export class TasksController {
+  constructor(
+    private readonly tasks: TasksService,
+    private readonly guildAccess: GuildAccessService,
+  ) {}
+
+  @Get('guilds/:guildId/tasks')
+  async list(
+    @Req() req: AuthenticatedRequest,
+    @Param('guildId') guildId: string,
+  ): Promise<TaskDto[]> {
+    await this.guildAccess.assertOfficer(req.user.id, guildId);
+    return this.tasks.list(guildId);
+  }
+
+  @Get('guilds/:guildId/channels')
+  async channels(
+    @Req() req: AuthenticatedRequest,
+    @Param('guildId') guildId: string,
+  ): Promise<ServerChannelsDto[]> {
+    await this.guildAccess.assertOfficer(req.user.id, guildId);
+    return this.tasks.listChannels(guildId);
+  }
+
+  @Post('guilds/:guildId/tasks')
+  @HttpCode(HttpStatus.CREATED)
+  async create(
+    @Req() req: AuthenticatedRequest,
+    @Param('guildId') guildId: string,
+    @Body() body: TaskInput,
+  ): Promise<TaskDto> {
+    await this.guildAccess.assertOfficer(req.user.id, guildId);
+    return this.tasks.create(guildId, req.user.id, body);
+  }
+
+  @Patch('tasks/:id')
+  async update(
+    @Req() req: AuthenticatedRequest,
+    @Param('id') id: string,
+    @Body() body: TaskInput,
+  ): Promise<TaskDto> {
+    await this.assertOfficerOfTask(req, id);
+    return this.tasks.update(id, body);
+  }
+
+  @Delete('tasks/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async remove(@Req() req: AuthenticatedRequest, @Param('id') id: string): Promise<void> {
+    await this.assertOfficerOfTask(req, id);
+    await this.tasks.remove(id);
+  }
+
+  @Post('tasks/:id/run-now')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async runNow(@Req() req: AuthenticatedRequest, @Param('id') id: string): Promise<void> {
+    await this.assertOfficerOfTask(req, id);
+    await this.tasks.runNow(id);
+  }
+
+  @Get('tasks/:id/reactions')
+  async reactions(
+    @Req() req: AuthenticatedRequest,
+    @Param('id') id: string,
+  ): Promise<ReactionDto[]> {
+    await this.assertOfficerOfTask(req, id);
+    return this.tasks.reactions(id);
+  }
+
+  private async assertOfficerOfTask(req: AuthenticatedRequest, taskId: string): Promise<void> {
+    await this.guildAccess.assertOfficer(req.user.id, await this.tasks.guildIdOf(taskId));
+  }
+}

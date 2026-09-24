@@ -7,6 +7,7 @@ import {
 import { Prisma } from '@prisma/client';
 import { DiscordOAuthService, type DiscordServerMember } from '../auth/discord-oauth.service';
 import { APP_CONFIG } from '../config/app.config';
+import type { RegionId } from '../config/regions';
 import { PrismaService } from '../database/prisma.service';
 import { GAME_VERSIONS } from '../game/game-version';
 import { RealtimeService } from '../realtime/realtime.service';
@@ -25,6 +26,7 @@ export interface UserGuildDto {
   realm: string;
   faction: Faction;
   gameVersion: string;
+  region: string;
   servers: GuildServerDto[];
   officerRole: { id: string; name: string } | null;
   /** Optional Discord roles (in the main server) standing for Raider and Social, for roster setup. */
@@ -47,6 +49,8 @@ export interface EligibleServersDto {
 export interface SetupInfoDto {
   adminRoleName: string;
   botInviteUrl: string;
+  /** Regions a guild can be in, with the timezone their schedules run in. */
+  regions: { id: string; label: string; timezone: string }[];
 }
 
 export interface RoleOptionDto {
@@ -80,6 +84,7 @@ export interface GuildDetails {
   realm: string;
   faction: Faction;
   gameVersion: string;
+  region: RegionId;
 }
 
 const guildSelect = {
@@ -88,6 +93,7 @@ const guildSelect = {
   realm: true,
   faction: true,
   gameVersion: true,
+  region: true,
   officerRoleId: true,
   officerRoleName: true,
   servers: {
@@ -173,6 +179,7 @@ export class GuildsService {
           realm: input.realm,
           faction: input.faction,
           gameVersion: input.gameVersion,
+          region: input.region,
           servers: {
             create: chosen.map((server) => ({
               ...server!,

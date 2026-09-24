@@ -20,6 +20,7 @@ import { AuthService } from '../auth/auth.service';
 import type { AuthenticatedRequest } from '../auth/auth.types';
 import { GuildAccessService } from '../auth/guild-access.service';
 import { APP_CONFIG } from '../config/app.config';
+import { isRegion, REGIONS, regionOptions } from '../config/regions';
 import { RanksService, type RanksDto } from './ranks.service';
 import {
   GUILD_ROLE_KEYS,
@@ -69,6 +70,7 @@ export class GuildsController {
     return {
       adminRoleName: APP_CONFIG.adminRoleName,
       botInviteUrl: `https://discord.com/oauth2/authorize?${params.toString()}`,
+      regions: regionOptions(),
     };
   }
 
@@ -246,11 +248,15 @@ function parseGuildDetails(body: Payload): GuildDetails {
   if (!isGameVersion(body.gameVersion)) {
     throw new BadRequestException('Unsupported game version');
   }
+  if (!isRegion(body.region)) {
+    throw new BadRequestException(`region must be one of ${Object.keys(REGIONS).join(', ')}`);
+  }
   return {
     name: text('name'),
     realm: text('realm'),
     faction: body.faction,
     gameVersion: body.gameVersion,
+    region: body.region,
   };
 }
 

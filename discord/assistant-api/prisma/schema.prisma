@@ -25,6 +25,30 @@ enum GuildRole {
   SOCIAL
 }
 
+enum TaskType {
+  POST
+}
+
+enum ScheduleKind {
+  ONCE
+  DAILY
+  WEEKLY
+}
+
+enum TaskRunStatus {
+  SUCCESS
+  FAILED
+  // A recurring occurrence that was skipped because the task caught up with a later one.
+  MISSED
+}
+
+enum HoneypotAction {
+  // Test mode: what the bot would have done.
+  WOULD_BAN
+  BANNED
+  FAILED
+}
+
 // A WoW guild. It can be managed from more than one Discord server.
 model Guild {
   id              String             @id @default(uuid()) @db.Uuid
@@ -38,6 +62,10 @@ model Guild {
   // and can manage the guild like a Guild-Assistant. Null = no officer role set.
   officerRoleId   String?            @map("officer_role_id")
   officerRoleName String?            @map("officer_role_name")
+  // One of the keys of REGIONS (src/config/regions.ts); decides the timezone schedules run in.
+  region          String             @default("EU")
+  scheduledTasks  ScheduledTask[]
+  honeypots       Honeypot[]
   servers         DiscordServer[]
   roleMappings    GuildRoleMapping[]
   players         Player[]
@@ -179,4 +207,88 @@ model Session {
   createdAt             DateTime  @default(now()) @map("created_at")
 
   @@map("sessions")
+}
+
+// Something the background worker does on a schedule, defined by Officers in the backoffice.
+// The schedule is stored in a friendly form and interpreted in the guild's region timezone;
+// `nextRunAt` (UTC) is what the worker queries. `config`/`state` are per-type JSON (validated
+// in code): for POST, config = channel, content, seed reactions; state = the posted message.
+model ScheduledTask {
+  id           String         @id @default(uuid()) @db.Uuid
+  guildId      String         @map("guild_id") @db.Uuid
+  guild        Guild          @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  type         TaskType
+  name         String
+  enabled      Boolean        @default(true)
+  scheduleKind ScheduleKind   @map("schedule_kind")
+  // ONCE: the instant to run. DAILY/WEEKLY: wall-clock "HH:mm" (and ISO weekday 1-7) in the guild's timezone.
+  runAt        DateTime?      @map("run_at")
+  timeOfDay    String?        @map("time_of_day")
+  weekday      Int?
+  nextRunAt    DateTime?      @map("next_run_at")
+  // Set while a worker is executing the task, so no other worker picks it up.
+  leaseUntil   DateTime?      @map("lease_until")
+  lastRunAt    DateTime?      @map("last_run_at")
+  lastStatus   TaskRunStatus? @map("last_status")
+  lastError    String?        @map("last_error")
+  config       Json
+  state        Json           @default("{}")
+  createdById  String?        @map("created_by_id") @db.Uuid
+  runs         TaskRun[]
+  createdAt    DateTime       @default(now()) @map("created_at")
+  updatedAt    DateTime       @updatedAt @map("updated_at")
+
+  @@index([enabled, nextRunAt])
+  @@map("scheduled_tasks")
+}
+
+model TaskRun {
+  id           String        @id @default(uuid()) @db.Uuid
+  taskId       String        @map("task_id") @db.Uuid
+  task         ScheduledTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  // The occurrence this run is for; unique so an occurrence runs at most once.
+  scheduledFor DateTime      @map("scheduled_for")
+  startedAt    DateTime      @default(now()) @map("started_at")
+  finishedAt   DateTime?     @map("finished_at")
+  status       TaskRunStatus
+  error        String?
+
+  @@unique([taskId, scheduledFor])
+  @@map("task_runs")
+}
+
+// A channel where anyone who posts is banned (unless exempt). Not scheduled: the worker's
+// gateway listener enforces it. In test mode it only logs what it would do.
+model Honeypot {
+  id              String          @id @default(uuid()) @db.Uuid
+  guildId         String          @map("guild_id") @db.Uuid
+  guild           Guild           @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  name            String
+  enabled         Boolean         @default(true)
+  testMode        Boolean         @default(true) @map("test_mode")
+  discordServerId String          @map("discord_server_id")
+  channelId       String          @unique @map("channel_id")
+  logChannelId    String          @map("log_channel_id")
+  createdChannel  Boolean         @default(false) @map("created_channel")
+  events          HoneypotEvent[]
+  createdById     String?         @map("created_by_id") @db.Uuid
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+
+  @@map("honeypots")
+}
+
+model HoneypotEvent {
+  id            String         @id @default(uuid()) @db.Uuid
+  honeypotId    String         @map("honeypot_id") @db.Uuid
+  honeypot      Honeypot       @relation(fields: [honeypotId], references: [id], onDelete: Cascade)
+  discordUserId String         @map("discord_user_id")
+  username      String?
+  messageId     String?        @map("message_id")
+  action        HoneypotAction
+  error         String?
+  createdAt     DateTime       @default(now()) @map("created_at")
+
+  @@index([honeypotId, createdAt])
+  @@map("honeypot_events")
 }

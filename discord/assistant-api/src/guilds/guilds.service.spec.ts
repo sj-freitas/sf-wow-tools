@@ -124,6 +124,7 @@ describe('GuildsService', () => {
       realm: 'Realm',
       faction: 'ALLIANCE' as const,
       gameVersion: 'Forever',
+      region: 'EU' as const,
     };
 
     it('creates the guild with the chosen main server and the creator as Guild-Assistant', async () => {

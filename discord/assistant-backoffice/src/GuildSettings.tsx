@@ -11,22 +11,25 @@ import {
   setRoleMapping,
   updateGuild,
 } from './api';
+import { RegionSelect } from './RegionSelect';
 import {
   GAME_VERSIONS,
   type EligibleServers,
   type Faction,
   type Guild,
+  type Region,
   type RoleOption,
 } from './types';
 
 interface Props {
   guild: Guild;
+  regions: Region[];
   /** Called after any change so the parent can reload guilds. */
   onChanged: () => Promise<void>;
   onClose: () => void;
 }
 
-export function GuildSettings({ guild, onChanged, onClose }: Props) {
+export function GuildSettings({ guild, regions, onChanged, onClose }: Props) {
   const [error, setError] = useState<string | null>(null);
 
   const run = (action: Promise<unknown>) => {
@@ -46,7 +49,7 @@ export function GuildSettings({ guild, onChanged, onClose }: Props) {
       </div>
       {error && <p className="status-error">{error}</p>}
 
-      <DetailsSection guild={guild} run={run} />
+      <DetailsSection guild={guild} regions={regions} run={run} />
       <ServersSection guild={guild} run={run} />
       <RolesSection guild={guild} run={run} />
 
@@ -81,16 +84,23 @@ interface SectionProps {
   run: (action: Promise<unknown>) => Promise<void>;
 }
 
-function DetailsSection({ guild, run }: SectionProps) {
+function DetailsSection({ guild, regions, run }: SectionProps & { regions: Region[] }) {
   const [name, setName] = useState(guild.name);
   const [realm, setRealm] = useState(guild.realm);
   const [faction, setFaction] = useState<Faction>(guild.faction);
   const [gameVersion, setGameVersion] = useState(guild.gameVersion);
+  const [region, setRegion] = useState(guild.region);
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
     void run(
-      updateGuild(guild.id, { name: name.trim(), realm: realm.trim(), faction, gameVersion }),
+      updateGuild(guild.id, {
+        name: name.trim(),
+        realm: realm.trim(),
+        faction,
+        gameVersion,
+        region,
+      }),
     );
   };
 
@@ -121,6 +131,7 @@ function DetailsSection({ guild, run }: SectionProps) {
             ))}
           </select>
         </label>
+        <RegionSelect regions={regions} value={region} onChange={setRegion} />
       </div>
       <div className="form-actions">
         <button type="submit" className="btn btn-primary">

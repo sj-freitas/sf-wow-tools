@@ -4,6 +4,10 @@ import { ConfigModule } from '@nestjs/config';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { AuthModule } from './auth/auth.module';
 import { BotModule } from './bot/bot.module';
+import { DiscordBotModule } from './discord/discord-bot.module';
+import { HoneypotModule } from './honeypot/honeypot.module';
+import { TasksModule } from './tasks/tasks.module';
+import { WorkerModule } from './worker/worker.module';
 import { CharactersModule } from './characters/characters.module';
 import { DatabaseModule } from './database/database.module';
 import { GuildsModule } from './guilds/guilds.module';
@@ -21,12 +25,16 @@ import { PlayersModule } from './players/players.module';
       exclude: ['/api/{*splat}'],
     }),
     DatabaseModule,
+    DiscordBotModule,
     AuthModule,
     BotModule,
     PlayersModule,
     CharactersModule,
     GuildsModule,
     RealtimeModule,
+    TasksModule,
+    HoneypotModule,
+    WorkerModule,
   ],
 })
 export class AppModule {}

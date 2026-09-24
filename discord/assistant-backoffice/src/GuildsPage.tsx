@@ -12,6 +12,7 @@ import { CreateGuildForm } from './CreateGuildForm';
 import { playerLabel } from './format';
 import { GuildSettings } from './GuildSettings';
 import { SetupInstructions } from './SetupInstructions';
+import { TasksPage } from './TasksPage';
 import {
   ROLE_LABELS,
   type Guild,
@@ -38,6 +39,7 @@ export function GuildsPage({ guilds, setup, currentUser, onGuildsChanged }: Prop
   const [editingId, setEditingId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [managing, setManaging] = useState(false);
+  const [view, setView] = useState<'roster' | 'tasks'>('roster');
 
   const load = useCallback(() => {
     fetchPlayers()
@@ -179,6 +181,7 @@ export function GuildsPage({ guilds, setup, currentUser, onGuildsChanged }: Prop
                 setAdding(false);
                 setEditingId(null);
                 setManaging(false);
+                setView('roster');
               }}
             >
               {g.name}
@@ -231,7 +234,7 @@ export function GuildsPage({ guilds, setup, currentUser, onGuildsChanged }: Prop
                 {managing ? 'Hide settings' : 'Manage guild'}
               </button>
             )}
-            {!adding && (
+            {view === 'roster' && !adding && (
               <button
                 type="button"
                 className="btn btn-primary"
@@ -264,10 +267,32 @@ export function GuildsPage({ guilds, setup, currentUser, onGuildsChanged }: Prop
           ))}
         </div>
 
+        {guild.isOfficer && (
+          <div className="view-tabs" role="tablist">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={view === 'roster'}
+              onClick={() => setView('roster')}
+            >
+              Roster
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={view === 'tasks'}
+              onClick={() => setView('tasks')}
+            >
+              Scheduled tasks
+            </button>
+          </div>
+        )}
+
         {managing && canConfigure && (
           <GuildSettings
             key={guild.id}
             guild={guild}
+            regions={setup.regions}
             onChanged={async () => {
               await onGuildsChanged();
               load();
@@ -276,95 +301,105 @@ export function GuildsPage({ guilds, setup, currentUser, onGuildsChanged }: Prop
           />
         )}
 
-        {adding && (
-          <CharacterForm
+        {view === 'tasks' && guild.isOfficer ? (
+          <TasksPage
+            key={guild.id}
             guild={guild}
-            onSaved={() => {
-              setAdding(false);
-              load();
-            }}
-            onCancel={() => setAdding(false)}
+            timezone={setup.regions.find((region) => region.id === guild.region)?.timezone ?? 'UTC'}
           />
-        )}
-
-        {rows.length === 0 ? (
-          <p className="empty">No characters registered yet.</p>
         ) : (
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Character</th>
-                  <th>Class</th>
-                  <th>Roles</th>
-                  <th>Level</th>
-                  <th>Discord user</th>
-                  <th>Rank</th>
-                  <th />
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map(({ player, character }) => (
-                  <Fragment key={character.id}>
+          <>
+            {adding && (
+              <CharacterForm
+                guild={guild}
+                onSaved={() => {
+                  setAdding(false);
+                  load();
+                }}
+                onCancel={() => setAdding(false)}
+              />
+            )}
+
+            {rows.length === 0 ? (
+              <p className="empty">No characters registered yet.</p>
+            ) : (
+              <div className="table-wrap">
+                <table>
+                  <thead>
                     <tr>
-                      <td>
-                        {`${character.firstName} ${character.lastName}`.trim()}{' '}
-                        {character.isMain && <span className="badge badge-main">Main</span>}
-                      </td>
-                      <td>{character.class}</td>
-                      <td>{character.roles.map((role) => ROLE_LABELS[role]).join(', ')}</td>
-                      <td>{character.level}</td>
-                      <td>
-                        {playerLabel(player)}
-                        {playerLabel(player) !== player.discordUserId && (
-                          <span className="muted"> · {player.discordUserId}</span>
-                        )}
-                      </td>
-                      <td>{ranks[player.discordUserId]?.join(', ') ?? '—'}</td>
-                      <td className="cell-actions">
-                        {canEditRow(player) && (
-                          <>
-                            <button
-                              type="button"
-                              className="btn btn-sm"
-                              onClick={() => {
-                                setAdding(false);
-                                setEditingId(character.id);
-                              }}
-                            >
-                              Edit
-                            </button>{' '}
-                            <button
-                              type="button"
-                              className="btn btn-sm btn-danger"
-                              onClick={() => run(deleteCharacter(character.id))}
-                            >
-                              Remove
-                            </button>
-                          </>
-                        )}
-                      </td>
+                      <th>Character</th>
+                      <th>Class</th>
+                      <th>Roles</th>
+                      <th>Level</th>
+                      <th>Discord user</th>
+                      <th>Rank</th>
+                      <th />
                     </tr>
-                    {editingId === character.id && (
-                      <tr className="edit-row">
-                        <td colSpan={7}>
-                          <CharacterForm
-                            guild={guild}
-                            editing={{ character, playerLabel: playerLabel(player) }}
-                            onSaved={() => {
-                              setEditingId(null);
-                              load();
-                            }}
-                            onCancel={() => setEditingId(null)}
-                          />
-                        </td>
-                      </tr>
-                    )}
-                  </Fragment>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                  </thead>
+                  <tbody>
+                    {rows.map(({ player, character }) => (
+                      <Fragment key={character.id}>
+                        <tr>
+                          <td>
+                            {`${character.firstName} ${character.lastName}`.trim()}{' '}
+                            {character.isMain && <span className="badge badge-main">Main</span>}
+                          </td>
+                          <td>{character.class}</td>
+                          <td>{character.roles.map((role) => ROLE_LABELS[role]).join(', ')}</td>
+                          <td>{character.level}</td>
+                          <td>
+                            {playerLabel(player)}
+                            {playerLabel(player) !== player.discordUserId && (
+                              <span className="muted"> · {player.discordUserId}</span>
+                            )}
+                          </td>
+                          <td>{ranks[player.discordUserId]?.join(', ') ?? '—'}</td>
+                          <td className="cell-actions">
+                            {canEditRow(player) && (
+                              <>
+                                <button
+                                  type="button"
+                                  className="btn btn-sm"
+                                  onClick={() => {
+                                    setAdding(false);
+                                    setEditingId(character.id);
+                                  }}
+                                >
+                                  Edit
+                                </button>{' '}
+                                <button
+                                  type="button"
+                                  className="btn btn-sm btn-danger"
+                                  onClick={() => run(deleteCharacter(character.id))}
+                                >
+                                  Remove
+                                </button>
+                              </>
+                            )}
+                          </td>
+                        </tr>
+                        {editingId === character.id && (
+                          <tr className="edit-row">
+                            <td colSpan={7}>
+                              <CharacterForm
+                                guild={guild}
+                                editing={{ character, playerLabel: playerLabel(player) }}
+                                onSaved={() => {
+                                  setEditingId(null);
+                                  load();
+                                }}
+                                onCancel={() => setEditingId(null)}
+                              />
+                            </td>
+                          </tr>
+                        )}
+                      </Fragment>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </>
         )}
       </section>
     </>

@@ -638,3 +638,213 @@ tbody tr:last-child td {
     grid-template-columns: 1fr;
   }
 }
+
+/* ---- scheduled tasks ---- */
+.view-tabs {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.5rem 1.25rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.view-tabs button {
+  padding: 0.5rem 0.9rem;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  cursor: pointer;
+}
+.view-tabs button[aria-selected='true'] {
+  color: var(--text);
+  border-bottom-color: var(--blurple);
+}
+.tasks {
+  display: grid;
+  gap: 1rem;
+  padding: 1.25rem;
+}
+.tasks-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.tasks-section {
+  margin: 0.5rem 0 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.task-card {
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-2);
+}
+.task-card-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.task-form {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-2);
+}
+.task-text {
+  margin-top: 1rem;
+}
+.task-text-head {
+  display: flex;
+  justify-content: space-between;
+}
+.task-text-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.field textarea {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.9rem;
+  resize: vertical;
+}
+.mode-box {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+.field-toggle-danger {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+.badge-live {
+  background: color-mix(in srgb, var(--danger) 15%, transparent);
+  border-color: var(--danger);
+  color: var(--danger);
+}
+.reaction-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.reaction-list li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+}
+.reaction-emoji {
+  font-size: 1.2rem;
+}
+.honeypot-events {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+}
+
+/* ---- Discord markdown preview ---- */
+.md-preview {
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--blurple);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.95rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.md-preview code {
+  padding: 0.1rem 0.3rem;
+  border-radius: 4px;
+  background: var(--surface-2);
+  font-size: 0.85em;
+}
+.md-code {
+  margin: 0.3rem 0;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-2);
+  font-size: 0.85rem;
+  white-space: pre-wrap;
+}
+.md-quote {
+  margin: 0.2rem 0;
+  padding-left: 0.7rem;
+  border-left: 3px solid var(--border);
+  white-space: pre-wrap;
+}
+.md-heading {
+  font-weight: 700;
+  margin: 0.4rem 0 0.1rem;
+}
+.md-h1 {
+  font-size: 1.4rem;
+}
+.md-h2 {
+  font-size: 1.2rem;
+}
+.md-h3 {
+  font-size: 1.05rem;
+}
+.md-preview ul {
+  margin: 0.2rem 0;
+  padding-left: 1.4rem;
+}
+.md-mention {
+  padding: 0 0.2rem;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--blurple) 25%, transparent);
+  color: var(--blurple);
+}
+.md-spoiler {
+  border-radius: 4px;
+  background: var(--border);
+  color: transparent;
+  cursor: pointer;
+}
+.md-spoiler-shown {
+  color: inherit;
+  cursor: default;
+}
+.md-emoji {
+  width: 1.4em;
+  height: 1.4em;
+  vertical-align: middle;
+}
+
+.task-form h3 {
+  margin-bottom: 0.75rem;
+}
+.field-span-2 {
+  grid-column: span 2;
+}
+@media (max-width: 720px) {
+  .field-span-2 {
+    grid-column: auto;
+  }
+}

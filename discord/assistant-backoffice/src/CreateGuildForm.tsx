@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { createGuild, fetchEligibleServers, syncDiscord } from './api';
+import { RegionSelect } from './RegionSelect';
 import { SetupInstructions } from './SetupInstructions';
 import {
   GAME_VERSIONS,
@@ -21,6 +22,7 @@ export function CreateGuildForm({ setup, onCreated, onCancel }: Props) {
   const [realm, setRealm] = useState('');
   const [faction, setFaction] = useState<Faction>('ALLIANCE');
   const [gameVersion, setGameVersion] = useState<string>(GAME_VERSIONS[0]);
+  const [region, setRegion] = useState(setup.regions[0]?.id ?? 'EU');
   const [selected, setSelected] = useState<string[]>([]);
   const [mainId, setMainId] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -47,6 +49,7 @@ export function CreateGuildForm({ setup, onCreated, onCancel }: Props) {
       realm: realm.trim(),
       faction,
       gameVersion,
+      region,
       discordServerIds: selected,
       mainServerId: effectiveMain,
     })
@@ -90,6 +93,7 @@ export function CreateGuildForm({ setup, onCreated, onCancel }: Props) {
               ))}
             </select>
           </label>
+          <RegionSelect regions={setup.regions} value={region} onChange={setRegion} />
         </div>
 
         <div className="field server-picker">

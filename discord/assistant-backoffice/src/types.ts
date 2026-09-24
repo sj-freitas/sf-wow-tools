@@ -33,6 +33,7 @@ export interface Guild {
   realm: string;
   faction: Faction;
   gameVersion: string;
+  region: string;
   servers: GuildServer[];
   /** Role in the main server whose holders manage the guild's characters and settings. */
   officerRole: { id: string; name: string } | null;
@@ -60,6 +61,7 @@ export interface GuildDetails {
   realm: string;
   faction: Faction;
   gameVersion: string;
+  region: string;
 }
 
 export interface RoleOption {
@@ -84,9 +86,17 @@ export interface EligibleServers {
   servers: { discordId: string; name: string }[];
 }
 
+export interface Region {
+  id: string;
+  label: string;
+  /** IANA timezone the guild's schedules run in. */
+  timezone: string;
+}
+
 export interface SetupInfo {
   adminRoleName: string;
   botInviteUrl: string;
+  regions: Region[];
 }
 
 // Keep in sync with assistant-api/src/game/game-version.ts.
@@ -137,4 +147,102 @@ export interface NewCharacterInput {
   roles: Role[];
   isMain: boolean;
   level?: number;
+}
+
+// ---- scheduled tasks and honeypots ----
+
+export type ScheduleKind = 'ONCE' | 'DAILY' | 'WEEKLY';
+export type TaskRunStatus = 'SUCCESS' | 'FAILED' | 'MISSED';
+
+export interface ScheduledPost {
+  id: string;
+  name: string;
+  type: 'POST';
+  enabled: boolean;
+  schedule: {
+    kind: ScheduleKind;
+    runAt: string | null;
+    /** For datetime-local inputs: the one-time date in the guild's timezone. */
+    runAtLocal: string | null;
+    timeOfDay: string | null;
+    weekday: number | null;
+    description: string;
+  };
+  timezone: string;
+  nextRunAt: string | null;
+  lastRunAt: string | null;
+  lastStatus: TaskRunStatus | null;
+  lastError: string | null;
+  post: {
+    serverId: string;
+    channelId: string;
+    content: string;
+    seedReactions: string[];
+    posted: { messageId: string; url: string; postedAt: string; messageDeleted: boolean } | null;
+  };
+}
+
+export interface PostInput {
+  name: string;
+  enabled: boolean;
+  kind: ScheduleKind;
+  runAtLocal?: string;
+  timeOfDay?: string;
+  weekday?: number;
+  serverId: string;
+  channelId: string;
+  content: string;
+  seedReactions: string[];
+}
+
+export interface ServerChannels {
+  serverId: string;
+  serverName: string;
+  channels: { id: string; name: string }[];
+  /** Why the channels could not be read (e.g. the bot is not in the server). */
+  error: string | null;
+}
+
+export interface Reaction {
+  emoji: string;
+  emojiId: string | null;
+  count: number;
+  imageUrl: string | null;
+}
+
+export type HoneypotAction = 'WOULD_BAN' | 'BANNED' | 'FAILED';
+
+export interface HoneypotEvent {
+  id: string;
+  discordUserId: string;
+  username: string | null;
+  action: HoneypotAction;
+  error: string | null;
+  at: string;
+}
+
+export interface Honeypot {
+  id: string;
+  name: string;
+  enabled: boolean;
+  /** Test mode only logs what would happen; nobody is banned. */
+  testMode: boolean;
+  serverId: string;
+  channelId: string;
+  logChannelId: string;
+  createdChannel: boolean;
+  recentEvents: HoneypotEvent[];
+}
+
+export interface HoneypotInput {
+  name: string;
+  testMode: boolean;
+  confirmLive: boolean;
+  serverId: string;
+  channelId?: string;
+  newChannelName?: string;
+  topic?: string;
+  initialPost?: string;
+  logServerId: string;
+  logChannelId: string;
 }

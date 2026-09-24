@@ -27,6 +27,7 @@ authorization), the character and guild rules, token encryption and name parsing
 | Script                            | Purpose                                             |
 | --------------------------------- | --------------------------------------------------- |
 | `npm run start:dev`               | Run the API with hot reload (`nodemon` + `ts-node`) |
+| `npm run start:worker` / `:dev`   | Run the background worker (see below)               |
 | `npm run build`                   | Compile TypeScript to `dist/`                       |
 | `npm run start`                   | Run the compiled API from `dist/`                   |
 | `npm run commands:register`       | Push `src/bot/commands.json` to Discord             |
@@ -153,6 +154,57 @@ server can't be removed directly.
   user's servers that the bot is in, reads the user's role ids (their token, scope
   `guilds.members.read`) and the server's roles (bot token). Officer status only needs the user's
   role ids in the main server. Results are stored in `guild_access` and `user_admin_servers`.
+
+### Background worker, scheduled tasks and honeypots
+
+Officers manage these in the backoffice under **Scheduled tasks** (Officers only). The worker that
+runs them is internal: officers never see it.
+
+**Running the worker.** `src/worker.ts` is a second entrypoint of the same codebase: a Nest
+application context (no HTTP, no login) that needs only `DATABASE_URL` and `DISCORD_TOKEN`.
+
+- `npm run start:worker` (`node dist/worker.js`); `npm run start:worker:dev` locally.
+- On Render: a Background Worker (or any always-on service) built from the same Dockerfile with the
+  start command `node dist/worker.js`.
+- On a single instance you can instead set `WORKER_IN_PROCESS=true` on the web service and it runs
+  inside the API process.
+
+**Scheduler.** Every minute the worker claims due rows of `scheduled_tasks` in the database
+(`FOR UPDATE SKIP LOCKED` plus a 5-minute lease), so several workers can run safely. Schedules are
+stored as once / daily / weekly wall-clock times and read in the guild's region timezone
+(`src/config/regions.ts`; DST-aware). Missed runs are never dropped: at start-up and on every tick
+whatever is overdue runs, late rather than never. A recurring task catches up with one run and the
+occurrences it skipped are recorded as `MISSED` in `task_runs`. A failed run is retried after 5
+minutes, up to 3 attempts, and the error is shown to the officer. Each run is at-least-once: if the
+worker dies between posting and saving, one post can be repeated after the lease expires.
+
+**Scheduled post.** Markdown text posted to a channel of one of the guild's servers, once, daily or
+weekly, with an optional set of reactions added by the bot (polls). The backoffice previews the
+markdown (mentions shown with their names). The bot remembers the message it posted:
+
+- saving new text edits that Discord message (if it was deleted, the next run posts a new one);
+- `GET /api/tasks/:id/reactions` reads the live reaction counts (the backoffice polls it every 5 s);
+- "Post now" makes the task due immediately.
+
+Posts never ping `@everyone`/`@here` (only user and role mentions are allowed).
+
+**Honeypot.** A channel where anyone who posts is permanently banned, with their messages from the
+last hour deleted (`delete_message_seconds = 3600`). Created from the backoffice: use an existing
+channel or have the bot create one (with a description/topic and a first post), and pick a log
+channel. It needs the guild's Officer role to be set (Officers are never banned). Also exempt: the
+bot, other bots, the server owner and Administrators.
+
+- **Test mode** (the default): nothing is banned; the bot only writes to the log channel what it
+  would have done. Going live needs an explicit confirmation. Every action is stored in
+  `honeypot_events` and the last ones show under the honeypot.
+- Enforcement uses the bot's gateway connection in the worker, with the non-privileged `Guilds` and
+  `GuildMessages` intents only (message text is not read; no portal setting needed).
+- Honeypots are reloaded from the database every 30 seconds, so changes apply without a restart.
+- Bot permissions used: View Channel, Send Messages, Manage Channels (to create the channel), Ban
+  Members. The bot's role must be above the people it bans.
+
+**Not built yet:** channel cleanup and the raid task (see `TODO.md`). Live updates between the worker
+and the browser use polling until a shared bus (Redis or Postgres `LISTEN/NOTIFY`) exists.
 
 ### Fresh Discord data and live updates
 
