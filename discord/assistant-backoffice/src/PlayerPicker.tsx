@@ -70,6 +70,13 @@ export function PlayerPicker({ guildId, value, onChange }: Props) {
       ? query.trim()
       : null;
 
+  const results = [
+    ...matches.map(({ person }) => ({ id: person.discordUserId, label: personLabel(person) })),
+    ...(idOption ? [{ id: idOption, label: idOption }] : []),
+  ];
+  const onlyResult =
+    query.trim() !== '' && value === '' && results.length === 1 ? results[0] : null;
+
   return (
     <div className="dropdown" ref={root}>
       <input
@@ -80,6 +87,14 @@ export function PlayerPicker({ guildId, value, onChange }: Props) {
           setQuery(event.target.value);
           onChange('');
           setOpen(true);
+        }}
+        onKeyDown={(event) => {
+          // Tab accepts the single suggestion; focus still moves on to the next field as usual.
+          if (event.key === 'Tab' && !event.shiftKey && onlyResult) {
+            choose(onlyResult.id, onlyResult.label);
+          } else if (event.key === 'Tab' || event.key === 'Escape') {
+            setOpen(false);
+          }
         }}
         aria-autocomplete="list"
         aria-invalid={value === '' && query !== ''}
@@ -119,6 +134,7 @@ export function PlayerPicker({ guildId, value, onChange }: Props) {
               Use Discord user ID <strong>{idOption}</strong>
             </button>
           )}
+          {onlyResult && <div className="dropdown-hint muted">Press Tab to select</div>}
         </div>
       )}
     </div>

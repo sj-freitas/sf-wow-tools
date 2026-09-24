@@ -19,18 +19,25 @@ interface Props {
   onCancel: () => void;
 }
 
-const fullName = (character: Character) =>
-  `${character.firstName}-${character.lastName}`.replace(/-$/, '');
-
 const ROLE_OPTIONS = (Object.keys(ROLE_LABELS) as Role[]).map((role) => ({
   value: role,
   label: ROLE_LABELS[role],
 }));
 
+// Letters of any alphabet (combining marks allowed), no digits or punctuation; the API is the
+// authority, this only gives early feedback.
+const NAME_PATTERN = '\\p{L}[\\p{L}\\p{M}]*';
+const NAME_HINT = 'Letters only (any alphabet), 2 to 12 letters.';
+
 export function CharacterForm({ guild, editing, onSaved, onCancel }: Props) {
   const initial = editing?.character;
+  const lastNameRequired = requiresLastName(guild.gameVersion);
+  // Also shown when editing a character that already has one, so saving can't silently drop it.
+  const showLastName = lastNameRequired || Boolean(initial?.lastName);
+
   const [discordUserId, setDiscordUserId] = useState('');
-  const [name, setName] = useState(initial ? fullName(initial) : '');
+  const [firstName, setFirstName] = useState(initial?.firstName ?? '');
+  const [lastName, setLastName] = useState(initial?.lastName ?? '');
   const [characterClass, setCharacterClass] = useState<string>(initial?.class ?? WOW_CLASSES[0]);
   const [roles, setRoles] = useState<Role[]>(initial?.roles ?? ['TANK']);
   const [level, setLevel] = useState(initial ? String(initial.level) : '');
@@ -40,16 +47,18 @@ export function CharacterForm({ guild, editing, onSaved, onCancel }: Props) {
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
     setError(null);
-    if (requiresLastName(guild.gameVersion) && !name.includes('-')) {
-      setError(`Characters in ${guild.gameVersion} need a last name: use Name-Lastname.`);
-      return;
-    }
     if (!initial && guild.isOfficer && discordUserId === '') {
       setError('Pick a player from the list, or paste their Discord user ID.');
       return;
     }
+    const last = showLastName ? lastName.trim() : '';
+    if (lastNameRequired && last === '') {
+      setError(`Characters in ${guild.gameVersion} need a last name.`);
+      return;
+    }
     const fields = {
-      name: name.trim(),
+      // The API takes `Name` or `Name-Lastname`.
+      name: last === '' ? firstName.trim() : `${firstName.trim()}-${last}`,
       class: characterClass,
       roles,
       isMain,
@@ -65,9 +74,9 @@ export function CharacterForm({ guild, editing, onSaved, onCancel }: Props) {
 
   return (
     <form className="card-body" onSubmit={handleSubmit}>
-      <div className="form-grid">
+      <div className="form-grid form-grid-3">
         {(editing || guild.isOfficer) && (
-          <div className="field">
+          <div className="field field-wide">
             Discord user
             {editing ? (
               <input value={editing.playerLabel} disabled />
@@ -77,17 +86,31 @@ export function CharacterForm({ guild, editing, onSaved, onCancel }: Props) {
           </div>
         )}
         <label className="field">
-          Character name
+          {showLastName ? 'First name' : 'Name'}
           <input
-            placeholder={
-              requiresLastName(guild.gameVersion) ? 'Name-Lastname' : 'Name or Name-Lastname'
-            }
-            title="First and last name are separated by a dash. Letters only (any alphabet), at least 2 each."
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+            pattern={NAME_PATTERN}
+            minLength={2}
+            maxLength={12}
+            title={NAME_HINT}
             required
           />
         </label>
+        {showLastName && (
+          <label className="field">
+            Last name
+            <input
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              pattern={NAME_PATTERN}
+              minLength={2}
+              maxLength={12}
+              title={NAME_HINT}
+              required={lastNameRequired}
+            />
+          </label>
+        )}
         <label className="field">
           Class
           <select value={characterClass} onChange={(e) => setCharacterClass(e.target.value)}>
@@ -117,16 +140,10 @@ export function CharacterForm({ guild, editing, onSaved, onCancel }: Props) {
         </label>
         <div className="field">
           Main character
-          <div className="checks">
-            <label>
-              <input
-                type="checkbox"
-                checked={isMain}
-                onChange={(e) => setIsMain(e.target.checked)}
-              />
-              This is a main
-            </label>
-          </div>
+          <label className="field-toggle">
+            <input type="checkbox" checked={isMain} onChange={(e) => setIsMain(e.target.checked)} />
+            This is a main
+          </label>
         </div>
       </div>
       {error && <p className="status-error">{error}</p>}

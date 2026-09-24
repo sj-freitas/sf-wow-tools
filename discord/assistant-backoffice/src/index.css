@@ -291,20 +291,57 @@ tbody tr:last-child td {
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1rem;
 }
+/* Character form: three equal columns, one column on small screens. */
+.form-grid-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+@media (max-width: 720px) {
+  .form-grid-3 {
+    grid-template-columns: 1fr;
+  }
+}
 .field {
   display: grid;
   gap: 0.35rem;
   font-size: 0.85rem;
   color: var(--muted);
 }
-.field input,
-.field select {
-  padding: 0.5rem 0.6rem;
+/* Every text input, select and dropdown button shares one height and look. */
+:root {
+  --control-height: 2.5rem;
+}
+.field input:not([type='checkbox']):not([type='radio']),
+.field select,
+.dropdown-button,
+.inline-form select {
+  box-sizing: border-box;
+  width: 100%;
+  height: var(--control-height);
+  padding: 0 0.7rem;
   border: 1px solid var(--border);
   border-radius: 6px;
   background: var(--surface-2);
   color: var(--text);
   font: inherit;
+  font-size: 0.9rem;
+}
+.field input:disabled {
+  opacity: 0.7;
+}
+.field-wide {
+  grid-column: 1 / -1;
+}
+.field-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: var(--control-height);
+  padding: 0 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 0.9rem;
 }
 .checks {
   display: flex;
@@ -440,14 +477,17 @@ tbody tr:last-child td {
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
-  padding: 0.5rem 0.6rem;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--surface-2);
-  color: var(--text);
-  font: inherit;
   cursor: pointer;
   text-align: left;
+}
+.dropdown-button > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dropdown-hint {
+  padding: 0.35rem 0.5rem 0.15rem;
+  font-size: 0.8rem;
 }
 .dropdown-menu {
   position: absolute;
@@ -561,12 +601,10 @@ tbody tr:last-child td {
 }
 .inline-form select {
   flex: 1 1 220px;
-  padding: 0.5rem 0.6rem;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--surface-2);
-  color: var(--text);
-  font: inherit;
+  width: auto;
+}
+.inline-form .btn {
+  height: var(--control-height);
 }
 .danger-zone {
   border-color: var(--danger);
