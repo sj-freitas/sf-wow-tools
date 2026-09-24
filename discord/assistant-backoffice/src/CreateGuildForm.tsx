@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { createGuild, fetchEligibleServers } from './api';
+import { createGuild, fetchEligibleServers, syncDiscord } from './api';
 import { SetupInstructions } from './SetupInstructions';
 import {
   GAME_VERSIONS,
@@ -26,7 +26,8 @@ export function CreateGuildForm({ setup, onCreated, onCancel }: Props) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchEligibleServers()
+    syncDiscord()
+      .then(fetchEligibleServers)
       .then(setEligible)
       .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)));
   }, []);

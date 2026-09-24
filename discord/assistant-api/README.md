@@ -16,6 +16,12 @@ npm run commands:register
 npm run start:dev
 ```
 
+## Tests
+
+`npm test` runs the specs (`src/**/*.spec.ts`) with Node's built-in test runner through ts-node;
+no extra dependencies. They cover the permission rules, the Discord sync (roles, cooldown, expired
+authorization), the character and guild rules, token encryption and name parsing.
+
 ## Scripts
 
 | Script                            | Purpose                                             |
@@ -27,6 +33,7 @@ npm run start:dev
 | `npm run prisma:generate`         | Regenerate the Prisma client                        |
 | `npm run prisma:migrate`          | Create/apply a dev migration                        |
 | `npm run prisma:deploy`           | Apply pending migrations only (CI/production)       |
+| `npm test`                        | Unit tests (Node test runner + ts-node)             |
 | `npm run lint` / `lint:fix`       | ESLint (flat config, typescript-eslint)             |
 | `npm run format` / `format:check` | Prettier                                            |
 
@@ -97,11 +104,30 @@ just another controller.
 The admin role name is a single setting, `adminRoleName` in `src/config/app.config.ts`
 (`Guild-Assistant`). Access to a guild has three levels, combinable per user:
 
-| Level                                         | How you get it                                                                            | What you can do                                                                                                                  |
-| --------------------------------------------- | ----------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| **Guild-Assistant** (`guild_access.is_admin`) | Hold the role in **every** Discord server of the guild                                    | Create guilds; configure them: details, delete, add/remove servers, main server, Officer role. **Not** other people's characters |
-| **Officer** (`guild_access.is_officer`)       | Hold the guild's Officer role in its **main** server (the Guild-Assistant picks the role) | Add, edit and remove **every** player's characters                                                                               |
-| **Member** (any `guild_access` row)           | Be in any Discord server attached to the guild; no role needed                            | Add, edit and remove **your own** characters                                                                                     |
+| Level                                         | How you get it                                                                            | What you can do                                                                                                                                                                                       |
+| --------------------------------------------- | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Guild-Assistant** (`guild_access.is_admin`) | Hold the role in **every** Discord server of the guild                                    | Create guilds; configure them: details, delete, add/remove servers, main server, Officer role. **Not** other people's characters                                                                      |
+| **Officer** (`guild_access.is_officer`)       | Hold the guild's Officer role in its **main** server (the Guild-Assistant picks the role) | Add, edit and remove **every** player's characters, **and** configure the guild like a Guild-Assistant (except that adding a server still requires holding the Guild-Assistant role in _that_ server) |
+| **Member** (any `guild_access` row)           | Be in any Discord server attached to the guild; no role needed                            | Add, edit and remove **your own** characters                                                                                                                                                          |
+
+Officers being able to configure the guild is also the recovery path: because a Guild-Assistant needs
+the role in _every_ server, a guild whose servers lose their role holders would otherwise be stuck.
+
+The rules live in `src/auth/access-rules.ts` (pure functions, unit tested).
+
+**Guild role mappings (optional):** besides the Officer role, an Officer can map two more guild roles,
+**Raider** and **Social**, each to a role of the guild's main server
+(`PUT /api/guilds/:id/role-mappings/RAIDER|SOCIAL`, `roleId: null` clears; role choices come from
+`GET /api/guilds/:id/role-options`). They are stored in `guild_role_mappings` and shown in "Manage
+guild" but don't grant anything or affect the roster yet; they're groundwork for roster setup. Like
+the Officer role they belong to the main server, so changing the main server clears them.
+
+**Rank column:** the character list shows a "Rank" per player: the guild roles they hold, as
+Officer, Raider and/or Social, comma separated. It is worked out live from the player's Discord
+roles in the main server (`GET /api/guilds/:id/ranks`, any guild member) and never stored. Discord's
+member list is read once per request when the Server Members intent allows it, otherwise players are
+looked up one by one (up to 100). Results are kept in memory for 60 seconds (`ranksCacheMs`) and
+dropped whenever the guild's settings change.
 
 Everyone with a `guild_access` row can see the guild's players. Changing the main server clears the
 Officer role, since roles belong to a server. A guild always keeps at least one server and its main
@@ -113,7 +139,7 @@ server can't be removed directly.
 - **Creating a guild:** any logged-in user (`POST /api/guilds`) picks name, realm, faction, game
   version and the Discord servers to attach, and which one is main. Only servers where the user holds
   the admin role, the bot is installed, and that don't belong to a guild yet are offered
-  (`GET /api/guilds/eligible-servers`). The creator becomes a Guild-Assistant of the new guild.
+  (`GET /api/guilds/eligible-servers`, after `POST /api/guilds/sync`). The creator becomes a Guild-Assistant of the new guild.
 - **Player search:** `GET /api/guilds/:id/people` lists every human member of the guild's Discord
   servers (Discord's list-members endpoint, up to 10,000 per server) with their names and the names
   of their characters; the backoffice searches it, typo tolerant, when adding a character. This
@@ -133,11 +159,16 @@ server can't be removed directly.
 - **Stored token:** at login the user's Discord access token is stored, AES-256-GCM encrypted with
   `SESSION_ENCRYPTION_KEY`, on their session (valid about 7 days, like the session). It is used to
   re-read their servers and roles later.
-- **Refresh:** opening "Create guild" always re-reads the user's servers first
-  (`GET /api/guilds/eligible-servers`). Any authenticated request also re-syncs servers, roles and
-  `guild_access` if the last sync is older than 5 minutes (`discordSyncMaxAgeMs` in
-  `app.config.ts`), so a lost role stops working within minutes. If the token is missing or
-  rejected the user is asked to log in again.
+- **Refresh:** opening "Create guild" (or the guild settings) first calls `POST /api/guilds/sync`,
+  which re-reads the user's servers and roles, then reads `GET /api/guilds/eligible-servers` (a pure
+  read). A user-triggered sync is skipped if the last one was under 30 seconds ago
+  (`discordForceSyncMinIntervalMs`), so it can't be used to hammer Discord's rate limits. Any
+  authenticated request also re-syncs servers, roles and `guild_access` if the last sync is older
+  than 5 minutes (`discordSyncMaxAgeMs` in `app.config.ts`), so a lost role stops working within
+  minutes; temporary Discord errors keep the old access until the next attempt.
+- **Usernames:** listing players never calls Discord. Names come from the bot's commands, from
+  adding a character, from the user's own login, and from the Officers' "Refresh names" button
+  (`POST /api/players/guild/:id/refresh-names`, up to 100 lookups).
 - **Bot requirement:** the bot must be in a server for its roles to be read. The backoffice shows
   the setup steps and the invite link (`GET /api/guilds/setup-info`, built from
   `DISCORD_APPLICATION_ID` and `botInvitePermissions`).
@@ -159,9 +190,20 @@ ephemeral (only you see them).
 | `/character-list`   | —                                                                            | Lists your characters            |
 | `/character-remove` | `name`                                                                       | Removes one of your characters   |
 
-**Name format:** `Name` or `Name-Lastname` — a dash separates first and last name, and the last
-name is optional. Letters only, 2-12 per part; casing is normalized (`arthas-menethil` →
-`Arthas Menethil`). You can mark several characters as `main`.
+**Name format:** `Name` or `Name-Lastname`, a dash separating first and last name.
+
+- Each part is 2-12 **letters of any alphabet** (accents and other combining marks are fine); no
+  digits, spaces or punctuation. If a last name is given it must be valid too, so `Arthas-M` and
+  `Arthas-` are rejected.
+- Casing is normalized: first letter upper case, the rest lower case (`aRTHAS-menethil` →
+  `Arthas Menethil`), and text is stored NFC-normalized.
+- The last name is optional in general but **required for game versions that say so**: Forever
+  requires it (`GAME_VERSIONS`/`RULES` in `src/game/game-version.ts`). This is enforced by the API
+  for the bot and the backoffice, on create and on rename. The database itself only guarantees the
+  minimum lengths (CHECK constraints on `characters.first_name`/`last_name`), since a CHECK can't
+  read the guild's game version from another table.
+
+You can mark several characters as `main`.
 
 After changing `src/bot/commands.json`, run `npm run commands:register`. Class choices live in both
 `commands.json` and `src/game/wow-class.ts` — keep them in sync.

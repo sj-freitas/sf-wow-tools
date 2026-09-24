@@ -3,10 +3,12 @@ import type {
   EligibleServers,
   Guild,
   GuildDetails,
+  GuildRoleKey,
   NewCharacterInput,
   NewGuildInput,
   People,
   Player,
+  Ranks,
   RoleOption,
   SetupInfo,
   User,
@@ -51,8 +53,17 @@ export const fetchGuilds = (): Promise<Guild[]> => request('GET', '/api/guilds')
 
 export const fetchSetupInfo = (): Promise<SetupInfo> => request('GET', '/api/guilds/setup-info');
 
+/** Asks the API to re-read the user's Discord servers and roles (rate limited server side). */
+export const syncDiscord = (): Promise<void> => request('POST', '/api/guilds/sync');
+
+export const fetchRanks = (guildId: string): Promise<Ranks> =>
+  request('GET', `/api/guilds/${guildId}/ranks`);
+
 export const fetchEligibleServers = (): Promise<EligibleServers> =>
   request('GET', '/api/guilds/eligible-servers');
+
+export const refreshPlayerNames = (guildId: string): Promise<{ updated: number }> =>
+  request('POST', `/api/players/guild/${guildId}/refresh-names`);
 
 export const createGuild = (input: NewGuildInput): Promise<Guild> =>
   request('POST', '/api/guilds', input);
@@ -72,8 +83,14 @@ export const addGuildServer = (guildId: string, discordServerId: string): Promis
 export const setMainServer = (guildId: string, discordServerId: string): Promise<void> =>
   request('PUT', `/api/guilds/${guildId}/main-server`, { discordServerId });
 
-export const fetchOfficerRoleOptions = (guildId: string): Promise<RoleOption[]> =>
-  request('GET', `/api/guilds/${guildId}/officer-role-options`);
+export const fetchRoleOptions = (guildId: string): Promise<RoleOption[]> =>
+  request('GET', `/api/guilds/${guildId}/role-options`);
+
+export const setRoleMapping = (
+  guildId: string,
+  guildRole: GuildRoleKey,
+  roleId: string | null,
+): Promise<void> => request('PUT', `/api/guilds/${guildId}/role-mappings/${guildRole}`, { roleId });
 
 export const setOfficerRole = (guildId: string, roleId: string | null): Promise<void> =>
   request('PUT', `/api/guilds/${guildId}/officer-role`, { roleId });

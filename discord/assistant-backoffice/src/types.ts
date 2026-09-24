@@ -34,13 +34,20 @@ export interface Guild {
   faction: Faction;
   gameVersion: string;
   servers: GuildServer[];
-  /** Role in the main server whose holders can manage the guild. */
+  /** Role in the main server whose holders manage the guild's characters and settings. */
   officerRole: { id: string; name: string } | null;
+  /** Optional roles in the main server standing for Raider and Social, for roster setup. */
+  roleMappings: Record<GuildRoleKey, { id: string; name: string } | null>;
   /** Holds the admin role in all servers: configures the guild (details, servers, Officer role). */
   isAdmin: boolean;
   /** Holds the Officer role in the main server: manages every player's characters. */
   isOfficer: boolean;
 }
+
+export type GuildRoleKey = 'RAIDER' | 'SOCIAL';
+
+/** Discord user id -> ranks (Officer, Raider, Social) they hold as Discord roles. */
+export type Ranks = Record<string, string[]>;
 
 export interface GuildServer {
   discordId: string;
@@ -84,6 +91,8 @@ export interface SetupInfo {
 
 // Keep in sync with assistant-api/src/game/game-version.ts.
 export const GAME_VERSIONS = ['Forever'] as const;
+
+export const requiresLastName = (gameVersion: string): boolean => gameVersion === 'Forever';
 
 export interface NewGuildInput extends GuildDetails {
   discordServerIds: string[];

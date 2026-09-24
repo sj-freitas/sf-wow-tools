@@ -29,13 +29,14 @@ export function SetupInstructions({ setup }: { setup: SetupInfo }) {
       <h3>Who can do what</h3>
       <ul>
         <li>
-          <strong>{setup.adminRoleName}</strong> (in every server of the guild): create guilds, and
+          <strong>{setup.adminRoleName}</strong> (in every server of the guild): create guilds and
           configure them: details, servers, main server and Officer role. Not other people&apos;s
           characters.
         </li>
         <li>
           <strong>Officer</strong> (the role you pick for the guild): add, edit and remove every
-          player&apos;s characters.
+          player&apos;s characters, and configure the guild too. This is also the way out if a
+          server ever loses its {setup.adminRoleName} holders.
         </li>
         <li>
           <strong>Everyone else</strong> in one of the guild&apos;s Discord servers: add and edit

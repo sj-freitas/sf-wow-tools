@@ -2,7 +2,14 @@ import { useState, type FormEvent } from 'react';
 import { createCharacter, updateCharacter } from './api';
 import { MultiSelect } from './MultiSelect';
 import { PlayerPicker } from './PlayerPicker';
-import { ROLE_LABELS, WOW_CLASSES, type Character, type Guild, type Role } from './types';
+import {
+  ROLE_LABELS,
+  WOW_CLASSES,
+  requiresLastName,
+  type Character,
+  type Guild,
+  type Role,
+} from './types';
 
 interface Props {
   guild: Guild;
@@ -33,6 +40,10 @@ export function CharacterForm({ guild, editing, onSaved, onCancel }: Props) {
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
     setError(null);
+    if (requiresLastName(guild.gameVersion) && !name.includes('-')) {
+      setError(`Characters in ${guild.gameVersion} need a last name: use Name-Lastname.`);
+      return;
+    }
     if (!initial && guild.isOfficer && discordUserId === '') {
       setError('Pick a player from the list, or paste their Discord user ID.');
       return;
@@ -68,7 +79,10 @@ export function CharacterForm({ guild, editing, onSaved, onCancel }: Props) {
         <label className="field">
           Character name
           <input
-            placeholder="Name or Name-Lastname"
+            placeholder={
+              requiresLastName(guild.gameVersion) ? 'Name-Lastname' : 'Name or Name-Lastname'
+            }
+            title="First and last name are separated by a dash. Letters only (any alphabet), at least 2 each."
             value={name}
             onChange={(e) => setName(e.target.value)}
             required

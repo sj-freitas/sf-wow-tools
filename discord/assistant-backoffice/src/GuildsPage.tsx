@@ -1,11 +1,25 @@
 import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
-import { deleteCharacter, fetchCurrentUser, fetchPlayers, redirectToLogin } from './api';
+import {
+  deleteCharacter,
+  fetchCurrentUser,
+  fetchPlayers,
+  fetchRanks,
+  redirectToLogin,
+  refreshPlayerNames,
+} from './api';
 import { CharacterForm } from './CharacterForm';
 import { CreateGuildForm } from './CreateGuildForm';
 import { playerLabel } from './format';
 import { GuildSettings } from './GuildSettings';
 import { SetupInstructions } from './SetupInstructions';
-import { ROLE_LABELS, type Guild, type Player, type SetupInfo, type User } from './types';
+import {
+  ROLE_LABELS,
+  type Guild,
+  type Player,
+  type Ranks,
+  type SetupInfo,
+  type User,
+} from './types';
 
 interface Props {
   guilds: Guild[];
@@ -16,7 +30,9 @@ interface Props {
 
 export function GuildsPage({ guilds, setup, currentUser, onGuildsChanged }: Props) {
   const [players, setPlayers] = useState<Player[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [ranks, setRanks] = useState<Ranks>({});
   const [selectedId, setSelectedId] = useState(guilds[0]?.id);
   const [adding, setAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -25,11 +41,25 @@ export function GuildsPage({ guilds, setup, currentUser, onGuildsChanged }: Prop
 
   const load = useCallback(() => {
     fetchPlayers()
-      .then(setPlayers)
-      .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)));
+      .then((loaded) => {
+        setPlayers(loaded);
+        setLoadError(null);
+      })
+      .catch((err: unknown) => setLoadError(err instanceof Error ? err.message : String(err)));
   }, []);
 
   useEffect(load, [load]);
+
+  // Ranks are read live from Discord roles, so they're loaded per guild and not stored anywhere.
+  // They are optional decoration: if they can't be loaded the column just stays empty.
+  const rankGuildId = (guilds.find((g) => g.id === selectedId) ?? guilds[0])?.id;
+  const loadRanks = useCallback(() => {
+    if (!rankGuildId) return;
+    fetchRanks(rankGuildId)
+      .then(setRanks)
+      .catch(() => setRanks({}));
+  }, [rankGuildId]);
+  useEffect(loadRanks, [loadRanks]);
 
   const guildsChanged = useRef(onGuildsChanged);
   useEffect(() => {
@@ -42,6 +72,7 @@ export function GuildsPage({ guilds, setup, currentUser, onGuildsChanged }: Prop
     source.addEventListener('characters', load);
     source.addEventListener('guild', () => {
       load();
+      loadRanks();
       guildsChanged.current().catch(() => undefined);
     });
     source.onerror = () => {
@@ -51,12 +82,13 @@ export function GuildsPage({ guilds, setup, currentUser, onGuildsChanged }: Prop
       }
     };
     return () => source.close();
-  }, [load]);
+  }, [load, loadRanks]);
 
-  const run = (action: Promise<void>) => {
+  const run = (action: Promise<unknown>) => {
+    setActionError(null);
     action
       .then(load)
-      .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)));
+      .catch((err: unknown) => setActionError(err instanceof Error ? err.message : String(err)));
   };
 
   const guild = guilds.find((g) => g.id === selectedId) ?? guilds[0];
@@ -92,8 +124,15 @@ export function GuildsPage({ guilds, setup, currentUser, onGuildsChanged }: Prop
       </>
     );
   }
-  if (error) {
-    return <p className="status status-error">Failed: {error}</p>;
+  if (loadError && !players) {
+    return (
+      <div className="status status-error">
+        <p>Could not load players: {loadError}</p>
+        <button type="button" className="btn" onClick={load}>
+          Retry
+        </button>
+      </div>
+    );
   }
   if (!players) {
     return <p className="status">Loading players…</p>;
@@ -110,13 +149,17 @@ export function GuildsPage({ guilds, setup, currentUser, onGuildsChanged }: Prop
   ];
   const accessHint = [
     guild.isAdmin &&
-      `${setup.adminRoleName} (in every server of this guild): configure the guild, its servers and its Officer role.`,
+      `${setup.adminRoleName} (in every server of this guild): create guilds and configure them.`,
     guild.isOfficer &&
-      `Officer (${guild.officerRole?.name ?? ''}): add, edit and remove every player's characters.`,
+      `Officer (${guild.officerRole?.name ?? ''}): manage every player's characters and configure the guild.`,
     "Everyone in one of the guild's servers: add and edit their own characters.",
   ]
     .filter(Boolean)
     .join('\n');
+  const canConfigure = guild.isAdmin || guild.isOfficer;
+  const missingNames = guildPlayers.some(
+    (player) => !player.discordUsername && !player.discordDisplayName,
+  );
   const canEditRow = (player: Player) =>
     guild.isOfficer || player.discordUserId === currentUser.discordId;
 
@@ -169,7 +212,17 @@ export function GuildsPage({ guilds, setup, currentUser, onGuildsChanged }: Prop
             </div>
           </div>
           <div className="settings-actions">
-            {guild.isAdmin && (
+            {guild.isOfficer && missingNames && (
+              <button
+                type="button"
+                className="btn"
+                title="Look up the Discord usernames of players we only know by ID"
+                onClick={() => run(refreshPlayerNames(guild.id))}
+              >
+                Refresh names
+              </button>
+            )}
+            {canConfigure && (
               <button
                 type="button"
                 className="btn"
@@ -193,6 +246,15 @@ export function GuildsPage({ guilds, setup, currentUser, onGuildsChanged }: Prop
           </div>
         </div>
 
+        {actionError && (
+          <div className="banner banner-error" role="alert">
+            <span>{actionError}</span>
+            <button type="button" className="btn btn-sm" onClick={() => setActionError(null)}>
+              Dismiss
+            </button>
+          </div>
+        )}
+
         <div className="server-list">
           {guild.servers.map((server) => (
             <span key={server.discordId} className="server-chip">
@@ -202,7 +264,7 @@ export function GuildsPage({ guilds, setup, currentUser, onGuildsChanged }: Prop
           ))}
         </div>
 
-        {managing && guild.isAdmin && (
+        {managing && canConfigure && (
           <GuildSettings
             key={guild.id}
             guild={guild}
@@ -237,6 +299,7 @@ export function GuildsPage({ guilds, setup, currentUser, onGuildsChanged }: Prop
                   <th>Roles</th>
                   <th>Level</th>
                   <th>Discord user</th>
+                  <th>Rank</th>
                   <th />
                 </tr>
               </thead>
@@ -257,6 +320,7 @@ export function GuildsPage({ guilds, setup, currentUser, onGuildsChanged }: Prop
                           <span className="muted"> · {player.discordUserId}</span>
                         )}
                       </td>
+                      <td>{ranks[player.discordUserId]?.join(', ') ?? '—'}</td>
                       <td className="cell-actions">
                         {canEditRow(player) && (
                           <>
@@ -283,7 +347,7 @@ export function GuildsPage({ guilds, setup, currentUser, onGuildsChanged }: Prop
                     </tr>
                     {editingId === character.id && (
                       <tr className="edit-row">
-                        <td colSpan={6}>
+                        <td colSpan={7}>
                           <CharacterForm
                             guild={guild}
                             editing={{ character, playerLabel: playerLabel(player) }}

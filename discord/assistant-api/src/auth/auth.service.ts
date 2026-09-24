@@ -9,6 +9,7 @@ import {
   DiscordOAuthService,
   type DiscordPartialGuild,
 } from './discord-oauth.service';
+import { holdsRoleNamed, isGuildAssistant } from './access-rules';
 import { TokenCrypto } from './token-crypto';
 
 export const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
@@ -74,7 +75,10 @@ export class AuthService {
     if (!session || session.expiresAt < new Date()) {
       throw new UnauthorizedException('Not logged in');
     }
-    if (!force && Date.now() - session.discordSyncedAt.getTime() < APP_CONFIG.discordSyncMaxAgeMs) {
+    const maxAge = force
+      ? APP_CONFIG.discordForceSyncMinIntervalMs
+      : APP_CONFIG.discordSyncMaxAgeMs;
+    if (Date.now() - session.discordSyncedAt.getTime() < maxAge) {
       return;
     }
     if (
@@ -147,10 +151,14 @@ export class AuthService {
         servers: { select: { discordId: true, isMain: true } },
       },
     });
-    // Admin of a guild = holds the role in *every* one of its Discord servers.
     const adminGuildIds = new Set(
       guilds
-        .filter((guild) => guild.servers.every((server) => adminServerIds.has(server.discordId)))
+        .filter((guild) =>
+          isGuildAssistant(
+            guild.servers.map((server) => server.discordId),
+            adminServerIds,
+          ),
+        )
         .map((guild) => guild.id),
     );
 
@@ -160,7 +168,17 @@ export class AuthService {
       new Set(userServerIds),
     );
 
+    const user = await this.prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+      select: { discordId: true, username: true },
+    });
+
     await this.prisma.$transaction([
+      // Keep the user's own player rows labelled with their current Discord username.
+      this.prisma.player.updateMany({
+        where: { discordUserId: user.discordId },
+        data: { discordUsername: user.username },
+      }),
       this.prisma.guildAccess.deleteMany({ where: { userId } }),
       this.prisma.guildAccess.createMany({
         data: guilds.map((guild) => ({
@@ -246,8 +264,7 @@ export class AuthService {
         this.discord.fetchGuildMember(accessToken, discordServerId),
         this.discord.fetchGuildRoles(discordServerId),
       ]);
-      const adminRole = roles.find((role) => role.name === APP_CONFIG.adminRoleName);
-      return adminRole !== undefined && member.roles.includes(adminRole.id);
+      return holdsRoleNamed(roles, member.roles, APP_CONFIG.adminRoleName);
     } catch (error) {
       this.logger.warn(
         `Could not check ${APP_CONFIG.adminRoleName} role in server ${discordServerId}: ${String(error)}`,

@@ -27,11 +27,18 @@ export interface UserGuildDto {
   gameVersion: string;
   servers: GuildServerDto[];
   officerRole: { id: string; name: string } | null;
+  /** Optional Discord roles (in the main server) standing for Raider and Social, for roster setup. */
+  roleMappings: RoleMappingsDto;
   /** Holds Guild-Assistant in every server: configures the guild (details, servers, Officer role). */
   isAdmin: boolean;
   /** Holds the Officer role in the main server: manages every player's characters. */
   isOfficer: boolean;
 }
+
+export type GuildRoleKey = 'RAIDER' | 'SOCIAL';
+export const GUILD_ROLE_KEYS: readonly GuildRoleKey[] = ['RAIDER', 'SOCIAL'];
+
+export type RoleMappingsDto = Record<GuildRoleKey, { id: string; name: string } | null>;
 
 export interface EligibleServersDto {
   servers: { discordId: string; name: string }[];
@@ -87,14 +94,20 @@ const guildSelect = {
     select: { discordId: true, name: true, isMain: true },
     orderBy: [{ isMain: 'desc' }, { name: 'asc' }],
   },
+  roleMappings: { select: { guildRole: true, discordRoleId: true, discordRoleName: true } },
 } satisfies Prisma.GuildSelect;
 
 type GuildRow = Prisma.GuildGetPayload<{ select: typeof guildSelect }>;
 
 function toDto(guild: GuildRow, isAdmin: boolean, isOfficer: boolean): UserGuildDto {
-  const { officerRoleId, officerRoleName, ...rest } = guild;
+  const { officerRoleId, officerRoleName, roleMappings, ...rest } = guild;
+  const mapped = (key: GuildRoleKey) => {
+    const mapping = roleMappings.find((m) => m.guildRole === key);
+    return mapping ? { id: mapping.discordRoleId, name: mapping.discordRoleName } : null;
+  };
   return {
     ...rest,
+    roleMappings: { RAIDER: mapped('RAIDER'), SOCIAL: mapped('SOCIAL') },
     officerRole:
       officerRoleId && officerRoleName ? { id: officerRoleId, name: officerRoleName } : null,
     isAdmin,
@@ -251,7 +264,7 @@ export class GuildsService {
     this.realtime.publish(guildId, 'guild');
   }
 
-  /** Changing the main server clears the Officer role, since roles belong to a server. */
+  /** Changing the main server clears the role settings, since roles belong to a server. */
   async setMainServer(guildId: string, discordServerId: string): Promise<void> {
     const server = await this.prisma.discordServer.findFirst({
       where: { guildId, discordId: discordServerId },
@@ -267,12 +280,13 @@ export class GuildsService {
         where: { id: guildId },
         data: { officerRoleId: null, officerRoleName: null },
       }),
+      this.prisma.guildRoleMapping.deleteMany({ where: { guildId } }),
     ]);
     this.realtime.publish(guildId, 'guild');
   }
 
-  /** Roles of the main server, for picking the Officer role. */
-  async listOfficerRoleOptions(guildId: string): Promise<RoleOptionDto[]> {
+  /** Roles of the main server, for picking the Officer role and the guild role mappings. */
+  async listRoleOptions(guildId: string): Promise<RoleOptionDto[]> {
     const roles = await this.readMainServerRoles(guildId);
     return roles.sort((a, b) => a.name.localeCompare(b.name));
   }
@@ -290,6 +304,28 @@ export class GuildsService {
       data = { officerRoleId: role.id, officerRoleName: role.name };
     }
     await this.prisma.guild.update({ where: { id: guildId }, data });
+    this.realtime.publish(guildId, 'guild');
+  }
+
+  /** Maps (or, with `roleId: null`, unmaps) a guild role to a role of the main server. */
+  async setRoleMapping(
+    guildId: string,
+    guildRole: GuildRoleKey,
+    roleId: string | null,
+  ): Promise<void> {
+    if (roleId === null) {
+      await this.prisma.guildRoleMapping.deleteMany({ where: { guildId, guildRole } });
+    } else {
+      const role = (await this.readMainServerRoles(guildId)).find((r) => r.id === roleId);
+      if (!role) {
+        throw new BadRequestException('That role does not exist in the main server');
+      }
+      await this.prisma.guildRoleMapping.upsert({
+        where: { guildId_guildRole: { guildId, guildRole } },
+        create: { guildId, guildRole, discordRoleId: role.id, discordRoleName: role.name },
+        update: { discordRoleId: role.id, discordRoleName: role.name },
+      });
+    }
     this.realtime.publish(guildId, 'guild');
   }
 

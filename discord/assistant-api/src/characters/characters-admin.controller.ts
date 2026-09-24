@@ -17,6 +17,7 @@ import {
 import { Prisma, type Role } from '@prisma/client';
 import { AuthGuard } from '../auth/auth.guard';
 import type { AuthenticatedRequest, SessionUser } from '../auth/auth.types';
+import { canEditCharacter, canManageAllCharacters } from '../auth/access-rules';
 import { GuildAccessService } from '../auth/guild-access.service';
 import { isWowClass } from '../game/wow-class';
 import { parseCharacterName } from './character-name';
@@ -50,7 +51,9 @@ export class CharactersAdminController {
 
     const name = parseCharacterName(typeof body.name === 'string' ? body.name : '');
     if (!name) {
-      throw new BadRequestException('name must be Name or Name-Lastname (letters, 2-12 each)');
+      throw new BadRequestException(
+        'name must be Name or Name-Lastname (letters, at least 2 each)',
+      );
     }
     const fields = parseFields(body, { partial: false });
 
@@ -59,7 +62,7 @@ export class CharactersAdminController {
       username: req.user.username,
       displayName: null,
     };
-    if (access.isOfficer) {
+    if (canManageAllCharacters(access)) {
       // Officers may add characters for any member of the guild's servers (default: themselves).
       if (body.discordUserId !== undefined && body.discordUserId !== req.user.discordId) {
         if (typeof body.discordUserId !== 'string' || !/^\d{15,25}$/.test(body.discordUserId)) {
@@ -95,6 +98,11 @@ export class CharactersAdminController {
     if (result === 'no-guild') {
       throw new NotFoundException('Guild not found');
     }
+    if (result === 'last-name-required') {
+      throw new BadRequestException(
+        "This guild's game version needs a last name: use Name-Lastname",
+      );
+    }
   }
 
   @Patch('characters/:id')
@@ -109,7 +117,9 @@ export class CharactersAdminController {
     if (body.name !== undefined) {
       const name = parseCharacterName(typeof body.name === 'string' ? body.name : '');
       if (!name) {
-        throw new BadRequestException('name must be Name or Name-Lastname (letters, 2-12 each)');
+        throw new BadRequestException(
+          'name must be Name or Name-Lastname (letters, at least 2 each)',
+        );
       }
       Object.assign(patch, name);
     }
@@ -141,7 +151,7 @@ export class CharactersAdminController {
   private async assertCanEdit(user: SessionUser, characterId: string): Promise<void> {
     const { guildId, discordUserId } = await this.charactersService.findOwnership(characterId);
     const access = await this.guildAccess.find(user.id, guildId);
-    if (!access || !(access.isOfficer || discordUserId === user.discordId)) {
+    if (!canEditCharacter(access, discordUserId, user.discordId)) {
       throw new ForbiddenException('You can only change your own characters');
     }
   }

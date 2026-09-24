@@ -15,5 +15,12 @@
         - 
 
 
+- Infrastructure
+    - Replace the in-memory caches with a shared one (looking into Redis)
+        - Guild ranks cache (discord/assistant-api/src/guilds/ranks.service.ts, `ranksCacheMs`)
+        - In-flight Discord syncs per user (`inFlightSyncs` in auth.service.ts)
+        - Live updates event bus (realtime.service.ts): also per-process, Redis pub/sub would allow several API instances
+        - Until then everything assumes a single API instance
+
 Notes:
     Domain: guildassistant.app

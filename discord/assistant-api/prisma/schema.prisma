@@ -18,24 +18,32 @@ enum Role {
   RANGED_DPS
 }
 
+// Guild roles that can be mapped to a Discord role of the guild's main server, for roster
+// setup. (The Officer role is separate: it grants permissions, see Guild.officerRoleId.)
+enum GuildRole {
+  RAIDER
+  SOCIAL
+}
+
 // A WoW guild. It can be managed from more than one Discord server.
 model Guild {
-  id              String          @id @default(uuid()) @db.Uuid
+  id              String             @id @default(uuid()) @db.Uuid
   name            String
   realm           String
   faction         Faction
   // One of GAME_VERSIONS (src/game/game-version.ts); a string so adding a
   // version doesn't need a migration.
-  gameVersion     String          @map("game_version")
+  gameVersion     String             @map("game_version")
   // Officers hold this role in the guild's main server (see DiscordServer.isMain)
   // and can manage the guild like a Guild-Assistant. Null = no officer role set.
-  officerRoleId   String?         @map("officer_role_id")
-  officerRoleName String?         @map("officer_role_name")
+  officerRoleId   String?            @map("officer_role_id")
+  officerRoleName String?            @map("officer_role_name")
   servers         DiscordServer[]
+  roleMappings    GuildRoleMapping[]
   players         Player[]
   access          GuildAccess[]
-  createdAt       DateTime        @default(now()) @map("created_at")
-  updatedAt       DateTime        @updatedAt @map("updated_at")
+  createdAt       DateTime           @default(now()) @map("created_at")
+  updatedAt       DateTime           @updatedAt @map("updated_at")
 
   @@unique([name, realm, gameVersion])
   @@map("guilds")
@@ -54,6 +62,20 @@ model DiscordServer {
   createdAt DateTime @default(now()) @map("created_at")
 
   @@map("discord_servers")
+}
+
+// Optional: which Discord role (in the guild's main server) stands for a guild role.
+// Cleared when the main server changes, since roles belong to a server.
+model GuildRoleMapping {
+  id              String    @id @default(uuid()) @db.Uuid
+  guildId         String    @map("guild_id") @db.Uuid
+  guild           Guild     @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  guildRole       GuildRole @map("guild_role")
+  discordRoleId   String    @map("discord_role_id")
+  discordRoleName String    @map("discord_role_name")
+
+  @@unique([guildId, guildRole])
+  @@map("guild_role_mappings")
 }
 
 // A Discord user's membership in one guild: one Player per (guild, Discord
@@ -83,6 +105,8 @@ model Character {
   // A WoW class name, locked to a known set in code like gameVersion.
   class     String
   roles     Role[]
+  // Both parts have at least 2 characters (CHECK constraints in the migrations). The last
+  // name is empty when there is none, and required for game versions that say so.
   firstName String   @map("first_name")
   lastName  String   @default("") @map("last_name")
   isMain    Boolean  @default(false) @map("is_main")

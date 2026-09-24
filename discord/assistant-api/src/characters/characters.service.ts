@@ -1,7 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma, type Role } from '@prisma/client';
 import { DiscordOAuthService } from '../auth/discord-oauth.service';
 import { PrismaService } from '../database/prisma.service';
+import { lastNameRequiredMessage, requiresLastName } from '../game/game-version';
 import { RealtimeService } from '../realtime/realtime.service';
 import type { CharacterName } from './character-name';
 
@@ -28,7 +29,10 @@ export type CharacterUpdate = Partial<
 
 interface GuildRef {
   id: string;
+  gameVersion: string;
 }
+
+export type AddResult = 'created' | 'duplicate' | 'no-guild' | 'last-name-required';
 
 export interface CharacterSummary extends CharacterName {
   class: string;
@@ -49,10 +53,7 @@ export class CharactersService {
    * Adds a character for the user, registering them as a player of the
    * guild managed by this Discord server on first use.
    */
-  async add(
-    owner: CharacterOwner,
-    character: NewCharacter,
-  ): Promise<'created' | 'duplicate' | 'no-guild'> {
+  async add(owner: CharacterOwner, character: NewCharacter): Promise<AddResult> {
     const guild = await this.findGuild(owner.discordServerId);
     if (!guild) {
       return 'no-guild';
@@ -66,10 +67,10 @@ export class CharactersService {
     discordUserId: string,
     character: NewCharacter,
     names?: DiscordNames,
-  ): Promise<'created' | 'duplicate' | 'no-guild'> {
+  ): Promise<AddResult> {
     const guild = await this.prisma.guild.findUnique({
       where: { id: guildId },
-      select: { id: true },
+      select: { id: true, gameVersion: true },
     });
     if (!guild) {
       return 'no-guild';
@@ -102,6 +103,20 @@ export class CharactersService {
   }
 
   async update(characterId: string, patch: CharacterUpdate): Promise<void> {
+    if (patch.firstName !== undefined || patch.lastName !== undefined) {
+      const character = await this.prisma.character.findUnique({
+        where: { id: characterId },
+        select: { player: { select: { guild: { select: { gameVersion: true } } } } },
+      });
+      if (!character) {
+        throw new NotFoundException('Character not found');
+      }
+      const { gameVersion } = character.player.guild;
+      if (requiresLastName(gameVersion) && !patch.lastName) {
+        throw new BadRequestException(lastNameRequiredMessage(gameVersion));
+      }
+    }
+
     const { player } = await this.prisma.character.update({
       where: { id: characterId },
       data: patch,
@@ -134,7 +149,11 @@ export class CharactersService {
     discordUserId: string,
     character: NewCharacter,
     names?: DiscordNames,
-  ): Promise<'created' | 'duplicate'> {
+  ): Promise<Exclude<AddResult, 'no-guild'>> {
+    if (requiresLastName(guild.gameVersion) && character.lastName === '') {
+      return 'last-name-required';
+    }
+
     const player = await this.prisma.player.upsert({
       where: { guildId_discordUserId: { guildId: guild.id, discordUserId } },
       create: {
@@ -216,7 +235,7 @@ export class CharactersService {
   private findGuild(discordServerId: string) {
     return this.prisma.guild.findFirst({
       where: { servers: { some: { discordId: discordServerId } } },
-      select: { id: true },
+      select: { id: true, gameVersion: true },
     });
   }
 }

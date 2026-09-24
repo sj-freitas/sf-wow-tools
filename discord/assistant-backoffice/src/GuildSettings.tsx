@@ -3,10 +3,12 @@ import {
   addGuildServer,
   deleteGuild,
   fetchEligibleServers,
-  fetchOfficerRoleOptions,
+  fetchRoleOptions,
   removeGuildServer,
+  syncDiscord,
   setMainServer,
   setOfficerRole,
+  setRoleMapping,
   updateGuild,
 } from './api';
 import {
@@ -46,7 +48,7 @@ export function GuildSettings({ guild, onChanged, onClose }: Props) {
 
       <DetailsSection guild={guild} run={run} />
       <ServersSection guild={guild} run={run} />
-      <OfficerSection guild={guild} run={run} />
+      <RolesSection guild={guild} run={run} />
 
       <section className="settings-section danger-zone">
         <h4>Delete guild</h4>
@@ -134,8 +136,9 @@ function ServersSection({ guild, run }: SectionProps) {
   const [toAdd, setToAdd] = useState('');
 
   useEffect(() => {
-    // Also re-reads the user's servers from Discord, so newly set-up servers show up.
-    fetchEligibleServers()
+    // Re-read the user's servers from Discord first, so newly set-up servers show up.
+    syncDiscord()
+      .then(fetchEligibleServers)
       .then(setEligible)
       .catch(() => setEligible({ servers: [] }));
   }, [guild.servers.length]);
@@ -212,34 +215,83 @@ function ServersSection({ guild, run }: SectionProps) {
   );
 }
 
-function OfficerSection({ guild, run }: SectionProps) {
+function RolesSection({ guild, run }: SectionProps) {
   const [options, setOptions] = useState<RoleOption[] | null>(null);
-  const [roleId, setRoleId] = useState(guild.officerRole?.id ?? '');
   const [loadError, setLoadError] = useState<string | null>(null);
   const mainServer = guild.servers.find((server) => server.isMain);
 
   useEffect(() => {
-    fetchOfficerRoleOptions(guild.id)
+    fetchRoleOptions(guild.id)
       .then(setOptions)
       .catch((err: unknown) => setLoadError(err instanceof Error ? err.message : String(err)));
   }, [guild.id, mainServer?.discordId]);
 
-  useEffect(() => setRoleId(guild.officerRole?.id ?? ''), [guild.officerRole?.id]);
-
   return (
     <section className="settings-section">
-      <h4>Officer role</h4>
+      <h4>Discord roles</h4>
       <p className="muted">
-        Members holding this role in the main server ({mainServer?.name ?? 'none'}) are the guild's
-        Officers: they can add, edit and remove every player's characters. Changes reach officers
-        within a few minutes.
+        Roles of the main server ({mainServer?.name ?? 'none'}) that stand for guild roles. Changes
+        to the Officer role reach officers within a few minutes.
       </p>
       {loadError ? (
         <p className="status-error">{loadError}</p>
       ) : (
+        <div className="role-rows">
+          <RoleRow
+            title="Officer"
+            hint="Can add, edit and remove every player's characters and configure the guild."
+            current={guild.officerRole}
+            options={options}
+            editable
+            onSave={(roleId) => run(setOfficerRole(guild.id, roleId))}
+          />
+          <RoleRow
+            title="Raider"
+            hint="Optional. Helps with the roster setup later."
+            current={guild.roleMappings.RAIDER}
+            options={options}
+            editable={guild.isOfficer}
+            onSave={(roleId) => run(setRoleMapping(guild.id, 'RAIDER', roleId))}
+          />
+          <RoleRow
+            title="Social"
+            hint="Optional. Helps with the roster setup later."
+            current={guild.roleMappings.SOCIAL}
+            options={options}
+            editable={guild.isOfficer}
+            onSave={(roleId) => run(setRoleMapping(guild.id, 'SOCIAL', roleId))}
+          />
+        </div>
+      )}
+    </section>
+  );
+}
+
+interface RoleRowProps {
+  title: string;
+  hint: string;
+  current: { id: string; name: string } | null;
+  options: RoleOption[] | null;
+  /** Read-only when the current user isn't allowed to change this mapping. */
+  editable: boolean;
+  onSave: (roleId: string | null) => Promise<void>;
+}
+
+function RoleRow({ title, hint, current, options, editable, onSave }: RoleRowProps) {
+  const [roleId, setRoleId] = useState(current?.id ?? '');
+
+  useEffect(() => setRoleId(current?.id ?? ''), [current?.id]);
+
+  return (
+    <div className="role-row">
+      <div>
+        <strong>{title}</strong>
+        <div className="muted">{hint}</div>
+      </div>
+      {editable ? (
         <div className="inline-form">
           <select value={roleId} onChange={(e) => setRoleId(e.target.value)}>
-            <option value="">{options === null ? 'Loading roles…' : 'No officer role'}</option>
+            <option value="">{options === null ? 'Loading roles…' : 'Not set'}</option>
             {options?.map((role) => (
               <option key={role.id} value={role.id}>
                 {role.name}
@@ -249,13 +301,18 @@ function OfficerSection({ guild, run }: SectionProps) {
           <button
             type="button"
             className="btn"
-            disabled={roleId === (guild.officerRole?.id ?? '')}
-            onClick={() => void run(setOfficerRole(guild.id, roleId === '' ? null : roleId))}
+            disabled={roleId === (current?.id ?? '')}
+            onClick={() => void onSave(roleId === '' ? null : roleId)}
           >
-            Save officer role
+            Save
           </button>
         </div>
+      ) : (
+        <span>
+          {current?.name ?? 'Not set'}
+          <span className="muted"> (only Officers can change this)</span>
+        </span>
       )}
-    </section>
+    </div>
   );
 }

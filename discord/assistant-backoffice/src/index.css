@@ -571,3 +571,32 @@ tbody tr:last-child td {
 .danger-zone {
   border-color: var(--danger);
 }
+
+.banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.6rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+.banner-error {
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+  color: var(--danger);
+}
+
+.role-rows {
+  display: grid;
+  gap: 0.9rem;
+}
+.role-row {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) 2fr;
+  gap: 0.5rem 1rem;
+  align-items: center;
+}
+@media (max-width: 600px) {
+  .role-row {
+    grid-template-columns: 1fr;
+  }
+}

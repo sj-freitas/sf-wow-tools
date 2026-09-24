@@ -22,8 +22,8 @@ const ROLE_LABELS: Record<Role, string> = {
 const SERVER_ONLY = 'This command can only be used inside a server.';
 const NO_GUILD = "This server isn't linked to a guild yet.";
 const BAD_NAME =
-  'Invalid name. Use `Name` or `Name-Lastname` (a dash between first and last name, ' +
-  'last name optional), letters only, 2-12 letters each.';
+  'Invalid name. Use `Name` or `Name-Lastname` (a dash between first and last name). ' +
+  'Letters only (any alphabet, no numbers), at least 2 letters each.';
 
 @Injectable()
 export class CharactersCommand {
@@ -54,6 +54,9 @@ export class CharactersCommand {
     });
     const label = formatCharacterName(name);
     if (result === 'no-guild') return NO_GUILD;
+    if (result === 'last-name-required') {
+      return "This guild's game version needs a last name: use `Name-Lastname`.";
+    }
     if (result === 'duplicate') return `You already have a character named ${label}.`;
     return `Added ${label} (${characterClass}, ${ROLE_LABELS[role]}).`;
   }

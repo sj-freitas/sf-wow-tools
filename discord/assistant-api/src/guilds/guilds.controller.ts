@@ -3,6 +3,7 @@ import {
   Body,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   HttpCode,
   HttpStatus,
@@ -19,9 +20,12 @@ import { AuthService } from '../auth/auth.service';
 import type { AuthenticatedRequest } from '../auth/auth.types';
 import { GuildAccessService } from '../auth/guild-access.service';
 import { APP_CONFIG } from '../config/app.config';
+import { RanksService, type RanksDto } from './ranks.service';
 import {
+  GUILD_ROLE_KEYS,
   GuildsService,
   isGameVersion,
+  type GuildRoleKey,
   type CreateGuildInput,
   type EligibleServersDto,
   type GuildDetails,
@@ -42,6 +46,7 @@ export class GuildsController {
     private readonly guildsService: GuildsService,
     private readonly guildAccess: GuildAccessService,
     private readonly authService: AuthService,
+    private readonly ranksService: RanksService,
     configService: ConfigService,
   ) {
     this.applicationId = configService.getOrThrow<string>('DISCORD_APPLICATION_ID');
@@ -67,10 +72,19 @@ export class GuildsController {
     };
   }
 
-  /** Re-reads the user's servers and roles from Discord first, so the list is current. */
-  @Get('eligible-servers')
-  async eligibleServers(@Req() req: AuthenticatedRequest): Promise<EligibleServersDto> {
+  /**
+   * Re-reads the user's servers and roles from Discord (at most once per
+   * `discordForceSyncMinIntervalMs` per user, so it can't be used to hammer Discord).
+   */
+  @Post('sync')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async sync(@Req() req: AuthenticatedRequest): Promise<void> {
     await this.authService.refresh(req.sessionToken, { force: true });
+  }
+
+  /** Servers where the user holds the admin role that don't belong to a guild yet. */
+  @Get('eligible-servers')
+  eligibleServers(@Req() req: AuthenticatedRequest): Promise<EligibleServersDto> {
     return this.guildsService.findEligibleServers(req.user.id);
   }
 
@@ -87,14 +101,14 @@ export class GuildsController {
     @Param('guildId') guildId: string,
     @Body() body: Payload,
   ): Promise<void> {
-    await this.guildAccess.assertAdmin(req.user.id, guildId);
+    await this.guildAccess.assertCanConfigure(req.user.id, guildId);
     await this.guildsService.update(guildId, parseGuildDetails(body));
   }
 
   @Delete(':guildId')
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Req() req: AuthenticatedRequest, @Param('guildId') guildId: string): Promise<void> {
-    await this.guildAccess.assertAdmin(req.user.id, guildId);
+    await this.guildAccess.assertCanConfigure(req.user.id, guildId);
     await this.guildsService.delete(guildId);
   }
 
@@ -105,7 +119,7 @@ export class GuildsController {
     @Param('guildId') guildId: string,
     @Body() body: Payload,
   ): Promise<void> {
-    await this.guildAccess.assertAdmin(req.user.id, guildId);
+    await this.guildAccess.assertCanConfigure(req.user.id, guildId);
     await this.guildsService.addServer(
       req.user.id,
       guildId,
@@ -120,11 +134,11 @@ export class GuildsController {
     @Param('guildId') guildId: string,
     @Param('discordServerId') discordServerId: string,
   ): Promise<void> {
-    await this.guildAccess.assertAdmin(req.user.id, guildId);
+    await this.guildAccess.assertCanConfigure(req.user.id, guildId);
     await this.guildsService.removeServer(guildId, discordServerId);
   }
 
-  /** Guild-Assistant only: decides where the Officer role lives. */
+  /** Decides where the Officer role lives. */
   @Put(':guildId/main-server')
   @HttpCode(HttpStatus.NO_CONTENT)
   async setMainServer(
@@ -132,20 +146,20 @@ export class GuildsController {
     @Param('guildId') guildId: string,
     @Body() body: Payload,
   ): Promise<void> {
-    await this.guildAccess.assertAdmin(req.user.id, guildId);
+    await this.guildAccess.assertCanConfigure(req.user.id, guildId);
     await this.guildsService.setMainServer(guildId, requireString(body, 'discordServerId'));
   }
 
-  @Get(':guildId/officer-role-options')
-  async officerRoleOptions(
+  @Get(':guildId/role-options')
+  async roleOptions(
     @Req() req: AuthenticatedRequest,
     @Param('guildId') guildId: string,
   ): Promise<RoleOptionDto[]> {
-    await this.guildAccess.assertAdmin(req.user.id, guildId);
-    return this.guildsService.listOfficerRoleOptions(guildId);
+    await this.guildAccess.assertCanConfigure(req.user.id, guildId);
+    return this.guildsService.listRoleOptions(guildId);
   }
 
-  /** Guild-Assistant only. `roleId: null` clears the Officer role. */
+  /** `roleId: null` clears the Officer role. */
   @Put(':guildId/officer-role')
   @HttpCode(HttpStatus.NO_CONTENT)
   async setOfficerRole(
@@ -153,11 +167,49 @@ export class GuildsController {
     @Param('guildId') guildId: string,
     @Body() body: Payload,
   ): Promise<void> {
-    await this.guildAccess.assertAdmin(req.user.id, guildId);
+    await this.guildAccess.assertCanConfigure(req.user.id, guildId);
     await this.guildsService.setOfficerRole(
       guildId,
       body.roleId === null ? null : requireString(body, 'roleId'),
     );
+  }
+
+  /**
+   * Officers only. Maps the Raider or Social guild role to a role of the main server
+   * (`roleId: null` clears it). Optional; meant to help with roster setup later.
+   */
+  @Put(':guildId/role-mappings/:guildRole')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async setRoleMapping(
+    @Req() req: AuthenticatedRequest,
+    @Param('guildId') guildId: string,
+    @Param('guildRole') guildRole: string,
+    @Body() body: Payload,
+  ): Promise<void> {
+    if (!GUILD_ROLE_KEYS.includes(guildRole as GuildRoleKey)) {
+      throw new BadRequestException(`guildRole must be one of ${GUILD_ROLE_KEYS.join(', ')}`);
+    }
+    await this.guildAccess.assertOfficer(req.user.id, guildId);
+    await this.guildsService.setRoleMapping(
+      guildId,
+      guildRole as GuildRoleKey,
+      body.roleId === null ? null : requireString(body, 'roleId'),
+    );
+  }
+
+  /**
+   * Any member of the guild. Officer/Raider/Social ranks of its players, read live from
+   * their Discord roles in the main server (nothing is stored).
+   */
+  @Get(':guildId/ranks')
+  async ranks(
+    @Req() req: AuthenticatedRequest,
+    @Param('guildId') guildId: string,
+  ): Promise<RanksDto> {
+    if (!(await this.guildAccess.find(req.user.id, guildId))) {
+      throw new ForbiddenException('You are not a member of this guild');
+    }
+    return this.ranksService.findRanks(guildId);
   }
 
   /** Officers only: candidates for the "add character for a player" search. */

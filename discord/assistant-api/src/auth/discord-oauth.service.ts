@@ -34,6 +34,8 @@ export interface DiscordProfile {
 
 export interface DiscordServerMember {
   nick: string | null;
+  /** Ids of the roles the member holds in the server. */
+  roles: string[];
   user: DiscordProfile;
 }
 

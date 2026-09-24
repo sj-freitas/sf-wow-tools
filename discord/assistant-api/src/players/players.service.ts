@@ -4,7 +4,7 @@ import { DiscordOAuthService } from '../auth/discord-oauth.service';
 import { PrismaService } from '../database/prisma.service';
 import { PlayerDto } from './dto/player.dto';
 
-const MAX_NAME_LOOKUPS_PER_REQUEST = 20;
+const MAX_NAME_LOOKUPS = 100;
 
 @Injectable()
 export class PlayersService {
@@ -14,36 +14,37 @@ export class PlayersService {
   ) {}
 
   /** Players in guilds the given backoffice user belongs to. */
-  async findForUser(userId: string): Promise<PlayerDto[]> {
-    const players = await this.findMany({ guild: { access: { some: { userId } } } });
-    await this.fillMissingNames(players);
-    return players;
+  findForUser(userId: string): Promise<PlayerDto[]> {
+    return this.findMany({ guild: { access: { some: { userId } } } });
   }
 
   /**
-   * Looks up (and stores) the Discord username of players we don't know by
-   * name yet, e.g. registered before names were tracked. Best effort, capped
-   * per request so a large guild can't trigger a burst of Discord calls.
+   * Looks up (and stores) the Discord username of the guild's players we don't
+   * know by name yet, e.g. registered before names were tracked. An explicit
+   * action, not part of listing, so reads never call Discord. Returns how many
+   * players were updated.
    */
-  private async fillMissingNames(players: PlayerDto[]): Promise<void> {
-    const missing = players
-      .filter((player) => !player.discordUsername && !player.discordDisplayName)
-      .slice(0, MAX_NAME_LOOKUPS_PER_REQUEST);
-    await Promise.all(
+  async refreshMissingNames(guildId: string): Promise<number> {
+    const missing = await this.prisma.player.findMany({
+      where: { guildId, discordUsername: null, discordDisplayName: null },
+      select: { id: true, discordUserId: true },
+      take: MAX_NAME_LOOKUPS,
+    });
+    const results = await Promise.all(
       missing.map(async (player) => {
         try {
           const profile = await this.discord.fetchUserById(player.discordUserId);
-          player.discordUsername = profile.username;
-          player.discordDisplayName = profile.global_name;
           await this.prisma.player.update({
             where: { id: player.id },
             data: { discordUsername: profile.username, discordDisplayName: profile.global_name },
           });
+          return true;
         } catch {
-          // Unknown or deleted user: keep showing the id.
+          return false; // Unknown or deleted user: keep showing the id.
         }
       }),
     );
+    return results.filter(Boolean).length;
   }
 
   /** Players in the guild managed from the given Discord server (by Discord id). */
