@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 const DISCORD_API = 'https://discord.com/api/v10';
+const MAX_MEMBER_PAGES = 10;
 
 export interface DiscordUser {
   id: string;
@@ -18,6 +19,7 @@ export interface DiscordProfile {
   id: string;
   username: string;
   global_name: string | null;
+  bot?: boolean;
 }
 
 export interface DiscordServerMember {
@@ -116,6 +118,28 @@ export class DiscordOAuthService {
       `/guilds/${serverId}/members/${userId}`,
       `Bot ${this.botToken}`,
     );
+  }
+
+  /**
+   * Every human member of a server, read with the bot token in pages of 1000
+   * (capped at MAX_MEMBER_PAGES pages). Discord only allows this when the
+   * Server Members privileged intent is enabled for the application.
+   */
+  async fetchServerMembers(serverId: string): Promise<DiscordServerMember[]> {
+    const members: DiscordServerMember[] = [];
+    let after = '0';
+    for (let page = 0; page < MAX_MEMBER_PAGES; page++) {
+      const batch = await this.get<DiscordServerMember[]>(
+        `/guilds/${serverId}/members?limit=1000&after=${after}`,
+        `Bot ${this.botToken}`,
+      );
+      members.push(...batch.filter((member) => !member.user.bot));
+      if (batch.length < 1000) {
+        break;
+      }
+      after = batch[batch.length - 1].user.id;
+    }
+    return members;
   }
 
   /** The user's own member record (role ids) in a server. Needs `guilds.members.read`. */

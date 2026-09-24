@@ -113,12 +113,15 @@ in the guild is read-only.
   version and the Discord servers to attach, and which one is main. Only servers where the user holds
   the admin role, the bot is installed, and that don't belong to a guild yet are offered
   (`GET /api/guilds/eligible-servers`). The creator becomes a Guild-Assistant of the new guild.
-- **Player search:** `GET /api/guilds/:id/people` lists players and backoffice users of the guild
-  with their Discord names and character names; the backoffice searches it (typo tolerant) when adding
-  a character. Adding by Discord ID only works for members of at least one of the guild's servers
-  (checked with the bot token, which also gives the username). Discord usernames are stored on
-  `players` when the bot sees the user, when a character is added, and lazily when players are
-  listed.
+- **Player search:** `GET /api/guilds/:id/people` lists every human member of the guild's Discord
+  servers (Discord's list-members endpoint, up to 10,000 per server) with their names and the names
+  of their characters; the backoffice searches it, typo tolerant, when adding a character. This
+  needs the **Server Members Intent** enabled for the application (Developer Portal → Bot →
+  Privileged Gateway Intents; no gateway connection is used). Without it the search falls back to
+  players we already know and says so. Adding by Discord ID only works for members of at least one of
+  the guild's servers (checked with the bot token, which also gives the username). Discord usernames
+  are stored on `players` when the bot sees the user, when a character is added, and lazily when
+  players are listed.
 - **How roles are read:** at login the API lists the bot's servers (bot token), and for each of the
   user's servers that the bot is in, reads the user's role ids (their token, scope
   `guilds.members.read`) and the server's roles (bot token). Officer status only needs the user's

@@ -23,13 +23,17 @@ const looksLikeId = (text: string) => /^\d{15,25}$/.test(text.trim());
  */
 export function PlayerPicker({ guildId, value, onChange }: Props) {
   const [people, setPeople] = useState<Person[]>([]);
+  const [source, setSource] = useState<'servers' | 'known'>('servers');
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchPeople(guildId)
-      .then(setPeople)
+      .then((result) => {
+        setPeople(result.people);
+        setSource(result.source);
+      })
       .catch(() => setPeople([]));
   }, [guildId]);
 
@@ -80,6 +84,13 @@ export function PlayerPicker({ guildId, value, onChange }: Props) {
         aria-autocomplete="list"
         aria-invalid={value === '' && query !== ''}
       />
+      {source === 'known' && (
+        <small className="muted">
+          Showing only players we already know: Discord did not allow listing the servers' members.
+          Enable the bot's <strong>Server Members Intent</strong> in the Discord Developer Portal
+          (Bot → Privileged Gateway Intents) to search everyone.
+        </small>
+      )}
       {open && (matches.length > 0 || idOption) && (
         <div className="dropdown-menu" role="listbox">
           {matches.map(({ person }) => (

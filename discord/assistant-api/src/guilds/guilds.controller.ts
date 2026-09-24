@@ -25,7 +25,7 @@ import {
   type CreateGuildInput,
   type EligibleServersDto,
   type GuildDetails,
-  type PersonDto,
+  type PeopleDto,
   type RoleOptionDto,
   type SetupInfoDto,
   type UserGuildDto,
@@ -165,7 +165,7 @@ export class GuildsController {
   async people(
     @Req() req: AuthenticatedRequest,
     @Param('guildId') guildId: string,
-  ): Promise<PersonDto[]> {
+  ): Promise<PeopleDto> {
     await this.guildAccess.assertCanManage(req.user.id, guildId);
     return this.guildsService.findPeople(guildId);
   }

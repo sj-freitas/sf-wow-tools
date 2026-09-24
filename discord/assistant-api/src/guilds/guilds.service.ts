@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { DiscordOAuthService } from '../auth/discord-oauth.service';
+import { DiscordOAuthService, type DiscordServerMember } from '../auth/discord-oauth.service';
 import { APP_CONFIG } from '../config/app.config';
 import { PrismaService } from '../database/prisma.service';
 import { GAME_VERSIONS } from '../game/game-version';
@@ -46,6 +46,15 @@ export interface SetupInfoDto {
 export interface RoleOptionDto {
   id: string;
   name: string;
+}
+
+export interface PeopleDto {
+  /**
+   * `servers`: everyone in the guild's Discord servers. `known`: Discord refused to
+   * list server members (Server Members intent off), so only players we know.
+   */
+  source: 'servers' | 'known';
+  people: PersonDto[];
 }
 
 export interface PersonDto {
@@ -286,9 +295,9 @@ export class GuildsService {
     this.realtime.publish(guildId, 'guild');
   }
 
-  /** Everyone we know by name in this guild: registered players and backoffice users. */
-  async findPeople(guildId: string): Promise<PersonDto[]> {
-    const [players, access] = await Promise.all([
+  /** People the "add character" search can offer: members of the guild's Discord servers. */
+  async findPeople(guildId: string): Promise<PeopleDto> {
+    const [players, servers] = await Promise.all([
       this.prisma.player.findMany({
         where: { guildId },
         select: {
@@ -298,35 +307,46 @@ export class GuildsService {
           characters: { select: { firstName: true, lastName: true } },
         },
       }),
-      this.prisma.guildAccess.findMany({
-        where: { guildId },
-        select: { user: { select: { discordId: true, username: true } } },
-      }),
+      this.prisma.discordServer.findMany({ where: { guildId }, select: { discordId: true } }),
     ]);
+    const characterNames = new Map(
+      players.map((player) => [
+        player.discordUserId,
+        player.characters.map((c) => `${c.firstName} ${c.lastName}`.trim()),
+      ]),
+    );
 
-    const people = new Map<string, PersonDto>();
-    for (const player of players) {
-      people.set(player.discordUserId, {
+    const lists = await Promise.allSettled(
+      servers.map((server) => this.discord.fetchServerMembers(server.discordId)),
+    );
+    const fulfilled = lists.filter(
+      (list): list is PromiseFulfilledResult<DiscordServerMember[]> => list.status === 'fulfilled',
+    );
+
+    if (fulfilled.length > 0) {
+      const people = new Map<string, PersonDto>();
+      for (const { value } of fulfilled) {
+        for (const { nick, user } of value) {
+          people.set(user.id, {
+            discordUserId: user.id,
+            username: user.username,
+            displayName: nick ?? user.global_name,
+            characterNames: characterNames.get(user.id) ?? [],
+          });
+        }
+      }
+      return { source: 'servers', people: [...people.values()] };
+    }
+
+    return {
+      source: 'known',
+      people: players.map((player) => ({
         discordUserId: player.discordUserId,
         username: player.discordUsername,
         displayName: player.discordDisplayName,
-        characterNames: player.characters.map((c) => `${c.firstName} ${c.lastName}`.trim()),
-      });
-    }
-    for (const { user } of access) {
-      const existing = people.get(user.discordId);
-      if (existing) {
-        existing.username ??= user.username;
-      } else {
-        people.set(user.discordId, {
-          discordUserId: user.discordId,
-          username: user.username,
-          displayName: null,
-          characterNames: [],
-        });
-      }
-    }
-    return [...people.values()];
+        characterNames: characterNames.get(player.discordUserId) ?? [],
+      })),
+    };
   }
 
   private async readMainServerRoles(guildId: string): Promise<RoleOptionDto[]> {

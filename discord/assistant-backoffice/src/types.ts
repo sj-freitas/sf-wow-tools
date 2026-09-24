@@ -61,6 +61,12 @@ export interface RoleOption {
   name: string;
 }
 
+export interface People {
+  /** `known`: Discord refused to list server members, so only registered players. */
+  source: 'servers' | 'known';
+  people: Person[];
+}
+
 export interface Person {
   discordUserId: string;
   username: string | null;

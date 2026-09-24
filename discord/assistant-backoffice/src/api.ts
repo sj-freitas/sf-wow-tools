@@ -5,7 +5,7 @@ import type {
   GuildDetails,
   NewCharacterInput,
   NewGuildInput,
-  Person,
+  People,
   Player,
   RoleOption,
   SetupInfo,
@@ -63,7 +63,7 @@ export const fetchOfficerRoleOptions = (guildId: string): Promise<RoleOption[]> 
 export const setOfficerRole = (guildId: string, roleId: string | null): Promise<void> =>
   request('PUT', `/api/guilds/${guildId}/officer-role`, { roleId });
 
-export const fetchPeople = (guildId: string): Promise<Person[]> =>
+export const fetchPeople = (guildId: string): Promise<People> =>
   request('GET', `/api/guilds/${guildId}/people`);
 
 export const createCharacter = (guildId: string, input: NewCharacterInput): Promise<void> =>
