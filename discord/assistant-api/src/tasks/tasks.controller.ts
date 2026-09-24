@@ -68,6 +68,12 @@ export class TasksController {
     return this.tasks.create(guildId, req.user.id, body);
   }
 
+  @Get('tasks/:id')
+  async get(@Req() req: AuthenticatedRequest, @Param('id') id: string): Promise<TaskDto> {
+    await this.assertOfficerOfTask(req, id);
+    return this.tasks.get(id);
+  }
+
   @Patch('tasks/:id')
   async update(
     @Req() req: AuthenticatedRequest,

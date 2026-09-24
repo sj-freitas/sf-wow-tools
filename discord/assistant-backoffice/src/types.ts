@@ -47,6 +47,15 @@ export interface Guild {
 
 export type GuildRoleKey = 'RAIDER' | 'SOCIAL';
 
+/** The guild's optional welcome post. */
+export interface GuildHome {
+  /** Markdown, or null when none has been written. */
+  markdown: string | null;
+  updatedAt: string | null;
+  /** Username of the Officer who last edited it. */
+  updatedBy: string | null;
+}
+
 /** Discord user id -> ranks (Officer, Raider, Social) they hold as Discord roles. */
 export type Ranks = Record<string, string[]>;
 

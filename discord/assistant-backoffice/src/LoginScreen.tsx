@@ -1,3 +1,4 @@
+import { rememberReturnPath } from './api';
 import { DiscordMark } from './DiscordMark';
 
 export function LoginScreen() {
@@ -13,7 +14,7 @@ export function LoginScreen() {
           your guild's server.
         </p>
         {/* Full-page navigation: the API redirects to Discord and back. */}
-        <a className="btn btn-primary" href="/api/auth/login">
+        <a className="btn btn-primary" href="/api/auth/login" onClick={rememberReturnPath}>
           <DiscordMark size={22} />
           Log in with Discord
         </a>

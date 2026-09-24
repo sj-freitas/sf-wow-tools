@@ -187,3 +187,69 @@ describe('GuildsService', () => {
     });
   });
 });
+
+describe('GuildsService welcome post', () => {
+  let guildRow: any;
+  let editorRow: any;
+  let saved: any;
+  let service: GuildsService;
+
+  beforeEach(() => {
+    guildRow = { homeMarkdown: null, homeUpdatedAt: null, homeUpdatedById: null };
+    editorRow = { username: 'officer-one' };
+    saved = null;
+    const prisma = {
+      guild: {
+        findUnique: async () => guildRow,
+        update: async (args: any) => {
+          saved = args.data;
+          guildRow = {
+            homeMarkdown: args.data.homeMarkdown,
+            homeUpdatedAt: args.data.homeUpdatedAt,
+            homeUpdatedById: args.data.homeUpdatedById,
+          };
+        },
+      },
+      user: { findUnique: async () => editorRow },
+    } as unknown as PrismaService;
+    service = new GuildsService(
+      prisma,
+      { publish: () => undefined } as unknown as RealtimeService,
+      {} as DiscordOAuthService,
+    );
+  });
+
+  it('has no welcome post until one is written (it is optional)', async () => {
+    assert.deepEqual(await service.getHome('g'), {
+      markdown: null,
+      updatedAt: null,
+      updatedBy: null,
+    });
+  });
+
+  it('saves the welcome post and says who edited it and when', async () => {
+    const home = await service.setHome('g', 'u1', '# Welcome\n\nHave fun!');
+    assert.equal(home.markdown, '# Welcome\n\nHave fun!');
+    assert.equal(home.updatedBy, 'officer-one');
+    assert.ok(home.updatedAt);
+    assert.equal(saved.homeUpdatedById, 'u1');
+  });
+
+  it('removes the welcome post when saved empty', async () => {
+    await service.setHome('g', 'u1', 'Something');
+    const home = await service.setHome('g', 'u1', '   \n ');
+    assert.equal(home.markdown, null);
+    assert.equal(saved.homeMarkdown, null);
+  });
+
+  it('rejects a post that is too long or not text', async () => {
+    await assert.rejects(service.setHome('g', 'u1', 'x'.repeat(10_001)), /at most 10000/);
+    await assert.rejects(service.setHome('g', 'u1', 42), BadRequestException);
+    assert.equal(saved, null);
+  });
+
+  it('404s for an unknown guild', async () => {
+    guildRow = null;
+    await assert.rejects(service.getHome('nope'), NotFoundException);
+  });
+});

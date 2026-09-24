@@ -166,6 +166,12 @@ export class TasksService {
     };
   }
 
+  /** One post, for its edit page. */
+  async get(taskId: string): Promise<TaskDto> {
+    const task = await this.find(taskId);
+    return this.toDto(task, await this.timezoneOf(task.guildId));
+  }
+
   /** Text channels of every server of the guild, for the channel pickers. */
   async listChannels(guildId: string): Promise<ServerChannelsDto[]> {
     const servers = await this.prisma.discordServer.findMany({

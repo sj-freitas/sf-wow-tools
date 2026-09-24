@@ -27,6 +27,7 @@ describe('TasksController is for Officers only', () => {
     const tasks = {
       guildIdOf: async () => 'guild-of-task',
       list: async () => void calls.push('list'),
+      get: async () => void calls.push('get'),
       listChannels: async () => void calls.push('channels'),
       create: async () => void calls.push('create'),
       update: async () => void calls.push('update'),
@@ -41,6 +42,7 @@ describe('TasksController is for Officers only', () => {
   it('lets Officers do everything', async () => {
     await controller.list(req, 'g');
     await controller.channels(req, 'g');
+    await controller.get(req, 't');
     await controller.create(req, 'g', {});
     await controller.update(req, 't', {});
     await controller.remove(req, 't');
@@ -50,6 +52,7 @@ describe('TasksController is for Officers only', () => {
     assert.deepEqual(calls, [
       'list',
       'channels',
+      'get',
       'create',
       'update',
       'remove',
@@ -64,6 +67,7 @@ describe('TasksController is for Officers only', () => {
     for (const attempt of [
       () => controller.list(req, 'g'),
       () => controller.channels(req, 'g'),
+      () => controller.get(req, 't'),
       () => controller.create(req, 'g', {}),
       () => controller.update(req, 't', {}),
       () => controller.remove(req, 't'),

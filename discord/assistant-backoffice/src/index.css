@@ -942,3 +942,115 @@ tbody tr:last-child td {
 .pager .settings-actions {
   align-items: center;
 }
+
+/* ---- navigation and routed pages ---- */
+.brand {
+  color: inherit;
+  text-decoration: none;
+}
+.view-tabs a {
+  padding: 0.5rem 0.9rem;
+  border-bottom: 2px solid transparent;
+  color: var(--muted);
+  text-decoration: none;
+}
+.view-tabs a:hover {
+  color: var(--text);
+}
+.view-tabs a[aria-current='page'] {
+  color: var(--text);
+  border-bottom-color: var(--blurple);
+}
+.back-link {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+.back-link:hover {
+  color: var(--text);
+}
+a.btn {
+  text-decoration: none;
+}
+.home-editor {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+@media (max-width: 800px) {
+  .home-editor {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---- rendered markdown (welcome post) ---- */
+.markdown {
+  color: var(--text);
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+.markdown > :first-child {
+  margin-top: 0;
+}
+.markdown h1,
+.markdown h2,
+.markdown h3 {
+  margin: 1.2em 0 0.4em;
+  line-height: 1.25;
+}
+.markdown h1 {
+  font-size: 1.6rem;
+}
+.markdown h2 {
+  font-size: 1.3rem;
+}
+.markdown h3 {
+  font-size: 1.1rem;
+}
+.markdown a {
+  color: var(--blurple);
+}
+.markdown img {
+  max-width: 100%;
+  border-radius: 6px;
+}
+.markdown code {
+  padding: 0.1rem 0.3rem;
+  border-radius: 4px;
+  background: var(--surface-2);
+  font-size: 0.9em;
+}
+.markdown pre {
+  padding: 0.8rem 1rem;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-2);
+}
+.markdown pre code {
+  padding: 0;
+  background: none;
+}
+.markdown blockquote {
+  margin: 0.8em 0;
+  padding-left: 1rem;
+  border-left: 3px solid var(--border);
+  color: var(--muted);
+}
+.markdown table {
+  display: block;
+  overflow-x: auto;
+  width: max-content;
+  max-width: 100%;
+  margin: 0.8em 0;
+}
+.markdown th,
+.markdown td {
+  padding: 0.4rem 0.75rem;
+  border: 1px solid var(--border);
+}
+.markdown hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 1.2em 0;
+}

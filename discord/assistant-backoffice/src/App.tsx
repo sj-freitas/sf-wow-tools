@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { fetchCurrentUser, fetchGuilds, fetchSetupInfo, logout } from './api';
-import { GuildsPage } from './GuildsPage';
+import { Link, useNavigate } from 'react-router-dom';
+import { fetchCurrentUser, fetchGuilds, fetchSetupInfo, logout, takeReturnPath } from './api';
+import { GuildShell } from './GuildShell';
 import { LoginScreen } from './LoginScreen';
 import type { Guild, SetupInfo, User } from './types';
 
@@ -24,6 +25,7 @@ function Avatar({ user }: { user: User }) {
 
 export function App() {
   const [auth, setAuth] = useState<AuthState>({ status: 'loading' });
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchCurrentUser()
@@ -32,11 +34,14 @@ export function App() {
           ? await Promise.all([fetchGuilds(), fetchSetupInfo()])
           : [[], null];
         setAuth({ status: 'ready', user, guilds, setup });
+        // Back to the page the user was on before logging in.
+        const returnTo = user ? takeReturnPath() : null;
+        if (returnTo && returnTo !== '/') navigate(returnTo, { replace: true });
       })
       .catch((err: unknown) =>
         setAuth({ status: 'error', message: err instanceof Error ? err.message : String(err) }),
       );
-  }, []);
+  }, [navigate]);
 
   const reloadGuilds = async () => {
     const guilds = await fetchGuilds();
@@ -62,12 +67,12 @@ export function App() {
   return (
     <>
       <header className="header">
-        <div className="brand">
+        <Link className="brand" to="/">
           <span className="brand-mark">
             <img src="/logo.png" alt="" />
           </span>
           Guild Assistant
-        </div>
+        </Link>
         <div className="header-user">
           <Avatar user={auth.user} />
           <span className="username">{auth.user.username}</span>
@@ -78,7 +83,7 @@ export function App() {
       </header>
       <main className="page">
         {auth.setup && (
-          <GuildsPage
+          <GuildShell
             guilds={auth.guilds}
             setup={auth.setup}
             currentUser={auth.user}

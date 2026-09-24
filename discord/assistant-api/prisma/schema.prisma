@@ -64,6 +64,10 @@ model Guild {
   officerRoleName String?            @map("officer_role_name")
   // One of the keys of REGIONS (src/config/regions.ts); decides the timezone schedules run in.
   region          String             @default("EU")
+  // Optional welcome post (markdown) shown on the guild's home page; null = none written yet.
+  homeMarkdown    String?            @map("home_markdown")
+  homeUpdatedAt   DateTime?          @map("home_updated_at")
+  homeUpdatedById String?            @map("home_updated_by_id") @db.Uuid
   scheduledTasks  ScheduledTask[]
   honeypots       Honeypot[]
   servers         DiscordServer[]

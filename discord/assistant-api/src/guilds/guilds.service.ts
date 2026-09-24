@@ -42,6 +42,17 @@ export const GUILD_ROLE_KEYS: readonly GuildRoleKey[] = ['RAIDER', 'SOCIAL'];
 
 export type RoleMappingsDto = Record<GuildRoleKey, { id: string; name: string } | null>;
 
+export interface GuildHomeDto {
+  /** The welcome post in markdown, or null when none has been written. */
+  markdown: string | null;
+  updatedAt: string | null;
+  /** Username of the Officer who last edited it. */
+  updatedBy: string | null;
+}
+
+/** Longest welcome post, in characters. */
+export const MAX_HOME_LENGTH = 10_000;
+
 export interface EligibleServersDto {
   servers: { discordId: string; name: string }[];
 }
@@ -334,6 +345,48 @@ export class GuildsService {
       });
     }
     this.realtime.publish(guildId, 'guild');
+  }
+
+  /** The guild's welcome post. It is optional: `markdown` is null until an Officer writes one. */
+  async getHome(guildId: string): Promise<GuildHomeDto> {
+    const guild = await this.prisma.guild.findUnique({
+      where: { id: guildId },
+      select: { homeMarkdown: true, homeUpdatedAt: true, homeUpdatedById: true },
+    });
+    if (!guild) throw new NotFoundException('Guild not found');
+    const editor = guild.homeUpdatedById
+      ? await this.prisma.user.findUnique({
+          where: { id: guild.homeUpdatedById },
+          select: { username: true },
+        })
+      : null;
+    return {
+      markdown: guild.homeMarkdown,
+      updatedAt: guild.homeUpdatedAt?.toISOString() ?? null,
+      updatedBy: editor?.username ?? null,
+    };
+  }
+
+  /** Saves the welcome post; an empty text removes it. */
+  async setHome(guildId: string, userId: string, markdown: unknown): Promise<GuildHomeDto> {
+    if (typeof markdown !== 'string') {
+      throw new BadRequestException('markdown must be text');
+    }
+    const text = markdown.trim();
+    if (text.length > MAX_HOME_LENGTH) {
+      throw new BadRequestException(
+        `The welcome post can have at most ${MAX_HOME_LENGTH} characters.`,
+      );
+    }
+    await this.prisma.guild.update({
+      where: { id: guildId },
+      data: {
+        homeMarkdown: text === '' ? null : text,
+        homeUpdatedAt: new Date(),
+        homeUpdatedById: userId,
+      },
+    });
+    return this.getHome(guildId);
   }
 
   /** People the "add character" search can offer: members of the guild's Discord servers. */

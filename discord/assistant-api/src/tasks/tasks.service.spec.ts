@@ -171,6 +171,16 @@ describe('TasksService', () => {
     });
   });
 
+  it('returns a single post for its edit page', async () => {
+    const dto = await service.get('t1');
+    assert.equal(dto.id, 't1');
+    assert.equal(dto.post.content, 'Raid tonight');
+    await assert.rejects(async () => {
+      task = null;
+      await service.get('nope');
+    }, NotFoundException);
+  });
+
   describe('create', () => {
     it('schedules a one-time post at the chosen time in the guild timezone (Paris, UTC+2 in October)', async () => {
       const dto = await service.create('g', 'u', { ...validInput, runAtLocal: '2099-10-01T20:00' });

@@ -15,12 +15,14 @@ describe('GuildsController role mappings', () => {
   let officer: boolean;
   let member: boolean;
   let mapped: unknown[][];
+  let homeWrites: unknown[][];
   let controller: GuildsController;
 
   beforeEach(() => {
     officer = true;
     member = true;
     mapped = [];
+    homeWrites = [];
     const guildAccess = {
       find: async () => (member ? { isAdmin: false, isOfficer: false } : null),
       assertOfficer: async () => {
@@ -29,6 +31,8 @@ describe('GuildsController role mappings', () => {
     } as unknown as GuildAccessService;
     const guilds = {
       setRoleMapping: async (...args: unknown[]) => void mapped.push(args),
+      getHome: async () => ({ markdown: null, updatedAt: null, updatedBy: null }),
+      setHome: async (...args: unknown[]) => void homeWrites.push(args),
     } as unknown as GuildsService;
     controller = new GuildsController(
       guilds,
@@ -78,5 +82,25 @@ describe('GuildsController role mappings', () => {
     assert.deepEqual(await controller.ranks(req, 'g'), { a: ['Raider'] });
     member = false;
     await assert.rejects(controller.ranks(req, 'g'), ForbiddenException);
+  });
+
+  describe('welcome post', () => {
+    it('is readable by any member of the guild, but not by outsiders', async () => {
+      assert.deepEqual(await controller.home(req, 'g'), {
+        markdown: null,
+        updatedAt: null,
+        updatedBy: null,
+      });
+      member = false;
+      await assert.rejects(controller.home(req, 'g'), ForbiddenException);
+    });
+
+    it('can only be written by Officers', async () => {
+      await controller.setHome(req, 'g', { markdown: '# Hi' });
+      assert.deepEqual(homeWrites, [['g', 'u1', '# Hi']]);
+      officer = false;
+      await assert.rejects(controller.setHome(req, 'g', { markdown: '# Hi' }), ForbiddenException);
+      assert.equal(homeWrites.length, 1);
+    });
   });
 });

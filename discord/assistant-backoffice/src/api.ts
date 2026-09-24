@@ -9,6 +9,7 @@ import type {
   EligibleServers,
   Guild,
   GuildDetails,
+  GuildHome,
   GuildRoleKey,
   NewCharacterInput,
   NewGuildInput,
@@ -24,7 +25,32 @@ import type {
 export class UnauthorizedError extends Error {}
 
 /** Full-page navigation: the API redirects to Discord (no consent screen when already approved) and back. */
-export const redirectToLogin = (): void => window.location.assign('/api/auth/login');
+export const redirectToLogin = (): void => {
+  rememberReturnPath();
+  window.location.assign('/api/auth/login');
+};
+
+const RETURN_KEY = 'guildAssistant.returnTo';
+
+/** Remembers the current page so that, after logging in, the user lands back on it. */
+export function rememberReturnPath(): void {
+  try {
+    sessionStorage.setItem(RETURN_KEY, window.location.pathname + window.location.search);
+  } catch {
+    // Storage can be unavailable (private windows); the user just lands on the home page.
+  }
+}
+
+/** The page remembered before login, once; null if there is none. */
+export function takeReturnPath(): string | null {
+  try {
+    const path = sessionStorage.getItem(RETURN_KEY);
+    sessionStorage.removeItem(RETURN_KEY);
+    return path && path.startsWith('/') && !path.startsWith('//') ? path : null;
+  } catch {
+    return null;
+  }
+}
 
 async function request<T>(
   method: string,
@@ -115,6 +141,15 @@ export const updateCharacter = (id: string, patch: CharacterPatch): Promise<void
 
 export const deleteCharacter = (id: string): Promise<void> =>
   request('DELETE', `/api/characters/${id}`);
+
+export const fetchHome = (guildId: string): Promise<GuildHome> =>
+  request('GET', `/api/guilds/${guildId}/home`);
+
+/** An empty text removes the welcome post. */
+export const saveHome = (guildId: string, markdown: string): Promise<GuildHome> =>
+  request('PUT', `/api/guilds/${guildId}/home`, { markdown });
+
+export const fetchTask = (id: string): Promise<ScheduledPost> => request('GET', `/api/tasks/${id}`);
 
 export const fetchTasks = (
   guildId: string,

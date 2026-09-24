@@ -155,6 +155,34 @@ server can't be removed directly.
   `guilds.members.read`) and the server's roles (bot token). Officer status only needs the user's
   role ids in the main server. Results are stored in `guild_access` and `user_admin_servers`.
 
+### Backoffice pages and routes
+
+The backoffice is a single-page app with real addresses (the API serves `index.html` for any path
+outside `/api`, so deep links and reloads work). The guild you are looking at is remembered in the
+browser; the paths themselves don't carry it.
+
+| Path                                 | Page                                   | Who                               |
+| ------------------------------------ | -------------------------------------- | --------------------------------- |
+| `/`                                  | Home: the guild's welcome post         | everyone in the guild             |
+| `/edit`                              | Write the welcome post                 | Officers                          |
+| `/roster`                            | Roster                                 | everyone in the guild             |
+| `/roster/create`, `/roster/edit/:id` | Add / edit a character                 | members: their own; Officers: any |
+| `/posts?q=&page=`                    | Posts (search and page in the address) | Officers                          |
+| `/posts/create`, `/posts/edit/:id`   | New / edit post                        | Officers                          |
+| `/honeypots`, `/honeypots/create`    | Honeypots (`/honeypot` redirects)      | Officers                          |
+| `/settings`                          | Guild settings                         | Guild-Assistants and Officers     |
+| `/guilds/create`                     | Set up a new guild                     | anyone                            |
+
+Members only see Home and Roster in the navigation; opening any other page sends them to Home.
+Save and Cancel on a create/edit page return to the list you came from, search included. After
+logging in you land back on the page you were on.
+
+**Welcome post.** Optional markdown text on the guild (`guilds.home_markdown`, null until an Officer
+writes one), shown on Home to everyone in the guild (`GET /api/guilds/:id/home`) and written by
+Officers only (`PUT /api/guilds/:id/home`, up to 10,000 characters; an empty text removes it). It is
+rendered with `react-markdown` (GitHub flavour) which only builds elements and never raw HTML, so
+what an Officer writes can't inject scripts into what members see.
+
 ### Background worker, posts and honeypots
 
 Officers manage these in the backoffice under the **Posts** and **Honeypots** tabs of a guild

@@ -30,6 +30,7 @@ import {
   type CreateGuildInput,
   type EligibleServersDto,
   type GuildDetails,
+  type GuildHomeDto,
   type PeopleDto,
   type RoleOptionDto,
   type SetupInfoDto,
@@ -212,6 +213,29 @@ export class GuildsController {
       throw new ForbiddenException('You are not a member of this guild');
     }
     return this.ranksService.findRanks(guildId);
+  }
+
+  /** Any member of the guild: its welcome post (optional). */
+  @Get(':guildId/home')
+  async home(
+    @Req() req: AuthenticatedRequest,
+    @Param('guildId') guildId: string,
+  ): Promise<GuildHomeDto> {
+    if (!(await this.guildAccess.find(req.user.id, guildId))) {
+      throw new ForbiddenException('You are not a member of this guild');
+    }
+    return this.guildsService.getHome(guildId);
+  }
+
+  /** Officers only: writes the welcome post. An empty `markdown` removes it. */
+  @Put(':guildId/home')
+  async setHome(
+    @Req() req: AuthenticatedRequest,
+    @Param('guildId') guildId: string,
+    @Body() body: Payload,
+  ): Promise<GuildHomeDto> {
+    await this.guildAccess.assertOfficer(req.user.id, guildId);
+    return this.guildsService.setHome(guildId, req.user.id, body.markdown);
   }
 
   /** Officers only: candidates for the "add character for a player" search. */

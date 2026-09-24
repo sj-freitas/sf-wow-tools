@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { deleteHoneypot, fetchHoneypots, updateHoneypot } from './api';
 import { HoneypotForm } from './HoneypotForm';
 import { formatWhen } from './time';
@@ -15,9 +16,8 @@ const REFRESH_MS = 15_000;
 
 export function HoneypotsPage({ guild, timezone }: Props) {
   const [honeypots, setHoneypots] = useState<Honeypot[] | null>(null);
-  const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { channels, channelName } = useChannels(guild.id);
+  const { channelName, channels } = useChannels(guild.id);
   const { confirm, dialog } = useConfirm();
 
   const load = useCallback(() => {
@@ -49,9 +49,9 @@ export function HoneypotsPage({ guild, timezone }: Props) {
             Channels where anyone who posts is banned. Times are in {timezone}.
           </span>
         </div>
-        <button type="button" className="btn btn-primary" onClick={() => setCreating(true)}>
+        <Link className="btn btn-primary" to="/honeypots/create">
           + Honeypot channel
-        </button>
+        </Link>
       </div>
 
       {error && (
@@ -61,18 +61,6 @@ export function HoneypotsPage({ guild, timezone }: Props) {
             Dismiss
           </button>
         </div>
-      )}
-
-      {creating && (
-        <HoneypotForm
-          guild={guild}
-          channels={channels}
-          onSaved={() => {
-            setCreating(false);
-            load();
-          }}
-          onCancel={() => setCreating(false)}
-        />
       )}
 
       {honeypots === null ? (
@@ -166,6 +154,25 @@ export function HoneypotsPage({ guild, timezone }: Props) {
           </div>
         ))
       )}
+    </div>
+  );
+}
+
+/** `/honeypots/create`: the honeypot form on its own page. */
+export function HoneypotCreatePage({ guild }: { guild: Guild }) {
+  const navigate = useNavigate();
+  const { channels } = useChannels(guild.id);
+  return (
+    <div className="tasks">
+      <Link className="back-link" to="/honeypots">
+        ← Honeypots
+      </Link>
+      <HoneypotForm
+        guild={guild}
+        channels={channels}
+        onSaved={() => navigate('/honeypots')}
+        onCancel={() => navigate('/honeypots')}
+      />
     </div>
   );
 }
