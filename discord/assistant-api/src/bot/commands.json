@@ -10,7 +10,7 @@
     "options": [
       {
         "name": "name",
-        "description": "Name-Lastname: a dash between first and last name (letters only, 2+ each). Last name required in Forever",
+        "description": "Name-Lastname (dash between the names, letters only, 2+ each). Forever needs a last name",
         "type": 3,
         "required": true
       },
@@ -109,7 +109,7 @@
     "options": [
       {
         "name": "name",
-        "description": "Name-Lastname: a dash between first and last name (letters only, 2+ each). Last name required in Forever",
+        "description": "Name-Lastname (dash between the names, letters only, 2+ each). Forever needs a last name",
         "type": 3,
         "required": true
       }
