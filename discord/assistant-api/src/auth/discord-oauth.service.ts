@@ -17,6 +17,8 @@ export class DiscordApiError extends UnauthorizedException {
 export interface DiscordUser {
   id: string;
   username: string;
+  /** The display name shown in Discord; null when the account has none. */
+  global_name: string | null;
   avatar: string | null;
 }
 

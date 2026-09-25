@@ -400,13 +400,13 @@ export class GuildsService {
     const editor = guild.homeUpdatedById
       ? await this.prisma.user.findUnique({
           where: { id: guild.homeUpdatedById },
-          select: { username: true },
+          select: { username: true, displayName: true },
         })
       : null;
     return {
       markdown: guild.homeMarkdown,
       updatedAt: guild.homeUpdatedAt?.toISOString() ?? null,
-      updatedBy: editor?.username ?? null,
+      updatedBy: editor ? (editor.displayName ?? editor.username) : null,
     };
   }
 

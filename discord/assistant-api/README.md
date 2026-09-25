@@ -171,20 +171,20 @@ the database keeps name, realm, game version and region unique and the API also 
 ignoring case and punctuation, and renaming a guild moves its address (the
 settings page follows it).
 
-| Path                                 | Page                                     | Who                               |
-| ------------------------------------ | ---------------------------------------- | --------------------------------- |
-| `/`                                  | Your last guild, else `/overview`        | anyone logged in                  |
-| `/overview`                          | Overview: your guilds                    | anyone logged in                  |
-| `/guilds/create`                     | Set up a new guild                       | anyone logged in                  |
-| `<guild>/`                           | Welcome: the guild's welcome post        | everyone in the guild             |
-| `<guild>/edit`                       | Write the welcome post                   | Officers                          |
-| `<guild>/roster`                     | Roster                                   | everyone in the guild             |
-| `<guild>/roster/create`, `/edit/:id` | Add / edit a character                   | members: their own; Officers: any |
-| `<guild>/posts?q=&page=`             | Posts (search and page in the address)   | Officers                          |
-| `<guild>/posts/create`, `/edit/:id`  | New / edit post                          | Officers                          |
-| `<guild>/honeypots`, `/create`       | Honeypots (`/honeypot` redirects)        | Officers                          |
-| `<guild>/officer-requests`, `/:id`   | Members' messages to officers, read-only | Officers                          |
-| `<guild>/settings`                   | Guild settings, incl. the welcome post   | Guild-Assistants and Officers     |
+| Path                                 | Page                                          | Who                               |
+| ------------------------------------ | --------------------------------------------- | --------------------------------- |
+| `/`                                  | Your last guild, else `/overview`             | anyone logged in                  |
+| `/overview`                          | Overview: your guilds                         | anyone logged in                  |
+| `/guilds/create`                     | Set up a new guild                            | anyone logged in                  |
+| `<guild>/`                           | Welcome: the guild's welcome post             | everyone in the guild             |
+| `<guild>/edit`                       | Write the welcome post                        | Officers                          |
+| `<guild>/roster`                     | Roster                                        | everyone in the guild             |
+| `<guild>/roster/create`, `/edit/:id` | Add / edit a character                        | members: their own; Officers: any |
+| `<guild>/posts?q=&page=`             | Posts (search and page in the address)        | Officers                          |
+| `<guild>/posts/create`, `/edit/:id`  | New / edit post                               | Officers                          |
+| `<guild>/honeypots`, `/create`       | Honeypots (`/honeypot` redirects)             | Officers                          |
+| `<guild>/officer-requests`, `/:id`   | Members' messages to officers; officers reply | Officers                          |
+| `<guild>/settings`                   | Guild settings, incl. the welcome post        | Guild-Assistants and Officers     |
 
 Members only see Welcome and Roster in the navigation; opening any other page sends them to the guild's
 welcome page. An address that isn't one of your guilds says so and links back to the Overview. Save and
@@ -226,7 +226,7 @@ command sees it).
   are never anonymous.
 - **Backoffice** (Officers only): **Officer requests** lists conversations, most recently active
   first, ten to a page, with a search by id or text (`/officer-requests?q=&page=`) and an "Awaiting
-  reply" badge. `/officer-requests/:conversationId` shows the whole conversation read-only, each
+  reply" badge. `/officer-requests/:conversationId` shows the whole conversation and a reply box (same delivery as the command: a DM plus a post in the request channel), each
   message labelled as the member (anonymous or by name) or as an officer, by name.
 
 Not built yet: closing a conversation, deleting old ones after a while, and blocking a sender.

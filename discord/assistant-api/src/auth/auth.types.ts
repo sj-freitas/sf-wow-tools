@@ -4,6 +4,8 @@ export interface SessionUser {
   id: string;
   discordId: string;
   username: string;
+  /** Discord's display name, or the username when the account has none. */
+  displayName: string;
   avatar: string | null;
 }
 

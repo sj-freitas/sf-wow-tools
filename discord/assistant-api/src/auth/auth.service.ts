@@ -43,9 +43,14 @@ export class AuthService {
       create: {
         discordId: discordUser.id,
         username: discordUser.username,
+        displayName: discordUser.global_name,
         avatar: discordUser.avatar,
       },
-      update: { username: discordUser.username, avatar: discordUser.avatar },
+      update: {
+        username: discordUser.username,
+        displayName: discordUser.global_name,
+        avatar: discordUser.avatar,
+      },
     });
     await this.syncFromDiscord(user.id, accessToken);
 
@@ -281,8 +286,8 @@ export class AuthService {
     if (!session || session.expiresAt < new Date()) {
       return null;
     }
-    const { id, discordId, username, avatar } = session.user;
-    return { id, discordId, username, avatar };
+    const { id, discordId, username, displayName, avatar } = session.user;
+    return { id, discordId, username, displayName: displayName ?? username, avatar };
   }
 
   async logout(token: string): Promise<void> {

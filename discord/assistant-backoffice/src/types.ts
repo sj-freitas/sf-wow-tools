@@ -24,6 +24,8 @@ export interface User {
   id: string;
   discordId: string;
   username: string;
+  /** The Discord display name (the username when the account has none). */
+  displayName: string;
   avatar: string | null;
 }
 

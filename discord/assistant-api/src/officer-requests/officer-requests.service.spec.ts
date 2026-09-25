@@ -1,3 +1,4 @@
+import { NotFoundException } from '@nestjs/common';
 import assert from 'node:assert/strict';
 import { beforeEach, describe, it } from 'node:test';
 import { BadRequestException } from '@nestjs/common';
@@ -52,6 +53,7 @@ describe('OfficerRequestsService', () => {
     guildUpdate = null;
     const prisma = {
       guild: {
+        findUnique: async (args: any) => (args.where.id === guild.id ? guild : null),
         findFirst: async (args: any) => {
           const wanted = args.where.servers.some.discordId;
           return wanted === SERVER || wanted === OTHER_SERVER ? guild : null;
@@ -291,6 +293,36 @@ describe('OfficerRequestsService', () => {
     it('says when the conversation does not exist', async () => {
       conversation = null;
       assert.equal(await reply(), MESSAGES.officerConversationNotFound);
+    });
+
+    describe('from the backoffice', () => {
+      const replyAsOfficer = () =>
+        service.replyAsOfficer('g1', 12345678, { id: 'officer-1', name: 'Olga' }, 'From the web');
+
+      it('delivers like the command: channel post, DM and saved message', async () => {
+        assert.deepEqual(await replyAsOfficer(), { dmDelivered: true });
+        assert.equal(posts[0].embed.description, 'From the web');
+        assert.deepEqual(posts[0].options, { replyTo: 'first-post' });
+        assert.equal(dms[0].userId, member.id);
+        assert.equal(dms[0].embed.fields.find((f: any) => f.name === 'Replied by').value, 'Olga');
+        assert.deepEqual(
+          [createdMessages[0].officerDiscordId, createdMessages[0].officerName],
+          ['officer-1', 'Olga'],
+        );
+        assert.deepEqual(touched, ['c1']);
+      });
+
+      it('reports a DM that could not be delivered', async () => {
+        dmFails = true;
+        assert.deepEqual(await replyAsOfficer(), { dmDelivered: false });
+        assert.equal(createdMessages[0].dmDelivered, false);
+      });
+
+      it('404s for an unknown conversation', async () => {
+        conversation = null;
+        await assert.rejects(replyAsOfficer(), NotFoundException);
+        assert.deepEqual([posts, dms, createdMessages], [[], [], []]);
+      });
     });
   });
 

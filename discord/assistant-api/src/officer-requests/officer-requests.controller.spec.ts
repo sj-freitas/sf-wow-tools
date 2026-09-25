@@ -7,7 +7,7 @@ import type { ConversationsService } from './conversations.service';
 import { OfficerRequestsController } from './officer-requests.controller';
 import type { OfficerRequestsService } from './officer-requests.service';
 
-const req = { user: { id: 'u1' } } as AuthenticatedRequest;
+const req = { user: { id: 'u1', discordId: 'd1', displayName: 'Olga' } } as AuthenticatedRequest;
 const CHANNEL = '333333333333333333';
 const SERVER = '111111111111111111';
 
@@ -34,6 +34,10 @@ describe('OfficerRequestsController', () => {
       get: async (...args: unknown[]) => void calls.push(['get', ...args]),
     } as unknown as ConversationsService;
     const officerRequests = {
+      replyAsOfficer: async (...args: unknown[]) => {
+        calls.push(['reply', ...args]);
+        return { dmDelivered: true };
+      },
       setChannel: async (...args: unknown[]) => void calls.push(['setChannel', ...args]),
     } as unknown as OfficerRequestsService;
     controller = new OfficerRequestsController(conversations, officerRequests, guildAccess);
@@ -55,6 +59,35 @@ describe('OfficerRequestsController', () => {
   it('rejects ids that are not 8 digits', async () => {
     await assert.rejects(controller.get(req, 'g', 'abc'), BadRequestException);
     await assert.rejects(controller.get(req, 'g', '123'), BadRequestException);
+  });
+
+  it('lets Officers reply, as their display name, with a trimmed message', async () => {
+    assert.deepEqual(await controller.reply(req, 'g', '12345678', { message: '  Hi  ' }), {
+      dmDelivered: true,
+    });
+    assert.deepEqual(calls, [['reply', 'g', 12345678, { id: 'd1', name: 'Olga' }, 'Hi']]);
+  });
+
+  it('refuses replies from non-Officers and empty, too long or malformed ones', async () => {
+    await assert.rejects(
+      controller.reply(req, 'g', '12345678', { message: '' }),
+      BadRequestException,
+    );
+    await assert.rejects(
+      controller.reply(req, 'g', '12345678', { message: 5 }),
+      BadRequestException,
+    );
+    await assert.rejects(
+      controller.reply(req, 'g', '12345678', { message: 'x'.repeat(3501) }),
+      BadRequestException,
+    );
+    await assert.rejects(controller.reply(req, 'g', 'abc', { message: 'hi' }), BadRequestException);
+    officer = false;
+    await assert.rejects(
+      controller.reply(req, 'g', '12345678', { message: 'hi' }),
+      ForbiddenException,
+    );
+    assert.deepEqual(calls, []);
   });
 
   it('lets whoever can configure the guild set or clear the channel', async () => {

@@ -159,6 +159,14 @@ export const fetchOfficerRequests = (
 export const fetchOfficerRequest = (guildId: string, publicId: string): Promise<Conversation> =>
   request('GET', `/api/guilds/${guildId}/officer-requests/${publicId}`);
 
+/** Sends an officer's reply; `dmDelivered` is false when the member could not be reached by DM. */
+export const replyToOfficerRequest = (
+  guildId: string,
+  publicId: number,
+  message: string,
+): Promise<{ dmDelivered: boolean }> =>
+  request('POST', `/api/guilds/${guildId}/officer-requests/${publicId}/replies`, { message });
+
 /** `null` clears the channel. */
 export const setOfficerRequestChannel = (
   guildId: string,

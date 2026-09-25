@@ -14,7 +14,7 @@ function Avatar({ user }: { user: User }) {
       />
     );
   }
-  return <span className="avatar">{user.username.charAt(0).toUpperCase()}</span>;
+  return <span className="avatar">{user.displayName.charAt(0).toUpperCase()}</span>;
 }
 
 interface Props {
@@ -62,14 +62,14 @@ export function UserMenu({ user, guilds, setup, onLogout }: Props) {
         onClick={() => setOpen((value) => !value)}
       >
         <Avatar user={user} />
-        <span className="username">{user.username}</span>
+        <span className="username">{user.displayName}</span>
         <span aria-hidden="true">▾</span>
       </button>
       {open && (
         <div className="user-menu-panel" role="menu">
           <div className="user-menu-section">
             <div className="muted">Signed in as</div>
-            <strong>{user.username}</strong>
+            <strong>{user.displayName}</strong>
             {current && setup && (
               <div className="muted">
                 In {current.name}: {accessSummary(current, setup.adminRoleName)}

@@ -1114,3 +1114,10 @@ a.btn {
 .guild-card:hover {
   border-color: var(--blurple);
 }
+
+.reply-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+}

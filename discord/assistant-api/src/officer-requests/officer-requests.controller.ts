@@ -6,6 +6,7 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  Post,
   Put,
   Query,
   Req,
@@ -20,9 +21,9 @@ import {
   type ConversationDto,
   type ConversationPageDto,
 } from './conversations.service';
-import { OfficerRequestsService } from './officer-requests.service';
+import { MAX_MESSAGE_LENGTH, OfficerRequestsService } from './officer-requests.service';
 
-/** Officer requests in the backoffice: read-only for Officers; the channel is guild configuration. */
+/** Officer requests in the backoffice: Officers read and reply; the channel is guild configuration. */
 @Controller('guilds/:guildId')
 @UseGuards(AuthGuard)
 export class OfficerRequestsController {
@@ -52,6 +53,29 @@ export class OfficerRequestsController {
     await this.guildAccess.assertOfficer(req.user.id, guildId);
     if (!/^\d{8}$/.test(publicId)) throw new BadRequestException('Not a conversation id');
     return this.conversations.get(guildId, Number(publicId));
+  }
+
+  /** Officers only. Sends the same reply as /contact-officer-reply, in the officer's display name. */
+  @Post('officer-requests/:publicId/replies')
+  async reply(
+    @Req() req: AuthenticatedRequest,
+    @Param('guildId') guildId: string,
+    @Param('publicId') publicId: string,
+    @Body() body: Record<string, unknown>,
+  ): Promise<{ dmDelivered: boolean }> {
+    await this.guildAccess.assertOfficer(req.user.id, guildId);
+    if (!/^\d{8}$/.test(publicId)) throw new BadRequestException('Not a conversation id');
+    const message = typeof body.message === 'string' ? body.message.trim() : '';
+    if (!message) throw new BadRequestException('Write a message first.');
+    if (message.length > MAX_MESSAGE_LENGTH) {
+      throw new BadRequestException(`Messages can be at most ${MAX_MESSAGE_LENGTH} characters.`);
+    }
+    return this.officerRequests.replyAsOfficer(
+      guildId,
+      Number(publicId),
+      { id: req.user.discordId, name: req.user.displayName },
+      message,
+    );
   }
 
   /** Guild-Assistants and Officers. `channelId: null` clears the channel. */

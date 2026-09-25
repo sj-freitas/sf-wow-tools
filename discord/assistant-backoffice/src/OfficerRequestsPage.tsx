@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
-import { fetchOfficerRequest, fetchOfficerRequests } from './api';
+import { fetchOfficerRequest, fetchOfficerRequests, replyToOfficerRequest } from './api';
 import { formatWhen, timeAgo } from './time';
 import type { Conversation, ConversationsPage, Guild } from './types';
 import { useCurrentUrl, useReturnTo } from './useReturnTo';
@@ -72,8 +72,8 @@ export function OfficerRequestsPage({ guild, timezone }: Props) {
         <div>
           <h3>Officer requests</h3>
           <span className="muted">
-            Messages members sent with /contact-officer. Officers reply in Discord with
-            /contact-officer-reply. Read-only here.
+            Messages members sent with /contact-officer. Reply here, or in Discord with
+            /contact-officer-reply.
           </span>
         </div>
       </div>
@@ -163,7 +163,7 @@ export function OfficerRequestsPage({ guild, timezone }: Props) {
 }
 
 /**
- * `/officer-requests/:conversationId`: the whole conversation, read-only. Each message says who
+ * `/officer-requests/:conversationId`: the whole conversation and a reply box. Each message says who
  * wrote it: an anonymous member (or the member, if they chose to be named) or a named officer.
  */
 export function ConversationPage({ guild, timezone }: Props) {
@@ -213,11 +213,6 @@ export function ConversationPage({ guild, timezone }: Props) {
               {conversation.isAnonymous ? 'Anonymous' : 'Named'}
             </span>
           </div>
-          <p className="muted">
-            Read-only. Officers reply in Discord with{' '}
-            <code>/contact-officer-reply conversation-id:{conversation.publicId}</code>; the member
-            gets it by DM.
-          </p>
           <ol className="conversation">
             {conversation.messages.map((message) => {
               const fromOfficer = message.author === 'OFFICER';
@@ -245,8 +240,79 @@ export function ConversationPage({ guild, timezone }: Props) {
               );
             })}
           </ol>
+          <ReplyForm guildId={guild.id} publicId={conversation.publicId} onSent={load} />
         </>
       )}
     </div>
+  );
+}
+
+const MAX_REPLY_LENGTH = 3500;
+
+/** The member gets the reply by DM, and it is also posted in the Officer Request Channel. */
+function ReplyForm({
+  guildId,
+  publicId,
+  onSent,
+}: {
+  guildId: string;
+  publicId: number;
+  onSent: () => void;
+}) {
+  const [text, setText] = useState('');
+  const [sending, setSending] = useState(false);
+  const [feedback, setFeedback] = useState<{ ok: boolean; text: string } | null>(null);
+
+  const send = (event: React.FormEvent) => {
+    event.preventDefault();
+    const message = text.trim();
+    if (!message || sending) return;
+    setSending(true);
+    setFeedback(null);
+    replyToOfficerRequest(guildId, publicId, message)
+      .then(({ dmDelivered }) => {
+        setText('');
+        setFeedback(
+          dmDelivered
+            ? { ok: true, text: 'Reply sent: the member got it by DM.' }
+            : {
+                ok: false,
+                text: 'Reply saved and posted, but the member could not be reached by DM (they may have DMs closed).',
+              },
+        );
+        onSent();
+      })
+      .catch((err: unknown) =>
+        setFeedback({ ok: false, text: err instanceof Error ? err.message : String(err) }),
+      )
+      .finally(() => setSending(false));
+  };
+
+  return (
+    <form className="reply-form" onSubmit={send}>
+      <label className="field">
+        <span>Reply as an officer</span>
+        <textarea
+          rows={4}
+          maxLength={MAX_REPLY_LENGTH}
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder="Your name is shown to the member. The reply goes to them by DM."
+        />
+      </label>
+      <div className="settings-actions">
+        <button type="submit" className="btn btn-primary" disabled={sending || !text.trim()}>
+          {sending ? 'Sending…' : 'Send reply'}
+        </button>
+        <span className="muted">
+          {text.length}/{MAX_REPLY_LENGTH}
+        </span>
+      </div>
+      {feedback && (
+        <p className={feedback.ok ? 'muted' : 'status-error'} role="status">
+          {feedback.text}
+        </p>
+      )}
+    </form>
   );
 }

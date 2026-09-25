@@ -60,7 +60,7 @@ export class CharactersAdminController {
     let discordUserId = req.user.discordId;
     let names: { username: string; displayName: string | null } | null = {
       username: req.user.username,
-      displayName: null,
+      displayName: req.user.displayName === req.user.username ? null : req.user.displayName,
     };
     if (canManageAllCharacters(access)) {
       // Officers may add characters for any member of the guild's servers (default: themselves).

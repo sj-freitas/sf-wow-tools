@@ -163,6 +163,53 @@ export class OfficerRequestsService {
     });
     if (!conversation) return MESSAGES.officerConversationNotFound;
 
+    const { dmDelivered } = await this.deliverReply(
+      guild,
+      conversation,
+      input.invoker,
+      input.message,
+    );
+
+    return dmDelivered
+      ? `Your reply to conversation #${conversation.publicId} was sent to the member by DM and posted in the request channel.`
+      : `Your reply to conversation #${conversation.publicId} was saved and posted, but the member could not be reached by DM (they may have DMs closed). Consider reaching out to them directly.`;
+  }
+
+  /**
+   * The backoffice's way to reply: same delivery as /contact-officer-reply. The caller has already
+   * checked that the user is an Officer of the guild.
+   */
+  async replyAsOfficer(
+    guildId: string,
+    publicId: number,
+    officer: { id: string; name: string },
+    message: string,
+  ): Promise<{ dmDelivered: boolean }> {
+    const guild = await this.prisma.guild.findUnique({
+      where: { id: guildId },
+      select: { id: true, name: true, realm: true, officerRequestChannelId: true },
+    });
+    if (!guild) throw new NotFoundException('Guild not found');
+    const conversation = await this.prisma.officerConversation.findUnique({
+      where: { guildId_publicId: { guildId, publicId } },
+      include: { messages: { orderBy: { createdAt: 'asc' } } },
+    });
+    if (!conversation) throw new NotFoundException(MESSAGES.officerConversationNotFound);
+    return this.deliverReply(guild, conversation, officer, message);
+  }
+
+  /** Posts the reply in the request channel, DMs the member and saves it. */
+  private async deliverReply(
+    guild: { name: string; realm: string; officerRequestChannelId: string | null },
+    conversation: {
+      id: string;
+      publicId: number;
+      userDiscordId: string;
+      messages: { author: string; content: string; discordMessageId: string | null }[];
+    },
+    officer: { id: string; name: string },
+    message: string,
+  ): Promise<{ dmDelivered: boolean }> {
     const firstRequest = conversation.messages.find((m) => m.author === 'USER');
     let discordMessageId: string | null = null;
     if (guild.officerRequestChannelId) {
@@ -171,8 +218,8 @@ export class OfficerRequestsService {
           guild.officerRequestChannelId,
           officerReplyEmbed({
             publicId: conversation.publicId,
-            officerName: input.invoker.name,
-            content: input.message,
+            officerName: officer.name,
+            content: message,
           }),
           { replyTo: firstRequest?.discordMessageId ?? undefined },
         );
@@ -192,9 +239,9 @@ export class OfficerRequestsService {
           guildName: guild.name,
           guildRealm: guild.realm,
           publicId: conversation.publicId,
-          officerName: input.invoker.name,
+          officerName: officer.name,
           originalRequest: firstRequest?.content ?? '',
-          reply: input.message,
+          reply: message,
         }),
       );
     } catch (error) {
@@ -206,9 +253,9 @@ export class OfficerRequestsService {
       data: {
         conversationId: conversation.id,
         author: 'OFFICER',
-        officerDiscordId: input.invoker.id,
-        officerName: input.invoker.name,
-        content: input.message,
+        officerDiscordId: officer.id,
+        officerName: officer.name,
+        content: message,
         discordMessageId,
         dmDelivered,
       },
@@ -218,9 +265,7 @@ export class OfficerRequestsService {
       data: { updatedAt: new Date() },
     });
 
-    return dmDelivered
-      ? `Your reply to conversation #${conversation.publicId} was sent to the member by DM and posted in the request channel.`
-      : `Your reply to conversation #${conversation.publicId} was saved and posted, but the member could not be reached by DM (they may have DMs closed). Consider reaching out to them directly.`;
+    return { dmDelivered };
   }
 
   /**
