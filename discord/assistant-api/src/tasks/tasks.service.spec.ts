@@ -192,6 +192,15 @@ describe('TasksService', () => {
       assert.equal(dto.timezone, 'Europe/Paris');
     });
 
+    it('shows link previews unless told otherwise', async () => {
+      const dto = await service.create('g', 'u', validInput);
+      assert.equal(created.config.embedLinks, true);
+      assert.equal(dto.post.embedLinks, true);
+      const hidden = await service.create('g', 'u', { ...validInput, embedLinks: false });
+      assert.equal(created.config.embedLinks, false);
+      assert.equal(hidden.post.embedLinks, false);
+    });
+
     it('can post right away, without a date', async () => {
       await service.create('g', 'u', { ...validInput, runAtLocal: undefined, postNow: true });
       assert.ok(created.nextRunAt <= new Date());
@@ -244,8 +253,18 @@ describe('TasksService', () => {
   describe('a post that is live in Discord', () => {
     it('edits the Discord message when the text changes (live edit)', async () => {
       await service.update('t1', { content: 'Raid moved to 21:00' });
-      assert.deepEqual(edits, [[CHANNEL, 'm1', 'Raid moved to 21:00']]);
+      assert.deepEqual(edits, [[CHANNEL, 'm1', 'Raid moved to 21:00', { suppressEmbeds: false }]]);
       assert.equal(updated.config.content, 'Raid moved to 21:00');
+    });
+
+    it('edits the message when only the link previews are switched off or on', async () => {
+      await service.update('t1', { embedLinks: false });
+      assert.deepEqual(edits, [[CHANNEL, 'm1', 'Raid tonight', { suppressEmbeds: true }]]);
+      assert.equal(updated.config.embedLinks, false);
+    });
+
+    it('rejects link preview values that are not true or false', async () => {
+      await assert.rejects(service.update('t1', { embedLinks: 'no' }), /true or false/);
     });
 
     it('does not touch Discord when the text is unchanged', async () => {

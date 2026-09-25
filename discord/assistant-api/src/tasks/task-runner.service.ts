@@ -4,7 +4,7 @@ import { DEFAULT_REGION, timezoneOfRegion } from '../config/regions';
 import { PrismaService } from '../database/prisma.service';
 import { DiscordBotService } from '../discord/discord-bot.service';
 import { describeDiscordError } from '../discord/discord-errors';
-import type { PostConfig, PostState } from './post-task';
+import { embedsShown, type PostConfig, type PostState } from './post-task';
 import { nextOccurrence, occurrencesBetween, type Schedule } from './schedule';
 
 /** A failed run is retried this many times in total (within RETRY_WINDOW_MS) before moving on. */
@@ -101,7 +101,9 @@ export class TaskRunnerService {
       throw new Error('This post is already in Discord. Delete it first to post it again.');
     }
     const config = task.config as unknown as PostConfig;
-    const messageId = await this.bot.postMessage(config.channelId, config.content);
+    const messageId = await this.bot.postMessage(config.channelId, config.content, {
+      suppressEmbeds: !embedsShown(config),
+    });
     const state: PostState = {
       messageId,
       channelId: config.channelId,

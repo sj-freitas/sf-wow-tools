@@ -10,6 +10,11 @@ export interface PostConfig {
   content: string;
   /** Emojis the bot adds to the post so people can just click them (polls). */
   seedReactions: string[];
+  /**
+   * Whether Discord shows link previews (embeds) under the post. Absent on posts made before the
+   * option existed, which counts as true.
+   */
+  embedLinks?: boolean;
 }
 
 /** What the last run left behind, so the post can be edited and its reactions read. */
@@ -59,6 +64,18 @@ export function parseSeedReactions(value: unknown): string[] {
   }
   return [...new Set(emojis as string[])];
 }
+
+/** Absent means the default (or the current value): links are shown. */
+export function parseEmbedLinks(value: unknown, current = true): boolean {
+  if (value === undefined) return current;
+  if (typeof value !== 'boolean') {
+    throw new BadRequestException('embedLinks must be true or false.');
+  }
+  return value;
+}
+
+export const embedsShown = (config: Pick<PostConfig, 'embedLinks'>): boolean =>
+  config.embedLinks !== false;
 
 export function parseSnowflake(value: unknown, what: string): string {
   if (typeof value !== 'string' || !SNOWFLAKE.test(value)) {

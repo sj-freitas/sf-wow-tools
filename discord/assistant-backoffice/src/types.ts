@@ -194,6 +194,8 @@ export interface ScheduledPost {
     channelId: string;
     content: string;
     seedReactions: string[];
+    /** Whether Discord shows link previews under the post. */
+    embedLinks: boolean;
     posted: { messageId: string; url: string; postedAt: string; messageDeleted: boolean } | null;
   };
 }

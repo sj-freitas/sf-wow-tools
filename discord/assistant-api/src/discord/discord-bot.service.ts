@@ -19,6 +19,9 @@ export interface BotFile {
   contentType: string;
 }
 
+/** Message flag: no link previews. */
+const SUPPRESS_EMBEDS = 1 << 2;
+
 /** Only files Discord itself hosts are downloaded. */
 const DISCORD_FILE_HOSTS = new Set(['cdn.discordapp.com', 'media.discordapp.net']);
 
@@ -154,9 +157,18 @@ export class DiscordBotService {
     return { id: channel.id, name: channel.name };
   }
 
-  async postMessage(channelId: string, content: string): Promise<string> {
+  /** With `suppressEmbeds` Discord shows no link previews under the message. */
+  async postMessage(
+    channelId: string,
+    content: string,
+    options: { suppressEmbeds?: boolean } = {},
+  ): Promise<string> {
     const message = (await this.rest.post(Routes.channelMessages(channelId), {
-      body: { content, allowed_mentions: { parse: ['users', 'roles'] } },
+      body: {
+        content,
+        allowed_mentions: { parse: ['users', 'roles'] },
+        ...(options.suppressEmbeds ? { flags: SUPPRESS_EMBEDS } : {}),
+      },
     })) as APIMessage;
     return message.id;
   }
@@ -207,9 +219,19 @@ export class DiscordBotService {
     });
   }
 
-  async editMessage(channelId: string, messageId: string, content: string): Promise<void> {
+  /** `suppressEmbeds` sets or clears the "no link previews" flag along with the new text. */
+  async editMessage(
+    channelId: string,
+    messageId: string,
+    content: string,
+    options: { suppressEmbeds?: boolean } = {},
+  ): Promise<void> {
     await this.rest.patch(Routes.channelMessage(channelId, messageId), {
-      body: { content, allowed_mentions: { parse: ['users', 'roles'] } },
+      body: {
+        content,
+        allowed_mentions: { parse: ['users', 'roles'] },
+        flags: options.suppressEmbeds ? SUPPRESS_EMBEDS : 0,
+      },
     });
   }
 

@@ -37,6 +37,7 @@ export function PostTaskForm({ guild, channels, editing, timezone, onSaved, onCa
   const [runAtLocal, setRunAtLocal] = useState(editing?.schedule.runAtLocal ?? '');
   const [content, setContent] = useState(editing?.post.content ?? '');
   const [reactions, setReactions] = useState(editing?.post.seedReactions.join(' ') ?? '');
+  const [embedLinks, setEmbedLinks] = useState(editing?.post.embedLinks ?? true);
   const [preview, setPreview] = useState(false);
   const [names, setNames] = useState<MentionNames>(emptyNames);
   const [busy, setBusy] = useState(false);
@@ -78,6 +79,7 @@ export function PostTaskForm({ guild, channels, editing, timezone, onSaved, onCa
       channelId,
       content,
       seedReactions: reactions.split(/[\s,]+/).filter(Boolean),
+      embedLinks,
       // A post that is live keeps its message: its date and "post now" no longer apply.
       ...(live ? {} : postNow ? { postNow: true } : { runAtLocal }),
     };
@@ -125,14 +127,6 @@ export function PostTaskForm({ guild, channels, editing, timezone, onSaved, onCa
             />
           </label>
         )}
-        <label className="field field-span-2">
-          Reactions to add (optional)
-          <input
-            value={reactions}
-            placeholder="👍 👎"
-            onChange={(e) => setReactions(e.target.value)}
-          />
-        </label>
       </div>
 
       <div className="field task-text">
@@ -161,6 +155,28 @@ export function PostTaskForm({ guild, channels, editing, timezone, onSaved, onCa
           )}
         </div>
         {preview && <DiscordMarkdown text={content} names={names} />}
+      </div>
+
+      <div className="form-grid">
+        <label className="field field-span-2">
+          Reactions to add (optional)
+          <input
+            value={reactions}
+            placeholder="👍 👎"
+            onChange={(e) => setReactions(e.target.value)}
+          />
+        </label>
+        <div className="field">
+          Link previews
+          <label className="field-toggle">
+            <input
+              type="checkbox"
+              checked={embedLinks}
+              onChange={(e) => setEmbedLinks(e.target.checked)}
+            />
+            {embedLinks ? 'Shown under links' : 'Hidden (links stay plain)'}
+          </label>
+        </div>
       </div>
 
       {error && <p className="status-error">{error}</p>}

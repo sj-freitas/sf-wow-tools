@@ -9,7 +9,9 @@ import {
   type ServerChannel,
 } from '../discord/discord-bot.service';
 import {
+  embedsShown,
   messageUrl,
+  parseEmbedLinks,
   parsePostContent,
   parseSeedReactions,
   parseSnowflake,
@@ -42,6 +44,8 @@ export interface TaskDto {
     channelId: string;
     content: string;
     seedReactions: string[];
+    /** Whether Discord shows link previews under the post. */
+    embedLinks: boolean;
     posted: { messageId: string; url: string; postedAt: string; messageDeleted: boolean } | null;
   };
 }
@@ -74,6 +78,7 @@ export interface TaskInput {
   channelId?: unknown;
   content?: unknown;
   seedReactions?: unknown;
+  embedLinks?: unknown;
 }
 
 export interface ReactionDto extends MessageReaction {
@@ -257,12 +262,15 @@ export class TasksService {
     }
 
     let newState = state;
-    if (config.content !== oldConfig.content && isLive(state)) {
+    const textChanged =
+      config.content !== oldConfig.content || embedsShown(config) !== embedsShown(oldConfig);
+    if (textChanged && isLive(state)) {
       try {
         await this.bot.editMessage(
           state.channelId ?? oldConfig.channelId,
           state.messageId as string,
           config.content,
+          { suppressEmbeds: !embedsShown(config) },
         );
       } catch (error) {
         if (isDiscordError(error, UNKNOWN_MESSAGE)) {
@@ -397,6 +405,7 @@ export class TasksService {
         channelId: config.channelId,
         content: config.content,
         seedReactions: config.seedReactions,
+        embedLinks: embedsShown(config),
         posted:
           state.messageId && state.channelId
             ? {
@@ -494,7 +503,8 @@ export class TasksService {
         throw new BadRequestException('That channel is not in the chosen server.');
       }
     }
-    return { serverId, channelId, content, seedReactions };
+    const embedLinks = parseEmbedLinks(input.embedLinks, existing ? embedsShown(existing) : true);
+    return { serverId, channelId, content, seedReactions, embedLinks };
   }
 }
 

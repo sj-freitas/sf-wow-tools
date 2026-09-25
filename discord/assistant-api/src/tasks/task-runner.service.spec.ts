@@ -55,9 +55,13 @@ describe('TaskRunnerService', () => {
       scheduledTask: { update: async (args: any) => void (update = args.data) },
     } as unknown as PrismaService;
     const bot = {
-      postMessage: async (channelId: string, content: string) => {
+      postMessage: async (
+        channelId: string,
+        content: string,
+        options: { suppressEmbeds?: boolean } = {},
+      ) => {
         if (failPost) throw new Error('Missing Permissions');
-        posted.push({ channelId, content });
+        posted.push({ channelId, content, suppressEmbeds: options.suppressEmbeds });
         return 'msg1';
       },
       addReaction: async (_c: string, _m: string, emoji: string) => {
@@ -68,10 +72,24 @@ describe('TaskRunnerService', () => {
     runner = new TaskRunnerService(prisma, bot);
   });
 
+  describe('link previews', () => {
+    it('are shown for posts made before the option existed', async () => {
+      await runner.run(baseTask(), NOW);
+      assert.equal(posted[0].suppressEmbeds, false);
+    });
+
+    it('are hidden when the post says so', async () => {
+      const task = baseTask();
+      Object.assign(task.config as object, { embedLinks: false });
+      await runner.run(task, NOW);
+      assert.equal(posted[0].suppressEmbeds, true);
+    });
+  });
+
   describe('a successful run', () => {
     it('posts the message, adds the seed reactions and remembers the post', async () => {
       await runner.run(baseTask(), NOW);
-      assert.deepEqual(posted, [{ channelId: 'c', content: 'Hello' }]);
+      assert.deepEqual(posted, [{ channelId: 'c', content: 'Hello', suppressEmbeds: false }]);
       assert.deepEqual(reactions, ['👍', '👎']);
       assert.equal(update.state.messageId, 'msg1');
       assert.equal(update.state.channelId, 'c');
