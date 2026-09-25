@@ -40,14 +40,14 @@ authorization), the character and guild rules, token encryption and name parsing
 
 ## Endpoints
 
-| Method | Path                        | Purpose                                                                |
-| ------ | --------------------------- | ---------------------------------------------------------------------- |
-| GET    | `/api/players`              | Players in the guilds the logged-in user belongs to (session required) |
-| GET    | `/api/auth/login`           | Starts "Login with Discord" (OAuth2, scopes `identify guilds`)         |
-| GET    | `/api/auth/callback`        | OAuth2 redirect target; creates the session cookie                     |
-| GET    | `/api/auth/me`              | Current user, or 401                                                   |
-| POST   | `/api/auth/logout`          | Destroys the session                                                   |
-| POST   | `/api/discord/interactions` | Discord's HTTP Interactions Endpoint — see below                       |
+| Method | Path                        | Purpose                                                        |
+| ------ | --------------------------- | -------------------------------------------------------------- |
+| GET    | `/api/guilds/:id/players`   | The guild's roster: its players only, any member of the guild  |
+| GET    | `/api/auth/login`           | Starts "Login with Discord" (OAuth2, scopes `identify guilds`) |
+| GET    | `/api/auth/callback`        | OAuth2 redirect target; creates the session cookie             |
+| GET    | `/api/auth/me`              | Current user, or 401                                           |
+| POST   | `/api/auth/logout`          | Destroys the session                                           |
+| POST   | `/api/discord/interactions` | Discord's HTTP Interactions Endpoint — see below               |
 
 Backoffice auth: Discord OAuth2 login using the **same Discord application** as the bot (add the
 redirect URI under OAuth2 → Redirects; set `DISCORD_CLIENT_SECRET` and
@@ -158,21 +158,25 @@ server can't be removed directly.
 ### Backoffice pages and routes
 
 The backoffice is a single-page app with real addresses (the API serves `index.html` for any path
-outside `/api`, so deep links and reloads work). After logging in you land on **Your guilds**
-(`/`), where you pick a guild or add one. The **user menu** (top right, your Discord username) lists
-your guilds to switch between, adds a guild, and logs out.
+outside `/api`, so deep links and reloads work). `/` goes to the guild you last opened (remembered in
+a cookie holding the guild id, so renaming a guild doesn't matter); with none, or one you have left,
+it shows the **Overview** (`/overview`): your guilds, to pick one or add one. The **user menu** (top
+right, your Discord username) links to the Overview, lists your guilds to switch between, adds a
+guild, and logs out.
 
 Every guild page lives under the guild's own address, built by the API (`path` on each guild):
 `/<version>/<region>/<server>/<guild-name>`, all lower case with hyphens, for example
 `/forever/eu/firemaw/relic-hunters`. "Server" is the WoW realm. Two guilds can't share an address:
-names are compared ignoring case and punctuation, and renaming a guild moves its address (the
+the database keeps name, realm, game version and region unique and the API also compares names
+ignoring case and punctuation, and renaming a guild moves its address (the
 settings page follows it).
 
 | Path                                 | Page                                     | Who                               |
 | ------------------------------------ | ---------------------------------------- | --------------------------------- |
-| `/`                                  | Your guilds                              | anyone logged in                  |
+| `/`                                  | Your last guild, else `/overview`        | anyone logged in                  |
+| `/overview`                          | Overview: your guilds                    | anyone logged in                  |
 | `/guilds/create`                     | Set up a new guild                       | anyone logged in                  |
-| `<guild>/`                           | Home: the guild's welcome post           | everyone in the guild             |
+| `<guild>/`                           | Welcome: the guild's welcome post        | everyone in the guild             |
 | `<guild>/edit`                       | Write the welcome post                   | Officers                          |
 | `<guild>/roster`                     | Roster                                   | everyone in the guild             |
 | `<guild>/roster/create`, `/edit/:id` | Add / edit a character                   | members: their own; Officers: any |
@@ -182,13 +186,13 @@ settings page follows it).
 | `<guild>/officer-requests`, `/:id`   | Members' messages to officers, read-only | Officers                          |
 | `<guild>/settings`                   | Guild settings, incl. the welcome post   | Guild-Assistants and Officers     |
 
-Members only see Home and Roster in the navigation; opening any other page sends them to the guild's
-home. An address that isn't one of your guilds says so and links back to Your guilds. Save and
+Members only see Welcome and Roster in the navigation; opening any other page sends them to the guild's
+welcome page. An address that isn't one of your guilds says so and links back to the Overview. Save and
 Cancel on a create/edit page return to the list you came from, search included. After logging in
 you land back on the page you were on.
 
 **Welcome post.** Optional markdown text on the guild (`guilds.home_markdown`, null until an Officer
-writes one), shown on Home to everyone in the guild (`GET /api/guilds/:id/home`) and written by
+writes one), shown on the Welcome page to everyone in the guild (`GET /api/guilds/:id/home`) and written by
 Officers only (`PUT /api/guilds/:id/home`, up to 10,000 characters; an empty text removes it), on the home page's edit link or in guild Settings, with a Preview toggle. It is
 rendered with `react-markdown` (GitHub flavour) which only builds elements and never raw HTML, so
 what an Officer writes can't inject scripts into what members see.
@@ -307,7 +311,7 @@ and the browser use polling until a shared bus (Redis or Postgres `LISTEN/NOTIFY
   minutes; temporary Discord errors keep the old access until the next attempt.
 - **Usernames:** listing players never calls Discord. Names come from the bot's commands, from
   adding a character, from the user's own login, and from the Officers' "Refresh names" button
-  (`POST /api/players/guild/:id/refresh-names`, up to 100 lookups).
+  (`POST /api/guilds/:id/players/refresh-names`, up to 100 lookups).
 - **Bot requirement:** the bot must be in a server for its roles to be read. The backoffice shows
   the setup steps and the invite link (`GET /api/guilds/setup-info`, built from
   `DISCORD_APPLICATION_ID` and `botInvitePermissions`).

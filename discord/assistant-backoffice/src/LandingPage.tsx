@@ -10,7 +10,7 @@ export function LandingPage({ guilds, setup }: { guilds: Guild[]; setup: SetupIn
     <div className="landing">
       <div className="tasks-head">
         <div>
-          <h2>Your guilds</h2>
+          <h2>Overview</h2>
           <span className="muted">
             {guilds.length > 0
               ? 'Pick a guild to manage, or add another one.'

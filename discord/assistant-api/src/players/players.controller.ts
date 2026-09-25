@@ -1,11 +1,21 @@
-import { Controller, Get, HttpCode, HttpStatus, Param, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  ForbiddenException,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthGuard } from '../auth/auth.guard';
 import type { AuthenticatedRequest } from '../auth/auth.types';
 import { GuildAccessService } from '../auth/guild-access.service';
 import { PlayerDto } from './dto/player.dto';
 import { PlayersService } from './players.service';
 
-@Controller('players')
+@Controller('guilds/:guildId/players')
 @UseGuards(AuthGuard)
 export class PlayersController {
   constructor(
@@ -13,13 +23,20 @@ export class PlayersController {
     private readonly guildAccess: GuildAccessService,
   ) {}
 
+  /** The guild's roster: any member of the guild, and only that guild's players. */
   @Get()
-  findAll(@Req() req: AuthenticatedRequest): Promise<PlayerDto[]> {
-    return this.playersService.findForUser(req.user.id);
+  async findAll(
+    @Req() req: AuthenticatedRequest,
+    @Param('guildId') guildId: string,
+  ): Promise<PlayerDto[]> {
+    if (!(await this.guildAccess.find(req.user.id, guildId))) {
+      throw new ForbiddenException('You are not a member of this guild');
+    }
+    return this.playersService.findForGuild(guildId);
   }
 
   /** Officers: fill in missing Discord usernames of the guild's players. */
-  @Post('guild/:guildId/refresh-names')
+  @Post('refresh-names')
   @HttpCode(HttpStatus.OK)
   async refreshNames(
     @Req() req: AuthenticatedRequest,

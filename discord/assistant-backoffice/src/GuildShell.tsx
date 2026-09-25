@@ -7,6 +7,7 @@ import { guildPath } from './guildPath';
 import { HomeEditPage, HomePage } from './HomePage';
 import { HoneypotCreatePage, HoneypotsPage } from './HoneypotsPage';
 import { LandingPage } from './LandingPage';
+import { forgetLastGuild, readLastGuildId, rememberLastGuild } from './lastGuild';
 import { ConversationPage, OfficerRequestsPage } from './OfficerRequestsPage';
 import { PostEditorPage } from './PostEditorPage';
 import { PostsPage } from './PostsPage';
@@ -26,10 +27,11 @@ interface Props {
 /**
  * Everything behind the login.
  *
- *   /                                     your guilds: pick one or add one
+ *   /                                     goes to the guild you last used (a cookie), else to /overview
+ *   /overview                             your guilds: pick one or add one
  *   /guilds/create                        set up a new guild
  *   /<version>/<region>/<server>/<guild>  a guild, e.g. /forever/eu/firemaw/relic-hunters, and under it:
- *       /                     Home (welcome post)          everyone in the guild
+ *       /                     Welcome (the welcome post)   everyone in the guild
  *       /edit                 write the welcome post       Officers
  *       /roster               roster                       everyone in the guild
  *       /roster/create        add a character              everyone (members: their own)
@@ -55,7 +57,8 @@ export function GuildShell({ guilds, setup, currentUser, onGuildsChanged }: Prop
 
   return (
     <Routes>
-      <Route index element={<LandingPage guilds={guilds} setup={setup} />} />
+      <Route index element={<LastGuildRedirect guilds={guilds} />} />
+      <Route path="overview" element={<LandingPage guilds={guilds} setup={setup} />} />
       <Route
         path="guilds/create"
         element={<CreateGuildPage setup={setup} onCreated={onGuildsChanged} />}
@@ -76,18 +79,38 @@ export function GuildShell({ guilds, setup, currentUser, onGuildsChanged }: Prop
   );
 }
 
+/**
+ * `/`: straight to the guild the user last opened (remembered in a cookie), so that with a
+ * guild chosen they never see the list again. With none, or one they have since left, the
+ * Overview.
+ */
+function LastGuildRedirect({ guilds }: { guilds: Guild[] }) {
+  const remembered = readLastGuildId();
+  const guild = guilds.find((g) => g.id === remembered);
+  useEffect(() => {
+    if (remembered && !guild) forgetLastGuild();
+  }, [remembered, guild]);
+  return <Navigate to={guild ? guildPath(guild) : '/overview'} replace />;
+}
+
 /** Finds the guild the address points to and shows its pages, or says it wasn't found. */
 function GuildRoutes({ guilds, setup, currentUser, onGuildsChanged }: Props) {
   const { version, region, realm, guildSlug } = useParams();
   const path = [version, region, realm, guildSlug].join('/');
   const guild = guilds.find((g) => g.path === path);
 
+  // Opening a guild makes it the one `/` goes to next time.
+  const guildId = guild?.id;
+  useEffect(() => {
+    if (guildId) rememberLastGuild(guildId);
+  }, [guildId]);
+
   if (!guild) {
     return (
       <div className="card empty">
         <p>You are not in a guild at this address.</p>
-        <Link className="btn btn-primary" to="/">
-          Your guilds
+        <Link className="btn btn-primary" to="/overview">
+          Overview
         </Link>
       </div>
     );
@@ -188,7 +211,7 @@ function GuildFrame({
 
       <nav className="view-tabs" aria-label="Guild sections">
         <NavLink to={guildPath(guild)} end>
-          Home
+          Welcome
         </NavLink>
         <NavLink to={guildPath(guild, 'roster')}>Roster</NavLink>
         {guild.isOfficer && <NavLink to={guildPath(guild, 'posts')}>Posts</NavLink>}

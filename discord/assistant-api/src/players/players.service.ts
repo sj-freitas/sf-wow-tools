@@ -13,9 +13,9 @@ export class PlayersService {
     private readonly discord: DiscordOAuthService,
   ) {}
 
-  /** Players in guilds the given backoffice user belongs to. */
-  findForUser(userId: string): Promise<PlayerDto[]> {
-    return this.findMany({ guild: { access: { some: { userId } } } });
+  /** The players of one guild. */
+  findForGuild(guildId: string): Promise<PlayerDto[]> {
+    return this.findMany({ guildId });
   }
 
   /**

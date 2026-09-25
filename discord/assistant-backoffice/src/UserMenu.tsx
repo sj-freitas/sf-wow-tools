@@ -77,6 +77,9 @@ export function UserMenu({ user, guilds, setup, onLogout }: Props) {
             )}
           </div>
           <div className="user-menu-section">
+            <Link role="menuitem" className="user-menu-item" to="/overview">
+              Overview
+            </Link>
             <div className="muted">Your guilds</div>
             {guilds.length === 0 && <div className="muted">You are not in a guild yet.</div>}
             {guilds.map((guild) => (

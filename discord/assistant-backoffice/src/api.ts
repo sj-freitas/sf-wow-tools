@@ -84,7 +84,8 @@ async function request<T>(
   return (text === '' ? undefined : JSON.parse(text)) as T;
 }
 
-export const fetchPlayers = (): Promise<Player[]> => request('GET', '/api/players');
+export const fetchPlayers = (guildId: string): Promise<Player[]> =>
+  request('GET', `/api/guilds/${guildId}/players`);
 
 export const fetchGuilds = (): Promise<Guild[]> => request('GET', '/api/guilds');
 
@@ -100,7 +101,7 @@ export const fetchEligibleServers = (): Promise<EligibleServers> =>
   request('GET', '/api/guilds/eligible-servers');
 
 export const refreshPlayerNames = (guildId: string): Promise<{ updated: number }> =>
-  request('POST', `/api/players/guild/${guildId}/refresh-names`);
+  request('POST', `/api/guilds/${guildId}/players/refresh-names`);
 
 export const createGuild = (input: NewGuildInput): Promise<Guild> =>
   request('POST', '/api/guilds', input);

@@ -27,7 +27,7 @@ export function SettingsPage({ guild, regions, onGuildsChanged }: Props) {
         }
       }}
       onClose={() => navigate(guildPath(guild))}
-      onDeleted={() => navigate('/')}
+      onDeleted={() => navigate('/overview')}
     />
   );
 }

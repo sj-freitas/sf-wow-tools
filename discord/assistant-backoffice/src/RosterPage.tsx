@@ -22,13 +22,13 @@ export function RosterPage({ guild, currentUser }: Props) {
   const here = useCurrentUrl();
 
   const load = useCallback(() => {
-    fetchPlayers()
+    fetchPlayers(guild.id)
       .then((loaded) => {
         setPlayers(loaded);
         setLoadError(null);
       })
       .catch((err: unknown) => setLoadError(err instanceof Error ? err.message : String(err)));
-  }, []);
+  }, [guild.id]);
 
   // Ranks are read live from Discord roles and are optional decoration.
   const loadRanks = useCallback(() => {
@@ -68,11 +68,10 @@ export function RosterPage({ guild, currentUser }: Props) {
   }
   if (!players) return <p className="status">Loading players…</p>;
 
-  const guildPlayers = players.filter((player) => player.guildId === guild.id);
-  const rows = guildPlayers.flatMap((player) =>
+  const rows = players.flatMap((player) =>
     player.characters.map((character) => ({ player, character })),
   );
-  const missingNames = guildPlayers.some(
+  const missingNames = players.some(
     (player) => !player.discordUsername && !player.discordDisplayName,
   );
   const canEditRow = (player: Player) =>
@@ -84,7 +83,7 @@ export function RosterPage({ guild, currentUser }: Props) {
         <div>
           <h3>Roster</h3>
           <span className="muted">
-            {guildPlayers.length} player{guildPlayers.length === 1 ? '' : 's'}
+            {players.length} player{players.length === 1 ? '' : 's'}
           </span>
         </div>
         <div className="settings-actions">
@@ -192,15 +191,14 @@ export function CharacterEditorPage({ guild, currentUser }: Props) {
 
   useEffect(() => {
     if (!characterId) return;
-    fetchPlayers()
+    fetchPlayers(guild.id)
       .then(setPlayers)
       .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)));
-  }, [characterId]);
+  }, [guild.id, characterId]);
 
   const found = characterId
     ? players
-        ?.filter((player) => player.guildId === guild.id)
-        .flatMap((player) => player.characters.map((character) => ({ player, character })))
+        ?.flatMap((player) => player.characters.map((character) => ({ player, character })))
         .find((row) => row.character.id === characterId)
     : undefined;
 

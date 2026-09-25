@@ -14,12 +14,12 @@ export function CreateGuildPage({ setup, onCreated }: Props) {
   const navigate = useNavigate();
   return (
     <div className="tasks">
-      <Link className="back-link" to="/">
-        ← Your guilds
+      <Link className="back-link" to="/overview">
+        ← Overview
       </Link>
       <CreateGuildForm
         setup={setup}
-        onCancel={() => navigate('/')}
+        onCancel={() => navigate('/overview')}
         onCreated={(guild: Guild) => void onCreated().then(() => navigate(guildPath(guild)))}
       />
     </div>

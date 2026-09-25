@@ -15,6 +15,12 @@
         - 
 
 
+- Guild setup
+    - Realms ("server" in a guild's address) should come from a config instead of free text
+        - Per game version and region; a picker in the create guild / settings forms, validated by the API
+        - In Forever the realms are called rulesets: PvP, Normal, RP and Hardcore
+        - Today the realm is free text, so typos change a guild's address (`/<version>/<region>/<realm>/<guild>`)
+    - Guild addresses change when a guild is renamed (or its realm/region changes): keep old addresses and redirect
 - Infrastructure
     - Replace the in-memory caches with a shared one (looking into Redis)
         - Guild ranks cache (discord/assistant-api/src/guilds/ranks.service.ts, `ranksCacheMs`)

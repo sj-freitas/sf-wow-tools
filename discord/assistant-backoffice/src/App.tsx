@@ -56,7 +56,7 @@ export function App() {
   return (
     <>
       <header className="header">
-        <Link className="brand" to="/">
+        <Link className="brand" to="/overview" title="Overview: all your guilds">
           <span className="brand-mark">
             <img src="/logo.png" alt="" />
           </span>

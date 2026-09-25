@@ -86,7 +86,7 @@ model Guild {
   createdAt               DateTime              @default(now()) @map("created_at")
   updatedAt               DateTime              @updatedAt @map("updated_at")
 
-  @@unique([name, realm, gameVersion])
+  @@unique([name, realm, gameVersion, region])
   @@map("guilds")
 }
 
