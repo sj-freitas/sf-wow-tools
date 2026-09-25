@@ -52,7 +52,13 @@ export class AuthService {
         avatar: discordUser.avatar,
       },
     });
-    await this.syncFromDiscord(user.id, accessToken);
+    try {
+      await this.syncFromDiscord(user.id, accessToken);
+    } catch (error) {
+      // A hiccup at Discord must not lock people out: they keep the access they had, and the
+      // next request re-syncs.
+      this.logger.warn(`Could not sync Discord data at login: ${String(error)}`);
+    }
 
     await this.prisma.session.deleteMany({ where: { expiresAt: { lt: new Date() } } });
     const token = randomBytes(32).toString('base64url');
@@ -218,13 +224,8 @@ export class AuthService {
     accessToken: string,
     userServers: DiscordPartialGuild[],
   ): Promise<DiscordPartialGuild[]> {
-    let botServerIds: Set<string>;
-    try {
-      botServerIds = await this.discord.fetchBotGuildIds();
-    } catch (error) {
-      this.logger.warn(`Could not list the bot's servers: ${String(error)}`);
-      return [];
-    }
+    // A failure here throws: better to keep the roles we already know than to wipe them all.
+    const botServerIds = await this.discord.fetchBotGuildIds();
     const results = await Promise.all(
       userServers
         .filter((server) => botServerIds.has(server.id))
@@ -253,10 +254,8 @@ export class AuthService {
           const member = await this.discord.fetchGuildMember(accessToken, main.discordId);
           return member.roles.includes(guild.officerRoleId) ? guild.id : null;
         } catch (error) {
-          this.logger.warn(
-            `Could not check officer role in server ${main.discordId}: ${String(error)}`,
-          );
-          return null;
+          if (isNotAMember(error)) return null;
+          throw error;
         }
       }),
     );
@@ -271,10 +270,8 @@ export class AuthService {
       ]);
       return holdsRoleNamed(roles, member.roles, APP_CONFIG.adminRoleName);
     } catch (error) {
-      this.logger.warn(
-        `Could not check ${APP_CONFIG.adminRoleName} role in server ${discordServerId}: ${String(error)}`,
-      );
-      return false;
+      if (isNotAMember(error)) return false;
+      throw error;
     }
   }
 
@@ -293,4 +290,11 @@ export class AuthService {
   async logout(token: string): Promise<void> {
     await this.prisma.session.deleteMany({ where: { tokenHash: hashToken(token) } });
   }
+}
+
+/** Discord says the user is not in that server (or may not be looked up there): they hold no role. */
+function isNotAMember(error: unknown): boolean {
+  return (
+    error instanceof DiscordApiError && (error.discordStatus === 404 || error.discordStatus === 403)
+  );
 }

@@ -32,6 +32,7 @@ describe('AuthService.refresh', () => {
   let serverRoles: Record<string, { id: string; name: string }[]>;
   let discordCalls: number;
   let failWith: Error | null;
+  let memberFailsWith: number | null;
   let service: AuthService;
 
   beforeEach(() => {
@@ -53,6 +54,7 @@ describe('AuthService.refresh', () => {
     serverRoles = {};
     discordCalls = 0;
     failWith = null;
+    memberFailsWith = null;
 
     const prisma = {
       session: {
@@ -86,9 +88,10 @@ describe('AuthService.refresh', () => {
         return userServers;
       },
       fetchBotGuildIds: async () => botServers,
-      fetchGuildMember: async (_token: string, serverId: string) => ({
-        roles: memberRoles[serverId] ?? [],
-      }),
+      fetchGuildMember: async (_token: string, serverId: string) => {
+        if (memberFailsWith) throw new DiscordApiError(memberFailsWith, 'member lookup failed');
+        return { roles: memberRoles[serverId] ?? [] };
+      },
       fetchGuildRoles: async (serverId: string) => serverRoles[serverId] ?? [],
     } as unknown as DiscordOAuthService;
 
@@ -99,12 +102,12 @@ describe('AuthService.refresh', () => {
 
   describe('cooldown', () => {
     it('skips an ordinary refresh when the last sync is recent', async () => {
-      session.discordSyncedAt = minutesAgo(1);
+      session.discordSyncedAt = new Date(Date.now() - 20_000);
       await service.refresh(SESSION_TOKEN, { force: false });
       assert.equal(discordCalls, 0);
     });
 
-    it('syncs an ordinary refresh when the last sync is older than 5 minutes', async () => {
+    it('syncs an ordinary refresh when the last sync is older than a minute', async () => {
       await service.refresh(SESSION_TOKEN, { force: false });
       assert.equal(discordCalls, 1);
     });
@@ -116,7 +119,7 @@ describe('AuthService.refresh', () => {
     });
 
     it('runs a forced refresh once the cooldown has passed', async () => {
-      session.discordSyncedAt = minutesAgo(1);
+      session.discordSyncedAt = minutesAgo(2);
       await service.refresh(SESSION_TOKEN, { force: true });
       assert.equal(discordCalls, 1);
     });
@@ -157,6 +160,23 @@ describe('AuthService.refresh', () => {
       memberRoles = { a: ['ra'], b: ['rb'] };
       await service.refresh(SESSION_TOKEN, { force: false });
       assert.equal(accessOf('both').isAdmin, true);
+    });
+
+    it('keeps the access the user already had when Discord fails, instead of wiping it', async () => {
+      guilds = [{ id: 'g', officerRoleId: null, servers: [{ discordId: 'a', isMain: true }] }];
+      accessRows = [{ userId: 'u1', guildId: 'g', isAdmin: true, isOfficer: true }];
+      memberFailsWith = 500;
+      await assert.rejects(service.refresh(SESSION_TOKEN, { force: false }), BadGatewayException);
+      assert.deepEqual(accessRows, [
+        { userId: 'u1', guildId: 'g', isAdmin: true, isOfficer: true },
+      ]);
+    });
+
+    it('treats "not a member of that server" as holding no role', async () => {
+      guilds = [{ id: 'g', officerRoleId: null, servers: [{ discordId: 'a', isMain: true }] }];
+      memberFailsWith = 404;
+      await service.refresh(SESSION_TOKEN, { force: false });
+      assert.equal(accessOf('g').isAdmin, false);
     });
 
     it('does not count a server the bot is not in', async () => {

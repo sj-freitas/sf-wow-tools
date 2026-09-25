@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { fetchCurrentUser, fetchGuilds, fetchSetupInfo, logout, takeReturnPath } from './api';
 import { GuildShell } from './GuildShell';
 import { UserMenu } from './UserMenu';
 import { LoginScreen } from './LoginScreen';
 import type { Guild, SetupInfo, User } from './types';
+
+const ROLE_REFRESH_MS = 60_000;
 
 type AuthState =
   | { status: 'loading' }
@@ -31,11 +33,32 @@ export function App() {
       );
   }, [navigate]);
 
-  const reloadGuilds = async (): Promise<Guild[]> => {
+  const reloadGuilds = useCallback(async (): Promise<Guild[]> => {
     const guilds = await fetchGuilds();
-    setAuth((current) => (current.status === 'ready' ? { ...current, guilds } : current));
+    // Keep the old objects when nothing changed, so pages don't reload for no reason.
+    setAuth((current) =>
+      current.status === 'ready' && JSON.stringify(current.guilds) !== JSON.stringify(guilds)
+        ? { ...current, guilds }
+        : current,
+    );
     return guilds;
-  };
+  }, []);
+
+  // Roles come from Discord: the API re-reads them at most once a minute, so ask again about that
+  // often (and when the tab is shown again) to pick up role changes without a reload.
+  const signedIn = auth.status === 'ready' && auth.user !== null;
+  useEffect(() => {
+    if (!signedIn) return;
+    const refresh = () => {
+      if (document.visibilityState === 'visible') reloadGuilds().catch(() => undefined);
+    };
+    const timer = setInterval(refresh, ROLE_REFRESH_MS);
+    document.addEventListener('visibilitychange', refresh);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener('visibilitychange', refresh);
+    };
+  }, [signedIn, reloadGuilds]);
 
   if (auth.status === 'loading') {
     return <p className="status">Loading…</p>;

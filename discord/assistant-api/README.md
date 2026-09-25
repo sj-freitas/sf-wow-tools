@@ -338,8 +338,7 @@ and the browser use polling until a shared bus (Redis or Postgres `LISTEN/NOTIFY
   read). A user-triggered sync is skipped if the last one was under 30 seconds ago
   (`discordForceSyncMinIntervalMs`), so it can't be used to hammer Discord's rate limits. Any
   authenticated request also re-syncs servers, roles and `guild_access` if the last sync is older
-  than 5 minutes (`discordSyncMaxAgeMs` in `app.config.ts`), so a lost role stops working within
-  minutes; temporary Discord errors keep the old access until the next attempt.
+  than a minute (`discordSyncMaxAgeMs` in `app.config.ts`); the backoffice asks again every minute while open, so role changes show up without a reload. A sync that fails because Discord is unreachable never wipes the roles already known: the old access is kept until the next attempt.
 - **Usernames:** listing players never calls Discord. Names come from the bot's commands, from
   adding a character, from the user's own login, and from the Officers' "Refresh names" button
   (`POST /api/guilds/:id/players/refresh-names`, up to 100 lookups).

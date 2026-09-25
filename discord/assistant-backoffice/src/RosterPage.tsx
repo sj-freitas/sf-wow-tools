@@ -39,6 +39,11 @@ export function RosterPage({ guild, currentUser }: Props) {
 
   useEffect(load, [load]);
   useEffect(loadRanks, [loadRanks]);
+  // Discord roles change outside the app: look again every minute while the page is open.
+  useEffect(() => {
+    const timer = setInterval(loadRanks, 60_000);
+    return () => clearInterval(timer);
+  }, [loadRanks]);
   useEffect(() => subscribeEvents('characters', load), [load]);
   useEffect(
     () =>
