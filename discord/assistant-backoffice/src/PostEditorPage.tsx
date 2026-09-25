@@ -5,6 +5,7 @@ import { PostTaskForm } from './PostTaskForm';
 import type { Guild, ScheduledPost } from './types';
 import { useChannels } from './useChannels';
 import { useReturnTo } from './useReturnTo';
+import { guildPath } from './guildPath';
 
 interface Props {
   guild: Guild;
@@ -15,7 +16,7 @@ interface Props {
 export function PostEditorPage({ guild, timezone }: Props) {
   const { id } = useParams();
   const navigate = useNavigate();
-  const back = useReturnTo('/posts');
+  const back = useReturnTo(guildPath(guild, 'posts'));
   const { channels } = useChannels(guild.id);
   const [post, setPost] = useState<ScheduledPost | null>(null);
   const [error, setError] = useState<string | null>(null);

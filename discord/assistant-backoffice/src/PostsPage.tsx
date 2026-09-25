@@ -7,6 +7,7 @@ import type { Guild, PostsPage as PostsPageData, ScheduledPost } from './types';
 import { useChannels } from './useChannels';
 import { useConfirm } from './useConfirm';
 import { useCurrentUrl } from './useReturnTo';
+import { guildPath } from './guildPath';
 
 interface Props {
   guild: Guild;
@@ -170,7 +171,11 @@ export function PostsPage({ guild, timezone }: Props) {
             Each post is sent once, as one message. Times are in {timezone}.
           </span>
         </div>
-        <Link className="btn btn-primary" to="/posts/create" state={{ from: here }}>
+        <Link
+          className="btn btn-primary"
+          to={guildPath(guild, 'posts/create')}
+          state={{ from: here }}
+        >
           + New post
         </Link>
       </div>
@@ -298,7 +303,11 @@ export function PostsPage({ guild, timezone }: Props) {
                   {post.enabled ? 'Pause' : 'Resume'}
                 </button>
               )}
-              <Link className="btn btn-sm" to={`/posts/edit/${post.id}`} state={{ from: here }}>
+              <Link
+                className="btn btn-sm"
+                to={guildPath(guild, `posts/edit/${post.id}`)}
+                state={{ from: here }}
+              >
                 Edit
               </Link>
               {isLive(post) && (

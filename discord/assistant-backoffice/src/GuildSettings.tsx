@@ -3,6 +3,7 @@ import {
   addGuildServer,
   deleteGuild,
   fetchChannels,
+  fetchHome,
   fetchEligibleServers,
   fetchRoleOptions,
   removeGuildServer,
@@ -16,12 +17,14 @@ import {
 import { channelKey, splitChannelKey } from './channelKey';
 import { ChannelSelect } from './ChannelSelect';
 import { RegionSelect } from './RegionSelect';
+import { WelcomeEditor } from './WelcomeEditor';
 import { useConfirm } from './useConfirm';
 import {
   GAME_VERSIONS,
   type EligibleServers,
   type Faction,
   type Guild,
+  type GuildHome,
   type Region,
   type RoleOption,
   type ServerChannels,
@@ -33,9 +36,11 @@ interface Props {
   /** Called after any change so the parent can reload guilds. */
   onChanged: () => Promise<void>;
   onClose: () => void;
+  /** Called after the guild was deleted. */
+  onDeleted: () => void;
 }
 
-export function GuildSettings({ guild, regions, onChanged, onClose }: Props) {
+export function GuildSettings({ guild, regions, onChanged, onClose, onDeleted }: Props) {
   const [error, setError] = useState<string | null>(null);
   const { confirm, dialog } = useConfirm();
 
@@ -59,6 +64,7 @@ export function GuildSettings({ guild, regions, onChanged, onClose }: Props) {
 
       <DetailsSection guild={guild} regions={regions} run={run} />
       <ServersSection guild={guild} run={run} />
+      <WelcomeSection guild={guild} />
       <RolesSection guild={guild} run={run} />
       <RequestChannelSection guild={guild} run={run} />
 
@@ -78,7 +84,7 @@ export function GuildSettings({ guild, regions, onChanged, onClose }: Props) {
               confirmLabel: 'Delete guild',
               danger: true,
             }).then((ok) => {
-              if (ok) void run(deleteGuild(guild.id).then(onClose));
+              if (ok) void run(deleteGuild(guild.id).then(onDeleted));
             })
           }
         >
@@ -405,6 +411,50 @@ function RequestChannelSection({ guild, run }: SectionProps) {
           </button>
         )}
       </div>
+    </section>
+  );
+}
+
+/** The welcome post shown on the guild's home page. Officers write it; it is optional. */
+function WelcomeSection({ guild }: { guild: Guild }) {
+  const [home, setHome] = useState<GuildHome | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    if (!guild.isOfficer) return;
+    fetchHome(guild.id)
+      .then(setHome)
+      .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)));
+  }, [guild.id, guild.isOfficer]);
+
+  return (
+    <section className="settings-section">
+      <h4>Welcome post</h4>
+      <p className="muted">
+        Shown on the guild's home page to everyone in the guild. It is optional.
+      </p>
+      {!guild.isOfficer ? (
+        <p className="muted">Only Officers can write the welcome post.</p>
+      ) : error ? (
+        <p className="status-error">{error}</p>
+      ) : !home ? (
+        <p className="muted">Loading…</p>
+      ) : (
+        <>
+          <WelcomeEditor
+            key={home.updatedAt ?? 'none'}
+            guildId={guild.id}
+            guildName={guild.name}
+            initial={home.markdown ?? ''}
+            onSaved={(updated) => {
+              setHome(updated);
+              setSaved(true);
+            }}
+          />
+          {saved && <p className="run-ok">✓ Saved</p>}
+        </>
+      )}
     </section>
   );
 }

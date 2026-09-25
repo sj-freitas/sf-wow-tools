@@ -21,6 +21,7 @@ describe('GuildsService', () => {
   let events: string[];
   let mappingCalls: unknown[][];
   let mainServerRoles: { id: string; name: string }[];
+  let existingGuilds: any[];
   let service: GuildsService;
 
   beforeEach(() => {
@@ -35,6 +36,7 @@ describe('GuildsService', () => {
     createdData = null;
     events = [];
     mappingCalls = [];
+    existingGuilds = [];
     mainServerRoles = [
       { id: 'main', name: '@everyone' },
       { id: 'r1', name: 'Raiders' },
@@ -59,15 +61,29 @@ describe('GuildsService', () => {
         upsert: async (args: any) => void mappingCalls.push(['upsert', args.create]),
       },
       guild: {
+        findMany: async () => existingGuilds,
+        findUnique: async () => ({
+          name: 'Relic Hunters',
+          realm: 'Firemaw',
+          gameVersion: 'Forever',
+          region: 'EU',
+        }),
         update: async () => 'guildUpdate',
         create: async (args: any) => {
           createdData = args.data;
           return {
             id: 'g',
+            name: 'Relic Hunters',
+            realm: 'Firemaw',
+            gameVersion: 'Forever',
+            region: 'EU',
+            faction: 'ALLIANCE',
             servers: [],
             roleMappings: [],
             officerRoleId: null,
             officerRoleName: null,
+            officerRequestServerId: null,
+            officerRequestChannelId: null,
           };
         },
       },
@@ -151,6 +167,46 @@ describe('GuildsService', () => {
       );
     });
 
+    it('gives the guild its address: version/region/server/guild-name', async () => {
+      const guild = await service.create('u', {
+        ...input,
+        discordServerIds: ['free'],
+        mainServerId: 'free',
+      });
+      assert.equal(guild.path, 'forever/eu/firemaw/relic-hunters');
+    });
+
+    it('rejects a name whose address is already taken, ignoring case and punctuation', async () => {
+      existingGuilds = [
+        {
+          id: 'other',
+          name: 'GUILD',
+          realm: 'realm',
+          gameVersion: 'Forever',
+          region: 'EU',
+        },
+      ];
+      await assert.rejects(
+        service.create('u', { ...input, discordServerIds: ['free'], mainServerId: 'free' }),
+        /already exists on that server/,
+      );
+      assert.equal(createdData, null);
+    });
+
+    it('allows the same name on another server or region', async () => {
+      existingGuilds = [
+        {
+          id: 'other',
+          name: 'Guild',
+          realm: 'Gehennas',
+          gameVersion: 'Forever',
+          region: 'EU',
+        },
+      ];
+      await service.create('u', { ...input, discordServerIds: ['free'], mainServerId: 'free' });
+      assert.ok(createdData);
+    });
+
     it('rejects a main server that was not selected', async () => {
       adminServers = [
         { discordId: 'free', name: 'Free' },
@@ -160,6 +216,25 @@ describe('GuildsService', () => {
         service.create('u', { ...input, discordServerIds: ['free'], mainServerId: 'free2' }),
         /main server/,
       );
+    });
+  });
+
+  describe('renaming a guild', () => {
+    it('rejects a name whose address another guild already has', async () => {
+      existingGuilds = [
+        { id: 'other', name: 'The Rest', realm: 'Firemaw', gameVersion: 'Forever', region: 'EU' },
+      ];
+      await assert.rejects(
+        service.update('g', { name: 'the  rest' }),
+        /already exists on that server/,
+      );
+    });
+
+    it('lets a guild keep its own address', async () => {
+      existingGuilds = [
+        { id: 'g', name: 'Relic Hunters', realm: 'Firemaw', gameVersion: 'Forever', region: 'EU' },
+      ];
+      await service.update('g', { name: 'Relic hunters' });
     });
   });
 

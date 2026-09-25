@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { fetchCurrentUser, fetchGuilds, fetchSetupInfo, logout, takeReturnPath } from './api';
 import { GuildShell } from './GuildShell';
+import { UserMenu } from './UserMenu';
 import { LoginScreen } from './LoginScreen';
 import type { Guild, SetupInfo, User } from './types';
 
@@ -9,19 +10,6 @@ type AuthState =
   | { status: 'loading' }
   | { status: 'error'; message: string }
   | { status: 'ready'; user: User | null; guilds: Guild[]; setup: SetupInfo | null };
-
-function Avatar({ user }: { user: User }) {
-  if (user.avatar) {
-    return (
-      <img
-        className="avatar"
-        src={`https://cdn.discordapp.com/avatars/${user.discordId}/${user.avatar}.png?size=64`}
-        alt=""
-      />
-    );
-  }
-  return <span className="avatar">{user.username.charAt(0).toUpperCase()}</span>;
-}
 
 export function App() {
   const [auth, setAuth] = useState<AuthState>({ status: 'loading' });
@@ -43,9 +31,10 @@ export function App() {
       );
   }, [navigate]);
 
-  const reloadGuilds = async () => {
+  const reloadGuilds = async (): Promise<Guild[]> => {
     const guilds = await fetchGuilds();
     setAuth((current) => (current.status === 'ready' ? { ...current, guilds } : current));
+    return guilds;
   };
 
   if (auth.status === 'loading') {
@@ -73,13 +62,12 @@ export function App() {
           </span>
           Guild Assistant
         </Link>
-        <div className="header-user">
-          <Avatar user={auth.user} />
-          <span className="username">{auth.user.username}</span>
-          <button type="button" className="btn btn-sm" onClick={handleLogout}>
-            Log out
-          </button>
-        </div>
+        <UserMenu
+          user={auth.user}
+          guilds={auth.guilds}
+          setup={auth.setup}
+          onLogout={handleLogout}
+        />
       </header>
       <main className="page">
         {auth.setup && (

@@ -1,11 +1,11 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { fetchHome, saveHome } from './api';
+import { fetchHome } from './api';
+import { guildPath } from './guildPath';
 import { MarkdownView } from './MarkdownView';
+import { WelcomeEditor } from './WelcomeEditor';
 import { formatWhen } from './time';
 import type { Guild, GuildHome } from './types';
-
-const MAX_LENGTH = 10_000;
 
 interface Props {
   guild: Guild;
@@ -41,7 +41,7 @@ export function HomePage({ guild, timezone }: Props) {
           )}
         </div>
         {guild.isOfficer && (
-          <Link className="btn" to="/edit">
+          <Link className="btn" to={guildPath(guild, 'edit')}>
             {home?.markdown ? 'Edit' : 'Write a welcome post'}
           </Link>
         )}
@@ -63,77 +63,26 @@ export function HomePage({ guild, timezone }: Props) {
   );
 }
 
-/** Officers write the welcome post in markdown, with a live preview. */
+/** `edit`: Officers write the welcome post, with the same editor as in Settings. */
 export function HomeEditPage({ guild }: { guild: Guild }) {
   const navigate = useNavigate();
-  const { home, error: loadError } = useHome(guild.id);
-  const [text, setText] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { home, error } = useHome(guild.id);
 
-  useEffect(() => {
-    if (home && text === null) setText(home.markdown ?? '');
-  }, [home, text]);
-
-  const submit = (event: FormEvent) => {
-    event.preventDefault();
-    setError(null);
-    setSaving(true);
-    saveHome(guild.id, text ?? '')
-      .then(() => navigate('/'))
-      .catch((err: unknown) => {
-        setError(err instanceof Error ? err.message : String(err));
-        setSaving(false);
-      });
-  };
-
-  if (loadError) return <p className="status-error tasks">{loadError}</p>;
-  if (text === null) return <p className="empty">Loading…</p>;
+  if (error) return <p className="status-error tasks">{error}</p>;
+  if (!home) return <p className="empty">Loading…</p>;
 
   return (
-    <form className="tasks" onSubmit={submit}>
+    <div className="tasks">
       <div className="tasks-head">
-        <div>
-          <h3>Welcome post</h3>
-          <span className="muted">
-            Markdown: headings, **bold**, lists, links, tables and more. Everyone in the guild sees
-            it.
-          </span>
-        </div>
+        <h3>Welcome post</h3>
       </div>
-      <div className="home-editor">
-        <div className="field">
-          <span className="task-text-head">
-            Write
-            <span className={text.length > MAX_LENGTH ? 'status-error' : 'muted'}>
-              {text.length}/{MAX_LENGTH}
-            </span>
-          </span>
-          <textarea
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            rows={18}
-            placeholder={`# Welcome to ${guild.name}\n\nSay hello, share the rules, when we raid…`}
-          />
-        </div>
-        <div className="field">
-          Preview
-          {text.trim() === '' ? (
-            <p className="muted">Nothing to preview yet. Saving an empty post removes it.</p>
-          ) : (
-            <MarkdownView text={text} />
-          )}
-        </div>
-      </div>
-      {error && <p className="status-error">{error}</p>}
-      <div className="form-actions">
-        <button type="submit" className="btn btn-primary" disabled={saving}>
-          {saving ? 'Saving…' : 'Save'}
-        </button>
-        <Link className="btn" to="/">
-          Cancel
-        </Link>
-      </div>
-    </form>
+      <WelcomeEditor
+        guildId={guild.id}
+        guildName={guild.name}
+        initial={home.markdown ?? ''}
+        onSaved={() => navigate(guildPath(guild))}
+        onCancel={() => navigate(guildPath(guild))}
+      />
+    </div>
   );
 }

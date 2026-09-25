@@ -6,6 +6,7 @@ import { formatWhen } from './time';
 import type { Guild, Honeypot } from './types';
 import { useChannels } from './useChannels';
 import { useConfirm } from './useConfirm';
+import { guildPath } from './guildPath';
 
 interface Props {
   guild: Guild;
@@ -49,7 +50,7 @@ export function HoneypotsPage({ guild, timezone }: Props) {
             Channels where anyone who posts is banned. Times are in {timezone}.
           </span>
         </div>
-        <Link className="btn btn-primary" to="/honeypots/create">
+        <Link className="btn btn-primary" to={guildPath(guild, 'honeypots/create')}>
           + Honeypot channel
         </Link>
       </div>
@@ -164,14 +165,14 @@ export function HoneypotCreatePage({ guild }: { guild: Guild }) {
   const { channels } = useChannels(guild.id);
   return (
     <div className="tasks">
-      <Link className="back-link" to="/honeypots">
+      <Link className="back-link" to={guildPath(guild, 'honeypots')}>
         ← Honeypots
       </Link>
       <HoneypotForm
         guild={guild}
         channels={channels}
-        onSaved={() => navigate('/honeypots')}
-        onCancel={() => navigate('/honeypots')}
+        onSaved={() => navigate(guildPath(guild, 'honeypots'))}
+        onCancel={() => navigate(guildPath(guild, 'honeypots'))}
       />
     </div>
   );

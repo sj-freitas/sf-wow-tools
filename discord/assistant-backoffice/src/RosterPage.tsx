@@ -6,6 +6,7 @@ import { subscribeEvents } from './events';
 import { playerLabel } from './format';
 import { ROLE_LABELS, type Guild, type Player, type Ranks, type User } from './types';
 import { useCurrentUrl, useReturnTo } from './useReturnTo';
+import { guildPath } from './guildPath';
 
 interface Props {
   guild: Guild;
@@ -97,7 +98,11 @@ export function RosterPage({ guild, currentUser }: Props) {
               Refresh names
             </button>
           )}
-          <Link className="btn btn-primary" to="/roster/create" state={{ from: here }}>
+          <Link
+            className="btn btn-primary"
+            to={guildPath(guild, 'roster/create')}
+            state={{ from: here }}
+          >
             {guild.isOfficer ? '+ Add character' : '+ Add my character'}
           </Link>
         </div>
@@ -151,7 +156,7 @@ export function RosterPage({ guild, currentUser }: Props) {
                         <>
                           <Link
                             className="btn btn-sm"
-                            to={`/roster/edit/${character.id}`}
+                            to={guildPath(guild, `roster/edit/${character.id}`)}
                             state={{ from: here }}
                           >
                             Edit
@@ -181,7 +186,7 @@ export function RosterPage({ guild, currentUser }: Props) {
 export function CharacterEditorPage({ guild, currentUser }: Props) {
   const { characterId } = useParams();
   const navigate = useNavigate();
-  const back = useReturnTo('/roster');
+  const back = useReturnTo(guildPath(guild, 'roster'));
   const [players, setPlayers] = useState<Player[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 

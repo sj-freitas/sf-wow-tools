@@ -10,6 +10,7 @@ import { APP_CONFIG } from '../config/app.config';
 import type { RegionId } from '../config/regions';
 import { PrismaService } from '../database/prisma.service';
 import { GAME_VERSIONS } from '../game/game-version';
+import { guildPath } from './guild-path';
 import { RealtimeService } from '../realtime/realtime.service';
 
 export type Faction = 'ALLIANCE' | 'HORDE';
@@ -22,6 +23,8 @@ export interface GuildServerDto {
 
 export interface UserGuildDto {
   id: string;
+  /** Where the guild lives in the backoffice: `<version>/<region>/<server>/<guild-name>`. */
+  path: string;
   name: string;
   realm: string;
   faction: Faction;
@@ -135,6 +138,7 @@ function toDto(guild: GuildRow, isAdmin: boolean, isOfficer: boolean): UserGuild
   };
   return {
     ...rest,
+    path: guildPath(rest),
     roleMappings: { RAIDER: mapped('RAIDER'), SOCIAL: mapped('SOCIAL') },
     officerRequestChannel:
       officerRequestServerId && officerRequestChannelId
@@ -185,6 +189,23 @@ export class GuildsService {
     };
   }
 
+  /**
+   * Two guilds may not share an address. The database only stops exact duplicates, but the
+   * address is lower-cased and simplified, so "Relic Hunters" and "relic-hunters" would clash.
+   */
+  private async assertAddressFree(details: GuildDetails, exceptGuildId?: string): Promise<void> {
+    const address = guildPath(details);
+    const candidates = await this.prisma.guild.findMany({
+      where: { gameVersion: details.gameVersion, region: details.region },
+      select: { id: true, name: true, realm: true, gameVersion: true, region: true },
+    });
+    if (candidates.some((other) => other.id !== exceptGuildId && guildPath(other) === address)) {
+      throw new ConflictException(
+        'A guild with this name already exists on that server (names are compared ignoring case and punctuation).',
+      );
+    }
+  }
+
   async create(userId: string, input: CreateGuildInput): Promise<UserGuildDto> {
     const eligible = await this.findEligibleServers(userId);
     const eligibleById = new Map(eligible.servers.map((server) => [server.discordId, server]));
@@ -197,6 +218,7 @@ export class GuildsService {
     if (!input.discordServerIds.includes(input.mainServerId)) {
       throw new BadRequestException('The main server must be one of the selected servers');
     }
+    await this.assertAddressFree(input);
 
     try {
       const guild = await this.prisma.guild.create({
@@ -228,6 +250,12 @@ export class GuildsService {
   }
 
   async update(guildId: string, details: Partial<GuildDetails>): Promise<void> {
+    const current = await this.prisma.guild.findUnique({
+      where: { id: guildId },
+      select: { name: true, realm: true, gameVersion: true, region: true },
+    });
+    if (!current) throw new NotFoundException('Guild not found');
+    await this.assertAddressFree({ ...current, ...details } as GuildDetails, guildId);
     try {
       await this.prisma.guild.update({ where: { id: guildId }, data: details });
     } catch (error) {

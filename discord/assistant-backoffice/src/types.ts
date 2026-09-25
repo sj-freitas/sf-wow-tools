@@ -29,6 +29,8 @@ export interface User {
 
 export interface Guild {
   id: string;
+  /** The guild's address: `<version>/<region>/<server>/<guild-name>`. */
+  path: string;
   name: string;
   realm: string;
   faction: Faction;

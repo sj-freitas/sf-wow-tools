@@ -158,28 +158,38 @@ server can't be removed directly.
 ### Backoffice pages and routes
 
 The backoffice is a single-page app with real addresses (the API serves `index.html` for any path
-outside `/api`, so deep links and reloads work). The guild you are looking at is remembered in the
-browser; the paths themselves don't carry it.
+outside `/api`, so deep links and reloads work). After logging in you land on **Your guilds**
+(`/`), where you pick a guild or add one. The **user menu** (top right, your Discord username) lists
+your guilds to switch between, adds a guild, and logs out.
 
-| Path                                 | Page                                   | Who                               |
-| ------------------------------------ | -------------------------------------- | --------------------------------- |
-| `/`                                  | Home: the guild's welcome post         | everyone in the guild             |
-| `/edit`                              | Write the welcome post                 | Officers                          |
-| `/roster`                            | Roster                                 | everyone in the guild             |
-| `/roster/create`, `/roster/edit/:id` | Add / edit a character                 | members: their own; Officers: any |
-| `/posts?q=&page=`                    | Posts (search and page in the address) | Officers                          |
-| `/posts/create`, `/posts/edit/:id`   | New / edit post                        | Officers                          |
-| `/honeypots`, `/honeypots/create`    | Honeypots (`/honeypot` redirects)      | Officers                          |
-| `/settings`                          | Guild settings                         | Guild-Assistants and Officers     |
-| `/guilds/create`                     | Set up a new guild                     | anyone                            |
+Every guild page lives under the guild's own address, built by the API (`path` on each guild):
+`/<version>/<region>/<server>/<guild-name>`, all lower case with hyphens, for example
+`/forever/eu/firemaw/relic-hunters`. "Server" is the WoW realm. Two guilds can't share an address:
+names are compared ignoring case and punctuation, and renaming a guild moves its address (the
+settings page follows it).
 
-Members only see Home and Roster in the navigation; opening any other page sends them to Home.
-Save and Cancel on a create/edit page return to the list you came from, search included. After
-logging in you land back on the page you were on.
+| Path                                 | Page                                     | Who                               |
+| ------------------------------------ | ---------------------------------------- | --------------------------------- |
+| `/`                                  | Your guilds                              | anyone logged in                  |
+| `/guilds/create`                     | Set up a new guild                       | anyone logged in                  |
+| `<guild>/`                           | Home: the guild's welcome post           | everyone in the guild             |
+| `<guild>/edit`                       | Write the welcome post                   | Officers                          |
+| `<guild>/roster`                     | Roster                                   | everyone in the guild             |
+| `<guild>/roster/create`, `/edit/:id` | Add / edit a character                   | members: their own; Officers: any |
+| `<guild>/posts?q=&page=`             | Posts (search and page in the address)   | Officers                          |
+| `<guild>/posts/create`, `/edit/:id`  | New / edit post                          | Officers                          |
+| `<guild>/honeypots`, `/create`       | Honeypots (`/honeypot` redirects)        | Officers                          |
+| `<guild>/officer-requests`, `/:id`   | Members' messages to officers, read-only | Officers                          |
+| `<guild>/settings`                   | Guild settings, incl. the welcome post   | Guild-Assistants and Officers     |
+
+Members only see Home and Roster in the navigation; opening any other page sends them to the guild's
+home. An address that isn't one of your guilds says so and links back to Your guilds. Save and
+Cancel on a create/edit page return to the list you came from, search included. After logging in
+you land back on the page you were on.
 
 **Welcome post.** Optional markdown text on the guild (`guilds.home_markdown`, null until an Officer
 writes one), shown on Home to everyone in the guild (`GET /api/guilds/:id/home`) and written by
-Officers only (`PUT /api/guilds/:id/home`, up to 10,000 characters; an empty text removes it). It is
+Officers only (`PUT /api/guilds/:id/home`, up to 10,000 characters; an empty text removes it), on the home page's edit link or in guild Settings, with a Preview toggle. It is
 rendered with `react-markdown` (GitHub flavour) which only builds elements and never raw HTML, so
 what an Officer writes can't inject scripts into what members see.
 

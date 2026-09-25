@@ -4,6 +4,7 @@ import { fetchOfficerRequest, fetchOfficerRequests } from './api';
 import { formatWhen, timeAgo } from './time';
 import type { Conversation, ConversationsPage, Guild } from './types';
 import { useCurrentUrl, useReturnTo } from './useReturnTo';
+import { guildPath } from './guildPath';
 
 interface Props {
   guild: Guild;
@@ -83,7 +84,7 @@ export function OfficerRequestsPage({ guild, timezone }: Props) {
             The Officer Request Channel is not set, so members' messages can't be delivered. Set it
             in Settings.
           </span>
-          <Link className="btn btn-sm" to="/settings">
+          <Link className="btn btn-sm" to={guildPath(guild, 'settings')}>
             Open settings
           </Link>
         </div>
@@ -111,7 +112,7 @@ export function OfficerRequestsPage({ guild, timezone }: Props) {
           <Link
             key={item.publicId}
             className="task-card conversation-card"
-            to={`/officer-requests/${item.publicId}`}
+            to={guildPath(guild, `officer-requests/${item.publicId}`)}
             state={{ from: here }}
           >
             <div>
@@ -167,7 +168,7 @@ export function OfficerRequestsPage({ guild, timezone }: Props) {
  */
 export function ConversationPage({ guild, timezone }: Props) {
   const { conversationId } = useParams();
-  const back = useReturnTo('/officer-requests');
+  const back = useReturnTo(guildPath(guild, 'officer-requests'));
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [error, setError] = useState<string | null>(null);
 

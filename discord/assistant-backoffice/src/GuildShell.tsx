@@ -1,59 +1,49 @@
-import { useEffect, useRef, useState } from 'react';
-import { Link, NavLink, Navigate, Outlet, Route, Routes, useNavigate } from 'react-router-dom';
+import { useEffect, useRef, type ReactNode } from 'react';
+import { Link, NavLink, Navigate, Route, Routes, useParams } from 'react-router-dom';
 import { CreateGuildPage } from './CreateGuildPage';
 import { subscribeEvents } from './events';
 import { canConfigure } from './guildAccess';
+import { guildPath } from './guildPath';
 import { HomeEditPage, HomePage } from './HomePage';
 import { HoneypotCreatePage, HoneypotsPage } from './HoneypotsPage';
+import { LandingPage } from './LandingPage';
 import { ConversationPage, OfficerRequestsPage } from './OfficerRequestsPage';
 import { PostEditorPage } from './PostEditorPage';
 import { PostsPage } from './PostsPage';
 import { RequireAccess } from './RequireAccess';
 import { CharacterEditorPage, RosterPage } from './RosterPage';
 import { SettingsPage } from './SettingsPage';
-import { SetupInstructions } from './SetupInstructions';
 import type { Guild, SetupInfo, User } from './types';
 
 interface Props {
   guilds: Guild[];
   setup: SetupInfo;
   currentUser: User;
-  onGuildsChanged: () => Promise<void>;
-}
-
-const SELECTED_KEY = 'guildAssistant.guild';
-
-function readSelectedGuild(): string | undefined {
-  try {
-    return localStorage.getItem(SELECTED_KEY) ?? undefined;
-  } catch {
-    return undefined;
-  }
+  /** Reloads the user's guilds and returns the fresh list. */
+  onGuildsChanged: () => Promise<Guild[]>;
 }
 
 /**
- * Everything behind the login: the guild picker and, for the chosen guild, its pages.
+ * Everything behind the login.
  *
- *   /                  Home (welcome post)        everyone in the guild
- *   /edit              write the welcome post     Officers
- *   /roster            roster                     everyone in the guild
- *   /roster/create     add a character            everyone (members: their own)
- *   /roster/edit/:id   edit a character           Officers, or its owner
- *   /posts             posts (?q=&page=)          Officers
- *   /posts/create      new post                   Officers
- *   /posts/edit/:id    edit a post                Officers
- *   /honeypots         honeypot channels          Officers
- *   /honeypots/create  new honeypot               Officers
- *   /officer-requests  what members wrote to the officers    Officers
- *   /officer-requests/:conversationId   one conversation, read-only   Officers
- *   /settings          guild settings             Guild-Assistants and Officers
- *   /guilds/create     set up a new guild         anyone
+ *   /                                     your guilds: pick one or add one
+ *   /guilds/create                        set up a new guild
+ *   /<version>/<region>/<server>/<guild>  a guild, e.g. /forever/eu/firemaw/relic-hunters, and under it:
+ *       /                     Home (welcome post)          everyone in the guild
+ *       /edit                 write the welcome post       Officers
+ *       /roster               roster                       everyone in the guild
+ *       /roster/create        add a character              everyone (members: their own)
+ *       /roster/edit/:id      edit a character             Officers, or its owner
+ *       /posts                posts (?q=&page=)            Officers
+ *       /posts/create         new post                     Officers
+ *       /posts/edit/:id       edit a post                  Officers
+ *       /honeypots            honeypot channels            Officers
+ *       /honeypots/create     new honeypot                 Officers
+ *       /officer-requests     members' messages to officers           Officers
+ *       /officer-requests/:conversationId   one conversation          Officers
+ *       /settings             guild settings               Guild-Assistants and Officers
  */
 export function GuildShell({ guilds, setup, currentUser, onGuildsChanged }: Props) {
-  const [selectedId, setSelectedId] = useState(readSelectedGuild);
-  const guild = guilds.find((g) => g.id === selectedId) ?? guilds[0];
-  const navigate = useNavigate();
-
   const guildsChanged = useRef(onGuildsChanged);
   useEffect(() => {
     guildsChanged.current = onGuildsChanged;
@@ -63,242 +53,153 @@ export function GuildShell({ guilds, setup, currentUser, onGuildsChanged }: Prop
     [],
   );
 
-  const select = (id: string) => {
-    setSelectedId(id);
-    try {
-      localStorage.setItem(SELECTED_KEY, id);
-    } catch {
-      // Not remembering the guild between visits is fine.
-    }
-  };
-
-  const timezone = setup.regions.find((region) => region.id === guild?.region)?.timezone ?? 'UTC';
-
   return (
     <Routes>
+      <Route index element={<LandingPage guilds={guilds} setup={setup} />} />
       <Route
         path="guilds/create"
+        element={<CreateGuildPage setup={setup} onCreated={onGuildsChanged} />}
+      />
+      <Route
+        path=":version/:region/:realm/:guildSlug/*"
         element={
-          <CreateGuildPage
+          <GuildRoutes
+            guilds={guilds}
             setup={setup}
-            onCreated={async (created) => {
-              select(created.id);
-              await onGuildsChanged();
-            }}
+            currentUser={currentUser}
+            onGuildsChanged={onGuildsChanged}
           />
         }
       />
-      {guild ? (
-        <Route
-          element={
-            <GuildFrame
-              guilds={guilds}
-              guild={guild}
-              setup={setup}
-              onSelect={(id) => {
-                select(id);
-                navigate('/');
-              }}
-            />
-          }
-        >
-          <Route index element={<HomePage guild={guild} timezone={timezone} />} />
-          <Route
-            path="edit"
-            element={
-              <RequireAccess allowed={guild.isOfficer}>
-                <HomeEditPage guild={guild} />
-              </RequireAccess>
-            }
-          />
-          <Route path="roster" element={<RosterPage guild={guild} currentUser={currentUser} />} />
-          <Route
-            path="roster/create"
-            element={<CharacterEditorPage guild={guild} currentUser={currentUser} />}
-          />
-          <Route
-            path="roster/edit/:characterId"
-            element={<CharacterEditorPage guild={guild} currentUser={currentUser} />}
-          />
-          <Route
-            path="posts"
-            element={
-              <RequireAccess allowed={guild.isOfficer}>
-                <PostsPage guild={guild} timezone={timezone} />
-              </RequireAccess>
-            }
-          />
-          <Route
-            path="posts/create"
-            element={
-              <RequireAccess allowed={guild.isOfficer}>
-                <PostEditorPage guild={guild} timezone={timezone} />
-              </RequireAccess>
-            }
-          />
-          <Route
-            path="posts/edit/:id"
-            element={
-              <RequireAccess allowed={guild.isOfficer}>
-                <PostEditorPage guild={guild} timezone={timezone} />
-              </RequireAccess>
-            }
-          />
-          <Route
-            path="honeypots"
-            element={
-              <RequireAccess allowed={guild.isOfficer}>
-                <HoneypotsPage guild={guild} timezone={timezone} />
-              </RequireAccess>
-            }
-          />
-          <Route
-            path="honeypots/create"
-            element={
-              <RequireAccess allowed={guild.isOfficer}>
-                <HoneypotCreatePage guild={guild} />
-              </RequireAccess>
-            }
-          />
-          <Route path="honeypot" element={<Navigate to="/honeypots" replace />} />
-          <Route
-            path="officer-requests"
-            element={
-              <RequireAccess allowed={guild.isOfficer}>
-                <OfficerRequestsPage guild={guild} timezone={timezone} />
-              </RequireAccess>
-            }
-          />
-          <Route
-            path="officer-requests/:conversationId"
-            element={
-              <RequireAccess allowed={guild.isOfficer}>
-                <ConversationPage guild={guild} timezone={timezone} />
-              </RequireAccess>
-            }
-          />
-          <Route
-            path="settings"
-            element={
-              <RequireAccess allowed={canConfigure(guild)}>
-                <SettingsPage
-                  guild={guild}
-                  regions={setup.regions}
-                  onGuildsChanged={onGuildsChanged}
-                />
-              </RequireAccess>
-            }
-          />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Route>
-      ) : (
-        <Route path="*" element={<NoGuild setup={setup} />} />
-      )}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }
 
-function NoGuild({ setup }: { setup: SetupInfo }) {
+/** Finds the guild the address points to and shows its pages, or says it wasn't found. */
+function GuildRoutes({ guilds, setup, currentUser, onGuildsChanged }: Props) {
+  const { version, region, realm, guildSlug } = useParams();
+  const path = [version, region, realm, guildSlug].join('/');
+  const guild = guilds.find((g) => g.path === path);
+
+  if (!guild) {
+    return (
+      <div className="card empty">
+        <p>You are not in a guild at this address.</p>
+        <Link className="btn btn-primary" to="/">
+          Your guilds
+        </Link>
+      </div>
+    );
+  }
+
+  const timezone = setup.regions.find((r) => r.id === guild.region)?.timezone ?? 'UTC';
+  const home = guildPath(guild);
+  const officersOnly = (page: ReactNode) => (
+    <RequireAccess allowed={guild.isOfficer} fallback={home}>
+      {page}
+    </RequireAccess>
+  );
+
   return (
-    <div className="card empty">
-      <p>
-        None of your Discord servers belong to a guild that uses Guild Assistant yet. Create one to
-        get started.
-      </p>
-      <SetupInstructions setup={setup} />
-      <Link className="btn btn-primary" to="/guilds/create">
-        + Create guild
-      </Link>
-    </div>
+    <GuildFrame guild={guild} setup={setup}>
+      <Routes>
+        <Route index element={<HomePage guild={guild} timezone={timezone} />} />
+        <Route path="edit" element={officersOnly(<HomeEditPage guild={guild} />)} />
+        <Route path="roster" element={<RosterPage guild={guild} currentUser={currentUser} />} />
+        <Route
+          path="roster/create"
+          element={<CharacterEditorPage guild={guild} currentUser={currentUser} />}
+        />
+        <Route
+          path="roster/edit/:characterId"
+          element={<CharacterEditorPage guild={guild} currentUser={currentUser} />}
+        />
+        <Route
+          path="posts"
+          element={officersOnly(<PostsPage guild={guild} timezone={timezone} />)}
+        />
+        <Route
+          path="posts/create"
+          element={officersOnly(<PostEditorPage guild={guild} timezone={timezone} />)}
+        />
+        <Route
+          path="posts/edit/:id"
+          element={officersOnly(<PostEditorPage guild={guild} timezone={timezone} />)}
+        />
+        <Route
+          path="honeypots"
+          element={officersOnly(<HoneypotsPage guild={guild} timezone={timezone} />)}
+        />
+        <Route
+          path="honeypots/create"
+          element={officersOnly(<HoneypotCreatePage guild={guild} />)}
+        />
+        <Route path="honeypot" element={<Navigate to={guildPath(guild, 'honeypots')} replace />} />
+        <Route
+          path="officer-requests"
+          element={officersOnly(<OfficerRequestsPage guild={guild} timezone={timezone} />)}
+        />
+        <Route
+          path="officer-requests/:conversationId"
+          element={officersOnly(<ConversationPage guild={guild} timezone={timezone} />)}
+        />
+        <Route
+          path="settings"
+          element={
+            <RequireAccess allowed={canConfigure(guild)} fallback={home}>
+              <SettingsPage
+                guild={guild}
+                regions={setup.regions}
+                onGuildsChanged={onGuildsChanged}
+              />
+            </RequireAccess>
+          }
+        />
+        <Route path="*" element={<Navigate to={home} replace />} />
+      </Routes>
+    </GuildFrame>
   );
 }
 
-interface FrameProps {
-  guilds: Guild[];
+/** The guild's name and details, its section links, and the page being shown. */
+function GuildFrame({
+  guild,
+  setup,
+  children,
+}: {
   guild: Guild;
   setup: SetupInfo;
-  onSelect: (guildId: string) => void;
-}
-
-/** The guild picker, the guild's header and its section links, around the page being shown. */
-function GuildFrame({ guilds, guild, setup, onSelect }: FrameProps) {
-  const accessLabels = [
-    ...(guild.isAdmin ? [setup.adminRoleName] : []),
-    ...(guild.isOfficer ? ['Officer'] : []),
-  ];
-  const accessHint = [
-    guild.isAdmin &&
-      `${setup.adminRoleName} (in every server of this guild): create guilds and configure them.`,
-    guild.isOfficer &&
-      `Officer (${guild.officerRole?.name ?? ''}): manage every player's characters, the posts and honeypots, and configure the guild.`,
-    "Everyone in one of the guild's servers: see the home page and the roster, and add and edit their own characters.",
-  ]
-    .filter(Boolean)
-    .join('\n');
+  children: ReactNode;
+}) {
+  const regionLabel = setup.regions.find((r) => r.id === guild.region)?.label ?? guild.region;
 
   return (
-    <>
-      <div className="topbar">
-        <div className="tabs" role="tablist">
-          {guilds.map((g) => (
-            <button
-              key={g.id}
-              type="button"
-              role="tab"
-              className="tab"
-              aria-selected={g.id === guild.id}
-              onClick={() => onSelect(g.id)}
-            >
-              {g.name}
-            </button>
-          ))}
-        </div>
-        <Link className="btn" to="/guilds/create">
-          + Create guild
-        </Link>
-      </div>
-
-      <section className="card">
-        <div className="card-header">
-          <div>
-            <div className="card-title">
-              <h2>{guild.name}</h2>
-              <span className={`badge badge-${guild.faction.toLowerCase()}`}>{guild.faction}</span>
-              <span
-                className={`badge ${accessLabels.length > 0 ? 'badge-admin' : ''}`}
-                title={accessHint}
-              >
-                Your access: {accessLabels.length > 0 ? accessLabels.join(' + ') : 'Member'}
-              </span>
-            </div>
-            <div className="card-meta">
-              {guild.realm} · {guild.gameVersion}
-            </div>
+    <section className="card">
+      <div className="card-header">
+        <div>
+          <h2>{guild.name}</h2>
+          <div className="card-meta">
+            {guild.faction === 'ALLIANCE' ? 'Alliance' : 'Horde'} · {guild.realm} ·{' '}
+            {guild.gameVersion} · {regionLabel}
           </div>
         </div>
+      </div>
 
-        <div className="server-list">
-          {guild.servers.map((server) => (
-            <span key={server.discordId} className="server-chip">
-              {server.name || server.discordId}
-              {server.isMain && guild.servers.length > 1 && <span className="badge">Main</span>}
-            </span>
-          ))}
-        </div>
+      <nav className="view-tabs" aria-label="Guild sections">
+        <NavLink to={guildPath(guild)} end>
+          Home
+        </NavLink>
+        <NavLink to={guildPath(guild, 'roster')}>Roster</NavLink>
+        {guild.isOfficer && <NavLink to={guildPath(guild, 'posts')}>Posts</NavLink>}
+        {guild.isOfficer && <NavLink to={guildPath(guild, 'honeypots')}>Honeypots</NavLink>}
+        {guild.isOfficer && (
+          <NavLink to={guildPath(guild, 'officer-requests')}>Officer requests</NavLink>
+        )}
+        {canConfigure(guild) && <NavLink to={guildPath(guild, 'settings')}>Settings</NavLink>}
+      </nav>
 
-        <nav className="view-tabs" aria-label="Guild sections">
-          <NavLink to="/" end>
-            Home
-          </NavLink>
-          <NavLink to="/roster">Roster</NavLink>
-          {guild.isOfficer && <NavLink to="/posts">Posts</NavLink>}
-          {guild.isOfficer && <NavLink to="/honeypots">Honeypots</NavLink>}
-          {guild.isOfficer && <NavLink to="/officer-requests">Officer requests</NavLink>}
-          {canConfigure(guild) && <NavLink to="/settings">Settings</NavLink>}
-        </nav>
-
-        <Outlet />
-      </section>
-    </>
+      {children}
+    </section>
   );
 }
