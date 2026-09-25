@@ -22,6 +22,14 @@ interface Props {
 const REFRESH_MS = 60_000;
 const SEARCH_DELAY_MS = 300;
 
+const deleteConfirmation = (publicId: number) => ({
+  title: `Delete conversation #${publicId}`,
+  message:
+    "This removes the conversation from the database and deletes its messages from the Officer Request Channel. Direct messages already sent to the member can't be deleted. This can't be undone.",
+  confirmLabel: 'Delete',
+  danger: true,
+});
+
 /** `/officer-requests`: what members wrote to the officers, most recently active first. */
 export function OfficerRequestsPage({ guild, timezone }: Props) {
   const [params, setParams] = useSearchParams();
@@ -33,6 +41,8 @@ export function OfficerRequestsPage({ guild, timezone }: Props) {
   const [error, setError] = useState<string | null>(null);
   const latest = useRef(0);
   const here = useCurrentUrl();
+  const [busyId, setBusyId] = useState<number | null>(null);
+  const { confirm, dialog } = useConfirm();
 
   const load = useCallback(() => {
     const request = ++latest.current;
@@ -44,6 +54,29 @@ export function OfficerRequestsPage({ guild, timezone }: Props) {
       })
       .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)));
   }, [guild.id, query, page]);
+
+  const act = (publicId: number, action: () => Promise<unknown>) => {
+    if (busyId !== null) return;
+    setBusyId(publicId);
+    setError(null);
+    action()
+      .then(load)
+      .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)))
+      .finally(() => setBusyId(null));
+  };
+
+  const removeItem = async (publicId: number) => {
+    if (await confirm(deleteConfirmation(publicId))) {
+      act(publicId, async () => {
+        const { notDeleted } = await deleteOfficerRequest(guild.id, publicId);
+        if (notDeleted > 0) {
+          setError(
+            `Conversation #${publicId} was deleted, but ${notDeleted} message${notDeleted === 1 ? '' : 's'} could not be removed from the Officer Request Channel (probably already deleted).`,
+          );
+        }
+      });
+    }
+  };
 
   const goTo = useCallback(
     (next: { q?: string; page?: number }, replace = false) => {
@@ -81,6 +114,7 @@ export function OfficerRequestsPage({ guild, timezone }: Props) {
 
   return (
     <div className="tasks">
+      {dialog}
       <div className="tasks-head">
         <div>
           <h3>Officer requests</h3>
@@ -122,13 +156,12 @@ export function OfficerRequestsPage({ guild, timezone }: Props) {
         </p>
       ) : (
         data.items.map((item) => (
-          <Link
-            key={item.publicId}
-            className="task-card conversation-card"
-            to={guildPath(guild, `officer-requests/${item.publicId}`)}
-            state={{ from: here }}
-          >
-            <div>
+          <div key={item.publicId} className="task-card conversation-card">
+            <Link
+              className="conversation-link"
+              to={guildPath(guild, `officer-requests/${item.publicId}`)}
+              state={{ from: here }}
+            >
               <strong>#{item.publicId}</strong>{' '}
               <span className="badge">{item.isAnonymous ? 'Anonymous' : item.requesterName}</span>{' '}
               {item.locked && <span className="badge">Locked</span>}{' '}
@@ -140,8 +173,30 @@ export function OfficerRequestsPage({ guild, timezone }: Props) {
                 {item.messageCount} message{item.messageCount === 1 ? '' : 's'} · last activity{' '}
                 {formatWhen(item.lastActivityAt, timezone)} ({timeAgo(item.lastActivityAt)})
               </div>
+            </Link>
+            <div className="settings-actions">
+              <button
+                type="button"
+                className="btn btn-sm"
+                disabled={busyId !== null}
+                onClick={() =>
+                  act(item.publicId, () =>
+                    setOfficerRequestLocked(guild.id, item.publicId, !item.locked),
+                  )
+                }
+              >
+                {item.locked ? 'Unlock' : 'Lock'}
+              </button>
+              <button
+                type="button"
+                className="btn btn-sm btn-danger"
+                disabled={busyId !== null}
+                onClick={() => void removeItem(item.publicId)}
+              >
+                Delete
+              </button>
             </div>
-          </Link>
+          </div>
         ))
       )}
 
@@ -225,13 +280,7 @@ export function ConversationPage({ guild, timezone }: Props) {
 
   const remove = async () => {
     if (!conversation || busy) return;
-    const ok = await confirm({
-      title: `Delete conversation #${conversation.publicId}`,
-      message:
-        "This removes the conversation from the database and deletes its messages from the Officer Request Channel. Direct messages already sent to the member can't be deleted. This can't be undone.",
-      confirmLabel: 'Delete',
-      danger: true,
-    });
+    const ok = await confirm(deleteConfirmation(conversation.publicId));
     if (!ok) return;
     setBusy(true);
     setError(null);
