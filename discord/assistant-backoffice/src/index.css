@@ -1129,3 +1129,45 @@ a.btn {
   gap: 8px;
   margin-top: 16px;
 }
+
+/* ---- guild banner and server picture ---- */
+.guild-banner {
+  display: block;
+  width: 100%;
+  max-height: 220px;
+  object-fit: cover;
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+.banner-preview {
+  max-height: 140px;
+  border-radius: var(--radius);
+  margin-bottom: 0.75rem;
+}
+.guild-identity {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+.guild-identity h2 {
+  margin: 0;
+}
+.guild-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.guild-icon-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--blurple);
+  color: #fff;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+label.btn.disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}

@@ -87,6 +87,29 @@ async function request<T>(
 export const fetchPlayers = (guildId: string): Promise<Player[]> =>
   request('GET', `/api/guilds/${guildId}/players`);
 
+export const bannerUrl = (guild: { id: string; bannerVersion: number | null }): string =>
+  `/api/guilds/${guild.id}/banner?v=${guild.bannerVersion ?? 0}`;
+
+/** Uploads the image itself as the request body. */
+export async function uploadBanner(guildId: string, file: File): Promise<void> {
+  const response = await fetch(`/api/guilds/${guildId}/banner`, {
+    method: 'PUT',
+    headers: { 'Content-Type': file.type || 'application/octet-stream' },
+    body: file,
+  });
+  if (response.status === 401) {
+    redirectToLogin();
+    throw new UnauthorizedError('Not logged in');
+  }
+  if (!response.ok) {
+    const detail = (await response.json().catch(() => null)) as { message?: string } | null;
+    throw new Error(detail?.message ?? `Upload failed with status ${response.status}`);
+  }
+}
+
+export const removeBanner = (guildId: string): Promise<void> =>
+  request('DELETE', `/api/guilds/${guildId}/banner`);
+
 export const fetchGuilds = (): Promise<Guild[]> => request('GET', '/api/guilds');
 
 export const fetchSetupInfo = (): Promise<SetupInfo> => request('GET', '/api/guilds/setup-info');

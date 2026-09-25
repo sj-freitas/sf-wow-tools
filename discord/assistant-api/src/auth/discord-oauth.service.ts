@@ -25,6 +25,8 @@ export interface DiscordUser {
 export interface DiscordPartialGuild {
   id: string;
   name: string;
+  /** Icon hash; null when the server has no icon. */
+  icon?: string | null;
 }
 
 export interface DiscordProfile {

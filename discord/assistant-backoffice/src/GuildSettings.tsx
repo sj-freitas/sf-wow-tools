@@ -1,11 +1,13 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import {
   addGuildServer,
+  bannerUrl,
   deleteGuild,
   fetchChannels,
   fetchHome,
   fetchEligibleServers,
   fetchRoleOptions,
+  removeBanner,
   removeGuildServer,
   syncDiscord,
   setMainServer,
@@ -13,6 +15,7 @@ import {
   setOfficerRole,
   setRoleMapping,
   updateGuild,
+  uploadBanner,
 } from './api';
 import { channelKey, splitChannelKey } from './channelKey';
 import { ChannelSelect } from './ChannelSelect';
@@ -64,6 +67,7 @@ export function GuildSettings({ guild, regions, onChanged, onClose, onDeleted }:
 
       <DetailsSection guild={guild} regions={regions} run={run} />
       <ServersSection guild={guild} run={run} />
+      <BannerSection guild={guild} run={run} />
       <WelcomeSection guild={guild} />
       <RolesSection guild={guild} run={run} />
       <RequestChannelSection guild={guild} run={run} />
@@ -411,6 +415,69 @@ function RequestChannelSection({ guild, run }: SectionProps) {
           </button>
         )}
       </div>
+    </section>
+  );
+}
+
+const MAX_BANNER_MB = 2;
+
+/** The optional banner shown at the top of the guild's pages, above its name. */
+function BannerSection({ guild, run }: SectionProps) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const choose = (file: File | undefined) => {
+    if (!file) return;
+    setError(null);
+    if (file.size > MAX_BANNER_MB * 1024 * 1024) {
+      setError(`The banner can be at most ${MAX_BANNER_MB} MB.`);
+      return;
+    }
+    setBusy(true);
+    void run(
+      uploadBanner(guild.id, file).catch((err: unknown) => {
+        setError(err instanceof Error ? err.message : String(err));
+      }),
+    ).finally(() => setBusy(false));
+  };
+
+  return (
+    <section className="settings-section">
+      <h4>Banner</h4>
+      <p className="muted">
+        An optional wide image shown at the top of the guild, above its name. PNG, JPEG, GIF or
+        WebP, up to {MAX_BANNER_MB} MB; wide images (about 4:1) look best.
+      </p>
+      {guild.bannerVersion !== null && (
+        <img className="guild-banner banner-preview" src={bannerUrl(guild)} alt="Current banner" />
+      )}
+      <div className="settings-actions">
+        <label className={busy ? 'btn btn-primary disabled' : 'btn btn-primary'}>
+          {guild.bannerVersion === null ? 'Upload banner' : 'Replace banner'}
+          <input
+            type="file"
+            accept="image/png,image/jpeg,image/gif,image/webp"
+            hidden
+            disabled={busy}
+            onChange={(e) => {
+              choose(e.target.files?.[0]);
+              e.target.value = '';
+            }}
+          />
+        </label>
+        {guild.bannerVersion !== null && (
+          <button
+            type="button"
+            className="btn"
+            disabled={busy}
+            onClick={() => void run(removeBanner(guild.id))}
+          >
+            Remove banner
+          </button>
+        )}
+        {busy && <span className="muted">Uploading…</span>}
+      </div>
+      {error && <p className="status-error">{error}</p>}
     </section>
   );
 }

@@ -39,6 +39,8 @@ export interface Guild {
   gameVersion: string;
   region: string;
   servers: GuildServer[];
+  /** Changes with the banner image; null when the guild has no banner. */
+  bannerVersion: number | null;
   /** Where members' messages to the officers are posted; null until set. */
   officerRequestChannel: { serverId: string; channelId: string } | null;
   /** Role in the main server whose holders manage the guild's characters and settings. */
@@ -68,6 +70,8 @@ export type Ranks = Record<string, string[]>;
 export interface GuildServer {
   discordId: string;
   name: string;
+  /** Discord icon hash; null when the server has none. */
+  icon: string | null;
   isMain: boolean;
 }
 

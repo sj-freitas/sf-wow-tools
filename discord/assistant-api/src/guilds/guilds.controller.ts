@@ -12,8 +12,10 @@ import {
   Post,
   Put,
   Req,
+  Res,
   UseGuards,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { AuthGuard } from '../auth/auth.guard';
 import { AuthService } from '../auth/auth.service';
@@ -21,6 +23,7 @@ import type { AuthenticatedRequest } from '../auth/auth.types';
 import { GuildAccessService } from '../auth/guild-access.service';
 import { APP_CONFIG } from '../config/app.config';
 import { isRegion, REGIONS, regionOptions } from '../config/regions';
+import { MAX_BANNER_BYTES, readBody } from './banner';
 import { RanksService, type RanksDto } from './ranks.service';
 import {
   GUILD_ROLE_KEYS,
@@ -216,6 +219,40 @@ export class GuildsController {
   }
 
   /** Any member of the guild: its welcome post (optional). */
+  /** The guild's banner image, for any member of the guild. */
+  @Get(':guildId/banner')
+  async banner(
+    @Req() req: AuthenticatedRequest,
+    @Param('guildId') guildId: string,
+    @Res() res: Response,
+  ): Promise<void> {
+    if (!(await this.guildAccess.find(req.user.id, guildId))) throw new ForbiddenException();
+    const banner = await this.guildsService.getBanner(guildId);
+    if (!banner) {
+      res.status(HttpStatus.NOT_FOUND).json({ message: 'This guild has no banner' });
+      return;
+    }
+    // The URL carries the version, so a new banner is a new URL and this can be cached.
+    res
+      .set({ 'Content-Type': banner.contentType, 'Cache-Control': 'private, max-age=86400' })
+      .send(banner.data);
+  }
+
+  /** Guild-Assistants and Officers. The body is the image itself (PNG, JPEG, GIF or WebP, up to 2 MB). */
+  @Put(':guildId/banner')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async setBanner(@Req() req: AuthenticatedRequest, @Param('guildId') guildId: string) {
+    await this.guildAccess.assertCanConfigure(req.user.id, guildId);
+    await this.guildsService.setBanner(guildId, await readBody(req, MAX_BANNER_BYTES));
+  }
+
+  @Delete(':guildId/banner')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async removeBanner(@Req() req: AuthenticatedRequest, @Param('guildId') guildId: string) {
+    await this.guildAccess.assertCanConfigure(req.user.id, guildId);
+    await this.guildsService.removeBanner(guildId);
+  }
+
   @Get(':guildId/home')
   async home(
     @Req() req: AuthenticatedRequest,

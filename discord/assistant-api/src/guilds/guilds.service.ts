@@ -8,6 +8,7 @@ import { Prisma } from '@prisma/client';
 import { DiscordOAuthService, type DiscordServerMember } from '../auth/discord-oauth.service';
 import { APP_CONFIG } from '../config/app.config';
 import type { RegionId } from '../config/regions';
+import { sniffImageType } from './banner';
 import { PrismaService } from '../database/prisma.service';
 import { GAME_VERSIONS } from '../game/game-version';
 import { guildPath } from './guild-path';
@@ -18,6 +19,8 @@ export type Faction = 'ALLIANCE' | 'HORDE';
 export interface GuildServerDto {
   discordId: string;
   name: string;
+  /** Discord icon hash, for the picture next to the guild name. */
+  icon: string | null;
   isMain: boolean;
 }
 
@@ -31,6 +34,8 @@ export interface UserGuildDto {
   gameVersion: string;
   region: string;
   servers: GuildServerDto[];
+  /** Changes whenever the optional banner image does; null when there is none. */
+  bannerVersion: number | null;
   officerRole: { id: string; name: string } | null;
   /** Where members' messages to the officers are posted; null until set. */
   officerRequestChannel: { serverId: string; channelId: string } | null;
@@ -115,10 +120,11 @@ const guildSelect = {
   officerRequestServerId: true,
   officerRequestChannelId: true,
   servers: {
-    select: { discordId: true, name: true, isMain: true },
+    select: { discordId: true, name: true, icon: true, isMain: true },
     orderBy: [{ isMain: 'desc' }, { name: 'asc' }],
   },
   roleMappings: { select: { guildRole: true, discordRoleId: true, discordRoleName: true } },
+  banner: { select: { updatedAt: true } },
 } satisfies Prisma.GuildSelect;
 
 type GuildRow = Prisma.GuildGetPayload<{ select: typeof guildSelect }>;
@@ -130,6 +136,7 @@ function toDto(guild: GuildRow, isAdmin: boolean, isOfficer: boolean): UserGuild
     officerRequestServerId,
     officerRequestChannelId,
     roleMappings,
+    banner,
     ...rest
   } = guild;
   const mapped = (key: GuildRoleKey) => {
@@ -139,6 +146,7 @@ function toDto(guild: GuildRow, isAdmin: boolean, isOfficer: boolean): UserGuild
   return {
     ...rest,
     path: guildPath(rest),
+    bannerVersion: banner ? banner.updatedAt.getTime() : null,
     roleMappings: { RAIDER: mapped('RAIDER'), SOCIAL: mapped('SOCIAL') },
     officerRequestChannel:
       officerRequestServerId && officerRequestChannelId
@@ -430,6 +438,32 @@ export class GuildsService {
       },
     });
     return this.getHome(guildId);
+  }
+
+  async getBanner(guildId: string): Promise<{ contentType: string; data: Buffer } | null> {
+    const banner = await this.prisma.guildBanner.findUnique({ where: { guildId } });
+    return banner ? { contentType: banner.contentType, data: Buffer.from(banner.data) } : null;
+  }
+
+  /** Saves the banner (replacing any earlier one) after checking it really is an image. */
+  async setBanner(guildId: string, data: Buffer): Promise<void> {
+    if (data.length === 0) throw new BadRequestException('No image was sent.');
+    const contentType = sniffImageType(data);
+    if (!contentType) {
+      throw new BadRequestException('The banner must be a PNG, JPEG, GIF or WebP image.');
+    }
+    const bytes = new Uint8Array(data);
+    await this.prisma.guildBanner.upsert({
+      where: { guildId },
+      create: { guildId, contentType, data: bytes },
+      update: { contentType, data: bytes },
+    });
+    this.realtime.publish(guildId, 'guild');
+  }
+
+  async removeBanner(guildId: string): Promise<void> {
+    await this.prisma.guildBanner.deleteMany({ where: { guildId } });
+    this.realtime.publish(guildId, 'guild');
   }
 
   /** People the "add character" search can offer: members of the guild's Discord servers. */

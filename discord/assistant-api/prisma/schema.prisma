@@ -76,6 +76,7 @@ model Guild {
   // Where members' messages to the officers are posted; null until set in the guild settings.
   officerRequestServerId  String?               @map("officer_request_server_id")
   officerRequestChannelId String?               @map("officer_request_channel_id")
+  banner                  GuildBanner?
   officerConversations    OfficerConversation[]
   scheduledTasks          ScheduledTask[]
   honeypots               Honeypot[]
@@ -90,12 +91,26 @@ model Guild {
   @@map("guilds")
 }
 
+// The optional banner image of a guild, kept apart from the guild row so listing guilds never
+// loads the image bytes.
+model GuildBanner {
+  guildId     String   @id @map("guild_id") @db.Uuid
+  guild       Guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  contentType String   @map("content_type")
+  data        Bytes
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("guild_banners")
+}
+
 model DiscordServer {
   id        String   @id @default(uuid()) @db.Uuid
   // Discord's server (a.k.a. guild) snowflake id.
   discordId String   @unique @map("discord_id")
   // Display name, refreshed whenever a member logs in; empty until then.
   name      String   @default("")
+  // Discord's icon hash (the picture shown next to the guild name); null when the server has none.
+  icon      String?
   // Exactly one server per guild is the main one; kept in sync by GuildsService.
   isMain    Boolean  @default(false) @map("is_main")
   guildId   String   @map("guild_id") @db.Uuid

@@ -197,6 +197,19 @@ Officers only (`PUT /api/guilds/:id/home`, up to 10,000 characters; an empty tex
 rendered with `react-markdown` (GitHub flavour) which only builds elements and never raw HTML, so
 what an Officer writes can't inject scripts into what members see.
 
+### Guild picture and banner
+
+- The guild header shows the **picture of the guild's main Discord server** on the left, with the name
+  above and "Realm · Faction · Version · Region" below. The icon hash is stored on each server
+  (`discord_servers.icon`) and refreshed whenever a member's Discord sync runs (login, or a stale
+  re-sync), so a newly added server shows its picture after the next sync. Servers without an icon
+  show the guild's first letter.
+- An optional **banner** goes above the guild name (Settings → Banner; Guild-Assistants and Officers).
+  PNG, JPEG, GIF or WebP up to 2 MB; the type is checked from the file's bytes (SVG is refused as it
+  can carry scripts). It is stored in the database (`guild_banners`) and served, to members of the guild
+  only, by `GET /api/guilds/:guildId/banner?v=<version>`; `PUT` (raw image body) and `DELETE` on the same
+  path set and remove it. Guild DTOs carry `bannerVersion` so a new banner is a new, cacheable URL.
+
 ### Clearing a channel (`/clear-channel`)
 
 - **`/clear-channel [channel]`.** Deletes every unpinned message of the channel (default: the one you

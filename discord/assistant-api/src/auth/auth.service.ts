@@ -204,7 +204,7 @@ export class AuthService {
       ...discordGuilds.map((guild) =>
         this.prisma.discordServer.updateMany({
           where: { discordId: guild.id },
-          data: { name: guild.name },
+          data: { name: guild.name, icon: guild.icon ?? null },
         }),
       ),
     ]);
