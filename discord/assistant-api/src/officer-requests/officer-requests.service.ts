@@ -3,6 +3,7 @@ import { BadRequestException, Injectable, Logger, NotFoundException } from '@nes
 import { PrismaService } from '../database/prisma.service';
 import { DiscordBotService } from '../discord/discord-bot.service';
 import { describeDiscordError } from '../discord/discord-errors';
+import { RealtimeService } from '../realtime/realtime.service';
 import { memberDmEmbed, officerReplyEmbed, requestEmbed } from './officer-request-embeds';
 
 /** Who used the command, as Discord tells us. */
@@ -42,6 +43,7 @@ export class OfficerRequestsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly bot: DiscordBotService,
+    private readonly realtime: RealtimeService,
   ) {}
 
   /**
@@ -132,6 +134,7 @@ export class OfficerRequestsService {
         },
       });
     }
+    this.realtime.publish(guild.id, 'officer-requests');
 
     return [
       existing
@@ -200,7 +203,7 @@ export class OfficerRequestsService {
 
   /** Posts the reply in the request channel, DMs the member and saves it. */
   private async deliverReply(
-    guild: { name: string; realm: string; officerRequestChannelId: string | null },
+    guild: { id: string; name: string; realm: string; officerRequestChannelId: string | null },
     conversation: {
       id: string;
       publicId: number;
@@ -264,6 +267,7 @@ export class OfficerRequestsService {
       where: { id: conversation.id },
       data: { updatedAt: new Date() },
     });
+    this.realtime.publish(guild.id, 'officer-requests');
 
     return { dmDelivered };
   }

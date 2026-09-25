@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { subscribeEvents } from './events';
 import { fetchOfficerRequest, fetchOfficerRequests, replyToOfficerRequest } from './api';
 import { formatWhen, timeAgo } from './time';
 import type { Conversation, ConversationsPage, Guild } from './types';
@@ -11,7 +12,7 @@ interface Props {
   timezone: string;
 }
 
-const REFRESH_MS = 20_000;
+const REFRESH_MS = 60_000;
 const SEARCH_DELAY_MS = 300;
 
 /** `/officer-requests`: what members wrote to the officers, most recently active first. */
@@ -51,7 +52,12 @@ export function OfficerRequestsPage({ guild, timezone }: Props) {
   useEffect(() => {
     load();
     const timer = setInterval(load, REFRESH_MS);
-    return () => clearInterval(timer);
+    // New messages and replies arrive over the live stream; the timer is only a safety net.
+    const unsubscribe = subscribeEvents('officer-requests', load);
+    return () => {
+      clearInterval(timer);
+      unsubscribe();
+    };
   }, [load]);
 
   useEffect(() => {
@@ -185,7 +191,12 @@ export function ConversationPage({ guild, timezone }: Props) {
   useEffect(() => {
     load();
     const timer = setInterval(load, REFRESH_MS);
-    return () => clearInterval(timer);
+    // New messages and replies arrive over the live stream; the timer is only a safety net.
+    const unsubscribe = subscribeEvents('officer-requests', load);
+    return () => {
+      clearInterval(timer);
+      unsubscribe();
+    };
   }, [load]);
 
   return (

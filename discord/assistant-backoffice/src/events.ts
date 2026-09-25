@@ -1,14 +1,15 @@
 import { fetchCurrentUser, redirectToLogin } from './api';
 
-export type GuildEventType = 'characters' | 'guild';
+export type GuildEventType = 'characters' | 'guild' | 'officer-requests';
 
 const handlers: Record<GuildEventType, Set<() => void>> = {
   characters: new Set(),
   guild: new Set(),
+  'officer-requests': new Set(),
 };
 let source: EventSource | null = null;
 
-const subscriberCount = () => handlers.characters.size + handlers.guild.size;
+const subscriberCount = () => Object.values(handlers).reduce((total, set) => total + set.size, 0);
 
 function open(): EventSource {
   const stream = new EventSource('/api/events');

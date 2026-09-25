@@ -3,8 +3,9 @@ import { Subject } from 'rxjs';
 
 export interface GuildEvent {
   guildId: string;
-  /** `characters`: players/characters changed. `guild`: the guild itself (servers) changed. */
-  type: 'characters' | 'guild';
+  /** `characters`: players/characters changed. `guild`: the guild itself (servers) changed.
+   * `officer-requests`: a request or reply was added. */
+  type: 'characters' | 'guild' | 'officer-requests';
   /** When set, only these users get the event (used when their access rows no longer exist). */
   userIds?: string[];
 }

@@ -1,3 +1,4 @@
+import type { RealtimeService } from '../realtime/realtime.service';
 import { NotFoundException } from '@nestjs/common';
 import assert from 'node:assert/strict';
 import { beforeEach, describe, it } from 'node:test';
@@ -27,6 +28,7 @@ describe('OfficerRequestsService', () => {
   let createdMessages: any[];
   let touched: string[];
   let guildUpdate: any;
+  let published: string[][];
   let service: OfficerRequestsService;
 
   beforeEach(() => {
@@ -51,6 +53,7 @@ describe('OfficerRequestsService', () => {
     createdMessages = [];
     touched = [];
     guildUpdate = null;
+    published = [];
     const prisma = {
       guild: {
         findUnique: async (args: any) => (args.where.id === guild.id ? guild : null),
@@ -100,10 +103,23 @@ describe('OfficerRequestsService', () => {
       postMessage: async (channelId: string, text: string) =>
         void posts.push({ channelId, embed: text, options: null }),
     } as unknown as DiscordBotService;
-    service = new OfficerRequestsService(prisma, bot);
+    const realtime = {
+      publish: (guildId: string, type: string) => void published.push([guildId, type]),
+    } as unknown as RealtimeService;
+    service = new OfficerRequestsService(prisma, bot, realtime);
   });
 
   describe('/contact-officer', () => {
+    it('tells the backoffice to refresh when a request comes in', async () => {
+      await service.contact({
+        serverId: SERVER,
+        invoker: member,
+        message: 'Hello',
+        anonymous: true,
+      });
+      assert.deepEqual(published, [['g1', 'officer-requests']]);
+    });
+
     const send = (extra: Record<string, unknown> = {}) =>
       service.contact({ serverId: SERVER, invoker: member, message: 'Please help', ...extra });
 
@@ -310,6 +326,11 @@ describe('OfficerRequestsService', () => {
           ['officer-1', 'Olga'],
         );
         assert.deepEqual(touched, ['c1']);
+      });
+
+      it('tells the backoffice to refresh', async () => {
+        await replyAsOfficer();
+        assert.deepEqual(published, [['g1', 'officer-requests']]);
       });
 
       it('reports a DM that could not be delivered', async () => {
