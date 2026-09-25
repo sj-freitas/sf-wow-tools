@@ -23,11 +23,13 @@ async function main(): Promise<void> {
     ? Routes.applicationGuildCommands(applicationId, guildId)
     : Routes.applicationCommands(applicationId);
 
-  const result = (await rest.put(route, { body: commands })) as unknown[];
+  const result = (await rest.put(route, { body: commands })) as { id: string; name: string }[];
 
   console.log(
     `Registered ${result.length} command(s) ${guildId ? `to guild ${guildId}` : 'globally'}.`,
   );
+  // The ids are what makes a command clickable in a message: </name:id>.
+  for (const command of result) console.log(`  /${command.name}  ${command.id}`);
 }
 
 function requireEnv(name: string): string {

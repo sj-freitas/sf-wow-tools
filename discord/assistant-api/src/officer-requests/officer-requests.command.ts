@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { Command } from '../bot/decorators/command.decorator';
+import { Button, Modal } from '../bot/decorators/interaction-handler.decorator';
 import {
   getInvokerId,
+  getModalValue,
+  type ComponentReply,
   getNumberOption,
   getOptionalBooleanOption,
   getStringOption,
@@ -13,6 +16,7 @@ import {
   OfficerRequestsService,
   type Invoker,
 } from './officer-requests.service';
+import { parseReplyButtonId } from './officer-request-embeds';
 
 /** The two Discord commands of the officer contact flow. All answers are private (ephemeral). */
 @Injectable()
@@ -33,6 +37,58 @@ export class OfficerRequestsCommand {
       message,
       anonymous: getOptionalBooleanOption(interaction, 'anonymous'),
       conversationId: getNumberOption(interaction, 'conversation-id'),
+    });
+  }
+
+  /** The Reply button under an officer's answer in the member's DM: opens a form for the message. */
+  @Button('contact-reply')
+  async openReplyForm(interaction: DiscordInteraction): Promise<ComponentReply> {
+    const target = parseReplyButtonId(interaction.data?.custom_id);
+    const invoker = invokerOf(interaction);
+    if (!target || !invoker) return MESSAGES.conversationNotFound;
+    const refusal = await this.officerRequests.checkCanContinue(
+      target.guildId,
+      target.publicId,
+      invoker.id,
+    );
+    if (refusal) return refusal;
+    return {
+      modal: {
+        custom_id: interaction.data?.custom_id ?? '',
+        title: `Reply to the officers · #${target.publicId}`,
+        components: [
+          {
+            type: 1,
+            components: [
+              {
+                type: 4,
+                custom_id: 'message',
+                label: 'Your message',
+                style: 2,
+                min_length: 1,
+                max_length: MAX_MESSAGE_LENGTH,
+                required: true,
+              },
+            ],
+          },
+        ],
+      },
+    };
+  }
+
+  @Modal('contact-reply')
+  async sendReplyForm(interaction: DiscordInteraction): Promise<string> {
+    const target = parseReplyButtonId(interaction.data?.custom_id);
+    const invoker = invokerOf(interaction);
+    if (!target || !invoker) return MESSAGES.conversationNotFound;
+    const message = (getModalValue(interaction, 'message') ?? '').trim();
+    const tooLong = validateMessage(message);
+    if (tooLong) return tooLong;
+    return this.officerRequests.contact({
+      guildId: target.guildId,
+      invoker,
+      message,
+      conversationId: target.publicId,
     });
   }
 

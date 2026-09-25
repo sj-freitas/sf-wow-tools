@@ -210,6 +210,21 @@ what an Officer writes can't inject scripts into what members see.
   only, by `GET /api/guilds/:guildId/banner?v=<version>`; `PUT` (raw image body) and `DELETE` on the same
   path set and remove it. Guild DTOs carry `bannerVersion` so a new banner is a new, cacheable URL.
 
+### Buttons and forms (Discord components)
+
+Clicks on message buttons and submitted pop-up forms (modals) arrive at the same interactions endpoint
+as slash commands, so nothing extra is configured in the Developer Portal. Handlers are methods marked
+`@Button('prefix')` or `@Modal('prefix')` (`src/bot/decorators/interaction-handler.decorator.ts`); the
+button's `custom_id` is `<prefix>:<state>`. A button handler answers with a private message or opens a
+modal; a modal handler answers with a private message. Unknown or failing buttons get a private
+"no longer available" / "something went wrong".
+
+- **Reply button** (`contact-reply:<guildId>:<conversationId>`) under an officer's answer in the
+  member's DM: opens a "Your message" form and, on submit, runs the same code as `/contact-officer`
+  with that conversation id (so the cooldown, length limit and lock apply). It first checks that the
+  clicker started the conversation, so a forwarded DM can't be used by someone else.
+- `npm run commands:register` also prints every command's id (the number in `</name:id>` mentions).
+
 ### Clearing a channel (`/clear-channel`)
 
 - **`/clear-channel [channel]`.** Deletes every unpinned message of the channel (default: the one you

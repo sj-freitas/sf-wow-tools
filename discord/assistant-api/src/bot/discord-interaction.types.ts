@@ -33,7 +33,33 @@ export interface DiscordInteraction {
   data?: {
     name: string;
     options?: DiscordInteractionOption[];
+    /** Buttons and modals: the id we gave the component. */
+    custom_id?: string;
+    /** Modal submissions: the fields, one per row. */
+    components?: { components: { custom_id: string; value?: string }[] }[];
   };
+}
+
+/** What a button or modal handler answers: a private message, or a pop-up form to open. */
+export type ComponentReply = string | { modal: ModalData };
+
+export interface ModalData {
+  custom_id: string;
+  /** At most 45 characters. */
+  title: string;
+  components: unknown[];
+}
+
+/** The text a user typed into a modal field. */
+export function getModalValue(
+  interaction: DiscordInteraction,
+  customId: string,
+): string | undefined {
+  for (const row of interaction.data?.components ?? []) {
+    const field = row.components.find((component) => component.custom_id === customId);
+    if (field) return field.value;
+  }
+  return undefined;
 }
 
 export const getInvokerId = (interaction: DiscordInteraction): string | undefined =>

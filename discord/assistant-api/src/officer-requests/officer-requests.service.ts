@@ -10,7 +10,13 @@ import { PrismaService } from '../database/prisma.service';
 import { DiscordBotService } from '../discord/discord-bot.service';
 import { describeDiscordError } from '../discord/discord-errors';
 import { RealtimeService } from '../realtime/realtime.service';
-import { memberDmEmbed, officerReplyEmbed, requestEmbed } from './officer-request-embeds';
+import {
+  memberDmEmbed,
+  officerReplyEmbed,
+  replyButtonRow,
+  replyInstructions,
+  requestEmbed,
+} from './officer-request-embeds';
 
 /** Who used the command, as Discord tells us. */
 export interface Invoker {
@@ -20,6 +26,15 @@ export interface Invoker {
   /** Their role ids in the server the command was used in, when Discord included them. */
   roleIds?: readonly string[];
 }
+
+const GUILD_SELECT = {
+  id: true,
+  name: true,
+  realm: true,
+  officerRoleId: true,
+  officerRequestChannelId: true,
+  servers: { where: { isMain: true }, select: { discordId: true } },
+} as const;
 
 export const MAX_MESSAGE_LENGTH = 3500;
 /** A member has to wait this long between two messages to the officers. */
@@ -60,13 +75,19 @@ export class OfficerRequestsService {
    * the conversation id) ignore the `anonymous` option. Returns the private answer for the member.
    */
   async contact(input: {
-    serverId: string;
+    /** The server the command was used in. Buttons have no server and pass `guildId` instead. */
+    serverId?: string;
+    guildId?: string;
     invoker: Invoker;
     message: string;
     anonymous?: boolean;
     conversationId?: number;
   }): Promise<string> {
-    const guild = await this.findGuildOfServer(input.serverId);
+    const guild = input.guildId
+      ? await this.findGuildById(input.guildId)
+      : input.serverId
+        ? await this.findGuildOfServer(input.serverId)
+        : null;
     if (!guild) return MESSAGES.notLinked;
     if (!guild.officerRequestChannelId) return MESSAGES.channelNotSet;
 
@@ -149,7 +170,8 @@ export class OfficerRequestsService {
       existing
         ? `Your follow-up was sent to the officers of ${guild.name}.`
         : `Your message was sent to the officers of ${guild.name}${isAnonymous ? ', anonymously' : ', with your name'}.`,
-      `Conversation ID: **${publicId}**. Keep it: officers reply to you by DM, and you can write again with /contact-officer and this conversation ID.`,
+      `Conversation ID: **${publicId}**. Keep it: officers reply to you by DM.`,
+      replyInstructions(guild.name, publicId, await this.bot.getCommandMention('contact-officer')),
     ].join('\n');
   }
 
@@ -287,6 +309,7 @@ export class OfficerRequestsService {
       }
     }
 
+    const commandMention = await this.bot.getCommandMention('contact-officer');
     let dmDelivered = true;
     try {
       await this.bot.sendDirectMessage(
@@ -298,7 +321,10 @@ export class OfficerRequestsService {
           officerName: officer.name,
           originalRequest: firstRequest?.content ?? '',
           reply: message,
+          commandMention,
+          withButton: true,
         }),
+        replyButtonRow(guild.id, conversation.publicId),
       );
     } catch (error) {
       dmDelivered = false;
@@ -364,17 +390,31 @@ export class OfficerRequestsService {
     });
   }
 
+  /**
+   * Whether this member may write to the conversation: null if so, else the message to show. Used
+   * by the Reply button before it opens the form.
+   */
+  async checkCanContinue(
+    guildId: string,
+    publicId: number,
+    userDiscordId: string,
+  ): Promise<string | null> {
+    const conversation = await this.prisma.officerConversation.findFirst({
+      where: { guildId, publicId, userDiscordId },
+      select: { lockedAt: true },
+    });
+    if (!conversation) return MESSAGES.conversationNotFound;
+    return conversation.lockedAt ? MESSAGES.locked : null;
+  }
+
+  private findGuildById(guildId: string) {
+    return this.prisma.guild.findUnique({ where: { id: guildId }, select: GUILD_SELECT });
+  }
+
   private findGuildOfServer(serverId: string) {
     return this.prisma.guild.findFirst({
       where: { servers: { some: { discordId: serverId } } },
-      select: {
-        id: true,
-        name: true,
-        realm: true,
-        officerRoleId: true,
-        officerRequestChannelId: true,
-        servers: { where: { isMain: true }, select: { discordId: true } },
-      },
+      select: GUILD_SELECT,
     });
   }
 

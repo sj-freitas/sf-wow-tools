@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
-import type { DiscordInteraction } from './discord-interaction.types';
+import type { ComponentReply, DiscordInteraction } from './discord-interaction.types';
+import type { InteractionHandlerKind } from './decorators/interaction-handler.decorator';
 import type { CommandOptions } from './decorators/command.decorator';
 
 export interface CommandHandlerRef {
@@ -28,6 +29,38 @@ export class CommandRegistryService {
     }
     this.logger.log(`Registered command "${name}" -> ${instance.constructor.name}#${methodName}`);
     this.handlers.set(name, { instance, methodName, options });
+  }
+
+  private readonly componentHandlers = new Map<string, CommandHandlerRef>();
+
+  registerComponent(
+    kind: InteractionHandlerKind,
+    prefix: string,
+    instance: object,
+    methodName: string,
+  ): void {
+    const key = `${kind}:${prefix}`;
+    if (this.componentHandlers.has(key)) {
+      throw new Error(`A ${kind} handler for "${prefix}" is already registered`);
+    }
+    this.componentHandlers.set(key, { instance, methodName, options: {} });
+  }
+
+  /** Runs the handler of a button or modal, or returns null if nothing handles that custom id. */
+  async executeComponent(
+    kind: InteractionHandlerKind,
+    interaction: DiscordInteraction,
+  ): Promise<ComponentReply | null> {
+    const prefix = interaction.data?.custom_id?.split(':')[0] ?? '';
+    const handler = this.componentHandlers.get(`${kind}:${prefix}`);
+    if (!handler) return null;
+    const fn = (
+      handler.instance as Record<
+        string,
+        (i: DiscordInteraction) => Promise<ComponentReply> | ComponentReply
+      >
+    )[handler.methodName];
+    return fn.call(handler.instance, interaction);
   }
 
   has(name: string): boolean {

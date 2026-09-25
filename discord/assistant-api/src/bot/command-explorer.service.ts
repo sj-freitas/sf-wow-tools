@@ -5,6 +5,10 @@ import {
   COMMAND_OPTIONS_METADATA,
   type CommandOptions,
 } from './decorators/command.decorator';
+import {
+  INTERACTION_HANDLER_METADATA,
+  type InteractionHandlerMetadata,
+} from './decorators/interaction-handler.decorator';
 import { CommandRegistryService } from './command-registry.service';
 
 /**
@@ -50,6 +54,19 @@ export class CommandExplorerService implements OnApplicationBootstrap {
     const method = (prototype as Record<string, unknown>)[methodName];
     if (typeof method !== 'function') {
       return;
+    }
+
+    const componentHandler = this.reflector.get<InteractionHandlerMetadata | undefined>(
+      INTERACTION_HANDLER_METADATA,
+      method,
+    );
+    if (componentHandler) {
+      this.commandRegistry.registerComponent(
+        componentHandler.kind,
+        componentHandler.prefix,
+        instance,
+        methodName,
+      );
     }
 
     const commandName = this.reflector.get<string | undefined>(COMMAND_METADATA, method);

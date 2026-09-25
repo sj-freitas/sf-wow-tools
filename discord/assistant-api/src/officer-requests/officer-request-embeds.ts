@@ -49,6 +49,10 @@ export function memberDmEmbed(input: {
   officerName: string;
   originalRequest: string;
   reply: string;
+  /** `</contact-officer:id>`, when known: clicking it opens the command. */
+  commandMention?: string | null;
+  /** When the DM has a Reply button, the text points to it first. */
+  withButton?: boolean;
 }): APIEmbed {
   return {
     title: `An officer of ${input.guildName} replied to your request`,
@@ -60,9 +64,55 @@ export function memberDmEmbed(input: {
       { name: 'Your request', value: truncate(input.originalRequest, 1000) },
       {
         name: 'To reply',
-        value: `On the ${input.guildName} server, use /contact-officer and set conversation-id to ${input.publicId}.`,
+        value: replyInstructions(
+          input.guildName,
+          input.publicId,
+          input.commandMention,
+          input.withButton,
+        ),
       },
     ],
     footer: { text: `Conversation #${input.publicId}` },
   };
 }
+
+/** How a member writes back: a clickable command when we know it, plus a line to copy. */
+export function replyInstructions(
+  guildName: string,
+  publicId: number,
+  commandMention?: string | null,
+  withButton = false,
+): string {
+  return [
+    ...(withButton ? ['Press **Reply** below to write back.', 'Or, the slash command way:'] : []),
+    commandMention
+      ? `On the ${guildName} server, click ${commandMention}, set **conversation-id** to \`${publicId}\` and write your message.`
+      : `On the ${guildName} server, use /contact-officer with **conversation-id** \`${publicId}\`.`,
+    `Or copy this into a message box and add your text after "message:":`,
+    `\`\`\`/contact-officer conversation-id:${publicId} message:\`\`\``,
+  ].join('\n');
+}
+
+const REPLY_BUTTON = 'contact-reply';
+
+/** The id of a Reply button: it carries the guild and the conversation the member answers. */
+export const replyButtonId = (guildId: string, publicId: number): string =>
+  `${REPLY_BUTTON}:${guildId}:${publicId}`;
+
+export function parseReplyButtonId(
+  customId: string | undefined,
+): { guildId: string; publicId: number } | null {
+  const [prefix, guildId, publicId] = (customId ?? '').split(':');
+  if (prefix !== REPLY_BUTTON || !guildId || !/^\d{8}$/.test(publicId ?? '')) return null;
+  return { guildId, publicId: Number(publicId) };
+}
+
+/** The row with the Reply button under the officer's answer in the member's DM. */
+export const replyButtonRow = (guildId: string, publicId: number): unknown[] => [
+  {
+    type: 1,
+    components: [
+      { type: 2, style: 1, label: 'Reply', custom_id: replyButtonId(guildId, publicId) },
+    ],
+  },
+];

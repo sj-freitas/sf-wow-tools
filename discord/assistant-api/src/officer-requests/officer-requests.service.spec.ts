@@ -20,7 +20,7 @@ describe('OfficerRequestsService', () => {
   let takenIds: Set<number>;
   let idProbes: number;
   let posts: { channelId: string; embed: any; options: any }[];
-  let dms: { userId: string; embed: any }[];
+  let dms: { userId: string; embed: any; components?: any[] }[];
   let postFails: boolean;
   let dmFails: boolean;
   let officerRolesElsewhere: string[];
@@ -32,6 +32,7 @@ describe('OfficerRequestsService', () => {
   let deleted: string[];
   let channelDeletes: string[][];
   let failDeleteOf: string | null;
+  let mention: string | null;
   let service: OfficerRequestsService;
 
   beforeEach(() => {
@@ -60,6 +61,7 @@ describe('OfficerRequestsService', () => {
     deleted = [];
     channelDeletes = [];
     failDeleteOf = null;
+    mention = '</contact-officer:999>';
     const prisma = {
       guild: {
         findUnique: async (args: any) => (args.where.id === guild.id ? guild : null),
@@ -106,10 +108,11 @@ describe('OfficerRequestsService', () => {
         posts.push({ channelId, embed, options });
         return `discord-msg-${posts.length}`;
       },
-      sendDirectMessage: async (userId: string, embed: any) => {
+      sendDirectMessage: async (userId: string, embed: any, components?: unknown[]) => {
         if (dmFails) throw new Error('Cannot send messages to this user');
-        dms.push({ userId, embed });
+        dms.push({ userId, embed, components });
       },
+      getCommandMention: async () => mention,
       deleteMessage: async (channelId: string, messageId: string) => {
         if (messageId === failDeleteOf) throw new Error('Unknown Message');
         channelDeletes.push([channelId, messageId]);
@@ -309,7 +312,29 @@ describe('OfficerRequestsService', () => {
       assert.equal(fields['Guild'], 'Relic Hunters · Realm');
       assert.equal(fields['Replied by'], 'Olga');
       assert.equal(fields['Your request'], 'Please help with X');
-      assert.match(fields['To reply'], /\/contact-officer.*12345678/);
+      assert.match(fields['To reply'], /click <\/contact-officer:999>.*`12345678`/);
+      assert.match(fields['To reply'], /\/contact-officer conversation-id:12345678 message:/);
+    });
+
+    it('puts a Reply button, carrying the guild and conversation, under the DM', async () => {
+      await reply();
+      const button = dms[0].components?.[0].components[0];
+      assert.deepEqual(
+        [button.type, button.label, button.custom_id],
+        [2, 'Reply', 'contact-reply:g1:12345678'],
+      );
+      assert.match(
+        dms[0].embed.fields.find((f: any) => f.name === 'To reply').value,
+        /^Press \*\*Reply\*\* below/,
+      );
+    });
+
+    it('falls back to plain instructions when the command id is unknown', async () => {
+      mention = null;
+      await reply();
+      const text = dms[0].embed.fields.find((f: any) => f.name === 'To reply').value;
+      assert.doesNotMatch(text, /<\//);
+      assert.match(text, /use \/contact-officer with \*\*conversation-id\*\* `12345678`/);
     });
 
     it('saves the reply with the officer and whether the DM was delivered', async () => {
@@ -397,6 +422,18 @@ describe('OfficerRequestsService', () => {
           await assert.rejects(service.deleteConversation('g1', 87654321), NotFoundException);
           assert.deepEqual([channelDeletes, deleted], [[], []]);
         });
+      });
+    });
+
+    describe('from the Reply button', () => {
+      it('checks that the member owns the conversation and that it is not locked', async () => {
+        assert.equal(await service.checkCanContinue('g1', 12345678, member.id), null);
+        assert.equal(
+          await service.checkCanContinue('g1', 12345678, 'someone-else'),
+          MESSAGES.conversationNotFound,
+        );
+        conversation.lockedAt = new Date();
+        assert.equal(await service.checkCanContinue('g1', 12345678, member.id), MESSAGES.locked);
       });
     });
 

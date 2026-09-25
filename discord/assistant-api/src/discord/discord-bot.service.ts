@@ -52,8 +52,14 @@ const TEXT_CHANNEL_TYPES = new Set<number>([ChannelType.GuildText, ChannelType.G
 export class DiscordBotService {
   private readonly rest: REST;
   private botUserId: string | null = null;
+  private readonly applicationId: string | undefined;
+  private readonly devServerId: string | undefined;
+  /** Command ids only change if a command is deleted and created again, so they are kept. */
+  private readonly commandIds = new Map<string, string>();
 
   constructor(configService: ConfigService) {
+    this.applicationId = configService.get<string>('DISCORD_APPLICATION_ID');
+    this.devServerId = configService.get<string>('DISCORD_GUILD_ID') || undefined;
     this.rest = new REST({ version: '10' }).setToken(
       configService.getOrThrow<string>('DISCORD_TOKEN'),
     );
@@ -65,6 +71,41 @@ export class DiscordBotService {
       this.botUserId = me.id;
     }
     return this.botUserId;
+  }
+
+  /**
+   * A clickable mention of a slash command (`</name:id>`): clicking it puts the command in the
+   * user's message box. Null when the command can't be found, so callers fall back to plain text.
+   */
+  async getCommandMention(name: string): Promise<string | null> {
+    let id = this.commandIds.get(name);
+    if (!id) {
+      id = await this.lookUpCommandId(name);
+      if (!id) return null;
+      this.commandIds.set(name, id);
+    }
+    return `</${name}:${id}>`;
+  }
+
+  private async lookUpCommandId(name: string): Promise<string | undefined> {
+    if (!this.applicationId) return undefined;
+    // `commands:register` puts commands in one server while DISCORD_GUILD_ID is set, else everywhere.
+    const routes = [
+      Routes.applicationCommands(this.applicationId),
+      ...(this.devServerId
+        ? [Routes.applicationGuildCommands(this.applicationId, this.devServerId)]
+        : []),
+    ];
+    for (const route of routes) {
+      try {
+        const commands = (await this.rest.get(route)) as { id: string; name: string }[];
+        const found = commands.find((command) => command.name === name);
+        if (found) return found.id;
+      } catch {
+        // Not being able to look it up only costs the clickable mention.
+      }
+    }
+    return undefined;
   }
 
   async listTextChannels(serverId: string): Promise<ServerChannel[]> {
@@ -123,12 +164,12 @@ export class DiscordBotService {
   }
 
   /** Sends a direct message. Fails (Discord error 50007) when the user does not accept DMs. */
-  async sendDirectMessage(userId: string, embed: APIEmbed): Promise<void> {
+  async sendDirectMessage(userId: string, embed: APIEmbed, components?: unknown[]): Promise<void> {
     const dm = (await this.rest.post(Routes.userChannels(), {
       body: { recipient_id: userId },
     })) as APIChannel;
     await this.rest.post(Routes.channelMessages(dm.id), {
-      body: { embeds: [embed], allowed_mentions: { parse: [] } },
+      body: { embeds: [embed], components, allowed_mentions: { parse: [] } },
     });
   }
 

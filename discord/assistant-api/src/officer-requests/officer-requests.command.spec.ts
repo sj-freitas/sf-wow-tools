@@ -22,12 +22,15 @@ const interaction = (
 describe('OfficerRequestsCommand', () => {
   let calls: { kind: string; input: any }[];
   let command: OfficerRequestsCommand;
+  let refusal: string | null;
 
   beforeEach(() => {
     calls = [];
+    refusal = null;
     const service = {
       contact: async (input: unknown) => (calls.push({ kind: 'contact', input }), 'contacted'),
       reply: async (input: unknown) => (calls.push({ kind: 'reply', input }), 'replied'),
+      checkCanContinue: async () => refusal,
     } as unknown as OfficerRequestsService;
     command = new OfficerRequestsCommand(service);
   });
@@ -95,5 +98,63 @@ describe('OfficerRequestsCommand', () => {
       await command.reply(interaction([{ name: 'message', value: 'answer' }])),
       /conversation ID/,
     );
+  });
+
+  describe('the Reply button in a DM', () => {
+    const CUSTOM_ID = 'contact-reply:guild-1:12345678';
+    const dmInteraction = (over: Partial<DiscordInteraction['data']> = {}): DiscordInteraction => ({
+      type: 3,
+      user: { id: 'u1', username: 'user', global_name: 'Global' },
+      data: { name: '', custom_id: CUSTOM_ID, ...over },
+    });
+
+    it('opens a form for the message when the member may write', async () => {
+      const reply = await command.openReplyForm(dmInteraction());
+      assert.ok(typeof reply === 'object');
+      assert.equal(reply.modal.custom_id, CUSTOM_ID);
+      assert.match(reply.modal.title, /#12345678/);
+      assert.ok(reply.modal.title.length <= 45);
+    });
+
+    it('shows why instead when the conversation is locked or not theirs', async () => {
+      refusal = MESSAGES.locked;
+      assert.equal(await command.openReplyForm(dmInteraction()), MESSAGES.locked);
+    });
+
+    it('ignores buttons with a malformed id', async () => {
+      assert.equal(
+        await command.openReplyForm(dmInteraction({ custom_id: 'contact-reply:x' })),
+        MESSAGES.conversationNotFound,
+      );
+    });
+
+    it('sends the submitted message as a follow-up to that conversation', async () => {
+      const answer = await command.sendReplyForm({
+        ...dmInteraction(),
+        type: 5,
+        data: {
+          name: '',
+          custom_id: CUSTOM_ID,
+          components: [{ components: [{ custom_id: 'message', value: '  thanks!  ' }] }],
+        },
+      });
+      assert.equal(answer, 'contacted');
+      assert.deepEqual(calls[0].input, {
+        guildId: 'guild-1',
+        invoker: { id: 'u1', name: 'Global', roleIds: undefined },
+        message: 'thanks!',
+        conversationId: 12345678,
+      });
+    });
+
+    it('refuses an empty submission', async () => {
+      const answer = await command.sendReplyForm({
+        ...dmInteraction(),
+        type: 5,
+        data: { name: '', custom_id: CUSTOM_ID, components: [] },
+      });
+      assert.match(answer, /Write a message/);
+      assert.deepEqual(calls, []);
+    });
   });
 });
