@@ -1208,3 +1208,12 @@ label.btn.disabled {
   font-size: 0.85rem;
   pointer-events: none;
 }
+
+.md-preview a {
+  color: #00a8fc;
+  text-decoration: none;
+  word-break: break-all;
+}
+.md-preview a:hover {
+  text-decoration: underline;
+}

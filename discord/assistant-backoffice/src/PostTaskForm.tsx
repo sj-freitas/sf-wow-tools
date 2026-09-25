@@ -154,7 +154,18 @@ export function PostTaskForm({ guild, channels, editing, timezone, onSaved, onCa
             </span>
           )}
         </div>
-        {preview && <DiscordMarkdown text={content} names={names} />}
+        {preview && (
+          <>
+            <DiscordMarkdown text={content} names={names} />
+            {/https?:\/\//.test(content) && (
+              <p className="muted">
+                {embedLinks
+                  ? 'Discord will also show a preview card under the links (not shown here).'
+                  : 'Link previews are off: Discord will show the links as plain text only.'}
+              </p>
+            )}
+          </>
+        )}
       </div>
 
       <div className="form-grid">

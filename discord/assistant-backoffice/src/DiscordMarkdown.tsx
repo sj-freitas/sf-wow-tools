@@ -8,7 +8,7 @@ export interface MentionNames {
 }
 
 const INLINE =
-  /(`[^`\n]+`)|(\*\*[\s\S]+?\*\*)|(__[\s\S]+?__)|(~~[\s\S]+?~~)|(\|\|[\s\S]+?\|\|)|(\*[^*\n]+?\*)|(_[^_\n]+?_)|(<@!?\d+>|<@&\d+>|<#\d+>)|(<a?:\w+:\d+>)|(https?:\/\/[^\s<]+)|(@everyone|@here)/g;
+  /(`[^`\n]+`)|(\*\*[\s\S]+?\*\*)|(__[\s\S]+?__)|(~~[\s\S]+?~~)|(\|\|[\s\S]+?\|\|)|(\*[^*\n]+?\*)|(_[^_\n]+?_)|(<@!?\d+>|<@&\d+>|<#\d+>)|(<a?:\w+:\d+>)|(https?:\/\/[^\s<]+)|(@everyone|@here)|(\[[^\]\n]+\]\(https?:\/\/[^\s)]+\))|(<https?:\/\/[^\s>]+>)/g;
 
 function Spoiler({ children }: { children: ReactNode }) {
   const [shown, setShown] = useState(false);
@@ -71,9 +71,28 @@ function inline(text: string, names: MentionNames): ReactNode[] {
         />,
       );
     } else if (match[10]) {
+      // Sentence punctuation right after a link is not part of it.
+      const url = token.replace(/[.,;:!?)\]'"]+$/, '');
       nodes.push(
-        <a key={k} href={token} target="_blank" rel="noreferrer">
-          {token}
+        <a key={k} href={url} target="_blank" rel="noreferrer">
+          {url}
+        </a>,
+      );
+      if (url.length < token.length) nodes.push(token.slice(url.length));
+    } else if (match[12]) {
+      // [text](https://...): a link with its own text.
+      const parts = /^\[([^\]]+)\]\((.+)\)$/.exec(token);
+      nodes.push(
+        <a key={k} href={parts?.[2]} target="_blank" rel="noreferrer">
+          {parts?.[1]}
+        </a>,
+      );
+    } else if (match[13]) {
+      // <https://...>: a link written so Discord shows no preview for it.
+      const url = token.slice(1, -1);
+      nodes.push(
+        <a key={k} href={url} target="_blank" rel="noreferrer">
+          {url}
         </a>,
       );
     } else
