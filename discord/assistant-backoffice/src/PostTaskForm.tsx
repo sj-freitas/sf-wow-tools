@@ -167,14 +167,14 @@ export function PostTaskForm({ guild, channels, editing, timezone, onSaved, onCa
           />
         </label>
         <div className="field">
-          Link previews
+          Embedded links
           <label className="field-toggle">
             <input
               type="checkbox"
               checked={embedLinks}
               onChange={(e) => setEmbedLinks(e.target.checked)}
             />
-            {embedLinks ? 'Shown under links' : 'Hidden (links stay plain)'}
+            Show embedded links
           </label>
         </div>
       </div>
