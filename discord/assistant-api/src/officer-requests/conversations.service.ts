@@ -28,6 +28,8 @@ export interface ConversationMessageDto {
   createdAt: string;
   /** Officer replies: whether the DM reached the member. */
   dmDelivered: boolean | null;
+  /** The message has a picture, served by the image route of the conversation. */
+  hasImage: boolean;
 }
 
 export interface ConversationDto {
@@ -55,7 +57,7 @@ const PREVIEW_LENGTH = 140;
  */
 export function toConversationDto(
   conversation: OfficerConversation,
-  messages: OfficerMessage[],
+  messages: (OfficerMessage & { attachment?: { id: string } | null })[],
 ): ConversationDto {
   const named = !conversation.isAnonymous;
   return {
@@ -76,6 +78,7 @@ export function toConversationDto(
       content: message.content,
       createdAt: message.createdAt.toISOString(),
       dmDelivered: message.author === 'OFFICER' ? message.dmDelivered : null,
+      hasImage: Boolean(message.attachment),
     })),
   };
 }
@@ -149,9 +152,29 @@ export class ConversationsService {
   async get(guildId: string, publicId: number): Promise<ConversationDto> {
     const conversation = await this.prisma.officerConversation.findUnique({
       where: { guildId_publicId: { guildId, publicId } },
-      include: { messages: { orderBy: { createdAt: 'asc' } } },
+      include: {
+        messages: {
+          orderBy: { createdAt: 'asc' },
+          include: { attachment: { select: { id: true } } },
+        },
+      },
     });
     if (!conversation) throw new NotFoundException('Conversation not found');
     return toConversationDto(conversation, conversation.messages);
+  }
+
+  /** The picture of one message of the conversation, or null. */
+  async getImage(
+    guildId: string,
+    publicId: number,
+    messageId: string,
+  ): Promise<{ contentType: string; data: Buffer } | null> {
+    const attachment = await this.prisma.officerAttachment.findFirst({
+      where: { message: { id: messageId, conversation: { guildId, publicId } } },
+      select: { contentType: true, data: true },
+    });
+    return attachment
+      ? { contentType: attachment.contentType, data: Buffer.from(attachment.data) }
+      : null;
   }
 }

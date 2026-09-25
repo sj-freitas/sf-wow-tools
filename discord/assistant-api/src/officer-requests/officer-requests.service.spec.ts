@@ -1,3 +1,4 @@
+import { IMAGE_MESSAGES, MAX_IMAGE_BYTES } from './attachments';
 import type { RealtimeService } from '../realtime/realtime.service';
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import assert from 'node:assert/strict';
@@ -20,7 +21,9 @@ describe('OfficerRequestsService', () => {
   let takenIds: Set<number>;
   let idProbes: number;
   let posts: { channelId: string; embed: any; options: any }[];
-  let dms: { userId: string; embed: any; components?: any[] }[];
+  let dms: { userId: string; embed: any; components?: any[]; file?: any }[];
+  let files: any[];
+  let download: Buffer | null;
   let postFails: boolean;
   let dmFails: boolean;
   let officerRolesElsewhere: string[];
@@ -58,6 +61,8 @@ describe('OfficerRequestsService', () => {
     touched = [];
     guildUpdate = null;
     published = [];
+    files = [];
+    download = null;
     deleted = [];
     channelDeletes = [];
     failDeleteOf = null;
@@ -104,15 +109,17 @@ describe('OfficerRequestsService', () => {
     } as unknown as PrismaService;
     const bot = {
       postEmbed: async (channelId: string, embed: any, options: any) => {
+        if (options?.file) files.push(options.file);
         if (postFails) throw new Error('Missing Access');
         posts.push({ channelId, embed, options });
         return `discord-msg-${posts.length}`;
       },
-      sendDirectMessage: async (userId: string, embed: any, components?: unknown[]) => {
+      sendDirectMessage: async (userId: string, embed: any, components?: unknown[], file?: any) => {
         if (dmFails) throw new Error('Cannot send messages to this user');
-        dms.push({ userId, embed, components });
+        dms.push({ userId, embed, components, file });
       },
       getCommandMention: async () => mention,
+      downloadAttachment: async () => download,
       deleteMessage: async (channelId: string, messageId: string) => {
         if (messageId === failDeleteOf) throw new Error('Unknown Message');
         channelDeletes.push([channelId, messageId]);
@@ -129,6 +136,71 @@ describe('OfficerRequestsService', () => {
   });
 
   describe('/contact-officer', () => {
+    describe('with an image', () => {
+      const PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2]);
+      const image = { data: PNG, contentType: 'image/png' };
+      const attachment = {
+        id: '9',
+        filename: 'my-real-name.png',
+        content_type: 'image/png',
+        size: 10,
+        url: 'https://cdn.discordapp.com/attachments/1/2/my-real-name.png',
+      };
+
+      it('re-uploads it under a neutral name and keeps a copy with the message', async () => {
+        await service.contact({ serverId: SERVER, invoker: member, message: 'Look', image });
+        assert.equal(files[0].name, 'image.png');
+        assert.equal(posts[0].embed.image.url, 'attachment://image.png');
+        const saved = createdConversation.messages.create.attachment.create;
+        assert.deepEqual(
+          [saved.contentType, saved.size, Buffer.from(saved.data)],
+          ['image/png', PNG.length, PNG],
+        );
+      });
+
+      it('sends an officer reply image to the channel, the DM and the database', async () => {
+        conversation = {
+          id: 'c1',
+          publicId: 12345678,
+          isAnonymous: true,
+          userDiscordId: member.id,
+          messages: [{ author: 'USER', content: 'Help', discordMessageId: 'first-post' }],
+        };
+        await service.reply({
+          serverId: SERVER,
+          invoker: { id: 'o1', name: 'Olga', roleIds: [OFFICER_ROLE] },
+          conversationId: 12345678,
+          message: 'See this',
+          image,
+        });
+        assert.equal(files[0].name, 'image.png');
+        assert.equal(dms[0].file.name, 'image.png');
+        assert.equal(dms[0].embed.image.url, 'attachment://image.png');
+        assert.equal(createdMessages[0].attachment.create.size, PNG.length);
+      });
+
+      it('downloads and checks what was attached', async () => {
+        download = PNG;
+        assert.deepEqual(await service.loadImage(attachment), image);
+        assert.equal(await service.loadImage(undefined), undefined);
+      });
+
+      it('refuses files that are too big, not images, or not downloadable', async () => {
+        assert.equal(
+          await service.loadImage({ ...attachment, size: MAX_IMAGE_BYTES + 1 }),
+          IMAGE_MESSAGES.tooBig,
+        );
+        assert.equal(
+          await service.loadImage({ ...attachment, content_type: 'application/pdf' }),
+          IMAGE_MESSAGES.notImage,
+        );
+        download = Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"/>');
+        assert.equal(await service.loadImage(attachment), IMAGE_MESSAGES.notImage);
+        download = null;
+        assert.equal(await service.loadImage(attachment), IMAGE_MESSAGES.unreadable);
+      });
+    });
+
     it('tells the backoffice to refresh when a request comes in', async () => {
       await service.contact({
         serverId: SERVER,

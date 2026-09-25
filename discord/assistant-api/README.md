@@ -225,6 +225,20 @@ modal; a modal handler answers with a private message. Unknown or failing button
   clicker started the conversation, so a forwarded DM can't be used by someone else.
 - `npm run commands:register` also prints every command's id (the number in `</name:id>` mentions).
 
+### Images in officer requests
+
+- `/contact-officer` and `/contact-officer-reply` take an optional **`image`** (PNG, JPEG, GIF or WebP, up
+  to 5 MB, one per message); the backoffice reply box has an **Attach image** button.
+- The bot downloads the file (only from Discord's own CDN), checks its bytes, and re-uploads it under a
+  neutral name (`image.png`) in the request channel and in the member's DM, so the member's file name
+  never shows. **Metadata inside the picture (EXIF, what the picture shows) is not removed**, so an
+  anonymous sender can still be identified by the picture itself.
+- Discord's file links expire, so a copy is also kept in `officer_attachments` (one per message, deleted
+  with the message and the conversation). The backoffice shows it from
+  `GET /api/guilds/:guildId/officer-requests/:id/messages/:messageId/image` (Officers only).
+- Because the image is downloaded and posted before the command answers, a slow Discord can make the
+  3-second limit tight for big files.
+
 ### Clearing a channel (`/clear-channel`)
 
 - **`/clear-channel [channel]`.** Deletes every unpinned message of the channel (default: the one you

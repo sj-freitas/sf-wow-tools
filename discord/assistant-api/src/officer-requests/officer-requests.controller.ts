@@ -11,8 +11,13 @@ import {
   Put,
   Query,
   Req,
+  Res,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import type { Response } from 'express';
 import { AuthGuard } from '../auth/auth.guard';
 import type { AuthenticatedRequest } from '../auth/auth.types';
 import { GuildAccessService } from '../auth/guild-access.service';
@@ -22,6 +27,7 @@ import {
   type ConversationDto,
   type ConversationPageDto,
 } from './conversations.service';
+import { MAX_IMAGE_BYTES, toMessageImage } from './attachments';
 import { MAX_MESSAGE_LENGTH, OfficerRequestsService } from './officer-requests.service';
 
 /** Officer requests in the backoffice: Officers read and reply; the channel is guild configuration. */
@@ -58,11 +64,13 @@ export class OfficerRequestsController {
 
   /** Officers only. Sends the same reply as /contact-officer-reply, in the officer's display name. */
   @Post('officer-requests/:publicId/replies')
+  @UseInterceptors(FileInterceptor('image', { limits: { fileSize: MAX_IMAGE_BYTES, files: 1 } }))
   async reply(
     @Req() req: AuthenticatedRequest,
     @Param('guildId') guildId: string,
     @Param('publicId') publicId: string,
     @Body() body: Record<string, unknown>,
+    @UploadedFile() file?: { buffer: Buffer },
   ): Promise<{ dmDelivered: boolean }> {
     await this.guildAccess.assertOfficer(req.user.id, guildId);
     if (!/^\d{8}$/.test(publicId)) throw new BadRequestException('Not a conversation id');
@@ -71,12 +79,40 @@ export class OfficerRequestsController {
     if (message.length > MAX_MESSAGE_LENGTH) {
       throw new BadRequestException(`Messages can be at most ${MAX_MESSAGE_LENGTH} characters.`);
     }
+    const image = file ? toMessageImage(file.buffer) : undefined;
+    if (typeof image === 'string') throw new BadRequestException(image);
     return this.officerRequests.replyAsOfficer(
       guildId,
       Number(publicId),
       { id: req.user.discordId, name: req.user.displayName },
       message,
+      image,
     );
+  }
+
+  /** Officers only: the picture of one message. */
+  @Get('officer-requests/:publicId/messages/:messageId/image')
+  async image(
+    @Req() req: AuthenticatedRequest,
+    @Param('guildId') guildId: string,
+    @Param('publicId') publicId: string,
+    @Param('messageId') messageId: string,
+    @Res() res: Response,
+  ): Promise<void> {
+    await this.guildAccess.assertOfficer(req.user.id, guildId);
+    if (!/^\d{8}$/.test(publicId)) throw new BadRequestException('Not a conversation id');
+    const image = await this.conversations.getImage(guildId, Number(publicId), messageId);
+    if (!image) {
+      res.status(HttpStatus.NOT_FOUND).json({ message: 'No image' });
+      return;
+    }
+    res
+      .set({
+        'Content-Type': image.contentType,
+        'Cache-Control': 'private, max-age=86400',
+        'X-Content-Type-Options': 'nosniff',
+      })
+      .send(image.data);
   }
 
   /** Officers only. `{ locked: true }` locks the conversation, `{ locked: false }` unlocks it. */

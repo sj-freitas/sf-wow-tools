@@ -306,6 +306,8 @@ export interface ConversationMessage {
   createdAt: string;
   /** Officer replies: whether the DM reached the member. */
   dmDelivered: boolean | null;
+  /** The message has a picture: see `officerMessageImageUrl`. */
+  hasImage: boolean;
 }
 
 export interface Conversation {

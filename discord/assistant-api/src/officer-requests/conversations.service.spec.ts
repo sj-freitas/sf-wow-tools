@@ -43,6 +43,18 @@ describe('toConversationDto (what the backoffice may show)', () => {
     }),
   ];
 
+  it('tells the backoffice which messages have a picture, without any file details', () => {
+    const dto = toConversationDto(conversation({}), [
+      { ...messages[0], attachment: { id: 'a1' } },
+      messages[1],
+    ]);
+    assert.deepEqual(
+      dto.messages.map((m) => m.hasImage),
+      [true, false],
+    );
+    assert.doesNotMatch(JSON.stringify(dto), /a1/);
+  });
+
   it('never reveals an anonymous member: no id, no name', () => {
     const dto = toConversationDto(conversation({ userName: 'Should not leak' }), messages);
     const json = JSON.stringify(dto);

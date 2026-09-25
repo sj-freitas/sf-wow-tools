@@ -11,6 +11,14 @@ export interface DiscordInteractionOption {
   value?: string | number | boolean;
 }
 
+export interface DiscordAttachment {
+  id: string;
+  filename: string;
+  content_type?: string;
+  size: number;
+  url: string;
+}
+
 export interface DiscordInteractionUser {
   id: string;
   username?: string;
@@ -33,6 +41,8 @@ export interface DiscordInteraction {
   data?: {
     name: string;
     options?: DiscordInteractionOption[];
+    /** Files attached to options, by attachment id. */
+    resolved?: { attachments?: Record<string, DiscordAttachment> };
     /** Buttons and modals: the id we gave the component. */
     custom_id?: string;
     /** Modal submissions: the fields, one per row. */
@@ -87,4 +97,13 @@ export function getOptionalBooleanOption(
 export function getBooleanOption(interaction: DiscordInteraction, name: string): boolean {
   const value = interaction.data?.options?.find((option) => option.name === name)?.value;
   return value === true;
+}
+
+/** The file the user attached to an attachment option, if any. */
+export function getAttachmentOption(
+  interaction: DiscordInteraction,
+  name: string,
+): DiscordAttachment | undefined {
+  const id = getStringOption(interaction, name);
+  return id ? interaction.data?.resolved?.attachments?.[id] : undefined;
 }

@@ -9,6 +9,14 @@ import {
 import { PrismaService } from '../database/prisma.service';
 import { DiscordBotService } from '../discord/discord-bot.service';
 import { describeDiscordError } from '../discord/discord-errors';
+import {
+  IMAGE_MESSAGES,
+  MAX_IMAGE_BYTES,
+  neutralFileName,
+  toMessageImage,
+  type MessageImage,
+} from './attachments';
+import type { DiscordAttachment } from '../bot/discord-interaction.types';
 import { RealtimeService } from '../realtime/realtime.service';
 import {
   memberDmEmbed,
@@ -26,6 +34,30 @@ export interface Invoker {
   /** Their role ids in the server the command was used in, when Discord included them. */
   roleIds?: readonly string[];
 }
+
+const fileOption = (image?: MessageImage) => {
+  const file = discordFile(image);
+  return file ? { file } : {};
+};
+
+const discordFile = (image?: MessageImage) =>
+  image
+    ? { name: neutralFileName(image), data: image.data, contentType: image.contentType }
+    : undefined;
+
+/** Nested create data that keeps an image with its message. */
+const attachmentData = (image?: MessageImage) =>
+  image
+    ? {
+        attachment: {
+          create: {
+            contentType: image.contentType,
+            size: image.data.length,
+            data: new Uint8Array(image.data),
+          },
+        },
+      }
+    : {};
 
 const GUILD_SELECT = {
   id: true,
@@ -70,6 +102,27 @@ export class OfficerRequestsService {
   ) {}
 
   /**
+   * Downloads the file a member attached to a command and checks it is an allowed image. Returns
+   * the image, undefined when nothing was attached, or the message to show when it can't be used.
+   */
+  async loadImage(
+    attachment: DiscordAttachment | undefined,
+  ): Promise<MessageImage | string | undefined> {
+    if (!attachment) return undefined;
+    if (attachment.size > MAX_IMAGE_BYTES) return IMAGE_MESSAGES.tooBig;
+    if (attachment.content_type && !attachment.content_type.startsWith('image/')) {
+      return IMAGE_MESSAGES.notImage;
+    }
+    let data: Buffer | null = null;
+    try {
+      data = await this.bot.downloadAttachment(attachment.url, MAX_IMAGE_BYTES);
+    } catch (error) {
+      this.logger.warn(`Could not download an attachment: ${describeDiscordError(error)}`);
+    }
+    return data ? toMessageImage(data) : IMAGE_MESSAGES.unreadable;
+  }
+
+  /**
    * `/contact-officer`: posts the member's message in the guild's Officer Request Channel. The
    * first message of a conversation decides whether the member is anonymous; follow-ups (with
    * the conversation id) ignore the `anonymous` option. Returns the private answer for the member.
@@ -82,6 +135,7 @@ export class OfficerRequestsService {
     message: string;
     anonymous?: boolean;
     conversationId?: number;
+    image?: MessageImage;
   }): Promise<string> {
     const guild = input.guildId
       ? await this.findGuildById(input.guildId)
@@ -129,8 +183,12 @@ export class OfficerRequestsService {
           isAnonymous,
           userId: input.invoker.id,
           followUp: existing !== null,
+          imageName: input.image && neutralFileName(input.image),
         }),
-        { replyTo: existing?.messages[0]?.discordMessageId ?? undefined },
+        {
+          replyTo: existing?.messages[0]?.discordMessageId ?? undefined,
+          ...fileOption(input.image),
+        },
       );
     } catch (error) {
       this.logger.warn(
@@ -143,6 +201,7 @@ export class OfficerRequestsService {
       author: 'USER' as const,
       content: input.message,
       discordMessageId,
+      ...attachmentData(input.image),
     };
     if (existing) {
       await this.prisma.officerMessage.create({
@@ -185,6 +244,7 @@ export class OfficerRequestsService {
     invoker: Invoker;
     conversationId: number;
     message: string;
+    image?: MessageImage;
   }): Promise<string> {
     const guild = await this.findGuildOfServer(input.serverId);
     if (!guild) return MESSAGES.notLinked;
@@ -203,6 +263,7 @@ export class OfficerRequestsService {
       conversation,
       input.invoker,
       input.message,
+      input.image,
     );
 
     return dmDelivered
@@ -219,6 +280,7 @@ export class OfficerRequestsService {
     publicId: number,
     officer: { id: string; name: string },
     message: string,
+    image?: MessageImage,
   ): Promise<{ dmDelivered: boolean }> {
     const guild = await this.prisma.guild.findUnique({
       where: { id: guildId },
@@ -231,7 +293,7 @@ export class OfficerRequestsService {
     });
     if (!conversation) throw new NotFoundException(MESSAGES.officerConversationNotFound);
     if (conversation.lockedAt) throw new ConflictException(MESSAGES.locked);
-    return this.deliverReply(guild, conversation, officer, message);
+    return this.deliverReply(guild, conversation, officer, message, image);
   }
 
   /** Locks (or unlocks) a conversation: while locked, members and officers can't write to it. */
@@ -287,6 +349,7 @@ export class OfficerRequestsService {
     },
     officer: { id: string; name: string },
     message: string,
+    image?: MessageImage,
   ): Promise<{ dmDelivered: boolean }> {
     const firstRequest = conversation.messages.find((m) => m.author === 'USER');
     let discordMessageId: string | null = null;
@@ -298,8 +361,9 @@ export class OfficerRequestsService {
             publicId: conversation.publicId,
             officerName: officer.name,
             content: message,
+            imageName: image && neutralFileName(image),
           }),
-          { replyTo: firstRequest?.discordMessageId ?? undefined },
+          { replyTo: firstRequest?.discordMessageId ?? undefined, ...fileOption(image) },
         );
       } catch (error) {
         // The reply still counts: it is saved and the member still gets it.
@@ -323,8 +387,10 @@ export class OfficerRequestsService {
           reply: message,
           commandMention,
           withButton: true,
+          imageName: image && neutralFileName(image),
         }),
         replyButtonRow(guild.id, conversation.publicId),
+        discordFile(image),
       );
     } catch (error) {
       dmDelivered = false;
@@ -340,6 +406,7 @@ export class OfficerRequestsService {
         content: message,
         discordMessageId,
         dmDelivered,
+        ...attachmentData(image),
       },
     });
     await this.prisma.officerConversation.update({

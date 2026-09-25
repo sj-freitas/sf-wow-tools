@@ -139,6 +139,12 @@
         "required": false,
         "min_value": 10000000,
         "max_value": 99999999
+      },
+      {
+        "name": "image",
+        "description": "An optional picture (PNG, JPEG, GIF or WebP, up to 5 MB)",
+        "type": 11,
+        "required": false
       }
     ]
   },
@@ -160,6 +166,12 @@
         "type": 3,
         "required": true,
         "max_length": 3500
+      },
+      {
+        "name": "image",
+        "description": "An optional picture (PNG, JPEG, GIF or WebP, up to 5 MB)",
+        "type": 11,
+        "required": false
       }
     ]
   },

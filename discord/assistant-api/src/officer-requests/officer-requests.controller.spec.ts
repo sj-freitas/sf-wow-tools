@@ -8,6 +8,7 @@ import { OfficerRequestsController } from './officer-requests.controller';
 import type { OfficerRequestsService } from './officer-requests.service';
 
 const req = { user: { id: 'u1', discordId: 'd1', displayName: 'Olga' } } as AuthenticatedRequest;
+const PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1]);
 const CHANNEL = '333333333333333333';
 const SERVER = '111111111111111111';
 
@@ -15,12 +16,14 @@ describe('OfficerRequestsController', () => {
   let officer: boolean;
   let configurer: boolean;
   let calls: unknown[][];
+  let stored: { contentType: string; data: Buffer } | null;
   let controller: OfficerRequestsController;
 
   beforeEach(() => {
     officer = true;
     configurer = true;
     calls = [];
+    stored = { contentType: 'image/png', data: PNG };
     const guildAccess = {
       assertOfficer: async () => {
         if (!officer) throw new ForbiddenException();
@@ -32,6 +35,7 @@ describe('OfficerRequestsController', () => {
     const conversations = {
       list: async (...args: unknown[]) => void calls.push(['list', ...args]),
       get: async (...args: unknown[]) => void calls.push(['get', ...args]),
+      getImage: async () => stored,
     } as unknown as ConversationsService;
     const officerRequests = {
       setLocked: async (...args: unknown[]) => void calls.push(['lock', ...args]),
@@ -70,7 +74,39 @@ describe('OfficerRequestsController', () => {
     assert.deepEqual(await controller.reply(req, 'g', '12345678', { message: '  Hi  ' }), {
       dmDelivered: true,
     });
-    assert.deepEqual(calls, [['reply', 'g', 12345678, { id: 'd1', name: 'Olga' }, 'Hi']]);
+    assert.deepEqual(calls, [
+      ['reply', 'g', 12345678, { id: 'd1', name: 'Olga' }, 'Hi', undefined],
+    ]);
+  });
+
+  it('passes an attached image on to the reply, after checking it is an image', async () => {
+    await controller.reply(req, 'g', '12345678', { message: 'See' }, { buffer: PNG });
+    const image = calls[0][5] as { contentType: string; data: Buffer };
+    assert.equal(image.contentType, 'image/png');
+    assert.deepEqual(image.data, PNG);
+    await assert.rejects(
+      controller.reply(req, 'g', '12345678', { message: 'See' }, { buffer: Buffer.from('<svg/>') }),
+      BadRequestException,
+    );
+    assert.equal(calls.length, 1);
+  });
+
+  it('serves a message image to Officers only, with its own type', async () => {
+    const sent: { status?: number; headers?: Record<string, string>; body?: unknown } = {};
+    const res: any = {
+      status: (code: number) => ((sent.status = code), res),
+      json: (body: unknown) => ((sent.body = body), res),
+      set: (headers: Record<string, string>) => ((sent.headers = headers), res),
+      send: (body: unknown) => ((sent.body = body), res),
+    };
+    await controller.image(req, 'g', '12345678', 'm1', res);
+    assert.equal(sent.headers?.['Content-Type'], 'image/png');
+    assert.equal(sent.headers?.['X-Content-Type-Options'], 'nosniff');
+    stored = null;
+    await controller.image(req, 'g', '12345678', 'm1', res);
+    assert.equal(sent.status, 404);
+    officer = false;
+    await assert.rejects(controller.image(req, 'g', '12345678', 'm1', res), ForbiddenException);
   });
 
   it('refuses replies from non-Officers and empty, too long or malformed ones', async () => {

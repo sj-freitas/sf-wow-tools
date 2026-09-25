@@ -5,6 +5,7 @@ import {
   deleteOfficerRequest,
   fetchOfficerRequest,
   fetchOfficerRequests,
+  officerMessageImageUrl,
   replyToOfficerRequest,
   setOfficerRequestLocked,
 } from './api';
@@ -373,6 +374,20 @@ export function ConversationPage({ guild, timezone }: Props) {
                     <span className="muted">{formatWhen(message.createdAt, timezone)}</span>
                   </div>
                   <div className="bubble-text">{message.content}</div>
+                  {message.hasImage && (
+                    <a
+                      href={officerMessageImageUrl(guild.id, conversation.publicId, message.id)}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <img
+                        className="bubble-image"
+                        src={officerMessageImageUrl(guild.id, conversation.publicId, message.id)}
+                        alt="Attached"
+                        loading="lazy"
+                      />
+                    </a>
+                  )}
                   {fromOfficer && message.dmDelivered === false && (
                     <div className="status-error">
                       The member could not be reached by DM (they may have DMs closed).
@@ -392,6 +407,7 @@ export function ConversationPage({ guild, timezone }: Props) {
 }
 
 const MAX_REPLY_LENGTH = 3500;
+const MAX_IMAGE_MB = 5;
 
 /** The member gets the reply by DM, and it is also posted in the Officer Request Channel. */
 function ReplyForm({
@@ -404,6 +420,7 @@ function ReplyForm({
   onSent: () => void;
 }) {
   const [text, setText] = useState('');
+  const [image, setImage] = useState<File | null>(null);
   const [sending, setSending] = useState(false);
   const [feedback, setFeedback] = useState<{ ok: boolean; text: string } | null>(null);
 
@@ -413,9 +430,10 @@ function ReplyForm({
     if (!message || sending) return;
     setSending(true);
     setFeedback(null);
-    replyToOfficerRequest(guildId, publicId, message)
+    replyToOfficerRequest(guildId, publicId, message, image ?? undefined)
       .then(({ dmDelivered }) => {
         setText('');
+        setImage(null);
         setFeedback(
           dmDelivered
             ? { ok: true, text: 'Reply sent: the member got it by DM.' }
@@ -445,6 +463,32 @@ function ReplyForm({
         />
       </label>
       <div className="settings-actions">
+        <label className="btn">
+          {image ? 'Change image' : 'Attach image'}
+          <input
+            type="file"
+            accept="image/png,image/jpeg,image/gif,image/webp"
+            hidden
+            onChange={(e) => {
+              const file = e.target.files?.[0] ?? null;
+              e.target.value = '';
+              if (file && file.size > MAX_IMAGE_MB * 1024 * 1024) {
+                setFeedback({ ok: false, text: `The image can be at most ${MAX_IMAGE_MB} MB.` });
+                return;
+              }
+              setFeedback(null);
+              setImage(file);
+            }}
+          />
+        </label>
+        {image && (
+          <span className="muted">
+            {image.name}{' '}
+            <button type="button" className="btn btn-sm" onClick={() => setImage(null)}>
+              Remove
+            </button>
+          </span>
+        )}
         <button type="submit" className="btn btn-primary" disabled={sending || !text.trim()}>
           {sending ? 'Sending…' : 'Send reply'}
         </button>

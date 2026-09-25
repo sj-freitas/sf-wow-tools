@@ -23,14 +23,22 @@ describe('OfficerRequestsCommand', () => {
   let calls: { kind: string; input: any }[];
   let command: OfficerRequestsCommand;
   let refusal: string | null;
+  let loaded: unknown[];
+  let imageResult: unknown;
 
   beforeEach(() => {
     calls = [];
     refusal = null;
+    loaded = [];
+    imageResult = undefined;
     const service = {
       contact: async (input: unknown) => (calls.push({ kind: 'contact', input }), 'contacted'),
       reply: async (input: unknown) => (calls.push({ kind: 'reply', input }), 'replied'),
       checkCanContinue: async () => refusal,
+      loadImage: async (attachment: unknown) => {
+        loaded.push(attachment);
+        return imageResult;
+      },
     } as unknown as OfficerRequestsService;
     command = new OfficerRequestsCommand(service);
   });
@@ -48,6 +56,7 @@ describe('OfficerRequestsCommand', () => {
       serverId: '111111111111111111',
       invoker: { id: 'u1', name: 'Nicky', roleIds: ['r1'] },
       message: 'hello officers',
+      image: undefined,
       anonymous: false,
       conversationId: 12345678,
     });
@@ -57,6 +66,50 @@ describe('OfficerRequestsCommand', () => {
     await command.contact(interaction([{ name: 'message', value: 'hi' }]));
     assert.equal(calls[0].input.anonymous, undefined);
     assert.equal(calls[0].input.conversationId, undefined);
+  });
+
+  describe('images', () => {
+    const attachment = {
+      id: '9',
+      filename: 'me.png',
+      size: 100,
+      url: 'https://cdn.discordapp.com/x',
+    };
+    const withImage = (options: { name: string; value: string | number | boolean }[]) =>
+      interaction([...options, { name: 'image', value: '9' }], {
+        data: {
+          name: 'x',
+          options: [...options, { name: 'image', value: '9' }],
+          resolved: { attachments: { '9': attachment } },
+        },
+      });
+
+    it('hands the attached file to the service and passes the image on', async () => {
+      imageResult = { data: Buffer.from('img'), contentType: 'image/png' };
+      await command.contact(withImage([{ name: 'message', value: 'look' }]));
+      assert.deepEqual(loaded, [attachment]);
+      assert.equal(calls[0].input.image, imageResult);
+    });
+
+    it('does the same for officer replies', async () => {
+      imageResult = { data: Buffer.from('img'), contentType: 'image/png' };
+      await command.reply(
+        withImage([
+          { name: 'conversation-id', value: 12345678 },
+          { name: 'message', value: 'see' },
+        ]),
+      );
+      assert.equal(calls[0].input.image, imageResult);
+    });
+
+    it('answers with the reason and sends nothing when the image is refused', async () => {
+      imageResult = 'The image is too big';
+      assert.equal(
+        await command.contact(withImage([{ name: 'message', value: 'look' }])),
+        'The image is too big',
+      );
+      assert.deepEqual(calls, []);
+    });
   });
 
   it('only works inside a server', async () => {

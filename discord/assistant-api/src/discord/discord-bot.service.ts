@@ -12,6 +12,16 @@ import {
   type APIUser,
 } from 'discord-api-types/v10';
 
+/** A file sent along with a message; embeds show it with `attachment://<name>`. */
+export interface BotFile {
+  name: string;
+  data: Buffer;
+  contentType: string;
+}
+
+/** Only files Discord itself hosts are downloaded. */
+const DISCORD_FILE_HOSTS = new Set(['cdn.discordapp.com', 'media.discordapp.net']);
+
 export interface ServerChannel {
   id: string;
   name: string;
@@ -108,6 +118,23 @@ export class DiscordBotService {
     return undefined;
   }
 
+  /** Downloads a file from Discord's CDN; null if it is somewhere else, too big or unavailable. */
+  async downloadAttachment(url: string, maxBytes: number): Promise<Buffer | null> {
+    let parsed: URL;
+    try {
+      parsed = new URL(url);
+    } catch {
+      return null;
+    }
+    if (parsed.protocol !== 'https:' || !DISCORD_FILE_HOSTS.has(parsed.hostname)) return null;
+    const response = await fetch(parsed);
+    if (!response.ok) return null;
+    const declared = Number(response.headers.get('content-length'));
+    if (declared > maxBytes) return null;
+    const data = Buffer.from(await response.arrayBuffer());
+    return data.length > maxBytes ? null : data;
+  }
+
   async listTextChannels(serverId: string): Promise<ServerChannel[]> {
     const channels = (await this.rest.get(Routes.guildChannels(serverId))) as APIChannel[];
     return channels
@@ -149,9 +176,10 @@ export class DiscordBotService {
   async postEmbed(
     channelId: string,
     embed: APIEmbed,
-    options: { replyTo?: string } = {},
+    options: { replyTo?: string; file?: BotFile } = {},
   ): Promise<string> {
     const message = (await this.rest.post(Routes.channelMessages(channelId), {
+      files: options.file ? [options.file] : undefined,
       body: {
         embeds: [embed],
         allowed_mentions: { parse: [] },
@@ -164,11 +192,17 @@ export class DiscordBotService {
   }
 
   /** Sends a direct message. Fails (Discord error 50007) when the user does not accept DMs. */
-  async sendDirectMessage(userId: string, embed: APIEmbed, components?: unknown[]): Promise<void> {
+  async sendDirectMessage(
+    userId: string,
+    embed: APIEmbed,
+    components?: unknown[],
+    file?: BotFile,
+  ): Promise<void> {
     const dm = (await this.rest.post(Routes.userChannels(), {
       body: { recipient_id: userId },
     })) as APIChannel;
     await this.rest.post(Routes.channelMessages(dm.id), {
+      files: file ? [file] : undefined,
       body: { embeds: [embed], components, allowed_mentions: { parse: [] } },
     });
   }

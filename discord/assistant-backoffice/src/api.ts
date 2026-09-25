@@ -62,8 +62,12 @@ async function request<T>(
 ): Promise<T> {
   const response = await fetch(url, {
     method,
-    headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
-    body: body === undefined ? undefined : JSON.stringify(body),
+    // A FormData body (a file upload) sets its own content type.
+    headers:
+      body === undefined || body instanceof FormData
+        ? undefined
+        : { 'Content-Type': 'application/json' },
+    body: body === undefined ? undefined : body instanceof FormData ? body : JSON.stringify(body),
   });
 
   if (!response.ok) {
@@ -187,8 +191,18 @@ export const replyToOfficerRequest = (
   guildId: string,
   publicId: number,
   message: string,
-): Promise<{ dmDelivered: boolean }> =>
-  request('POST', `/api/guilds/${guildId}/officer-requests/${publicId}/replies`, { message });
+  image?: File,
+): Promise<{ dmDelivered: boolean }> => {
+  const url = `/api/guilds/${guildId}/officer-requests/${publicId}/replies`;
+  if (!image) return request('POST', url, { message });
+  const form = new FormData();
+  form.append('message', message);
+  form.append('image', image);
+  return request('POST', url, form);
+};
+
+export const officerMessageImageUrl = (guildId: string, publicId: number, messageId: string) =>
+  `/api/guilds/${guildId}/officer-requests/${publicId}/messages/${messageId}/image`;
 
 /** A locked conversation takes no more messages, from members or officers. */
 export const setOfficerRequestLocked = (

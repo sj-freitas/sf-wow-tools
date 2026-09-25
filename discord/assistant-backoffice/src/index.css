@@ -1171,3 +1171,12 @@ label.btn.disabled {
   opacity: 0.6;
   pointer-events: none;
 }
+
+.bubble-image {
+  display: block;
+  max-width: min(100%, 420px);
+  max-height: 320px;
+  margin-top: 0.5rem;
+  border-radius: 8px;
+  object-fit: contain;
+}

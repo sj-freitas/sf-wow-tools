@@ -348,6 +348,20 @@ model OfficerConversation {
   @@map("officer_conversations")
 }
 
+// The one optional image of a message, kept here (not only in the Discord channel) because
+// Discord's file links expire and officers may clear or move the request channel.
+model OfficerAttachment {
+  id          String         @id @default(uuid()) @db.Uuid
+  messageId   String         @unique @map("message_id") @db.Uuid
+  message     OfficerMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  contentType String         @map("content_type")
+  size        Int
+  data        Bytes
+  createdAt   DateTime       @default(now()) @map("created_at")
+
+  @@map("officer_attachments")
+}
+
 model OfficerMessage {
   id               String               @id @default(uuid()) @db.Uuid
   conversationId   String               @map("conversation_id") @db.Uuid
@@ -361,6 +375,7 @@ model OfficerMessage {
   discordMessageId String?              @map("discord_message_id")
   // Officer replies only: whether the DM reached the member.
   dmDelivered      Boolean?             @map("dm_delivered")
+  attachment       OfficerAttachment?
   createdAt        DateTime             @default(now()) @map("created_at")
 
   @@index([conversationId, createdAt])

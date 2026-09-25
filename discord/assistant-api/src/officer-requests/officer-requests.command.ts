@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Command } from '../bot/decorators/command.decorator';
 import { Button, Modal } from '../bot/decorators/interaction-handler.decorator';
 import {
+  getAttachmentOption,
   getInvokerId,
   getModalValue,
   type ComponentReply,
@@ -31,10 +32,14 @@ export class OfficerRequestsCommand {
     const tooLong = validateMessage(message);
     if (tooLong) return tooLong;
 
+    const image = await this.officerRequests.loadImage(getAttachmentOption(interaction, 'image'));
+    if (typeof image === 'string') return image;
+
     return this.officerRequests.contact({
       serverId: interaction.guild_id,
       invoker,
       message,
+      image,
       anonymous: getOptionalBooleanOption(interaction, 'anonymous'),
       conversationId: getNumberOption(interaction, 'conversation-id'),
     });
@@ -102,11 +107,15 @@ export class OfficerRequestsCommand {
     const conversationId = getNumberOption(interaction, 'conversation-id');
     if (conversationId === undefined) return 'Give the conversation ID to reply to.';
 
+    const image = await this.officerRequests.loadImage(getAttachmentOption(interaction, 'image'));
+    if (typeof image === 'string') return image;
+
     return this.officerRequests.reply({
       serverId: interaction.guild_id,
       invoker,
       conversationId,
       message,
+      image,
     });
   }
 }

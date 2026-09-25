@@ -7,6 +7,9 @@ const GREEN = 0x57f287;
 export const truncate = (text: string, max: number): string =>
   text.length > max ? `${text.slice(0, max - 1)}…` : text;
 
+const withImage = (name?: string): Pick<APIEmbed, 'image'> =>
+  name ? { image: { url: `attachment://${name}` } } : {};
+
 /** What the officers see in the request channel when a member writes to them. */
 export function requestEmbed(input: {
   publicId: number;
@@ -14,6 +17,8 @@ export function requestEmbed(input: {
   isAnonymous: boolean;
   userId: string;
   followUp: boolean;
+  /** Name of the file sent along with the embed, shown as its picture. */
+  imageName?: string;
 }): APIEmbed {
   return {
     title: `${input.followUp ? 'Follow-up' : 'Officer request'} · #${input.publicId}`,
@@ -24,6 +29,7 @@ export function requestEmbed(input: {
       { name: 'From', value: input.isAnonymous ? 'Anonymous member' : `<@${input.userId}>` },
     ],
     footer: { text: `Reply with /contact-officer-reply conversation-id:${input.publicId}` },
+    ...withImage(input.imageName),
   };
 }
 
@@ -32,12 +38,14 @@ export function officerReplyEmbed(input: {
   publicId: number;
   officerName: string;
   content: string;
+  imageName?: string;
 }): APIEmbed {
   return {
     title: `Reply · #${input.publicId}`,
     description: input.content,
     color: GREEN,
     fields: [{ name: 'Officer', value: input.officerName }],
+    ...withImage(input.imageName),
   };
 }
 
@@ -53,6 +61,7 @@ export function memberDmEmbed(input: {
   commandMention?: string | null;
   /** When the DM has a Reply button, the text points to it first. */
   withButton?: boolean;
+  imageName?: string;
 }): APIEmbed {
   return {
     title: `An officer of ${input.guildName} replied to your request`,
@@ -73,6 +82,7 @@ export function memberDmEmbed(input: {
       },
     ],
     footer: { text: `Conversation #${input.publicId}` },
+    ...withImage(input.imageName),
   };
 }
 
