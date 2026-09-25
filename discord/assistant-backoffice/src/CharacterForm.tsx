@@ -9,10 +9,13 @@ import {
   type Character,
   type Guild,
   type Role,
+  type User,
 } from './types';
 
 interface Props {
   guild: Guild;
+  /** The logged-in user: Officers add characters for themselves unless they pick someone else. */
+  currentUser: User;
   /** When set the form edits this character instead of adding one. */
   editing?: { character: Character; playerLabel: string };
   onSaved: () => void;
@@ -29,13 +32,13 @@ const ROLE_OPTIONS = (Object.keys(ROLE_LABELS) as Role[]).map((role) => ({
 const NAME_PATTERN = '\\p{L}[\\p{L}\\p{M}]*';
 const NAME_HINT = 'Letters only (any alphabet), 2 to 12 letters.';
 
-export function CharacterForm({ guild, editing, onSaved, onCancel }: Props) {
+export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }: Props) {
   const initial = editing?.character;
   const lastNameRequired = requiresLastName(guild.gameVersion);
   // Also shown when editing a character that already has one, so saving can't silently drop it.
   const showLastName = lastNameRequired || Boolean(initial?.lastName);
 
-  const [discordUserId, setDiscordUserId] = useState('');
+  const [discordUserId, setDiscordUserId] = useState(currentUser.discordId);
   const [firstName, setFirstName] = useState(initial?.firstName ?? '');
   const [lastName, setLastName] = useState(initial?.lastName ?? '');
   const [characterClass, setCharacterClass] = useState<string>(initial?.class ?? WOW_CLASSES[0]);
@@ -48,7 +51,7 @@ export function CharacterForm({ guild, editing, onSaved, onCancel }: Props) {
     event.preventDefault();
     setError(null);
     if (!initial && guild.isOfficer && discordUserId === '') {
-      setError('Pick a player from the list, or paste their Discord user ID.');
+      setError('Pick a player from the search results, or paste their Discord user ID.');
       return;
     }
     const last = showLastName ? lastName.trim() : '';
@@ -81,7 +84,12 @@ export function CharacterForm({ guild, editing, onSaved, onCancel }: Props) {
             {editing ? (
               <input value={editing.playerLabel} disabled />
             ) : (
-              <PlayerPicker guildId={guild.id} value={discordUserId} onChange={setDiscordUserId} />
+              <PlayerPicker
+                guildId={guild.id}
+                value={discordUserId}
+                onChange={setDiscordUserId}
+                self={{ discordId: currentUser.discordId, label: currentUser.displayName }}
+              />
             )}
           </div>
         )}

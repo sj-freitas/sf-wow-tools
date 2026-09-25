@@ -212,6 +212,7 @@ export function CharacterEditorPage({ guild, currentUser }: Props) {
       return (
         <CharacterForm
           guild={guild}
+          currentUser={currentUser}
           onSaved={() => navigate(back)}
           onCancel={() => navigate(back)}
         />
@@ -225,6 +226,7 @@ export function CharacterEditorPage({ guild, currentUser }: Props) {
     return (
       <CharacterForm
         guild={guild}
+        currentUser={currentUser}
         editing={{ character: found.character, playerLabel: playerLabel(found.player) }}
         onSaved={() => navigate(back)}
         onCancel={() => navigate(back)}
