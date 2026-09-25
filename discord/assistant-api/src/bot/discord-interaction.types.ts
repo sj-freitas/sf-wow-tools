@@ -21,6 +21,11 @@ export interface DiscordInteraction {
   type: InteractionType;
   /** Absent when the command was invoked in a DM. */
   guild_id?: string;
+  /** The channel the command was used in. */
+  channel_id?: string;
+  application_id?: string;
+  /** Lets us edit the reply for 15 minutes after the command. */
+  token?: string;
   /** Present for invocations inside a server. */
   member?: { nick?: string | null; roles?: string[]; user: DiscordInteractionUser };
   /** Present for invocations in a DM. */

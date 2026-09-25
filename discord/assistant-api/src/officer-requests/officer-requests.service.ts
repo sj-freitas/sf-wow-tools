@@ -1,5 +1,11 @@
 import { randomInt } from 'node:crypto';
-import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { DiscordBotService } from '../discord/discord-bot.service';
 import { describeDiscordError } from '../discord/discord-errors';
@@ -28,6 +34,8 @@ export const MESSAGES = {
   cooldown: 'Please wait a few seconds before sending another message.',
   conversationNotFound:
     "I couldn't find that conversation. Check the conversation ID: only the member who started a conversation can continue it.",
+  locked:
+    'This conversation is now locked, so nobody can write to it any more. You can start a new conversation with /contact-officer.',
   officerConversationNotFound: 'There is no conversation with that ID in this guild.',
   notOfficer: "You don't have permission to use this command. Only officers can reply to requests.",
   noOfficerRole:
@@ -85,6 +93,7 @@ export class OfficerRequestsService {
             include: { messages: { orderBy: { createdAt: 'asc' }, take: 1 } },
           });
     if (input.conversationId !== undefined && !existing) return MESSAGES.conversationNotFound;
+    if (existing?.lockedAt) return MESSAGES.locked;
 
     const isAnonymous = existing ? existing.isAnonymous : (input.anonymous ?? true);
     const publicId = existing?.publicId ?? (await this.newPublicId(guild.id));
@@ -165,6 +174,7 @@ export class OfficerRequestsService {
       include: { messages: { orderBy: { createdAt: 'asc' } } },
     });
     if (!conversation) return MESSAGES.officerConversationNotFound;
+    if (conversation.lockedAt) return MESSAGES.locked;
 
     const { dmDelivered } = await this.deliverReply(
       guild,
@@ -198,7 +208,50 @@ export class OfficerRequestsService {
       include: { messages: { orderBy: { createdAt: 'asc' } } },
     });
     if (!conversation) throw new NotFoundException(MESSAGES.officerConversationNotFound);
+    if (conversation.lockedAt) throw new ConflictException(MESSAGES.locked);
     return this.deliverReply(guild, conversation, officer, message);
+  }
+
+  /** Locks (or unlocks) a conversation: while locked, members and officers can't write to it. */
+  async setLocked(guildId: string, publicId: number, locked: boolean): Promise<void> {
+    const { count } = await this.prisma.officerConversation.updateMany({
+      where: { guildId, publicId },
+      data: { lockedAt: locked ? new Date() : null },
+    });
+    if (count === 0) throw new NotFoundException(MESSAGES.officerConversationNotFound);
+    this.realtime.publish(guildId, 'officer-requests');
+  }
+
+  /**
+   * Removes a conversation from the database and its messages from the request channel. DMs
+   * already sent to the member stay. Returns how many channel messages could not be deleted
+   * (already removed by hand, or the channel was changed since).
+   */
+  async deleteConversation(guildId: string, publicId: number): Promise<{ notDeleted: number }> {
+    const conversation = await this.prisma.officerConversation.findUnique({
+      where: { guildId_publicId: { guildId, publicId } },
+      include: { messages: true, guild: { select: { officerRequestChannelId: true } } },
+    });
+    if (!conversation) throw new NotFoundException(MESSAGES.officerConversationNotFound);
+
+    let notDeleted = 0;
+    const channelId = conversation.guild.officerRequestChannelId;
+    for (const message of conversation.messages) {
+      if (!message.discordMessageId) continue;
+      if (!channelId) {
+        notDeleted++;
+        continue;
+      }
+      try {
+        await this.bot.deleteMessage(channelId, message.discordMessageId);
+      } catch (error) {
+        notDeleted++;
+        this.logger.warn(`Could not delete a request message: ${describeDiscordError(error)}`);
+      }
+    }
+    await this.prisma.officerConversation.delete({ where: { id: conversation.id } });
+    this.realtime.publish(guildId, 'officer-requests');
+    return { notDeleted };
   }
 
   /** Posts the reply in the request channel, DMs the member and saves it. */

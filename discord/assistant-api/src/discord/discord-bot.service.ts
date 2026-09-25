@@ -142,6 +142,34 @@ export class DiscordBotService {
     await this.rest.delete(Routes.channelMessage(channelId, messageId));
   }
 
+  /** One page (up to 100) of a channel's messages, newest first, older than `before`. */
+  async listMessages(
+    channelId: string,
+    before?: string,
+  ): Promise<{ id: string; pinned: boolean }[]> {
+    const query = new URLSearchParams({ limit: '100' });
+    if (before) query.set('before', before);
+    const messages = (await this.rest.get(Routes.channelMessages(channelId), {
+      query,
+    })) as APIMessage[];
+    return messages.map((message) => ({ id: message.id, pinned: message.pinned }));
+  }
+
+  /** Deletes 2-100 messages at once. Discord refuses ones older than 14 days. */
+  async bulkDeleteMessages(channelId: string, messageIds: string[]): Promise<void> {
+    await this.rest.post(Routes.channelBulkDelete(channelId), {
+      body: { messages: messageIds },
+    });
+  }
+
+  /** Replaces the text of the reply to a command (valid for 15 minutes after the command). */
+  async editInteractionReply(applicationId: string, token: string, content: string): Promise<void> {
+    await this.rest.patch(Routes.webhookMessage(applicationId, token, '@original'), {
+      body: { content, allowed_mentions: { parse: [] } },
+      auth: false,
+    });
+  }
+
   async addReaction(channelId: string, messageId: string, emoji: string): Promise<void> {
     await this.rest.put(
       Routes.channelMessageOwnReaction(channelId, messageId, encodeURIComponent(emoji)),

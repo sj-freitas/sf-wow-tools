@@ -34,6 +34,11 @@ describe('OfficerRequestsController', () => {
       get: async (...args: unknown[]) => void calls.push(['get', ...args]),
     } as unknown as ConversationsService;
     const officerRequests = {
+      setLocked: async (...args: unknown[]) => void calls.push(['lock', ...args]),
+      deleteConversation: async (...args: unknown[]) => {
+        calls.push(['delete', ...args]);
+        return { notDeleted: 0 };
+      },
       replyAsOfficer: async (...args: unknown[]) => {
         calls.push(['reply', ...args]);
         return { dmDelivered: true };
@@ -87,6 +92,30 @@ describe('OfficerRequestsController', () => {
       controller.reply(req, 'g', '12345678', { message: 'hi' }),
       ForbiddenException,
     );
+    assert.deepEqual(calls, []);
+  });
+
+  it('lets Officers lock, unlock and delete conversations', async () => {
+    await controller.lock(req, 'g', '12345678', { locked: true });
+    await controller.lock(req, 'g', '12345678', { locked: false });
+    assert.deepEqual(await controller.remove(req, 'g', '12345678'), { notDeleted: 0 });
+    assert.deepEqual(calls, [
+      ['lock', 'g', 12345678, true],
+      ['lock', 'g', 12345678, false],
+      ['delete', 'g', 12345678],
+    ]);
+  });
+
+  it('refuses everyone else locking or deleting, and bad input', async () => {
+    await assert.rejects(controller.lock(req, 'g', '12345678', {}), BadRequestException);
+    await assert.rejects(controller.lock(req, 'g', 'abc', { locked: true }), BadRequestException);
+    await assert.rejects(controller.remove(req, 'g', '123'), BadRequestException);
+    officer = false;
+    await assert.rejects(
+      controller.lock(req, 'g', '12345678', { locked: true }),
+      ForbiddenException,
+    );
+    await assert.rejects(controller.remove(req, 'g', '12345678'), ForbiddenException);
     assert.deepEqual(calls, []);
   });
 

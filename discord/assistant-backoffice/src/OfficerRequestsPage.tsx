@@ -1,7 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { subscribeEvents } from './events';
-import { fetchOfficerRequest, fetchOfficerRequests, replyToOfficerRequest } from './api';
+import {
+  deleteOfficerRequest,
+  fetchOfficerRequest,
+  fetchOfficerRequests,
+  replyToOfficerRequest,
+  setOfficerRequestLocked,
+} from './api';
+import { useConfirm } from './useConfirm';
 import { formatWhen, timeAgo } from './time';
 import type { Conversation, ConversationsPage, Guild } from './types';
 import { useCurrentUrl, useReturnTo } from './useReturnTo';
@@ -124,7 +131,10 @@ export function OfficerRequestsPage({ guild, timezone }: Props) {
             <div>
               <strong>#{item.publicId}</strong>{' '}
               <span className="badge">{item.isAnonymous ? 'Anonymous' : item.requesterName}</span>{' '}
-              {item.awaitingReply && <span className="badge badge-live">Awaiting reply</span>}
+              {item.locked && <span className="badge">Locked</span>}{' '}
+              {item.awaitingReply && !item.locked && (
+                <span className="badge badge-live">Awaiting reply</span>
+              )}
               <div className="post-snippet">{item.preview}</div>
               <div className="muted">
                 {item.messageCount} message{item.messageCount === 1 ? '' : 's'} · last activity{' '}
@@ -174,9 +184,13 @@ export function OfficerRequestsPage({ guild, timezone }: Props) {
  */
 export function ConversationPage({ guild, timezone }: Props) {
   const { conversationId } = useParams();
+  const navigate = useNavigate();
   const back = useReturnTo(guildPath(guild, 'officer-requests'));
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [removed, setRemoved] = useState<{ notDeleted: number } | null>(null);
+  const [busy, setBusy] = useState(false);
+  const { confirm, dialog } = useConfirm();
 
   const load = useCallback(() => {
     if (!conversationId) return;
@@ -199,12 +213,60 @@ export function ConversationPage({ guild, timezone }: Props) {
     };
   }, [load]);
 
+  const toggleLock = () => {
+    if (!conversation || busy) return;
+    setBusy(true);
+    setError(null);
+    setOfficerRequestLocked(guild.id, conversation.publicId, !conversation.locked)
+      .then(load)
+      .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)))
+      .finally(() => setBusy(false));
+  };
+
+  const remove = async () => {
+    if (!conversation || busy) return;
+    const ok = await confirm({
+      title: `Delete conversation #${conversation.publicId}`,
+      message:
+        "This removes the conversation from the database and deletes its messages from the Officer Request Channel. Direct messages already sent to the member can't be deleted. This can't be undone.",
+      confirmLabel: 'Delete',
+      danger: true,
+    });
+    if (!ok) return;
+    setBusy(true);
+    setError(null);
+    deleteOfficerRequest(guild.id, conversation.publicId)
+      .then((result) => {
+        if (result.notDeleted === 0) navigate(back, { replace: true });
+        else setRemoved(result);
+      })
+      .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)))
+      .finally(() => setBusy(false));
+  };
+
+  if (removed) {
+    return (
+      <div className="tasks">
+        <Link className="back-link" to={back}>
+          ← Officer requests
+        </Link>
+        <p className="muted">
+          The conversation was deleted. {removed.notDeleted} message
+          {removed.notDeleted === 1 ? '' : 's'} could not be removed from the Officer Request
+          Channel (probably already deleted, or the channel was changed since).
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="tasks">
+      {dialog}
       <Link className="back-link" to={back}>
         ← Officer requests
       </Link>
-      {error ? (
+      {error && conversation && <p className="status-error">{error}</p>}
+      {error && !conversation ? (
         <p className="status-error">{error}</p>
       ) : !conversation ? (
         <p className="empty">Loading…</p>
@@ -220,10 +282,30 @@ export function ConversationPage({ guild, timezone }: Props) {
                   : `The member is ${conversation.requester?.name ?? 'named'}.`}
               </span>
             </div>
-            <span className={conversation.isAnonymous ? 'badge' : 'badge badge-main'}>
-              {conversation.isAnonymous ? 'Anonymous' : 'Named'}
-            </span>
+            <div className="settings-actions">
+              <span className={conversation.isAnonymous ? 'badge' : 'badge badge-main'}>
+                {conversation.isAnonymous ? 'Anonymous' : 'Named'}
+              </span>
+              {conversation.locked && <span className="badge">Locked</span>}
+              <button type="button" className="btn btn-sm" disabled={busy} onClick={toggleLock}>
+                {conversation.locked ? 'Unlock' : 'Lock'}
+              </button>
+              <button
+                type="button"
+                className="btn btn-sm btn-danger"
+                disabled={busy}
+                onClick={() => void remove()}
+              >
+                Delete
+              </button>
+            </div>
           </div>
+          {conversation.locked && (
+            <p className="muted">
+              Locked: nobody can write to this conversation. Members who try are told to start a new
+              one.
+            </p>
+          )}
           <ol className="conversation">
             {conversation.messages.map((message) => {
               const fromOfficer = message.author === 'OFFICER';
@@ -251,7 +333,9 @@ export function ConversationPage({ guild, timezone }: Props) {
               );
             })}
           </ol>
-          <ReplyForm guildId={guild.id} publicId={conversation.publicId} onSent={load} />
+          {!conversation.locked && (
+            <ReplyForm guildId={guild.id} publicId={conversation.publicId} onSent={load} />
+          )}
         </>
       )}
     </div>

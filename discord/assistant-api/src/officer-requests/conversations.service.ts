@@ -15,6 +15,7 @@ export interface ConversationSummaryDto {
   lastActivityAt: string;
   /** The last message is the member's: no officer has answered it yet. */
   awaitingReply: boolean;
+  locked: boolean;
 }
 
 export interface ConversationMessageDto {
@@ -35,6 +36,7 @@ export interface ConversationDto {
   /** Set only when the conversation is not anonymous. */
   requester: { name: string; discordId: string } | null;
   createdAt: string;
+  locked: boolean;
   messages: ConversationMessageDto[];
 }
 
@@ -64,6 +66,7 @@ export function toConversationDto(
         ? { name: conversation.userName, discordId: conversation.userDiscordId }
         : null,
     createdAt: conversation.createdAt.toISOString(),
+    locked: conversation.lockedAt !== null,
     messages: messages.map((message) => ({
       id: message.id,
       author: message.author,
@@ -135,6 +138,7 @@ export class ConversationsService {
         createdAt: conversation.createdAt.toISOString(),
         lastActivityAt: conversation.updatedAt.toISOString(),
         awaitingReply: last.get(conversation.id)?.author === 'USER',
+        locked: conversation.lockedAt !== null,
       })),
       total,
       page,

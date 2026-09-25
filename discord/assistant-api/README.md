@@ -197,6 +197,18 @@ Officers only (`PUT /api/guilds/:id/home`, up to 10,000 characters; an empty tex
 rendered with `react-markdown` (GitHub flavour) which only builds elements and never raw HTML, so
 what an Officer writes can't inject scripts into what members see.
 
+### Clearing a channel (`/clear-channel`)
+
+- **`/clear-channel [channel]`.** Deletes every unpinned message of the channel (default: the one you
+  are in). Only for holders of the guild's Officer role in its main server; anyone else gets a private
+  "you don't have permission" answer. The channel must be a text channel of the same server.
+- The answer is private. Deleting takes longer than Discord's 3 seconds, so the command answers
+  "Clearing…" at once and edits that message with the total (or the error) when it is done.
+  Messages younger than 14 days go 100 at a time; older ones one by one, so a big old channel takes a
+  while. One clear per channel at a time. There is no confirmation step.
+- The bot needs View Channel, Read Message History and Manage Messages in that channel (the invite
+  link's permissions include them). Run `npm run commands:register` after deploying.
+
 ### Contacting the officers (`/contact-officer`)
 
 Members write to the officers privately with the bot; officers answer from Discord and read the
@@ -224,12 +236,18 @@ command sees it).
   continue a conversation) but is never returned by the API for an anonymous conversation: the
   conversation is fetched by its id, and the DTO leaves out the member entirely (unit tested). Officers
   are never anonymous.
+- **Locking and deleting (backoffice, Officers).** _Lock_ (and _Unlock_) on the conversation page stops
+  anyone writing to it: `/contact-officer` with that id and `/contact-officer-reply` (and the reply
+  box) answer that the conversation is locked and that a new one can be started. _Delete_ removes the
+  conversation from the database and deletes every message the bot posted for it in the Officer
+  Request Channel (each message's Discord id is stored). DMs already sent to the member stay. Routes:
+  `PUT /api/guilds/:guildId/officer-requests/:id/lock` (`{ locked }`) and `DELETE …/officer-requests/:id`.
 - **Backoffice** (Officers only): **Officer requests** lists conversations, most recently active
   first, ten to a page, with a search by id or text (`/officer-requests?q=&page=`) and an "Awaiting
   reply" badge. `/officer-requests/:conversationId` shows the whole conversation and a reply box (same delivery as the command: a DM plus a post in the request channel), each
   message labelled as the member (anonymous or by name) or as an officer, by name.
 
-Not built yet: closing a conversation, deleting old ones after a while, and blocking a sender.
+Not built yet: deleting old conversations after a while, and blocking a sender.
 
 ### Background worker, posts and honeypots
 

@@ -1,5 +1,5 @@
 import type { RealtimeService } from '../realtime/realtime.service';
-import { NotFoundException } from '@nestjs/common';
+import { ConflictException, NotFoundException } from '@nestjs/common';
 import assert from 'node:assert/strict';
 import { beforeEach, describe, it } from 'node:test';
 import { BadRequestException } from '@nestjs/common';
@@ -29,6 +29,9 @@ describe('OfficerRequestsService', () => {
   let touched: string[];
   let guildUpdate: any;
   let published: string[][];
+  let deleted: string[];
+  let channelDeletes: string[][];
+  let failDeleteOf: string | null;
   let service: OfficerRequestsService;
 
   beforeEach(() => {
@@ -54,6 +57,9 @@ describe('OfficerRequestsService', () => {
     touched = [];
     guildUpdate = null;
     published = [];
+    deleted = [];
+    channelDeletes = [];
+    failDeleteOf = null;
     const prisma = {
       guild: {
         findUnique: async (args: any) => (args.where.id === guild.id ? guild : null),
@@ -86,6 +92,12 @@ describe('OfficerRequestsService', () => {
         },
         create: async (args: any) => void (createdConversation = args.data),
         update: async (args: any) => void touched.push(args.where.id),
+        updateMany: async (args: any) => {
+          const found = conversation && conversation.publicId === args.where.publicId;
+          if (found) conversation.lockedAt = args.data.lockedAt;
+          return { count: found ? 1 : 0 };
+        },
+        delete: async (args: any) => void deleted.push(args.where.id),
       },
     } as unknown as PrismaService;
     const bot = {
@@ -97,6 +109,10 @@ describe('OfficerRequestsService', () => {
       sendDirectMessage: async (userId: string, embed: any) => {
         if (dmFails) throw new Error('Cannot send messages to this user');
         dms.push({ userId, embed });
+      },
+      deleteMessage: async (channelId: string, messageId: string) => {
+        if (messageId === failDeleteOf) throw new Error('Unknown Message');
+        channelDeletes.push([channelId, messageId]);
       },
       fetchMemberRoles: async () => officerRolesElsewhere,
       listTextChannels: async () => [{ id: CHANNEL, name: 'officer-requests' }],
@@ -210,6 +226,13 @@ describe('OfficerRequestsService', () => {
         assert.deepEqual([posts, createdMessages], [[], []]);
       });
 
+      it('tells the member the conversation is locked, and posts nothing', async () => {
+        conversation.lockedAt = new Date();
+        assert.equal(await send({ conversationId: 12345678 }), MESSAGES.locked);
+        assert.match(MESSAGES.locked, /new conversation/);
+        assert.deepEqual([posts, createdMessages, touched], [[], [], []]);
+      });
+
       it('says it cannot find a conversation id that does not exist', async () => {
         assert.equal(await send({ conversationId: 87654321 }), MESSAGES.conversationNotFound);
       });
@@ -309,6 +332,72 @@ describe('OfficerRequestsService', () => {
     it('says when the conversation does not exist', async () => {
       conversation = null;
       assert.equal(await reply(), MESSAGES.officerConversationNotFound);
+    });
+
+    it('bounces officers replying to a locked conversation', async () => {
+      conversation.lockedAt = new Date();
+      assert.equal(await reply(), MESSAGES.locked);
+      assert.deepEqual([posts, dms, createdMessages], [[], [], []]);
+    });
+
+    describe('locking and deleting from the backoffice', () => {
+      it('locks and unlocks, and tells the backoffice', async () => {
+        await service.setLocked('g1', 12345678, true);
+        assert.ok(conversation.lockedAt instanceof Date);
+        await service.setLocked('g1', 12345678, false);
+        assert.equal(conversation.lockedAt, null);
+        assert.deepEqual(published, [
+          ['g1', 'officer-requests'],
+          ['g1', 'officer-requests'],
+        ]);
+      });
+
+      it('404s when locking an unknown conversation', async () => {
+        await assert.rejects(service.setLocked('g1', 87654321, true), NotFoundException);
+      });
+
+      it('refuses backoffice replies to a locked conversation', async () => {
+        conversation.lockedAt = new Date();
+        await assert.rejects(
+          service.replyAsOfficer('g1', 12345678, { id: 'o', name: 'Olga' }, 'Hi'),
+          ConflictException,
+        );
+        assert.deepEqual([posts, dms, createdMessages], [[], [], []]);
+      });
+
+      describe('deleting', () => {
+        beforeEach(() => {
+          conversation.guild = { officerRequestChannelId: CHANNEL };
+          conversation.messages = [
+            { author: 'USER', discordMessageId: 'm1' },
+            { author: 'OFFICER', discordMessageId: 'm2' },
+            { author: 'OFFICER', discordMessageId: null },
+          ];
+        });
+
+        it('deletes the tracked messages from the channel, then the conversation', async () => {
+          assert.deepEqual(await service.deleteConversation('g1', 12345678), { notDeleted: 0 });
+          assert.deepEqual(channelDeletes, [
+            [CHANNEL, 'm1'],
+            [CHANNEL, 'm2'],
+          ]);
+          assert.deepEqual(deleted, ['c1']);
+          assert.deepEqual(dms, []); // DMs are never touched
+          assert.deepEqual(published, [['g1', 'officer-requests']]);
+        });
+
+        it('still removes the conversation when a channel message is already gone', async () => {
+          failDeleteOf = 'm1';
+          assert.deepEqual(await service.deleteConversation('g1', 12345678), { notDeleted: 1 });
+          assert.deepEqual(channelDeletes, [[CHANNEL, 'm2']]);
+          assert.deepEqual(deleted, ['c1']);
+        });
+
+        it('404s for an unknown conversation and deletes nothing', async () => {
+          await assert.rejects(service.deleteConversation('g1', 87654321), NotFoundException);
+          assert.deepEqual([channelDeletes, deleted], [[], []]);
+        });
+      });
     });
 
     describe('from the backoffice', () => {

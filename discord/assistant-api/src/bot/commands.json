@@ -162,5 +162,18 @@
         "max_length": 3500
       }
     ]
+  },
+  {
+    "name": "clear-channel",
+    "description": "Officers only: delete all unpinned messages in a channel",
+    "options": [
+      {
+        "name": "channel",
+        "description": "The channel to clear (default: the one you are in)",
+        "type": 7,
+        "required": false,
+        "channel_types": [0, 5]
+      }
+    ]
   }
 ]

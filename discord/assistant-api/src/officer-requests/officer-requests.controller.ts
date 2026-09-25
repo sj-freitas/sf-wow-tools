@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -76,6 +77,33 @@ export class OfficerRequestsController {
       { id: req.user.discordId, name: req.user.displayName },
       message,
     );
+  }
+
+  /** Officers only. `{ locked: true }` locks the conversation, `{ locked: false }` unlocks it. */
+  @Put('officer-requests/:publicId/lock')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async lock(
+    @Req() req: AuthenticatedRequest,
+    @Param('guildId') guildId: string,
+    @Param('publicId') publicId: string,
+    @Body() body: Record<string, unknown>,
+  ): Promise<void> {
+    await this.guildAccess.assertOfficer(req.user.id, guildId);
+    if (!/^\d{8}$/.test(publicId)) throw new BadRequestException('Not a conversation id');
+    if (typeof body.locked !== 'boolean') throw new BadRequestException('Say whether to lock it.');
+    await this.officerRequests.setLocked(guildId, Number(publicId), body.locked);
+  }
+
+  /** Officers only. Removes the conversation and its messages in the request channel. */
+  @Delete('officer-requests/:publicId')
+  async remove(
+    @Req() req: AuthenticatedRequest,
+    @Param('guildId') guildId: string,
+    @Param('publicId') publicId: string,
+  ): Promise<{ notDeleted: number }> {
+    await this.guildAccess.assertOfficer(req.user.id, guildId);
+    if (!/^\d{8}$/.test(publicId)) throw new BadRequestException('Not a conversation id');
+    return this.officerRequests.deleteConversation(guildId, Number(publicId));
   }
 
   /** Guild-Assistants and Officers. `channelId: null` clears the channel. */

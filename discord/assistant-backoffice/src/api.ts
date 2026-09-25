@@ -167,6 +167,21 @@ export const replyToOfficerRequest = (
 ): Promise<{ dmDelivered: boolean }> =>
   request('POST', `/api/guilds/${guildId}/officer-requests/${publicId}/replies`, { message });
 
+/** A locked conversation takes no more messages, from members or officers. */
+export const setOfficerRequestLocked = (
+  guildId: string,
+  publicId: number,
+  locked: boolean,
+): Promise<void> =>
+  request('PUT', `/api/guilds/${guildId}/officer-requests/${publicId}/lock`, { locked });
+
+/** Removes the conversation and its messages in the request channel (not the members' DMs). */
+export const deleteOfficerRequest = (
+  guildId: string,
+  publicId: number,
+): Promise<{ notDeleted: number }> =>
+  request('DELETE', `/api/guilds/${guildId}/officer-requests/${publicId}`);
+
 /** `null` clears the channel. */
 export const setOfficerRequestChannel = (
   guildId: string,

@@ -282,6 +282,7 @@ export interface ConversationSummary {
   lastActivityAt: string;
   /** The member wrote last: no officer has answered yet. */
   awaitingReply: boolean;
+  locked: boolean;
 }
 
 export interface ConversationsPage {
@@ -308,5 +309,6 @@ export interface Conversation {
   isAnonymous: boolean;
   requester: { name: string; discordId: string } | null;
   createdAt: string;
+  locked: boolean;
   messages: ConversationMessage[];
 }

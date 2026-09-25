@@ -322,6 +322,8 @@ model OfficerConversation {
   // The member's name at the time; only kept when the conversation is not anonymous.
   userName      String?          @map("user_name")
   messages      OfficerMessage[]
+  // Set when an officer locks the conversation: nobody can write to it any more.
+  lockedAt      DateTime?        @map("locked_at")
   createdAt     DateTime         @default(now()) @map("created_at")
   // Bumped by every message, so it is the "last activity".
   updatedAt     DateTime         @updatedAt @map("updated_at")
