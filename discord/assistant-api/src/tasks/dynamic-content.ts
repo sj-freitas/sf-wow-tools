@@ -7,8 +7,10 @@ export const MAX_DYNAMIC_TOKENS = 5;
 
 export interface Reactor {
   id: string;
-  /** Display name, else username. */
+  /** Discord display name (global name), else username. */
   name: string;
+  /** How they are shown in the message's server: their nickname there, else `name`. */
+  displayName?: string;
   /** Their main characters in the guild (one entry each; empty when they have none). */
   mains?: string[];
 }
@@ -183,7 +185,11 @@ export async function checkExpressions(tokens: readonly DynamicToken[]): Promise
 export const trackingKey = (token: Pick<DynamicToken, 'ref' | 'emoji'>) =>
   `${token.ref}|${token.emoji}`;
 
-/** Changes when someone reacts, un-reacts, renames themselves or gets a main: what "nothing changed" means. */
+/**
+ * Changes when someone reacts, un-reacts, renames themselves or gets a main: what "nothing changed"
+ * means. Server nicknames are left out: they cost a lookup each, so they are only fetched once this
+ * has changed.
+ */
 export function hashReactors(reactors: readonly Reactor[]): string {
   const sorted = [...reactors].sort((a, b) => a.id.localeCompare(b.id));
   return createHash('sha256')
@@ -203,6 +209,7 @@ async function tagText(token: DynamicToken, reactors: readonly Reactor[]): Promi
         id: reactor.id,
         tag: `<@${reactor.id}>`,
         name: reactor.name,
+        displayName: reactor.displayName ?? reactor.name,
         mainName: mainNameOf(reactor),
         mains: reactor.mains ?? [],
       })),

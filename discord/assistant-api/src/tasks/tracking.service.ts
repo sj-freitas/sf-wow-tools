@@ -16,6 +16,8 @@ import { embedsShown, type PostConfig, type PostState } from './post-task';
 
 /** Channels asked at once while looking for a message by its id. */
 const SEARCH_PARALLEL = 8;
+/** Most people whose server nickname is looked up in one go (the rest show their Discord name). */
+const MAX_NICKNAME_LOOKUPS = 100;
 
 const isLive = (state: PostState): boolean => Boolean(state.messageId) && !state.messageDeleted;
 
@@ -231,11 +233,12 @@ export class TrackingService {
     for (const token of tokens) {
       const key = trackingKey(token);
       if (people.has(key)) continue;
-      const reactors = await this.readReactors(
-        await this.locate(sources.get(token.ref)),
-        token.emoji,
+      const location = await this.locate(sources.get(token.ref));
+      const reactors = await this.readReactors(location, token.emoji);
+      people.set(
+        key,
+        await this.withDisplayNames(location, await this.withMains(guildId, reactors)),
       );
-      people.set(key, await this.withMains(guildId, reactors));
     }
     return people;
   }
@@ -282,6 +285,52 @@ export class TrackingService {
       ]),
     );
     return reactors.map((reactor) => ({ ...reactor, mains: mains.get(reactor.id) ?? [] }));
+  }
+
+  /**
+   * Adds how each person is shown in the message's server (`displayName`: their nickname there).
+   * That is one Discord lookup per person, so people already looked up (`known`, from the last check)
+   * are not asked again, and at most a hundred are looked up at a time. Someone who cannot be found
+   * (they left the server) keeps their Discord name.
+   */
+  async withDisplayNames(
+    location: MessageLocation | null,
+    reactors: readonly Reactor[],
+    known: readonly Reactor[] = [],
+  ): Promise<Reactor[]> {
+    if (reactors.length === 0 || !location) return [...reactors];
+    const serverId = await this.serverOf(location.channelId);
+    const already = new Map(known.map((person) => [person.id, person.displayName]));
+    const missing = reactors
+      .filter((person) => !already.get(person.id))
+      .slice(0, MAX_NICKNAME_LOOKUPS);
+    const found = new Map<string, string>();
+    for (let i = 0; i < missing.length && serverId; i += SEARCH_PARALLEL) {
+      await Promise.all(
+        missing.slice(i, i + SEARCH_PARALLEL).map(async (person) => {
+          const name = await this.bot.getMemberDisplayName(serverId, person.id);
+          if (name) found.set(person.id, name);
+        }),
+      );
+    }
+    return reactors.map((person) => ({
+      ...person,
+      displayName: already.get(person.id) || found.get(person.id) || person.name,
+    }));
+  }
+
+  private readonly channelServers = new Map<string, string | null>();
+
+  /** The server a channel is in; a channel never moves, so it is asked once. */
+  private async serverOf(channelId: string): Promise<string | null> {
+    if (!this.channelServers.has(channelId)) {
+      try {
+        this.channelServers.set(channelId, await this.bot.getChannelServerId(channelId));
+      } catch {
+        return null;
+      }
+    }
+    return this.channelServers.get(channelId) ?? null;
   }
 
   /**
@@ -356,16 +405,20 @@ export class TrackingService {
       for (const row of rows) {
         if (!isLive(row.task.state as PostState)) continue;
         try {
-          const read = await this.readReactors(
-            row.sourceTask
-              ? this.locationOfTask(row.sourceTask)
-              : (sourceOfRow(row).message ?? null),
-            row.emoji,
-          );
+          const location = row.sourceTask
+            ? this.locationOfTask(row.sourceTask)
+            : (sourceOfRow(row).message ?? null);
+          const read = await this.readReactors(location, row.emoji);
           // Main characters are part of what is compared, so a new main updates the post too.
-          const reactors = await this.withMains(row.task.guildId, read);
-          const hash = hashReactors(reactors);
+          const withMains = await this.withMains(row.task.guildId, read);
+          const hash = hashReactors(withMains);
           if (hash === row.lastHash) continue;
+          // Only now, that something changed, ask for nicknames (and only of people not seen before).
+          const reactors = await this.withDisplayNames(
+            location,
+            withMains,
+            row.lastUsers as unknown as Reactor[],
+          );
           await this.prisma.postTracking.update({
             where: { id: row.id },
             data: {

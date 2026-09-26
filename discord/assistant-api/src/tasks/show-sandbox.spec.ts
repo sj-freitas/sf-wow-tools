@@ -11,8 +11,15 @@ import {
 import { checkShowExpression, runShowExpression, ShowExpressionError } from './show-sandbox';
 
 const people = [
-  { id: '1', tag: '<@1>', name: 'Ana', mainName: 'Merric', mains: ['Merric'] },
-  { id: '2', tag: '<@2>', name: 'Bruno', mainName: 'Bruno', mains: [] },
+  {
+    id: '1',
+    tag: '<@1>',
+    name: 'Ana',
+    displayName: 'Ana (Dev)',
+    mainName: 'Merric',
+    mains: ['Merric'],
+  },
+  { id: '2', tag: '<@2>', name: 'Bruno', displayName: 'Bruno', mainName: 'Bruno', mains: [] },
 ];
 
 describe('runShowExpression', () => {
@@ -22,6 +29,13 @@ describe('runShowExpression', () => {
       people,
     );
     assert.equal(text, '2: <@1> is Merric,<@2> is Bruno');
+  });
+
+  it('gives each person their server nickname as displayName', async () => {
+    assert.equal(
+      await runShowExpression('reactions.map(r => r.displayName)', people),
+      'Ana (Dev), Bruno',
+    );
   });
 
   it('joins an array result with commas, and turns other results into text', async () => {

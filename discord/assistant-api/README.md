@@ -258,8 +258,9 @@ A post's text can show who reacted to a message:
   it). Custom emoji are stored as `name:id`, and the reactions of any emoji on the message can be read,
   whichever server it comes from.
 - **`show`** is a **JavaScript expression** (there are no keywords), evaluated with `reactions`: an array
-  with one object per person who reacted, `{ id, tag, name, mainName, mains }` (`tag` is `<@id>`,
-  `name` the Discord display name, `mainName` the main characters in the guild joined with " / " or the
+  with one object per person who reacted, `{ id, tag, name, displayName, mainName, mains }` (`tag` is `<@id>`,
+  `name` the Discord name (global display name, else username; never the id, which is `id`),
+  `displayName` the nickname they have in the message's server, else `name`, `mainName` the main characters in the guild joined with " / " or the
   Discord name when they have none, `mains` a list). Left out it is `reactions.map((r) => r.name)`. An
   array result is joined with ", ". Examples: `reactions.length`, `reactions.map(r => r.tag)`,
   `` `${reactions.length}: ${reactions.map((a) => `${a.tag} is ${a.mainName}`).join(', ')}` ``.

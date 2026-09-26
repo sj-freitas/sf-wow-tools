@@ -1255,3 +1255,21 @@ label.btn.disabled {
 .syntax-help ul {
   padding-left: 1.2rem;
 }
+
+.syntax-help h5 {
+  margin: 0.8rem 0 0.25rem;
+  color: var(--text);
+  font-size: 0.85rem;
+}
+.syntax-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.25rem 0;
+}
+.syntax-table th,
+.syntax-table td {
+  padding: 0.25rem 0.5rem 0.25rem 0;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}

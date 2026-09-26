@@ -144,53 +144,149 @@ export function PostTaskForm({ guild, channels, editing, timezone, onSaved, onCa
           maxLength={MAX_LENGTH + 500}
         />
         <details className="syntax-help">
-          <summary title="Show who reacted to a post inside its text">
-            ⓘ Live tags: show who reacted
+          <summary title="Show who reacted to a message inside this post">
+            ⓘ Show who reacted (live tags)
           </summary>
+
+          <h5>What it does</h5>
           <p>
-            Write <code>{'{{reactions sourcePost="Raid signup" emoji=👍}}'}</code> anywhere in the
-            text. It is replaced by the people who reacted, and Discord's message updates by itself
-            within a minute of a reaction changing.
-          </p>
-          <ul>
-            <li>
-              <code>sourcePost</code>: which message to read. Its Discord{' '}
-              <strong>message id</strong> (Discord: right-click the message → Copy Message ID; needs
-              Developer Mode), of any message in this guild's servers that the bot can see. The{' '}
-              <strong>name</strong> of a scheduled post also works (case does not matter), and so
-              does a message <strong>link</strong> (right-click → Copy Message Link), which is the
-              way for a message in a thread. Leave it out for this post.
-            </li>
-            <li>
-              <code>emoji</code>: 👍, or a server emoji as <code>&lt;:name:id&gt;</code> (type{' '}
-              <code>\:emoji:</code> in Discord to get it).
-            </li>
-            <li>
-              <code>show</code>: a <strong>JavaScript expression</strong> that makes the text, using{' '}
-              <code>reactions</code>, the list of people who reacted (below). Left out, it lists
-              their Discord names.
-            </li>
-          </ul>
-          <p>Put a value with spaces in quotes. Options can come in any order.</p>
-          <p>
-            <strong>The expression</strong> is plain JavaScript and works with{' '}
-            <code>reactions</code>, one entry per person with <code>id</code>, <code>tag</code> (a
-            mention), <code>name</code> (Discord name), <code>mainName</code> (main characters, or
-            the Discord name if none) and <code>mains</code> (a list). It should give text, or a
-            list (joined with commas). Put it in quotes when it has spaces. Handy ones:{' '}
-            <code>reactions.length</code>, <code>reactions.map(r =&gt; r.name)</code>,{' '}
-            <code>reactions.map(r =&gt; r.mainName)</code>,{' '}
-            <code>reactions.map(r =&gt; r.tag)</code>. Example:
+            Put a tag in the text and the bot replaces it with the people who reacted to a message,
+            then keeps it up to date (within a minute of a reaction changing).
           </p>
           <pre className="md-code">
-            {
-              '{{reactions sourcePost="Raid signup" emoji=👍 show="`${reactions.length}: ${reactions.map((a) => `${a.tag} is ${a.mainName}`).join(\', \')}`"}}'
-            }
+            {'Signed up: {{reactions sourcePost=123456789012345678 emoji=👍}}'}
           </pre>
+
+          <h5>The three options</h5>
+          <table className="syntax-table">
+            <tbody>
+              <tr>
+                <th>
+                  <code>sourcePost</code>
+                </th>
+                <td>
+                  The message to read. Use its <strong>message id</strong> (Discord: right-click the
+                  message → Copy Message ID), or its <strong>link</strong> (Copy Message Link), or
+                  the <strong>name</strong> of a scheduled post. Leave it out to read this post.
+                </td>
+              </tr>
+              <tr>
+                <th>
+                  <code>emoji</code>
+                </th>
+                <td>
+                  Which reaction to list: 👍, or a server emoji as <code>&lt;:name:id&gt;</code>.
+                </td>
+              </tr>
+              <tr>
+                <th>
+                  <code>show</code>
+                </th>
+                <td>
+                  What to write, as a JavaScript expression (see below). Leave it out to list the
+                  names. Put it in quotes when it has spaces.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h5>
+            What <code>show</code> can use: <code>reactions</code>
+          </h5>
           <p>
-            Use single quotes inside the expression (or <code>\"</code> for a double quote). It runs
-            in a sandbox: no access to files, the network or anything else, and it stops after a
-            tenth of a second. A mistake is refused when you save.
+            <code>reactions</code> is a <strong>list</strong> (an array) with one entry for each
+            person who reacted. Each entry is an <strong>object</strong> with these fields:
+          </p>
+          <table className="syntax-table">
+            <thead>
+              <tr>
+                <th>Field</th>
+                <th>Type</th>
+                <th>What it is</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <code>id</code>
+                </td>
+                <td>text</td>
+                <td>Their Discord user id.</td>
+              </tr>
+              <tr>
+                <td>
+                  <code>tag</code>
+                </td>
+                <td>text</td>
+                <td>A mention of them, like @Ana. Nobody gets pinged.</td>
+              </tr>
+              <tr>
+                <td>
+                  <code>name</code>
+                </td>
+                <td>text</td>
+                <td>Their Discord name.</td>
+              </tr>
+              <tr>
+                <td>
+                  <code>displayName</code>
+                </td>
+                <td>text</td>
+                <td>Their nickname in the message's server (their Discord name if none).</td>
+              </tr>
+              <tr>
+                <td>
+                  <code>mainName</code>
+                </td>
+                <td>text</td>
+                <td>Their main character(s), like Merric / Olga (their Discord name if none).</td>
+              </tr>
+              <tr>
+                <td>
+                  <code>mains</code>
+                </td>
+                <td>list of text</td>
+                <td>Their main characters, one entry each (empty if none).</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>
+            The result can be text or a list (a list is joined with commas). Put the expression in
+            quotes: <code>show="…"</code>.
+          </p>
+
+          <h5>Examples</h5>
+          <table className="syntax-table">
+            <tbody>
+              <tr>
+                <td>
+                  <code>show="reactions.length"</code>
+                </td>
+                <td>How many: 3</td>
+              </tr>
+              <tr>
+                <td>
+                  <code>show="reactions.map(r =&gt; r.mainName)"</code>
+                </td>
+                <td>Main characters: Merric, Bruno</td>
+              </tr>
+              <tr>
+                <td>
+                  <code>show="reactions.map(r =&gt; r.tag)"</code>
+                </td>
+                <td>Mentions: @Ana, @Bruno</td>
+              </tr>
+              <tr>
+                <td>
+                  <code>{'show="`${reactions.length}: ${reactions.map(r => r.name)}`"'}</code>
+                </td>
+                <td>A count and the names: 2: Ana,Bruno</td>
+              </tr>
+            </tbody>
+          </table>
+          <p className="muted">
+            The expression runs in a safe sandbox (no files or network) and is checked when you
+            save. If you need a double quote inside it, write <code>\"</code>, or use single quotes.
           </p>
         </details>
         <div className="task-text-actions">

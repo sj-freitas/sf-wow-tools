@@ -321,6 +321,20 @@ export class DiscordBotService {
   }
 
   /**
+   * How a member is shown in a server: their nickname there, else their display name, else their
+   * username. Null when they are not in the server (or Discord cannot say).
+   */
+  async getMemberDisplayName(serverId: string, userId: string): Promise<string | null> {
+    try {
+      const member = (await this.rest.get(Routes.guildMember(serverId, userId))) as APIGuildMember;
+      return member.nick ?? member.user.global_name ?? member.user.username;
+    } catch (error) {
+      if (error instanceof DiscordAPIError) return null;
+      throw error;
+    }
+  }
+
+  /**
    * Whether a channel has a message with that id that the bot can read. Discord errors (unknown
    * message, no access) mean no; anything else (a network problem) is thrown.
    */

@@ -6,8 +6,10 @@ export interface ShowReactor {
   id: string;
   /** A mention: `<@id>`. */
   tag: string;
-  /** Discord display name. */
+  /** Discord display name (their global name, or username). */
   name: string;
+  /** How they are shown in the message's server: their nickname there, else `name`. */
+  displayName: string;
   /** Their main characters joined with " / ", or their Discord name when they have none. */
   mainName: string;
   /** Their main characters, one entry each (empty when they have none). */
@@ -74,6 +76,7 @@ const SAMPLE: ShowReactor[] = [
     id: '100000000000000001',
     tag: '<@100000000000000001>',
     name: 'Ana',
+    displayName: 'Ana (Dev)',
     mainName: 'Merric',
     mains: ['Merric'],
   },
@@ -81,6 +84,7 @@ const SAMPLE: ShowReactor[] = [
     id: '100000000000000002',
     tag: '<@100000000000000002>',
     name: 'Bruno',
+    displayName: 'Bruno',
     mainName: 'Bruno',
     mains: [],
   },

@@ -37,6 +37,8 @@ describe('TrackingService', () => {
   let servers: string[];
   let channelServer: string | null;
   let unreadable: boolean;
+  let nicknames: Record<string, string>;
+  let nicknameLookups: string[];
   let channelList: string[];
   let messageLives: Record<string, string>;
   let probed: string[];
@@ -56,6 +58,8 @@ describe('TrackingService', () => {
     channelServer = 's1';
     unreadable = false;
     channelList = [];
+    nicknames = {};
+    nicknameLookups = [];
     messageLives = {};
     probed = [];
     const prisma = {
@@ -113,6 +117,10 @@ describe('TrackingService', () => {
         return messageLives[channelId] === messageId;
       },
       getChannelServerId: async () => channelServer,
+      getMemberDisplayName: async (_server: string, userId: string) => {
+        nicknameLookups.push(userId);
+        return nicknames[userId] ?? null;
+      },
       assertCanReadMessage: async () => {
         if (unreadable) throw new Error('Missing Access');
       },
@@ -239,8 +247,8 @@ describe('TrackingService', () => {
         const sources = await resolve(`{{reactions sourcePost="${numericLink}" emoji=👍}}`);
         const people = await service.fetchPeople('g1', tokens, sources);
         assert.deepEqual(people.get(`${tokens[0].ref}|👍`), [
-          { ...ana, mains: [] },
-          { ...bruno, mains: [] },
+          { ...ana, mains: [], displayName: 'Ana' },
+          { ...bruno, mains: [], displayName: 'Bruno' },
         ]);
         await service.syncTracking(POST, tokens, sources);
         assert.deepEqual(
@@ -385,8 +393,8 @@ describe('TrackingService', () => {
         new Map([[token.ref, { taskId: POST }]]),
       );
       assert.deepEqual(people.get(`name:raid signup|👍`), [
-        { id: '1', name: 'Ana', mains: ['Merric Stone'] },
-        { id: '2', name: 'Bruno', mains: [] },
+        { id: '1', name: 'Ana', displayName: 'Ana', mains: ['Merric Stone'] },
+        { id: '2', name: 'Bruno', displayName: 'Bruno', mains: [] },
       ]);
     });
 
@@ -427,6 +435,66 @@ describe('TrackingService', () => {
     });
   });
 
+  describe('server nicknames (displayName)', () => {
+    const token = () =>
+      parseDynamicTokens(
+        '{{reactions sourcePost="Raid signup" emoji=👍 show="reactions.length"}}',
+      )[0];
+
+    it("gives each person their nickname in the message's server, else their Discord name", async () => {
+      nicknames = { [ana.id]: 'Ana (Tank)' };
+      const people = await service.fetchPeople(
+        'g1',
+        [token()],
+        new Map([[token().ref, { taskId: POST }]]),
+      );
+      assert.deepEqual(
+        people.get(`name:raid signup|👍`)?.map((p) => p.displayName),
+        ['Ana (Tank)', 'Bruno'],
+      );
+    });
+
+    it('asks Discord for the nickname only once the reactions changed, and only for new people', async () => {
+      tasks[POST].config.content =
+        'Going: {{reactions sourcePost="Raid signup" emoji=👍 show="reactions.map(r => r.displayName)"}}';
+      nicknames = { [ana.id]: 'Ana (Tank)', [bruno.id]: 'Bruno (Heal)' };
+      rows = [
+        trackingRow({
+          lastHash: hashReactors([{ ...ana, mains: [] }]),
+          lastUsers: [{ ...ana, mains: [], displayName: 'Ana (Tank)' }],
+        }),
+      ];
+      await service.refreshDue();
+      assert.deepEqual(nicknameLookups, [bruno.id]);
+      assert.equal(edits[0][2], 'Going: Ana (Tank), Bruno (Heal)');
+    });
+
+    it('does not ask at all while nothing changed', async () => {
+      rows = [
+        trackingRow({
+          lastHash: hashReactors([
+            { ...ana, mains: [] },
+            { ...bruno, mains: [] },
+          ]),
+        }),
+      ];
+      await service.refreshDue();
+      assert.deepEqual(nicknameLookups, []);
+    });
+
+    it('is the Discord name for someone who is not in the server any more', async () => {
+      const people = await service.fetchPeople(
+        'g1',
+        [token()],
+        new Map([[token().ref, { taskId: POST }]]),
+      );
+      assert.deepEqual(
+        people.get(`name:raid signup|👍`)?.map((p) => p.displayName),
+        ['Ana', 'Bruno'],
+      );
+    });
+  });
+
   describe('custom emoji', () => {
     it('reads reactions of a server emoji written as <:name:id> or <a:name:id>', async () => {
       reactors['raid:123456789012345678'] = [ana];
@@ -441,7 +509,7 @@ describe('TrackingService', () => {
           new Map([[token.ref, { taskId: POST }]]),
         );
         assert.deepEqual(people.get(`name:raid signup|raid:123456789012345678`), [
-          { ...ana, mains: [] },
+          { ...ana, mains: [], displayName: 'Ana' },
         ]);
       }
     });
