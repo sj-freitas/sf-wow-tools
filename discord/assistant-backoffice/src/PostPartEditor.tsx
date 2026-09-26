@@ -62,6 +62,7 @@ export function PostPartEditor({
       <div className="part-head">
         <strong>Message {index + 1}</strong>
         {draft.posted && <span className="badge badge-main">In Discord</span>}
+        {draft.messageId && <CopyIdButton id={draft.messageId} />}
         <span className="part-tools">
           <button
             type="button"
@@ -249,5 +250,28 @@ export function MessagePreview({
         </p>
       )}
     </div>
+  );
+}
+
+/** Copies the message's Discord id, for `sourcePost=…` in a `{{reactions …}}` tag. */
+function CopyIdButton({ id }: { id: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      type="button"
+      className="btn btn-sm"
+      title={`Copy this message's Discord id (${id}), to show who reacted to it inside a message's text`}
+      onClick={() => {
+        void navigator.clipboard
+          .writeText(id)
+          .then(() => {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 1500);
+          })
+          .catch(() => window.prompt('Copy the message id:', id));
+      }}
+    >
+      {copied ? '✓ Copied' : 'Copy ID'}
+    </button>
   );
 }

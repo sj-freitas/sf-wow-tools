@@ -397,17 +397,18 @@ sends the parts **one after the other, in order**, waiting `delaySeconds` (0 to 
 total, so a sequence stays inside the worker's 5 minute lease) before each except the first. Progress
 is saved after every message. Each part has its own text, reactions, link-preview setting and images.
 
-- **Order is fixed once posted.** Messages already in Discord keep their order (Discord cannot move a
-  message): they can be edited or removed, new messages go after them (and are sent as soon as the post is
-  saved, when the whole post was already up), and it is refused if a new message is put before or
-  between posted ones. Messages that are not in Discord yet can be reordered freely.
-  **Removing** a posted message from the post deletes it from Discord.
+- **Order is fixed once posted, and nothing can be added.** Messages already in Discord keep their order
+  (Discord cannot move a message): they can be edited or removed, but no message can be added to a post
+  that is in Discord (delete the post first). Messages that are not in Discord yet, including the
+  rest of a post that stopped halfway, can be reordered and removed freely. **Removing** a posted
+  message from the post deletes it from Discord.
 - **Saving a live post edits only what changed**: the messages whose text, images or link previews
   differ (an image change replaces that message's attachments).
 - The form has one card per message (move up/down, remove, text, images, reactions, links, wait), a
   preview of each message with its images, and a **preview of the whole sequence**.
 - A `{{reactions …}}` tag can say which message it reads: `part=2` (default: its own message for a tag
-  reading its own post, the first message of another post). Copy ID and View in Discord are per message.
+  reading its own post, the first message of another post). **Copy ID** (a message's Discord id) is on the message's card in the edit form, and on the Posts
+  list only for a post with a single message; **View in Discord** always opens the first message.
 
 **Images.** Each message can have up to 4 images (PNG, JPEG, GIF or WebP, 5 MB each, checked by
 content), shown under its text. They are uploaded from the form

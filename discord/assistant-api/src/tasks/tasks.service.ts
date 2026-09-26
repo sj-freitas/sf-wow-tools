@@ -25,7 +25,6 @@ import {
   type PostState,
 } from './post-task';
 import { PostImagesService } from './post-images.service';
-import { PostSenderService } from './post-sender.service';
 import {
   checkExpressions,
   parseAllTokens,
@@ -149,7 +148,6 @@ export class TasksService {
     private readonly bot: DiscordBotService,
     private readonly tracking: TrackingService,
     private readonly images: PostImagesService,
-    private readonly sender: PostSenderService,
   ) {}
 
   /**
@@ -286,8 +284,8 @@ export class TasksService {
    * Saving changes to a post edits the messages that are already in Discord (live edit): text,
    * images and link previews of each one. If Discord refuses, the change is not saved, so Discord
    * and the backoffice do not disagree. What is in Discord keeps its order: messages that are up
-   * cannot be moved, only edited or removed; new messages go after them, and are sent right away
-   * when the whole post was already up. Messages not sent yet can be changed freely.
+   * cannot be moved, only edited or removed, and no message can be added to a post that is in
+   * Discord. Messages not sent yet can be changed freely.
    */
   async update(taskId: string, input: TaskInput): Promise<TaskDto> {
     const task = await this.find(taskId);
@@ -303,6 +301,14 @@ export class TasksService {
       throw new BadRequestException(
         'This post is in Discord: delete it first to move it to another channel.',
       );
+    }
+    if (isLive(state)) {
+      const known = new Set(oldConfig.parts.map((part) => part.id));
+      if (config.parts.some((part) => !known.has(part.id))) {
+        throw new BadRequestException(
+          'Messages cannot be added to a post that is already in Discord. Delete the post first, then add them.',
+        );
+      }
     }
     this.assertOrderKept(oldConfig, config, state);
     const tokens = parseAllTokens(config.parts);
@@ -327,25 +333,12 @@ export class TasksService {
       }
     }
 
-    // Was every message up before this change? Then new messages go out now, after them.
-    const wasComplete = isComplete(oldConfig, state);
     const edit = await this.editLiveMessages(task, oldConfig, config, state, sources);
-    let newState = edit.state;
+    const newState = edit.state;
     if (edit.failure) {
       await this.saveState(taskId, newState);
       throw edit.failure;
     }
-    if (wasComplete && !isComplete(config, newState)) {
-      try {
-        newState = await this.sender.sendMissing(task, config, newState);
-      } catch (error) {
-        await this.saveState(taskId, newState);
-        throw new BadRequestException(
-          `Could not send the new messages to Discord: ${describeDiscordError(error)}`,
-        );
-      }
-    }
-
     const updated = await this.prisma.scheduledTask.update({
       where: { id: taskId },
       data: {
@@ -386,7 +379,7 @@ export class TasksService {
       if (!up.has(part.id)) seenNew = true;
       else if (seenNew) {
         throw new BadRequestException(
-          'New messages go after the ones already in Discord. Delete the post to change the order.',
+          'Messages already in Discord come before the ones not sent yet. Delete the post to change the order.',
         );
       }
     }

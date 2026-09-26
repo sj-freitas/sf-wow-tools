@@ -5,7 +5,6 @@ import { DiscordAPIError } from '@discordjs/rest';
 import type { PrismaService } from '../database/prisma.service';
 import type { DiscordBotService } from '../discord/discord-bot.service';
 import type { PostImagesService } from './post-images.service';
-import type { PostSenderService } from './post-sender.service';
 import type { TrackingService } from './tracking.service';
 import { TasksService } from './tasks.service';
 
@@ -77,8 +76,6 @@ describe('TasksService', () => {
   let rawIds: { id: string }[];
   let imageChecks: unknown[][];
   let attached: unknown[][];
-  let sentNow: unknown[][];
-  let sendError: Error | null;
   let service: TasksService;
 
   beforeEach(() => {
@@ -102,8 +99,6 @@ describe('TasksService', () => {
     rawIds = [];
     imageChecks = [];
     attached = [];
-    sentNow = [];
-    sendError = null;
     // A post that already went out: its one message is live in Discord.
     task = {
       id: 't1',
@@ -185,22 +180,7 @@ describe('TasksService', () => {
       files: async (ids: string[]) =>
         ids.map((id) => ({ name: `${id}.png`, data: Buffer.alloc(1), contentType: 'image/png' })),
     } as unknown as PostImagesService;
-    const sender = {
-      sendMissing: async (_task: unknown, config: any, state: any) => {
-        if (sendError) throw sendError;
-        sentNow.push(config.parts.map((p: any) => p.id));
-        const have = new Set((state.messages ?? []).map((m: any) => m.partId));
-        return {
-          messages: [
-            ...(state.messages ?? []),
-            ...config.parts
-              .filter((p: any) => !have.has(p.id))
-              .map((p: any) => posted(p.id, `sent-${p.id.slice(0, 1)}`)),
-          ],
-        };
-      },
-    } as unknown as PostSenderService;
-    service = new TasksService(prisma, bot, tracking, images, sender);
+    service = new TasksService(prisma, bot, tracking, images);
   });
 
   describe('listing (ten to a page, searchable)', () => {
@@ -588,42 +568,21 @@ describe('TasksService', () => {
       assert.equal(edits.length, 0);
     });
 
-    it('puts new messages after the ones in Discord, never in between or before', async () => {
-      await assert.rejects(
-        service.update('t1', {
-          parts: [input('New'), input('One', { id: P1 }), input('Two', { id: P2 })],
-        }),
-        /go after the ones already in Discord/,
-      );
-      await assert.rejects(
-        service.update('t1', {
-          parts: [input('One', { id: P1 }), input('New'), input('Two', { id: P2 })],
-        }),
-        /go after the ones already in Discord/,
-      );
-    });
-
-    it('sends a new message right away, after the others, when the whole post was up', async () => {
-      await service.update('t1', {
-        parts: [input('One', { id: P1 }), input('Two', { id: P2 }), input('Three', { id: P3 })],
-      });
-      assert.equal(sentNow.length, 1);
-      assert.deepEqual(sentNow[0], [P1, P2, P3]);
-      assert.deepEqual(
-        updated.state.messages.map((m: any) => m.partId),
-        [P1, P2, P3],
-      );
-    });
-
-    it('saves nothing new and tells you when a new message cannot be sent', async () => {
-      sendError = new Error('Missing Permissions');
+    it('does not let a message be added to a post that is in Discord', async () => {
       await assert.rejects(
         service.update('t1', {
           parts: [input('One', { id: P1 }), input('Two', { id: P2 }), input('Three')],
         }),
-        /Could not send the new messages/,
+        /cannot be added to a post that is already in Discord/,
       );
-      assert.equal(updated?.config, undefined);
+      await assert.rejects(
+        service.update('t1', {
+          parts: [input('New'), input('One', { id: P1 }), input('Two', { id: P2 })],
+        }),
+        /cannot be added/,
+      );
+      assert.equal(updated, null);
+      assert.deepEqual(edits, []);
     });
 
     it('deletes the Discord message of a message taken out of the post', async () => {
@@ -657,12 +616,14 @@ describe('TasksService', () => {
       assert.equal(updated?.config, undefined);
     });
 
-    it('does not send new messages of a post that stopped halfway: they wait for the schedule', async () => {
+    it('does not let a message be added to a post that stopped halfway either', async () => {
       task.state = { messages: [posted(P1, 'm1', { renderedContent: 'One' })] };
-      await service.update('t1', {
-        parts: [input('One', { id: P1 }), input('Two', { id: P2 }), input('Three')],
-      });
-      assert.equal(sentNow.length, 0);
+      await assert.rejects(
+        service.update('t1', {
+          parts: [input('One', { id: P1 }), input('Two', { id: P2 }), input('Three')],
+        }),
+        /cannot be added/,
+      );
     });
 
     it('lets the messages that are not in Discord yet be changed and moved freely', async () => {
@@ -715,7 +676,6 @@ describe('TasksService', () => {
       });
       assert.equal(updated.config.parts.length, 2);
       assert.equal(updated.config.parts[1].id, P1);
-      assert.equal(sentNow.length, 0);
     });
 
     it('is unscheduled when paused, and goes out on resume even if its time passed (late rather than never)', async () => {

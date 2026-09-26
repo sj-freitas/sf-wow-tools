@@ -173,9 +173,8 @@ export function PostTaskForm({ guild, channels, editing, timezone, onSaved, onCa
       {live && (
         <p className="muted">
           This post is in Discord: saving edits its messages right away (text, images and link
-          previews). Messages already posted keep their order; a new message goes after them and is
-          sent when you save. To move the post to another channel, or to post it again, delete it
-          first.
+          previews). Messages already posted keep their order and no message can be added. To add
+          one, move the post to another channel, or post it again, delete it first.
         </p>
       )}
 
@@ -239,7 +238,8 @@ export function PostTaskForm({ guild, channels, editing, timezone, onSaved, onCa
           <button
             type="button"
             className="btn"
-            disabled={parts.length >= MAX_PARTS}
+            disabled={parts.length >= MAX_PARTS || live}
+            title={live ? 'A post that is in Discord cannot get more messages' : undefined}
             onClick={() => setParts((current) => [...current, newDraft()])}
           >
             + Add message

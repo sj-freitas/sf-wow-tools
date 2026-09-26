@@ -20,6 +20,8 @@ export interface PartDraft {
   imageIds: string[];
   /** The message is in Discord: it keeps its place and can only be edited or removed. */
   posted: boolean;
+  /** Its Discord message id, when it is in Discord (to copy into a live tag). */
+  messageId?: string;
 }
 
 let counter = 0;
@@ -44,6 +46,7 @@ export const draftOf = (part: PostPart): PartDraft => ({
   delaySeconds: part.delaySeconds,
   imageIds: part.imageIds,
   posted: part.posted !== null,
+  ...(part.posted ? { messageId: part.posted.messageId } : {}),
 });
 
 export const inputOf = (draft: PartDraft): PostPartInput => ({

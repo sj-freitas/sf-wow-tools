@@ -291,24 +291,19 @@ export function PostsPage({ guild, timezone }: Props) {
                 ),
             )}
             <div className="settings-actions task-actions">
-              {post.post.parts.map((part, i) => {
-                const label = post.post.parts.length > 1 ? ` ${i + 1}` : '';
-                return (
-                  part.posted && (
-                    <span key={part.id} className="part-links">
-                      <CopyIdButton id={part.posted.messageId} label={label} />
-                      <a
-                        className="btn btn-sm"
-                        href={part.posted.url}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        {label ? `View${label} in Discord` : 'View in Discord'}
-                      </a>
-                    </span>
-                  )
-                );
-              })}
+              {post.post.parts.length === 1 && post.post.parts[0].posted && (
+                <CopyIdButton id={post.post.parts[0].posted.messageId} />
+              )}
+              {post.post.parts[0]?.posted && (
+                <a
+                  className="btn btn-sm"
+                  href={post.post.parts[0].posted.url}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  View in Discord
+                </a>
+              )}
               {!post.post.complete && post.enabled && (
                 <button
                   type="button"
@@ -412,7 +407,7 @@ export function PostsPage({ guild, timezone }: Props) {
  * Copies the Discord message id of the post, for `sourcePost=…` in a `{{reactions …}}` tag (in this
  * post's text or another's), which shows who reacted with an emoji.
  */
-function CopyIdButton({ id, label = '' }: { id: string; label?: string }) {
+function CopyIdButton({ id }: { id: string }) {
   const [copied, setCopied] = useState(false);
   return (
     <button
@@ -429,7 +424,7 @@ function CopyIdButton({ id, label = '' }: { id: string; label?: string }) {
           .catch(() => window.prompt('Copy the message id:', id));
       }}
     >
-      {copied ? '✓ Copied' : `Copy ID${label}`}
+      {copied ? '✓ Copied' : 'Copy ID'}
     </button>
   );
 }
