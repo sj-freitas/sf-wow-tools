@@ -88,9 +88,6 @@ export function RosterPage({ guild, currentUser }: Props) {
       <div className="tasks-head">
         <div>
           <h3>Roster</h3>
-          <span className="muted">
-            {players.length} player{players.length === 1 ? '' : 's'}
-          </span>
         </div>
         <div className="settings-actions">
           {guild.isOfficer && missingNames && (
