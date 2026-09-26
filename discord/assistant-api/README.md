@@ -241,11 +241,11 @@ modal; a modal handler answers with a private message. Unknown or failing button
 
 ### Live reactions in a post's text
 
-A post's text can show who reacted to a post:
-`{{reactions sourcePost="Raid signup" emoji=👍 show=mainNames}}`.
+A post's text can show who reacted to a message:
+`{{reactions sourcePost="Raid signup" emoji=👍 show="reactions.map((r) => r.mainName)"}}`.
 
-- **`sourcePost`** says which message to read: its Discord **message id** (Copy Message ID, or **Copy ID** on a
-  live post) for any message in one of the guild's servers, a **link** (Copy Message Link; the way to
+- **`sourcePost`** says which message to read: its Discord **message id** (Copy Message ID, or **Copy ID** on
+  a live post) for any message in one of the guild's servers, a **link** (Copy Message Link; the way to
   reach a message in a thread), or the **name** of a scheduled post of the guild (case does not matter;
   it must be unique). Leave it out for the post the text is in. A bare id says which message but not
   which channel, so on save it is looked for: first among the bot's own posts, then in every text channel
@@ -254,39 +254,37 @@ A post's text can show who reacted to a post:
   guild, its channel really is in that server and the bot can read the message (View Channel + Read
   Message History, which the invite link grants). So a post can show the reactions of messages nobody
   scheduled here, e.g. a Raid-Helper signup or an officer's own message.
-  **`emoji`** is 👍 or a server emoji `<:name:id>` (or `<a:name:id>`; type `\:emoji:` in Discord to get
-  it). **`show`** is optional (default `names`): `names` (`Ana, Bruno`, Discord display names),
-  `mainNames` (their main characters in the guild, `Merric Stone / Olga` if they have several, else their
-  Discord name), `tags` (`<@id>` mentions), `number` (`3`), or **your own JavaScript expression** (below). Options may come in any order; a value with
-  spaces goes in quotes. Up to 5 tags per
-  post; a wrong tag, an unknown post or an ambiguous name is refused on save.
-- **Your own format.** `show` can be a JavaScript expression in quotes, evaluated with `reactions`: an
-  array with one object per person who reacted, `{ id, tag, name, mainName, mains }` (`tag` is `<@id>`,
-  `mainName` the main characters joined with " / " or the Discord name, `mains` a list). An array result
-  is joined with ", ". Example:
-  `{{reactions sourcePost="Raid signup" emoji=👍 show="`${reactions.length}: ${reactions.map((a) => `${a.tag} is ${a.mainName}`).join(', ')}`"}}`.
-  Inside the quotes `}}` and `${…}` are just text; use `\"` for a double quote (or single quotes).
-  **Sandbox:** expressions run in QuickJS (a JavaScript engine compiled to WebAssembly, via
+- **`emoji`** is 👍 or a server emoji `<:name:id>` (or `<a:name:id>`; type `\:emoji:` in Discord to get
+  it). Custom emoji are stored as `name:id`, and the reactions of any emoji on the message can be read,
+  whichever server it comes from.
+- **`show`** is a **JavaScript expression** (there are no keywords), evaluated with `reactions`: an array
+  with one object per person who reacted, `{ id, tag, name, mainName, mains }` (`tag` is `<@id>`,
+  `name` the Discord display name, `mainName` the main characters in the guild joined with " / " or the
+  Discord name when they have none, `mains` a list). Left out it is `reactions.map((r) => r.name)`. An
+  array result is joined with ", ". Examples: `reactions.length`, `reactions.map(r => r.tag)`,
+  `` `${reactions.length}: ${reactions.map((a) => `${a.tag} is ${a.mainName}`).join(', ')}` ``.
+  Options may come in any order; a value with spaces goes in quotes, inside which `}}` and `${…}` are
+  just text (use `\"` for a double quote, or single quotes). Up to 5 tags per post; a wrong tag, an
+  unknown source or an ambiguous name is refused on save.
+- **Sandbox:** expressions run in QuickJS (a JavaScript engine compiled to WebAssembly, via
   `quickjs-emscripten`), not in Node: no files, network, `process` or `require`, a fresh engine for every
   evaluation, stopped after 100 ms and 16 MB. Each expression is run once on sample data when the post is
   saved, so a syntax error or an unknown name is refused with its reason; a failure that only happens with
   real data shows in the post as `⚠️ (TypeError: …)` instead of breaking it. It only runs when the people
   changed (the hash), so the cost is small.
-- **Tracking:** saving a post keeps one `post_tracking` row per tag in line with its text (rows appear,
-  stay or go with the tags; deleting a post removes them). A row remembers how the text pointed at the
-  message (`post_ref`) and which one that was when saved (a scheduled post, or the channel and message ids), so renaming the other post does not break a post
-  that is already up; saving the text again looks the name up afresh. The post's text is the _template_;
-  what is in Discord is kept in the task state (`renderedContent`).
+- **Tracking:** saving a post keeps one `post_tracking` row per source and emoji in line with its text
+  (rows appear, stay or go with the tags; deleting a post removes them). A row remembers how the text
+  pointed at the message (`post_ref`) and which one that was when saved (a scheduled post, or the channel
+  and message ids), so renaming the other post does not break a post that is already up; saving the text
+  again looks the name up afresh. The post's text is the _template_; what is in Discord is kept in the
+  task state (`renderedContent`).
 - **Refreshing:** every scheduler tick (a minute) the worker reads, for each tracked post that is in
-  Discord, who reacted (the bot's own reaction left out) and hashes the list. Only when the hash changed
-  is the message edited, and only if the rendered text really changed. Edits that show people never
-  ping them. A scheduled post is rendered right before it goes out. Long lists are cut ("…and 12 more")
-  so the message fits in 2000 characters.
-- **Custom emoji** are stored as `name:id`, and the reactions of any emoji on the message can be read,
-  whichever server it comes from. Only the id identifies the emoji.
-- `names` come free with Discord's reaction list (no server nicknames, which would need a lookup per
-  person). `mainNames` looks the people up in the database once a minute (no Discord calls), and a new or
-  changed main updates the post even if the reactions did not change.
+  Discord, who reacted (the bot's own reaction left out), looks up their main characters in the database
+  (no Discord calls) and hashes the list. Only when the hash changed (someone reacted, un-reacted,
+  renamed, or got a new main) is the message edited, and only if the rendered text really changed. Edits
+  that show people never ping them. A scheduled post is rendered right before it goes out. A message
+  longer than 2000 characters is cut. Names come free with Discord's reaction list (no server nicknames,
+  which would need a lookup per person).
 - **Backoffice:** clicking a reaction on a post shows who reacted. The post form has a collapsible
   "Live tags" help with this syntax, and the preview marks the tag (it cannot show real names).
   Tracking has no end date: remove the tag (or the post) to stop it.

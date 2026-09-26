@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { BadRequestException } from '@nestjs/common';
 import {
-  formatReactors,
+  DEFAULT_SHOW,
   hashReactors,
   parseDynamicTokens,
   renderContent,
@@ -10,35 +10,38 @@ import {
   type Reactor,
 } from './dynamic-content';
 
-const POST = '11111111-2222-3333-4444-555555555555';
-const OTHER = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee';
+const POST = '900000000000000001';
+const LINK =
+  'https://discord.com/channels/100000000000000001/800000000000000002/900000000000000003';
 const ana: Reactor = { id: '100000000000000001', name: 'Ana' };
 const bruno: Reactor = { id: '100000000000000002', name: 'Bruno' };
 
 describe('parseDynamicTokens', () => {
-  it('reads the post, the emoji and the format, for unicode and custom emoji', () => {
+  it('reads the source, the emoji and the expression, for unicode and custom emoji', () => {
     const tokens = parseDynamicTokens(
-      `Going: {{reactions sourcePost="${POST}" emoji=👍 show=names}} and {{reactions sourcePost="${OTHER}" emoji=<:raid:123456789012345678> show=number}}`,
+      `Going: {{reactions sourcePost=${POST} emoji=👍 show="reactions.length"}} and {{reactions sourcePost="Roster" emoji=<:raid:123456789012345678> show=reactions.length}}`,
     );
     assert.deepEqual(
-      tokens.map((t) => [t.ref, t.emoji, t.format]),
+      tokens.map((t) => [t.ref, t.emoji, t.expression]),
       [
-        [`name:${POST}`, '👍', 'names'],
-        [`name:${OTHER}`, 'raid:123456789012345678', 'number'],
+        [`msgid:${POST}`, '👍', 'reactions.length'],
+        ['name:roster', 'raid:123456789012345678', 'reactions.length'],
       ],
     );
-    assert.equal(tokens[0].raw, `{{reactions sourcePost="${POST}" emoji=👍 show=names}}`);
-  });
-
-  it('reads the mainNames format', () => {
-    const [token] = parseDynamicTokens(
-      `{{reactions sourcePost="${POST}" emoji=👍 show=mainNames}}`,
+    assert.equal(
+      tokens[0].raw,
+      `{{reactions sourcePost=${POST} emoji=👍 show="reactions.length"}}`,
     );
-    assert.equal(token.format, 'mainNames');
   });
 
-  it('no longer reads the old [reactions:…] form: it is ordinary text', () => {
-    assert.deepEqual(parseDynamicTokens(`[reactions:${POST},👍,names]`), []);
+  it('shows the Discord names when show is left out', () => {
+    const [token] = parseDynamicTokens('{{reactions emoji=👍}}');
+    assert.equal(token.expression, DEFAULT_SHOW);
+  });
+
+  it('takes show as it is: a word is an expression, not a keyword', () => {
+    const [token] = parseDynamicTokens('{{reactions emoji=👍 show=names}}');
+    assert.equal(token.expression, 'names');
   });
 
   it('finds nothing in ordinary text', () => {
@@ -46,36 +49,48 @@ describe('parseDynamicTokens', () => {
   });
 
   it('refuses a tag that is written wrongly instead of posting it as text', () => {
-    for (const bad of [`{{reactions sourcePost="${POST}" emoji=abc show=names}}`]) {
+    for (const bad of [
+      '{{reactions sourcePost="A"}}',
+      '{{reactions emoji=abc}}',
+      '{{reactions emoji=👍 colour=red}}',
+      '{{reactions emoji=👍 emoji=🔥}}',
+      '{{reactions emoji=👍 stray}}',
+      '{{reactions emoji=👍 show="unclosed}}',
+      '{{reactions emoji=👍',
+      '{{reactions emoji=👍 show=}}',
+      '{{reactions emoji=👍 show=""}}',
+    ]) {
       assert.throws(() => parseDynamicTokens(bad), BadRequestException, bad);
     }
   });
 
+  it('no longer accepts the old post= option', () => {
+    assert.throws(
+      () => parseDynamicTokens('{{reactions post="Raid" emoji=👍}}'),
+      /"post", which is not an option here/,
+    );
+  });
+
   it('allows at most five tags', () => {
-    const tag = `{{reactions sourcePost="${POST}" emoji=👍 show=names}}`;
+    const tag = `{{reactions sourcePost=${POST} emoji=👍}}`;
     assert.equal(parseDynamicTokens(Array(5).fill(tag).join(' ')).length, 5);
     assert.throws(() => parseDynamicTokens(Array(6).fill(tag).join(' ')), /at most 5/);
   });
-});
 
-describe('the {{reactions …}} syntax', () => {
   it('points at a post by name, in any order, with a quoted or bare value', () => {
     const [a, b] = parseDynamicTokens(
-      'Yes: {{reactions sourcePost="Raid Signup" emoji=👍 show=mainNames}} and {{reactions show=number emoji=👍 sourcePost=Roster}}',
+      'Yes: {{reactions sourcePost="Raid Signup" emoji=👍 show="reactions.length"}} and {{reactions show=reactions.length emoji=👍 sourcePost=Roster}}',
     );
-    assert.deepEqual(
-      [a.ref, a.label, a.emoji, a.format],
-      ['name:raid signup', 'Raid Signup', '👍', 'mainNames'],
-    );
-    assert.deepEqual([b.ref, b.format], ['name:roster', 'number']);
+    assert.deepEqual([a.ref, a.label, a.emoji], ['name:raid signup', 'Raid Signup', '👍']);
+    assert.equal(b.ref, 'name:roster');
   });
 
-  it('points at the post itself when post is left out', () => {
-    const [self] = parseDynamicTokens('{{ reactions emoji=🔥 show=tags }}');
-    assert.deepEqual([self.ref, self.format], ['self', 'tags']);
+  it('points at the post itself when sourcePost is left out', () => {
+    const [self] = parseDynamicTokens('{{ reactions emoji=🔥 }}');
+    assert.equal(self.ref, 'self');
   });
 
-  it('points at a Discord message by its id (a message the bot posted)', () => {
+  it('points at a Discord message by its id', () => {
     const [token] = parseDynamicTokens('{{reactions sourcePost=900000000000000001 emoji=👍}}');
     assert.equal(token.ref, 'msgid:900000000000000001');
     assert.equal(token.message, undefined);
@@ -83,7 +98,7 @@ describe('the {{reactions …}} syntax', () => {
 
   it('points at any Discord message by its link', () => {
     for (const host of ['discord.com', 'ptb.discord.com', 'canary.discord.com', 'discordapp.com']) {
-      const link = `https://${host}/channels/100000000000000001/800000000000000002/900000000000000003`;
+      const link = LINK.replace('discord.com', host);
       const [token] = parseDynamicTokens(`{{reactions sourcePost="${link}" emoji=👍}}`);
       assert.equal(token.ref, 'msg:800000000000000002/900000000000000003', host);
       assert.deepEqual(token.message, {
@@ -101,44 +116,14 @@ describe('the {{reactions …}} syntax', () => {
     assert.match(token.ref, /^name:/);
   });
 
-  it('shows names unless told otherwise, and accepts any letter case for the format', () => {
-    assert.equal(parseDynamicTokens('{{reactions emoji=👍}}')[0].format, 'names');
-    assert.equal(
-      parseDynamicTokens('{{reactions emoji=👍 show=MAINNAMES}}')[0].format,
-      'mainNames',
-    );
-  });
-
-  it('takes custom emoji, and keeps the tags in text order', () => {
+  it('keeps the tags in text order', () => {
     const tokens = parseDynamicTokens(
-      `{{reactions sourcePost="${POST}" emoji=👍 show=names}} then {{reactions sourcePost=A emoji=<:raid:123456789012345678> show=number}}`,
+      `{{reactions sourcePost=${POST} emoji=👍}} then {{reactions sourcePost=A emoji=<:raid:123456789012345678>}}`,
     );
     assert.deepEqual(
       tokens.map((t) => t.emoji),
       ['👍', 'raid:123456789012345678'],
     );
-    const reversed = parseDynamicTokens(
-      `{{reactions sourcePost=A emoji=🔥}} then {{reactions sourcePost="${POST}" emoji=👍 show=names}}`,
-    );
-    assert.deepEqual(
-      reversed.map((t) => t.emoji),
-      ['🔥', '👍'],
-    );
-  });
-
-  it('refuses tags written wrongly, with a hint', () => {
-    for (const bad of [
-      '{{reactions sourcePost="A"}}',
-      '{{reactions emoji=abc}}',
-      '{{reactions emoji=👍 show="unclosed}}',
-      '{{reactions emoji=👍',
-      '{{reactions emoji=👍 show=}}',
-      '{{reactions emoji=👍 colour=red}}',
-      '{{reactions emoji=👍 emoji=🔥}}',
-      '{{reactions emoji=👍 stray}}',
-    ]) {
-      assert.throws(() => parseDynamicTokens(bad), BadRequestException, bad);
-    }
   });
 
   it('reads an expression with quotes, backticks, ${…} and }} inside', () => {
@@ -147,7 +132,6 @@ describe('the {{reactions …}} syntax', () => {
     const text = `Going {{reactions sourcePost="Raid" emoji=👍 show="${expression}"}} and more {{reactions emoji=🔥}}`;
     const tokens = parseDynamicTokens(text);
     assert.equal(tokens.length, 2);
-    assert.equal(tokens[0].format, 'custom');
     assert.equal(tokens[0].expression, expression);
     assert.equal(tokens[0].raw, `{{reactions sourcePost="Raid" emoji=👍 show="${expression}"}}`);
     assert.equal(tokens[1].emoji, '🔥');
@@ -158,76 +142,57 @@ describe('the {{reactions …}} syntax', () => {
     assert.equal(token.expression, '"a" + reactions.length');
   });
 
-  it('no longer accepts the old post= option', () => {
-    assert.throws(
-      () => parseDynamicTokens('{{reactions post="Raid" emoji=👍}}'),
-      /"post", which is not an option here/,
-    );
-  });
-
   it('leaves other double-brace text alone', () => {
     assert.deepEqual(parseDynamicTokens('{{something else}} {{reactionsfoo}}'), []);
   });
 });
 
-describe('formatReactors', () => {
-  it('writes a number, names, or Discord mentions', () => {
-    assert.equal(formatReactors('number', [ana, bruno]), '2');
-    assert.equal(formatReactors('names', [ana, bruno]), 'Ana, Bruno');
+describe('renderContent', () => {
+  const tag = (show: string) => `{{reactions sourcePost="A" emoji=👍 show="${show}"}}`;
+  const people = (token: { ref: string; emoji: string }, list: Reactor[]) =>
+    new Map([[trackingKey(token), list]]);
+
+  it('replaces every occurrence of the tag with what its expression gives', async () => {
+    const text = `Yes: ${tag('reactions.map(r => r.name)')}\nAgain: ${tag('reactions.map(r => r.name)')}`;
+    const tokens = parseDynamicTokens(text);
     assert.equal(
-      formatReactors('tags', [ana, bruno]),
-      '<@100000000000000001>, <@100000000000000002>',
+      await renderContent(text, tokens, people(tokens[0], [ana, bruno])),
+      'Yes: Ana, Bruno\nAgain: Ana, Bruno',
     );
   });
 
-  it('writes main character names like names', () => {
-    assert.equal(formatReactors('mainNames', [ana, bruno]), 'Ana, Bruno');
-    assert.equal(formatReactors('mainNames', []), 'nobody yet');
+  it('writes the default (Discord names) when show is left out', async () => {
+    const text = 'Going: {{reactions sourcePost="A" emoji=👍}}';
+    const tokens = parseDynamicTokens(text);
+    assert.equal(
+      await renderContent(text, tokens, people(tokens[0], [ana, bruno])),
+      'Going: Ana, Bruno',
+    );
   });
 
-  it('says nobody yet for an empty list, but 0 for a number', () => {
-    assert.equal(formatReactors('names', []), 'nobody yet');
-    assert.equal(formatReactors('number', []), '0');
-  });
-
-  it('shortens long lists', () => {
-    assert.equal(formatReactors('names', [ana, bruno], 1), 'Ana …and 1 more');
-  });
-});
-
-describe('renderContent', () => {
-  const [token] = parseDynamicTokens(`{{reactions sourcePost="${POST}" emoji=👍 show=names}}`);
-
-  it('replaces every occurrence of the tag with the people', async () => {
-    const text = `Yes: ${token.raw}\nAgain: ${token.raw}`;
-    const people = new Map([[trackingKey(token), [ana, bruno]]]);
-    assert.equal(await renderContent(text, [token], people), 'Yes: Ana, Bruno\nAgain: Ana, Bruno');
-  });
-
-  it('reads as nobody when the people are unknown', async () => {
-    assert.equal(await renderContent(token.raw, [token], new Map()), 'nobody yet');
+  it('gives the expression an empty list when the people are unknown', async () => {
+    const text = tag('reactions.length');
+    const tokens = parseDynamicTokens(text);
+    assert.equal(await renderContent(text, tokens, new Map()), '0');
   });
 
   it('leaves text without tags alone', async () => {
     assert.equal(await renderContent('Hello', [], new Map()), 'Hello');
   });
 
-  it('shortens the list until the message fits in Discord', async () => {
-    const many = Array.from({ length: 300 }, (_, i) => ({
-      id: String(100000000000000000 + i),
-      name: 'x'.repeat(40),
-    }));
-    const text = `${'a'.repeat(1500)} ${token.raw}`;
-    const out = await renderContent(text, [token], new Map([[trackingKey(token), many]]));
-    assert.ok(out.length <= 2000);
-    assert.match(out, /…and \d+ more/);
+  it('cuts a message that would not fit in Discord', async () => {
+    const text = `${'a'.repeat(1500)} ${tag("'x'.repeat(1000)")}`;
+    const tokens = parseDynamicTokens(text);
+    const out = await renderContent(text, tokens, new Map());
+    assert.equal(out.length, 2000);
   });
 });
 
 describe('hashReactors', () => {
-  it('is the same for the same people in any order, and changes when someone joins or renames', () => {
+  it('is the same for the same people in any order, and changes when someone joins, renames or gets a main', () => {
     assert.equal(hashReactors([ana, bruno]), hashReactors([bruno, ana]));
     assert.notEqual(hashReactors([ana]), hashReactors([ana, bruno]));
     assert.notEqual(hashReactors([ana]), hashReactors([{ ...ana, name: 'Anna' }]));
+    assert.notEqual(hashReactors([ana]), hashReactors([{ ...ana, mains: ['Merric'] }]));
   });
 });

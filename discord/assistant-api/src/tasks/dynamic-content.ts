@@ -3,22 +3,13 @@ import { BadRequestException } from '@nestjs/common';
 import { MAX_POST_LENGTH, normalizeEmoji } from './post-task';
 import { checkShowExpression, runShowExpression, ShowExpressionError } from './show-sandbox';
 
-/**
- * How the people who reacted are written into the post. The presets: `names` (Discord names),
- * `mainNames` (the names of their main characters, else their Discord name), `number` and `tags`
- * (mentions). `custom` is a JavaScript expression of the tag's own (see `runShowExpression`).
- */
-export type ReactorFormat = 'names' | 'mainNames' | 'number' | 'tags' | 'custom';
-
 export const MAX_DYNAMIC_TOKENS = 5;
-/** Never list more than this many people in one place; the rest becomes "…and N more". */
-export const MAX_LISTED_REACTORS = 50;
 
 export interface Reactor {
   id: string;
   /** Display name, else username. */
   name: string;
-  /** Their main characters in the guild, when they were looked up (`mainNames` and expressions). */
+  /** Their main characters in the guild (one entry each; empty when they have none). */
   mains?: string[];
 }
 
@@ -41,23 +32,23 @@ export interface DynamicToken extends PostRef {
   raw: string;
   /** Unicode emoji, or `name:id` for a custom one. */
   emoji: string;
-  format: ReactorFormat;
-  /** The JavaScript of a `custom` tag. */
-  expression?: string;
+  /**
+   * The JavaScript expression that writes the people, from `show`: `reactions` is the list of
+   * people who reacted (see `runShowExpression`).
+   */
+  expression: string;
 }
 
-const PRESETS: readonly ReactorFormat[] = ['names', 'mainNames', 'number', 'tags'];
+/** What a tag shows when it has no `show`: the Discord names of the people, comma separated. */
+export const DEFAULT_SHOW = 'reactions.map((r) => r.name)';
+
 const MESSAGE_LINK =
   /^https?:\/\/(?:(?:ptb|canary)\.)?discord(?:app)?\.com\/channels\/(\d{15,25})\/(\d{15,25})\/(\d{15,25})\/?$/;
 const MESSAGE_ID = /^\d{15,25}$/;
-/** `{{reactions sourcePost="Raid signup" emoji=👍 show=names}}` */
+/** `{{reactions sourcePost="Raid signup" emoji=👍 show="reactions.length"}}` */
 const NEW_START = /\{\{\s*reactions(?=[\s}])/g;
 const HELP =
-  'Use {{reactions sourcePost="Post name" emoji=👍 show=names}} (show: names, mainNames, tags, number, or a JavaScript expression in quotes).';
-
-/** Whether a tag's people must be looked up as main characters (for `mainNames` and expressions). */
-export const needsMains = (format: ReactorFormat): boolean =>
-  format === 'mainNames' || format === 'custom';
+  'Use {{reactions sourcePost="Post name" emoji=👍 show="reactions.map((r) => r.name)"}}: show is a JavaScript expression in quotes.';
 
 function refOf(value: string): PostRef {
   const text = value.trim();
@@ -143,21 +134,18 @@ function tokenOf(raw: string, args: Map<string, string>): DynamicToken {
       `"${emojiText}" in ${raw} is not an emoji (custom ones as <:name:id>).`,
     );
   }
-  const show = (args.get('show') ?? 'names').trim();
-  const preset = PRESETS.find((candidate) => candidate.toLowerCase() === show.toLowerCase());
+  const show = (args.get('show') ?? DEFAULT_SHOW).trim();
   if (show === '') throw new BadRequestException(`${raw} has an empty show. ${HELP}`);
   const post = args.get('sourcepost');
   const target: PostRef =
     post === undefined || post.trim() === '' ? { ref: 'self', label: 'this post' } : refOf(post);
-  return preset
-    ? { raw, ...target, emoji, format: preset }
-    : { raw, ...target, emoji, format: 'custom', expression: show };
+  return { raw, ...target, emoji, expression: show };
 }
 
 /**
- * The dynamic tags of a text, in order: `{{reactions sourcePost="Raid signup" emoji=👍 show=names}}`
- * (the post can be its name or its id, and is this post when left out). `show` is a preset or a
- * JavaScript expression in quotes. Throws for a tag that is written wrongly, so a typo is reported
+ * The dynamic tags of a text, in order: `{{reactions sourcePost="Raid signup" emoji=👍 show="reactions.length"}}`
+ * (the source can be a message id, a message link or a post name, and is this post when left
+ * out). `show` is a JavaScript expression, in quotes when it has spaces. Throws for a tag that is written wrongly, so a typo is reported
  * on save instead of showing up in Discord. (Expressions are checked by `checkExpressions`.)
  */
 export function parseDynamicTokens(content: string): DynamicToken[] {
@@ -180,7 +168,6 @@ export function parseDynamicTokens(content: string): DynamicToken[] {
 /** Runs every expression once on sample people, so a wrong one is refused on save. */
 export async function checkExpressions(tokens: readonly DynamicToken[]): Promise<void> {
   for (const token of tokens) {
-    if (token.format !== 'custom' || token.expression === undefined) continue;
     try {
       await checkShowExpression(token.expression);
     } catch (error) {
@@ -193,8 +180,8 @@ export async function checkExpressions(tokens: readonly DynamicToken[]): Promise
 }
 
 /** The identity of what a token asks for: the same reactions read by different tokens share it. */
-export const trackingKey = (token: Pick<DynamicToken, 'ref' | 'emoji' | 'format'>) =>
-  `${token.ref}|${token.emoji}|${token.format}`;
+export const trackingKey = (token: Pick<DynamicToken, 'ref' | 'emoji'>) =>
+  `${token.ref}|${token.emoji}`;
 
 /** Changes when someone reacts, un-reacts, renames themselves or gets a main: what "nothing changed" means. */
 export function hashReactors(reactors: readonly Reactor[]): string {
@@ -207,28 +194,11 @@ export function hashReactors(reactors: readonly Reactor[]): string {
 const mainNameOf = (reactor: Reactor): string =>
   reactor.mains && reactor.mains.length > 0 ? reactor.mains.join(' / ') : reactor.name;
 
-/** The text for one preset tag, listing at most `limit` people. */
-export function formatReactors(
-  format: ReactorFormat,
-  reactors: readonly Reactor[],
-  limit = MAX_LISTED_REACTORS,
-): string {
-  if (format === 'number') return String(reactors.length);
-  if (reactors.length === 0) return 'nobody yet';
-  const shown = reactors.slice(0, limit);
-  const items = shown.map((reactor) => {
-    if (format === 'tags') return `<@${reactor.id}>`;
-    return format === 'mainNames' ? mainNameOf(reactor) : reactor.name;
-  });
-  const more = reactors.length - shown.length;
-  return `${items.join(', ')}${more > 0 ? ` …and ${more} more` : ''}`;
-}
-
-/** What a `custom` tag's expression works with, and what to show if it fails. */
-async function customText(token: DynamicToken, reactors: readonly Reactor[]): Promise<string> {
+/** What a tag's expression works with; a failing expression shows as a warning, not a broken post. */
+async function tagText(token: DynamicToken, reactors: readonly Reactor[]): Promise<string> {
   try {
     return await runShowExpression(
-      token.expression ?? '""',
+      token.expression,
       reactors.map((reactor) => ({
         id: reactor.id,
         tag: `<@${reactor.id}>`,
@@ -244,32 +214,19 @@ async function customText(token: DynamicToken, reactors: readonly Reactor[]): Pr
 }
 
 /**
- * The template with every token replaced by its people. A token whose people are unknown (its
- * post is gone or not in Discord yet) reads as nobody. If the result would not fit in a Discord
- * message, the preset lists are shortened until it does.
+ * The template with every tag replaced by what its expression makes of the people. A tag whose
+ * people are unknown (its message is gone or not posted yet) sees nobody. A result that would not fit
+ * in a Discord message is cut.
  */
 export async function renderContent(
   template: string,
   tokens: readonly DynamicToken[],
   people: ReadonlyMap<string, readonly Reactor[]>,
 ): Promise<string> {
-  if (tokens.length === 0) return template;
-  const custom = new Map<string, string>();
+  let rendered = template;
   for (const token of tokens) {
-    if (token.format === 'custom') {
-      custom.set(token.raw, await customText(token, people.get(trackingKey(token)) ?? []));
-    }
+    const text = await tagText(token, people.get(trackingKey(token)) ?? []);
+    rendered = rendered.split(token.raw).join(text);
   }
-  for (let limit = MAX_LISTED_REACTORS; ; limit = Math.floor(limit / 2)) {
-    let rendered = template;
-    for (const token of tokens) {
-      const text =
-        custom.get(token.raw) ??
-        formatReactors(token.format, people.get(trackingKey(token)) ?? [], limit);
-      rendered = rendered.split(token.raw).join(text);
-    }
-    if (rendered.length <= MAX_POST_LENGTH || limit === 0) {
-      return rendered.length <= MAX_POST_LENGTH ? rendered : rendered.slice(0, MAX_POST_LENGTH);
-    }
-  }
+  return rendered.length <= MAX_POST_LENGTH ? rendered : rendered.slice(0, MAX_POST_LENGTH);
 }

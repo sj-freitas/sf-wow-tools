@@ -6,13 +6,11 @@ import { DiscordBotService } from '../discord/discord-bot.service';
 import { describeDiscordError, isDiscordError, UNKNOWN_MESSAGE } from '../discord/discord-errors';
 import {
   hashReactors,
-  needsMains,
   parseDynamicTokens,
   renderContent,
   trackingKey,
   type DynamicToken,
   type Reactor,
-  type ReactorFormat,
 } from './dynamic-content';
 import { embedsShown, type PostConfig, type PostState } from './post-task';
 
@@ -237,10 +235,7 @@ export class TrackingService {
         await this.locate(sources.get(token.ref)),
         token.emoji,
       );
-      people.set(
-        key,
-        needsMains(token.format) ? await this.withMains(guildId, reactors) : reactors,
-      );
+      people.set(key, await this.withMains(guildId, reactors));
     }
     return people;
   }
@@ -265,7 +260,7 @@ export class TrackingService {
 
   /**
    * Adds the main characters each person has in the guild (`mains`, one entry per character).
-   * Someone with no main character has none, and the `mainNames` preset then shows their Discord name.
+   * Someone with no main character has none, and `mainName` then shows their Discord name.
    */
   async withMains(guildId: string, reactors: readonly Reactor[]): Promise<Reactor[]> {
     if (reactors.length === 0) return [];
@@ -303,7 +298,7 @@ export class TrackingService {
     const wanted = new Map(tokens.map((token) => [trackingKey(token), token]));
     const rows = await this.prisma.postTracking.findMany({ where: { taskId } });
     const rowKey = (row: { postRef: string; emoji: string; type: string }) =>
-      trackingKey({ ref: row.postRef, emoji: row.emoji, format: row.type as ReactorFormat });
+      trackingKey({ ref: row.postRef, emoji: row.emoji });
     const have = new Map(rows.map((row) => [rowKey(row), row]));
 
     const stale = rows.filter((row) => !wanted.has(rowKey(row)));
@@ -336,7 +331,7 @@ export class TrackingService {
           ...target,
           postRef: token.ref,
           emoji: token.emoji,
-          type: token.format,
+          type: 'custom',
           ...(users
             ? {
                 lastHash: hashReactors(users),
@@ -368,9 +363,7 @@ export class TrackingService {
             row.emoji,
           );
           // Main characters are part of what is compared, so a new main updates the post too.
-          const reactors = needsMains(row.type as ReactorFormat)
-            ? await this.withMains(row.task.guildId, read)
-            : read;
+          const reactors = await this.withMains(row.task.guildId, read);
           const hash = hashReactors(reactors);
           if (hash === row.lastHash) continue;
           await this.prisma.postTracking.update({
@@ -416,7 +409,7 @@ export class TrackingService {
     const tokens = parseDynamicTokens(config.content);
     const people: PeopleByKey = new Map(
       rows.map((row) => [
-        trackingKey({ ref: row.postRef, emoji: row.emoji, format: row.type as ReactorFormat }),
+        trackingKey({ ref: row.postRef, emoji: row.emoji }),
         row.lastUsers as unknown as Reactor[],
       ]),
     );

@@ -148,9 +148,9 @@ export function PostTaskForm({ guild, channels, editing, timezone, onSaved, onCa
             ⓘ Live tags: show who reacted
           </summary>
           <p>
-            Write <code>{'{{reactions sourcePost="Raid signup" emoji=👍 show=names}}'}</code>{' '}
-            anywhere in the text. It is replaced by the people who reacted, and Discord's message
-            updates by itself within a minute of a reaction changing.
+            Write <code>{'{{reactions sourcePost="Raid signup" emoji=👍}}'}</code> anywhere in the
+            text. It is replaced by the people who reacted, and Discord's message updates by itself
+            within a minute of a reaction changing.
           </p>
           <ul>
             <li>
@@ -166,22 +166,21 @@ export function PostTaskForm({ guild, channels, editing, timezone, onSaved, onCa
               <code>\:emoji:</code> in Discord to get it).
             </li>
             <li>
-              <code>show</code> (optional, default <code>names</code>): <code>names</code> Discord
-              names · <code>mainNames</code> their main characters, or the Discord name if they have
-              none · <code>tags</code> mentions (nobody is pinged) · <code>number</code> how many ·
-              or your own JavaScript expression in quotes (below).
+              <code>show</code>: a <strong>JavaScript expression</strong> that makes the text, using{' '}
+              <code>reactions</code>, the list of people who reacted (below). Left out, it lists
+              their Discord names.
             </li>
           </ul>
+          <p>Put a value with spaces in quotes. Options can come in any order.</p>
           <p>
-            Put a value with spaces in quotes. Options can come in any order. Example:{' '}
-            <code>{'{{reactions sourcePost="Raid signup" emoji=👍 show=mainNames}}'}</code>
-          </p>
-          <p>
-            <strong>Your own format:</strong> <code>show</code> can be a JavaScript expression that
-            uses <code>reactions</code>, a list of the people who reacted, each with <code>id</code>
-            , <code>tag</code> (a mention), <code>name</code>, <code>mainName</code> and{' '}
-            <code>mains</code> (a list). It should give text, or a list (joined with commas).
-            Example:
+            <strong>The expression</strong> is plain JavaScript and works with{' '}
+            <code>reactions</code>, one entry per person with <code>id</code>, <code>tag</code> (a
+            mention), <code>name</code> (Discord name), <code>mainName</code> (main characters, or
+            the Discord name if none) and <code>mains</code> (a list). It should give text, or a
+            list (joined with commas). Put it in quotes when it has spaces. Handy ones:{' '}
+            <code>reactions.length</code>, <code>reactions.map(r =&gt; r.name)</code>,{' '}
+            <code>reactions.map(r =&gt; r.mainName)</code>,{' '}
+            <code>reactions.map(r =&gt; r.tag)</code>. Example:
           </p>
           <pre className="md-code">
             {

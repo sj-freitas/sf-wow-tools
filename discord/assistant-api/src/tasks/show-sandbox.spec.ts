@@ -81,14 +81,15 @@ describe('checking expressions on save', () => {
     });
   });
 
-  it('refuses an unknown name (a typo in a preset is an expression that does not exist)', async () => {
+  it('refuses an unknown name: a bare word is an expression, not a keyword', async () => {
     const [bad] = parseDynamicTokens('{{reactions emoji=👍 show=people}}');
-    assert.equal(bad.format, 'custom');
     await assert.rejects(checkExpressions([bad]), /ReferenceError/);
   });
 
-  it('skips the presets', async () => {
-    await checkExpressions(parseDynamicTokens('{{reactions emoji=👍 show=names}}'));
+  it('accepts the default expression', async () => {
+    await checkExpressions(
+      parseDynamicTokens('{{reactions emoji=👍 show="reactions.map(r => r.name)"}}'),
+    );
   });
 });
 

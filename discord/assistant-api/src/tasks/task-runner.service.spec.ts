@@ -74,7 +74,7 @@ describe('TaskRunnerService', () => {
     } as unknown as DiscordBotService;
     const tracking = {
       sourceMap: async () => new Map([[`name:raid signup`, { taskId: SOURCE }]]),
-      fetchPeople: async () => new Map([[`name:raid signup|👍|names`, [{ id: '1', name: 'Ana' }]]]),
+      fetchPeople: async () => new Map([[`name:raid signup|👍`, [{ id: '1', name: 'Ana' }]]]),
     } as unknown as TrackingService;
     runner = new TaskRunnerService(prisma, bot, tracking);
   });
@@ -83,7 +83,7 @@ describe('TaskRunnerService', () => {
     it('fills in who reacted when the post goes out, and remembers what was posted', async () => {
       const task = baseTask();
       Object.assign(task.config as object, {
-        content: `Going: {{reactions sourcePost="Raid signup" emoji=👍 show=names}}`,
+        content: `Going: {{reactions sourcePost="Raid signup" emoji=👍 show="reactions.map(r => r.name)"}}`,
       });
       await runner.run(task, NOW);
       assert.equal(posted[0].content, 'Going: Ana');

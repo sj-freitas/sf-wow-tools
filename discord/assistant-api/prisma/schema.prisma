@@ -296,7 +296,7 @@ model PostTracking {
   postRef         String         @default("") @map("post_ref")
   // The emoji: unicode, or `name:id` for a custom one.
   emoji           String
-  // names | number | tags
+  // Always "custom" now (every tag is a JavaScript expression); kept from when tags had presets.
   type            String
   // Hash of who had reacted at the last check: equal means nothing changed, nothing more to fetch.
   lastHash        String?        @map("last_hash")

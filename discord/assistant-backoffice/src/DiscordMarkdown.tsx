@@ -97,15 +97,13 @@ function inline(text: string, names: MentionNames): ReactNode[] {
       );
     } else if (match[14]) {
       const emoji = /emoji\s*=\s*(\S+?)(?=\s|\}\})/.exec(token)?.[1] ?? '?';
-      const showValue = /show\s*=\s*("|'|)(\w*)/.exec(token);
-      const preset = ['names', 'mainNames', 'number', 'tags'].includes(showValue?.[2] ?? '');
-      const show = !showValue
-        ? 'names'
-        : preset && showValue[1]
-          ? showValue[2]
-          : preset
-            ? showValue[2]
-            : 'custom';
+      const shown = /show\s*=\s*(?:"((?:\\.|[^"\\])*)"|'((?:\\.|[^'\\])*)'|([^\s}]+))/.exec(token);
+      const expression = shown?.[1] ?? shown?.[2] ?? shown?.[3];
+      const show = expression
+        ? expression.length > 28
+          ? `${expression.slice(0, 27)}…`
+          : expression
+        : 'names';
       nodes.push(
         <span
           key={k}

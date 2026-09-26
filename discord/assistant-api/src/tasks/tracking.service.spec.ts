@@ -17,7 +17,7 @@ const post = (over: Record<string, unknown> = {}): any => ({
   guildId: 'g1',
   name: 'Raid signup',
   config: {
-    content: `Going: {{reactions sourcePost="Raid signup" emoji=👍 show=names}}`,
+    content: `Going: {{reactions sourcePost="Raid signup" emoji=👍 show="reactions.map(r => r.name)"}}`,
     embedLinks: true,
   },
   state: { ...liveState },
@@ -238,7 +238,10 @@ describe('TrackingService', () => {
         const tokens = parseDynamicTokens(`{{reactions sourcePost="${numericLink}" emoji=👍}}`);
         const sources = await resolve(`{{reactions sourcePost="${numericLink}" emoji=👍}}`);
         const people = await service.fetchPeople('g1', tokens, sources);
-        assert.deepEqual(people.get(`${tokens[0].ref}|👍|names`), [ana, bruno]);
+        assert.deepEqual(people.get(`${tokens[0].ref}|👍`), [
+          { ...ana, mains: [] },
+          { ...bruno, mains: [] },
+        ]);
         await service.syncTracking(POST, tokens, sources);
         assert.deepEqual(
           [created[0].sourceTaskId, created[0].sourceChannelId, created[0].sourceMessageId],
@@ -280,7 +283,7 @@ describe('TrackingService', () => {
       const sources = await service.sourceMap(POST, 'g1', tokens);
       assert.equal(sources.size, 0);
       const people = await service.fetchPeople('g1', tokens, sources);
-      assert.deepEqual(people.get('name:gone|👍|names'), []);
+      assert.deepEqual(people.get('name:gone|👍'), []);
     });
   });
 
@@ -297,19 +300,21 @@ describe('TrackingService', () => {
 
     it('adds a row per tag, and removes rows whose tag is gone', async () => {
       rows = [trackingRow({ id: 'old', emoji: '🔥' })];
-      await sync(`{{reactions sourcePost="Raid signup" emoji=👍 show=names}}`);
+      await sync(
+        `{{reactions sourcePost="Raid signup" emoji=👍 show="reactions.map(r => r.name)"}}`,
+      );
       assert.deepEqual(deletedRows, ['old']);
       assert.deepEqual(
         created.map((c) => [c.taskId, c.sourceTaskId, c.postRef, c.emoji, c.type]),
-        [[POST, POST, 'name:raid signup', '👍', 'names']],
+        [[POST, POST, 'name:raid signup', '👍', 'custom']],
       );
     });
 
     it('keeps a row that is still in the text and seeds new rows so nothing looks changed', async () => {
       rows = [trackingRow()];
-      const people = new Map([[`name:raid signup|👍|number`, [ana]]]);
+      const people = new Map([[`name:raid signup|🔥`, [ana]]]);
       await sync(
-        `{{reactions sourcePost="Raid signup" emoji=👍 show=names}} {{reactions sourcePost="Raid signup" emoji=👍 show=number}}`,
+        `{{reactions sourcePost="Raid signup" emoji=👍 show="reactions.map(r => r.name)"}} {{reactions sourcePost="Raid signup" emoji=🔥 show="reactions.length"}}`,
         people,
       );
       assert.deepEqual(deletedRows, []);
@@ -318,8 +323,10 @@ describe('TrackingService', () => {
     });
 
     it('stores tags that point at a post by name with that name as the reference', async () => {
-      await sync('{{reactions sourcePost="Raid signup" emoji=🔥 show=tags}}');
-      assert.deepEqual([created[0].postRef, created[0].type], ['name:raid signup', 'tags']);
+      await sync(
+        '{{reactions sourcePost="Raid signup" emoji=🔥 show="reactions.map(r => r.tag)"}}',
+      );
+      assert.equal(created[0].postRef, 'name:raid signup');
     });
 
     it('removes every row when the tags are removed from the text', async () => {
@@ -370,14 +377,14 @@ describe('TrackingService', () => {
         [bruno.id]: [],
       };
       const [token] = parseDynamicTokens(
-        `{{reactions sourcePost="Raid signup" emoji=👍 show=mainNames}}`,
+        `{{reactions sourcePost="Raid signup" emoji=👍 show="reactions.map(r => r.mainName)"}}`,
       );
       const people = await service.fetchPeople(
         'g1',
         [token],
         new Map([[token.ref, { taskId: POST }]]),
       );
-      assert.deepEqual(people.get(`name:raid signup|👍|mainNames`), [
+      assert.deepEqual(people.get(`name:raid signup|👍`), [
         { id: '1', name: 'Ana', mains: ['Merric Stone'] },
         { id: '2', name: 'Bruno', mains: [] },
       ]);
@@ -396,7 +403,7 @@ describe('TrackingService', () => {
 
     it('updates the post when someone gets a main, even if the reactions did not change', async () => {
       tasks[POST].config.content =
-        `Going: {{reactions sourcePost="Raid signup" emoji=👍 show=mainNames}}`;
+        `Going: {{reactions sourcePost="Raid signup" emoji=👍 show="reactions.map(r => r.mainName)"}}`;
       rows = [trackingRow({ type: 'mainNames' })];
       await service.refreshDue();
       assert.equal(edits[0][2], 'Going: Ana, Bruno');
@@ -406,7 +413,7 @@ describe('TrackingService', () => {
       assert.equal(edits[1][2], 'Going: Merric, Bruno');
     });
 
-    it('looks main characters up for expressions too', async () => {
+    it('always looks main characters up, so every expression can use them', async () => {
       mains = { [ana.id]: [{ firstName: 'Merric', lastName: '' }] };
       const [token] = parseDynamicTokens(
         `{{reactions sourcePost="Raid signup" emoji=👍 show="reactions.map(r => r.mainName)"}}`,
@@ -416,20 +423,7 @@ describe('TrackingService', () => {
         [token],
         new Map([[token.ref, { taskId: POST }]]),
       );
-      assert.deepEqual(people.get(`name:raid signup|👍|custom`)?.[0].mains, ['Merric']);
-    });
-
-    it('does not touch the database for plain names', async () => {
-      mains = { [ana.id]: [{ firstName: 'Merric', lastName: '' }] };
-      const [token] = parseDynamicTokens(
-        `{{reactions sourcePost="Raid signup" emoji=👍 show=names}}`,
-      );
-      const people = await service.fetchPeople(
-        'g1',
-        [token],
-        new Map([[token.ref, { taskId: POST }]]),
-      );
-      assert.equal(people.get(`name:raid signup|👍|names`)?.[0].name, 'Ana');
+      assert.deepEqual(people.get(`name:raid signup|👍`)?.[0].mains, ['Merric']);
     });
   });
 
@@ -438,7 +432,7 @@ describe('TrackingService', () => {
       reactors['raid:123456789012345678'] = [ana];
       for (const written of ['<:raid:123456789012345678>', '<a:raid:123456789012345678>']) {
         const [token] = parseDynamicTokens(
-          `{{reactions sourcePost="Raid signup" emoji=${written} show=names}}`,
+          `{{reactions sourcePost="Raid signup" emoji=${written} show="reactions.map(r => r.name)"}}`,
         );
         assert.equal(token.emoji, 'raid:123456789012345678');
         const people = await service.fetchPeople(
@@ -446,7 +440,9 @@ describe('TrackingService', () => {
           [token],
           new Map([[token.ref, { taskId: POST }]]),
         );
-        assert.deepEqual(people.get(`name:raid signup|raid:123456789012345678|names`), [ana]);
+        assert.deepEqual(people.get(`name:raid signup|raid:123456789012345678`), [
+          { ...ana, mains: [] },
+        ]);
       }
     });
   });
@@ -499,7 +495,7 @@ describe('TrackingService', () => {
         state: { messageId: 'm9', channelId: 'c9' },
       });
       tasks[POST].config.content =
-        `Signed up: {{reactions sourcePost="Roster" emoji=👍 show=number}}`;
+        `Signed up: {{reactions sourcePost="Roster" emoji=👍 show="reactions.length"}}`;
       rows = [trackingRow({ sourceTaskId: source, postRef: 'name:roster', type: 'number' })];
       await service.refreshDue();
       assert.equal(edits[0][0], 'c1');

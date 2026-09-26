@@ -271,7 +271,7 @@ describe('TasksService', () => {
   });
 
   describe('dynamic reactions in the text', () => {
-    const withTag = `Going: {{reactions sourcePost="Raid signup" emoji=👍 show=names}}`;
+    const withTag = `Going: {{reactions sourcePost="Raid signup" emoji=👍 show="reactions.map(r => r.name)"}}`;
 
     it('keeps tracking rows in line with the text when a post is created', async () => {
       await service.create('g', 'u', { ...validInput, content: withTag });
@@ -299,7 +299,7 @@ describe('TasksService', () => {
     });
 
     it('edits a live post with the people filled in, quietly, and syncs the rows', async () => {
-      people = new Map([[`name:raid signup|👍|names`, [{ id: '1', name: 'Ana' }]]]);
+      people = new Map([[`name:raid signup|👍`, [{ id: '1', name: 'Ana' }]]]);
       await service.update('t1', { content: withTag });
       assert.deepEqual(edits, [
         [CHANNEL, 'm1', 'Going: Ana', { suppressEmbeds: false, quiet: true }],
