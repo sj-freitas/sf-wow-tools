@@ -1374,3 +1374,9 @@ label.btn.disabled {
   padding: 0.15rem 0 0.35rem 0.5rem;
   font-size: 0.8rem;
 }
+
+.armory-load {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}

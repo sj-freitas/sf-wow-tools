@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from 'react';
 import { createCharacter, updateCharacter } from './api';
 import { MultiSelect } from './MultiSelect';
-import { classNamesOf, gameOf, racesOf, requiresLastName, useGames } from './game';
+import { fetchArmoryCharacter } from './api';
+import { classNamesOf, gameOf, racesOf, requiresLastName, useArmory, useGames } from './game';
 import { PlayerPicker } from './PlayerPicker';
 import { ROLE_LABELS, type Character, type Guild, type Role, type User } from './types';
 
@@ -61,6 +62,43 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
   const [isMain, setIsMain] = useState(initial?.isMain ?? false);
   const [error, setError] = useState<string | null>(null);
 
+  // TEST: fill race, class and level from the armory (Officers), with the name typed above.
+  const armory = useArmory();
+  const [armoryBusy, setArmoryBusy] = useState(false);
+  const [armoryNote, setArmoryNote] = useState<{ ok: boolean; text: string } | null>(null);
+  const loadFromArmory = () => {
+    setArmoryBusy(true);
+    setArmoryNote(null);
+    fetchArmoryCharacter(guild.id, firstName.trim())
+      .then((found) => {
+        const raceEntry = races.find((r) => r.race.toLowerCase() === found.race.toLowerCase());
+        const className = allClasses.find((c) => c.toLowerCase() === found.class.toLowerCase());
+        const problems: string[] = [];
+        if (raceEntry) setRace(raceEntry.race);
+        else if (races.length > 0)
+          problems.push(`${found.race} is not a race of this guild's faction`);
+        const classFits = className && (!raceEntry || raceEntry.classes.includes(className));
+        setCharacterClass(classFits ? className : '');
+        if (!className) problems.push(`${guild.gameVersion} has no ${found.class} class`);
+        else if (!classFits)
+          problems.push(`${found.race} cannot be a ${found.class} in ${guild.gameVersion}`);
+        setLevel(String(Math.min(100, Math.max(1, found.level))));
+        const summary = `${found.name}: ${found.race} ${found.class}, level ${found.level}.`;
+        setArmoryNote(
+          problems.length === 0
+            ? { ok: true, text: `Loaded ${summary}` }
+            : { ok: false, text: `Loaded ${summary} Not filled in: ${problems.join('; ')}.` },
+        );
+      })
+      .catch((err: unknown) =>
+        setArmoryNote({
+          ok: false,
+          text: `${err instanceof Error ? err.message : String(err)} Fill the character in by hand.`,
+        }),
+      )
+      .finally(() => setArmoryBusy(false));
+  };
+
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
     setError(null);
@@ -107,6 +145,30 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
             )}
           </div>
         )}
+        {armory && guild.isOfficer && (
+          <div className="field field-wide armory-load">
+            <span>
+              <button
+                type="button"
+                className="btn btn-sm"
+                disabled={armoryBusy || firstName.trim().length < 2}
+                title="Fills race, class and level from the armory, using the name typed below"
+                onClick={loadFromArmory}
+              >
+                {armoryBusy ? 'Loading…' : 'Load from armory'}
+              </button>{' '}
+              <span className="badge badge-live">TEST</span>{' '}
+              <span className="muted">
+                {armory.description}. Type the name first; nothing else is needed.
+              </span>
+            </span>
+            {armoryNote && (
+              <span className={armoryNote.ok ? 'run-ok' : 'status-error'} role="status">
+                {armoryNote.text}
+              </span>
+            )}
+          </div>
+        )}
         <label className="field">
           {showLastName ? 'First name' : 'Name'}
           <input
@@ -144,11 +206,6 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
                 <option key={r.race}>{r.race}</option>
               ))}
             </select>
-            <small className="muted">
-              {initial
-                ? 'Narrows the classes below to what the race can be.'
-                : 'Choose the race first: it decides which classes you can pick.'}
-            </small>
           </label>
         )}
         <label className="field">

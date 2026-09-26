@@ -5,6 +5,7 @@ import type { ConfigService } from '@nestjs/config';
 import type { AuthService } from '../auth/auth.service';
 import type { AuthenticatedRequest } from '../auth/auth.types';
 import type { GuildAccessService } from '../auth/guild-access.service';
+import { getGame } from '../game/games';
 import { GuildsController } from './guilds.controller';
 import type { RanksService } from './ranks.service';
 import type { GuildsService } from './guilds.service';
@@ -17,6 +18,7 @@ describe('GuildsController role mappings', () => {
   let mapped: unknown[][];
   let homeWrites: unknown[][];
   let created: unknown[][];
+  let blizzard: string | undefined;
   let controller: GuildsController;
 
   beforeEach(() => {
@@ -25,6 +27,7 @@ describe('GuildsController role mappings', () => {
     mapped = [];
     homeWrites = [];
     created = [];
+    blizzard = 'set';
     const guildAccess = {
       find: async () => (member ? { isAdmin: false, isOfficer: false } : null),
       assertOfficer: async () => {
@@ -44,6 +47,7 @@ describe('GuildsController role mappings', () => {
       { findRanks: async () => ({ a: ['Raider'] }) } as unknown as RanksService,
       {
         getOrThrow: () => 'app-id',
+        get: (key: string) => (key.startsWith('BLIZZARD') ? blizzard : undefined),
       } as unknown as ConfigService,
     );
   });
@@ -141,15 +145,16 @@ describe('GuildsController role mappings', () => {
       );
     });
 
+    it('offers the armory test only when the Battle.net client is set up', () => {
+      assert.match(controller.setupInfo().armoryTest?.description ?? '', /Wild Growth/);
+    });
+
     it('sends the game configs to the backoffice with the setup info', () => {
       const { games } = controller.setupInfo();
       assert.equal(games[0].gameVersion, 'Forever');
       assert.deepEqual(Object.keys(games[0].factions), ['Alliance', 'Horde']);
-      assert.deepEqual(games[0].factions.Alliance.races['Night Elf'].classes, [
-        'Druid',
-        'Hunter',
-        'Priest',
-      ]);
+      // Whatever the version's config says (it changes often): the API sends it as it is.
+      assert.deepEqual(games[0], getGame('Forever'));
       assert.deepEqual(games[0].allowedServers.EU, ['RP', 'PVP', 'PVE', 'Hardcore']);
     });
   });

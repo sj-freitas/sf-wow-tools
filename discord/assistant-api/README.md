@@ -553,6 +553,30 @@ rule, and the backoffice: `GET /api/guilds/setup-info` includes `games` (every c
 guild forms (version, region, **server** from `allowedServers`, faction) and the character form (race
 narrows the classes it can be) render from it. Race is not stored on characters yet.
 
+## Load from armory (TEST)
+
+Officers get a **Load from armory** button, tagged TEST, in the character form: type the character's
+name, press it, and race, class and level are filled in from Blizzard's armory. Everything stays
+editable, and if the lookup fails (not found, Blizzard down, not set up) the form shows why and the
+character is added by hand as before.
+
+- **Where from:** one fixed server, **EU · Classic Season of Discovery · Wild Growth**
+  (`src/armory/armory.config.ts`: region `eu`, realm `wild-growth`, namespace `profile-classic1x-eu`;
+  Season of Discovery shares Blizzard's Classic Era API). The Forever armory does not exist yet. Later the
+  region, version and server should come from the guild, so it is all in that one file.
+- **How:** `GET /api/guilds/:guildId/armory/character?name=` (Officers only) asks
+  `https://eu.api.blizzard.com/profile/wow/character/wild-growth/<name>` with a token the server gets for
+  itself (OAuth **client credentials**), so no player logs in and nothing is stored. The token is kept in
+  memory until a minute before it expires, and renewed once if Blizzard refuses it. Requests time out after
+  8 seconds. Only public data is read: name, class, race, level and faction.
+- **Set up:** create a client at [develop.battle.net/access/clients](https://develop.battle.net/access/clients)
+  and set `BLIZZARD_CLIENT_ID` and `BLIZZARD_CLIENT_SECRET` (on Render too). Without both the button is
+  hidden (`setup-info` has `armoryTest: null`).
+- **What the form does with the answer:** it picks the race if it is one of the guild's faction, then the
+  class if that race can be it (the class stays empty otherwise), and the level; anything that does not fit
+  is listed ("Orc is not a race of this guild's faction"). Roles are not on the armory, and the name is
+  left as typed. Blizzard's data for Classic can be slow or missing (new characters often 404).
+
 ## Database
 
 Postgres, hosted on [Supabase](https://supabase.com/), accessed through [Prisma](https://www.prisma.io/)

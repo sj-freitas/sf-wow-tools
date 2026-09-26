@@ -3,6 +3,10 @@ import type { Faction, GameConfig } from './types';
 
 /** The game versions the API knows, provided once for every form that needs them. */
 export const GamesContext = createContext<GameConfig[]>([]);
+/** TEST: the armory the character form can load from (null when it is not set up). */
+export const ArmoryContext = createContext<{ description: string } | null>(null);
+export const useArmory = (): { description: string } | null => useContext(ArmoryContext);
+
 export const useGames = (): GameConfig[] => useContext(GamesContext);
 
 export const gameOf = (games: readonly GameConfig[], gameVersion: string): GameConfig | undefined =>

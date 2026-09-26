@@ -13,6 +13,7 @@ import { DatabaseModule } from './database/database.module';
 import { GuildsModule } from './guilds/guilds.module';
 import { RealtimeModule } from './realtime/realtime.module';
 import { ModerationModule } from './moderation/moderation.module';
+import { ArmoryModule } from './armory/armory.module';
 import { OfficerRequestsModule } from './officer-requests/officer-requests.module';
 import { PlayersModule } from './players/players.module';
 
@@ -38,6 +39,7 @@ import { PlayersModule } from './players/players.module';
     HoneypotModule,
     OfficerRequestsModule,
     ModerationModule,
+    ArmoryModule,
     WorkerModule,
   ],
 })

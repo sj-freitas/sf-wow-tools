@@ -23,6 +23,7 @@ import type { AuthenticatedRequest } from '../auth/auth.types';
 import { GuildAccessService } from '../auth/guild-access.service';
 import { APP_CONFIG } from '../config/app.config';
 import { isRegion, REGIONS, regionOptions } from '../config/regions';
+import { TEST_ARMORY } from '../armory/armory.config';
 import { games, getGame, isGameVersion, serversOf } from '../game/games';
 import { MAX_BANNER_BYTES, readBody } from './banner';
 import { RanksService, type RanksDto } from './ranks.service';
@@ -46,6 +47,8 @@ type Payload = Record<string, unknown>;
 @UseGuards(AuthGuard)
 export class GuildsController {
   private readonly applicationId: string;
+  /** The armory test feature is offered when the Battle.net client is configured. */
+  private readonly armoryDescription: string | null;
 
   constructor(
     private readonly guildsService: GuildsService,
@@ -55,6 +58,11 @@ export class GuildsController {
     configService: ConfigService,
   ) {
     this.applicationId = configService.getOrThrow<string>('DISCORD_APPLICATION_ID');
+    this.armoryDescription =
+      configService.get<string>('BLIZZARD_CLIENT_ID') &&
+      configService.get<string>('BLIZZARD_CLIENT_SECRET')
+        ? TEST_ARMORY.description
+        : null;
   }
 
   /** Guilds the logged-in user belongs to, with what they're allowed to do in each. */
@@ -77,6 +85,8 @@ export class GuildsController {
       regions: regionOptions(),
       // What the forms are built from: versions, their servers per region, factions, races and classes.
       games: games(),
+      // TEST: "Load from armory" in the character form (Officers), null when it is not set up.
+      armoryTest: this.armoryDescription ? { description: this.armoryDescription } : null,
     };
   }
 

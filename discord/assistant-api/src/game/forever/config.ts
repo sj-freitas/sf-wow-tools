@@ -20,7 +20,7 @@ export default defineGame({
         Dwarf: { classes: ['Hunter', 'Paladin', 'Priest', 'Rogue', 'Warrior', 'Shaman'] },
         Gnome: { classes: ['Mage', 'Rogue', 'Warlock', 'Warrior', 'Priest'] },
         Human: { classes: ['Paladin', 'Hunter', 'Priest', 'Rogue', 'Warrior'] },
-        'Night Elf': { classes: ['Druid', 'Hunter', 'Priest'] },
+        'Night Elf': { classes: ['Druid', 'Hunter', 'Priest', 'Warrior', 'Rogue'] },
         Skyborne: { classes: ['Druid', 'Hunter', 'Mage', 'Rogue', 'Warrior'] },
       },
     },

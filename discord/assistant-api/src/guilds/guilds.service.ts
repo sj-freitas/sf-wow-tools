@@ -74,6 +74,8 @@ export interface SetupInfoDto {
   regions: { id: string; label: string; timezone: string }[];
   /** The versions of the game (src/game/<version>/config.ts), for the guild and character forms. */
   games: readonly GameConfig[];
+  /** TEST: the armory the character form can load from, or null when it is not set up. */
+  armoryTest: { description: string } | null;
 }
 
 export interface RoleOptionDto {

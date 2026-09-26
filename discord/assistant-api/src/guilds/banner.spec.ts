@@ -142,7 +142,7 @@ describe('GuildsController banner routes', () => {
       guildAccess,
       {} as AuthService,
       {} as RanksService,
-      { getOrThrow: () => 'app-id' } as unknown as ConfigService,
+      { getOrThrow: () => 'app-id', get: () => undefined } as unknown as ConfigService,
     );
   };
 

@@ -118,6 +118,18 @@ export interface SetupInfo {
   regions: Region[];
   /** The versions of the game the API knows (src/game/<version>/config.ts). */
   games: GameConfig[];
+  /** TEST: the armory the character form can load from; null when it is not set up. */
+  armoryTest: { description: string } | null;
+}
+
+/** A character as the armory describes it (TEST). */
+export interface ArmoryCharacter {
+  name: string;
+  class: string;
+  race: string;
+  level: number;
+  faction: string;
+  realm: string;
 }
 
 /** A specialization of a class (still being defined). */
