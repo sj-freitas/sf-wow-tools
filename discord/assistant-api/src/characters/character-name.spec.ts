@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { lastNameRequiredMessage, requiresLastName } from '../game/game-version';
+import { lastNameRequiredMessage, requiresLastName } from '../game/games';
 import { formatCharacterName, parseCharacterName } from './character-name';
 
 describe('parseCharacterName', () => {

@@ -34,7 +34,7 @@ function parseNamePart(input: string): string | null {
  * 2-12 letters of any alphabet, no digits. A last name is optional here, but
  * if there is a dash it must be a valid name too. Casing is normalized to
  * `Xxxx`. Whether a last name is *required* depends on the guild's game
- * version (see game/game-version.ts).
+ * version (see game/<version>/config.ts).
  */
 export function parseCharacterName(input: string): CharacterName | null {
   const [first, ...rest] = input.trim().split('-');

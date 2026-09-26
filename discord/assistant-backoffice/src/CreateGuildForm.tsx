@@ -1,14 +1,9 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { createGuild, fetchEligibleServers, syncDiscord } from './api';
+import { factionsOf, gameOf, regionsOf, serversFor, useGames } from './game';
 import { RegionSelect } from './RegionSelect';
 import { SetupInstructions } from './SetupInstructions';
-import {
-  GAME_VERSIONS,
-  type EligibleServers,
-  type Faction,
-  type Guild,
-  type SetupInfo,
-} from './types';
+import type { EligibleServers, Faction, Guild, SetupInfo } from './types';
 
 interface Props {
   setup: SetupInfo;
@@ -19,10 +14,22 @@ interface Props {
 export function CreateGuildForm({ setup, onCreated, onCancel }: Props) {
   const [eligible, setEligible] = useState<EligibleServers | null>(null);
   const [name, setName] = useState('');
-  const [realm, setRealm] = useState('');
-  const [faction, setFaction] = useState<Faction>('ALLIANCE');
-  const [gameVersion, setGameVersion] = useState<string>(GAME_VERSIONS[0]);
-  const [region, setRegion] = useState(setup.regions[0]?.id ?? 'EU');
+  const games = useGames();
+  const [chosenRealm, setRealm] = useState('');
+  const [chosenFaction, setFaction] = useState<Faction>('ALLIANCE');
+  const [gameVersion, setGameVersion] = useState<string>(games[0]?.gameVersion ?? '');
+  const [chosenRegion, setRegion] = useState(setup.regions[0]?.id ?? 'EU');
+  // What the version allows: its regions, the servers of the region, its factions. A choice that
+  // the version does not offer (after switching version or region) falls back to the first one.
+  const game = gameOf(games, gameVersion);
+  const regions = setup.regions.filter((r) => regionsOf(game).includes(r.id));
+  const region = regions.some((r) => r.id === chosenRegion) ? chosenRegion : (regions[0]?.id ?? '');
+  const servers = serversFor(game, region);
+  const realm = servers.includes(chosenRealm) ? chosenRealm : (servers[0] ?? '');
+  const factions = factionsOf(game);
+  const faction = factions.some((f) => f.id === chosenFaction)
+    ? chosenFaction
+    : (factions[0]?.id ?? chosenFaction);
   const [selected, setSelected] = useState<string[]>([]);
   const [mainId, setMainId] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -46,7 +53,7 @@ export function CreateGuildForm({ setup, onCreated, onCancel }: Props) {
     setError(null);
     createGuild({
       name: name.trim(),
-      realm: realm.trim(),
+      realm,
       faction,
       gameVersion,
       region,
@@ -70,30 +77,32 @@ export function CreateGuildForm({ setup, onCreated, onCancel }: Props) {
             <input value={name} onChange={(e) => setName(e.target.value)} maxLength={64} required />
           </label>
           <label className="field">
-            Realm
-            <input
-              value={realm}
-              onChange={(e) => setRealm(e.target.value)}
-              maxLength={64}
-              required
-            />
+            Game version
+            <select value={gameVersion} onChange={(e) => setGameVersion(e.target.value)}>
+              {games.map((g) => (
+                <option key={g.gameVersion}>{g.gameVersion}</option>
+              ))}
+            </select>
+          </label>
+          <RegionSelect regions={regions} value={region} onChange={setRegion} />
+          <label className="field">
+            Server
+            <select value={realm} onChange={(e) => setRealm(e.target.value)} required>
+              {servers.map((server) => (
+                <option key={server}>{server}</option>
+              ))}
+            </select>
           </label>
           <label className="field">
             Faction
             <select value={faction} onChange={(e) => setFaction(e.target.value as Faction)}>
-              <option value="ALLIANCE">Alliance</option>
-              <option value="HORDE">Horde</option>
-            </select>
-          </label>
-          <label className="field">
-            Game version
-            <select value={gameVersion} onChange={(e) => setGameVersion(e.target.value)}>
-              {GAME_VERSIONS.map((version) => (
-                <option key={version}>{version}</option>
+              {factions.map((f) => (
+                <option key={f.id} value={f.id}>
+                  {f.label}
+                </option>
               ))}
             </select>
           </label>
-          <RegionSelect regions={setup.regions} value={region} onChange={setRegion} />
         </div>
 
         <div className="field server-picker">
@@ -137,7 +146,11 @@ export function CreateGuildForm({ setup, onCreated, onCancel }: Props) {
 
         {error && <p className="status-error">{error}</p>}
         <div className="form-actions">
-          <button type="submit" className="btn btn-primary" disabled={selected.length === 0}>
+          <button
+            type="submit"
+            className="btn btn-primary"
+            disabled={selected.length === 0 || realm === ''}
+          >
             Create guild
           </button>
           <button type="button" className="btn" onClick={onCancel}>

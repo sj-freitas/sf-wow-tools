@@ -9,8 +9,8 @@ import { DiscordOAuthService, type DiscordServerMember } from '../auth/discord-o
 import { APP_CONFIG } from '../config/app.config';
 import type { RegionId } from '../config/regions';
 import { sniffImageType } from './banner';
+import type { GameConfig } from '../game/game-config';
 import { PrismaService } from '../database/prisma.service';
-import { GAME_VERSIONS } from '../game/game-version';
 import { guildPath } from './guild-path';
 import { RealtimeService } from '../realtime/realtime.service';
 
@@ -72,6 +72,8 @@ export interface SetupInfoDto {
   botInviteUrl: string;
   /** Regions a guild can be in, with the timezone their schedules run in. */
   regions: { id: string; label: string; timezone: string }[];
+  /** The versions of the game (src/game/<version>/config.ts), for the guild and character forms. */
+  games: readonly GameConfig[];
 }
 
 export interface RoleOptionDto {
@@ -540,6 +542,3 @@ export class GuildsService {
     }
   }
 }
-
-export const isGameVersion = (value: unknown): value is string =>
-  typeof value === 'string' && (GAME_VERSIONS as readonly string[]).includes(value);

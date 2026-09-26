@@ -19,7 +19,7 @@ import { AuthGuard } from '../auth/auth.guard';
 import type { AuthenticatedRequest, SessionUser } from '../auth/auth.types';
 import { canEditCharacter, canManageAllCharacters } from '../auth/access-rules';
 import { GuildAccessService } from '../auth/guild-access.service';
-import { isWowClass } from '../game/wow-class';
+import { isWowClass } from '../game/games';
 import { parseCharacterName } from './character-name';
 import { CharactersService, type CharacterUpdate } from './characters.service';
 
@@ -97,6 +97,9 @@ export class CharactersAdminController {
     }
     if (result === 'no-guild') {
       throw new NotFoundException('Guild not found');
+    }
+    if (result === 'unknown-class') {
+      throw new BadRequestException("This guild's game version has no such class");
     }
     if (result === 'last-name-required') {
       throw new BadRequestException(

@@ -19,11 +19,11 @@ import {
 } from './api';
 import { channelKey, splitChannelKey } from './channelKey';
 import { ChannelSelect } from './ChannelSelect';
+import { factionsOf, gameOf, regionsOf, serversFor, useGames } from './game';
 import { RegionSelect } from './RegionSelect';
 import { WelcomeEditor } from './WelcomeEditor';
 import { useConfirm } from './useConfirm';
 import {
-  GAME_VERSIONS,
   type EligibleServers,
   type Faction,
   type Guild,
@@ -106,17 +106,30 @@ interface SectionProps {
 
 function DetailsSection({ guild, regions, run }: SectionProps & { regions: Region[] }) {
   const [name, setName] = useState(guild.name);
-  const [realm, setRealm] = useState(guild.realm);
-  const [faction, setFaction] = useState<Faction>(guild.faction);
+  const games = useGames();
+  const [chosenRealm, setRealm] = useState(guild.realm);
+  const [chosenFaction, setFaction] = useState<Faction>(guild.faction);
   const [gameVersion, setGameVersion] = useState(guild.gameVersion);
-  const [region, setRegion] = useState(guild.region);
+  const [chosenRegion, setRegion] = useState(guild.region);
+  // What the version allows: its regions, the servers of the region and its factions.
+  const game = gameOf(games, gameVersion);
+  const shownRegions = regions.filter((r) => regionsOf(game).includes(r.id));
+  const region = shownRegions.some((r) => r.id === chosenRegion)
+    ? chosenRegion
+    : (shownRegions[0]?.id ?? chosenRegion);
+  const servers = serversFor(game, region);
+  const realm = servers.includes(chosenRealm) ? chosenRealm : (servers[0] ?? chosenRealm);
+  const factions = factionsOf(game);
+  const faction = factions.some((f) => f.id === chosenFaction)
+    ? chosenFaction
+    : (factions[0]?.id ?? chosenFaction);
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
     void run(
       updateGuild(guild.id, {
         name: name.trim(),
-        realm: realm.trim(),
+        realm,
         faction,
         gameVersion,
         region,
@@ -133,25 +146,37 @@ function DetailsSection({ guild, regions, run }: SectionProps & { regions: Regio
           <input value={name} onChange={(e) => setName(e.target.value)} maxLength={64} required />
         </label>
         <label className="field">
-          Realm
-          <input value={realm} onChange={(e) => setRealm(e.target.value)} maxLength={64} required />
+          Game version
+          <select value={gameVersion} onChange={(e) => setGameVersion(e.target.value)}>
+            {games.map((g) => (
+              <option key={g.gameVersion}>{g.gameVersion}</option>
+            ))}
+          </select>
+        </label>
+        <RegionSelect regions={shownRegions} value={region} onChange={setRegion} />
+        <label className="field">
+          Server
+          <select value={realm} onChange={(e) => setRealm(e.target.value)} required>
+            {servers.map((server) => (
+              <option key={server}>{server}</option>
+            ))}
+          </select>
+          {!servers.includes(guild.realm) && guild.gameVersion === gameVersion && (
+            <small className="muted">
+              “{guild.realm}” is not a server of this version: pick one and save.
+            </small>
+          )}
         </label>
         <label className="field">
           Faction
           <select value={faction} onChange={(e) => setFaction(e.target.value as Faction)}>
-            <option value="ALLIANCE">Alliance</option>
-            <option value="HORDE">Horde</option>
-          </select>
-        </label>
-        <label className="field">
-          Game version
-          <select value={gameVersion} onChange={(e) => setGameVersion(e.target.value)}>
-            {GAME_VERSIONS.map((version) => (
-              <option key={version}>{version}</option>
+            {factions.map((f) => (
+              <option key={f.id} value={f.id}>
+                {f.label}
+              </option>
             ))}
           </select>
         </label>
-        <RegionSelect regions={regions} value={region} onChange={setRegion} />
       </div>
       <div className="form-actions">
         <button type="submit" className="btn btn-primary">

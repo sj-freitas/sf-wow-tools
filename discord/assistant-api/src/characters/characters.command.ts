@@ -7,7 +7,7 @@ import {
   getStringOption,
   type DiscordInteraction,
 } from '../bot/discord-interaction.types';
-import { isWowClass } from '../game/wow-class';
+import { isWowClass } from '../game/games';
 import { formatCharacterName, parseCharacterName } from './character-name';
 import { CharactersService, type CharacterOwner } from './characters.service';
 import type { Role } from '@prisma/client';
@@ -57,6 +57,8 @@ export class CharactersCommand {
     if (result === 'last-name-required') {
       return "This guild's game version needs a last name: use `Name-Lastname`.";
     }
+    if (result === 'unknown-class')
+      return `This guild's game version has no ${characterClass} class.`;
     if (result === 'duplicate') return `You already have a character named ${label}.`;
     return `Added ${label} (${characterClass}, ${ROLE_LABELS[role]}).`;
   }

@@ -61,6 +61,20 @@ describe('CharactersService last name rule', () => {
       assert.equal(created.length, 0);
     });
 
+    it('rejects a class the game version does not have, and stores nothing', async () => {
+      assert.equal(await service.add(owner, { ...newCharacter, class: 'Bard' }), 'unknown-class');
+      assert.equal(
+        await service.addToGuild('g', 'u', { ...newCharacter, class: 'Bard' }),
+        'unknown-class',
+      );
+      assert.equal(created.length, 0);
+    });
+
+    it('accepts any class for a game version we know nothing about', async () => {
+      gameVersion = 'Other';
+      assert.equal(await service.add(owner, { ...newCharacter, class: 'Bard' }), 'created');
+    });
+
     it('applies to characters added from the backoffice too', async () => {
       assert.equal(
         await service.addToGuild('g', 'u', { ...newCharacter, lastName: '' }),

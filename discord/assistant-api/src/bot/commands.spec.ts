@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import commands from './commands.json';
+import { games } from '../game/games';
 
 /** Discord rejects the whole registration if any command or option breaks these limits. */
 const NAME = /^[-_\p{L}\p{N}]{1,32}$/u;
@@ -65,4 +66,15 @@ describe('commands.json (Discord limits)', () => {
       }
     });
   }
+});
+
+describe('commands.json and the game configs', () => {
+  it('offers, for /character-add, exactly the classes the game versions have', () => {
+    const add = commands.find((command) => command.name === 'character-add');
+    const choices = (add?.options as { name: string; choices?: { value: string }[] }[]).find(
+      (option) => option.name === 'class',
+    )?.choices;
+    const inGames = new Set(games().flatMap((game) => Object.keys(game.classes)));
+    assert.deepEqual(new Set(choices?.map((choice) => choice.value)), inGames);
+  });
 });

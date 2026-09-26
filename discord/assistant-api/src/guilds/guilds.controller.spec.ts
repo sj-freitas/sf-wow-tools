@@ -16,6 +16,7 @@ describe('GuildsController role mappings', () => {
   let member: boolean;
   let mapped: unknown[][];
   let homeWrites: unknown[][];
+  let created: unknown[][];
   let controller: GuildsController;
 
   beforeEach(() => {
@@ -23,6 +24,7 @@ describe('GuildsController role mappings', () => {
     member = true;
     mapped = [];
     homeWrites = [];
+    created = [];
     const guildAccess = {
       find: async () => (member ? { isAdmin: false, isOfficer: false } : null),
       assertOfficer: async () => {
@@ -30,6 +32,7 @@ describe('GuildsController role mappings', () => {
       },
     } as unknown as GuildAccessService;
     const guilds = {
+      create: async (...args: unknown[]) => void created.push(args),
       setRoleMapping: async (...args: unknown[]) => void mapped.push(args),
       getHome: async () => ({ markdown: null, updatedAt: null, updatedBy: null }),
       setHome: async (...args: unknown[]) => void homeWrites.push(args),
@@ -101,6 +104,53 @@ describe('GuildsController role mappings', () => {
       officer = false;
       await assert.rejects(controller.setHome(req, 'g', { markdown: '# Hi' }), ForbiddenException);
       assert.equal(homeWrites.length, 1);
+    });
+  });
+
+  describe('guild details follow the game config', () => {
+    const details = {
+      name: 'Relic Hunters',
+      realm: 'PVE',
+      faction: 'ALLIANCE',
+      gameVersion: 'Forever',
+      region: 'EU',
+      discordServerIds: ['123456789012345678'],
+    };
+
+    it('accepts a server, faction and region the version lists', async () => {
+      await controller.create(req, details);
+      assert.equal(created.length, 1);
+    });
+
+    it('refuses a server the version does not list for that region', async () => {
+      await assert.rejects(
+        async () => controller.create(req, { ...details, realm: 'Firemaw' }),
+        /must be one of RP, PVP, PVE, Hardcore for Forever in EU/,
+      );
+      assert.equal(created.length, 0);
+    });
+
+    it('refuses an unknown version and an unknown region', async () => {
+      await assert.rejects(
+        async () => controller.create(req, { ...details, gameVersion: 'Retail' }),
+        /game version/,
+      );
+      await assert.rejects(
+        async () => controller.create(req, { ...details, region: 'MARS' }),
+        /region must be/,
+      );
+    });
+
+    it('sends the game configs to the backoffice with the setup info', () => {
+      const { games } = controller.setupInfo();
+      assert.equal(games[0].gameVersion, 'Forever');
+      assert.deepEqual(Object.keys(games[0].factions), ['Alliance', 'Horde']);
+      assert.deepEqual(games[0].factions.Alliance.races['Night Elf'].classes, [
+        'Druid',
+        'Hunter',
+        'Priest',
+      ]);
+      assert.deepEqual(games[0].allowedServers.EU, ['RP', 'PVP', 'PVE', 'Hardcore']);
     });
   });
 });

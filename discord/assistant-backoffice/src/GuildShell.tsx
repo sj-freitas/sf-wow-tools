@@ -2,6 +2,7 @@ import { useEffect, useRef, type ReactNode } from 'react';
 import { Link, NavLink, Navigate, Route, Routes, useParams } from 'react-router-dom';
 import { bannerUrl } from './api';
 import { CreateGuildPage } from './CreateGuildPage';
+import { GamesContext } from './game';
 import { subscribeEvents } from './events';
 import { canConfigure } from './guildAccess';
 import { guildPath } from './guildPath';
@@ -57,26 +58,28 @@ export function GuildShell({ guilds, setup, currentUser, onGuildsChanged }: Prop
   );
 
   return (
-    <Routes>
-      <Route index element={<LastGuildRedirect guilds={guilds} />} />
-      <Route path="overview" element={<LandingPage guilds={guilds} setup={setup} />} />
-      <Route
-        path="guilds/create"
-        element={<CreateGuildPage setup={setup} onCreated={onGuildsChanged} />}
-      />
-      <Route
-        path=":version/:region/:realm/:guildSlug/*"
-        element={
-          <GuildRoutes
-            guilds={guilds}
-            setup={setup}
-            currentUser={currentUser}
-            onGuildsChanged={onGuildsChanged}
-          />
-        }
-      />
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    <GamesContext.Provider value={setup.games}>
+      <Routes>
+        <Route index element={<LastGuildRedirect guilds={guilds} />} />
+        <Route path="overview" element={<LandingPage guilds={guilds} setup={setup} />} />
+        <Route
+          path="guilds/create"
+          element={<CreateGuildPage setup={setup} onCreated={onGuildsChanged} />}
+        />
+        <Route
+          path=":version/:region/:realm/:guildSlug/*"
+          element={
+            <GuildRoutes
+              guilds={guilds}
+              setup={setup}
+              currentUser={currentUser}
+              onGuildsChanged={onGuildsChanged}
+            />
+          }
+        />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </GamesContext.Provider>
   );
 }
 

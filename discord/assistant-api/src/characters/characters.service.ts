@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { Prisma, type Role } from '@prisma/client';
 import { DiscordOAuthService } from '../auth/discord-oauth.service';
 import { PrismaService } from '../database/prisma.service';
-import { lastNameRequiredMessage, requiresLastName } from '../game/game-version';
+import { getGame, lastNameRequiredMessage, requiresLastName } from '../game/games';
 import { RealtimeService } from '../realtime/realtime.service';
 import type { CharacterName } from './character-name';
 
@@ -32,7 +32,14 @@ interface GuildRef {
   gameVersion: string;
 }
 
-export type AddResult = 'created' | 'duplicate' | 'no-guild' | 'last-name-required';
+export type AddResult =
+  'created' | 'duplicate' | 'no-guild' | 'last-name-required' | 'unknown-class';
+
+/** Whether a class exists in the guild's version of the game (a version we know nothing of accepts any). */
+const classInGame = (gameVersion: string, characterClass: string): boolean => {
+  const game = getGame(gameVersion);
+  return !game || Object.hasOwn(game.classes, characterClass);
+};
 
 export interface CharacterSummary extends CharacterName {
   class: string;
@@ -103,7 +110,11 @@ export class CharactersService {
   }
 
   async update(characterId: string, patch: CharacterUpdate): Promise<void> {
-    if (patch.firstName !== undefined || patch.lastName !== undefined) {
+    if (
+      patch.firstName !== undefined ||
+      patch.lastName !== undefined ||
+      patch.class !== undefined
+    ) {
       const character = await this.prisma.character.findUnique({
         where: { id: characterId },
         select: { player: { select: { guild: { select: { gameVersion: true } } } } },
@@ -112,8 +123,15 @@ export class CharactersService {
         throw new NotFoundException('Character not found');
       }
       const { gameVersion } = character.player.guild;
-      if (requiresLastName(gameVersion) && !patch.lastName) {
+      if (
+        (patch.firstName !== undefined || patch.lastName !== undefined) &&
+        requiresLastName(gameVersion) &&
+        !patch.lastName
+      ) {
         throw new BadRequestException(lastNameRequiredMessage(gameVersion));
+      }
+      if (patch.class !== undefined && !classInGame(gameVersion, patch.class)) {
+        throw new BadRequestException(`${gameVersion} has no ${patch.class} class.`);
       }
     }
 
@@ -153,6 +171,7 @@ export class CharactersService {
     if (requiresLastName(guild.gameVersion) && character.lastName === '') {
       return 'last-name-required';
     }
+    if (!classInGame(guild.gameVersion, character.class)) return 'unknown-class';
 
     const player = await this.prisma.player.upsert({
       where: { guildId_discordUserId: { guildId: guild.id, discordUserId } },

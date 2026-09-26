@@ -23,12 +23,12 @@ import type { AuthenticatedRequest } from '../auth/auth.types';
 import { GuildAccessService } from '../auth/guild-access.service';
 import { APP_CONFIG } from '../config/app.config';
 import { isRegion, REGIONS, regionOptions } from '../config/regions';
+import { games, getGame, isGameVersion, serversOf } from '../game/games';
 import { MAX_BANNER_BYTES, readBody } from './banner';
 import { RanksService, type RanksDto } from './ranks.service';
 import {
   GUILD_ROLE_KEYS,
   GuildsService,
-  isGameVersion,
   type GuildRoleKey,
   type CreateGuildInput,
   type EligibleServersDto,
@@ -75,6 +75,8 @@ export class GuildsController {
       adminRoleName: APP_CONFIG.adminRoleName,
       botInviteUrl: `https://discord.com/oauth2/authorize?${params.toString()}`,
       regions: regionOptions(),
+      // What the forms are built from: versions, their servers per region, factions, races and classes.
+      games: games(),
     };
   }
 
@@ -312,9 +314,27 @@ function parseGuildDetails(body: Payload): GuildDetails {
   if (!isRegion(body.region)) {
     throw new BadRequestException(`region must be one of ${Object.keys(REGIONS).join(', ')}`);
   }
+  const { gameVersion, region } = body;
+  const factions = Object.keys(getGame(gameVersion)?.factions ?? {}).map((name) =>
+    name.toUpperCase(),
+  );
+  if (!factions.includes(body.faction)) {
+    throw new BadRequestException(`${gameVersion} has no ${body.faction.toLowerCase()} faction`);
+  }
+  // The server is one the game's config lists for that region.
+  const realm = text('realm');
+  const servers = serversOf(gameVersion, region);
+  if (servers.length === 0) {
+    throw new BadRequestException(`${gameVersion} is not available in ${region}`);
+  }
+  if (!servers.includes(realm)) {
+    throw new BadRequestException(
+      `The server must be one of ${servers.join(', ')} for ${gameVersion} in ${region}`,
+    );
+  }
   return {
     name: text('name'),
-    realm: text('realm'),
+    realm,
     faction: body.faction,
     gameVersion: body.gameVersion,
     region: body.region,

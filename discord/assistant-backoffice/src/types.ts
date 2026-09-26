@@ -116,30 +116,33 @@ export interface SetupInfo {
   adminRoleName: string;
   botInviteUrl: string;
   regions: Region[];
+  /** The versions of the game the API knows (src/game/<version>/config.ts). */
+  games: GameConfig[];
 }
 
-// Keep in sync with assistant-api/src/game/game-version.ts.
-export const GAME_VERSIONS = ['Forever'] as const;
+/** A specialization of a class (still being defined). */
+export interface SpecializationConfig {
+  roles: string[];
+  raidBuffs?: string[];
+  groupBuffs?: string[];
+}
 
-export const requiresLastName = (gameVersion: string): boolean => gameVersion === 'Forever';
+/** One version of the game, as the API sends it: what the guild and character forms render from. */
+export interface GameConfig {
+  gameVersion: string;
+  rules: { lastNameRequired: boolean };
+  /** Servers a guild can be on, per region id; a region that is missing is not available. */
+  allowedServers: Record<string, string[]>;
+  /** Every class, by name. */
+  classes: Record<string, { specializations: Record<string, SpecializationConfig> }>;
+  /** By name ("Alliance", "Horde"), each with its races and the classes they can be. */
+  factions: Record<string, { races: Record<string, { classes: string[] }> }>;
+}
 
 export interface NewGuildInput extends GuildDetails {
   discordServerIds: string[];
   mainServerId: string;
 }
-
-// Keep in sync with assistant-api/src/game/wow-class.ts.
-export const WOW_CLASSES = [
-  'Druid',
-  'Hunter',
-  'Mage',
-  'Paladin',
-  'Priest',
-  'Rogue',
-  'Shaman',
-  'Warlock',
-  'Warrior',
-] as const;
 
 export const ROLE_LABELS: Record<Role, string> = {
   TANK: 'Tank',

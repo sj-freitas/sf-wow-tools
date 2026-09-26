@@ -517,15 +517,41 @@ ephemeral (only you see them).
 - Casing is normalized: first letter upper case, the rest lower case (`aRTHAS-menethil` →
   `Arthas Menethil`), and text is stored NFC-normalized.
 - The last name is optional in general but **required for game versions that say so**: Forever
-  requires it (`GAME_VERSIONS`/`RULES` in `src/game/game-version.ts`). This is enforced by the API
+  requires it (`rules.lastNameRequired` in `src/game/forever/config.ts`). This is enforced by the API
   for the bot and the backoffice, on create and on rename. The database itself only guarantees the
   minimum lengths (CHECK constraints on `characters.first_name`/`last_name`), since a CHECK can't
   read the guild's game version from another table.
 
 You can mark several characters as `main`.
 
-After changing `src/bot/commands.json`, run `npm run commands:register`. Class choices live in both
-`commands.json` and `src/game/wow-class.ts` — keep them in sync.
+After changing `src/bot/commands.json`, run `npm run commands:register`. The class choices of
+`/character-add` are a fixed list in `commands.json` (Discord needs them at registration); a test checks
+that it matches the classes of the game versions in `src/game/*/config.ts`.
+
+## Game versions
+
+Each version of the game is a directory, `src/game/<version>/`, with a `config.ts` that default-exports
+a config built with `defineGame` (`src/game/game-config.ts` has the interface). The versions are **found
+by scanning those directories** at start-up (`src/game/games.ts`), so adding a version is adding a
+directory; a directory without a config is ignored, and an invalid config stops the app with what is
+wrong. The shape (volatile: expect it to grow):
+
+- `gameVersion`: the name guilds store (`Forever`), unique.
+- `rules`: `{ lastNameRequired }`.
+- `allowedServers`: the servers a guild can be on, **per region** (`EU`, `US`, the regions of
+  `config/regions.ts`); a region that is missing is not available for that version.
+- `classes`: every class, by name, each with its `specializations` (`{}` until defined; a specialization
+  has `roles` and optional `raidBuffs`/`groupBuffs`).
+- `factions`: by name (`Alliance`, `Horde`), each with its `races`, and each race with the `classes` it
+  can be. **A race can only list classes that are keys of `classes`**: `defineGame` makes that a compile
+  error, and the loader checks it again for the config it finds.
+
+What uses it: the guild's game version (the API refuses an unknown version, a faction the version does
+not have, a region it is not in, or a server it does not list for that region), the character class (a
+class the guild's version does not have is refused, from the bot and the backoffice), the last-name
+rule, and the backoffice: `GET /api/guilds/setup-info` includes `games` (every config as JSON), and the
+guild forms (version, region, **server** from `allowedServers`, faction) and the character form (race
+narrows the classes it can be) render from it. Race is not stored on characters yet.
 
 ## Database
 
