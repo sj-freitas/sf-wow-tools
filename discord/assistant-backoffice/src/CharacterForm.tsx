@@ -30,25 +30,32 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
   const games = useGames();
   const game = gameOf(games, guild.gameVersion);
   const lastNameRequired = requiresLastName(games, guild.gameVersion);
-  // The races of the guild's faction, and which classes each can be. Race only narrows the classes
-  // (it is not stored yet); without one, every class of the version is offered.
+  // The races of the guild's faction, and which classes each can be. Adding a character starts with
+  // the race: the class is locked until one is chosen, and then offers what that race can be. Race
+  // is not stored yet, so editing a character (whose race is unknown) offers every class.
   const races = racesOf(game, guild.faction);
   const [race, setRace] = useState('');
   const allClasses = classNamesOf(game);
-  const classOptions = race
-    ? (races.find((r) => r.race === race)?.classes ?? allClasses)
-    : allClasses;
+  const classLocked = !initial && races.length > 0 && race === '';
+  const classOptions = classLocked
+    ? []
+    : race
+      ? (races.find((r) => r.race === race)?.classes ?? allClasses)
+      : allClasses;
   // Also shown when editing a character that already has one, so saving can't silently drop it.
   const showLastName = lastNameRequired || Boolean(initial?.lastName);
 
   const [discordUserId, setDiscordUserId] = useState(currentUser.discordId);
   const [firstName, setFirstName] = useState(initial?.firstName ?? '');
   const [lastName, setLastName] = useState(initial?.lastName ?? '');
-  const [chosenClass, setCharacterClass] = useState<string>(initial?.class ?? '');
-  // A class the race (or version) does not offer falls back to the first one that fits.
-  const characterClass = classOptions.includes(chosenClass)
-    ? chosenClass
-    : (classOptions[0] ?? chosenClass);
+  const [characterClass, setCharacterClass] = useState<string>(initial?.class ?? '');
+
+  /** Changing the race keeps the class only if the new race can be it; otherwise it is cleared. */
+  const changeRace = (next: string) => {
+    setRace(next);
+    const allowed = next === '' ? allClasses : (races.find((r) => r.race === next)?.classes ?? []);
+    setCharacterClass((current) => (allowed.includes(current) ? current : ''));
+  };
   const [roles, setRoles] = useState<Role[]>(initial?.roles ?? ['TANK']);
   const [level, setLevel] = useState(initial ? String(initial.level) : '');
   const [isMain, setIsMain] = useState(initial?.isMain ?? false);
@@ -129,18 +136,33 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
         {races.length > 0 && (
           <label className="field">
             Race
-            <select value={race} onChange={(e) => setRace(e.target.value)}>
-              <option value="">Any (show every class)</option>
+            <select value={race} onChange={(e) => changeRace(e.target.value)} required={!initial}>
+              <option value="" disabled={!initial}>
+                {initial ? 'Any (show every class)' : 'Choose a race…'}
+              </option>
               {races.map((r) => (
                 <option key={r.race}>{r.race}</option>
               ))}
             </select>
-            <small className="muted">Narrows the classes below to what the race can be.</small>
+            <small className="muted">
+              {initial
+                ? 'Narrows the classes below to what the race can be.'
+                : 'Choose the race first: it decides which classes you can pick.'}
+            </small>
           </label>
         )}
         <label className="field">
           Class
-          <select value={characterClass} onChange={(e) => setCharacterClass(e.target.value)}>
+          <select
+            value={characterClass}
+            onChange={(e) => setCharacterClass(e.target.value)}
+            disabled={classLocked}
+            required
+            title={classLocked ? 'Choose a race first' : undefined}
+          >
+            <option value="" disabled>
+              {classLocked ? 'Choose a race first' : 'Choose a class…'}
+            </option>
             {classOptions.map((c) => (
               <option key={c}>{c}</option>
             ))}
