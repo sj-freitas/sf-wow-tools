@@ -2,6 +2,7 @@ import { Fragment, useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { deleteCharacter, fetchPlayers, fetchRanks, refreshPlayerNames } from './api';
 import { CharacterForm } from './CharacterForm';
+import { CopyableName } from './CopyableName';
 import { subscribeEvents } from './events';
 import { playerLabel } from './format';
 import { ROLE_LABELS, type Guild, type Player, type Ranks, type User } from './types';
@@ -142,17 +143,14 @@ export function RosterPage({ guild, currentUser }: Props) {
                 <Fragment key={character.id}>
                   <tr>
                     <td>
-                      {`${character.firstName} ${character.lastName}`.trim()}{' '}
-                      {character.isMain && <span className="badge badge-main">Main</span>}
+                      {`${character.firstName} ${character.lastName}`.trim()}
+                      {character.isMain && <span className="badge badge-main main-pill">Main</span>}
                     </td>
                     <td>{character.class}</td>
                     <td>{character.roles.map((role) => ROLE_LABELS[role]).join(', ')}</td>
                     <td>{character.level}</td>
                     <td>
-                      {playerLabel(player)}
-                      {playerLabel(player) !== player.discordUserId && (
-                        <span className="muted"> · {player.discordUserId}</span>
-                      )}
+                      <CopyableName label={playerLabel(player)} id={player.discordUserId} />
                     </td>
                     <td>{ranks[player.discordUserId]?.join(', ') ?? '—'}</td>
                     <td className="cell-actions">

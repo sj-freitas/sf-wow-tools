@@ -42,15 +42,117 @@ export default defineGame({
           raidBuffs: ['Ranged DPS', 'Healers'],
           groupBuffs: ['Ranged DPS'],
         },
+        Feral: {
+          roles: ['Melee DPS', 'Tank'],
+        },
+        Restoration: {
+          roles: ['Healer'],
+        },
       },
     },
-    Hunter: { specializations: {} },
-    Mage: { specializations: {} },
-    Paladin: { specializations: {} },
-    Priest: { specializations: {} },
-    Rogue: { specializations: {} },
-    Shaman: { specializations: {} },
-    Warlock: { specializations: {} },
-    Warrior: { specializations: {} },
+    Hunter: {
+      specializations: {
+        Survival: {
+          roles: ['Ranged DPS'],
+        },
+        Marksmanship: {
+          roles: ['Ranged DPS'],
+        },
+        BeastMastery: {
+          roles: ['Ranged DPS'],
+        },
+      },
+    },
+    Mage: {
+      specializations: {
+        Arcane: {
+          roles: ['Ranged DPS'],
+        },
+        Fire: {
+          roles: ['Ranged DPS'],
+        },
+        Frost: {
+          roles: ['Ranged DPS'],
+        },
+      },
+    },
+    Paladin: {
+      specializations: {
+        Protection: {
+          roles: ['Tank'],
+        },
+        Holy: {
+          roles: ['Healer'],
+        },
+        Retribution: {
+          roles: ['Melee DPS'],
+        },
+      },
+    },
+    Priest: {
+      specializations: {
+        Shadow: {
+          roles: ['Ranged DPS'],
+        },
+        Holy: {
+          roles: ['Healer'],
+        },
+        Discipline: {
+          roles: ['Healer'],
+        },
+      },
+    },
+    Rogue: {
+      specializations: {
+        Assassination: {
+          roles: ['Melee DPS'],
+        },
+        Combat: {
+          roles: ['Melee DPS'],
+        },
+        Subtlety: {
+          roles: ['Melee DPS'],
+        },
+      },
+    },
+    Shaman: {
+      specializations: {
+        Elemental: {
+          roles: ['Ranged DPS'],
+        },
+        Enhancement: {
+          roles: ['Melee DPS'],
+        },
+        Restoration: {
+          roles: ['Healer'],
+        },
+      },
+    },
+    Warlock: {
+      specializations: {
+        Affliction: {
+          roles: ['Ranged DPS'],
+        },
+        Demonology: {
+          roles: ['Ranged DPS'],
+        },
+        Destruction: {
+          roles: ['Ranged DPS'],
+        },
+      },
+    },
+    Warrior: {
+      specializations: {
+        Arms: {
+          roles: ['Melee DPS'],
+        },
+        Fury: {
+          roles: ['Melee DPS'],
+        },
+        Protection: {
+          roles: ['Tank'],
+        },
+      },
+    },
   },
 });

@@ -33,7 +33,11 @@ describe('CharactersService last name rule', () => {
       player: { upsert: async () => ({ id: 'p' }) },
       character: {
         create: async (args: any) => void created.push(args.data),
-        findUnique: async () => ({ player: { guild: { gameVersion } } }),
+        findUnique: async () => ({
+          class: 'Paladin',
+          roles: ['TANK'],
+          player: { guild: { gameVersion } },
+        }),
         update: async (args: any) => {
           updated.push(args.data);
           return { player: { guildId: 'g' } };
@@ -75,6 +79,28 @@ describe('CharactersService last name rule', () => {
       assert.equal(await service.add(owner, { ...newCharacter, class: 'Bard' }), 'created');
     });
 
+    it('rejects roles the class cannot play in the game version, and accepts the ones it can', async () => {
+      // A Paladin can be Protection (Tank), Holy (Healer) or Retribution (Melee DPS), not a Ranged DPS.
+      assert.equal(
+        await service.add(owner, { ...newCharacter, roles: ['RANGED_DPS'] }),
+        'role-not-for-class',
+      );
+      assert.equal(
+        await service.add(owner, { ...newCharacter, roles: ['TANK', 'RANGED_DPS'] }),
+        'role-not-for-class',
+      );
+      assert.equal(created.length, 0);
+      assert.equal(
+        await service.add(owner, { ...newCharacter, roles: ['HEALER', 'MELEE_DPS'] }),
+        'created',
+      );
+    });
+
+    it('does not restrict roles for a game version we know nothing about', async () => {
+      gameVersion = 'Other';
+      assert.equal(await service.add(owner, { ...newCharacter, roles: ['RANGED_DPS'] }), 'created');
+    });
+
     it('applies to characters added from the backoffice too', async () => {
       assert.equal(
         await service.addToGuild('g', 'u', { ...newCharacter, lastName: '' }),
@@ -90,6 +116,25 @@ describe('CharactersService last name rule', () => {
   });
 
   describe('renaming', () => {
+    it('checks the roles when they change, against the character’s class', async () => {
+      await assert.rejects(
+        service.update('c', { roles: ['RANGED_DPS'] }),
+        /A Paladin in Forever can be Tank, Healer, Melee DPS, not Ranged DPS/,
+      );
+      await service.update('c', { roles: ['HEALER'] });
+      assert.deepEqual(updated.at(-1).roles, ['HEALER']);
+    });
+
+    it('checks the current roles when the class changes, and the new roles with the new class', async () => {
+      // The character is a Paladin Tank: as a Mage (Ranged DPS only) that Tank role no longer fits.
+      await assert.rejects(
+        service.update('c', { class: 'Mage' }),
+        /A Mage in Forever can be Ranged DPS, not Tank/,
+      );
+      await service.update('c', { class: 'Mage', roles: ['RANGED_DPS'] });
+      assert.equal(updated.at(-1).class, 'Mage');
+    });
+
     it('lets a rename keep a last name', async () => {
       await service.update('c', { firstName: 'Arthas', lastName: 'Menethil' });
       assert.equal(updated.length, 1);

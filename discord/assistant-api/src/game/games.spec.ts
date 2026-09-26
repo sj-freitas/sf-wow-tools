@@ -14,6 +14,7 @@ import {
   lastNameRequiredMessage,
   loadGames,
   requiresLastName,
+  rolesOfClass,
   serversOf,
 } from './games';
 
@@ -165,6 +166,20 @@ describe('asking about a version', () => {
     assert.deepEqual(classesOf('Retail'), []);
     assert.equal(isWowClass('Warrior'), true);
     assert.equal(isWowClass('Bard'), false);
+  });
+
+  it('gives the roles of a class: those of its specializations, in the usual order', () => {
+    assert.deepEqual(rolesOfClass('Forever', 'Druid'), [
+      'Tank',
+      'Healer',
+      'Melee DPS',
+      'Ranged DPS',
+    ]);
+    assert.deepEqual(rolesOfClass('Forever', 'Mage'), ['Ranged DPS']);
+    assert.deepEqual(rolesOfClass('Forever', 'Paladin'), ['Tank', 'Healer', 'Melee DPS']);
+    // Nothing is known about an unknown class or version: every role is allowed.
+    assert.deepEqual(rolesOfClass('Forever', 'Bard'), []);
+    assert.deepEqual(rolesOfClass('Retail', 'Mage'), []);
   });
 
   it('lists the servers of a version per region, none when it is not there', () => {

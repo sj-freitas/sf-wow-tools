@@ -550,8 +550,12 @@ What uses it: the guild's game version (the API refuses an unknown version, a fa
 not have, a region it is not in, or a server it does not list for that region), the character class (a
 class the guild's version does not have is refused, from the bot and the backoffice), the last-name
 rule, and the backoffice: `GET /api/guilds/setup-info` includes `games` (every config as JSON), and the
-guild forms (version, region, **server** from `allowedServers`, faction) and the character form (race
-narrows the classes it can be) render from it. Race is not stored on characters yet.
+guild forms (version, region, **server** from `allowedServers`, faction) and the character form render
+from it: **race → class → roles**, each locked until the one before it is chosen, and each narrowed by it
+(the roles of a class are those of its specializations; changing the race or class keeps what still
+fits and clears the rest). The API also refuses roles a class cannot play in that version, from the bot and
+the backoffice (a class whose specializations are not defined yet allows every role). Race is not stored on
+characters yet.
 
 ## Load from armory (TEST)
 

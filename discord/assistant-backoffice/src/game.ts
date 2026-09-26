@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react';
-import type { Faction, GameConfig } from './types';
+import { ROLE_LABELS, type Faction, type GameConfig, type Role } from './types';
 
 /** The game versions the API knows, provided once for every form that needs them. */
 export const GamesContext = createContext<GameConfig[]>([]);
@@ -22,6 +22,16 @@ export const factionsOf = (game: GameConfig | undefined): { id: Faction; label: 
     id: label.toUpperCase() as Faction,
     label,
   }));
+
+/**
+ * The roles a class can play in a version: those of its specializations. Empty when the version does
+ * not define any for the class yet, which means nothing is known and every role is allowed.
+ */
+export function rolesOfClass(game: GameConfig | undefined, className: string): Role[] {
+  const specializations = Object.values(game?.classes[className]?.specializations ?? {});
+  const names = new Set(specializations.flatMap((spec) => spec.roles));
+  return (Object.keys(ROLE_LABELS) as Role[]).filter((role) => names.has(ROLE_LABELS[role]));
+}
 
 /** Every class of a version, by name. */
 export const classNamesOf = (game: GameConfig | undefined): string[] =>

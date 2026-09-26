@@ -1393,3 +1393,8 @@ label.btn.disabled {
 .copy-name:hover strong {
   text-decoration: underline dotted;
 }
+
+/* A little room between a character's name and its Main pill. */
+.main-pill {
+  margin-left: 0.6rem;
+}

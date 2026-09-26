@@ -1,7 +1,7 @@
 import { existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import type { RegionId } from '../config/regions';
-import { gameConfigProblems, type GameConfig } from './game-config';
+import { GAME_ROLES, gameConfigProblems, type GameConfig, type GameRole } from './game-config';
 
 /**
  * The versions of the game, found by looking at the directories next to this file: every
@@ -53,6 +53,17 @@ export const isGameVersion = (value: unknown): value is string =>
 /** The classes of a version (empty for an unknown one). */
 export const classesOf = (gameVersion: string): string[] =>
   Object.keys(getGame(gameVersion)?.classes ?? {});
+
+/**
+ * The roles a class can play in a version: those of its specializations. Empty when the version
+ * has not defined any specialization for the class yet (or does not have the class), which means
+ * nothing is known and every role is allowed.
+ */
+export function rolesOfClass(gameVersion: string, characterClass: string): GameRole[] {
+  const specializations = getGame(gameVersion)?.classes[characterClass]?.specializations ?? {};
+  const roles = new Set(Object.values(specializations).flatMap((spec) => spec.roles));
+  return GAME_ROLES.filter((role) => roles.has(role));
+}
 
 /** Whether any version of the game has this class. */
 export const isWowClass = (value: string): boolean =>

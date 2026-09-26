@@ -3,7 +3,15 @@ import { createCharacter, updateCharacter } from './api';
 import { MultiSelect } from './MultiSelect';
 import { fetchArmoryCharacter } from './api';
 import { CopyableName } from './CopyableName';
-import { classNamesOf, gameOf, racesOf, requiresLastName, useArmory, useGames } from './game';
+import {
+  classNamesOf,
+  gameOf,
+  racesOf,
+  requiresLastName,
+  rolesOfClass,
+  useArmory,
+  useGames,
+} from './game';
 import { PlayerPicker } from './PlayerPicker';
 import { ROLE_LABELS, type Character, type Guild, type Role, type User } from './types';
 
@@ -51,14 +59,35 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
   const [firstName, setFirstName] = useState(initial?.firstName ?? '');
   const [lastName, setLastName] = useState(initial?.lastName ?? '');
   const [characterClass, setCharacterClass] = useState<string>(initial?.class ?? '');
+  const [roles, setRoles] = useState<Role[]>(initial?.roles ?? []);
+
+  // Roles depend on the class the way the class depends on the race: locked until a class is
+  // chosen, then only what the class can play (every role when the version does not say).
+  const roleOptionsFor = (className: string) => {
+    const allowed = rolesOfClass(game, className);
+    return allowed.length > 0
+      ? ROLE_OPTIONS.filter((option) => allowed.includes(option.value))
+      : ROLE_OPTIONS;
+  };
+  const roleLocked = characterClass === '';
+  const roleOptions = roleLocked ? [] : roleOptionsFor(characterClass);
+
+  /** Changing the class keeps the roles the new class can play and drops the others. */
+  const applyClass = (next: string) => {
+    setCharacterClass(next);
+    setRoles((current) =>
+      next === ''
+        ? []
+        : current.filter((role) => roleOptionsFor(next).some((option) => option.value === role)),
+    );
+  };
 
   /** Changing the race keeps the class only if the new race can be it; otherwise it is cleared. */
   const changeRace = (next: string) => {
     setRace(next);
     const allowed = next === '' ? allClasses : (races.find((r) => r.race === next)?.classes ?? []);
-    setCharacterClass((current) => (allowed.includes(current) ? current : ''));
+    applyClass(allowed.includes(characterClass) ? characterClass : '');
   };
-  const [roles, setRoles] = useState<Role[]>(initial?.roles ?? ['TANK']);
   const [level, setLevel] = useState(initial ? String(initial.level) : '');
   const [isMain, setIsMain] = useState(initial?.isMain ?? false);
   const [error, setError] = useState<string | null>(null);
@@ -79,7 +108,7 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
         else if (races.length > 0)
           problems.push(`${found.race} is not a race of this guild's faction`);
         const classFits = className && (!raceEntry || raceEntry.classes.includes(className));
-        setCharacterClass(classFits ? className : '');
+        applyClass(classFits ? className : '');
         if (!className) problems.push(`${guild.gameVersion} has no ${found.class} class`);
         else if (!classFits)
           problems.push(`${found.race} cannot be a ${found.class} in ${guild.gameVersion}`);
@@ -223,7 +252,7 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
           Class
           <select
             value={characterClass}
-            onChange={(e) => setCharacterClass(e.target.value)}
+            onChange={(e) => applyClass(e.target.value)}
             disabled={classLocked}
             required
             title={classLocked ? 'Choose a race first' : undefined}
@@ -239,10 +268,11 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
         <div className="field">
           Roles
           <MultiSelect
-            options={ROLE_OPTIONS}
+            options={roleOptions}
             value={roles}
             onChange={setRoles}
-            placeholder="Select roles"
+            placeholder={roleLocked ? 'Choose a class first' : 'Select roles'}
+            disabled={roleLocked}
           />
         </div>
         <label className="field">

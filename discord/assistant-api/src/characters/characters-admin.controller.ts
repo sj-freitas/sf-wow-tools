@@ -98,6 +98,11 @@ export class CharactersAdminController {
     if (result === 'no-guild') {
       throw new NotFoundException('Guild not found');
     }
+    if (result === 'role-not-for-class') {
+      throw new BadRequestException(
+        "That class cannot play those roles in this guild's game version",
+      );
+    }
     if (result === 'unknown-class') {
       throw new BadRequestException("This guild's game version has no such class");
     }

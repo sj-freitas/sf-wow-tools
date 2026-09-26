@@ -5,10 +5,18 @@ interface Props<T extends string> {
   value: T[];
   onChange: (value: T[]) => void;
   placeholder?: string;
+  /** The button is locked (with `placeholder` as its text). */
+  disabled?: boolean;
 }
 
 /** Dropdown with a checkbox per option; the button shows the current selection. */
-export function MultiSelect<T extends string>({ options, value, onChange, placeholder }: Props<T>) {
+export function MultiSelect<T extends string>({
+  options,
+  value,
+  onChange,
+  placeholder,
+  disabled,
+}: Props<T>) {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
 
@@ -40,6 +48,7 @@ export function MultiSelect<T extends string>({ options, value, onChange, placeh
         className="dropdown-button"
         aria-haspopup="listbox"
         aria-expanded={open}
+        disabled={disabled}
         onClick={() => setOpen((current) => !current)}
       >
         <span className={value.length === 0 ? 'muted' : undefined}>{summary}</span>

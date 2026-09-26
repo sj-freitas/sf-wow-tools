@@ -2,7 +2,8 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { Prisma, type Role } from '@prisma/client';
 import { DiscordOAuthService } from '../auth/discord-oauth.service';
 import { PrismaService } from '../database/prisma.service';
-import { getGame, lastNameRequiredMessage, requiresLastName } from '../game/games';
+import { getGame, lastNameRequiredMessage, requiresLastName, rolesOfClass } from '../game/games';
+import { ROLE_LABELS } from './role-labels';
 import { RealtimeService } from '../realtime/realtime.service';
 import type { CharacterName } from './character-name';
 
@@ -33,7 +34,22 @@ interface GuildRef {
 }
 
 export type AddResult =
-  'created' | 'duplicate' | 'no-guild' | 'last-name-required' | 'unknown-class';
+  | 'created'
+  | 'duplicate'
+  | 'no-guild'
+  | 'last-name-required'
+  | 'unknown-class'
+  | 'role-not-for-class';
+
+/**
+ * The roles that do not fit a class in a version (empty when they all do, or when the version says
+ * nothing about the class's roles).
+ */
+export const rolesNotFor = (gameVersion: string, characterClass: string, roles: Role[]): Role[] => {
+  const allowed = rolesOfClass(gameVersion, characterClass);
+  if (allowed.length === 0) return [];
+  return roles.filter((role) => !allowed.includes(ROLE_LABELS[role]));
+};
 
 /** Whether a class exists in the guild's version of the game (a version we know nothing of accepts any). */
 const classInGame = (gameVersion: string, characterClass: string): boolean => {
@@ -113,11 +129,16 @@ export class CharactersService {
     if (
       patch.firstName !== undefined ||
       patch.lastName !== undefined ||
-      patch.class !== undefined
+      patch.class !== undefined ||
+      patch.roles !== undefined
     ) {
       const character = await this.prisma.character.findUnique({
         where: { id: characterId },
-        select: { player: { select: { guild: { select: { gameVersion: true } } } } },
+        select: {
+          class: true,
+          roles: true,
+          player: { select: { guild: { select: { gameVersion: true } } } },
+        },
       });
       if (!character) {
         throw new NotFoundException('Character not found');
@@ -132,6 +153,16 @@ export class CharactersService {
       }
       if (patch.class !== undefined && !classInGame(gameVersion, patch.class)) {
         throw new BadRequestException(`${gameVersion} has no ${patch.class} class.`);
+      }
+      // Changing either the class or the roles: the roles must still fit the class.
+      if (patch.class !== undefined || patch.roles !== undefined) {
+        const characterClass = patch.class ?? character.class;
+        const misfits = rolesNotFor(gameVersion, characterClass, patch.roles ?? character.roles);
+        if (misfits.length > 0) {
+          throw new BadRequestException(
+            `A ${characterClass} in ${gameVersion} can be ${rolesOfClass(gameVersion, characterClass).join(', ')}, not ${misfits.map((role) => ROLE_LABELS[role]).join(', ')}.`,
+          );
+        }
       }
     }
 
@@ -172,6 +203,9 @@ export class CharactersService {
       return 'last-name-required';
     }
     if (!classInGame(guild.gameVersion, character.class)) return 'unknown-class';
+    if (rolesNotFor(guild.gameVersion, character.class, character.roles).length > 0) {
+      return 'role-not-for-class';
+    }
 
     const player = await this.prisma.player.upsert({
       where: { guildId_discordUserId: { guildId: guild.id, discordUserId } },

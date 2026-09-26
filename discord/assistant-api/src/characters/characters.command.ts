@@ -57,6 +57,9 @@ export class CharactersCommand {
     if (result === 'last-name-required') {
       return "This guild's game version needs a last name: use `Name-Lastname`.";
     }
+    if (result === 'role-not-for-class') {
+      return `A ${characterClass} in this guild's game version cannot be a ${ROLE_LABELS[role]}.`;
+    }
     if (result === 'unknown-class')
       return `This guild's game version has no ${characterClass} class.`;
     if (result === 'duplicate') return `You already have a character named ${label}.`;
