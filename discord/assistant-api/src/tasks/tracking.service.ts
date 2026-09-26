@@ -1,12 +1,16 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
-import type { Prisma, ScheduledTask } from '@prisma/client';
+import type { Prisma, Role, ScheduledTask } from '@prisma/client';
 import { formatCharacterName } from '../characters/character-name';
 import { ROLE_LABELS } from '../characters/role-labels';
 import { PrismaService } from '../database/prisma.service';
-import { DiscordBotService } from '../discord/discord-bot.service';
+import { DiscordBotService, type GuildMemberInfo } from '../discord/discord-bot.service';
 import { describeDiscordError, isDiscordError, UNKNOWN_MESSAGE } from '../discord/discord-errors';
 import {
+  hasRosterTokens,
   hashReactors,
+  hashRoster,
+  parseRosterTokens,
+  type RosterData,
   parseDynamicTokens,
   renderContent,
   trackingKey,
@@ -14,6 +18,7 @@ import {
   type Reactor,
   type ReactorCharacter,
 } from './dynamic-content';
+import type { ShowRosterEntry } from './show-sandbox';
 import {
   isLive,
   liveMessageOf,
@@ -24,6 +29,8 @@ import {
 
 /** Channels asked at once while looking for a message by its id. */
 const SEARCH_PARALLEL = 8;
+/** The nicknames and roles of a guild's players are kept this long. */
+const MEMBER_INFO_TTL_MS = 5 * 60 * 1000;
 /** Most people whose server nickname is looked up in one go (the rest show their Discord name). */
 const MAX_NICKNAME_LOOKUPS = 100;
 
@@ -303,20 +310,140 @@ export class TrackingService {
       },
     });
     const byPerson = new Map(
-      players.map((player) => [
-        player.discordUserId,
-        player.characters.map((character): ReactorCharacter => ({
-          name: formatCharacterName(character),
-          firstName: character.firstName,
-          lastName: character.lastName,
-          isMain: character.isMain,
-          class: character.class,
-          roles: character.roles.map((role) => ROLE_LABELS[role]),
-          level: character.level,
-        })),
-      ]),
+      players.map((player) => [player.discordUserId, player.characters.map(toCharacter)]),
     );
     return reactors.map((reactor) => ({ ...reactor, characters: byPerson.get(reactor.id) ?? [] }));
+  }
+
+  /**
+   * Every character of the guild, each with who plays it, sorted by name (so the same roster
+   * always gives the same list, and the same hash). This is what `{{roster …}}` tags work with.
+   */
+  async loadRoster(guildId: string): Promise<ShowRosterEntry[]> {
+    const players = await this.prisma.player.findMany({
+      where: { guildId },
+      select: {
+        discordUserId: true,
+        discordUsername: true,
+        discordDisplayName: true,
+        characters: {
+          select: {
+            firstName: true,
+            lastName: true,
+            isMain: true,
+            class: true,
+            roles: true,
+            level: true,
+          },
+        },
+      },
+    });
+    const withCharacters = players.filter((player) => player.characters.length > 0);
+    const members = await this.memberInfo(
+      guildId,
+      withCharacters.map((player) => player.discordUserId),
+    );
+    return withCharacters
+      .flatMap((player) => {
+        const name = player.discordDisplayName ?? player.discordUsername ?? player.discordUserId;
+        const member = members.get(player.discordUserId);
+        return player.characters.map((character): ShowRosterEntry => ({
+          ...toCharacter(character),
+          discordUser: {
+            id: player.discordUserId,
+            tag: `<@${player.discordUserId}>`,
+            name,
+            displayName: member?.displayName ?? name,
+            roles: member?.roles ?? [],
+          },
+        }));
+      })
+      .sort(
+        (a, b) => a.name.localeCompare(b.name) || a.discordUser.id.localeCompare(b.discordUser.id),
+      );
+  }
+
+  private readonly memberCache = new Map<
+    string,
+    { at: number; info: Map<string, { displayName?: string; roles: string[] }> }
+  >();
+
+  /**
+   * How the guild's players are in its main server: their nickname there and the names of their
+   * Discord roles. One member listing and one role listing when Discord allows it (the bot's Server
+   * Members Intent), otherwise one lookup per player (at most a hundred). Kept for a few minutes,
+   * so a roster checked every minute does not call Discord every minute. If Discord cannot be
+   * reached, nothing is known and nothing is kept (players show their Discord name and no roles).
+   */
+  private async memberInfo(
+    guildId: string,
+    playerIds: readonly string[],
+  ): Promise<Map<string, { displayName?: string; roles: string[] }>> {
+    const cached = this.memberCache.get(guildId);
+    if (cached && Date.now() - cached.at < MEMBER_INFO_TTL_MS) return cached.info;
+    const info = new Map<string, { displayName?: string; roles: string[] }>();
+    try {
+      const main = await this.prisma.discordServer.findFirst({
+        where: { guildId, isMain: true },
+        select: { discordId: true },
+      });
+      if (!main || playerIds.length === 0) return info;
+      const roleNames = new Map(
+        (await this.bot.listRoles(main.discordId)).map((role) => [role.id, role.name]),
+      );
+      let members: GuildMemberInfo[];
+      try {
+        members = await this.bot.listGuildMembers(main.discordId);
+      } catch {
+        const found = await Promise.all(
+          playerIds
+            .slice(0, MAX_NICKNAME_LOOKUPS)
+            .map((id) => this.bot.getGuildMember(main.discordId, id)),
+        );
+        members = found.filter((member): member is GuildMemberInfo => member !== null);
+      }
+      for (const member of members) {
+        info.set(member.id, {
+          ...(member.nick ? { displayName: member.nick } : {}),
+          roles: member.roles.flatMap((id) => roleNames.get(id) ?? []),
+        });
+      }
+    } catch (error) {
+      this.logger.warn(
+        `Could not read the guild's members from Discord: ${describeDiscordError(error)}`,
+      );
+      return info;
+    }
+    this.memberCache.set(guildId, { at: Date.now(), info });
+    return info;
+  }
+
+  /**
+   * What the roster tags of a message's text work with: the guild's characters, loaded only when
+   * the text has such tags (once per guild, when a `cache` is passed).
+   */
+  async rosterOf(
+    guildId: string,
+    content: string,
+    cache: Map<string, RosterSnapshot> = new Map(),
+  ): Promise<RosterData | undefined> {
+    if (!hasRosterTokens(content)) return undefined;
+    const tokens = parseRosterTokens(content);
+    if (tokens.length === 0) return undefined;
+    return { tokens, entries: (await this.rosterSnapshot(guildId, cache)).entries };
+  }
+
+  private async rosterSnapshot(
+    guildId: string,
+    cache: Map<string, RosterSnapshot>,
+  ): Promise<RosterSnapshot> {
+    let snapshot = cache.get(guildId);
+    if (!snapshot) {
+      const entries = await this.loadRoster(guildId);
+      snapshot = { entries, hash: hashRoster(entries) };
+      cache.set(guildId, snapshot);
+    }
+    return snapshot;
   }
 
   /**
@@ -433,6 +560,7 @@ export class TrackingService {
         include: { task: true, sourceTask: true },
         orderBy: [{ taskId: 'asc' }, { createdAt: 'asc' }],
       });
+      const rosters = new Map<string, RosterSnapshot>();
       const changedTasks = new Map<string, ScheduledTask>();
       for (const row of rows) {
         if (!isLive(row.task.state as PostState)) continue;
@@ -472,6 +600,7 @@ export class TrackingService {
             await this.rerender(
               task,
               rows.filter((row) => row.taskId === task.id),
+              rosters,
             )
           )
             edited++;
@@ -479,6 +608,7 @@ export class TrackingService {
           this.logger.warn(`Could not update post ${task.id}: ${describeDiscordError(error)}`);
         }
       }
+      edited += await this.refreshRosterPosts(rosters);
     } catch (error) {
       this.logger.error(`Refreshing tracked posts failed: ${String(error)}`);
     }
@@ -492,6 +622,8 @@ export class TrackingService {
   private async rerender(
     task: ScheduledTask,
     rows: { postRef: string; emoji: string; type: string; lastUsers: Prisma.JsonValue }[],
+    rosters: Map<string, RosterSnapshot>,
+    rosterHash?: string,
   ): Promise<boolean> {
     const config = task.config as unknown as PostConfig;
     const state = task.state as PostState;
@@ -506,9 +638,10 @@ export class TrackingService {
     let edited = false;
     for (const [index, part] of config.parts.entries()) {
       const tokens = parseDynamicTokens(part.content, index + 1);
+      const roster = await this.rosterOf(task.guildId, part.content, rosters);
       const posted = liveMessageOf({ messages }, part.id);
-      if (tokens.length === 0 || !posted) continue;
-      const rendered = await renderContent(part.content, tokens, people);
+      if ((tokens.length === 0 && !roster) || !posted) continue;
+      const rendered = await renderContent(part.content, tokens, people, roster);
       if (rendered === posted.renderedContent) continue;
       try {
         await this.bot.editMessage(posted.channelId, posted.messageId, rendered, {
@@ -526,11 +659,46 @@ export class TrackingService {
         );
       }
     }
-    if (messages !== original) {
+    if (messages !== original || (rosterHash && rosterHash !== state.rosterHash)) {
       await this.prisma.scheduledTask.update({
         where: { id: task.id },
-        data: { state: { ...state, messages } as unknown as Prisma.InputJsonValue },
+        data: {
+          state: {
+            ...state,
+            messages,
+            ...(rosterHash ? { rosterHash } : {}),
+          } as unknown as Prisma.InputJsonValue,
+        },
       });
+    }
+    return edited;
+  }
+
+  /**
+   * Posts with `{{roster …}}` tags: when the guild's roster is not the one they were last written
+   * from (its hash differs), their messages are written again, and edited if that changes them.
+   * Most passes find the same hash and do nothing more than one query per guild.
+   */
+  private async refreshRosterPosts(rosters: Map<string, RosterSnapshot>): Promise<number> {
+    const found = await this.prisma.$queryRaw<{ id: string }[]>`
+      SELECT id FROM scheduled_tasks
+      WHERE type = 'POST'
+        AND config::text LIKE '%{{roster%'
+        AND jsonb_array_length(COALESCE(state->'messages', '[]'::jsonb)) > 0`;
+    let edited = 0;
+    for (const { id } of found) {
+      try {
+        const task = await this.prisma.scheduledTask.findUnique({ where: { id } });
+        if (!task || !isLive(task.state as PostState)) continue;
+        const { hash } = await this.rosterSnapshot(task.guildId, rosters);
+        if ((task.state as PostState).rosterHash === hash) continue;
+        const rows = await this.prisma.postTracking.findMany({ where: { taskId: id } });
+        if (await this.rerender(task, rows, rosters, hash)) edited++;
+      } catch (error) {
+        this.logger.warn(
+          `Could not update the roster of post ${id}: ${describeDiscordError(error)}`,
+        );
+      }
     }
     return edited;
   }
@@ -563,3 +731,26 @@ function sourceColumns(source: Source) {
     sourceMessageId: source.message?.messageId ?? null,
   };
 }
+
+/** A character row as the roster tags and reactions see it. */
+function toCharacter(character: {
+  firstName: string;
+  lastName: string;
+  isMain: boolean;
+  class: string;
+  roles: Role[];
+  level: number;
+}): ReactorCharacter {
+  return {
+    name: formatCharacterName(character),
+    firstName: character.firstName,
+    lastName: character.lastName,
+    isMain: character.isMain,
+    class: character.class,
+    roles: character.roles.map((role) => ROLE_LABELS[role]),
+    level: character.level,
+  };
+}
+
+/** The guild's characters, as loaded once per pass, and their hash. */
+type RosterSnapshot = { entries: ShowRosterEntry[]; hash: string };

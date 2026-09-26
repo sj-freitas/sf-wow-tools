@@ -51,7 +51,16 @@ export interface HoneypotInput {
   logChannelId?: unknown;
 }
 
-const CHANNEL_NAME = /^[a-z0-9][a-z0-9_-]{1,99}$/;
+/**
+ * A channel name is 1 to 100 characters. Discord decides the rest: it accepts letters of any
+ * alphabet, numbers, emojis, "-" and "_", lower-cases the name and turns spaces into hyphens, and
+ * says so when it refuses something, which is passed on. Only what could never work is refused here.
+ */
+const MAX_CHANNEL_NAME = 100;
+// eslint-disable-next-line no-control-regex
+const CONTROL_CHARACTERS = /[\u0000-\u001f\u007f]/;
+const validChannelName = (name: string): boolean =>
+  name.length > 0 && [...name].length <= MAX_CHANNEL_NAME && !CONTROL_CHARACTERS.test(name);
 
 @Injectable()
 export class HoneypotService {
@@ -109,9 +118,9 @@ export class HoneypotService {
       channel = { id: channelId, name };
     } else {
       const newName = typeof input.newChannelName === 'string' ? input.newChannelName.trim() : '';
-      if (!CHANNEL_NAME.test(newName)) {
+      if (!validChannelName(newName)) {
         throw new BadRequestException(
-          'The new channel name must be lower case letters, numbers, - or _ (2 to 100 characters).',
+          `Give the new channel a name of 1 to ${MAX_CHANNEL_NAME} characters (letters, numbers, emojis, - and _).`,
         );
       }
       try {

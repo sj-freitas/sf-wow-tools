@@ -110,6 +110,7 @@ describe('TaskRunnerService', () => {
     } as unknown as DiscordBotService;
     const tracking = {
       sourceMap: async () => new Map([[`name:raid signup#1`, { taskId: SOURCE, part: 1 }]]),
+      rosterOf: async () => undefined,
       fetchPeople: async () => new Map([[`name:raid signup#1|👍`, [{ id: '1', name: 'Ana' }]]]),
     } as unknown as TrackingService;
     const images = {
@@ -131,6 +132,19 @@ describe('TaskRunnerService', () => {
       await runner.run(task, NOW);
       assert.equal(posted[0].content, 'Going: Ana');
       assert.equal(update.state.messages[0].renderedContent, 'Going: Ana');
+    });
+  });
+
+  describe('the guild roster', () => {
+    it('fills in {{roster …}} tags when the message goes out', async () => {
+      const task = baseTask();
+      task.config.parts[0].content = 'Members: {{roster show="roster.length"}}';
+      (runner as any).sender.tracking.rosterOf = async (_guild: string, content: string) => ({
+        tokens: [{ raw: content.slice(9), expression: 'roster.length' }],
+        entries: [{}, {}, {}],
+      });
+      await runner.run(task, NOW);
+      assert.equal(posted[0].content, 'Members: 3');
     });
   });
 

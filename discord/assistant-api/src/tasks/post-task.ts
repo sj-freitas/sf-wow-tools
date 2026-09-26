@@ -54,6 +54,8 @@ export interface PostedPart {
  */
 export interface PostState {
   messages?: PostedPart[];
+  /** Hash of the guild's roster the messages with `{{roster …}}` tags were last written from. */
+  rosterHash?: string;
 }
 
 export const liveMessages = (state: PostState): PostedPart[] =>

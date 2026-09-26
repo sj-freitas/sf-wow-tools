@@ -93,10 +93,14 @@ export function HoneypotForm({ guild, channels, onSaved, onCancel }: Props) {
               <input
                 value={newChannelName}
                 onChange={(e) => setNewChannelName(e.target.value)}
-                pattern="[a-z0-9][a-z0-9_\-]{1,99}"
-                title="Lower case letters, numbers, - or _"
+                maxLength={100}
+                placeholder="🍯-do-not-post"
+                title="Letters, numbers, emojis, - and _. Discord makes it lower case and turns spaces into hyphens."
                 required
               />
+              <small className="muted">
+                Emojis are fine. Discord lower-cases the name and turns spaces into hyphens.
+              </small>
             </label>
             <label className="field field-span-2">
               Channel description (topic)

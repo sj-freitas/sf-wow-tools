@@ -117,22 +117,45 @@ describe('HoneypotEnforcerService', () => {
     });
   });
 
-  describe('who is left alone', () => {
-    it('Officers (role known from the message)', async () => {
+  describe('who is left alone (never banned)', () => {
+    it('Officers (role known from the message): logged in test mode, nothing else', async () => {
       await enforcer.handle(message({ roleIds: ['x', OFFICER] }));
-      assert.deepEqual([bans, logs, events], [[], [], []]);
+      assert.deepEqual([bans, events], [[], []]);
+      assert.equal(logs.length, 1);
+      assert.match(logs[0].text, /Test mode.*<@spammer>.*would \*\*not\*\* be banned.*an Officer/s);
     });
 
     it('Officers when the post is in another server: roles are looked up in the main server', async () => {
       await enforcer.handle(message({ serverId: 'other', roleIds: [] }));
       assert.deepEqual(roleLookups, ['main:spammer']);
+      assert.deepEqual([bans, events], [[], []]);
+      assert.match(logs[0].text, /an Officer/);
+    });
+
+    it('the server owner and Administrators: logged in test mode, and say why', async () => {
+      await enforcer.handle(message({ authorId: 'o', isServerOwner: true }));
+      await enforcer.handle(message({ authorId: 'a', isAdministrator: true }));
+      assert.deepEqual([bans, events], [[], []]);
+      assert.match(logs[0].text, /the server owner/);
+      assert.match(logs[1].text, /an Administrator/);
+    });
+
+    it('bots are ignored without a word', async () => {
+      await enforcer.handle(message({ authorIsBot: true }));
       assert.deepEqual([bans, logs, events], [[], [], []]);
     });
 
-    it('bots, the server owner and Administrators', async () => {
-      await enforcer.handle(message({ authorIsBot: true }));
+    it('do not fill the log channel when they keep posting', async () => {
+      await enforcer.handle(message({ roleIds: [OFFICER] }));
+      await enforcer.handle(message({ roleIds: [OFFICER], messageId: 'm2' }));
+      assert.equal(logs.length, 1);
+    });
+
+    it('are silent once the honeypot is live: nothing to log, nothing done', async () => {
+      testMode = false;
+      await enforcer.refresh();
+      await enforcer.handle(message({ roleIds: [OFFICER] }));
       await enforcer.handle(message({ authorId: 'o', isServerOwner: true }));
-      await enforcer.handle(message({ authorId: 'a', isAdministrator: true }));
       assert.deepEqual([bans, logs, events], [[], [], []]);
     });
   });

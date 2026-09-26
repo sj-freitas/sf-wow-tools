@@ -74,6 +74,7 @@ describe('TasksService', () => {
   let listResult: any[] | null;
   let rawQueries: any[];
   let rawIds: { id: string }[];
+  let rosterEntries: unknown[];
   let imageChecks: unknown[][];
   let attached: unknown[][];
   let service: TasksService;
@@ -98,6 +99,7 @@ describe('TasksService', () => {
     rawQueries = [];
     rawIds = [];
     imageChecks = [];
+    rosterEntries = [];
     attached = [];
     // A post that already went out: its one message is live in Discord.
     task = {
@@ -165,6 +167,10 @@ describe('TasksService', () => {
         return new Map();
       },
       fetchPeople: async () => people,
+      rosterOf: async (_guild: string, content: string) =>
+        content.includes('{{roster')
+          ? { tokens: [{ raw: content, expression: 'roster.length' }], entries: rosterEntries }
+          : undefined,
       syncTracking: async (_id: string, tokens: unknown[]) => {
         trackingCalls.push(['sync', tokens.length]);
       },

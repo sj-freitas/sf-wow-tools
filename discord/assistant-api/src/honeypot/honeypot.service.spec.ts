@@ -123,15 +123,35 @@ describe('HoneypotService', () => {
       assert.equal(createdRow.channelId, '666666666666666666');
     });
 
-    it('rejects an invalid new channel name', async () => {
-      await assert.rejects(
-        service.create('g', 'u', {
-          ...validInput,
-          channelId: undefined,
-          newChannelName: 'Not Valid!',
-        }),
-        BadRequestException,
-      );
+    it('rejects an empty, too long or control-character channel name', async () => {
+      for (const newChannelName of ['', '   ', 'x'.repeat(101), 'line\nbreak']) {
+        await assert.rejects(
+          service.create('g', 'u', { ...validInput, channelId: undefined, newChannelName }),
+          BadRequestException,
+          JSON.stringify(newChannelName),
+        );
+      }
+    });
+
+    it('lets Discord decide about emojis, other alphabets, spaces and capitals', async () => {
+      for (const newChannelName of [
+        '🍯-honeypot',
+        'do not post',
+        'Ловушка',
+        '🍯🐝',
+        'a',
+        'Do-Not-Post_1',
+      ]) {
+        createdChannels.length = 0;
+        await service.create('g', 'u', { ...validInput, channelId: undefined, newChannelName });
+        assert.equal(createdChannels[0].name, newChannelName);
+      }
+      // 100 characters counted as characters, not bytes: 100 emojis fit.
+      await service.create('g', 'u', {
+        ...validInput,
+        channelId: undefined,
+        newChannelName: '🍯'.repeat(100),
+      });
     });
 
     it('rejects servers outside the guild and channels outside the server', async () => {

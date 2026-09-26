@@ -4,6 +4,7 @@ import { BadRequestException } from '@nestjs/common';
 import {
   checkExpressions,
   parseDynamicTokens,
+  parseRosterTokens,
   renderContent,
   trackingKey,
   type Reactor,
@@ -149,5 +150,78 @@ describe('an expression in a post', () => {
     const map = new Map([[trackingKey(tokens[0]), [ana]]]);
     const out = await renderContent(text, tokens, map);
     assert.match(out, /^Going: 1: Ana \/ ⚠️ \(TypeError/);
+  });
+});
+
+describe('the roster variable', () => {
+  const roster = [
+    {
+      name: 'Merric Stone',
+      firstName: 'Merric',
+      lastName: 'Stone',
+      isMain: true,
+      class: 'Warrior',
+      roles: ['Tank'],
+      level: 60,
+      discordUser: { id: '1', tag: '<@1>', name: 'Ana', displayName: 'Ana', roles: [] },
+    },
+    {
+      name: 'Olga',
+      firstName: 'Olga',
+      lastName: '',
+      isMain: false,
+      class: 'Priest',
+      roles: ['Healer'],
+      level: 58,
+      discordUser: { id: '2', tag: '<@2>', name: 'Bruno', displayName: 'Bruno', roles: [] },
+    },
+  ];
+
+  it('gives every character with who plays it', async () => {
+    assert.equal(
+      await runShowExpression(
+        'roster.map(c => `${c.name} (${c.discordUser.tag})`)',
+        roster,
+        'roster',
+      ),
+      'Merric Stone (<@1>), Olga (<@2>)',
+    );
+    assert.equal(
+      await runShowExpression("roster.filter(c => c.class === 'Priest').length", roster, 'roster'),
+      '1',
+    );
+  });
+
+  it('gives the Discord user of each character, with nickname and roles', async () => {
+    const list = [
+      {
+        ...roster[0],
+        discordUser: {
+          ...roster[0].discordUser,
+          displayName: 'Ana (Tank)',
+          roles: ['Officer', 'Raider'],
+        },
+      },
+    ];
+    assert.equal(
+      await runShowExpression(
+        "roster.filter(c => c.discordUser.roles.includes('Officer')).map(c => `${c.name} / ${c.discordUser.displayName}`)",
+        list,
+        'roster',
+      ),
+      'Merric Stone / Ana (Tank)',
+    );
+  });
+
+  it('does not know reactions in a roster tag, nor roster in a reactions tag', async () => {
+    await assert.rejects(runShowExpression('reactions.length', roster, 'roster'), /ReferenceError/);
+    await assert.rejects(runShowExpression('roster.length', [], 'reactions'), /ReferenceError/);
+  });
+
+  it('is checked on save with sample characters', async () => {
+    await checkShowExpression('roster.map(c => c.discordUser.tag)', 'roster');
+    const [bad] = parseRosterTokens('{{roster show="roster.map(c => c.nope.x)"}}');
+    await assert.rejects(checkExpressions([], [bad]), /TypeError/);
+    await checkExpressions([], parseRosterTokens('{{roster}}'));
   });
 });

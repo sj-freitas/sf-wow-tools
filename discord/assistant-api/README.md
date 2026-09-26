@@ -293,6 +293,34 @@ A post's text can show who reacted to a message:
   "Live tags" help with this syntax, and the preview marks the tag (it cannot show real names).
   Tracking has no end date: remove the tag (or the post) to stop it.
 
+### The guild roster in a post (`{{roster …}}`)
+
+`{{roster show="roster.map((c) => c.name)"}}` in a message's text is replaced by whatever the
+`show` expression makes of the guild's characters. It works like the reactions tags (same options
+syntax, same QuickJS sandbox, checked on save with sample data, `⚠️ (…)` if it fails with real data).
+Its only option is `show` (left out: every character's name); the list is called `roster`.
+
+- **`roster`** is an array with one entry per character of the guild, sorted by name:
+  `{ name, firstName, lastName, isMain, class, roles, level, discordUser }` (the same character fields as
+  `characters` in a reactions tag). A character belongs to a player (`players.discord_user_id`), so
+  `discordUser` is the Discord user who plays it: `{ id, tag, name, displayName, roles }` where `tag` is
+  `<@id>`, `name` the Discord name we know (else the id), `displayName` their nickname in the guild's main
+  server (else `name`) and `roles` the **names of their Discord roles** in that server (`@everyone` left
+  out). Examples: `roster.length`, `roster.filter(c => c.isMain).map(c => c.name)`,
+  `roster.filter(c => c.discordUser.roles.includes('Raider')).map(c => c.name)`.
+- **Nicknames and roles come from Discord**, so they are read with one member listing and one role listing
+  of the main server (the bot's Server Members Intent), or one lookup per player (at most 100) when that
+  intent is off, and kept for 5 minutes. They are part of the roster hash, so a role change shows in a post
+  within a few minutes. If Discord cannot be reached, users show their Discord name and no roles until the
+  next attempt.
+- **Updating:** each pass of the worker (a minute) looks at the posts in Discord whose config has a
+  roster tag, loads the guild's roster once per guild and compares its **hash** with the one the post was
+  last written from (`state.rosterHash`). Only when it differs are the post's messages written again, and
+  a message is edited only if its text really changed. So an unchanged roster costs one query per guild;
+  no change tracking on characters is needed. Edits that show people never ping them.
+- The roster is also filled in when a message is first sent, and when a live message is saved. It is not
+  limited to Officers' view: it lists every character of the guild.
+
 ### Clearing a channel (`/clear-channel`)
 
 - **`/clear-channel [channel]`.** Deletes every unpinned message of the channel (default: the one you
@@ -432,7 +460,11 @@ bot, other bots, the server owner and Administrators.
 
 - **Test mode** (the default): nothing is banned; the bot only writes to the log channel what it
   would have done. Going live needs an explicit confirmation. Every action is stored in
-  `honeypot_events` and the last ones show under the honeypot.
+  `honeypot_events` and the last ones show under the honeypot. Someone who is exempt (an Officer, the
+  server owner, an Administrator) is also logged in test mode, as "would **not** be banned: they are
+  an Officer", so the honeypot can be tried out with your own account (once per 5 minutes per person;
+  bots stay silent). Nothing is stored for them, and once the honeypot is live exempt people are not
+  logged to the channel, only in the server logs.
 - Enforcement uses the bot's gateway connection in the worker, with the non-privileged `Guilds` and
   `GuildMessages` intents only (message text is not read; no portal setting needed).
 - Honeypots are reloaded from the database every 30 seconds, so changes apply without a restart.

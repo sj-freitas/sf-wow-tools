@@ -4,7 +4,11 @@ import { BadRequestException } from '@nestjs/common';
 import {
   DEFAULT_SHOW,
   hashReactors,
+  hashRoster,
+  hasRosterTokens,
+  parseAllRosterTokens,
   parseAllTokens,
+  parseRosterTokens,
   parseDynamicTokens,
   renderContent,
   trackingKey,
@@ -250,6 +254,95 @@ describe('hashReactors', () => {
           ],
         },
       ]),
+    );
+  });
+});
+
+describe('{{roster …}} tags', () => {
+  it('reads the show expression, with quotes, backticks and }} inside', () => {
+    const expression = "`${roster.length}: ${roster.map((c) => c.name).join(', ')}`";
+    const [token] = parseRosterTokens(`Members {{roster show="${expression}"}}!`);
+    assert.equal(token.expression, expression);
+    assert.equal(token.raw, `{{roster show="${expression}"}}`);
+  });
+
+  it('lists every character’s name when show is left out', () => {
+    assert.equal(parseRosterTokens('{{roster}}')[0].expression, 'roster.map((c) => c.name)');
+    assert.equal(parseRosterTokens('{{ roster }}').length, 1);
+  });
+
+  it('finds several tags in order, and tells reactions tags apart', () => {
+    const text = '{{roster show="roster.length"}} and {{reactions emoji=👍}} and {{roster}}';
+    assert.deepEqual(
+      parseRosterTokens(text).map((t) => t.expression),
+      ['roster.length', 'roster.map((c) => c.name)'],
+    );
+    assert.equal(parseDynamicTokens(text).length, 1);
+    assert.equal(parseAllRosterTokens([{ content: text }, { content: 'none' }]).length, 2);
+  });
+
+  it('knows quickly whether a text has roster tags', () => {
+    assert.equal(hasRosterTokens('a {{roster}} b'), true);
+    assert.equal(hasRosterTokens('a {{rosterfoo}} b {{reactions emoji=👍}}'), false);
+  });
+
+  it('refuses options it does not have, empty or unfinished tags, and more than five', () => {
+    for (const bad of [
+      '{{roster emoji=👍}}',
+      '{{roster sourcePost=A}}',
+      '{{roster show=}}',
+      '{{roster show=""}}',
+      '{{roster show="unclosed}}',
+      '{{roster ',
+    ]) {
+      assert.throws(() => parseRosterTokens(bad), BadRequestException, bad);
+    }
+    assert.throws(() => parseRosterTokens(Array(6).fill('{{roster}}').join(' ')), /at most 5/);
+  });
+
+  it('is filled in with the roster, and a failing expression shows a warning', async () => {
+    const text = 'All: {{roster show="roster.map(c => c.name)"}} / {{roster show="roster.x.y"}}';
+    const entries = [
+      {
+        name: 'Merric',
+        firstName: 'Merric',
+        lastName: '',
+        isMain: true,
+        class: 'Warrior',
+        roles: ['Tank'],
+        level: 60,
+        discordUser: { id: '1', tag: '<@1>', name: 'Ana', displayName: 'Ana', roles: [] },
+      },
+    ];
+    const out = await renderContent(text, [], new Map(), {
+      tokens: parseRosterTokens(text),
+      entries,
+    });
+    assert.match(out, /^All: Merric \/ ⚠️ \(TypeError/);
+  });
+
+  it('has a hash that changes with any character or who plays it', () => {
+    const base = {
+      name: 'Merric',
+      firstName: 'Merric',
+      lastName: '',
+      isMain: true,
+      class: 'Warrior',
+      roles: ['Tank'],
+      level: 60,
+      discordUser: { id: '1', tag: '<@1>', name: 'Ana', displayName: 'Ana', roles: [] },
+    };
+    const same = hashRoster([base]);
+    assert.equal(same, hashRoster([{ ...base }]));
+    assert.notEqual(same, hashRoster([]));
+    assert.notEqual(same, hashRoster([{ ...base, level: 61 }]));
+    assert.notEqual(
+      same,
+      hashRoster([{ ...base, discordUser: { ...base.discordUser, roles: ['Officer'] } }]),
+    );
+    assert.notEqual(
+      same,
+      hashRoster([{ ...base, discordUser: { ...base.discordUser, name: 'Anna' } }]),
     );
   });
 });

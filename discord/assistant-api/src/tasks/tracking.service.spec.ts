@@ -63,6 +63,13 @@ describe('TrackingService', () => {
   let deletedRows: string[];
   let taskUpdates: any[];
   let roster: Record<string, ReturnType<typeof character>[]>;
+  let rosterTaskIds: string[];
+  let serverRoles: { id: string; name: string }[];
+  let members: { id: string; nick: string | null; name: string; roles: string[] }[];
+  let membersIntentOff: boolean;
+  let memberCalls: string[];
+  let mainServer: boolean;
+  let playerNames: Record<string, { username?: string; display?: string }>;
   let servers: string[];
   let channelServer: string | null;
   let unreadable: boolean;
@@ -83,6 +90,13 @@ describe('TrackingService', () => {
     deletedRows = [];
     taskUpdates = [];
     roster = {};
+    rosterTaskIds = [];
+    serverRoles = [];
+    members = [];
+    membersIntentOff = false;
+    memberCalls = [];
+    mainServer = true;
+    playerNames = {};
     servers = ['s1'];
     channelServer = 's1';
     unreadable = false;
@@ -92,6 +106,7 @@ describe('TrackingService', () => {
     messageLives = {};
     probed = [];
     const prisma = {
+      $queryRaw: async () => rosterTaskIds.map((id) => ({ id })),
       scheduledTask: {
         findMany: async (args: any) =>
           Object.values(tasks).filter(
@@ -104,14 +119,21 @@ describe('TrackingService', () => {
       },
       discordServer: {
         findMany: async () => servers.map((discordId) => ({ discordId })),
-        findFirst: async (args: any) =>
-          servers.includes(args.where.discordId) ? { id: 'x' } : null,
+        findFirst: async (args: any) => {
+          if (args.where.isMain) return mainServer ? { discordId: 'main-server' } : null;
+          return servers.includes(args.where.discordId) ? { id: 'x' } : null;
+        },
       },
       player: {
         findMany: async (args: any) =>
-          args.where.discordUserId.in
+          (args.where.discordUserId?.in ?? Object.keys(roster))
             .filter((id: string) => id in roster)
-            .map((id: string) => ({ discordUserId: id, characters: roster[id] })),
+            .map((id: string) => ({
+              discordUserId: id,
+              discordUsername: playerNames[id]?.username ?? null,
+              discordDisplayName: playerNames[id]?.display ?? null,
+              characters: roster[id],
+            })),
       },
       postTracking: {
         findMany: async (args: any) =>
@@ -141,6 +163,16 @@ describe('TrackingService', () => {
         return messageLives[channelId] === messageId;
       },
       getChannelServerId: async () => channelServer,
+      listRoles: async () => serverRoles,
+      listGuildMembers: async () => {
+        memberCalls.push('list');
+        if (membersIntentOff) throw new Error('Missing Access');
+        return members;
+      },
+      getGuildMember: async (_server: string, id: string) => {
+        memberCalls.push(`get:${id}`);
+        return members.find((m) => m.id === id) ?? null;
+      },
       getMemberDisplayName: async (_server: string, userId: string) => {
         nicknameLookups.push(userId);
         return nicknames[userId] ?? null;
@@ -632,6 +664,185 @@ describe('TrackingService', () => {
           ['m2', undefined],
         ],
       );
+    });
+  });
+
+  describe('the guild roster ({{roster …}})', () => {
+    const rosterTag =
+      'Tanks: {{roster show="roster.filter(c => c.roles.includes(\'Tank\')).map(c => c.name)"}}';
+
+    beforeEach(() => {
+      rosterTaskIds = [POST];
+      tasks[POST].config.parts[0].content = rosterTag;
+      tasks[POST].state.messages[0].renderedContent = 'Tanks: ';
+      roster = {};
+    });
+
+    it('lists every character of the guild with who plays it, sorted by name', async () => {
+      roster = {
+        '20': [character('Zed', '', { isMain: false, class: 'Rogue', roles: ['MELEE_DPS'] })],
+        '10': [
+          character('Merric', 'Stone'),
+          character('Olga', '', { isMain: false, class: 'Priest', roles: ['HEALER'] }),
+        ],
+      };
+      playerNames = { '10': { username: 'ana', display: 'Ana' }, '20': { username: 'zoe' } };
+      const entries = await service.loadRoster('g1');
+      assert.deepEqual(
+        entries.map((e) => [
+          e.name,
+          e.class,
+          e.roles,
+          e.isMain,
+          e.discordUser.id,
+          e.discordUser.name,
+        ]),
+        [
+          ['Merric Stone', 'Warrior', ['Tank'], true, '10', 'Ana'],
+          ['Olga', 'Priest', ['Healer'], false, '10', 'Ana'],
+          ['Zed', 'Rogue', ['Melee DPS'], false, '20', 'zoe'],
+        ],
+      );
+    });
+
+    describe('the Discord user of each character (nickname and roles)', () => {
+      beforeEach(() => {
+        roster = { '10': [character('Merric')], '20': [character('Zed')] };
+        playerNames = { '10': { username: 'ana', display: 'Ana' } };
+        serverRoles = [
+          { id: 'r1', name: 'Officer' },
+          { id: 'r2', name: 'Raider' },
+          { id: 'r3', name: 'Unused' },
+        ];
+        members = [{ id: '10', nick: 'Ana (Tank)', name: 'Ana', roles: ['r1', 'r2', 'gone'] }];
+      });
+
+      it('gives their nickname in the main server and the names of their Discord roles', async () => {
+        const [merric, zed] = await service.loadRoster('g1');
+        assert.deepEqual(merric.discordUser, {
+          id: '10',
+          tag: '<@10>',
+          name: 'Ana',
+          displayName: 'Ana (Tank)',
+          roles: ['Officer', 'Raider'],
+        });
+        // Not in the member list: their Discord name and no roles.
+        assert.deepEqual([zed.discordUser.displayName, zed.discordUser.roles], ['20', []]);
+      });
+
+      it('uses the Discord name as the display name when they have no nickname', async () => {
+        members = [{ id: '10', nick: null, name: 'Ana', roles: [] }];
+        assert.equal((await service.loadRoster('g1'))[0].discordUser.displayName, 'Ana');
+      });
+
+      it('looks members up one by one when the Server Members Intent is off', async () => {
+        membersIntentOff = true;
+        const [merric] = await service.loadRoster('g1');
+        assert.deepEqual(memberCalls, ['list', 'get:10', 'get:20']);
+        assert.deepEqual(merric.discordUser.roles, ['Officer', 'Raider']);
+      });
+
+      it('keeps what it found for a few minutes instead of asking Discord every minute', async () => {
+        await service.loadRoster('g1');
+        await service.loadRoster('g1');
+        assert.deepEqual(memberCalls, ['list']);
+      });
+
+      it('shows no roles, and does not remember it, when Discord cannot be reached', async () => {
+        serverRoles = null as never;
+        const [merric] = await service.loadRoster('g1');
+        assert.deepEqual([merric.discordUser.displayName, merric.discordUser.roles], ['Ana', []]);
+        serverRoles = [{ id: 'r1', name: 'Officer' }];
+        assert.deepEqual((await service.loadRoster('g1'))[0].discordUser.roles, ['Officer']);
+      });
+
+      it('does not ask Discord for a guild without a main server or without characters', async () => {
+        mainServer = false;
+        await service.loadRoster('g1');
+        roster = {};
+        mainServer = true;
+        await service.loadRoster('g1');
+        assert.deepEqual(memberCalls, []);
+      });
+    });
+
+    it('falls back to the Discord id when no name is known', async () => {
+      roster = { '30': [character('Kim')] };
+      assert.equal((await service.loadRoster('g1'))[0].discordUser.name, '30');
+    });
+
+    it('only loads the roster for text that has roster tags, once per guild', async () => {
+      roster = { '10': [character('Merric')] };
+      const cache = new Map();
+      assert.equal(await service.rosterOf('g1', 'No tags here', cache), undefined);
+      assert.equal(cache.size, 0);
+      const first = await service.rosterOf('g1', rosterTag, cache);
+      const second = await service.rosterOf('g1', rosterTag, cache);
+      assert.equal(first?.tokens.length, 1);
+      assert.equal(first?.entries, second?.entries);
+    });
+
+    it('writes the post again when the roster is not the one it was written from, and remembers it', async () => {
+      roster = { '10': [character('Merric')] };
+      assert.equal(await service.refreshDue(), 1);
+      assert.deepEqual(edits, [
+        ['c1', 'm1', 'Tanks: Merric', { suppressEmbeds: false, quiet: true }],
+      ]);
+      const saved = taskUpdates.at(-1).state;
+      assert.equal(saved.messages[0].renderedContent, 'Tanks: Merric');
+      assert.match(saved.rosterHash, /^[0-9a-f]{64}$/);
+    });
+
+    it('does nothing more while the roster hash is the same', async () => {
+      roster = { '10': [character('Merric')] };
+      await service.refreshDue();
+      const remembered = taskUpdates.at(-1).state;
+      tasks[POST].state = remembered;
+      edits.length = 0;
+      taskUpdates.length = 0;
+      assert.equal(await service.refreshDue(), 0);
+      assert.deepEqual([edits, taskUpdates], [[], []]);
+    });
+
+    it('updates again when a character joins, leaves or changes', async () => {
+      roster = { '10': [character('Merric')] };
+      await service.refreshDue();
+      tasks[POST].state = taskUpdates.at(-1).state;
+      roster = { '10': [character('Merric'), character('Bolt', '', { isMain: false })] };
+      assert.equal(await service.refreshDue(), 1);
+      assert.equal(edits.at(-1)?.[2], 'Tanks: Bolt, Merric');
+      tasks[POST].state = taskUpdates.at(-1).state;
+      roster = {
+        '10': [
+          character('Merric', '', { roles: ['HEALER'] }),
+          character('Bolt', '', { isMain: false }),
+        ],
+      };
+      await service.refreshDue();
+      assert.equal(edits.at(-1)?.[2], 'Tanks: Bolt');
+    });
+
+    it('remembers the new hash even when the text does not change, without editing', async () => {
+      roster = {};
+      assert.equal(await service.refreshDue(), 0);
+      assert.deepEqual(edits, []);
+      assert.match(taskUpdates.at(-1).state.rosterHash, /^[0-9a-f]{64}$/);
+    });
+
+    it('skips posts that are not in Discord', async () => {
+      tasks[POST].state = { messages: [liveMessage({ deleted: true })] };
+      roster = { '10': [character('Merric')] };
+      assert.equal(await service.refreshDue(), 0);
+      assert.deepEqual(edits, []);
+    });
+
+    it('fills in reactions and the roster in the same message', async () => {
+      tasks[POST].config.parts[0].content =
+        'Going {{reactions emoji=👍 show="reactions.length"}} of {{roster show="roster.length"}}';
+      roster = { '10': [character('Merric'), character('Olga', '', { isMain: false })] };
+      rows = [trackingRow({ postRef: 'self#1', sourceTaskId: POST })];
+      await service.refreshDue();
+      assert.equal(edits[0][2], 'Going 2 of 2');
     });
   });
 

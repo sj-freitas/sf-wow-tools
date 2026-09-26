@@ -29,6 +29,28 @@ export interface ShowReactor {
   characters: ShowCharacter[];
 }
 
+/** The Discord user who plays a character of the roster. */
+export interface ShowDiscordUser {
+  /** Discord user id. */
+  id: string;
+  /** A mention: `<@id>`. */
+  tag: string;
+  /** Their Discord name (global display name, else username; the id when it is not known). */
+  name: string;
+  /** How they are shown in the guild's main server: their nickname there, else `name`. */
+  displayName: string;
+  /** The names of the Discord roles they hold in the guild's main server. */
+  roles: string[];
+}
+
+/** One character of the guild's roster (`roster[i]`), with the Discord user who plays it. */
+export interface ShowRosterEntry extends ShowCharacter {
+  discordUser: ShowDiscordUser;
+}
+
+/** The name an expression uses for its list: `reactions` in a reactions tag, `roster` in a roster tag. */
+export type ShowVariable = 'reactions' | 'roster';
+
 /** An expression that is written wrongly or fails when it runs. */
 export class ShowExpressionError extends Error {}
 
@@ -39,7 +61,7 @@ const MAX_RESULT_LENGTH = 4000;
 
 /**
  * Evaluates the `show` expression of a tag, e.g. `` `${reactions.length}: ${reactions.map(r => r.name)}` ``,
- * with the people who reacted as `reactions`. The expression is written by whoever edits a post, so
+ * with the people who reacted as `reactions` (or the guild's characters as `roster`). The expression is written by whoever edits a post, so
  * it runs in QuickJS (a JavaScript engine compiled to WebAssembly) rather than in Node: it has
  * no access to files, the network, `process`, `require` or anything of ours, only the standard
  * language, and it is stopped after 100 ms and 16 MB. An array result is joined with ", "; anything
@@ -47,7 +69,8 @@ const MAX_RESULT_LENGTH = 4000;
  */
 export async function runShowExpression(
   expression: string,
-  reactors: readonly ShowReactor[],
+  data: readonly (ShowReactor | ShowRosterEntry)[],
+  variable: ShowVariable = 'reactions',
 ): Promise<string> {
   const quickJS = await getQuickJS();
   const runtime = quickJS.newRuntime();
@@ -59,7 +82,7 @@ export async function runShowExpression(
     // The people are handed over as JSON text: plain data, nothing that reaches back into Node.
     const program = `"use strict";
 (function () {
-  const reactions = JSON.parse(${JSON.stringify(JSON.stringify(reactors))});
+  const ${variable} = JSON.parse(${JSON.stringify(JSON.stringify(data))});
   const result = (
 ${expression}
   );
@@ -111,7 +134,39 @@ const SAMPLE: ShowReactor[] = [
   },
 ];
 
-/** Runs an expression once on two made-up people, so a typo is refused on save. */
-export async function checkShowExpression(expression: string): Promise<void> {
-  await runShowExpression(expression, SAMPLE);
+const SAMPLE_ROSTER: ShowRosterEntry[] = [
+  {
+    ...SAMPLE[0].characters[0],
+    discordUser: {
+      id: SAMPLE[0].id,
+      tag: SAMPLE[0].tag,
+      name: SAMPLE[0].name,
+      displayName: SAMPLE[0].displayName,
+      roles: ['Officer', 'Raider'],
+    },
+  },
+  {
+    name: 'Olga',
+    firstName: 'Olga',
+    lastName: '',
+    isMain: false,
+    class: 'Priest',
+    roles: ['Healer'],
+    level: 58,
+    discordUser: {
+      id: SAMPLE[1].id,
+      tag: SAMPLE[1].tag,
+      name: SAMPLE[1].name,
+      displayName: SAMPLE[1].displayName,
+      roles: [],
+    },
+  },
+];
+
+/** Runs an expression once on made-up people or characters, so a typo is refused on save. */
+export async function checkShowExpression(
+  expression: string,
+  variable: ShowVariable = 'reactions',
+): Promise<void> {
+  await runShowExpression(expression, variable === 'roster' ? SAMPLE_ROSTER : SAMPLE, variable);
 }

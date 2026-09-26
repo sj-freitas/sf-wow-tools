@@ -22,6 +22,24 @@ export interface BotFile {
 /** Message flag: no link previews. */
 const SUPPRESS_EMBEDS = 1 << 2;
 
+/** What Discord says about a member of a server. */
+export interface GuildMemberInfo {
+  id: string;
+  /** Their nickname in the server, if they set one. */
+  nick: string | null;
+  /** Their global display name, else their username. */
+  name: string;
+  /** Ids of the roles they hold (the everyone role is not listed). */
+  roles: string[];
+}
+
+const toMemberInfo = (member: APIGuildMember): GuildMemberInfo => ({
+  id: member.user.id,
+  nick: member.nick ?? null,
+  name: member.user.global_name ?? member.user.username,
+  roles: member.roles,
+});
+
 /** Only files Discord itself hosts are downloaded. */
 const DISCORD_FILE_HOSTS = new Set(['cdn.discordapp.com', 'media.discordapp.net']);
 
@@ -341,6 +359,46 @@ export class DiscordBotService {
       if (error instanceof DiscordAPIError) return null;
       throw error;
     }
+  }
+
+  /**
+   * Every member of a server, a thousand per request. Discord only allows this with the bot's
+   * "Server Members Intent"; without it this throws and members are looked up one by one.
+   */
+  async listGuildMembers(serverId: string): Promise<GuildMemberInfo[]> {
+    const members: GuildMemberInfo[] = [];
+    let after: string | undefined;
+    for (;;) {
+      const query = new URLSearchParams({ limit: '1000' });
+      if (after) query.set('after', after);
+      const page = (await this.rest.get(Routes.guildMembers(serverId), {
+        query,
+      })) as APIGuildMember[];
+      members.push(...page.map(toMemberInfo));
+      if (page.length < 1000) return members;
+      after = page[page.length - 1].user.id;
+    }
+  }
+
+  /** One member of a server; null when they are not in it (or Discord cannot say). */
+  async getGuildMember(serverId: string, userId: string): Promise<GuildMemberInfo | null> {
+    try {
+      return toMemberInfo(
+        (await this.rest.get(Routes.guildMember(serverId, userId))) as APIGuildMember,
+      );
+    } catch (error) {
+      if (error instanceof DiscordAPIError) return null;
+      throw error;
+    }
+  }
+
+  /** The roles of a server, to turn a member's role ids into names. */
+  async listRoles(serverId: string): Promise<{ id: string; name: string }[]> {
+    const roles = (await this.rest.get(Routes.guildRoles(serverId))) as {
+      id: string;
+      name: string;
+    }[];
+    return roles.map((role) => ({ id: role.id, name: role.name }));
   }
 
   /**

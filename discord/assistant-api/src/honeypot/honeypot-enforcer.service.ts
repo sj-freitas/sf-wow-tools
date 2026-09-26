@@ -73,6 +73,7 @@ export class HoneypotEnforcerService {
           },
         },
       });
+      const before = [...this.byChannel.keys()].sort().join();
       this.byChannel = new Map(
         honeypots.map((honeypot) => [
           honeypot.channelId,
@@ -87,8 +88,20 @@ export class HoneypotEnforcerService {
           },
         ]),
       );
+      if ([...this.byChannel.keys()].sort().join() !== before) {
+        this.logger.log(
+          `Honeypots loaded: ${this.byChannel.size} active (${[...this.byChannel.values()]
+            .map((honeypot) => `${honeypot.name}${honeypot.testMode ? ', test mode' : ''}`)
+            .join('; ')})`,
+        );
+      }
     } catch (error) {
-      this.logger.error(`Could not load honeypots: ${String(error)}`);
+      // One line, so the whole reason (Prisma's message spans several) shows in the logs.
+      this.logger.error(
+        `Could not load honeypots: ${String(error).replace(/\s*\n\s*/g, ' ')}${
+          (error as { code?: string }).code ? ` [${(error as { code?: string }).code}]` : ''
+        }`,
+      );
     }
   }
 
@@ -122,14 +135,31 @@ export class HoneypotEnforcerService {
       honeypot.officerRoleId,
       honeypot.testMode,
     );
-    if (decision.action === 'IGNORE' || decision.action === 'EXEMPT') return;
+    if (decision.action === 'IGNORE') return;
 
     const last = this.recent.get(message.authorId);
     if (last && Date.now() - last < DEDUPE_MS) return;
-    this.recent.set(message.authorId, Date.now());
 
     const link = messageUrl(message.serverId, message.channelId, message.messageId);
     const who = `<@${message.authorId}> (${message.authorUsername}, ${message.authorId})`;
+
+    if (decision.action === 'EXEMPT') {
+      // Never banned, but said out loud: "I posted and nothing happened" is usually this. In test
+      // mode it also goes to the log channel, so the honeypot can be tried out with an Officer's
+      // own account.
+      this.logger.log(
+        `Message from ${message.authorUsername} (${message.authorId}) in honeypot "${honeypot.name}": not banned, they are ${decision.reason}.`,
+      );
+      if (honeypot.testMode) {
+        this.recent.set(message.authorId, Date.now());
+        await this.log(
+          honeypot,
+          `🧪 **Test mode.** ${who} posted in <#${message.channelId}> (${link}). They would **not** be banned: they are ${decision.reason}. Nothing was done.`,
+        );
+      }
+      return;
+    }
+    this.recent.set(message.authorId, Date.now());
 
     if (decision.action === 'WOULD_BAN') {
       await this.record(honeypot, message, 'WOULD_BAN', null);

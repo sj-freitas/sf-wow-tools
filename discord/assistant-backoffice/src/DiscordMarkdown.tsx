@@ -8,7 +8,7 @@ export interface MentionNames {
 }
 
 const INLINE =
-  /(`[^`\n]+`)|(\*\*[\s\S]+?\*\*)|(__[\s\S]+?__)|(~~[\s\S]+?~~)|(\|\|[\s\S]+?\|\|)|(\*[^*\n]+?\*)|(_[^_\n]+?_)|(<@!?\d+>|<@&\d+>|<#\d+>)|(<a?:\w+:\d+>)|(https?:\/\/[^\s<]+)|(@everyone|@here)|(\[[^\]\n]+\]\(https?:\/\/[^\s)]+\))|(<https?:\/\/[^\s>]+>)|(\{\{\s*reactions(?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|[^}"'])*\}\})/g;
+  /(`[^`\n]+`)|(\*\*[\s\S]+?\*\*)|(__[\s\S]+?__)|(~~[\s\S]+?~~)|(\|\|[\s\S]+?\|\|)|(\*[^*\n]+?\*)|(_[^_\n]+?_)|(<@!?\d+>|<@&\d+>|<#\d+>)|(<a?:\w+:\d+>)|(https?:\/\/[^\s<]+)|(@everyone|@here)|(\[[^\]\n]+\]\(https?:\/\/[^\s)]+\))|(<https?:\/\/[^\s>]+>)|(\{\{\s*(?:reactions|roster)(?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|[^}"'])*\}\})/g;
 
 function Spoiler({ children }: { children: ReactNode }) {
   const [shown, setShown] = useState(false);
@@ -96,6 +96,7 @@ function inline(text: string, names: MentionNames): ReactNode[] {
         </a>,
       );
     } else if (match[14]) {
+      const isRoster = /^\{\{\s*roster/.test(token);
       const emoji = /emoji\s*=\s*(\S+?)(?=\s|\}\})/.exec(token)?.[1] ?? '?';
       const shown = /show\s*=\s*(?:"((?:\\.|[^"\\])*)"|'((?:\\.|[^'\\])*)'|([^\s}]+))/.exec(token);
       const expression = shown?.[1] ?? shown?.[2] ?? shown?.[3];
@@ -108,9 +109,13 @@ function inline(text: string, names: MentionNames): ReactNode[] {
         <span
           key={k}
           className="md-mention"
-          title="Replaced by who reacted, once the post is in Discord"
+          title={
+            isRoster
+              ? "Replaced by the guild's characters, once the post is in Discord"
+              : 'Replaced by who reacted, once the post is in Discord'
+          }
         >
-          ⟦ {emoji} · {show} ⟧
+          ⟦ {isRoster ? `roster · ${show}` : `${emoji} · ${show}`} ⟧
         </span>,
       );
     } else

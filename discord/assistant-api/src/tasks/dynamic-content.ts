@@ -1,7 +1,12 @@
 import { createHash } from 'node:crypto';
 import { BadRequestException } from '@nestjs/common';
 import { MAX_PARTS, MAX_POST_LENGTH, normalizeEmoji } from './post-task';
-import { checkShowExpression, runShowExpression, ShowExpressionError } from './show-sandbox';
+import {
+  checkShowExpression,
+  runShowExpression,
+  ShowExpressionError,
+  type ShowRosterEntry,
+} from './show-sandbox';
 
 export const MAX_DYNAMIC_TOKENS = 5;
 
@@ -63,6 +68,7 @@ const MESSAGE_LINK =
 const MESSAGE_ID = /^\d{15,25}$/;
 /** `{{reactions sourcePost="Raid signup" emoji=👍 show="reactions.length"}}` */
 const NEW_START = /\{\{\s*reactions(?=[\s}])/g;
+const ROSTER_START = /\{\{\s*roster(?=[\s}])/g;
 const HELP =
   'Use {{reactions sourcePost="Post name" emoji=👍 show="reactions.map((r) => r.name)"}}: show is a JavaScript expression in quotes.';
 
@@ -86,12 +92,17 @@ function refOf(value: string): PostRef {
  * the closing `}}`. A value is bare, or in "double" or 'single' quotes, inside which `}}` is just
  * text and `\"` stands for the quote itself.
  */
-function scanTag(content: string, from: number): { end: number; args: Map<string, string> } {
+function scanTag(
+  content: string,
+  from: number,
+  allowed: readonly string[] = ['sourcepost', 'part', 'emoji', 'show'],
+  help: string = HELP,
+): { end: number; args: Map<string, string> } {
   const args = new Map<string, string>();
   let position = from;
   const fail = (what: string): never => {
     throw new BadRequestException(
-      `${content.slice(Math.max(0, from - 12), from + 40)}… ${what}. ${HELP}`,
+      `${content.slice(Math.max(0, from - 12), from + 40)}… ${what}. ${help}`,
     );
   };
   for (;;) {
@@ -134,7 +145,7 @@ function scanTag(content: string, from: number): { end: number; args: Map<string
       position += value.length;
     }
     const name = key!.toLowerCase();
-    if (!['sourcepost', 'part', 'emoji', 'show'].includes(name) || args.has(name)) {
+    if (!allowed.includes(name) || args.has(name)) {
       fail(`has "${key}", which is not an option here or is given twice`);
     }
     args.set(name, value);
@@ -213,11 +224,83 @@ export function parseAllTokens(parts: readonly { content: string }[]): DynamicTo
   return parts.flatMap((part, index) => parseDynamicTokens(part.content, index + 1));
 }
 
-/** Runs every expression once on sample people, so a wrong one is refused on save. */
-export async function checkExpressions(tokens: readonly DynamicToken[]): Promise<void> {
-  for (const token of tokens) {
+// ---- {{roster show="…"}}: the guild's characters ----
+
+/** `{{roster show="roster.map((c) => c.name)"}}`: the guild's whole character list. */
+export interface RosterToken {
+  /** The text exactly as written, which is what gets replaced. */
+  raw: string;
+  /** The JavaScript expression from `show`, working with `roster` (see `runShowExpression`). */
+  expression: string;
+}
+
+/** What a roster tag shows when it has no `show`: the names of every character. */
+export const DEFAULT_ROSTER_SHOW = 'roster.map((c) => c.name)';
+
+const ROSTER_HELP =
+  'Use {{roster show="roster.map((c) => c.name)"}}: show is a JavaScript expression in quotes.';
+
+/** The roster tags of one message's text, in order. Throws for one that is written wrongly. */
+export function parseRosterTokens(content: string): RosterToken[] {
+  const tokens: RosterToken[] = [];
+  let searchFrom = 0;
+  for (;;) {
+    ROSTER_START.lastIndex = searchFrom;
+    const start = ROSTER_START.exec(content);
+    if (!start) break;
+    const { end, args } = scanTag(content, start.index + start[0].length, ['show'], ROSTER_HELP);
+    const raw = content.slice(start.index, end);
+    const expression = (args.get('show') ?? DEFAULT_ROSTER_SHOW).trim();
+    if (expression === '')
+      throw new BadRequestException(`${raw} has an empty show. ${ROSTER_HELP}`);
+    tokens.push({ raw, expression });
+    searchFrom = end;
+  }
+  if (tokens.length > MAX_DYNAMIC_TOKENS) {
+    throw new BadRequestException(`A message can have at most ${MAX_DYNAMIC_TOKENS} roster tags.`);
+  }
+  return tokens;
+}
+
+export const parseAllRosterTokens = (parts: readonly { content: string }[]): RosterToken[] =>
+  parts.flatMap((part) => parseRosterTokens(part.content));
+
+/** A quick check, before parsing, whether a text has roster tags at all. */
+export const hasRosterTokens = (content: string): boolean => /\{\{\s*roster(?=[\s}])/.test(content);
+
+/** The guild's characters, as the roster tags of a message see them. */
+export interface RosterData {
+  tokens: readonly RosterToken[];
+  entries: readonly ShowRosterEntry[];
+}
+
+/** Changes when any character, or who plays it, changes: what "the roster is the same" means. */
+export function hashRoster(entries: readonly ShowRosterEntry[]): string {
+  return createHash('sha256').update(JSON.stringify(entries)).digest('hex');
+}
+
+/**
+ * Runs every expression once on sample people and characters, so a wrong one is refused on save.
+ */
+export async function checkExpressions(
+  tokens: readonly DynamicToken[],
+  rosterTokens: readonly RosterToken[] = [],
+): Promise<void> {
+  const all = [
+    ...tokens.map((token) => ({
+      raw: token.raw,
+      expression: token.expression,
+      variable: 'reactions' as const,
+    })),
+    ...rosterTokens.map((token) => ({
+      raw: token.raw,
+      expression: token.expression,
+      variable: 'roster' as const,
+    })),
+  ];
+  for (const token of all) {
     try {
-      await checkShowExpression(token.expression);
+      await checkShowExpression(token.expression, token.variable);
     } catch (error) {
       if (error instanceof ShowExpressionError) {
         throw new BadRequestException(`The show expression of ${token.raw} ${error.message}`);
@@ -263,7 +346,8 @@ async function tagText(token: DynamicToken, reactors: readonly Reactor[]): Promi
 }
 
 /**
- * The template with every tag replaced by what its expression makes of the people. A tag whose
+ * The template with every tag replaced by what its expression makes of the people (and, for
+ * `{{roster …}}` tags, of the guild's characters). A tag whose
  * people are unknown (its message is gone or not posted yet) sees nobody. A result that would not fit
  * in a Discord message is cut.
  */
@@ -271,10 +355,21 @@ export async function renderContent(
   template: string,
   tokens: readonly DynamicToken[],
   people: ReadonlyMap<string, readonly Reactor[]>,
+  roster?: RosterData,
 ): Promise<string> {
   let rendered = template;
   for (const token of tokens) {
     const text = await tagText(token, people.get(trackingKey(token)) ?? []);
+    rendered = rendered.split(token.raw).join(text);
+  }
+  for (const token of roster?.tokens ?? []) {
+    let text: string;
+    try {
+      text = await runShowExpression(token.expression, roster?.entries ?? [], 'roster');
+    } catch (error) {
+      if (!(error instanceof ShowExpressionError)) throw error;
+      text = `⚠️ (${error.message})`;
+    }
     rendered = rendered.split(token.raw).join(text);
   }
   return rendered.length <= MAX_POST_LENGTH ? rendered : rendered.slice(0, MAX_POST_LENGTH);

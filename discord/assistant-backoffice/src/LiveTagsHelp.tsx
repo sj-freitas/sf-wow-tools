@@ -215,6 +215,48 @@ export function LiveTagsHelp() {
           </tr>
         </tbody>
       </table>
+      <h5>The guild's roster</h5>
+      <p>
+        <code>{'{{roster show="…"}}'}</code> works the same way, with <code>roster</code>: the list
+        of every character in the guild, sorted by name. It has one option, <code>show</code> (left
+        out, it lists the names), and is written again by itself when the roster changes. Each entry
+        is an object with the character fields above (<code>name</code>, <code>firstName</code>,{' '}
+        <code>lastName</code>, <code>isMain</code>, <code>class</code>, <code>roles</code>,{' '}
+        <code>level</code>) and <code>discordUser</code>: the Discord user who plays it, with{' '}
+        <code>id</code>, <code>tag</code> (a mention), <code>name</code> (their Discord name),{' '}
+        <code>displayName</code> (their nickname in the guild's main server, else the Discord name)
+        and <code>roles</code> (the names of their Discord roles there, a list of text).
+      </p>
+      <table className="syntax-table">
+        <tbody>
+          <tr>
+            <td>
+              <code>{'{{roster show="roster.length"}}'}</code>
+            </td>
+            <td>How many characters: 42</td>
+          </tr>
+          <tr>
+            <td>
+              <code>
+                {
+                  '{{roster show="roster.filter(c => c.isMain && c.roles.includes(\'Tank\')).map(c => c.name)"}}'
+                }
+              </code>
+            </td>
+            <td>Every main tank</td>
+          </tr>
+          <tr>
+            <td>
+              <code>
+                {
+                  '{{roster show="roster.filter(c => c.discordUser.roles.includes(\'Raider\')).map(c => c.name)"}}'
+                }
+              </code>
+            </td>
+            <td>Every character played by someone with the Raider role</td>
+          </tr>
+        </tbody>
+      </table>
       <p className="muted">
         The expression runs in a safe sandbox (no files or network) and is checked when you save. If
         you need a double quote inside it, write <code>\"</code>, or use single quotes.

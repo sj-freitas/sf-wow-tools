@@ -53,7 +53,8 @@ export class PostSenderService {
     const tokens = parseDynamicTokens(part.content, index + 1);
     const sources = await this.tracking.sourceMap(task.id, task.guildId, tokens);
     const people = await this.tracking.fetchPeople(task.guildId, tokens, sources);
-    const rendered = await renderContent(part.content, tokens, people);
+    const roster = await this.tracking.rosterOf(task.guildId, part.content);
+    const rendered = await renderContent(part.content, tokens, people, roster);
     const files = await this.images.files(part.imageIds);
     const messageId = await this.bot.postMessage(config.channelId, rendered, {
       suppressEmbeds: !part.embedLinks,

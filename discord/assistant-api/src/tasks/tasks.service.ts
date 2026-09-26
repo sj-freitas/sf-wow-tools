@@ -27,6 +27,7 @@ import {
 import { PostImagesService } from './post-images.service';
 import {
   checkExpressions,
+  parseAllRosterTokens,
   parseAllTokens,
   parseDynamicTokens,
   renderContent,
@@ -254,7 +255,7 @@ export class TasksService {
     const runAt = postNow ? now : this.parseFutureDate(input.runAtLocal, timezone, now);
     const config = await this.parsePostConfig(guildId, input, undefined);
     const tokens = parseAllTokens(config.parts);
-    await checkExpressions(tokens);
+    await checkExpressions(tokens, parseAllRosterTokens(config.parts));
     await this.tracking.resolveSources(guildId, tokens);
     await this.images.assertUsable(guildId, undefined, imageIdsOf(config));
     const enabled = postNow || input.enabled !== false;
@@ -312,7 +313,7 @@ export class TasksService {
     }
     this.assertOrderKept(oldConfig, config, state);
     const tokens = parseAllTokens(config.parts);
-    await checkExpressions(tokens);
+    await checkExpressions(tokens, parseAllRosterTokens(config.parts));
     const sources = await this.tracking.resolveSources(task.guildId, tokens, taskId);
     await this.images.assertUsable(task.guildId, taskId, imageIdsOf(config));
     const enabled = input.enabled === undefined ? task.enabled : input.enabled === true;
@@ -436,12 +437,17 @@ export class TasksService {
       if (!changed) continue;
 
       const tokens = parseDynamicTokens(part.content, index + 1);
+      const roster = await this.tracking.rosterOf(task.guildId, part.content);
+      const dynamic = tokens.length > 0 || roster !== undefined;
       let rendered = part.content;
-      if (tokens.length > 0) {
+      if (dynamic) {
         try {
-          const fetched = await this.tracking.fetchPeople(task.guildId, tokens, sources);
+          const fetched =
+            tokens.length > 0
+              ? await this.tracking.fetchPeople(task.guildId, tokens, sources)
+              : new Map();
           people = new Map([...(people ?? []), ...fetched]);
-          rendered = await renderContent(part.content, tokens, fetched);
+          rendered = await renderContent(part.content, tokens, fetched, roster);
         } catch (error) {
           return {
             ...done(),
@@ -455,7 +461,7 @@ export class TasksService {
         await this.bot.editMessage(posted.channelId, posted.messageId, rendered, {
           suppressEmbeds: !part.embedLinks,
           // Edits that show people never ping them.
-          ...(tokens.length > 0 ? { quiet: true } : {}),
+          ...(dynamic ? { quiet: true } : {}),
           ...(imagesChanged ? { files: await this.images.files(part.imageIds) } : {}),
         });
         messages = messages.map((message) =>
