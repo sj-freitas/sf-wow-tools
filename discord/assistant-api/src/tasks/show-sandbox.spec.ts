@@ -16,19 +16,52 @@ const people = [
     tag: '<@1>',
     name: 'Ana',
     displayName: 'Ana (Dev)',
-    mainName: 'Merric',
-    mains: ['Merric'],
+    characters: [
+      {
+        name: 'Merric Stone',
+        firstName: 'Merric',
+        lastName: 'Stone',
+        isMain: true,
+        class: 'Warrior',
+        roles: ['Tank'],
+        level: 60,
+      },
+      {
+        name: 'Olga',
+        firstName: 'Olga',
+        lastName: '',
+        isMain: false,
+        class: 'Priest',
+        roles: ['Healer'],
+        level: 58,
+      },
+    ],
   },
-  { id: '2', tag: '<@2>', name: 'Bruno', displayName: 'Bruno', mainName: 'Bruno', mains: [] },
+  { id: '2', tag: '<@2>', name: 'Bruno', displayName: 'Bruno', characters: [] },
 ];
 
 describe('runShowExpression', () => {
   it('runs the example from the docs: a count, then who is who', async () => {
     const text = await runShowExpression(
-      '`${reactions.length}: ${reactions.map((a) => `${a.tag} is ${a.mainName}`)}`',
+      '`${reactions.length}: ${reactions.map((a) => `${a.tag} is ${a.name}`)}`',
       people,
     );
-    assert.equal(text, '2: <@1> is Merric,<@2> is Bruno');
+    assert.equal(text, '2: <@1> is Ana,<@2> is Bruno');
+  });
+
+  it('gives the characters, with class, roles and whether they are the main', async () => {
+    const text = await runShowExpression(
+      "reactions.flatMap(r => r.characters.filter(c => c.roles.includes('Tank')).map(c => `${c.name} (${c.class})`))",
+      people,
+    );
+    assert.equal(text, 'Merric Stone (Warrior)');
+    assert.equal(
+      await runShowExpression(
+        'reactions.map(r => (r.characters.find(c => c.isMain) || {}).name || r.name)',
+        people,
+      ),
+      'Merric Stone, Bruno',
+    );
   });
 
   it('gives each person their server nickname as displayName', async () => {
@@ -110,11 +143,11 @@ describe('checking expressions on save', () => {
 describe('an expression in a post', () => {
   it('is replaced by what it returns, and a failing one is shown as a warning, not a broken post', async () => {
     const text =
-      'Going: {{reactions sourcePost="A" emoji=👍 show="`${reactions.length}: ${reactions.map(a => a.mainName)}`"}} / {{reactions sourcePost="A" emoji=👍 show="reactions.x.y"}}';
+      'Going: {{reactions sourcePost="A" emoji=👍 show="`${reactions.length}: ${reactions.map(a => a.name)}`"}} / {{reactions sourcePost="A" emoji=👍 show="reactions.x.y"}}';
     const tokens = parseDynamicTokens(text);
-    const ana: Reactor = { id: '1', name: 'Ana', mains: ['Merric'] };
+    const ana: Reactor = { id: '1', name: 'Ana' };
     const map = new Map([[trackingKey(tokens[0]), [ana]]]);
     const out = await renderContent(text, tokens, map);
-    assert.match(out, /^Going: 1: Merric \/ ⚠️ \(TypeError/);
+    assert.match(out, /^Going: 1: Ana \/ ⚠️ \(TypeError/);
   });
 });

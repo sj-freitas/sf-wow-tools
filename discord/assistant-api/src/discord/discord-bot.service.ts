@@ -157,13 +157,17 @@ export class DiscordBotService {
     return { id: channel.id, name: channel.name };
   }
 
-  /** With `suppressEmbeds` Discord shows no link previews under the message. */
+  /**
+   * With `suppressEmbeds` Discord shows no link previews under the message. `files` are attached
+   * (images show under the text).
+   */
   async postMessage(
     channelId: string,
     content: string,
-    options: { suppressEmbeds?: boolean } = {},
+    options: { suppressEmbeds?: boolean; files?: BotFile[] } = {},
   ): Promise<string> {
     const message = (await this.rest.post(Routes.channelMessages(channelId), {
+      files: options.files && options.files.length > 0 ? options.files : undefined,
       body: {
         content,
         allowed_mentions: { parse: ['users', 'roles'] },
@@ -221,19 +225,24 @@ export class DiscordBotService {
 
   /**
    * `suppressEmbeds` sets or clears the "no link previews" flag along with the new text. `quiet`
-   * makes sure the edit pings nobody, whatever it mentions.
+   * makes sure the edit pings nobody, whatever it mentions. With `files` (an empty list too) the
+   * message's attachments are replaced by exactly these files; without it they are left alone.
    */
   async editMessage(
     channelId: string,
     messageId: string,
     content: string,
-    options: { suppressEmbeds?: boolean; quiet?: boolean } = {},
+    options: { suppressEmbeds?: boolean; quiet?: boolean; files?: BotFile[] } = {},
   ): Promise<void> {
+    const files = options.files;
     await this.rest.patch(Routes.channelMessage(channelId, messageId), {
+      files: files && files.length > 0 ? files : undefined,
       body: {
         content,
         allowed_mentions: { parse: options.quiet ? [] : ['users', 'roles'] },
         flags: options.suppressEmbeds ? SUPPRESS_EMBEDS : 0,
+        // New files are referred to by their position; an empty list drops every attachment.
+        ...(files ? { attachments: files.map((file, id) => ({ id, filename: file.name })) } : {}),
       },
     });
   }

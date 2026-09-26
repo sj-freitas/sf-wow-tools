@@ -192,12 +192,41 @@ export interface ScheduledPost {
   post: {
     serverId: string;
     channelId: string;
-    content: string;
-    seedReactions: string[];
-    /** Whether Discord shows link previews under the post. */
-    embedLinks: boolean;
-    posted: { messageId: string; url: string; postedAt: string; messageDeleted: boolean } | null;
+    /** The messages of the post, in the order they are sent. */
+    parts: PostPart[];
+    /** Some message of the post is in Discord. */
+    live: boolean;
+    /** Every message of the post is in Discord. */
+    complete: boolean;
+    /** It was in Discord and every message was deleted. */
+    wasDeleted: boolean;
   };
+}
+
+/** One message of a post. */
+export interface PostPart {
+  id: string;
+  content: string;
+  seedReactions: string[];
+  /** Whether Discord shows link previews under the message. */
+  embedLinks: boolean;
+  /** Seconds waited after the previous message before this one is sent. */
+  delaySeconds: number;
+  /** Uploaded images shown under the text (see `postImageUrl`). */
+  imageIds: string[];
+  /** The message in Discord; null when it is not there. */
+  posted: { messageId: string; url: string; postedAt: string } | null;
+}
+
+/** What is sent to save one message of a post. */
+export interface PostPartInput {
+  /** Kept when editing, so the message keeps its place in Discord. */
+  id?: string;
+  content: string;
+  seedReactions: string[];
+  embedLinks: boolean;
+  delaySeconds: number;
+  imageIds: string[];
 }
 
 export interface PostInput {
@@ -209,8 +238,7 @@ export interface PostInput {
   postNow?: boolean;
   serverId: string;
   channelId: string;
-  content: string;
-  seedReactions: string[];
+  parts: PostPartInput[];
 }
 
 /** One page of the guild's posts. */

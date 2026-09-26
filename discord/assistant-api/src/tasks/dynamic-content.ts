@@ -1,9 +1,20 @@
 import { createHash } from 'node:crypto';
 import { BadRequestException } from '@nestjs/common';
-import { MAX_POST_LENGTH, normalizeEmoji } from './post-task';
+import { MAX_PARTS, MAX_POST_LENGTH, normalizeEmoji } from './post-task';
 import { checkShowExpression, runShowExpression, ShowExpressionError } from './show-sandbox';
 
 export const MAX_DYNAMIC_TOKENS = 5;
+
+/** A character of someone who reacted, as looked up in the guild's roster. */
+export interface ReactorCharacter {
+  name: string;
+  firstName: string;
+  lastName: string;
+  isMain: boolean;
+  class: string;
+  roles: string[];
+  level: number;
+}
 
 export interface Reactor {
   id: string;
@@ -11,15 +22,16 @@ export interface Reactor {
   name: string;
   /** How they are shown in the message's server: their nickname there, else `name`. */
   displayName?: string;
-  /** Their main characters in the guild (one entry each; empty when they have none). */
-  mains?: string[];
+  /** Their characters in the guild, main first (empty when they have none). */
+  characters?: ReactorCharacter[];
 }
 
 /** How a token points at the post whose reactions it shows. */
 export interface PostRef {
   /**
-   * `name:<lower-cased name>` (a scheduled post), `msgid:<message id>` (a message the bot posted),
-   * `msg:<channel id>/<message id>` (any message, by its link) or `self` (the post the text is in).
+   * `name:<lower-cased name>#<part>` (a message of a scheduled post), `self#<part>` (a message of
+   * the post the text is in), `msgid:<message id>` (a message the bot posted) or
+   * `msg:<channel id>/<message id>` (any message, by its link).
    */
   ref: string;
   /** As written, for messages. */
@@ -34,6 +46,8 @@ export interface DynamicToken extends PostRef {
   raw: string;
   /** Unicode emoji, or `name:id` for a custom one. */
   emoji: string;
+  /** For a scheduled post (a name, or itself): which of its messages, from 1. 0 otherwise. */
+  part: number;
   /**
    * The JavaScript expression that writes the people, from `show`: `reactions` is the list of
    * people who reacted (see `runShowExpression`).
@@ -120,14 +134,14 @@ function scanTag(content: string, from: number): { end: number; args: Map<string
       position += value.length;
     }
     const name = key!.toLowerCase();
-    if (!['sourcepost', 'emoji', 'show'].includes(name) || args.has(name)) {
+    if (!['sourcepost', 'part', 'emoji', 'show'].includes(name) || args.has(name)) {
       fail(`has "${key}", which is not an option here or is given twice`);
     }
     args.set(name, value);
   }
 }
 
-function tokenOf(raw: string, args: Map<string, string>): DynamicToken {
+function tokenOf(raw: string, args: Map<string, string>, ownPart: number): DynamicToken {
   const emojiText = args.get('emoji');
   if (!emojiText) throw new BadRequestException(`${raw} needs an emoji. ${HELP}`);
   const emoji = normalizeEmoji(emojiText);
@@ -141,16 +155,41 @@ function tokenOf(raw: string, args: Map<string, string>): DynamicToken {
   const post = args.get('sourcepost');
   const target: PostRef =
     post === undefined || post.trim() === '' ? { ref: 'self', label: 'this post' } : refOf(post);
-  return { raw, ...target, emoji, expression: show };
+
+  // Which message of a post: `part=2` (counting from 1). Left out, a tag reading its own post
+  // reads the message it is in; one reading another post reads that post's first message.
+  const partText = args.get('part');
+  const given = partText === undefined ? undefined : Number(partText);
+  if (given !== undefined && (!Number.isInteger(given) || given < 1 || given > MAX_PARTS)) {
+    throw new BadRequestException(`part in ${raw} must be a number from 1 to ${MAX_PARTS}.`);
+  }
+  const ofPost = target.ref === 'self' || target.ref.startsWith('name:');
+  if (given !== undefined && !ofPost) {
+    throw new BadRequestException(
+      `part in ${raw} only applies to a scheduled post; a message id or link is already one message.`,
+    );
+  }
+  const part = ofPost ? (given ?? (target.ref === 'self' ? ownPart : 1)) : 0;
+  return {
+    raw,
+    ...target,
+    ref: ofPost ? `${target.ref}#${part}` : target.ref,
+    part,
+    emoji,
+    expression: show,
+  };
 }
 
 /**
- * The dynamic tags of a text, in order: `{{reactions sourcePost="Raid signup" emoji=👍 show="reactions.length"}}`
- * (the source can be a message id, a message link or a post name, and is this post when left
- * out). `show` is a JavaScript expression, in quotes when it has spaces. Throws for a tag that is written wrongly, so a typo is reported
- * on save instead of showing up in Discord. (Expressions are checked by `checkExpressions`.)
+ * The dynamic tags of one message's text, in order:
+ * `{{reactions sourcePost="Raid signup" part=2 emoji=👍 show="reactions.length"}}` (the source can
+ * be a message id, a message link or a post name, and is this post when left out; `part` picks one
+ * message of a post). `show` is a JavaScript expression, in quotes when it has spaces. `ownPart` is
+ * the number of the message the text belongs to (from 1). Throws for a tag that is written wrongly,
+ * so a typo is reported on save instead of showing up in Discord. (Expressions are checked by
+ * `checkExpressions`.)
  */
-export function parseDynamicTokens(content: string): DynamicToken[] {
+export function parseDynamicTokens(content: string, ownPart = 1): DynamicToken[] {
   const tokens: DynamicToken[] = [];
   let searchFrom = 0;
   for (;;) {
@@ -158,13 +197,20 @@ export function parseDynamicTokens(content: string): DynamicToken[] {
     const start = NEW_START.exec(content);
     if (!start) break;
     const { end, args } = scanTag(content, start.index + start[0].length);
-    tokens.push(tokenOf(content.slice(start.index, end), args));
+    tokens.push(tokenOf(content.slice(start.index, end), args, ownPart));
     searchFrom = end;
   }
   if (tokens.length > MAX_DYNAMIC_TOKENS) {
-    throw new BadRequestException(`A post can have at most ${MAX_DYNAMIC_TOKENS} reactions tags.`);
+    throw new BadRequestException(
+      `A message can have at most ${MAX_DYNAMIC_TOKENS} reactions tags.`,
+    );
   }
   return tokens;
+}
+
+/** The tags of every message of a post, each read as belonging to its own message. */
+export function parseAllTokens(parts: readonly { content: string }[]): DynamicToken[] {
+  return parts.flatMap((part, index) => parseDynamicTokens(part.content, index + 1));
 }
 
 /** Runs every expression once on sample people, so a wrong one is refused on save. */
@@ -186,19 +232,16 @@ export const trackingKey = (token: Pick<DynamicToken, 'ref' | 'emoji'>) =>
   `${token.ref}|${token.emoji}`;
 
 /**
- * Changes when someone reacts, un-reacts, renames themselves or gets a main: what "nothing changed"
+ * Changes when someone reacts, un-reacts, renames themselves or their characters change: what "nothing changed"
  * means. Server nicknames are left out: they cost a lookup each, so they are only fetched once this
  * has changed.
  */
 export function hashReactors(reactors: readonly Reactor[]): string {
   const sorted = [...reactors].sort((a, b) => a.id.localeCompare(b.id));
   return createHash('sha256')
-    .update(JSON.stringify(sorted.map((r) => [r.id, r.name, r.mains ?? []])))
+    .update(JSON.stringify(sorted.map((r) => [r.id, r.name, r.characters ?? []])))
     .digest('hex');
 }
-
-const mainNameOf = (reactor: Reactor): string =>
-  reactor.mains && reactor.mains.length > 0 ? reactor.mains.join(' / ') : reactor.name;
 
 /** What a tag's expression works with; a failing expression shows as a warning, not a broken post. */
 async function tagText(token: DynamicToken, reactors: readonly Reactor[]): Promise<string> {
@@ -210,8 +253,7 @@ async function tagText(token: DynamicToken, reactors: readonly Reactor[]): Promi
         tag: `<@${reactor.id}>`,
         name: reactor.name,
         displayName: reactor.displayName ?? reactor.name,
-        mainName: mainNameOf(reactor),
-        mains: reactor.mains ?? [],
+        characters: reactor.characters ?? [],
       })),
     );
   } catch (error) {

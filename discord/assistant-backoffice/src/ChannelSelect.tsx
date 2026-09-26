@@ -9,14 +9,20 @@ interface Props {
   /** Restrict to one server (by id). */
   onlyServer?: string;
   required?: boolean;
+  disabled?: boolean;
 }
 
 /** Channel dropdown grouped by Discord server. */
-export function ChannelSelect({ groups, value, onChange, onlyServer, required }: Props) {
+export function ChannelSelect({ groups, value, onChange, onlyServer, required, disabled }: Props) {
   const shown = groups.filter((group) => !onlyServer || group.serverId === onlyServer);
   return (
     <>
-      <select value={value} onChange={(e) => onChange(e.target.value)} required={required}>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        required={required}
+        disabled={disabled}
+      >
         <option value="">Choose a channel…</option>
         {shown.map((group) => (
           <optgroup key={group.serverId} label={group.serverName}>

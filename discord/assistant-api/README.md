@@ -242,7 +242,7 @@ modal; a modal handler answers with a private message. Unknown or failing button
 ### Live reactions in a post's text
 
 A post's text can show who reacted to a message:
-`{{reactions sourcePost="Raid signup" emoji=👍 show="reactions.map((r) => r.mainName)"}}`.
+`{{reactions sourcePost="Raid signup" emoji=👍 show="reactions.map((r) => r.displayName)"}}`.
 
 - **`sourcePost`** says which message to read: its Discord **message id** (Copy Message ID, or **Copy ID** on
   a live post) for any message in one of the guild's servers, a **link** (Copy Message Link; the way to
@@ -258,12 +258,15 @@ A post's text can show who reacted to a message:
   it). Custom emoji are stored as `name:id`, and the reactions of any emoji on the message can be read,
   whichever server it comes from.
 - **`show`** is a **JavaScript expression** (there are no keywords), evaluated with `reactions`: an array
-  with one object per person who reacted, `{ id, tag, name, displayName, mainName, mains }` (`tag` is `<@id>`,
-  `name` the Discord name (global display name, else username; never the id, which is `id`),
-  `displayName` the nickname they have in the message's server, else `name`, `mainName` the main characters in the guild joined with " / " or the
-  Discord name when they have none, `mains` a list). Left out it is `reactions.map((r) => r.name)`. An
-  array result is joined with ", ". Examples: `reactions.length`, `reactions.map(r => r.tag)`,
-  `` `${reactions.length}: ${reactions.map((a) => `${a.tag} is ${a.mainName}`).join(', ')}` ``.
+  with one object per person who reacted:
+  `{ id, tag, name, displayName, characters }`. `tag` is `<@id>`; `name` the Discord name (global display
+  name, else username; never the id, which is `id`); `displayName` the nickname they have in the
+  message's server, else `name`; `characters` their characters in the guild (an empty array if none),
+  main first, each `{ name, firstName, lastName, isMain, class, roles, level }` (`name` is
+  "Merric Stone", `roles` a list of "Tank", "Healer", "Melee DPS", "Ranged DPS"). Left out, `show` is
+  `reactions.map((r) => r.name)`. An array result is joined with ", ". Examples: `reactions.length`,
+  `reactions.map(r => r.tag)`, `reactions.map(r => (r.characters.find(c => c.isMain) || r).name)` (the
+  main, else the Discord name), `reactions.flatMap(r => r.characters).filter(c => c.roles.includes('Tank')).map(c => c.name)`.
   Options may come in any order; a value with spaces goes in quotes, inside which `}}` and `${…}` are
   just text (use `\"` for a double quote, or single quotes). Up to 5 tags per post; a wrong tag, an
   unknown source or an ambiguous name is refused on save.
@@ -280,9 +283,9 @@ A post's text can show who reacted to a message:
   again looks the name up afresh. The post's text is the _template_; what is in Discord is kept in the
   task state (`renderedContent`).
 - **Refreshing:** every scheduler tick (a minute) the worker reads, for each tracked post that is in
-  Discord, who reacted (the bot's own reaction left out), looks up their main characters in the database
+  Discord, who reacted (the bot's own reaction left out), looks up their characters in the database
   (no Discord calls) and hashes the list. Only when the hash changed (someone reacted, un-reacted,
-  renamed, or got a new main) is the message edited, and only if the rendered text really changed. Edits
+  renamed, or a character of theirs changed) is the message edited, and only if the rendered text really changed. Edits
   that show people never ping them. A scheduled post is rendered right before it goes out. A message
   longer than 2000 characters is cut. Names come free with Discord's reaction list (no server nicknames,
   which would need a lookup per person).
@@ -367,25 +370,55 @@ worker dies between posting and saving, one post can be repeated after the lease
 schedule engine (`src/tasks/schedule.ts`, the catch-up of recurring tasks) also supports daily and
 weekly schedules, unused by posts, for the planned channel cleanup.
 
-**Posts.** A post is sent **once**, as **one message**, and one database row tracks it (recurring
-events will be a separate flow). Markdown text goes to a channel of one of the guild's servers at a
-chosen date and time, with optional reactions added by the bot (polls); the backoffice previews the
-markdown with mentions shown by name. A post moves through these states:
+**Posts.** A post is sent **once**, as **one or more messages** ("parts"), and one database row tracks
+it (recurring events will be a separate flow). Markdown text goes to a channel of one of the guild's
+servers at a chosen date and time, with optional reactions added by the bot (polls); the backoffice
+previews the markdown with mentions shown by name. A post moves through these states:
 
 - _Scheduled_: not sent yet. The date can be changed, "Post now" sends it right away, "Pause" holds it
   (resuming one whose time has passed sends it immediately).
-- _Posted_: the message is in Discord. Saving new text edits that message; its live reaction
-  counts (`GET /api/tasks/:id/reactions`, without the bot's own vote) show right on the post and
-  refresh every 10 s while the page is visible.
-  While it is live it cannot be sent again or moved to a new date.
-- _Deleted from Discord_ (**Delete post**, `POST /api/tasks/:id/delete-post`): the message is removed
+- _Posted_: every message is in Discord. Saving edits those messages; the live reaction counts of each
+  (`GET /api/tasks/:id/reactions?part=n`, without the bot's own vote) show right on the post and
+  refresh every 10 s while the page is visible. While it is live it cannot be sent again or moved to
+  a new date or channel.
+- _Partly posted_: a run stopped halfway (Discord refused the third message, say). What was sent is
+  kept, and the retry (or "Post now") sends only the missing messages, so nothing is sent twice.
+- _Deleted from Discord_ (**Delete post**, `POST /api/tasks/:id/delete-post`): every message is removed
   but the post stays, so it can be sent again with "Post now" or a new date.
 - _Untracked_ (**Untrack**, `DELETE /api/tasks/:id`): the row and its history are removed from the
   backoffice and the database. Whatever it posted stays in Discord and can no longer be deleted from
   the backoffice (the UI warns about this; delete the post first if it should go too).
 
+**Several messages.** `config.parts` is the list (1 to 10) of `{ id, content, seedReactions,
+embedLinks, delaySeconds, imageIds }`; `state.messages` records, per part id, the Discord message
+(`messageId`, channel, the text as posted, its images and link-preview setting, and `deleted` when it
+was removed in Discord). Both are JSON, so there is no table for parts. At the scheduled time the worker
+sends the parts **one after the other, in order**, waiting `delaySeconds` (0 to 60, at most 240 in
+total, so a sequence stays inside the worker's 5 minute lease) before each except the first. Progress
+is saved after every message. Each part has its own text, reactions, link-preview setting and images.
+
+- **Order is fixed once posted.** Messages already in Discord keep their order (Discord cannot move a
+  message): they can be edited or removed, new messages go after them (and are sent as soon as the post is
+  saved, when the whole post was already up), and it is refused if a new message is put before or
+  between posted ones. Messages that are not in Discord yet can be reordered freely.
+  **Removing** a posted message from the post deletes it from Discord.
+- **Saving a live post edits only what changed**: the messages whose text, images or link previews
+  differ (an image change replaces that message's attachments).
+- The form has one card per message (move up/down, remove, text, images, reactions, links, wait), a
+  preview of each message with its images, and a **preview of the whole sequence**.
+- A `{{reactions …}}` tag can say which message it reads: `part=2` (default: its own message for a tag
+  reading its own post, the first message of another post). Copy ID and View in Discord are per message.
+
+**Images.** Each message can have up to 4 images (PNG, JPEG, GIF or WebP, 5 MB each, checked by
+content), shown under its text. They are uploaded from the form
+(`POST /api/guilds/:guildId/post-images`, Officers; preview at `GET …/post-images/:id`) and kept in
+the `post_images` table, because a post goes out later. An image belongs to no post until the post
+that lists it is saved; uploads never used are removed by the worker after a day, and images a post
+stops listing are removed when it is saved. Deleting a post deletes its images. Files are sent as
+`image-1.png`, … (original names are not kept).
+
 The list (`GET /api/guilds/:id/tasks?query=&page=`) shows ten posts to a page, newest date first.
-The search covers every page: each word must appear in the name or the text (case-insensitive,
+The search covers every page: each word must appear in the name or the text of a message (case-insensitive,
 partial words count). Pagination is by offset, so a post added while you browse can shift a page.
 
 Posts never ping `@everyone`/`@here` (only user and role mentions are allowed).

@@ -9,7 +9,7 @@ const REFRESH_MS = 10_000;
  * who reacted. Refreshes every 10 seconds while the page is visible; shows nothing until somebody
  * has reacted.
  */
-export function ReactionsPanel({ taskId }: { taskId: string }) {
+export function ReactionsPanel({ taskId, part = 1 }: { taskId: string; part?: number }) {
   const [reactions, setReactions] = useState<Reaction[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState<string | null>(null);
@@ -17,7 +17,7 @@ export function ReactionsPanel({ taskId }: { taskId: string }) {
   useEffect(() => {
     const load = () => {
       if (document.hidden) return Promise.resolve();
-      return fetchTaskReactions(taskId)
+      return fetchTaskReactions(taskId, part)
         .then((result) => {
           setReactions(result);
           setError(null);
@@ -27,7 +27,7 @@ export function ReactionsPanel({ taskId }: { taskId: string }) {
     void load();
     const timer = setInterval(() => void load(), REFRESH_MS);
     return () => clearInterval(timer);
-  }, [taskId]);
+  }, [taskId, part]);
 
   if (error) return <p className="status-error">{error}</p>;
   if (!reactions || reactions.length === 0) return null;
@@ -56,22 +56,30 @@ export function ReactionsPanel({ taskId }: { taskId: string }) {
           </li>
         ))}
       </ul>
-      {opened && <Reactors taskId={taskId} reaction={opened} />}
+      {opened && <Reactors taskId={taskId} part={part} reaction={opened} />}
     </>
   );
 }
 
 /** The people behind one reaction; reloaded when its count changes. */
-function Reactors({ taskId, reaction }: { taskId: string; reaction: Reaction }) {
+function Reactors({
+  taskId,
+  part,
+  reaction,
+}: {
+  taskId: string;
+  part: number;
+  reaction: Reaction;
+}) {
   const [people, setPeople] = useState<{ id: string; name: string }[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setError(null);
-    fetchReactionUsers(taskId, reaction.emoji)
+    fetchReactionUsers(taskId, reaction.emoji, part)
       .then(setPeople)
       .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)));
-  }, [taskId, reaction.emoji, reaction.count]);
+  }, [taskId, part, reaction.emoji, reaction.count]);
 
   return (
     <div className="reactors">

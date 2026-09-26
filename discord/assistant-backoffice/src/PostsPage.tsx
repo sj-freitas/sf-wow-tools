@@ -25,14 +25,18 @@ const SEARCH_DELAY_MS = 300;
 const isQueued = (post: ScheduledPost): boolean =>
   post.enabled && post.nextRunAt !== null && new Date(post.nextRunAt).getTime() <= Date.now();
 
-/** In Discord right now. */
-const isLive = (post: ScheduledPost): boolean =>
-  post.post.posted !== null && !post.post.posted.messageDeleted;
+/** Some message of the post is in Discord right now. */
+const isLive = (post: ScheduledPost): boolean => post.post.live;
 
-const wasDeleted = (post: ScheduledPost): boolean => post.post.posted?.messageDeleted === true;
+const wasDeleted = (post: ScheduledPost): boolean => post.post.wasDeleted;
+
+/** How many messages of the post are in Discord. */
+const liveCount = (post: ScheduledPost): number =>
+  post.post.parts.filter((part) => part.posted !== null).length;
 
 function statusLabel(post: ScheduledPost): string {
-  if (isLive(post)) return 'Posted';
+  if (post.post.complete) return 'Posted';
+  if (isLive(post)) return `Partly posted (${liveCount(post)} of ${post.post.parts.length})`;
   if (wasDeleted(post)) return 'Deleted from Discord';
   if (!post.enabled) return 'Paused';
   if (isQueued(post)) return 'Queued';
@@ -241,7 +245,13 @@ export function PostsPage({ guild, timezone }: Props) {
                   `Paused. It was set for ${formatWhen(post.schedule.runAt, timezone)}.`
                 )}
               </div>
-              <div className="post-snippet">{snippet(post.post.content)}</div>
+              <div className="post-snippet">{snippet(post.post.parts[0]?.content ?? '')}</div>
+              {post.post.parts.length > 1 && (
+                <div className="muted">
+                  {post.post.parts.length} messages, sent in order
+                  {post.post.parts.some((part) => part.imageIds.length > 0) && ' · with images'}
+                </div>
+              )}
               {post.lastRunAt && !isLive(post) && (
                 <div className="muted">
                   Last ran: {formatWhen(post.lastRunAt, timezone)} ({timeAgo(post.lastRunAt)}) ·{' '}
@@ -271,20 +281,35 @@ export function PostsPage({ guild, timezone }: Props) {
                 </div>
               )}
             </div>
-            {isLive(post) && <ReactionsPanel taskId={post.id} />}
+            {post.post.parts.map(
+              (part, i) =>
+                part.posted && (
+                  <div key={part.id} className="part-reactions">
+                    {post.post.parts.length > 1 && <span className="muted">Message {i + 1}</span>}
+                    <ReactionsPanel taskId={post.id} part={i + 1} />
+                  </div>
+                ),
+            )}
             <div className="settings-actions task-actions">
-              {post.post.posted && isLive(post) && <CopyIdButton id={post.post.posted.messageId} />}
-              {post.post.posted && isLive(post) && (
-                <a
-                  className="btn btn-sm"
-                  href={post.post.posted.url}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  View in Discord
-                </a>
-              )}
-              {!isLive(post) && post.enabled && (
+              {post.post.parts.map((part, i) => {
+                const label = post.post.parts.length > 1 ? ` ${i + 1}` : '';
+                return (
+                  part.posted && (
+                    <span key={part.id} className="part-links">
+                      <CopyIdButton id={part.posted.messageId} label={label} />
+                      <a
+                        className="btn btn-sm"
+                        href={part.posted.url}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        {label ? `View${label} in Discord` : 'View in Discord'}
+                      </a>
+                    </span>
+                  )
+                );
+              })}
+              {!post.post.complete && post.enabled && (
                 <button
                   type="button"
                   className="btn btn-sm"
@@ -315,11 +340,11 @@ export function PostsPage({ guild, timezone }: Props) {
                 <button
                   type="button"
                   className="btn btn-sm btn-danger"
-                  title="Removes the message from Discord. The post stays here, so it can be sent again later."
+                  title="Removes the message(s) from Discord. The post stays here, so it can be sent again later."
                   onClick={() =>
                     void confirm({
                       title: 'Delete the post from Discord?',
-                      message: `The message in #${channelName(post.post.serverId, post.post.channelId) ?? 'the channel'} is removed${post.post.seedReactions.length > 0 ? ', with its reactions' : ''}. "${post.name}" stays here, so you can send it again later with Post now or a new date.`,
+                      message: `${liveCount(post) === 1 ? 'The message' : `The ${liveCount(post)} messages`} in #${channelName(post.post.serverId, post.post.channelId) ?? 'the channel'} ${liveCount(post) === 1 ? 'is' : 'are'} removed, with the reactions. "${post.name}" stays here, so you can send it again later with Post now or a new date.`,
                       confirmLabel: 'Delete post',
                       danger: true,
                     }).then((ok) => ok && run(deletePostMessage(post.id)))
@@ -387,7 +412,7 @@ export function PostsPage({ guild, timezone }: Props) {
  * Copies the Discord message id of the post, for `sourcePost=…` in a `{{reactions …}}` tag (in this
  * post's text or another's), which shows who reacted with an emoji.
  */
-function CopyIdButton({ id }: { id: string }) {
+function CopyIdButton({ id, label = '' }: { id: string; label?: string }) {
   const [copied, setCopied] = useState(false);
   return (
     <button
@@ -404,7 +429,7 @@ function CopyIdButton({ id }: { id: string }) {
           .catch(() => window.prompt('Copy the message id:', id));
       }}
     >
-      {copied ? '✓ Copied' : 'Copy ID'}
+      {copied ? '✓ Copied' : `Copy ID${label}`}
     </button>
   );
 }

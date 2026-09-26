@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict';
 import { beforeEach, describe, it } from 'node:test';
-import { ForbiddenException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import type { AuthenticatedRequest } from '../auth/auth.types';
 import type { GuildAccessService } from '../auth/guild-access.service';
 import { TasksController } from './tasks.controller';
+import type { PostImagesService } from './post-images.service';
 import type { TasksService } from './tasks.service';
 
 const req = { user: { id: 'u1' } } as AuthenticatedRequest;
@@ -12,12 +13,14 @@ describe('TasksController is for Officers only', () => {
   let officer: boolean;
   let checkedGuilds: string[];
   let calls: string[];
+  let reactionParts: number[];
   let controller: TasksController;
 
   beforeEach(() => {
     officer = true;
     checkedGuilds = [];
     calls = [];
+    reactionParts = [];
     const check = async (_user: string, guildId: string) => {
       checkedGuilds.push(guildId);
       if (!officer) throw new ForbiddenException();
@@ -37,10 +40,20 @@ describe('TasksController is for Officers only', () => {
       remove: async () => void calls.push('remove'),
       deletePost: async () => void calls.push('deletePost'),
       runNow: async () => void calls.push('runNow'),
-      reactions: async () => void calls.push('reactions'),
-      reactionUsers: async () => void calls.push('reactionUsers'),
+      reactions: async (_id: string, part: number) => {
+        calls.push('reactions');
+        reactionParts.push(part);
+      },
+      reactionUsers: async (_id: string, _emoji: unknown, part: number) => {
+        calls.push('reactionUsers');
+        reactionParts.push(part);
+      },
     } as unknown as TasksService;
-    controller = new TasksController(tasks, guildAccess);
+    const images = {
+      upload: async () => ({ id: 'i', contentType: 'image/png', size: 1 }),
+      get: async () => null,
+    } as unknown as PostImagesService;
+    controller = new TasksController(tasks, guildAccess, images);
   });
 
   it('lets Officers do everything', async () => {
@@ -81,10 +94,39 @@ describe('TasksController is for Officers only', () => {
       () => controller.runNow(req, 't'),
       () => controller.reactions(req, 't'),
       () => controller.reactionUsers(req, 't', '👍'),
+      () => controller.uploadImage(req, 'g', { buffer: Buffer.alloc(1) }),
+      () => controller.image(req, 'g', 'i', {} as never),
     ]) {
       await assert.rejects(attempt(), ForbiddenException);
     }
     assert.deepEqual(calls, []);
+  });
+
+  it('passes the chosen message of the post to the reaction routes', async () => {
+    await controller.reactions(req, 't', '2');
+    await controller.reactionUsers(req, 't', '👍', '3');
+    assert.deepEqual(reactionParts, [2, 3]);
+    await assert.rejects(controller.reactions(req, 't', '0'), BadRequestException);
+    await assert.rejects(controller.reactions(req, 't', 'x'), BadRequestException);
+  });
+
+  it('accepts an uploaded image from Officers, and needs a file', async () => {
+    assert.deepEqual(await controller.uploadImage(req, 'g', { buffer: Buffer.alloc(1) }), {
+      id: 'i',
+      contentType: 'image/png',
+      size: 1,
+    });
+    await assert.rejects(controller.uploadImage(req, 'g', undefined), BadRequestException);
+  });
+
+  it('answers 404 for an image that is not there', async () => {
+    const sent: { status?: number } = {};
+    const res: any = {
+      status: (code: number) => ((sent.status = code), res),
+      json: () => res,
+    };
+    await controller.image(req, 'g', 'i', res);
+    assert.equal(sent.status, 404);
   });
 
   it('checks the guild the task belongs to, not one supplied by the caller', async () => {

@@ -2,6 +2,7 @@ import { Injectable, Logger, OnApplicationShutdown } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../database/prisma.service';
 import { TaskRunnerService } from './task-runner.service';
+import { PostImagesService } from './post-images.service';
 import { TrackingService } from './tracking.service';
 
 const TICK_MS = 60 * 1000;
@@ -24,6 +25,7 @@ export class SchedulerService implements OnApplicationShutdown {
     private readonly prisma: PrismaService,
     private readonly runner: TaskRunnerService,
     private readonly tracking: TrackingService,
+    private readonly images: PostImagesService,
   ) {}
 
   start(): void {
@@ -61,6 +63,8 @@ export class SchedulerService implements OnApplicationShutdown {
       }
       // Posts whose text shows who reacted are brought up to date once a minute.
       await this.tracking.refreshDue();
+      // Uploaded images that no post ever used.
+      await this.images.deleteOrphans();
     } catch (error) {
       this.logger.error(`Scheduler tick failed: ${String(error)}`);
     } finally {

@@ -2,11 +2,9 @@ import { Injectable, Logger } from '@nestjs/common';
 import type { Prisma, ScheduledTask } from '@prisma/client';
 import { DEFAULT_REGION, timezoneOfRegion } from '../config/regions';
 import { PrismaService } from '../database/prisma.service';
-import { DiscordBotService } from '../discord/discord-bot.service';
 import { describeDiscordError } from '../discord/discord-errors';
-import { parseDynamicTokens, renderContent } from './dynamic-content';
-import { embedsShown, type PostConfig, type PostState } from './post-task';
-import { TrackingService } from './tracking.service';
+import { PostSenderService } from './post-sender.service';
+import { isComplete, type PostConfig, type PostState } from './post-task';
 import { nextOccurrence, occurrencesBetween, type Schedule } from './schedule';
 
 /** A failed run is retried this many times in total (within RETRY_WINDOW_MS) before moving on. */
@@ -26,9 +24,11 @@ export class TaskRunnerService {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly bot: DiscordBotService,
-    private readonly tracking: TrackingService,
+    private readonly sender: PostSenderService,
   ) {}
+
+  /** How the worker waits between the messages of a post (replaced in tests). */
+  sleep: (ms: number) => Promise<void> = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
   async run(task: ScheduledTask, now: Date = new Date()): Promise<void> {
     const guild = await this.prisma.guild.findUnique({
@@ -44,10 +44,11 @@ export class TaskRunnerService {
     };
     const scheduledFor = task.nextRunAt ?? now;
 
-    let state = task.state as PostState;
+    // Kept up to date while the messages go out, so a failure halfway keeps what was sent.
+    const progress = { state: task.state as PostState };
     let error: string | null = null;
     try {
-      state = await this.execute(task);
+      progress.state = await this.execute(task, progress);
     } catch (caught) {
       error = describeDiscordError(caught);
       this.logger.warn(`Task ${task.id} (${task.name}) failed: ${String(caught)}`);
@@ -92,42 +93,27 @@ export class TaskRunnerService {
           ? new Date(now.getTime() + RETRY_DELAY_MS)
           : nextOccurrence(schedule, timezone, now),
         leaseUntil: null,
-        state: state as unknown as Prisma.InputJsonValue,
+        state: progress.state as unknown as Prisma.InputJsonValue,
       },
     });
   }
 
-  private async execute(task: ScheduledTask): Promise<PostState> {
-    // POST is the only task type so far. A post is one message: never send a second one.
-    const previous = task.state as PostState;
-    if (previous.messageId && !previous.messageDeleted) {
+  private async execute(task: ScheduledTask, progress: { state: PostState }): Promise<PostState> {
+    // POST is the only task type so far. A message is sent once: never send a second copy.
+    const config = task.config as unknown as PostConfig;
+    if (isComplete(config, progress.state)) {
       throw new Error('This post is already in Discord. Delete it first to post it again.');
     }
-    const config = task.config as unknown as PostConfig;
-    // Dynamic parts (who reacted to which post) are filled in as they are right now.
-    const tokens = parseDynamicTokens(config.content);
-    const sources = await this.tracking.sourceMap(task.id, task.guildId, tokens);
-    const people = await this.tracking.fetchPeople(task.guildId, tokens, sources);
-    const rendered = await renderContent(config.content, tokens, people);
-    const messageId = await this.bot.postMessage(config.channelId, rendered, {
-      suppressEmbeds: !embedsShown(config),
+    return this.sender.sendMissing(task, config, progress.state, {
+      wait: (seconds) => this.sleep(seconds * 1000),
+      onSent: async (state) => {
+        progress.state = state;
+        await this.prisma.scheduledTask.update({
+          where: { id: task.id },
+          data: { state: state as unknown as Prisma.InputJsonValue },
+        });
+      },
     });
-    const state: PostState = {
-      renderedContent: rendered,
-      messageId,
-      channelId: config.channelId,
-      serverId: config.serverId,
-      postedAt: new Date().toISOString(),
-    };
-    for (const emoji of config.seedReactions) {
-      try {
-        await this.bot.addReaction(config.channelId, messageId, emoji);
-      } catch (error) {
-        // The post is out; a missing seed reaction is not worth failing (and re-posting) for.
-        this.logger.warn(`Could not add reaction ${emoji} to ${messageId}: ${String(error)}`);
-      }
-    }
-    return state;
   }
 
   private async shouldRetry(taskId: string, now: Date): Promise<boolean> {

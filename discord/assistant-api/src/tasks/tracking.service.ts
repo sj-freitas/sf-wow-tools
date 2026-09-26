@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import type { Prisma, ScheduledTask } from '@prisma/client';
 import { formatCharacterName } from '../characters/character-name';
+import { ROLE_LABELS } from '../characters/role-labels';
 import { PrismaService } from '../database/prisma.service';
 import { DiscordBotService } from '../discord/discord-bot.service';
 import { describeDiscordError, isDiscordError, UNKNOWN_MESSAGE } from '../discord/discord-errors';
@@ -11,15 +12,20 @@ import {
   trackingKey,
   type DynamicToken,
   type Reactor,
+  type ReactorCharacter,
 } from './dynamic-content';
-import { embedsShown, type PostConfig, type PostState } from './post-task';
+import {
+  isLive,
+  liveMessageOf,
+  type PostConfig,
+  type PostedPart,
+  type PostState,
+} from './post-task';
 
 /** Channels asked at once while looking for a message by its id. */
 const SEARCH_PARALLEL = 8;
 /** Most people whose server nickname is looked up in one go (the rest show their Discord name). */
 const MAX_NICKNAME_LOOKUPS = 100;
-
-const isLive = (state: PostState): boolean => Boolean(state.messageId) && !state.messageDeleted;
 
 /** A message in Discord: where reactions are read. */
 export interface MessageLocation {
@@ -33,6 +39,8 @@ export interface MessageLocation {
  */
 export interface Source {
   taskId?: string;
+  /** For a scheduled post: which of its messages, from 1. */
+  part?: number;
   message?: MessageLocation;
 }
 
@@ -72,14 +80,17 @@ export class TrackingService {
     const sources: SourceMap = new Map();
     for (const token of tokens) {
       if (sources.has(token.ref)) continue;
-      if (token.ref === 'self') {
-        if (selfId) sources.set(token.ref, { taskId: selfId });
+      if (token.ref.startsWith('self#')) {
+        if (selfId) sources.set(token.ref, { taskId: selfId, part: token.part });
       } else if (token.message) {
         sources.set(token.ref, { message: await this.checkMessage(guildId, token) });
       } else if (token.ref.startsWith('msgid:')) {
         sources.set(token.ref, { message: await this.findMessageById(guildId, token) });
       } else {
-        sources.set(token.ref, { taskId: await this.postByName(guildId, token) });
+        sources.set(token.ref, {
+          taskId: await this.postByName(guildId, token),
+          part: token.part,
+        });
       }
     }
     return sources;
@@ -110,11 +121,17 @@ export class TrackingService {
    */
   private async findMessageById(guildId: string, token: DynamicToken): Promise<MessageLocation> {
     const messageId = token.ref.slice('msgid:'.length);
-    const task = await this.prisma.scheduledTask.findFirst({
-      where: { guildId, state: { path: ['messageId'], equals: messageId } },
+    // A guild has few posts, so look through their messages here.
+    const tasks = await this.prisma.scheduledTask.findMany({
+      where: { guildId },
+      select: { state: true },
     });
-    const state = task ? (task.state as PostState) : {};
-    if (task && state.channelId) return { channelId: state.channelId, messageId };
+    for (const task of tasks) {
+      const posted = ((task.state as PostState).messages ?? []).find(
+        (message) => message.messageId === messageId,
+      );
+      if (posted) return { channelId: posted.channelId, messageId };
+    }
 
     const servers = await this.prisma.discordServer.findMany({
       where: { guildId },
@@ -207,17 +224,18 @@ export class TrackingService {
     if (!source) return null;
     if (source.taskId) {
       const task = await this.prisma.scheduledTask.findUnique({ where: { id: source.taskId } });
-      return this.locationOfTask(task);
+      return this.locationOfTask(task, source.part);
     }
     return source.message ?? null;
   }
 
-  /** The message a scheduled post has in Discord, if it is up. */
-  locationOfTask(task: ScheduledTask | null | undefined): MessageLocation | null {
-    const state = task ? (task.state as PostState) : {};
-    return isLive(state) && state.channelId && state.messageId
-      ? { channelId: state.channelId, messageId: state.messageId }
-      : null;
+  /** The message a scheduled post has in Discord for one of its parts (from 1), if it is up. */
+  locationOfTask(task: ScheduledTask | null | undefined, part = 1): MessageLocation | null {
+    if (!task) return null;
+    const config = task.config as unknown as PostConfig;
+    const target = config.parts?.[part - 1];
+    const posted = target ? liveMessageOf(task.state as PostState, target.id) : undefined;
+    return posted ? { channelId: posted.channelId, messageId: posted.messageId } : null;
   }
 
   /**
@@ -237,7 +255,7 @@ export class TrackingService {
       const reactors = await this.readReactors(location, token.emoji);
       people.set(
         key,
-        await this.withDisplayNames(location, await this.withMains(guildId, reactors)),
+        await this.withDisplayNames(location, await this.withCharacters(guildId, reactors)),
       );
     }
     return people;
@@ -262,29 +280,43 @@ export class TrackingService {
   }
 
   /**
-   * Adds the main characters each person has in the guild (`mains`, one entry per character).
-   * Someone with no main character has none, and `mainName` then shows their Discord name.
+   * Adds the characters each person has in the guild (`characters`: main first, then the others
+   * by when they were added). Someone with no characters has an empty list.
    */
-  async withMains(guildId: string, reactors: readonly Reactor[]): Promise<Reactor[]> {
+  async withCharacters(guildId: string, reactors: readonly Reactor[]): Promise<Reactor[]> {
     if (reactors.length === 0) return [];
     const players = await this.prisma.player.findMany({
       where: { guildId, discordUserId: { in: reactors.map((reactor) => reactor.id) } },
       select: {
         discordUserId: true,
         characters: {
-          where: { isMain: true },
-          orderBy: { createdAt: 'asc' },
-          select: { firstName: true, lastName: true },
+          orderBy: [{ isMain: 'desc' }, { createdAt: 'asc' }],
+          select: {
+            firstName: true,
+            lastName: true,
+            isMain: true,
+            class: true,
+            roles: true,
+            level: true,
+          },
         },
       },
     });
-    const mains = new Map(
+    const byPerson = new Map(
       players.map((player) => [
         player.discordUserId,
-        player.characters.map((character) => formatCharacterName(character)),
+        player.characters.map((character): ReactorCharacter => ({
+          name: formatCharacterName(character),
+          firstName: character.firstName,
+          lastName: character.lastName,
+          isMain: character.isMain,
+          class: character.class,
+          roles: character.roles.map((role) => ROLE_LABELS[role]),
+          level: character.level,
+        })),
       ]),
     );
-    return reactors.map((reactor) => ({ ...reactor, mains: mains.get(reactor.id) ?? [] }));
+    return reactors.map((reactor) => ({ ...reactor, characters: byPerson.get(reactor.id) ?? [] }));
   }
 
   /**
@@ -405,18 +437,19 @@ export class TrackingService {
       for (const row of rows) {
         if (!isLive(row.task.state as PostState)) continue;
         try {
+          const source = sourceOfRow(row);
           const location = row.sourceTask
-            ? this.locationOfTask(row.sourceTask)
-            : (sourceOfRow(row).message ?? null);
+            ? this.locationOfTask(row.sourceTask, source.part)
+            : (source.message ?? null);
           const read = await this.readReactors(location, row.emoji);
           // Main characters are part of what is compared, so a new main updates the post too.
-          const withMains = await this.withMains(row.task.guildId, read);
-          const hash = hashReactors(withMains);
+          const withCharacters = await this.withCharacters(row.task.guildId, read);
+          const hash = hashReactors(withCharacters);
           if (hash === row.lastHash) continue;
           // Only now, that something changed, ask for nicknames (and only of people not seen before).
           const reactors = await this.withDisplayNames(
             location,
-            withMains,
+            withCharacters,
             row.lastUsers as unknown as Reactor[],
           );
           await this.prisma.postTracking.update({
@@ -452,56 +485,70 @@ export class TrackingService {
     return edited;
   }
 
-  /** Writes the post's text with the latest people into Discord, if that changes the message. */
+  /**
+   * Writes each message's text with the latest people into Discord, for the messages whose text
+   * changes by it. Returns whether any message was edited.
+   */
   private async rerender(
     task: ScheduledTask,
     rows: { postRef: string; emoji: string; type: string; lastUsers: Prisma.JsonValue }[],
   ): Promise<boolean> {
     const config = task.config as unknown as PostConfig;
     const state = task.state as PostState;
-    const tokens = parseDynamicTokens(config.content);
     const people: PeopleByKey = new Map(
       rows.map((row) => [
         trackingKey({ ref: row.postRef, emoji: row.emoji }),
         row.lastUsers as unknown as Reactor[],
       ]),
     );
-    const rendered = await renderContent(config.content, tokens, people);
-    if (rendered === state.renderedContent || !state.channelId || !state.messageId) return false;
-    try {
-      await this.bot.editMessage(state.channelId, state.messageId, rendered, {
-        suppressEmbeds: !embedsShown(config),
-        quiet: true,
-      });
-    } catch (error) {
-      if (isDiscordError(error, UNKNOWN_MESSAGE)) {
-        await this.prisma.scheduledTask.update({
-          where: { id: task.id },
-          data: { state: { ...state, messageDeleted: true } },
+    const original: PostedPart[] = state.messages ?? [];
+    let messages = original;
+    let edited = false;
+    for (const [index, part] of config.parts.entries()) {
+      const tokens = parseDynamicTokens(part.content, index + 1);
+      const posted = liveMessageOf({ messages }, part.id);
+      if (tokens.length === 0 || !posted) continue;
+      const rendered = await renderContent(part.content, tokens, people);
+      if (rendered === posted.renderedContent) continue;
+      try {
+        await this.bot.editMessage(posted.channelId, posted.messageId, rendered, {
+          suppressEmbeds: !posted.embedLinks,
+          quiet: true,
         });
-        return false;
+        messages = messages.map((m) =>
+          m.partId === part.id && !m.deleted ? { ...m, renderedContent: rendered } : m,
+        );
+        edited = true;
+      } catch (error) {
+        if (!isDiscordError(error, UNKNOWN_MESSAGE)) throw error;
+        messages = messages.map((m) =>
+          m.partId === part.id && !m.deleted ? { ...m, deleted: true } : m,
+        );
       }
-      throw error;
     }
-    await this.prisma.scheduledTask.update({
-      where: { id: task.id },
-      data: { state: { ...state, renderedContent: rendered } },
-    });
-    return true;
+    if (messages !== original) {
+      await this.prisma.scheduledTask.update({
+        where: { id: task.id },
+        data: { state: { ...state, messages } as unknown as Prisma.InputJsonValue },
+      });
+    }
+    return edited;
   }
 }
 
 /** Discord's "Unknown Emoji" error code. */
 const UNKNOWN_EMOJI = 10014;
 
-/** What a tracking row points at. */
+/** What a tracking row points at (for a scheduled post, which of its messages comes from `#n`). */
 function sourceOfRow(row: {
+  postRef: string;
   sourceTaskId: string | null;
   sourceChannelId: string | null;
   sourceMessageId: string | null;
 }): Source {
+  const part = /#(\d+)$/.exec(row.postRef)?.[1];
   return {
-    ...(row.sourceTaskId ? { taskId: row.sourceTaskId } : {}),
+    ...(row.sourceTaskId ? { taskId: row.sourceTaskId, part: part ? Number(part) : 1 } : {}),
     ...(row.sourceChannelId && row.sourceMessageId
       ? { message: { channelId: row.sourceChannelId, messageId: row.sourceMessageId } }
       : {}),

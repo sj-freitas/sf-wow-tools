@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -10,12 +11,19 @@ import {
   Post,
   Query,
   Req,
+  Res,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import type { Response } from 'express';
 import { AuthGuard } from '../auth/auth.guard';
 import type { Reactor } from './dynamic-content';
 import type { AuthenticatedRequest } from '../auth/auth.types';
 import { GuildAccessService } from '../auth/guild-access.service';
+import { MAX_IMAGE_BYTES } from '../officer-requests/attachments';
+import { PostImagesService, type PostImageDto } from './post-images.service';
 import {
   TasksService,
   type ReactionDto,
@@ -35,6 +43,7 @@ export class TasksController {
   constructor(
     private readonly tasks: TasksService,
     private readonly guildAccess: GuildAccessService,
+    private readonly images: PostImagesService,
   ) {}
 
   /** `page` from 1, ten posts to a page; `query` searches every page by name and text. */
@@ -108,13 +117,15 @@ export class TasksController {
     await this.tasks.runNow(id);
   }
 
+  /** Reaction counts of one message of the post (`?part=2`, counting from 1; default the first). */
   @Get('tasks/:id/reactions')
   async reactions(
     @Req() req: AuthenticatedRequest,
     @Param('id') id: string,
+    @Query('part') part?: string,
   ): Promise<ReactionDto[]> {
     await this.assertOfficerOfTask(req, id);
-    return this.tasks.reactions(id);
+    return this.tasks.reactions(id, parsePart(part));
   }
 
   /** Who reacted with one emoji (`?emoji=👍`, or `name:id` for a custom one), without the bot. */
@@ -123,12 +134,58 @@ export class TasksController {
     @Req() req: AuthenticatedRequest,
     @Param('id') id: string,
     @Query('emoji') emoji?: string,
+    @Query('part') part?: string,
   ): Promise<Reactor[]> {
     await this.assertOfficerOfTask(req, id);
-    return this.tasks.reactionUsers(id, emoji);
+    return this.tasks.reactionUsers(id, emoji, parsePart(part));
+  }
+
+  /** Uploads an image for a message of a post (PNG, JPEG, GIF or WebP, up to 5 MB). */
+  @Post('guilds/:guildId/post-images')
+  @HttpCode(HttpStatus.CREATED)
+  @UseInterceptors(FileInterceptor('image', { limits: { fileSize: MAX_IMAGE_BYTES, files: 1 } }))
+  async uploadImage(
+    @Req() req: AuthenticatedRequest,
+    @Param('guildId') guildId: string,
+    @UploadedFile() file?: { buffer: Buffer },
+  ): Promise<PostImageDto> {
+    await this.guildAccess.assertOfficer(req.user.id, guildId);
+    if (!file) throw new BadRequestException('No image was sent.');
+    return this.images.upload(guildId, file.buffer);
+  }
+
+  /** An uploaded image, for the form's preview. */
+  @Get('guilds/:guildId/post-images/:imageId')
+  async image(
+    @Req() req: AuthenticatedRequest,
+    @Param('guildId') guildId: string,
+    @Param('imageId') imageId: string,
+    @Res() res: Response,
+  ): Promise<void> {
+    await this.guildAccess.assertOfficer(req.user.id, guildId);
+    const image = await this.images.get(guildId, imageId);
+    if (!image) {
+      res.status(HttpStatus.NOT_FOUND).json({ message: 'No image' });
+      return;
+    }
+    res
+      .set({
+        'Content-Type': image.contentType,
+        'Cache-Control': 'private, max-age=86400',
+        'X-Content-Type-Options': 'nosniff',
+      })
+      .send(image.data);
   }
 
   private async assertOfficerOfTask(req: AuthenticatedRequest, taskId: string): Promise<void> {
     await this.guildAccess.assertOfficer(req.user.id, await this.tasks.guildIdOf(taskId));
   }
+}
+
+/** `?part=2`: a message of the post, counting from 1; the first when left out. */
+function parsePart(value: string | undefined): number {
+  if (value === undefined || value === '') return 1;
+  const part = Number(value);
+  if (!Number.isInteger(part) || part < 1) throw new BadRequestException('part is not valid.');
+  return part;
 }

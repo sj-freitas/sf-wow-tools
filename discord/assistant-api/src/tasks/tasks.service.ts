@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma, type ScheduledTask, type TaskRunStatus } from '@prisma/client';
 import { DEFAULT_REGION, timezoneOfRegion } from '../config/regions';
@@ -9,18 +10,25 @@ import {
   type ServerChannel,
 } from '../discord/discord-bot.service';
 import {
-  embedsShown,
+  isComplete,
+  isLive,
+  liveMessageOf,
+  liveMessages,
   messageUrl,
   normalizeEmoji,
-  parseEmbedLinks,
-  parsePostContent,
-  parseSeedReactions,
+  parseParts,
   parseSnowflake,
+  wasDeleted,
   type PostConfig,
+  type PostedPart,
+  type PostPart,
   type PostState,
 } from './post-task';
+import { PostImagesService } from './post-images.service';
+import { PostSenderService } from './post-sender.service';
 import {
   checkExpressions,
+  parseAllTokens,
   parseDynamicTokens,
   renderContent,
   type Reactor,
@@ -50,12 +58,30 @@ export interface TaskDto {
   post: {
     serverId: string;
     channelId: string;
-    content: string;
-    seedReactions: string[];
-    /** Whether Discord shows link previews under the post. */
-    embedLinks: boolean;
-    posted: { messageId: string; url: string; postedAt: string; messageDeleted: boolean } | null;
+    /** The messages of the post, in the order they are sent. */
+    parts: PostPartDto[];
+    /** Some message of the post is in Discord. */
+    live: boolean;
+    /** Every message of the post is in Discord. */
+    complete: boolean;
+    /** It was in Discord and every message was deleted. */
+    wasDeleted: boolean;
   };
+}
+
+/** One message of a post. */
+export interface PostPartDto {
+  id: string;
+  content: string;
+  seedReactions: string[];
+  /** Whether Discord shows link previews under the message. */
+  embedLinks: boolean;
+  /** Seconds waited after the previous message before this one is sent. */
+  delaySeconds: number;
+  /** Uploaded images (see the post-images routes), shown under the text. */
+  imageIds: string[];
+  /** The message in Discord; null when it is not there. */
+  posted: { messageId: string; url: string; postedAt: string } | null;
 }
 
 /** One page of the guild's posts, newest date first. */
@@ -84,9 +110,8 @@ export interface TaskInput {
   postNow?: unknown;
   serverId?: unknown;
   channelId?: unknown;
-  content?: unknown;
-  seedReactions?: unknown;
-  embedLinks?: unknown;
+  /** The messages of the post: `[{ id?, content, seedReactions?, embedLinks?, delaySeconds?, imageIds? }]`. */
+  parts?: unknown;
 }
 
 export interface ReactionDto extends MessageReaction {
@@ -97,18 +122,23 @@ export interface ReactionDto extends MessageReaction {
 const ALREADY_POSTED =
   'This post is already in Discord. Edit it there, or delete it first to post it again.';
 
-/** A post that is in Discord right now. */
-const isLive = (state: PostState): boolean => Boolean(state.messageId) && !state.messageDeleted;
-
 /**
- * When the worker should post next. A post goes out once: never while it is live or paused,
- * and after it was deleted only at a new future date. One that never went out and whose time
- * has passed goes out now, late rather than never.
+ * When the worker should post next. A post goes out once: never while it is complete or paused,
+ * and after it was deleted only at a new future date. One that never went out and whose time has
+ * passed goes out now, late rather than never; so does one that stopped halfway (some messages
+ * sent), which continues with the rest.
  */
-function nextRunFor(state: PostState, runAt: Date, enabled: boolean, now: Date): Date | null {
-  if (!enabled || isLive(state)) return null;
+function nextRunFor(
+  config: PostConfig,
+  state: PostState,
+  runAt: Date,
+  enabled: boolean,
+  now: Date,
+): Date | null {
+  if (!enabled || isComplete(config, state)) return null;
   const future = runAt.getTime() > now.getTime();
-  if (state.messageId) return future ? runAt : null;
+  if (isLive(state)) return future ? runAt : now; // halfway: finish the rest
+  if (wasDeleted(state)) return future ? runAt : null;
   return future ? runAt : now;
 }
 
@@ -118,6 +148,8 @@ export class TasksService {
     private readonly prisma: PrismaService,
     private readonly bot: DiscordBotService,
     private readonly tracking: TrackingService,
+    private readonly images: PostImagesService,
+    private readonly sender: PostSenderService,
   ) {}
 
   /**
@@ -150,7 +182,7 @@ export class TasksService {
       const matches = Prisma.join(
         terms.map((term) => {
           const pattern = likePattern(term);
-          return Prisma.sql`(name ILIKE ${pattern} OR config->>'content' ILIKE ${pattern})`;
+          return Prisma.sql`(name ILIKE ${pattern} OR EXISTS (SELECT 1 FROM jsonb_array_elements(config->'parts') AS part WHERE part->>'content' ILIKE ${pattern}))`;
         }),
         ' AND ',
       );
@@ -223,9 +255,10 @@ export class TasksService {
     const postNow = input.postNow === true;
     const runAt = postNow ? now : this.parseFutureDate(input.runAtLocal, timezone, now);
     const config = await this.parsePostConfig(guildId, input, undefined);
-    const tokens = parseDynamicTokens(config.content);
+    const tokens = parseAllTokens(config.parts);
     await checkExpressions(tokens);
     await this.tracking.resolveSources(guildId, tokens);
+    await this.images.assertUsable(guildId, undefined, imageIdsOf(config));
     const enabled = postNow || input.enabled !== false;
     const task = await this.prisma.scheduledTask.create({
       data: {
@@ -235,11 +268,12 @@ export class TasksService {
         enabled,
         scheduleKind: 'ONCE',
         runAt,
-        nextRunAt: nextRunFor({}, runAt, enabled, now),
+        nextRunAt: nextRunFor(config, {}, runAt, enabled, now),
         config: config as unknown as Prisma.InputJsonValue,
         createdById: userId,
       },
     });
+    await this.images.attach(task.id, config);
     await this.tracking.syncTracking(
       task.id,
       tokens,
@@ -249,9 +283,11 @@ export class TasksService {
   }
 
   /**
-   * Saving changes to a post that is already in Discord edits that message (live edit). If
-   * Discord refuses, nothing is saved, so Discord and the backoffice never disagree. A post
-   * is one message: while it is in Discord it cannot be posted again or moved to a new date.
+   * Saving changes to a post edits the messages that are already in Discord (live edit): text,
+   * images and link previews of each one. If Discord refuses, the change is not saved, so Discord
+   * and the backoffice do not disagree. What is in Discord keeps its order: messages that are up
+   * cannot be moved, only edited or removed; new messages go after them, and are sent right away
+   * when the whole post was already up. Messages not sent yet can be changed freely.
    */
   async update(taskId: string, input: TaskInput): Promise<TaskDto> {
     const task = await this.find(taskId);
@@ -260,15 +296,25 @@ export class TasksService {
     const oldConfig = task.config as unknown as PostConfig;
     const state = task.state as PostState;
     const config = await this.parsePostConfig(task.guildId, input, oldConfig);
-    const tokens = parseDynamicTokens(config.content);
+    if (
+      isLive(state) &&
+      (config.serverId !== oldConfig.serverId || config.channelId !== oldConfig.channelId)
+    ) {
+      throw new BadRequestException(
+        'This post is in Discord: delete it first to move it to another channel.',
+      );
+    }
+    this.assertOrderKept(oldConfig, config, state);
+    const tokens = parseAllTokens(config.parts);
     await checkExpressions(tokens);
     const sources = await this.tracking.resolveSources(task.guildId, tokens, taskId);
+    await this.images.assertUsable(task.guildId, taskId, imageIdsOf(config));
     const enabled = input.enabled === undefined ? task.enabled : input.enabled === true;
 
     let runAt = task.runAt ?? now;
     let rescheduled = false;
     if (input.postNow === true) {
-      if (isLive(state)) throw new BadRequestException(ALREADY_POSTED);
+      if (isComplete(oldConfig, state)) throw new BadRequestException(ALREADY_POSTED);
       runAt = now;
       rescheduled = true;
     } else if (typeof input.runAtLocal === 'string') {
@@ -281,42 +327,22 @@ export class TasksService {
       }
     }
 
-    let newState = state;
-    const textChanged =
-      config.content !== oldConfig.content || embedsShown(config) !== embedsShown(oldConfig);
-    let people: Awaited<ReturnType<TrackingService['fetchPeople']>> | undefined;
-    if (textChanged && isLive(state)) {
-      let rendered = config.content;
-      if (tokens.length > 0) {
-        try {
-          people = await this.tracking.fetchPeople(task.guildId, tokens, sources);
-        } catch (error) {
-          throw new BadRequestException(
-            `Could not read the reactions from Discord: ${describeDiscordError(error)}`,
-          );
-        }
-        rendered = await renderContent(config.content, tokens, people);
-      }
+    // Was every message up before this change? Then new messages go out now, after them.
+    const wasComplete = isComplete(oldConfig, state);
+    const edit = await this.editLiveMessages(task, oldConfig, config, state, sources);
+    let newState = edit.state;
+    if (edit.failure) {
+      await this.saveState(taskId, newState);
+      throw edit.failure;
+    }
+    if (wasComplete && !isComplete(config, newState)) {
       try {
-        await this.bot.editMessage(
-          state.channelId ?? oldConfig.channelId,
-          state.messageId as string,
-          rendered,
-          {
-            suppressEmbeds: !embedsShown(config),
-            // Edits that show people never ping them.
-            ...(tokens.length > 0 ? { quiet: true } : {}),
-          },
-        );
-        newState = { ...state, renderedContent: rendered };
+        newState = await this.sender.sendMissing(task, config, newState);
       } catch (error) {
-        if (isDiscordError(error, UNKNOWN_MESSAGE)) {
-          newState = { ...state, messageDeleted: true };
-        } else {
-          throw new BadRequestException(
-            `Could not update the post in Discord: ${describeDiscordError(error)}`,
-          );
-        }
+        await this.saveState(taskId, newState);
+        throw new BadRequestException(
+          `Could not send the new messages to Discord: ${describeDiscordError(error)}`,
+        );
       }
     }
 
@@ -327,40 +353,182 @@ export class TasksService {
         enabled,
         runAt,
         ...(rescheduled || enabled !== task.enabled
-          ? { nextRunAt: nextRunFor(newState, runAt, enabled, now) }
+          ? { nextRunAt: nextRunFor(config, newState, runAt, enabled, now) }
           : {}),
         config: config as unknown as Prisma.InputJsonValue,
         state: newState as unknown as Prisma.InputJsonValue,
       },
     });
-    await this.tracking.syncTracking(taskId, tokens, sources, people);
+    await this.images.attach(taskId, config);
+    await this.tracking.syncTracking(taskId, tokens, sources, edit.people);
     return this.toDto(updated, timezone);
   }
 
   /**
-   * Deletes the message this task last posted, from Discord. The task stays (schedule, text,
+   * The messages already in Discord keep their order: the ones still in the post must be in the
+   * order they were sent, and come before every message that is not in Discord yet.
+   */
+  private assertOrderKept(oldConfig: PostConfig, config: PostConfig, state: PostState): void {
+    const up = new Set(liveMessages(state).map((message) => message.partId));
+    const kept = new Set(config.parts.map((part) => part.id));
+    // Messages taken out of the post do not count: only the ones that stay must keep their order.
+    const before = oldConfig.parts
+      .filter((part) => up.has(part.id) && kept.has(part.id))
+      .map((part) => part.id);
+    const after = config.parts.filter((part) => up.has(part.id)).map((part) => part.id);
+    if (after.join() !== before.join()) {
+      throw new BadRequestException(
+        'The messages already in Discord keep their order. Delete the post to change it.',
+      );
+    }
+    let seenNew = false;
+    for (const part of config.parts) {
+      if (!up.has(part.id)) seenNew = true;
+      else if (seenNew) {
+        throw new BadRequestException(
+          'New messages go after the ones already in Discord. Delete the post to change the order.',
+        );
+      }
+    }
+  }
+
+  /**
+   * Brings the messages that are in Discord in line with the saved parts: edits the ones whose
+   * text, images or link previews changed, and deletes the ones taken out of the post. Stops at
+   * the first Discord refusal, returning what was done so far.
+   */
+  private async editLiveMessages(
+    task: ScheduledTask,
+    oldConfig: PostConfig,
+    config: PostConfig,
+    state: PostState,
+    sources: Awaited<ReturnType<TrackingService['resolveSources']>>,
+  ): Promise<{
+    state: PostState;
+    people?: Awaited<ReturnType<TrackingService['fetchPeople']>>;
+    failure?: BadRequestException;
+  }> {
+    let messages: PostedPart[] = state.messages ?? [];
+    let people: Awaited<ReturnType<TrackingService['fetchPeople']>> | undefined;
+    const done = () => ({ state: { messages } as PostState, people });
+    const remaining = new Set(config.parts.map((part) => part.id));
+
+    // Messages of parts that were taken out of the post.
+    for (const posted of liveMessages(state)) {
+      if (remaining.has(posted.partId)) continue;
+      try {
+        await this.bot.deleteMessage(posted.channelId, posted.messageId);
+      } catch (error) {
+        if (!isDiscordError(error, UNKNOWN_MESSAGE)) {
+          return {
+            ...done(),
+            failure: new BadRequestException(
+              `Could not delete the message in Discord: ${describeDiscordError(error)}`,
+            ),
+          };
+        }
+      }
+      messages = messages.filter((message) => message !== posted);
+    }
+    // Entries of parts that are gone and were already deleted are dropped too.
+    messages = messages.filter((message) => remaining.has(message.partId));
+
+    for (const [index, part] of config.parts.entries()) {
+      const posted = liveMessageOf({ messages }, part.id);
+      if (!posted) continue;
+      const old = oldConfig.parts.find((candidate) => candidate.id === part.id);
+      const imagesChanged = part.imageIds.join() !== posted.imageIds.join();
+      const changed =
+        old?.content !== part.content || part.embedLinks !== posted.embedLinks || imagesChanged;
+      if (!changed) continue;
+
+      const tokens = parseDynamicTokens(part.content, index + 1);
+      let rendered = part.content;
+      if (tokens.length > 0) {
+        try {
+          const fetched = await this.tracking.fetchPeople(task.guildId, tokens, sources);
+          people = new Map([...(people ?? []), ...fetched]);
+          rendered = await renderContent(part.content, tokens, fetched);
+        } catch (error) {
+          return {
+            ...done(),
+            failure: new BadRequestException(
+              `Could not read the reactions from Discord: ${describeDiscordError(error)}`,
+            ),
+          };
+        }
+      }
+      try {
+        await this.bot.editMessage(posted.channelId, posted.messageId, rendered, {
+          suppressEmbeds: !part.embedLinks,
+          // Edits that show people never ping them.
+          ...(tokens.length > 0 ? { quiet: true } : {}),
+          ...(imagesChanged ? { files: await this.images.files(part.imageIds) } : {}),
+        });
+        messages = messages.map((message) =>
+          message === posted
+            ? {
+                ...message,
+                renderedContent: rendered,
+                embedLinks: part.embedLinks,
+                imageIds: part.imageIds,
+              }
+            : message,
+        );
+      } catch (error) {
+        if (isDiscordError(error, UNKNOWN_MESSAGE)) {
+          messages = messages.map((message) =>
+            message === posted ? { ...message, deleted: true } : message,
+          );
+        } else {
+          return {
+            ...done(),
+            failure: new BadRequestException(
+              `Could not update the post in Discord: ${describeDiscordError(error)}`,
+            ),
+          };
+        }
+      }
+    }
+    return done();
+  }
+
+  private async saveState(taskId: string, state: PostState): Promise<void> {
+    await this.prisma.scheduledTask.update({
+      where: { id: taskId },
+      data: { state: state as unknown as Prisma.InputJsonValue },
+    });
+  }
+
+  /**
+   * Deletes the messages this post has in Discord. The post stays (schedule, text, images,
    * everything), so it can be posted again later: by its schedule, "Post now", or a new date.
    */
   async deletePost(taskId: string): Promise<void> {
     const task = await this.find(taskId);
     const state = task.state as PostState;
-    if (!state.messageId || !state.channelId || state.messageDeleted) {
+    const live = liveMessages(state);
+    if (live.length === 0) {
       throw new BadRequestException('There is no post in Discord to delete.');
     }
-    try {
-      await this.bot.deleteMessage(state.channelId, state.messageId);
-    } catch (error) {
-      // Already gone from Discord counts as deleted.
-      if (!isDiscordError(error, UNKNOWN_MESSAGE)) {
-        throw new BadRequestException(
-          `Could not delete the post in Discord: ${describeDiscordError(error)}`,
-        );
+    let messages = state.messages ?? [];
+    for (const posted of live) {
+      try {
+        await this.bot.deleteMessage(posted.channelId, posted.messageId);
+      } catch (error) {
+        // Already gone from Discord counts as deleted.
+        if (!isDiscordError(error, UNKNOWN_MESSAGE)) {
+          await this.saveState(taskId, { messages });
+          throw new BadRequestException(
+            `Could not delete the post in Discord: ${describeDiscordError(error)}`,
+          );
+        }
       }
+      messages = messages.map((message) =>
+        message === posted ? { ...message, deleted: true } : message,
+      );
     }
-    await this.prisma.scheduledTask.update({
-      where: { id: taskId },
-      data: { state: { ...state, messageDeleted: true } },
-    });
+    await this.saveState(taskId, { messages });
   }
 
   /**
@@ -375,7 +543,7 @@ export class TasksService {
   /** Makes the post due now; the worker picks it up within a minute. */
   async runNow(taskId: string): Promise<void> {
     const task = await this.find(taskId);
-    if (isLive(task.state as PostState)) {
+    if (isComplete(task.config as unknown as PostConfig, task.state as PostState)) {
       throw new BadRequestException(ALREADY_POSTED);
     }
     if (!task.enabled) {
@@ -388,15 +556,15 @@ export class TasksService {
     });
   }
 
-  /** Live reaction counts of the task's current post, read from Discord. */
-  async reactions(taskId: string): Promise<ReactionDto[]> {
+  /** Live reaction counts of one message of the post (`part` from 1), read from Discord. */
+  async reactions(taskId: string, part = 1): Promise<ReactionDto[]> {
     const task = await this.find(taskId);
     const state = task.state as PostState;
-    if (!state.messageId || !state.channelId || state.messageDeleted) {
-      return [];
-    }
+    const target = (task.config as unknown as PostConfig).parts[part - 1];
+    const posted = target ? liveMessageOf(state, target.id) : undefined;
+    if (!posted) return [];
     try {
-      const reactions = await this.bot.getReactions(state.channelId, state.messageId);
+      const reactions = await this.bot.getReactions(posted.channelId, posted.messageId);
       return reactions.map((reaction) => ({
         ...reaction,
         imageUrl: reaction.emojiId
@@ -405,9 +573,10 @@ export class TasksService {
       }));
     } catch (error) {
       if (isDiscordError(error, UNKNOWN_MESSAGE)) {
-        await this.prisma.scheduledTask.update({
-          where: { id: taskId },
-          data: { state: { ...state, messageDeleted: true } },
+        await this.saveState(taskId, {
+          messages: (state.messages ?? []).map((message) =>
+            message === posted ? { ...message, deleted: true } : message,
+          ),
         });
         return [];
       }
@@ -415,13 +584,13 @@ export class TasksService {
     }
   }
 
-  /** Who reacted to the post's message with an emoji: the names behind a reaction's count. */
-  async reactionUsers(taskId: string, emoji: unknown): Promise<Reactor[]> {
+  /** Who reacted to one message of the post with an emoji: the names behind a reaction's count. */
+  async reactionUsers(taskId: string, emoji: unknown, part = 1): Promise<Reactor[]> {
     const task = await this.find(taskId);
     const normalized = typeof emoji === 'string' ? normalizeEmoji(emoji) : null;
     if (!normalized) throw new BadRequestException('Say which emoji (custom ones as name:id).');
     try {
-      return await this.tracking.readReactors(this.tracking.locationOfTask(task), normalized);
+      return await this.tracking.readReactors(this.tracking.locationOfTask(task, part), normalized);
     } catch (error) {
       throw new BadRequestException(describeDiscordError(error));
     }
@@ -453,22 +622,27 @@ export class TasksService {
       post: {
         serverId: config.serverId,
         channelId: config.channelId,
-        content: config.content,
-        seedReactions: config.seedReactions,
-        embedLinks: embedsShown(config),
-        posted:
-          state.messageId && state.channelId
-            ? {
-                messageId: state.messageId,
-                url: messageUrl(
-                  state.serverId ?? config.serverId,
-                  state.channelId,
-                  state.messageId,
-                ),
-                postedAt: state.postedAt ?? '',
-                messageDeleted: state.messageDeleted === true,
-              }
-            : null,
+        parts: config.parts.map((part): PostPartDto => {
+          const posted = liveMessageOf(state, part.id);
+          return {
+            id: part.id,
+            content: part.content,
+            seedReactions: part.seedReactions,
+            embedLinks: part.embedLinks,
+            delaySeconds: part.delaySeconds,
+            imageIds: part.imageIds,
+            posted: posted
+              ? {
+                  messageId: posted.messageId,
+                  url: messageUrl(posted.serverId, posted.channelId, posted.messageId),
+                  postedAt: posted.postedAt,
+                }
+              : null,
+          };
+        }),
+        live: isLive(state),
+        complete: isComplete(config, state),
+        wasDeleted: wasDeleted(state),
       },
     };
   }
@@ -524,12 +698,8 @@ export class TasksService {
       input.channelId === undefined && existing
         ? existing.channelId
         : parseSnowflake(input.channelId, 'The channel');
-    const content =
-      input.content === undefined && existing ? existing.content : parsePostContent(input.content);
-    const seedReactions =
-      input.seedReactions === undefined && existing
-        ? existing.seedReactions
-        : parseSeedReactions(input.seedReactions);
+    const parts: PostPart[] =
+      input.parts === undefined && existing ? existing.parts : parseParts(input.parts, randomUUID);
 
     const changedChannel =
       !existing || serverId !== existing.serverId || channelId !== existing.channelId;
@@ -553,8 +723,7 @@ export class TasksService {
         throw new BadRequestException('That channel is not in the chosen server.');
       }
     }
-    const embedLinks = parseEmbedLinks(input.embedLinks, existing ? embedsShown(existing) : true);
-    return { serverId, channelId, content, seedReactions, embedLinks };
+    return { serverId, channelId, parts };
   }
 }
 
@@ -571,3 +740,6 @@ function localWallClock(instant: Date, timezone: string): string {
   }).format(instant);
   return parts.replace(' ', 'T');
 }
+
+/** Every image id the parts of a post use. */
+const imageIdsOf = (config: PostConfig): string[] => config.parts.flatMap((part) => part.imageIds);

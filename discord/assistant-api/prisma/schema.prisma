@@ -267,6 +267,7 @@ model ScheduledTask {
   runs         TaskRun[]
   // The dynamic features (e.g. [reactions:...]) this post's text uses, and the posts whose
   // reactions other posts read.
+  images       PostImage[]
   tracking     PostTracking[] @relation("TrackedPost")
   trackedBy    PostTracking[] @relation("TrackingSource")
   createdAt    DateTime       @default(now()) @map("created_at")
@@ -308,6 +309,24 @@ model PostTracking {
   @@unique([taskId, postRef, emoji, type])
   @@index([sourceTaskId])
   @@map("post_tracking")
+}
+
+// An image attached to one message (part) of a post. Uploaded before the post is saved, so it may
+// belong to no post yet (`taskId` null) until the post that uses it is saved; unused uploads are
+// removed by the worker after a day. The bytes are kept because the post goes out later.
+model PostImage {
+  id          String         @id @default(uuid()) @db.Uuid
+  guildId     String         @map("guild_id") @db.Uuid
+  taskId      String?        @map("task_id") @db.Uuid
+  task        ScheduledTask? @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  contentType String         @map("content_type")
+  size        Int
+  data        Bytes
+  createdAt   DateTime       @default(now()) @map("created_at")
+
+  @@index([taskId])
+  @@index([guildId, taskId, createdAt])
+  @@map("post_images")
 }
 
 model TaskRun {

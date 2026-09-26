@@ -1,5 +1,20 @@
 import { getQuickJS, shouldInterruptAfterDeadline } from 'quickjs-emscripten';
 
+/** One character of a person who reacted, in the guild. */
+export interface ShowCharacter {
+  /** `Name` or `Name Lastname`, as shown in the roster. */
+  name: string;
+  firstName: string;
+  /** Empty when the character has no last name. */
+  lastName: string;
+  isMain: boolean;
+  /** The class, like "Warrior". */
+  class: string;
+  /** Their roles: "Tank", "Healer", "Melee DPS" and/or "Ranged DPS". */
+  roles: string[];
+  level: number;
+}
+
 /** What an expression sees of each person who reacted (`reactions[i]`). */
 export interface ShowReactor {
   /** Discord user id. */
@@ -10,10 +25,8 @@ export interface ShowReactor {
   name: string;
   /** How they are shown in the message's server: their nickname there, else `name`. */
   displayName: string;
-  /** Their main characters joined with " / ", or their Discord name when they have none. */
-  mainName: string;
-  /** Their main characters, one entry each (empty when they have none). */
-  mains: string[];
+  /** Their characters in the guild (empty when they have none), main first. */
+  characters: ShowCharacter[];
 }
 
 /** An expression that is written wrongly or fails when it runs. */
@@ -25,7 +38,7 @@ const STACK_LIMIT_BYTES = 512 * 1024;
 const MAX_RESULT_LENGTH = 4000;
 
 /**
- * Evaluates the `show` expression of a tag, e.g. `` `${reactions.length}: ${reactions.map(r => r.mainName)}` ``,
+ * Evaluates the `show` expression of a tag, e.g. `` `${reactions.length}: ${reactions.map(r => r.name)}` ``,
  * with the people who reacted as `reactions`. The expression is written by whoever edits a post, so
  * it runs in QuickJS (a JavaScript engine compiled to WebAssembly) rather than in Node: it has
  * no access to files, the network, `process`, `require` or anything of ours, only the standard
@@ -77,16 +90,24 @@ const SAMPLE: ShowReactor[] = [
     tag: '<@100000000000000001>',
     name: 'Ana',
     displayName: 'Ana (Dev)',
-    mainName: 'Merric',
-    mains: ['Merric'],
+    characters: [
+      {
+        name: 'Merric Stone',
+        firstName: 'Merric',
+        lastName: 'Stone',
+        isMain: true,
+        class: 'Warrior',
+        roles: ['Tank'],
+        level: 60,
+      },
+    ],
   },
   {
     id: '100000000000000002',
     tag: '<@100000000000000002>',
     name: 'Bruno',
     displayName: 'Bruno',
-    mainName: 'Bruno',
-    mains: [],
+    characters: [],
   },
 ];
 

@@ -4,6 +4,7 @@ import { BadRequestException } from '@nestjs/common';
 import {
   DEFAULT_SHOW,
   hashReactors,
+  parseAllTokens,
   parseDynamicTokens,
   renderContent,
   trackingKey,
@@ -25,7 +26,7 @@ describe('parseDynamicTokens', () => {
       tokens.map((t) => [t.ref, t.emoji, t.expression]),
       [
         [`msgid:${POST}`, '👍', 'reactions.length'],
-        ['name:roster', 'raid:123456789012345678', 'reactions.length'],
+        ['name:roster#1', 'raid:123456789012345678', 'reactions.length'],
       ],
     );
     assert.equal(
@@ -81,13 +82,51 @@ describe('parseDynamicTokens', () => {
     const [a, b] = parseDynamicTokens(
       'Yes: {{reactions sourcePost="Raid Signup" emoji=👍 show="reactions.length"}} and {{reactions show=reactions.length emoji=👍 sourcePost=Roster}}',
     );
-    assert.deepEqual([a.ref, a.label, a.emoji], ['name:raid signup', 'Raid Signup', '👍']);
-    assert.equal(b.ref, 'name:roster');
+    assert.deepEqual([a.ref, a.label, a.emoji], ['name:raid signup#1', 'Raid Signup', '👍']);
+    assert.equal(b.ref, 'name:roster#1');
   });
 
   it('points at the post itself when sourcePost is left out', () => {
     const [self] = parseDynamicTokens('{{ reactions emoji=🔥 }}');
-    assert.equal(self.ref, 'self');
+    assert.equal(self.ref, 'self#1');
+  });
+
+  it('reads a tag in the third message of a post as reading that same message', () => {
+    const [own] = parseDynamicTokens('{{reactions emoji=👍}}', 3);
+    assert.deepEqual([own.ref, own.part], ['self#3', 3]);
+  });
+
+  it('reads another post’s first message, unless part says which', () => {
+    const [first, second] = parseDynamicTokens(
+      '{{reactions sourcePost="Raid" emoji=👍}} {{reactions sourcePost="Raid" part=2 emoji=👍}}',
+      3,
+    );
+    assert.deepEqual([first.ref, first.part], ['name:raid#1', 1]);
+    assert.deepEqual([second.ref, second.part], ['name:raid#2', 2]);
+    assert.notEqual(first.ref, second.ref);
+  });
+
+  it('refuses a part that is not a message number, or given for a message id or link', () => {
+    for (const bad of [
+      '{{reactions part=0 emoji=👍}}',
+      '{{reactions part=11 emoji=👍}}',
+      '{{reactions part=x emoji=👍}}',
+      '{{reactions sourcePost=900000000000000001 part=2 emoji=👍}}',
+    ]) {
+      assert.throws(() => parseDynamicTokens(bad), BadRequestException, bad);
+    }
+  });
+
+  it('reads every message of a post, each tag knowing which message it is in', () => {
+    const tokens = parseAllTokens([
+      { content: 'One {{reactions emoji=👍}}' },
+      { content: 'Two, no tags' },
+      { content: 'Three {{reactions emoji=🔥}}' },
+    ]);
+    assert.deepEqual(
+      tokens.map((t) => t.ref),
+      ['self#1', 'self#3'],
+    );
   });
 
   it('points at a Discord message by its id', () => {
@@ -128,7 +167,7 @@ describe('parseDynamicTokens', () => {
 
   it('reads an expression with quotes, backticks, ${…} and }} inside', () => {
     const expression =
-      "`${reactions.length}: ${reactions.map((a) => `${a.tag} is ${a.mainName}`).join(', ')}`";
+      "`${reactions.length}: ${reactions.map((a) => `${a.tag} is ${a.name}`).join(', ')}`";
     const text = `Going {{reactions sourcePost="Raid" emoji=👍 show="${expression}"}} and more {{reactions emoji=🔥}}`;
     const tokens = parseDynamicTokens(text);
     assert.equal(tokens.length, 2);
@@ -189,10 +228,28 @@ describe('renderContent', () => {
 });
 
 describe('hashReactors', () => {
-  it('is the same for the same people in any order, and changes when someone joins, renames or gets a main', () => {
+  it('is the same for the same people in any order, and changes when someone joins, renames or their characters change', () => {
     assert.equal(hashReactors([ana, bruno]), hashReactors([bruno, ana]));
     assert.notEqual(hashReactors([ana]), hashReactors([ana, bruno]));
     assert.notEqual(hashReactors([ana]), hashReactors([{ ...ana, name: 'Anna' }]));
-    assert.notEqual(hashReactors([ana]), hashReactors([{ ...ana, mains: ['Merric'] }]));
+    assert.notEqual(
+      hashReactors([ana]),
+      hashReactors([
+        {
+          ...ana,
+          characters: [
+            {
+              name: 'Merric',
+              firstName: 'Merric',
+              lastName: '',
+              isMain: true,
+              class: 'Warrior',
+              roles: ['Tank'],
+              level: 60,
+            },
+          ],
+        },
+      ]),
+    );
   });
 });

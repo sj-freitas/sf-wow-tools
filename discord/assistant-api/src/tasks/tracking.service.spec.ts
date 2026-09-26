@@ -8,19 +8,48 @@ import { TrackingService } from './tracking.service';
 
 const POST = '11111111-2222-3333-4444-555555555555';
 const BOT = 'bot-1';
+/** A character row, as the roster stores it. */
+const character = (
+  firstName: string,
+  lastName = '',
+  over: Partial<{ isMain: boolean; class: string; roles: string[]; level: number }> = {},
+) => ({ firstName, lastName, isMain: true, class: 'Warrior', roles: ['TANK'], level: 60, ...over });
+
 const ana = { id: '1', name: 'Ana' };
 const bruno = { id: '2', name: 'Bruno' };
 
-const liveState = { messageId: 'm1', channelId: 'c1', renderedContent: undefined as unknown };
+const PART = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+/** The message a post has in Discord. */
+const liveMessage = (over: Record<string, unknown> = {}) => ({
+  partId: PART,
+  messageId: 'm1',
+  channelId: 'c1',
+  serverId: 's1',
+  postedAt: '2026-10-01T18:00:00.000Z',
+  renderedContent: undefined as unknown,
+  imageIds: [] as string[],
+  embedLinks: true,
+  ...over,
+});
 const post = (over: Record<string, unknown> = {}): any => ({
   id: POST,
   guildId: 'g1',
   name: 'Raid signup',
   config: {
-    content: `Going: {{reactions sourcePost="Raid signup" emoji=👍 show="reactions.map(r => r.name)"}}`,
-    embedLinks: true,
+    serverId: 's1',
+    channelId: 'c1',
+    parts: [
+      {
+        id: PART,
+        content: `Going: {{reactions sourcePost="Raid signup" emoji=👍 show="reactions.map(r => r.name)"}}`,
+        seedReactions: [] as string[],
+        embedLinks: true,
+        delaySeconds: 0,
+        imageIds: [] as string[],
+      },
+    ],
   },
-  state: { ...liveState },
+  state: { messages: [liveMessage()] },
   ...over,
 });
 
@@ -33,7 +62,7 @@ describe('TrackingService', () => {
   let created: any[];
   let deletedRows: string[];
   let taskUpdates: any[];
-  let mains: Record<string, { firstName: string; lastName: string }[]>;
+  let roster: Record<string, ReturnType<typeof character>[]>;
   let servers: string[];
   let channelServer: string | null;
   let unreadable: boolean;
@@ -53,7 +82,7 @@ describe('TrackingService', () => {
     created = [];
     deletedRows = [];
     taskUpdates = [];
-    mains = {};
+    roster = {};
     servers = ['s1'];
     channelServer = 's1';
     unreadable = false;
@@ -68,13 +97,8 @@ describe('TrackingService', () => {
           Object.values(tasks).filter(
             (t: any) =>
               t.guildId === args.where.guildId &&
-              t.name.toLowerCase() === args.where.name.equals.toLowerCase(),
+              (!args.where.name || t.name.toLowerCase() === args.where.name.equals.toLowerCase()),
           ),
-        findFirst: async (args: any) =>
-          Object.values(tasks).find(
-            (t: any) =>
-              t.guildId === args.where.guildId && t.state?.messageId === args.where.state.equals,
-          ) ?? null,
         findUnique: async (args: any) => tasks[args.where.id] ?? null,
         update: async (args: any) => void taskUpdates.push(args.data),
       },
@@ -86,8 +110,8 @@ describe('TrackingService', () => {
       player: {
         findMany: async (args: any) =>
           args.where.discordUserId.in
-            .filter((id: string) => id in mains)
-            .map((id: string) => ({ discordUserId: id, characters: mains[id] })),
+            .filter((id: string) => id in roster)
+            .map((id: string) => ({ discordUserId: id, characters: roster[id] })),
       },
       postTracking: {
         findMany: async (args: any) =>
@@ -134,7 +158,7 @@ describe('TrackingService', () => {
     sourceTaskId: POST,
     sourceChannelId: null,
     sourceMessageId: null,
-    postRef: 'name:raid signup',
+    postRef: 'name:raid signup#1',
     emoji: '👍',
     type: 'names',
     lastHash: null,
@@ -148,7 +172,7 @@ describe('TrackingService', () => {
 
     it('finds a post by its name, but only in the same guild', async () => {
       const sources = await resolve('{{reactions sourcePost="Raid signup" emoji=👍}}');
-      assert.deepEqual(sources.get('name:raid signup'), { taskId: POST });
+      assert.deepEqual(sources.get('name:raid signup#1'), { taskId: POST, part: 1 });
       await assert.rejects(
         resolve('{{reactions sourcePost="Raid signup" emoji=👍}}', 'other-guild'),
         /no post named/,
@@ -157,11 +181,15 @@ describe('TrackingService', () => {
 
     it('finds a post by its name, whatever the letter case', async () => {
       const sources = await resolve('{{reactions sourcePost="RAID SIGNUP" emoji=👍}}');
-      assert.deepEqual(sources.get('name:raid signup'), { taskId: POST });
+      assert.deepEqual(sources.get('name:raid signup#1'), { taskId: POST, part: 1 });
     });
 
     it('finds the message of a post the bot made by its Discord message id', async () => {
-      tasks[POST].state = { messageId: '900000000000000001', channelId: '800000000000000001' };
+      tasks[POST].state = {
+        messages: [
+          liveMessage({ messageId: '900000000000000001', channelId: '800000000000000001' }),
+        ],
+      };
       const sources = await resolve('{{reactions sourcePost=900000000000000001 emoji=👍}}');
       assert.deepEqual(sources.get('msgid:900000000000000001'), {
         message: { channelId: '800000000000000001', messageId: '900000000000000001' },
@@ -185,7 +213,9 @@ describe('TrackingService', () => {
       });
 
       it('prefers a post the bot made, without asking any channel', async () => {
-        tasks[POST].state = { messageId: id, channelId: '800000000000000001' };
+        tasks[POST].state = {
+          messages: [liveMessage({ messageId: id, channelId: '800000000000000001' })],
+        };
         channelList = ['800000000000000002'];
         await resolve(`{{reactions sourcePost=${id} emoji=👍}}`);
         assert.deepEqual(probed, []);
@@ -247,8 +277,8 @@ describe('TrackingService', () => {
         const sources = await resolve(`{{reactions sourcePost="${numericLink}" emoji=👍}}`);
         const people = await service.fetchPeople('g1', tokens, sources);
         assert.deepEqual(people.get(`${tokens[0].ref}|👍`), [
-          { ...ana, mains: [], displayName: 'Ana' },
-          { ...bruno, mains: [], displayName: 'Bruno' },
+          { ...ana, characters: [], displayName: 'Ana' },
+          { ...bruno, characters: [], displayName: 'Bruno' },
         ]);
         await service.syncTracking(POST, tokens, sources);
         assert.deepEqual(
@@ -274,16 +304,17 @@ describe('TrackingService', () => {
 
     it('lets a post point at itself, once it has an id', async () => {
       assert.equal((await resolve('{{reactions emoji=👍}}')).size, 0);
-      assert.deepEqual((await resolve('{{reactions emoji=👍}}', 'g1', POST)).get('self'), {
+      assert.deepEqual((await resolve('{{reactions emoji=👍}}', 'g1', POST)).get('self#1'), {
         taskId: POST,
+        part: 1,
       });
     });
 
     it('keeps what was found on save, so renaming the other post breaks nothing', async () => {
-      rows = [trackingRow({ postRef: 'name:old name' })];
+      rows = [trackingRow({ postRef: 'name:old name#1' })];
       const tokens = parseDynamicTokens('{{reactions sourcePost="Old name" emoji=👍}}');
       const sources = await service.sourceMap(POST, 'g1', tokens);
-      assert.deepEqual(sources.get('name:old name'), { taskId: POST });
+      assert.deepEqual(sources.get('name:old name#1'), { taskId: POST, part: 1 });
     });
 
     it('shows nobody for a tag that points nowhere when posting', async () => {
@@ -291,7 +322,7 @@ describe('TrackingService', () => {
       const sources = await service.sourceMap(POST, 'g1', tokens);
       assert.equal(sources.size, 0);
       const people = await service.fetchPeople('g1', tokens, sources);
-      assert.deepEqual(people.get('name:gone|👍'), []);
+      assert.deepEqual(people.get('name:gone#1|👍'), []);
     });
   });
 
@@ -314,13 +345,13 @@ describe('TrackingService', () => {
       assert.deepEqual(deletedRows, ['old']);
       assert.deepEqual(
         created.map((c) => [c.taskId, c.sourceTaskId, c.postRef, c.emoji, c.type]),
-        [[POST, POST, 'name:raid signup', '👍', 'custom']],
+        [[POST, POST, 'name:raid signup#1', '👍', 'custom']],
       );
     });
 
     it('keeps a row that is still in the text and seeds new rows so nothing looks changed', async () => {
       rows = [trackingRow()];
-      const people = new Map([[`name:raid signup|🔥`, [ana]]]);
+      const people = new Map([[`name:raid signup#1|🔥`, [ana]]]);
       await sync(
         `{{reactions sourcePost="Raid signup" emoji=👍 show="reactions.map(r => r.name)"}} {{reactions sourcePost="Raid signup" emoji=🔥 show="reactions.length"}}`,
         people,
@@ -334,7 +365,7 @@ describe('TrackingService', () => {
       await sync(
         '{{reactions sourcePost="Raid signup" emoji=🔥 show="reactions.map(r => r.tag)"}}',
       );
-      assert.equal(created[0].postRef, 'name:raid signup');
+      assert.equal(created[0].postRef, 'name:raid signup#1');
     });
 
     it('removes every row when the tags are removed from the text', async () => {
@@ -356,7 +387,7 @@ describe('TrackingService', () => {
       tasks[POST].state = {};
       assert.deepEqual(await service.readReactors(service.locationOfTask(tasks[POST]), '👍'), []);
       assert.deepEqual(await service.readReactors(null, '👍'), []);
-      tasks[POST].state = { messageId: 'm1', channelId: 'c1', messageDeleted: true };
+      tasks[POST].state = { messages: [liveMessage({ deleted: true })] };
       assert.equal(service.locationOfTask(tasks[POST]), null);
     });
 
@@ -378,60 +409,61 @@ describe('TrackingService', () => {
     });
   });
 
-  describe('main character names', () => {
-    it("shows each person's main characters, else their Discord name", async () => {
-      mains = {
-        [ana.id]: [{ firstName: 'Merric', lastName: 'Stone' }],
-        [bruno.id]: [],
-      };
-      const [token] = parseDynamicTokens(
-        `{{reactions sourcePost="Raid signup" emoji=👍 show="reactions.map(r => r.mainName)"}}`,
-      );
+  describe('characters', () => {
+    const tag = `{{reactions sourcePost="Raid signup" emoji=👍 show="reactions.flatMap(r => r.characters.map(c => c.name))"}}`;
+    const fetch = async () => {
+      const [token] = parseDynamicTokens(tag);
       const people = await service.fetchPeople(
         'g1',
         [token],
         new Map([[token.ref, { taskId: POST }]]),
       );
-      assert.deepEqual(people.get(`name:raid signup|👍`), [
-        { id: '1', name: 'Ana', displayName: 'Ana', mains: ['Merric Stone'] },
-        { id: '2', name: 'Bruno', displayName: 'Bruno', mains: [] },
+      return people.get('name:raid signup#1|👍') ?? [];
+    };
+
+    it('gives each person their characters, or an empty list when they have none', async () => {
+      roster = { [ana.id]: [character('Merric', 'Stone', { roles: ['TANK', 'MELEE_DPS'] })] };
+      const [first, second] = await fetch();
+      assert.deepEqual(first.characters, [
+        {
+          name: 'Merric Stone',
+          firstName: 'Merric',
+          lastName: 'Stone',
+          isMain: true,
+          class: 'Warrior',
+          roles: ['Tank', 'Melee DPS'],
+          level: 60,
+        },
       ]);
+      assert.deepEqual(second.characters, []);
     });
 
-    it('joins several mains of one person', async () => {
-      mains = {
+    it('lists the main first and every character, with its own class and roles', async () => {
+      roster = {
         [ana.id]: [
-          { firstName: 'Merric', lastName: '' },
-          { firstName: 'Olga', lastName: '' },
+          character('Merric', '', { isMain: true }),
+          character('Olga', '', { isMain: false, class: 'Priest', roles: ['HEALER'] }),
         ],
       };
-      const people = await service.withMains('g1', [ana]);
-      assert.deepEqual(people[0].mains, ['Merric', 'Olga']);
+      const [first] = await fetch();
+      assert.deepEqual(
+        first.characters?.map((c) => [c.name, c.isMain, c.class, c.roles]),
+        [
+          ['Merric', true, 'Warrior', ['Tank']],
+          ['Olga', false, 'Priest', ['Healer']],
+        ],
+      );
     });
 
-    it('updates the post when someone gets a main, even if the reactions did not change', async () => {
-      tasks[POST].config.content =
-        `Going: {{reactions sourcePost="Raid signup" emoji=👍 show="reactions.map(r => r.mainName)"}}`;
-      rows = [trackingRow({ type: 'mainNames' })];
+    it('updates the post when a character changes, even if the reactions did not', async () => {
+      tasks[POST].config.parts[0].content = `Going: ${tag}`;
+      rows = [trackingRow()];
       await service.refreshDue();
-      assert.equal(edits[0][2], 'Going: Ana, Bruno');
-      tasks[POST].state.renderedContent = 'Going: Ana, Bruno';
-      mains = { [ana.id]: [{ firstName: 'Merric', lastName: '' }] };
+      assert.equal(edits[0][2], 'Going: ');
+      tasks[POST].state.messages[0].renderedContent = 'Going: ';
+      roster = { [ana.id]: [character('Merric')] };
       assert.equal(await service.refreshDue(), 1);
-      assert.equal(edits[1][2], 'Going: Merric, Bruno');
-    });
-
-    it('always looks main characters up, so every expression can use them', async () => {
-      mains = { [ana.id]: [{ firstName: 'Merric', lastName: '' }] };
-      const [token] = parseDynamicTokens(
-        `{{reactions sourcePost="Raid signup" emoji=👍 show="reactions.map(r => r.mainName)"}}`,
-      );
-      const people = await service.fetchPeople(
-        'g1',
-        [token],
-        new Map([[token.ref, { taskId: POST }]]),
-      );
-      assert.deepEqual(people.get(`name:raid signup|👍`)?.[0].mains, ['Merric']);
+      assert.equal(edits[1][2], 'Going: Merric');
     });
   });
 
@@ -449,19 +481,19 @@ describe('TrackingService', () => {
         new Map([[token().ref, { taskId: POST }]]),
       );
       assert.deepEqual(
-        people.get(`name:raid signup|👍`)?.map((p) => p.displayName),
+        people.get(`name:raid signup#1|👍`)?.map((p) => p.displayName),
         ['Ana (Tank)', 'Bruno'],
       );
     });
 
     it('asks Discord for the nickname only once the reactions changed, and only for new people', async () => {
-      tasks[POST].config.content =
+      tasks[POST].config.parts[0].content =
         'Going: {{reactions sourcePost="Raid signup" emoji=👍 show="reactions.map(r => r.displayName)"}}';
       nicknames = { [ana.id]: 'Ana (Tank)', [bruno.id]: 'Bruno (Heal)' };
       rows = [
         trackingRow({
-          lastHash: hashReactors([{ ...ana, mains: [] }]),
-          lastUsers: [{ ...ana, mains: [], displayName: 'Ana (Tank)' }],
+          lastHash: hashReactors([{ ...ana, characters: [] }]),
+          lastUsers: [{ ...ana, characters: [], displayName: 'Ana (Tank)' }],
         }),
       ];
       await service.refreshDue();
@@ -473,8 +505,8 @@ describe('TrackingService', () => {
       rows = [
         trackingRow({
           lastHash: hashReactors([
-            { ...ana, mains: [] },
-            { ...bruno, mains: [] },
+            { ...ana, characters: [] },
+            { ...bruno, characters: [] },
           ]),
         }),
       ];
@@ -489,7 +521,7 @@ describe('TrackingService', () => {
         new Map([[token().ref, { taskId: POST }]]),
       );
       assert.deepEqual(
-        people.get(`name:raid signup|👍`)?.map((p) => p.displayName),
+        people.get(`name:raid signup#1|👍`)?.map((p) => p.displayName),
         ['Ana', 'Bruno'],
       );
     });
@@ -508,10 +540,98 @@ describe('TrackingService', () => {
           [token],
           new Map([[token.ref, { taskId: POST }]]),
         );
-        assert.deepEqual(people.get(`name:raid signup|raid:123456789012345678`), [
-          { ...ana, mains: [], displayName: 'Ana' },
+        assert.deepEqual(people.get(`name:raid signup#1|raid:123456789012345678`), [
+          { ...ana, characters: [], displayName: 'Ana' },
         ]);
       }
+    });
+  });
+
+  describe('a post with several messages', () => {
+    const PART_B = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+    const partOf = (id: string, content: string) => ({
+      id,
+      content,
+      seedReactions: [] as string[],
+      embedLinks: true,
+      delaySeconds: 0,
+      imageIds: [] as string[],
+    });
+
+    beforeEach(() => {
+      tasks[POST].config.parts = [
+        partOf(PART, 'First: {{reactions emoji=👍 show="reactions.length"}}'),
+        partOf(PART_B, 'Second: {{reactions emoji=👍 show="reactions.map(r => r.name)"}}'),
+      ];
+      tasks[POST].state = {
+        messages: [liveMessage(), liveMessage({ partId: PART_B, messageId: 'm2' })],
+      };
+    });
+
+    it('finds the message of the part a tag asks for', () => {
+      assert.deepEqual(service.locationOfTask(tasks[POST], 1), {
+        channelId: 'c1',
+        messageId: 'm1',
+      });
+      assert.deepEqual(service.locationOfTask(tasks[POST], 2), {
+        channelId: 'c1',
+        messageId: 'm2',
+      });
+      assert.equal(service.locationOfTask(tasks[POST], 3), null);
+    });
+
+    it('reads the reactions of the second message of another post', async () => {
+      const tokens = parseDynamicTokens('{{reactions sourcePost="Raid signup" part=2 emoji=👍}}');
+      const sources = await service.resolveSources('g1', tokens);
+      assert.deepEqual(sources.get('name:raid signup#2'), { taskId: POST, part: 2 });
+      readFails = null;
+      const people = await service.fetchPeople('g1', tokens, sources);
+      assert.equal(people.get('name:raid signup#2|👍')?.length, 2);
+    });
+
+    it('keeps which message a row reads in its reference', async () => {
+      rows = [trackingRow({ postRef: 'name:raid signup#2' })];
+      const tokens = parseDynamicTokens('{{reactions sourcePost="Raid signup" part=2 emoji=👍}}');
+      const sources = await service.sourceMap(POST, 'g1', tokens);
+      assert.deepEqual(sources.get('name:raid signup#2'), { taskId: POST, part: 2 });
+    });
+
+    it('edits each message of the post whose text changed, and only those', async () => {
+      // Each tag reads its own message (no sourcePost); the first one shows a count.
+      rows = [trackingRow({ postRef: 'self#1', sourceTaskId: POST })];
+      tasks[POST].config.parts[0].content = 'First: {{reactions emoji=👍 show="reactions.length"}}';
+      tasks[POST].config.parts[1].content = 'Second, no tags';
+      assert.equal(await service.refreshDue(), 1);
+      assert.deepEqual(
+        edits.map((e) => [e[1], e[2]]),
+        [['m1', 'First: 2']],
+      );
+    });
+
+    it('marks only the message that is gone when Discord says so', async () => {
+      rows = [trackingRow({ postRef: 'self#1', sourceTaskId: POST })];
+      tasks[POST].config.parts[0].content = 'First: {{reactions emoji=👍 show="reactions.length"}}';
+      tasks[POST].config.parts[1].content = 'Second, no tags';
+      const bot = (service as any).bot;
+      bot.editMessage = async () => {
+        throw new DiscordAPIError(
+          { code: 10008, message: 'Unknown Message' },
+          10008,
+          404,
+          'PATCH',
+          '',
+          {},
+        );
+      };
+      await service.refreshDue();
+      const saved = taskUpdates.at(-1).state.messages;
+      assert.deepEqual(
+        saved.map((m: any) => [m.messageId, m.deleted]),
+        [
+          ['m1', true],
+          ['m2', undefined],
+        ],
+      );
     });
   });
 
@@ -522,7 +642,7 @@ describe('TrackingService', () => {
       assert.deepEqual(edits, [
         ['c1', 'm1', 'Going: Ana, Bruno', { suppressEmbeds: false, quiet: true }],
       ]);
-      assert.equal(taskUpdates[0].state.renderedContent, 'Going: Ana, Bruno');
+      assert.equal(taskUpdates[0].state.messages[0].renderedContent, 'Going: Ana, Bruno');
       assert.equal(rows[0].lastHash, hashReactors([ana, bruno]));
     });
 
@@ -535,14 +655,14 @@ describe('TrackingService', () => {
     it('updates again when someone un-reacts', async () => {
       rows = [trackingRow()];
       await service.refreshDue();
-      tasks[POST].state.renderedContent = 'Going: Ana, Bruno';
+      tasks[POST].state.messages[0].renderedContent = 'Going: Ana, Bruno';
       reactors['👍'] = [ana];
       assert.equal(await service.refreshDue(), 1);
       assert.equal(edits[1][2], 'Going: Ana');
     });
 
     it('skips posts that are not in Discord', async () => {
-      tasks[POST].state = { messageId: 'm1', channelId: 'c1', messageDeleted: true };
+      tasks[POST].state = { messages: [liveMessage({ deleted: true })] };
       rows = [trackingRow()];
       assert.equal(await service.refreshDue(), 0);
       assert.deepEqual(edits, []);
@@ -560,11 +680,11 @@ describe('TrackingService', () => {
       tasks[source] = post({
         id: source,
         name: 'Roster',
-        state: { messageId: 'm9', channelId: 'c9' },
+        state: { messages: [liveMessage({ messageId: 'm9', channelId: 'c9' })] },
       });
-      tasks[POST].config.content =
+      tasks[POST].config.parts[0].content =
         `Signed up: {{reactions sourcePost="Roster" emoji=👍 show="reactions.length"}}`;
-      rows = [trackingRow({ sourceTaskId: source, postRef: 'name:roster', type: 'number' })];
+      rows = [trackingRow({ sourceTaskId: source, postRef: 'name:roster#1', type: 'number' })];
       await service.refreshDue();
       assert.equal(edits[0][0], 'c1');
       assert.equal(edits[0][2], 'Signed up: 2');

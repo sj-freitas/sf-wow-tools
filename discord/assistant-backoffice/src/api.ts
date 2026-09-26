@@ -268,11 +268,25 @@ export const runTaskNow = (id: string): Promise<void> =>
 export const fetchReactionUsers = (
   id: string,
   emoji: string,
+  part = 1,
 ): Promise<{ id: string; name: string }[]> =>
-  request('GET', `/api/tasks/${id}/reactions/users?emoji=${encodeURIComponent(emoji)}`);
+  request(
+    'GET',
+    `/api/tasks/${id}/reactions/users?emoji=${encodeURIComponent(emoji)}&part=${part}`,
+  );
 
-export const fetchTaskReactions = (id: string): Promise<Reaction[]> =>
-  request('GET', `/api/tasks/${id}/reactions`);
+export const fetchTaskReactions = (id: string, part = 1): Promise<Reaction[]> =>
+  request('GET', `/api/tasks/${id}/reactions?part=${part}`);
+
+/** Uploads an image for a message of a post; returns its id. */
+export function uploadPostImage(guildId: string, file: File): Promise<{ id: string }> {
+  const form = new FormData();
+  form.append('image', file);
+  return request('POST', `/api/guilds/${guildId}/post-images`, form);
+}
+
+export const postImageUrl = (guildId: string, imageId: string): string =>
+  `/api/guilds/${guildId}/post-images/${imageId}`;
 
 export const fetchHoneypots = (guildId: string): Promise<Honeypot[]> =>
   request('GET', `/api/guilds/${guildId}/honeypots`);
