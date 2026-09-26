@@ -45,6 +45,13 @@ export interface GameConfig<C extends string = string> {
    */
   requiresLastName?: boolean;
   /**
+   * Where a character's armory page is, as a link with placeholders: `{name}` (the character's
+   * name), `{lastName}`, `{region}` (`eu`, `us`: the guild's region) and `{server}` (the guild's
+   * server, lower case with hyphens). Left out, characters have no armory link. The roster tags
+   * (`roster[i].armoryLink`) use it.
+   */
+  armoryLink?: string;
+  /**
    * The servers a guild of this version can be on, per region (the regions of `config/regions.ts`).
    * A region with no entry is not available for this version.
    */
@@ -79,6 +86,15 @@ export function gameConfigProblems(config: unknown): string[] {
   }
   if (game.requiresLastName !== undefined && typeof game.requiresLastName !== 'boolean') {
     problems.push('requiresLastName must be true or false (or left out)');
+  }
+
+  if (
+    game.armoryLink !== undefined &&
+    (typeof game.armoryLink !== 'string' || !/^https:\/\/\S+$/.test(game.armoryLink))
+  ) {
+    problems.push(
+      'armoryLink must be an https link (with {name}, {region}, {server} placeholders)',
+    );
   }
 
   const servers = game.allowedServers;

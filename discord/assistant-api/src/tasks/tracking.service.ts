@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import type { Prisma, Role, ScheduledTask } from '@prisma/client';
+import { armoryLinkFor } from '../game/games';
 import { formatCharacterName } from '../characters/character-name';
 import { ROLE_LABELS } from '../characters/role-labels';
 import { PrismaService } from '../database/prisma.service';
@@ -320,6 +321,10 @@ export class TrackingService {
    * always gives the same list, and the same hash). This is what `{{roster …}}` tags work with.
    */
   async loadRoster(guildId: string): Promise<ShowRosterEntry[]> {
+    const guild = await this.prisma.guild.findUnique({
+      where: { id: guildId },
+      select: { gameVersion: true, region: true, realm: true },
+    });
     const players = await this.prisma.player.findMany({
       where: { guildId },
       select: {
@@ -349,6 +354,14 @@ export class TrackingService {
         const member = members.get(player.discordUserId);
         return player.characters.map((character): ShowRosterEntry => ({
           ...toCharacter(character),
+          armoryLink: guild
+            ? armoryLinkFor(guild.gameVersion, {
+                name: character.firstName,
+                lastName: character.lastName,
+                region: guild.region,
+                server: guild.realm,
+              })
+            : null,
           discordUser: {
             id: player.discordUserId,
             tag: `<@${player.discordUserId}>`,

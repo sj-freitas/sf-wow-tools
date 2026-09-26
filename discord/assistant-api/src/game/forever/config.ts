@@ -8,6 +8,10 @@ export default defineGame({
   gameVersion: 'Forever',
   // Characters are written `Name-Lastname`.
   requiresLastName: true,
+  // A stand-in: Season of Discovery on Wild Growth (EU), because the Forever armory does not exist
+  // yet. When it does, this becomes something like
+  // 'https://<armory>/character/{region}/{server}/{name}' and follows the guild.
+  armoryLink: 'https://classic-armory.org/character/eu/classic-sod/wild-growth/{name}',
   allowedServers: {
     US: ['RP', 'PVP', 'PVE', 'Hardcore'],
     EU: ['RP', 'PVP', 'PVE', 'Hardcore'],

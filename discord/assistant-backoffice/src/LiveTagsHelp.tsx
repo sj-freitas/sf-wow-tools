@@ -222,7 +222,8 @@ export function LiveTagsHelp() {
         out, it lists the names), and is written again by itself when the roster changes. Each entry
         is an object with the character fields above (<code>name</code>, <code>firstName</code>,{' '}
         <code>lastName</code>, <code>isMain</code>, <code>class</code>, <code>roles</code>,{' '}
-        <code>level</code>) and <code>discordUser</code>: the Discord user who plays it, with{' '}
+        <code>level</code>), <code>armoryLink</code> (the link to its armory page, or{' '}
+        <code>null</code>) and <code>discordUser</code>: the Discord user who plays it, with{' '}
         <code>id</code>, <code>tag</code> (a mention), <code>name</code> (their Discord name),{' '}
         <code>displayName</code> (their nickname in the guild's main server, else the Discord name)
         and <code>roles</code> (the names of their Discord roles there, a list of text).

@@ -163,6 +163,7 @@ describe('the roster variable', () => {
       class: 'Warrior',
       roles: ['Tank'],
       level: 60,
+      armoryLink: null,
       discordUser: { id: '1', tag: '<@1>', name: 'Ana', displayName: 'Ana', roles: [] },
     },
     {
@@ -173,6 +174,7 @@ describe('the roster variable', () => {
       class: 'Priest',
       roles: ['Healer'],
       level: 58,
+      armoryLink: null,
       discordUser: { id: '2', tag: '<@2>', name: 'Bruno', displayName: 'Bruno', roles: [] },
     },
   ];

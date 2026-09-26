@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { describe, it } from 'node:test';
 import { defineGame, gameConfigProblems } from './game-config';
 import {
+  armoryLinkFor,
   classesOf,
   gameVersions,
   games,
@@ -108,6 +109,14 @@ describe('checking a config', () => {
     assert.match(gameConfigProblems(config).join(), /requiresLastName must be true or false/);
   });
 
+  it('has armoryLink as an optional https link', () => {
+    const config = valid();
+    config.armoryLink = 'https://armory.example/{region}/{server}/{name}';
+    assert.deepEqual(gameConfigProblems(config), []);
+    config.armoryLink = 'http://armory.example/{name}';
+    assert.match(gameConfigProblems(config).join(), /armoryLink/);
+  });
+
   it('only lets a race list classes that the game has', () => {
     const config = valid();
     config.factions.Alliance.races.Human.classes = ['Mage', 'Bard'];
@@ -155,6 +164,28 @@ describe('checking a config', () => {
       // @ts-expect-error "Bard" is not one of the game's classes
       factions: { Alliance: { races: { Human: { classes: ['Mage', 'Bard'] } } } },
     });
+  });
+});
+
+describe('the armory link of a character', () => {
+  it('fills the placeholders of the version’s template', () => {
+    const link = armoryLinkFor('Forever', {
+      name: 'Zoë Ann',
+      lastName: '',
+      region: 'EU',
+      server: 'PVE',
+    });
+    assert.equal(
+      link,
+      'https://classic-armory.org/character/eu/classic-sod/wild-growth/Zo%C3%AB%20Ann',
+    );
+  });
+
+  it('is null for a version with no template or that we do not know', () => {
+    assert.equal(
+      armoryLinkFor('Retail', { name: 'A', lastName: '', region: 'EU', server: 'PVE' }),
+      null,
+    );
   });
 });
 

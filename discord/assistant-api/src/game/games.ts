@@ -77,5 +77,42 @@ export const serversOf = (gameVersion: string, region: RegionId): readonly strin
 export const requiresLastName = (gameVersion: string): boolean =>
   getGame(gameVersion)?.requiresLastName ?? false;
 
+/** Everything an armory link template can use. */
+export interface ArmoryLinkValues {
+  name: string;
+  lastName: string;
+  /** The guild's region id, like `EU`. */
+  region: string;
+  /** The guild's server, like `PVE`. */
+  server: string;
+}
+
+const slug = (text: string): string =>
+  text
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, '-')
+    .replace(/^-+|-+$/g, '');
+
+/**
+ * The armory page of a character in a version, from its `armoryLink` template; null when the
+ * version has none. Each value is made safe for an address (`{name}` keeps its accents, encoded).
+ */
+export function armoryLinkFor(gameVersion: string, values: ArmoryLinkValues): string | null {
+  const template = getGame(gameVersion)?.armoryLink;
+  if (!template) return null;
+  const replacements: Record<string, string> = {
+    name: encodeURIComponent(values.name),
+    lastName: encodeURIComponent(values.lastName),
+    region: slug(values.region),
+    server: slug(values.server),
+  };
+  return template.replace(
+    /\{(name|lastName|region|server)\}/g,
+    (_match, key: string) => replacements[key],
+  );
+}
+
 export const lastNameRequiredMessage = (gameVersion: string): string =>
   `Characters in ${gameVersion} need a last name: use Name-Lastname (a dash between first and last name).`;

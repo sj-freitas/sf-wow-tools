@@ -301,8 +301,9 @@ syntax, same QuickJS sandbox, checked on save with sample data, `⚠️ (…)` i
 Its only option is `show` (left out: every character's name); the list is called `roster`.
 
 - **`roster`** is an array with one entry per character of the guild, sorted by name:
-  `{ name, firstName, lastName, isMain, class, roles, level, discordUser }` (the same character fields as
-  `characters` in a reactions tag). A character belongs to a player (`players.discord_user_id`), so
+  `{ name, firstName, lastName, isMain, class, roles, level, armoryLink, discordUser }` (the same character
+  fields as `characters` in a reactions tag, plus `armoryLink`: the character's armory page from the game
+  version's `armoryLink` template, or `null` when the version has none). A character belongs to a player (`players.discord_user_id`), so
   `discordUser` is the Discord user who plays it: `{ id, tag, name, displayName, roles }` where `tag` is
   `<@id>`, `name` the Discord name we know (else the id), `displayName` their nickname in the guild's main
   server (else `name`) and `roles` the **names of their Discord roles** in that server (`@everyone` left
@@ -544,6 +545,9 @@ wrong. The shape (volatile: expect it to grow):
 - `gameVersion`: the name guilds store (`Forever`), unique.
 - `requiresLastName` (optional): `true` when characters have a last name (`Name-Lastname`); left out, the
   version has none and the forms do not show the field.
+- `armoryLink` (optional): an https link template for a character's armory page, with the placeholders
+  `{name}`, `{lastName}`, `{region}` and `{server}` (filled from the character and the guild). It feeds
+  `roster[i].armoryLink`.
 - `allowedServers`: the servers a guild can be on, **per region** (`EU`, `US`, the regions of
   `config/regions.ts`); a region that is missing is not available for that version.
 - `classes`: every class, by name, each with its `specializations` (`{}` until defined; a specialization

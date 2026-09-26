@@ -107,6 +107,7 @@ describe('TrackingService', () => {
     probed = [];
     const prisma = {
       $queryRaw: async () => rosterTaskIds.map((id) => ({ id })),
+      guild: { findUnique: async () => ({ gameVersion: 'Forever', region: 'EU', realm: 'PVE' }) },
       scheduledTask: {
         findMany: async (args: any) =>
           Object.values(tasks).filter(
@@ -676,6 +677,15 @@ describe('TrackingService', () => {
       tasks[POST].config.parts[0].content = rosterTag;
       tasks[POST].state.messages[0].renderedContent = 'Tanks: ';
       roster = {};
+    });
+
+    it('gives every character an armory link from the game version, or none', async () => {
+      roster = { '10': [character('Merric', 'Stone')] };
+      const [entry] = await service.loadRoster('g1');
+      assert.equal(
+        entry.armoryLink,
+        'https://classic-armory.org/character/eu/classic-sod/wild-growth/Merric',
+      );
     });
 
     it('lists every character of the guild with who plays it, sorted by name', async () => {

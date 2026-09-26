@@ -311,6 +311,7 @@ describe('{{roster …}} tags', () => {
         class: 'Warrior',
         roles: ['Tank'],
         level: 60,
+        armoryLink: null,
         discordUser: { id: '1', tag: '<@1>', name: 'Ana', displayName: 'Ana', roles: [] },
       },
     ];
@@ -330,6 +331,7 @@ describe('{{roster …}} tags', () => {
       class: 'Warrior',
       roles: ['Tank'],
       level: 60,
+      armoryLink: null,
       discordUser: { id: '1', tag: '<@1>', name: 'Ana', displayName: 'Ana', roles: [] },
     };
     const same = hashRoster([base]);

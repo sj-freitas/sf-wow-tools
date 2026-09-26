@@ -144,6 +144,8 @@ export interface GameConfig {
   gameVersion: string;
   /** Characters have a last name (`Name-Lastname`, 2+ letters each). Left out: no last names. */
   requiresLastName?: boolean;
+  /** Link template of a character's armory page (`{name}`, `{lastName}`, `{region}`, `{server}`). */
+  armoryLink?: string;
   /** Servers a guild can be on, per region id; a region that is missing is not available. */
   allowedServers: Record<string, string[]>;
   /** Every class, by name. */
