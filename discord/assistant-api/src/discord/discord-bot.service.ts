@@ -219,17 +219,20 @@ export class DiscordBotService {
     });
   }
 
-  /** `suppressEmbeds` sets or clears the "no link previews" flag along with the new text. */
+  /**
+   * `suppressEmbeds` sets or clears the "no link previews" flag along with the new text. `quiet`
+   * makes sure the edit pings nobody, whatever it mentions.
+   */
   async editMessage(
     channelId: string,
     messageId: string,
     content: string,
-    options: { suppressEmbeds?: boolean } = {},
+    options: { suppressEmbeds?: boolean; quiet?: boolean } = {},
   ): Promise<void> {
     await this.rest.patch(Routes.channelMessage(channelId, messageId), {
       body: {
         content,
-        allowed_mentions: { parse: ['users', 'roles'] },
+        allowed_mentions: { parse: options.quiet ? [] : ['users', 'roles'] },
         flags: options.suppressEmbeds ? SUPPRESS_EMBEDS : 0,
       },
     });
@@ -278,6 +281,32 @@ export class DiscordBotService {
       Routes.channelMessage(channelId, messageId),
     )) as APIMessage;
     return humanReactions(message.reactions ?? []);
+  }
+
+  /**
+   * Who reacted to a message with an emoji (unicode, or `name:id`), including the bot if it did.
+   * Reads at most `max` people, a hundred per request.
+   */
+  async getReactionUsers(
+    channelId: string,
+    messageId: string,
+    emoji: string,
+    max = 500,
+  ): Promise<{ id: string; name: string }[]> {
+    const users: { id: string; name: string }[] = [];
+    let after: string | undefined;
+    while (users.length < max) {
+      const query = new URLSearchParams({ limit: '100' });
+      if (after) query.set('after', after);
+      const page = (await this.rest.get(
+        Routes.channelMessageReaction(channelId, messageId, encodeURIComponent(emoji)),
+        { query },
+      )) as APIUser[];
+      users.push(...page.map((user) => ({ id: user.id, name: user.global_name ?? user.username })));
+      if (page.length < 100) break;
+      after = page[page.length - 1].id;
+    }
+    return users.slice(0, max);
   }
 
   /** Role ids of a member of the server; an empty list if they are not in it. */

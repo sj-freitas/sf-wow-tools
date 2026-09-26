@@ -8,7 +8,7 @@ export interface MentionNames {
 }
 
 const INLINE =
-  /(`[^`\n]+`)|(\*\*[\s\S]+?\*\*)|(__[\s\S]+?__)|(~~[\s\S]+?~~)|(\|\|[\s\S]+?\|\|)|(\*[^*\n]+?\*)|(_[^_\n]+?_)|(<@!?\d+>|<@&\d+>|<#\d+>)|(<a?:\w+:\d+>)|(https?:\/\/[^\s<]+)|(@everyone|@here)|(\[[^\]\n]+\]\(https?:\/\/[^\s)]+\))|(<https?:\/\/[^\s>]+>)/g;
+  /(`[^`\n]+`)|(\*\*[\s\S]+?\*\*)|(__[\s\S]+?__)|(~~[\s\S]+?~~)|(\|\|[\s\S]+?\|\|)|(\*[^*\n]+?\*)|(_[^_\n]+?_)|(<@!?\d+>|<@&\d+>|<#\d+>)|(<a?:\w+:\d+>)|(https?:\/\/[^\s<]+)|(@everyone|@here)|(\[[^\]\n]+\]\(https?:\/\/[^\s)]+\))|(<https?:\/\/[^\s>]+>)|(\{\{\s*reactions[^}\n]*\}\})/g;
 
 function Spoiler({ children }: { children: ReactNode }) {
   const [shown, setShown] = useState(false);
@@ -94,6 +94,18 @@ function inline(text: string, names: MentionNames): ReactNode[] {
         <a key={k} href={url} target="_blank" rel="noreferrer">
           {url}
         </a>,
+      );
+    } else if (match[14]) {
+      const emoji = /emoji\s*=\s*(\S+?)(?=\s|\}\})/.exec(token)?.[1] ?? '?';
+      const show = /show\s*=\s*(\w+)/.exec(token)?.[1] ?? 'names';
+      nodes.push(
+        <span
+          key={k}
+          className="md-mention"
+          title="Replaced by who reacted, once the post is in Discord"
+        >
+          ⟦ {emoji} · {show} ⟧
+        </span>,
       );
     } else
       nodes.push(

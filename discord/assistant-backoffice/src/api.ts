@@ -264,6 +264,13 @@ export const deletePostMessage = (id: string): Promise<void> =>
 export const runTaskNow = (id: string): Promise<void> =>
   request('POST', `/api/tasks/${id}/run-now`);
 
+/** Who reacted with one emoji (the bot left out). */
+export const fetchReactionUsers = (
+  id: string,
+  emoji: string,
+): Promise<{ id: string; name: string }[]> =>
+  request('GET', `/api/tasks/${id}/reactions/users?emoji=${encodeURIComponent(emoji)}`);
+
 export const fetchTaskReactions = (id: string): Promise<Reaction[]> =>
   request('GET', `/api/tasks/${id}/reactions`);
 

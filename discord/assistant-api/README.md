@@ -239,6 +239,38 @@ modal; a modal handler answers with a private message. Unknown or failing button
 - Because the image is downloaded and posted before the command answers, a slow Discord can make the
   3-second limit tight for big files.
 
+### Live reactions in a post's text
+
+A post's text can show who reacted to a post:
+`{{reactions post="Raid signup" emoji=👍 show=mainNames}}`.
+
+- **`post`** is the name of a scheduled post of the guild (case does not matter; it must be unique, else
+  use the id) or its id (**Copy ID** on the Posts page). Leave it out for the post the text is in.
+  **`emoji`** is 👍 or a server emoji `<:name:id>` (or `<a:name:id>`; type `\:emoji:` in Discord to get
+  it). **`show`** is optional (default `names`): `names` (`Ana, Bruno`, Discord display names),
+  `mainNames` (their main characters in the guild, `Merric Stone / Olga` if they have several, else their
+  Discord name), `tags` (`<@id>` mentions) or `number` (`3`). Options may come in any order; a value with
+  spaces goes in quotes. Up to 5 tags per
+  post; a wrong tag, an unknown post or an ambiguous name is refused on save.
+- **Tracking:** saving a post keeps one `post_tracking` row per tag in line with its text (rows appear,
+  stay or go with the tags; deleting a post removes them). A row remembers how the text pointed at the
+  post (`post_ref`) and which post that was when saved, so renaming the other post does not break a post
+  that is already up; saving the text again looks the name up afresh. The post's text is the _template_;
+  what is in Discord is kept in the task state (`renderedContent`).
+- **Refreshing:** every scheduler tick (a minute) the worker reads, for each tracked post that is in
+  Discord, who reacted (the bot's own reaction left out) and hashes the list. Only when the hash changed
+  is the message edited, and only if the rendered text really changed. Edits that show people never
+  ping them. A scheduled post is rendered right before it goes out. Long lists are cut ("…and 12 more")
+  so the message fits in 2000 characters.
+- **Custom emoji** are stored as `name:id`, and the reactions of any emoji on the message can be read,
+  whichever server it comes from. Only the id identifies the emoji.
+- `names` come free with Discord's reaction list (no server nicknames, which would need a lookup per
+  person). `mainNames` looks the people up in the database once a minute (no Discord calls), and a new or
+  changed main updates the post even if the reactions did not change.
+- **Backoffice:** clicking a reaction on a post shows who reacted. The post form has a collapsible
+  "Live tags" help with this syntax, and the preview marks the tag (it cannot show real names).
+  Tracking has no end date: remove the tag (or the post) to stop it.
+
 ### Clearing a channel (`/clear-channel`)
 
 - **`/clear-channel [channel]`.** Deletes every unpinned message of the channel (default: the one you

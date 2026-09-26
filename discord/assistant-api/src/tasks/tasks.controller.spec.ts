@@ -38,6 +38,7 @@ describe('TasksController is for Officers only', () => {
       deletePost: async () => void calls.push('deletePost'),
       runNow: async () => void calls.push('runNow'),
       reactions: async () => void calls.push('reactions'),
+      reactionUsers: async () => void calls.push('reactionUsers'),
     } as unknown as TasksService;
     controller = new TasksController(tasks, guildAccess);
   });
@@ -52,6 +53,7 @@ describe('TasksController is for Officers only', () => {
     await controller.deletePost(req, 't');
     await controller.runNow(req, 't');
     await controller.reactions(req, 't');
+    await controller.reactionUsers(req, 't', '👍');
     assert.deepEqual(calls, [
       'list',
       'channels',
@@ -62,6 +64,7 @@ describe('TasksController is for Officers only', () => {
       'deletePost',
       'runNow',
       'reactions',
+      'reactionUsers',
     ]);
   });
 
@@ -77,6 +80,7 @@ describe('TasksController is for Officers only', () => {
       () => controller.deletePost(req, 't'),
       () => controller.runNow(req, 't'),
       () => controller.reactions(req, 't'),
+      () => controller.reactionUsers(req, 't', '👍'),
     ]) {
       await assert.rejects(attempt(), ForbiddenException);
     }

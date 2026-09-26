@@ -265,11 +265,45 @@ model ScheduledTask {
   state        Json           @default("{}")
   createdById  String?        @map("created_by_id") @db.Uuid
   runs         TaskRun[]
+  // The dynamic features (e.g. [reactions:...]) this post's text uses, and the posts whose
+  // reactions other posts read.
+  tracking     PostTracking[] @relation("TrackedPost")
+  trackedBy    PostTracking[] @relation("TrackingSource")
   createdAt    DateTime       @default(now()) @map("created_at")
   updatedAt    DateTime       @updatedAt @map("updated_at")
 
   @@index([enabled, nextRunAt])
   @@map("scheduled_tasks")
+}
+
+// One dynamic feature in a post's text, like [reactions:<post id>,<emoji>,<type>]. The worker
+// re-reads the source post's reactions every minute and edits the post when they changed. Rows
+// are created, kept and removed by saving the post, so they always match its text.
+model PostTracking {
+  id           String        @id @default(uuid()) @db.Uuid
+  // The post whose text contains the feature (the message that gets edited).
+  taskId       String        @map("task_id") @db.Uuid
+  task         ScheduledTask @relation("TrackedPost", fields: [taskId], references: [id], onDelete: Cascade)
+  // The scheduled post whose reactions are read (may be the same post).
+  sourceTaskId String        @map("source_task_id") @db.Uuid
+  sourceTask   ScheduledTask @relation("TrackingSource", fields: [sourceTaskId], references: [id], onDelete: Cascade)
+  // How the text points at that post, as written (`id:<uuid>`, `name:<lower-cased name>` or
+  // `self`), so a post renamed later keeps working until its text is saved again.
+  postRef      String        @default("") @map("post_ref")
+  // The emoji: unicode, or `name:id` for a custom one.
+  emoji        String
+  // names | number | tags
+  type         String
+  // Hash of who had reacted at the last check: equal means nothing changed, nothing more to fetch.
+  lastHash     String?       @map("last_hash")
+  // Who had reacted at the last check: [{ id, name }].
+  lastUsers    Json          @default("[]") @map("last_users")
+  checkedAt    DateTime?     @map("checked_at")
+  createdAt    DateTime      @default(now()) @map("created_at")
+
+  @@unique([taskId, postRef, emoji, type])
+  @@index([sourceTaskId])
+  @@map("post_tracking")
 }
 
 model TaskRun {

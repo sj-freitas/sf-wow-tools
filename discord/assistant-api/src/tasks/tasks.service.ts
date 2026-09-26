@@ -11,6 +11,7 @@ import {
 import {
   embedsShown,
   messageUrl,
+  normalizeEmoji,
   parseEmbedLinks,
   parsePostContent,
   parseSeedReactions,
@@ -18,6 +19,8 @@ import {
   type PostConfig,
   type PostState,
 } from './post-task';
+import { parseDynamicTokens, renderContent, type Reactor } from './dynamic-content';
+import { TrackingService } from './tracking.service';
 import { clampPage, likePattern, PAGE_SIZE, searchTerms } from './post-search';
 import { describeSchedule, instantFromLocal } from './schedule';
 
@@ -109,6 +112,7 @@ export class TasksService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly bot: DiscordBotService,
+    private readonly tracking: TrackingService,
   ) {}
 
   /**
@@ -214,6 +218,8 @@ export class TasksService {
     const postNow = input.postNow === true;
     const runAt = postNow ? now : this.parseFutureDate(input.runAtLocal, timezone, now);
     const config = await this.parsePostConfig(guildId, input, undefined);
+    const tokens = parseDynamicTokens(config.content);
+    await this.tracking.resolveSources(guildId, tokens);
     const enabled = postNow || input.enabled !== false;
     const task = await this.prisma.scheduledTask.create({
       data: {
@@ -228,6 +234,11 @@ export class TasksService {
         createdById: userId,
       },
     });
+    await this.tracking.syncTracking(
+      task.id,
+      tokens,
+      await this.tracking.resolveSources(guildId, tokens, task.id),
+    );
     return this.toDto(task, timezone);
   }
 
@@ -243,6 +254,8 @@ export class TasksService {
     const oldConfig = task.config as unknown as PostConfig;
     const state = task.state as PostState;
     const config = await this.parsePostConfig(task.guildId, input, oldConfig);
+    const tokens = parseDynamicTokens(config.content);
+    const sources = await this.tracking.resolveSources(task.guildId, tokens, taskId);
     const enabled = input.enabled === undefined ? task.enabled : input.enabled === true;
 
     let runAt = task.runAt ?? now;
@@ -264,14 +277,31 @@ export class TasksService {
     let newState = state;
     const textChanged =
       config.content !== oldConfig.content || embedsShown(config) !== embedsShown(oldConfig);
+    let people: Awaited<ReturnType<TrackingService['fetchPeople']>> | undefined;
     if (textChanged && isLive(state)) {
+      let rendered = config.content;
+      if (tokens.length > 0) {
+        try {
+          people = await this.tracking.fetchPeople(task.guildId, tokens, sources);
+        } catch (error) {
+          throw new BadRequestException(
+            `Could not read the reactions from Discord: ${describeDiscordError(error)}`,
+          );
+        }
+        rendered = renderContent(config.content, tokens, people);
+      }
       try {
         await this.bot.editMessage(
           state.channelId ?? oldConfig.channelId,
           state.messageId as string,
-          config.content,
-          { suppressEmbeds: !embedsShown(config) },
+          rendered,
+          {
+            suppressEmbeds: !embedsShown(config),
+            // Edits that show people never ping them.
+            ...(tokens.length > 0 ? { quiet: true } : {}),
+          },
         );
+        newState = { ...state, renderedContent: rendered };
       } catch (error) {
         if (isDiscordError(error, UNKNOWN_MESSAGE)) {
           newState = { ...state, messageDeleted: true };
@@ -296,6 +326,7 @@ export class TasksService {
         state: newState as unknown as Prisma.InputJsonValue,
       },
     });
+    await this.tracking.syncTracking(taskId, tokens, sources, people);
     return this.toDto(updated, timezone);
   }
 
@@ -373,6 +404,18 @@ export class TasksService {
         });
         return [];
       }
+      throw new BadRequestException(describeDiscordError(error));
+    }
+  }
+
+  /** Who reacted to the post's message with an emoji: the names behind a reaction's count. */
+  async reactionUsers(taskId: string, emoji: unknown): Promise<Reactor[]> {
+    const task = await this.find(taskId);
+    const normalized = typeof emoji === 'string' ? normalizeEmoji(emoji) : null;
+    if (!normalized) throw new BadRequestException('Say which emoji (custom ones as name:id).');
+    try {
+      return await this.tracking.readReactors(task, normalized);
+    } catch (error) {
       throw new BadRequestException(describeDiscordError(error));
     }
   }

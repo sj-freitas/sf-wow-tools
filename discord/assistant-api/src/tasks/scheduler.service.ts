@@ -2,13 +2,14 @@ import { Injectable, Logger, OnApplicationShutdown } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../database/prisma.service';
 import { TaskRunnerService } from './task-runner.service';
+import { TrackingService } from './tracking.service';
 
 const TICK_MS = 60 * 1000;
 const LEASE_MINUTES = 5;
 const BATCH_SIZE = 10;
 
 /**
- * Wakes up every minute and runs whatever is due. Due tasks are claimed in the database
+ * Wakes up every minute, runs whatever is due and refreshes the posts that show live reactions. Due tasks are claimed in the database
  * (`FOR UPDATE SKIP LOCKED` plus a lease), so several workers can run side by side without
  * doing anything twice. The first tick happens at start-up, which also picks up everything
  * that came due while no worker was running.
@@ -22,6 +23,7 @@ export class SchedulerService implements OnApplicationShutdown {
   constructor(
     private readonly prisma: PrismaService,
     private readonly runner: TaskRunnerService,
+    private readonly tracking: TrackingService,
   ) {}
 
   start(): void {
@@ -57,6 +59,8 @@ export class SchedulerService implements OnApplicationShutdown {
         }
         if (claimed.length < BATCH_SIZE) break;
       }
+      // Posts whose text shows who reacted are brought up to date once a minute.
+      await this.tracking.refreshDue();
     } catch (error) {
       this.logger.error(`Scheduler tick failed: ${String(error)}`);
     } finally {

@@ -1217,3 +1217,41 @@ label.btn.disabled {
 .md-preview a:hover {
   text-decoration: underline;
 }
+
+.reaction-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.reaction-button:hover,
+.reaction-button-open {
+  text-decoration: underline;
+}
+.reactors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0.4rem 0 0.2rem;
+}
+
+.syntax-help {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.syntax-help summary {
+  cursor: pointer;
+  width: fit-content;
+}
+.syntax-help ul,
+.syntax-help p {
+  margin: 0.35rem 0;
+}
+.syntax-help ul {
+  padding-left: 1.2rem;
+}

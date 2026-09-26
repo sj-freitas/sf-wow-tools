@@ -13,6 +13,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '../auth/auth.guard';
+import type { Reactor } from './dynamic-content';
 import type { AuthenticatedRequest } from '../auth/auth.types';
 import { GuildAccessService } from '../auth/guild-access.service';
 import {
@@ -114,6 +115,17 @@ export class TasksController {
   ): Promise<ReactionDto[]> {
     await this.assertOfficerOfTask(req, id);
     return this.tasks.reactions(id);
+  }
+
+  /** Who reacted with one emoji (`?emoji=👍`, or `name:id` for a custom one), without the bot. */
+  @Get('tasks/:id/reactions/users')
+  async reactionUsers(
+    @Req() req: AuthenticatedRequest,
+    @Param('id') id: string,
+    @Query('emoji') emoji?: string,
+  ): Promise<Reactor[]> {
+    await this.assertOfficerOfTask(req, id);
+    return this.tasks.reactionUsers(id, emoji);
   }
 
   private async assertOfficerOfTask(req: AuthenticatedRequest, taskId: string): Promise<void> {

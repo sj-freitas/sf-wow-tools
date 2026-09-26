@@ -143,6 +143,35 @@ export function PostTaskForm({ guild, channels, editing, timezone, onSaved, onCa
           required
           maxLength={MAX_LENGTH + 500}
         />
+        <details className="syntax-help">
+          <summary title="Show who reacted to a post inside its text">
+            ⓘ Live tags: show who reacted
+          </summary>
+          <p>
+            Write <code>{'{{reactions post="Raid signup" emoji=👍 show=names}}'}</code> anywhere in
+            the text. It is replaced by the people who reacted, and Discord's message updates by
+            itself within a minute of a reaction changing.
+          </p>
+          <ul>
+            <li>
+              <code>post</code>: the name of a scheduled post (case does not matter), or its id (
+              <strong>Copy ID</strong> on the Posts page). Leave it out for this post.
+            </li>
+            <li>
+              <code>emoji</code>: 👍, or a server emoji as <code>&lt;:name:id&gt;</code> (type{' '}
+              <code>\:emoji:</code> in Discord to get it).
+            </li>
+            <li>
+              <code>show</code> (optional, default <code>names</code>): <code>names</code> Discord
+              names · <code>mainNames</code> their main characters, or the Discord name if they have
+              none · <code>tags</code> mentions (nobody is pinged) · <code>number</code> how many.
+            </li>
+          </ul>
+          <p>
+            Put a value with spaces in quotes. Options can come in any order. Example:{' '}
+            <code>{'{{reactions post="Raid signup" emoji=👍 show=mainNames}}'}</code>
+          </p>
+        </details>
         <div className="task-text-actions">
           <button type="button" className="btn btn-sm" onClick={togglePreview}>
             {preview ? 'Hide preview' : 'Preview'}

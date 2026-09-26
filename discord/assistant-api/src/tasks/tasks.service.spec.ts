@@ -4,6 +4,7 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { DiscordAPIError } from '@discordjs/rest';
 import type { PrismaService } from '../database/prisma.service';
 import type { DiscordBotService } from '../discord/discord-bot.service';
+import type { TrackingService } from './tracking.service';
 import { TasksService } from './tasks.service';
 
 const CHANNEL = '333333333333333333';
@@ -32,6 +33,9 @@ describe('TasksService', () => {
   let channelsInServer: { id: string; name: string }[];
   let edits: any[];
   let editError: Error | null;
+  let trackingCalls: unknown[][];
+  let badSource: boolean;
+  let people: Map<string, { id: string; name: string }[]>;
   let deletedMessages: unknown[][];
   let deleteError: Error | null;
   let removed: boolean;
@@ -48,6 +52,9 @@ describe('TasksService', () => {
     created = null;
     updated = null;
     edits = [];
+    trackingCalls = [];
+    badSource = false;
+    people = new Map();
     editError = null;
     deletedMessages = [];
     deleteError = null;
@@ -123,7 +130,19 @@ describe('TasksService', () => {
         deletedMessages.push(args);
       },
     } as unknown as DiscordBotService;
-    service = new TasksService(prisma, bot);
+    const tracking = {
+      resolveSources: async (_guild: string, tokens: unknown[]) => {
+        trackingCalls.push(['resolve', tokens.length]);
+        if (badSource) throw new BadRequestException('There is no post with that id');
+        return new Map();
+      },
+      fetchPeople: async () => people,
+      syncTracking: async (_id: string, tokens: unknown[]) => {
+        trackingCalls.push(['sync', tokens.length]);
+      },
+      readReactors: async () => [{ id: '1', name: 'Ana' }],
+    } as unknown as TrackingService;
+    service = new TasksService(prisma, bot, tracking);
   });
 
   describe('listing (ten to a page, searchable)', () => {
@@ -247,6 +266,58 @@ describe('TasksService', () => {
         service.create('g', 'u', { ...validInput, content: '' }),
         BadRequestException,
       );
+    });
+  });
+
+  describe('dynamic reactions in the text', () => {
+    const SOURCE = '11111111-2222-3333-4444-555555555555';
+    const withTag = `Going: {{reactions post="${SOURCE}" emoji=👍 show=names}}`;
+
+    it('keeps tracking rows in line with the text when a post is created', async () => {
+      await service.create('g', 'u', { ...validInput, content: withTag });
+      assert.deepEqual(trackingCalls, [
+        ['resolve', 1],
+        ['resolve', 1],
+        ['sync', 1],
+      ]);
+    });
+
+    it('refuses a post that reads the reactions of an unknown post', async () => {
+      badSource = true;
+      await assert.rejects(
+        service.create('g', 'u', { ...validInput, content: withTag }),
+        /no post with that id/,
+      );
+      assert.equal(created, null);
+    });
+
+    it('rejects a tag that is written wrongly', async () => {
+      await assert.rejects(
+        service.create('g', 'u', { ...validInput, content: 'Going: {{reactions post=A}}' }),
+        /needs an emoji/,
+      );
+    });
+
+    it('edits a live post with the people filled in, quietly, and syncs the rows', async () => {
+      people = new Map([[`id:${SOURCE}|👍|names`, [{ id: '1', name: 'Ana' }]]]);
+      await service.update('t1', { content: withTag });
+      assert.deepEqual(edits, [
+        [CHANNEL, 'm1', 'Going: Ana', { suppressEmbeds: false, quiet: true }],
+      ]);
+      assert.equal(updated.config.content, withTag);
+      assert.equal(updated.state.renderedContent, 'Going: Ana');
+      assert.deepEqual(trackingCalls.at(-1), ['sync', 1]);
+    });
+
+    it('removes the tracking when the tags are taken out of the text', async () => {
+      await service.update('t1', { content: 'No more tags' });
+      assert.deepEqual(trackingCalls.at(-1), ['sync', 0]);
+    });
+
+    it('lists who reacted with an emoji', async () => {
+      assert.deepEqual(await service.reactionUsers('t1', '👍'), [{ id: '1', name: 'Ana' }]);
+      await assert.rejects(service.reactionUsers('t1', 'abc'), BadRequestException);
+      await assert.rejects(service.reactionUsers('t1', undefined), BadRequestException);
     });
   });
 

@@ -273,6 +273,7 @@ export function PostsPage({ guild, timezone }: Props) {
             </div>
             {isLive(post) && <ReactionsPanel taskId={post.id} />}
             <div className="settings-actions task-actions">
+              <CopyIdButton id={post.id} />
               {post.post.posted && isLive(post) && (
                 <a
                   className="btn btn-sm"
@@ -379,5 +380,31 @@ export function PostsPage({ guild, timezone }: Props) {
         </div>
       )}
     </div>
+  );
+}
+
+/**
+ * Copies the post's id, for `{{reactions post="<id>" emoji=… show=…}}` in another post's text
+ * (or its own), which shows who reacted with that emoji.
+ */
+function CopyIdButton({ id }: { id: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      type="button"
+      className="btn btn-sm"
+      title={`Copy this post's id (${id}) to show its reactions inside a post's text`}
+      onClick={() => {
+        void navigator.clipboard
+          .writeText(id)
+          .then(() => {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 1500);
+          })
+          .catch(() => window.prompt('Copy the post id:', id));
+      }}
+    >
+      {copied ? '✓ Copied' : 'Copy ID'}
+    </button>
   );
 }

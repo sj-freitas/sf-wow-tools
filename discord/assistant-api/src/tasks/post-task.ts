@@ -23,6 +23,8 @@ export interface PostState {
   channelId?: string;
   serverId?: string;
   postedAt?: string;
+  /** The text as it is in Discord, once the dynamic parts (reactions) are filled in. */
+  renderedContent?: string;
   /** The message was deleted in Discord; the next run posts a new one. */
   messageDeleted?: boolean;
 }

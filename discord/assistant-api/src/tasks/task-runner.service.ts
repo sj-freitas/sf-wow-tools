@@ -4,7 +4,9 @@ import { DEFAULT_REGION, timezoneOfRegion } from '../config/regions';
 import { PrismaService } from '../database/prisma.service';
 import { DiscordBotService } from '../discord/discord-bot.service';
 import { describeDiscordError } from '../discord/discord-errors';
+import { parseDynamicTokens, renderContent } from './dynamic-content';
 import { embedsShown, type PostConfig, type PostState } from './post-task';
+import { TrackingService } from './tracking.service';
 import { nextOccurrence, occurrencesBetween, type Schedule } from './schedule';
 
 /** A failed run is retried this many times in total (within RETRY_WINDOW_MS) before moving on. */
@@ -25,6 +27,7 @@ export class TaskRunnerService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly bot: DiscordBotService,
+    private readonly tracking: TrackingService,
   ) {}
 
   async run(task: ScheduledTask, now: Date = new Date()): Promise<void> {
@@ -101,10 +104,16 @@ export class TaskRunnerService {
       throw new Error('This post is already in Discord. Delete it first to post it again.');
     }
     const config = task.config as unknown as PostConfig;
-    const messageId = await this.bot.postMessage(config.channelId, config.content, {
+    // Dynamic parts (who reacted to which post) are filled in as they are right now.
+    const tokens = parseDynamicTokens(config.content);
+    const sources = await this.tracking.sourceMap(task.id, task.guildId, tokens);
+    const people = await this.tracking.fetchPeople(task.guildId, tokens, sources);
+    const rendered = renderContent(config.content, tokens, people);
+    const messageId = await this.bot.postMessage(config.channelId, rendered, {
       suppressEmbeds: !embedsShown(config),
     });
     const state: PostState = {
+      renderedContent: rendered,
       messageId,
       channelId: config.channelId,
       serverId: config.serverId,

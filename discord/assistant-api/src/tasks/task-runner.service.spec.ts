@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { beforeEach, describe, it } from 'node:test';
 import type { PrismaService } from '../database/prisma.service';
 import type { DiscordBotService } from '../discord/discord-bot.service';
+import type { TrackingService } from './tracking.service';
 import { MAX_ATTEMPTS, RETRY_DELAY_MS, TaskRunnerService } from './task-runner.service';
 
 const NOW = new Date('2026-10-05T18:00:30Z');
@@ -22,6 +23,8 @@ const baseTask = (overrides: Record<string, unknown> = {}) =>
     state: {},
     ...overrides,
   }) as any;
+
+const SOURCE = '11111111-2222-3333-4444-555555555555';
 
 describe('TaskRunnerService', () => {
   let region: string;
@@ -69,7 +72,23 @@ describe('TaskRunnerService', () => {
         reactions.push(emoji);
       },
     } as unknown as DiscordBotService;
-    runner = new TaskRunnerService(prisma, bot);
+    const tracking = {
+      sourceMap: async () => new Map([[`id:${SOURCE}`, SOURCE]]),
+      fetchPeople: async () => new Map([[`id:${SOURCE}|👍|names`, [{ id: '1', name: 'Ana' }]]]),
+    } as unknown as TrackingService;
+    runner = new TaskRunnerService(prisma, bot, tracking);
+  });
+
+  describe('dynamic reactions', () => {
+    it('fills in who reacted when the post goes out, and remembers what was posted', async () => {
+      const task = baseTask();
+      Object.assign(task.config as object, {
+        content: `Going: {{reactions post="${SOURCE}" emoji=👍 show=names}}`,
+      });
+      await runner.run(task, NOW);
+      assert.equal(posted[0].content, 'Going: Ana');
+      assert.equal(update.state.renderedContent, 'Going: Ana');
+    });
   });
 
   describe('link previews', () => {
