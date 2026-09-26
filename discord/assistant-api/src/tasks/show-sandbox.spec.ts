@@ -95,7 +95,7 @@ describe('checking expressions on save', () => {
 describe('an expression in a post', () => {
   it('is replaced by what it returns, and a failing one is shown as a warning, not a broken post', async () => {
     const text =
-      'Going: {{reactions post="A" emoji=👍 show="`${reactions.length}: ${reactions.map(a => a.mainName)}`"}} / {{reactions post="A" emoji=👍 show="reactions.x.y"}}';
+      'Going: {{reactions sourcePost="A" emoji=👍 show="`${reactions.length}: ${reactions.map(a => a.mainName)}`"}} / {{reactions sourcePost="A" emoji=👍 show="reactions.x.y"}}';
     const tokens = parseDynamicTokens(text);
     const ana: Reactor = { id: '1', name: 'Ana', mains: ['Merric'] };
     const map = new Map([[trackingKey(tokens[0]), [ana]]]);

@@ -273,7 +273,7 @@ export function PostsPage({ guild, timezone }: Props) {
             </div>
             {isLive(post) && <ReactionsPanel taskId={post.id} />}
             <div className="settings-actions task-actions">
-              {post.post.posted && isLive(post) && <CopyLinkButton link={post.post.posted.url} />}
+              {post.post.posted && isLive(post) && <CopyIdButton id={post.post.posted.messageId} />}
               {post.post.posted && isLive(post) && (
                 <a
                   className="btn btn-sm"
@@ -384,28 +384,27 @@ export function PostsPage({ guild, timezone }: Props) {
 }
 
 /**
- * Copies the Discord link of the post's message, for `post="…"` in a `{{reactions …}}` tag (in
- * this post's text or another's), which shows who reacted with an emoji. A post can also be
- * named by its name.
+ * Copies the Discord message id of the post, for `sourcePost=…` in a `{{reactions …}}` tag (in this
+ * post's text or another's), which shows who reacted with an emoji.
  */
-function CopyLinkButton({ link }: { link: string }) {
+function CopyIdButton({ id }: { id: string }) {
   const [copied, setCopied] = useState(false);
   return (
     <button
       type="button"
       className="btn btn-sm"
-      title="Copy the link of this post's message, to show who reacted to it inside a post's text"
+      title={`Copy this post's Discord message id (${id}), to show who reacted to it inside a post's text`}
       onClick={() => {
         void navigator.clipboard
-          .writeText(link)
+          .writeText(id)
           .then(() => {
             setCopied(true);
             setTimeout(() => setCopied(false), 1500);
           })
-          .catch(() => window.prompt('Copy the message link:', link));
+          .catch(() => window.prompt('Copy the message id:', id));
       }}
     >
-      {copied ? '✓ Copied' : 'Copy link'}
+      {copied ? '✓ Copied' : 'Copy ID'}
     </button>
   );
 }

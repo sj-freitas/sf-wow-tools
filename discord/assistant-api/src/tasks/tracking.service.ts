@@ -16,6 +16,9 @@ import {
 } from './dynamic-content';
 import { embedsShown, type PostConfig, type PostState } from './post-task';
 
+/** Channels asked at once while looking for a message by its id. */
+const SEARCH_PARALLEL = 8;
+
 const isLive = (state: PostState): boolean => Boolean(state.messageId) && !state.messageDeleted;
 
 /** A message in Discord: where reactions are read. */
@@ -40,7 +43,7 @@ export type SourceMap = Map<string, Source>;
 export type PeopleByKey = Map<string, Reactor[]>;
 
 /**
- * The dynamic features of posts: `{{reactions post=… emoji=… show=…}}` in a post's text is
+ * The dynamic features of posts: `{{reactions sourcePost=… emoji=… show=…}}` in a post's text is
  * replaced by the people who reacted. Saving a post keeps its tracking rows in line with its text;
  * the worker then re-reads the reactions every minute and edits the Discord message when they
  * changed. A cheap hash of who reacted tells whether anything did.
@@ -74,7 +77,7 @@ export class TrackingService {
       } else if (token.message) {
         sources.set(token.ref, { message: await this.checkMessage(guildId, token) });
       } else if (token.ref.startsWith('msgid:')) {
-        sources.set(token.ref, { message: await this.botMessage(guildId, token) });
+        sources.set(token.ref, { message: await this.findMessageById(guildId, token) });
       } else {
         sources.set(token.ref, { taskId: await this.postByName(guildId, token) });
       }
@@ -100,19 +103,49 @@ export class TrackingService {
     return matches[0].id;
   }
 
-  /** A bare message id only says which message, not where: it has to be one the bot posted. */
-  private async botMessage(guildId: string, token: DynamicToken): Promise<MessageLocation> {
+  /**
+   * A bare message id says which message but not where, so it is looked for: first among the posts
+   * the bot made (instant), then in every text channel of the guild's servers that the bot can see.
+   * Whatever is found is remembered as channel + message, so this happens once, on save.
+   */
+  private async findMessageById(guildId: string, token: DynamicToken): Promise<MessageLocation> {
     const messageId = token.ref.slice('msgid:'.length);
     const task = await this.prisma.scheduledTask.findFirst({
       where: { guildId, state: { path: ['messageId'], equals: messageId } },
     });
     const state = task ? (task.state as PostState) : {};
-    if (!task || !state.channelId) {
+    if (task && state.channelId) return { channelId: state.channelId, messageId };
+
+    const servers = await this.prisma.discordServer.findMany({
+      where: { guildId },
+      select: { discordId: true },
+    });
+    const channelIds: string[] = [];
+    for (const server of servers) {
+      try {
+        channelIds.push(...(await this.bot.listTextChannels(server.discordId)).map((c) => c.id));
+      } catch (error) {
+        this.logger.warn(
+          `Could not list the channels of ${server.discordId}: ${describeDiscordError(error)}`,
+        );
+      }
+    }
+    let found: string | null = null;
+    for (let i = 0; i < channelIds.length && !found; i += SEARCH_PARALLEL) {
+      const batch = channelIds.slice(i, i + SEARCH_PARALLEL);
+      const hits = await Promise.all(
+        batch.map(async (channelId) =>
+          (await this.bot.messageExists(channelId, messageId)) ? channelId : null,
+        ),
+      );
+      found = hits.find((channelId) => channelId !== null) ?? null;
+    }
+    if (!found) {
       throw new BadRequestException(
-        `${token.label} is not a message this bot posted. For any other message, use its link (right-click → Copy Message Link).`,
+        `No message with the id ${token.label} was found in the channels of this guild's servers that the bot can read (it needs View Channel and Read Message History). For a message in a thread, use its link (right-click → Copy Message Link).`,
       );
     }
-    return { channelId: state.channelId, messageId };
+    return { channelId: found, messageId };
   }
 
   /** A message link is accepted when its server belongs to this guild and the bot can read it. */

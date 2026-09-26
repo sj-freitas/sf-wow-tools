@@ -50,10 +50,10 @@ const PRESETS: readonly ReactorFormat[] = ['names', 'mainNames', 'number', 'tags
 const MESSAGE_LINK =
   /^https?:\/\/(?:(?:ptb|canary)\.)?discord(?:app)?\.com\/channels\/(\d{15,25})\/(\d{15,25})\/(\d{15,25})\/?$/;
 const MESSAGE_ID = /^\d{15,25}$/;
-/** `{{reactions post="Raid signup" emoji=👍 show=names}}` */
+/** `{{reactions sourcePost="Raid signup" emoji=👍 show=names}}` */
 const NEW_START = /\{\{\s*reactions(?=[\s}])/g;
 const HELP =
-  'Use {{reactions post="Post name" emoji=👍 show=names}} (show: names, mainNames, tags, number, or a JavaScript expression in quotes).';
+  'Use {{reactions sourcePost="Post name" emoji=👍 show=names}} (show: names, mainNames, tags, number, or a JavaScript expression in quotes).';
 
 /** Whether a tag's people must be looked up as main characters (for `mainNames` and expressions). */
 export const needsMains = (format: ReactorFormat): boolean =>
@@ -127,7 +127,7 @@ function scanTag(content: string, from: number): { end: number; args: Map<string
       position += value.length;
     }
     const name = key!.toLowerCase();
-    if (!['post', 'emoji', 'show'].includes(name) || args.has(name)) {
+    if (!['sourcepost', 'emoji', 'show'].includes(name) || args.has(name)) {
       fail(`has "${key}", which is not an option here or is given twice`);
     }
     args.set(name, value);
@@ -146,7 +146,7 @@ function tokenOf(raw: string, args: Map<string, string>): DynamicToken {
   const show = (args.get('show') ?? 'names').trim();
   const preset = PRESETS.find((candidate) => candidate.toLowerCase() === show.toLowerCase());
   if (show === '') throw new BadRequestException(`${raw} has an empty show. ${HELP}`);
-  const post = args.get('post');
+  const post = args.get('sourcepost');
   const target: PostRef =
     post === undefined || post.trim() === '' ? { ref: 'self', label: 'this post' } : refOf(post);
   return preset
@@ -155,7 +155,7 @@ function tokenOf(raw: string, args: Map<string, string>): DynamicToken {
 }
 
 /**
- * The dynamic tags of a text, in order: `{{reactions post="Raid signup" emoji=👍 show=names}}`
+ * The dynamic tags of a text, in order: `{{reactions sourcePost="Raid signup" emoji=👍 show=names}}`
  * (the post can be its name or its id, and is this post when left out). `show` is a preset or a
  * JavaScript expression in quotes. Throws for a tag that is written wrongly, so a typo is reported
  * on save instead of showing up in Discord. (Expressions are checked by `checkExpressions`.)

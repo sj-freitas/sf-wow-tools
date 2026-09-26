@@ -271,7 +271,7 @@ describe('TasksService', () => {
   });
 
   describe('dynamic reactions in the text', () => {
-    const withTag = `Going: {{reactions post="Raid signup" emoji=👍 show=names}}`;
+    const withTag = `Going: {{reactions sourcePost="Raid signup" emoji=👍 show=names}}`;
 
     it('keeps tracking rows in line with the text when a post is created', async () => {
       await service.create('g', 'u', { ...validInput, content: withTag });
@@ -293,7 +293,7 @@ describe('TasksService', () => {
 
     it('rejects a tag that is written wrongly', async () => {
       await assert.rejects(
-        service.create('g', 'u', { ...validInput, content: 'Going: {{reactions post=A}}' }),
+        service.create('g', 'u', { ...validInput, content: 'Going: {{reactions sourcePost=A}}' }),
         /needs an emoji/,
       );
     });

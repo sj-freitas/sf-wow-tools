@@ -1,4 +1,4 @@
-import { REST } from '@discordjs/rest';
+import { DiscordAPIError, REST } from '@discordjs/rest';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
@@ -318,6 +318,20 @@ export class DiscordBotService {
   /** Throws (a Discord error) unless the bot can read that message. */
   async assertCanReadMessage(channelId: string, messageId: string): Promise<void> {
     await this.rest.get(Routes.channelMessage(channelId, messageId));
+  }
+
+  /**
+   * Whether a channel has a message with that id that the bot can read. Discord errors (unknown
+   * message, no access) mean no; anything else (a network problem) is thrown.
+   */
+  async messageExists(channelId: string, messageId: string): Promise<boolean> {
+    try {
+      await this.rest.get(Routes.channelMessage(channelId, messageId));
+      return true;
+    } catch (error) {
+      if (error instanceof DiscordAPIError) return false;
+      throw error;
+    }
   }
 
   /** Role ids of a member of the server; an empty list if they are not in it. */

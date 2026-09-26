@@ -83,7 +83,7 @@ describe('TaskRunnerService', () => {
     it('fills in who reacted when the post goes out, and remembers what was posted', async () => {
       const task = baseTask();
       Object.assign(task.config as object, {
-        content: `Going: {{reactions post="Raid signup" emoji=👍 show=names}}`,
+        content: `Going: {{reactions sourcePost="Raid signup" emoji=👍 show=names}}`,
       });
       await runner.run(task, NOW);
       assert.equal(posted[0].content, 'Going: Ana');

@@ -148,18 +148,18 @@ export function PostTaskForm({ guild, channels, editing, timezone, onSaved, onCa
             ⓘ Live tags: show who reacted
           </summary>
           <p>
-            Write <code>{'{{reactions post="Raid signup" emoji=👍 show=names}}'}</code> anywhere in
-            the text. It is replaced by the people who reacted, and Discord's message updates by
-            itself within a minute of a reaction changing.
+            Write <code>{'{{reactions sourcePost="Raid signup" emoji=👍 show=names}}'}</code>{' '}
+            anywhere in the text. It is replaced by the people who reacted, and Discord's message
+            updates by itself within a minute of a reaction changing.
           </p>
           <ul>
             <li>
-              <code>post</code>: which message to read, in any of these ways. The{' '}
-              <strong>name</strong> of a scheduled post (case does not matter). The{' '}
-              <strong>link</strong> of any message in this guild's servers: right-click it in
-              Discord → Copy Message Link (or <strong>Copy link</strong> on a live post on the Posts
-              page); the bot must be able to see that channel. Or the message <strong>id</strong> of
-              a post the bot made. Leave it out for this post.
+              <code>sourcePost</code>: which message to read. Its Discord{' '}
+              <strong>message id</strong> (Discord: right-click the message → Copy Message ID; needs
+              Developer Mode), of any message in this guild's servers that the bot can see. The{' '}
+              <strong>name</strong> of a scheduled post also works (case does not matter), and so
+              does a message <strong>link</strong> (right-click → Copy Message Link), which is the
+              way for a message in a thread. Leave it out for this post.
             </li>
             <li>
               <code>emoji</code>: 👍, or a server emoji as <code>&lt;:name:id&gt;</code> (type{' '}
@@ -174,7 +174,7 @@ export function PostTaskForm({ guild, channels, editing, timezone, onSaved, onCa
           </ul>
           <p>
             Put a value with spaces in quotes. Options can come in any order. Example:{' '}
-            <code>{'{{reactions post="Raid signup" emoji=👍 show=mainNames}}'}</code>
+            <code>{'{{reactions sourcePost="Raid signup" emoji=👍 show=mainNames}}'}</code>
           </p>
           <p>
             <strong>Your own format:</strong> <code>show</code> can be a JavaScript expression that
@@ -185,7 +185,7 @@ export function PostTaskForm({ guild, channels, editing, timezone, onSaved, onCa
           </p>
           <pre className="md-code">
             {
-              '{{reactions post="Raid signup" emoji=👍 show="`${reactions.length}: ${reactions.map((a) => `${a.tag} is ${a.mainName}`).join(\', \')}`"}}'
+              '{{reactions sourcePost="Raid signup" emoji=👍 show="`${reactions.length}: ${reactions.map((a) => `${a.tag} is ${a.mainName}`).join(\', \')}`"}}'
             }
           </pre>
           <p>

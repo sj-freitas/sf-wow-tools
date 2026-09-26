@@ -242,16 +242,18 @@ modal; a modal handler answers with a private message. Unknown or failing button
 ### Live reactions in a post's text
 
 A post's text can show who reacted to a post:
-`{{reactions post="Raid signup" emoji=👍 show=mainNames}}`.
+`{{reactions sourcePost="Raid signup" emoji=👍 show=mainNames}}`.
 
-- **`post`** says which message to read: the **name** of a scheduled post of the guild (case does not
-  matter; it must be unique), the **link** of any message in one of the guild's servers (right-click →
-  Copy Message Link, or **Copy link** on a live post), or the message **id** of a post the bot made (a
-  bare id has no channel, so it only works for the bot's own posts). Leave it out for the post the text
-  is in. A link is refused unless its server belongs to the guild, its channel really is in that server
-  and the bot can read the message (View Channel + Read Message History, which the invite link grants).
-  So a post can show the reactions of messages nobody scheduled here, e.g. a Raid-Helper signup or an
-  officer's own message.
+- **`sourcePost`** says which message to read: its Discord **message id** (Copy Message ID, or **Copy ID** on a
+  live post) for any message in one of the guild's servers, a **link** (Copy Message Link; the way to
+  reach a message in a thread), or the **name** of a scheduled post of the guild (case does not matter;
+  it must be unique). Leave it out for the post the text is in. A bare id says which message but not
+  which channel, so on save it is looked for: first among the bot's own posts, then in every text channel
+  of the guild's servers that the bot can see (8 channels at a time, stopping when found), and remembered
+  as channel + message so the search happens once. A link is refused unless its server belongs to the
+  guild, its channel really is in that server and the bot can read the message (View Channel + Read
+  Message History, which the invite link grants). So a post can show the reactions of messages nobody
+  scheduled here, e.g. a Raid-Helper signup or an officer's own message.
   **`emoji`** is 👍 or a server emoji `<:name:id>` (or `<a:name:id>`; type `\:emoji:` in Discord to get
   it). **`show`** is optional (default `names`): `names` (`Ana, Bruno`, Discord display names),
   `mainNames` (their main characters in the guild, `Merric Stone / Olga` if they have several, else their
@@ -262,7 +264,7 @@ A post's text can show who reacted to a post:
   array with one object per person who reacted, `{ id, tag, name, mainName, mains }` (`tag` is `<@id>`,
   `mainName` the main characters joined with " / " or the Discord name, `mains` a list). An array result
   is joined with ", ". Example:
-  `{{reactions post="Raid signup" emoji=👍 show="`${reactions.length}: ${reactions.map((a) => `${a.tag} is ${a.mainName}`).join(', ')}`"}}`.
+  `{{reactions sourcePost="Raid signup" emoji=👍 show="`${reactions.length}: ${reactions.map((a) => `${a.tag} is ${a.mainName}`).join(', ')}`"}}`.
   Inside the quotes `}}` and `${…}` are just text; use `\"` for a double quote (or single quotes).
   **Sandbox:** expressions run in QuickJS (a JavaScript engine compiled to WebAssembly, via
   `quickjs-emscripten`), not in Node: no files, network, `process` or `require`, a fresh engine for every
