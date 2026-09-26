@@ -164,12 +164,30 @@ export function PostTaskForm({ guild, channels, editing, timezone, onSaved, onCa
             <li>
               <code>show</code> (optional, default <code>names</code>): <code>names</code> Discord
               names · <code>mainNames</code> their main characters, or the Discord name if they have
-              none · <code>tags</code> mentions (nobody is pinged) · <code>number</code> how many.
+              none · <code>tags</code> mentions (nobody is pinged) · <code>number</code> how many ·
+              or your own JavaScript expression in quotes (below).
             </li>
           </ul>
           <p>
             Put a value with spaces in quotes. Options can come in any order. Example:{' '}
             <code>{'{{reactions post="Raid signup" emoji=👍 show=mainNames}}'}</code>
+          </p>
+          <p>
+            <strong>Your own format:</strong> <code>show</code> can be a JavaScript expression that
+            uses <code>reactions</code>, a list of the people who reacted, each with <code>id</code>
+            , <code>tag</code> (a mention), <code>name</code>, <code>mainName</code> and{' '}
+            <code>mains</code> (a list). It should give text, or a list (joined with commas).
+            Example:
+          </p>
+          <pre className="md-code">
+            {
+              '{{reactions post="Raid signup" emoji=👍 show="`${reactions.length}: ${reactions.map((a) => `${a.tag} is ${a.mainName}`).join(\', \')}`"}}'
+            }
+          </pre>
+          <p>
+            Use single quotes inside the expression (or <code>\"</code> for a double quote). It runs
+            in a sandbox: no access to files, the network or anything else, and it stops after a
+            tenth of a second. A mistake is refused when you save.
           </p>
         </details>
         <div className="task-text-actions">

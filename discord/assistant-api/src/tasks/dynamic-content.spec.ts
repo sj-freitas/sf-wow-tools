@@ -44,10 +44,7 @@ describe('parseDynamicTokens', () => {
   });
 
   it('refuses a tag that is written wrongly instead of posting it as text', () => {
-    for (const bad of [
-      `{{reactions post="${POST}" emoji=👍 show=people}}`,
-      `{{reactions post="${POST}" emoji=abc show=names}}`,
-    ]) {
+    for (const bad of [`{{reactions post="${POST}" emoji=abc show=names}}`]) {
       assert.throws(() => parseDynamicTokens(bad), BadRequestException, bad);
     }
   });
@@ -108,13 +105,32 @@ describe('the {{reactions …}} syntax', () => {
     for (const bad of [
       '{{reactions post="A"}}',
       '{{reactions emoji=abc}}',
-      '{{reactions emoji=👍 show=people}}',
+      '{{reactions emoji=👍 show="unclosed}}',
+      '{{reactions emoji=👍',
+      '{{reactions emoji=👍 show=}}',
       '{{reactions emoji=👍 colour=red}}',
       '{{reactions emoji=👍 emoji=🔥}}',
       '{{reactions emoji=👍 stray}}',
     ]) {
       assert.throws(() => parseDynamicTokens(bad), BadRequestException, bad);
     }
+  });
+
+  it('reads an expression with quotes, backticks, ${…} and }} inside', () => {
+    const expression =
+      "`${reactions.length}: ${reactions.map((a) => `${a.tag} is ${a.mainName}`).join(', ')}`";
+    const text = `Going {{reactions post="Raid" emoji=👍 show="${expression}"}} and more {{reactions emoji=🔥}}`;
+    const tokens = parseDynamicTokens(text);
+    assert.equal(tokens.length, 2);
+    assert.equal(tokens[0].format, 'custom');
+    assert.equal(tokens[0].expression, expression);
+    assert.equal(tokens[0].raw, `{{reactions post="Raid" emoji=👍 show="${expression}"}}`);
+    assert.equal(tokens[1].emoji, '🔥');
+  });
+
+  it('lets \\" stand for a double quote inside the expression', () => {
+    const [token] = parseDynamicTokens('{{reactions emoji=👍 show="\\"a\\" + reactions.length"}}');
+    assert.equal(token.expression, '"a" + reactions.length');
   });
 
   it('leaves other double-brace text alone', () => {
@@ -150,27 +166,27 @@ describe('formatReactors', () => {
 describe('renderContent', () => {
   const [token] = parseDynamicTokens(`{{reactions post="${POST}" emoji=👍 show=names}}`);
 
-  it('replaces every occurrence of the tag with the people', () => {
+  it('replaces every occurrence of the tag with the people', async () => {
     const text = `Yes: ${token.raw}\nAgain: ${token.raw}`;
     const people = new Map([[trackingKey(token), [ana, bruno]]]);
-    assert.equal(renderContent(text, [token], people), 'Yes: Ana, Bruno\nAgain: Ana, Bruno');
+    assert.equal(await renderContent(text, [token], people), 'Yes: Ana, Bruno\nAgain: Ana, Bruno');
   });
 
-  it('reads as nobody when the people are unknown', () => {
-    assert.equal(renderContent(token.raw, [token], new Map()), 'nobody yet');
+  it('reads as nobody when the people are unknown', async () => {
+    assert.equal(await renderContent(token.raw, [token], new Map()), 'nobody yet');
   });
 
-  it('leaves text without tags alone', () => {
-    assert.equal(renderContent('Hello', [], new Map()), 'Hello');
+  it('leaves text without tags alone', async () => {
+    assert.equal(await renderContent('Hello', [], new Map()), 'Hello');
   });
 
-  it('shortens the list until the message fits in Discord', () => {
+  it('shortens the list until the message fits in Discord', async () => {
     const many = Array.from({ length: 300 }, (_, i) => ({
       id: String(100000000000000000 + i),
       name: 'x'.repeat(40),
     }));
     const text = `${'a'.repeat(1500)} ${token.raw}`;
-    const out = renderContent(text, [token], new Map([[trackingKey(token), many]]));
+    const out = await renderContent(text, [token], new Map([[trackingKey(token), many]]));
     assert.ok(out.length <= 2000);
     assert.match(out, /…and \d+ more/);
   });

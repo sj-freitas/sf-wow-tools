@@ -249,9 +249,21 @@ A post's text can show who reacted to a post:
   **`emoji`** is 👍 or a server emoji `<:name:id>` (or `<a:name:id>`; type `\:emoji:` in Discord to get
   it). **`show`** is optional (default `names`): `names` (`Ana, Bruno`, Discord display names),
   `mainNames` (their main characters in the guild, `Merric Stone / Olga` if they have several, else their
-  Discord name), `tags` (`<@id>` mentions) or `number` (`3`). Options may come in any order; a value with
+  Discord name), `tags` (`<@id>` mentions), `number` (`3`), or **your own JavaScript expression** (below). Options may come in any order; a value with
   spaces goes in quotes. Up to 5 tags per
   post; a wrong tag, an unknown post or an ambiguous name is refused on save.
+- **Your own format.** `show` can be a JavaScript expression in quotes, evaluated with `reactions`: an
+  array with one object per person who reacted, `{ id, tag, name, mainName, mains }` (`tag` is `<@id>`,
+  `mainName` the main characters joined with " / " or the Discord name, `mains` a list). An array result
+  is joined with ", ". Example:
+  `{{reactions post="Raid signup" emoji=👍 show="`${reactions.length}: ${reactions.map((a) => `${a.tag} is ${a.mainName}`).join(', ')}`"}}`.
+  Inside the quotes `}}` and `${…}` are just text; use `\"` for a double quote (or single quotes).
+  **Sandbox:** expressions run in QuickJS (a JavaScript engine compiled to WebAssembly, via
+  `quickjs-emscripten`), not in Node: no files, network, `process` or `require`, a fresh engine for every
+  evaluation, stopped after 100 ms and 16 MB. Each expression is run once on sample data when the post is
+  saved, so a syntax error or an unknown name is refused with its reason; a failure that only happens with
+  real data shows in the post as `⚠️ (TypeError: …)` instead of breaking it. It only runs when the people
+  changed (the hash), so the cost is small.
 - **Tracking:** saving a post keeps one `post_tracking` row per tag in line with its text (rows appear,
   stay or go with the tags; deleting a post removes them). A row remembers how the text pointed at the
   post (`post_ref`) and which post that was when saved, so renaming the other post does not break a post

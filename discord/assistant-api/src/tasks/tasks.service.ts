@@ -19,7 +19,12 @@ import {
   type PostConfig,
   type PostState,
 } from './post-task';
-import { parseDynamicTokens, renderContent, type Reactor } from './dynamic-content';
+import {
+  checkExpressions,
+  parseDynamicTokens,
+  renderContent,
+  type Reactor,
+} from './dynamic-content';
 import { TrackingService } from './tracking.service';
 import { clampPage, likePattern, PAGE_SIZE, searchTerms } from './post-search';
 import { describeSchedule, instantFromLocal } from './schedule';
@@ -219,6 +224,7 @@ export class TasksService {
     const runAt = postNow ? now : this.parseFutureDate(input.runAtLocal, timezone, now);
     const config = await this.parsePostConfig(guildId, input, undefined);
     const tokens = parseDynamicTokens(config.content);
+    await checkExpressions(tokens);
     await this.tracking.resolveSources(guildId, tokens);
     const enabled = postNow || input.enabled !== false;
     const task = await this.prisma.scheduledTask.create({
@@ -255,6 +261,7 @@ export class TasksService {
     const state = task.state as PostState;
     const config = await this.parsePostConfig(task.guildId, input, oldConfig);
     const tokens = parseDynamicTokens(config.content);
+    await checkExpressions(tokens);
     const sources = await this.tracking.resolveSources(task.guildId, tokens, taskId);
     const enabled = input.enabled === undefined ? task.enabled : input.enabled === true;
 
@@ -288,7 +295,7 @@ export class TasksService {
             `Could not read the reactions from Discord: ${describeDiscordError(error)}`,
           );
         }
-        rendered = renderContent(config.content, tokens, people);
+        rendered = await renderContent(config.content, tokens, people);
       }
       try {
         await this.bot.editMessage(

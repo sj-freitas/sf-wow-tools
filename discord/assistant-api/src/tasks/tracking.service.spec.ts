@@ -227,8 +227,8 @@ describe('TrackingService', () => {
       const [token] = parseDynamicTokens(`{{reactions post="${POST}" emoji=👍 show=mainNames}}`);
       const people = await service.fetchPeople('g1', [token], new Map([[token.ref, POST]]));
       assert.deepEqual(people.get(`id:${POST}|👍|mainNames`), [
-        { id: '1', name: 'Merric Stone' },
-        { id: '2', name: 'Bruno' },
+        { id: '1', name: 'Ana', mains: ['Merric Stone'] },
+        { id: '2', name: 'Bruno', mains: [] },
       ]);
     });
 
@@ -239,8 +239,8 @@ describe('TrackingService', () => {
           { firstName: 'Olga', lastName: '' },
         ],
       };
-      const people = await service.withMainNames('g1', [ana]);
-      assert.equal(people[0].name, 'Merric / Olga');
+      const people = await service.withMains('g1', [ana]);
+      assert.deepEqual(people[0].mains, ['Merric', 'Olga']);
     });
 
     it('updates the post when someone gets a main, even if the reactions did not change', async () => {
@@ -252,6 +252,15 @@ describe('TrackingService', () => {
       mains = { [ana.id]: [{ firstName: 'Merric', lastName: '' }] };
       assert.equal(await service.refreshDue(), 1);
       assert.equal(edits[1][2], 'Going: Merric, Bruno');
+    });
+
+    it('looks main characters up for expressions too', async () => {
+      mains = { [ana.id]: [{ firstName: 'Merric', lastName: '' }] };
+      const [token] = parseDynamicTokens(
+        `{{reactions post="${POST}" emoji=👍 show="reactions.map(r => r.mainName)"}}`,
+      );
+      const people = await service.fetchPeople('g1', [token], new Map([[token.ref, POST]]));
+      assert.deepEqual(people.get(`id:${POST}|👍|custom`)?.[0].mains, ['Merric']);
     });
 
     it('does not touch the database for plain names', async () => {

@@ -6,6 +6,7 @@ import { DiscordBotService } from '../discord/discord-bot.service';
 import { describeDiscordError, isDiscordError, UNKNOWN_MESSAGE } from '../discord/discord-errors';
 import {
   hashReactors,
+  needsMains,
   parseDynamicTokens,
   renderContent,
   trackingKey,
@@ -136,7 +137,7 @@ export class TrackingService {
       const reactors = await this.readReactors(sourceId ? posts.get(sourceId) : null, token.emoji);
       people.set(
         key,
-        token.format === 'mainNames' ? await this.withMainNames(guildId, reactors) : reactors,
+        needsMains(token.format) ? await this.withMains(guildId, reactors) : reactors,
       );
     }
     return people;
@@ -162,10 +163,10 @@ export class TrackingService {
   }
 
   /**
-   * Swaps each person's Discord name for the names of their main characters in the guild (several
-   * mains are joined with " / "). Someone with no main character keeps their Discord name.
+   * Adds the main characters each person has in the guild (`mains`, one entry per character).
+   * Someone with no main character has none, and the `mainNames` preset then shows their Discord name.
    */
-  async withMainNames(guildId: string, reactors: readonly Reactor[]): Promise<Reactor[]> {
+  async withMains(guildId: string, reactors: readonly Reactor[]): Promise<Reactor[]> {
     if (reactors.length === 0) return [];
     const players = await this.prisma.player.findMany({
       where: { guildId, discordUserId: { in: reactors.map((reactor) => reactor.id) } },
@@ -181,13 +182,10 @@ export class TrackingService {
     const mains = new Map(
       players.map((player) => [
         player.discordUserId,
-        player.characters.map((character) => formatCharacterName(character)).join(' / '),
+        player.characters.map((character) => formatCharacterName(character)),
       ]),
     );
-    return reactors.map((reactor) => ({
-      id: reactor.id,
-      name: mains.get(reactor.id) || reactor.name,
-    }));
+    return reactors.map((reactor) => ({ ...reactor, mains: mains.get(reactor.id) ?? [] }));
   }
 
   /**
@@ -259,8 +257,9 @@ export class TrackingService {
         try {
           const read = await this.readReactors(row.sourceTask, row.emoji);
           // Main characters are part of what is compared, so a new main updates the post too.
-          const reactors =
-            row.type === 'mainNames' ? await this.withMainNames(row.task.guildId, read) : read;
+          const reactors = needsMains(row.type as ReactorFormat)
+            ? await this.withMains(row.task.guildId, read)
+            : read;
           const hash = hashReactors(reactors);
           if (hash === row.lastHash) continue;
           await this.prisma.postTracking.update({
@@ -310,7 +309,7 @@ export class TrackingService {
         row.lastUsers as unknown as Reactor[],
       ]),
     );
-    const rendered = renderContent(config.content, tokens, people);
+    const rendered = await renderContent(config.content, tokens, people);
     if (rendered === state.renderedContent || !state.channelId || !state.messageId) return false;
     try {
       await this.bot.editMessage(state.channelId, state.messageId, rendered, {

@@ -8,7 +8,7 @@ export interface MentionNames {
 }
 
 const INLINE =
-  /(`[^`\n]+`)|(\*\*[\s\S]+?\*\*)|(__[\s\S]+?__)|(~~[\s\S]+?~~)|(\|\|[\s\S]+?\|\|)|(\*[^*\n]+?\*)|(_[^_\n]+?_)|(<@!?\d+>|<@&\d+>|<#\d+>)|(<a?:\w+:\d+>)|(https?:\/\/[^\s<]+)|(@everyone|@here)|(\[[^\]\n]+\]\(https?:\/\/[^\s)]+\))|(<https?:\/\/[^\s>]+>)|(\{\{\s*reactions[^}\n]*\}\})/g;
+  /(`[^`\n]+`)|(\*\*[\s\S]+?\*\*)|(__[\s\S]+?__)|(~~[\s\S]+?~~)|(\|\|[\s\S]+?\|\|)|(\*[^*\n]+?\*)|(_[^_\n]+?_)|(<@!?\d+>|<@&\d+>|<#\d+>)|(<a?:\w+:\d+>)|(https?:\/\/[^\s<]+)|(@everyone|@here)|(\[[^\]\n]+\]\(https?:\/\/[^\s)]+\))|(<https?:\/\/[^\s>]+>)|(\{\{\s*reactions(?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|[^}"'])*\}\})/g;
 
 function Spoiler({ children }: { children: ReactNode }) {
   const [shown, setShown] = useState(false);
@@ -97,7 +97,15 @@ function inline(text: string, names: MentionNames): ReactNode[] {
       );
     } else if (match[14]) {
       const emoji = /emoji\s*=\s*(\S+?)(?=\s|\}\})/.exec(token)?.[1] ?? '?';
-      const show = /show\s*=\s*(\w+)/.exec(token)?.[1] ?? 'names';
+      const showValue = /show\s*=\s*("|'|)(\w*)/.exec(token);
+      const preset = ['names', 'mainNames', 'number', 'tags'].includes(showValue?.[2] ?? '');
+      const show = !showValue
+        ? 'names'
+        : preset && showValue[1]
+          ? showValue[2]
+          : preset
+            ? showValue[2]
+            : 'custom';
       nodes.push(
         <span
           key={k}

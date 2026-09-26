@@ -108,7 +108,7 @@ export class TaskRunnerService {
     const tokens = parseDynamicTokens(config.content);
     const sources = await this.tracking.sourceMap(task.id, task.guildId, tokens);
     const people = await this.tracking.fetchPeople(task.guildId, tokens, sources);
-    const rendered = renderContent(config.content, tokens, people);
+    const rendered = await renderContent(config.content, tokens, people);
     const messageId = await this.bot.postMessage(config.channelId, rendered, {
       suppressEmbeds: !embedsShown(config),
     });
