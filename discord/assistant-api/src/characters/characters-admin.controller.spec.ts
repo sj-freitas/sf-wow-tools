@@ -17,6 +17,7 @@ describe('CharactersAdminController permissions', () => {
   let access: Access;
   let added: { discordUserId: string; names: unknown }[];
   let updated: string[];
+  let owners: unknown[];
   let removed: string[];
   let ownerOfCharacter: string;
   let isServerMember: boolean;
@@ -26,6 +27,7 @@ describe('CharactersAdminController permissions', () => {
     access = { isAdmin: false, isOfficer: false };
     added = [];
     updated = [];
+    owners = [];
     removed = [];
     ownerOfCharacter = ME;
     isServerMember = true;
@@ -37,7 +39,10 @@ describe('CharactersAdminController permissions', () => {
       findGuildMemberNames: async () =>
         isServerMember ? { username: 'them', displayName: null } : null,
       findOwnership: async () => ({ guildId: 'g', discordUserId: ownerOfCharacter }),
-      update: async (id: string) => void updated.push(id),
+      update: async (id: string, _patch: unknown, owner: unknown) => {
+        updated.push(id);
+        owners.push(owner);
+      },
       removeById: async (id: string) => void removed.push(id),
     } as unknown as CharactersService;
     const guildAccess = { find: async () => access } as unknown as GuildAccessService;
@@ -119,6 +124,38 @@ describe('CharactersAdminController permissions', () => {
       await controller.update(req, 'c1', { level: 60 });
       await controller.remove(req, 'c1');
       assert.deepEqual([updated, removed], [['c1'], ['c1']]);
+    });
+
+    it('lets an Officer move a character to another Discord user of the guild', async () => {
+      access = { isAdmin: false, isOfficer: true };
+      await controller.update(req, 'c1', { discordUserId: OTHER });
+      assert.deepEqual(owners, [
+        { discordUserId: OTHER, names: { username: 'them', displayName: null } },
+      ]);
+    });
+
+    it('refuses to move it to someone who is not in the guild’s servers, or to a bad id', async () => {
+      access = { isAdmin: false, isOfficer: true };
+      isServerMember = false;
+      await assert.rejects(controller.update(req, 'c1', { discordUserId: OTHER }), /not a member/);
+      await assert.rejects(
+        controller.update(req, 'c1', { discordUserId: 'abc' }),
+        BadRequestException,
+      );
+      assert.deepEqual(updated, []);
+    });
+
+    it('forbids members, even for their own character, from moving it to someone else', async () => {
+      await assert.rejects(
+        controller.update(req, 'c1', { discordUserId: OTHER }),
+        ForbiddenException,
+      );
+      assert.deepEqual(updated, []);
+    });
+
+    it('does not treat sending the current owner back as a move', async () => {
+      await controller.update(req, 'c1', { discordUserId: ME, level: 60 });
+      assert.deepEqual(owners, [undefined]);
     });
 
     it('forbids a Guild-Assistant (non-Officer) from changing others’ characters', async () => {

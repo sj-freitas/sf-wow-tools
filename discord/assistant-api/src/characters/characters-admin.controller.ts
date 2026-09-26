@@ -122,6 +122,7 @@ export class CharactersAdminController {
   ): Promise<void> {
     await this.assertCanEdit(req.user, id);
     const patch = parseFields(body, { partial: true });
+    const newOwner = await this.parseNewOwner(req.user, id, body);
     if (body.name !== undefined) {
       const name = parseCharacterName(typeof body.name === 'string' ? body.name : '');
       if (!name) {
@@ -132,7 +133,7 @@ export class CharactersAdminController {
       Object.assign(patch, name);
     }
     try {
-      await this.charactersService.update(id, patch);
+      await this.charactersService.update(id, patch, newOwner);
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
         throw new ConflictException('That player already has a character with this name');
@@ -153,6 +154,38 @@ export class CharactersAdminController {
       }
       throw error;
     }
+  }
+
+  /**
+   * Moving a character to another Discord user is for Officers, and only to a member of the guild's
+   * servers. Returns nothing when the body does not ask for it.
+   */
+  private async parseNewOwner(
+    user: SessionUser,
+    characterId: string,
+    body: Record<string, unknown>,
+  ): Promise<
+    | { discordUserId: string; names?: { username?: string; displayName?: string | null } }
+    | undefined
+  > {
+    if (body.discordUserId === undefined) return undefined;
+    const { guildId, discordUserId: current } =
+      await this.charactersService.findOwnership(characterId);
+    const access = await this.guildAccess.find(user.id, guildId);
+    if (typeof body.discordUserId !== 'string' || !/^\d{15,25}$/.test(body.discordUserId)) {
+      throw new BadRequestException('discordUserId must be a Discord user id (digits)');
+    }
+    if (body.discordUserId === current) return undefined;
+    if (!access || !canManageAllCharacters(access)) {
+      throw new ForbiddenException('Only Officers can move a character to another player');
+    }
+    const names = await this.charactersService.findGuildMemberNames(guildId, body.discordUserId);
+    if (!names) {
+      throw new BadRequestException(
+        "That user is not a member of any of this guild's Discord servers",
+      );
+    }
+    return { discordUserId: body.discordUserId, names };
   }
 
   /** Officers can edit any character of their guild; members only their own. */

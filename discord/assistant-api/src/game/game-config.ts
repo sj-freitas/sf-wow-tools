@@ -35,15 +35,15 @@ export interface FactionConfig<C extends string = string> {
   races: Readonly<Record<string, RaceConfig<C>>>;
 }
 
-export interface GameRules {
-  /** Characters must have a last name (`Name-Lastname`). */
-  lastNameRequired: boolean;
-}
-
 export interface GameConfig<C extends string = string> {
   /** The name of the version, as guilds store it ("Forever"). Unique across versions. */
   gameVersion: string;
-  rules: GameRules;
+  /**
+   * Characters of this version have a last name, written `Name-Lastname` and at least 2 letters
+   * like the first name. When it is not there (or false) the version has no last names: the forms
+   * do not show the field.
+   */
+  requiresLastName?: boolean;
   /**
    * The servers a guild of this version can be on, per region (the regions of `config/regions.ts`).
    * A region with no entry is not available for this version.
@@ -77,8 +77,8 @@ export function gameConfigProblems(config: unknown): string[] {
   if (typeof game.gameVersion !== 'string' || game.gameVersion.trim() === '') {
     problems.push('gameVersion must be a name');
   }
-  if (typeof game.rules?.lastNameRequired !== 'boolean') {
-    problems.push('rules.lastNameRequired must be true or false');
+  if (game.requiresLastName !== undefined && typeof game.requiresLastName !== 'boolean') {
+    problems.push('requiresLastName must be true or false (or left out)');
   }
 
   const servers = game.allowedServers;

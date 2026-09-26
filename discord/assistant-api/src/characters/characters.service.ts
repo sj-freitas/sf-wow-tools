@@ -125,7 +125,17 @@ export class CharactersService {
     return null;
   }
 
-  async update(characterId: string, patch: CharacterUpdate): Promise<void> {
+  /**
+   * Changes a character. With `newOwner` it moves to another Discord user of the same guild (their
+   * player is created if they have none), and the previous player is removed when it is left with no
+   * characters. The other player having a character with the same name is a unique violation, like a
+   * rename.
+   */
+  async update(
+    characterId: string,
+    patch: CharacterUpdate,
+    newOwner?: { discordUserId: string; names?: DiscordNames },
+  ): Promise<void> {
     if (
       patch.firstName !== undefined ||
       patch.lastName !== undefined ||
@@ -166,11 +176,44 @@ export class CharactersService {
       }
     }
 
+    let playerId: string | undefined;
+    let previousPlayerId: string | undefined;
+    if (newOwner) {
+      const current = await this.prisma.character.findUnique({
+        where: { id: characterId },
+        select: { playerId: true, player: { select: { guildId: true, discordUserId: true } } },
+      });
+      if (!current) throw new NotFoundException('Character not found');
+      if (current.player.discordUserId !== newOwner.discordUserId) {
+        const { guildId } = current.player;
+        const target = await this.prisma.player.upsert({
+          where: { guildId_discordUserId: { guildId, discordUserId: newOwner.discordUserId } },
+          create: {
+            guildId,
+            discordUserId: newOwner.discordUserId,
+            discordUsername: newOwner.names?.username,
+            discordDisplayName: newOwner.names?.displayName,
+          },
+          update: {
+            discordUsername: newOwner.names?.username,
+            discordDisplayName: newOwner.names?.displayName,
+          },
+        });
+        playerId = target.id;
+        previousPlayerId = current.playerId;
+      }
+    }
+
     const { player } = await this.prisma.character.update({
       where: { id: characterId },
-      data: patch,
+      data: playerId ? { ...patch, playerId } : patch,
       select: { player: { select: { guildId: true } } },
     });
+    if (previousPlayerId) {
+      // A player exists only through its characters: leaving none behind is cleaned up.
+      const left = await this.prisma.character.count({ where: { playerId: previousPlayerId } });
+      if (left === 0) await this.prisma.player.deleteMany({ where: { id: previousPlayerId } });
+    }
     this.realtime.publish(player.guildId, 'characters');
   }
 

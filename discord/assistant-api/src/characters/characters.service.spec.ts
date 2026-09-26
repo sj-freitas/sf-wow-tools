@@ -19,25 +19,39 @@ describe('CharactersService last name rule', () => {
   let gameVersion: string;
   let created: any[];
   let updated: any[];
+  let upserts: any[];
+  let removedPlayers: string[];
+  let charactersLeft: number;
   let service: CharactersService;
 
   beforeEach(() => {
     gameVersion = 'Forever';
     created = [];
     updated = [];
+    upserts = [];
+    removedPlayers = [];
+    charactersLeft = 0;
     const prisma = {
       guild: {
         findFirst: async () => ({ id: 'g', gameVersion }),
         findUnique: async () => ({ id: 'g', gameVersion }),
       },
-      player: { upsert: async () => ({ id: 'p' }) },
+      player: {
+        upsert: async (args: any) => {
+          upserts.push(args);
+          return { id: 'target-player' };
+        },
+        deleteMany: async (args: any) => void removedPlayers.push(args.where.id),
+      },
       character: {
         create: async (args: any) => void created.push(args.data),
         findUnique: async () => ({
           class: 'Paladin',
           roles: ['TANK'],
-          player: { guild: { gameVersion } },
+          playerId: 'old-player',
+          player: { guildId: 'g', discordUserId: 'old-user', guild: { gameVersion } },
         }),
+        count: async () => charactersLeft,
         update: async (args: any) => {
           updated.push(args.data);
           return { player: { guildId: 'g' } };
@@ -133,6 +147,40 @@ describe('CharactersService last name rule', () => {
       );
       await service.update('c', { class: 'Mage', roles: ['RANGED_DPS'] });
       assert.equal(updated.at(-1).class, 'Mage');
+    });
+
+    describe('moving a character to another Discord user', () => {
+      const names = { username: 'them', displayName: 'Them' };
+
+      it('points the character at the other user’s player, creating it with their names', async () => {
+        await service.update('c', { level: 60 }, { discordUserId: 'new-user', names });
+        assert.deepEqual(upserts[0].where, {
+          guildId_discordUserId: { guildId: 'g', discordUserId: 'new-user' },
+        });
+        assert.deepEqual(upserts[0].create, {
+          guildId: 'g',
+          discordUserId: 'new-user',
+          discordUsername: 'them',
+          discordDisplayName: 'Them',
+        });
+        assert.deepEqual(updated.at(-1), { level: 60, playerId: 'target-player' });
+      });
+
+      it('removes the previous player when it is left with no characters, and only then', async () => {
+        charactersLeft = 0;
+        await service.update('c', {}, { discordUserId: 'new-user', names });
+        assert.deepEqual(removedPlayers, ['old-player']);
+        removedPlayers.length = 0;
+        charactersLeft = 2;
+        await service.update('c', {}, { discordUserId: 'new-user', names });
+        assert.deepEqual(removedPlayers, []);
+      });
+
+      it('does nothing about the owner when it is the same user', async () => {
+        await service.update('c', { level: 60 }, { discordUserId: 'old-user', names });
+        assert.deepEqual(updated.at(-1), { level: 60 });
+        assert.deepEqual([upserts, removedPlayers], [[], []]);
+      });
     });
 
     it('lets a rename keep a last name', async () => {

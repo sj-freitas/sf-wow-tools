@@ -52,10 +52,11 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
     : race
       ? (races.find((r) => r.race === race)?.classes ?? allClasses)
       : allClasses;
-  // Also shown when editing a character that already has one, so saving can't silently drop it.
-  const showLastName = lastNameRequired || Boolean(initial?.lastName);
+  // Only versions that say so have last names; for the others the field is not there.
+  const showLastName = lastNameRequired;
 
-  const [discordUserId, setDiscordUserId] = useState(currentUser.discordId);
+  // Who plays it: the logged-in user for a new character, the current owner when editing.
+  const [discordUserId, setDiscordUserId] = useState(editing?.playerId ?? currentUser.discordId);
   const [firstName, setFirstName] = useState(initial?.firstName ?? '');
   const [lastName, setLastName] = useState(initial?.lastName ?? '');
   const [characterClass, setCharacterClass] = useState<string>(initial?.class ?? '');
@@ -132,11 +133,12 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
     setError(null);
-    if (!initial && guild.isOfficer && discordUserId === '') {
+    if (guild.isOfficer && discordUserId === '') {
       setError('Pick a player from the search results, or paste their Discord user ID.');
       return;
     }
-    const last = showLastName ? lastName.trim() : '';
+    // A character that already has a last name keeps it when its version no longer shows the field.
+    const last = showLastName ? lastName.trim() : (initial?.lastName ?? '');
     if (lastNameRequired && last === '') {
       setError(`Characters in ${guild.gameVersion} need a last name.`);
       return;
@@ -149,8 +151,11 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
       isMain,
       level: level === '' ? undefined : Number(level),
     };
+    // Only an Officer who picked someone else moves the character.
+    const moved =
+      editing && guild.isOfficer && discordUserId !== editing.playerId ? discordUserId : undefined;
     (initial
-      ? updateCharacter(initial.id, fields)
+      ? updateCharacter(initial.id, { ...fields, ...(moved ? { discordUserId: moved } : {}) })
       : createCharacter(guild.id, { ...fields, discordUserId: discordUserId || undefined })
     )
       .then(onSaved)
@@ -163,7 +168,7 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
         {(editing || guild.isOfficer) && (
           <div className="field field-wide">
             Discord user
-            {editing ? (
+            {editing && !guild.isOfficer ? (
               <div className="picked-player">
                 <CopyableName label={editing.playerLabel} id={editing.playerId} />
               </div>
@@ -173,6 +178,9 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
                 value={discordUserId}
                 onChange={setDiscordUserId}
                 self={{ discordId: currentUser.discordId, label: currentUser.displayName }}
+                initial={
+                  editing ? { discordId: editing.playerId, label: editing.playerLabel } : undefined
+                }
               />
             )}
           </div>

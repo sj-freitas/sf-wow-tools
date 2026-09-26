@@ -142,7 +142,8 @@ export interface SpecializationConfig {
 /** One version of the game, as the API sends it: what the guild and character forms render from. */
 export interface GameConfig {
   gameVersion: string;
-  rules: { lastNameRequired: boolean };
+  /** Characters have a last name (`Name-Lastname`, 2+ letters each). Left out: no last names. */
+  requiresLastName?: boolean;
   /** Servers a guild can be on, per region id; a region that is missing is not available. */
   allowedServers: Record<string, string[]>;
   /** Every class, by name. */
@@ -170,6 +171,8 @@ export interface CharacterPatch {
   roles?: Role[];
   isMain?: boolean;
   level?: number;
+  /** Officers only: move the character to another Discord user of the guild. */
+  discordUserId?: string;
 }
 
 export interface NewCharacterInput {

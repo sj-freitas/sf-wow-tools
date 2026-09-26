@@ -10,7 +10,7 @@
     "options": [
       {
         "name": "name",
-        "description": "Name-Lastname (dash between the names, letters only, 2+ each). Forever needs a last name",
+        "description": "Name, or Name-Lastname if the guild's game version uses last names (letters only, 2+ each)",
         "type": 3,
         "required": true
       },
@@ -109,7 +109,7 @@
     "options": [
       {
         "name": "name",
-        "description": "Name-Lastname (dash between the names, letters only, 2+ each). Forever needs a last name",
+        "description": "Name, or Name-Lastname if the guild's game version uses last names (letters only, 2+ each)",
         "type": 3,
         "required": true
       }

@@ -6,10 +6,8 @@ import { defineGame } from '../game-config';
  */
 export default defineGame({
   gameVersion: 'Forever',
-  rules: {
-    // Characters are written `Name-Lastname`.
-    lastNameRequired: true,
-  },
+  // Characters are written `Name-Lastname`.
+  requiresLastName: true,
   allowedServers: {
     US: ['RP', 'PVP', 'PVE', 'Hardcore'],
     EU: ['RP', 'PVP', 'PVE', 'Hardcore'],

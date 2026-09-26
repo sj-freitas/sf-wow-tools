@@ -22,7 +22,6 @@ import {
 const configSource = (over: Record<string, unknown> = {}): string => {
   const config = {
     gameVersion: 'Test',
-    rules: { lastNameRequired: false },
     allowedServers: { EU: ['PVE'] },
     classes: { Mage: { specializations: {} } },
     factions: { Alliance: { races: { Human: { classes: ['Mage'] } } } },
@@ -74,11 +73,13 @@ describe('the game versions found on disk', () => {
   });
 
   it('refuses a config that is not valid, naming the directory and what is wrong', () => {
-    withDirectories({ 'broken/config.js': configSource({ rules: {}, classes: {} }) }, (root) =>
-      assert.throws(
-        () => loadGames(root),
-        /"broken" is not valid.*rules\.lastNameRequired.*classes needs at least one class/s,
-      ),
+    withDirectories(
+      { 'broken/config.js': configSource({ requiresLastName: 'yes', classes: {} }) },
+      (root) =>
+        assert.throws(
+          () => loadGames(root),
+          /"broken" is not valid.*requiresLastName must be true or false.*classes needs at least one class/s,
+        ),
     );
   });
 
@@ -97,6 +98,15 @@ describe('checking a config', () => {
     JSON.parse(configSource().replace(/^module\.exports = \{ default: (.*) \};$/, '$1'));
 
   it('accepts a good one', () => assert.deepEqual(gameConfigProblems(valid()), []));
+
+  it('has requiresLastName as an optional yes/no: left out means no last names', () => {
+    const config = valid();
+    assert.equal(config.requiresLastName, undefined);
+    config.requiresLastName = true;
+    assert.deepEqual(gameConfigProblems(config), []);
+    config.requiresLastName = 'sure';
+    assert.match(gameConfigProblems(config).join(), /requiresLastName must be true or false/);
+  });
 
   it('only lets a race list classes that the game has', () => {
     const config = valid();
@@ -134,14 +144,12 @@ describe('checking a config', () => {
   it('has classes checked when it is written (a class a race lists must exist)', () => {
     defineGame({
       gameVersion: 'T',
-      rules: { lastNameRequired: false },
       allowedServers: { EU: ['PVE'] },
       classes: { Mage: { specializations: {} } },
       factions: { Alliance: { races: { Human: { classes: ['Mage'] } } } },
     });
     defineGame({
       gameVersion: 'T',
-      rules: { lastNameRequired: false },
       allowedServers: { EU: ['PVE'] },
       classes: { Mage: { specializations: {} } },
       // @ts-expect-error "Bard" is not one of the game's classes
@@ -188,7 +196,7 @@ describe('asking about a version', () => {
     assert.deepEqual(serversOf('Retail', 'EU'), []);
   });
 
-  it('takes the last-name rule from the version’s rules', () => {
+  it('takes the last-name rule from the version’s config: only a version that says so has last names', () => {
     assert.equal(requiresLastName('Forever'), true);
     assert.equal(requiresLastName('Something else'), false);
     assert.match(lastNameRequiredMessage('Forever'), /Forever.*last name.*Name-Lastname/);

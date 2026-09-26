@@ -14,7 +14,7 @@ export const gameOf = (games: readonly GameConfig[], gameVersion: string): GameC
 
 /** Characters must have a last name in this version. */
 export const requiresLastName = (games: readonly GameConfig[], gameVersion: string): boolean =>
-  gameOf(games, gameVersion)?.rules.lastNameRequired ?? false;
+  gameOf(games, gameVersion)?.requiresLastName ?? false;
 
 /** The factions of a version as the API stores them (ALLIANCE, HORDE) with their names. */
 export const factionsOf = (game: GameConfig | undefined): { id: Faction; label: string }[] =>

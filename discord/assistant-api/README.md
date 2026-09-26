@@ -516,13 +516,18 @@ ephemeral (only you see them).
   `Arthas-` are rejected.
 - Casing is normalized: first letter upper case, the rest lower case (`aRTHAS-menethil` →
   `Arthas Menethil`), and text is stored NFC-normalized.
-- The last name is optional in general but **required for game versions that say so**: Forever
-  requires it (`rules.lastNameRequired` in `src/game/forever/config.ts`). This is enforced by the API
+- Last names belong to **game versions that say so**: a version's config has `requiresLastName: true`
+  (Forever does, in `src/game/forever/config.ts`) and then every character needs one (2+ letters, like the
+  first name); without it the version has no last names and the backoffice form does not show the field. This is enforced by the API
   for the bot and the backoffice, on create and on rename. The database itself only guarantees the
   minimum lengths (CHECK constraints on `characters.first_name`/`last_name`), since a CHECK can't
   read the guild's game version from another table.
 
-You can mark several characters as `main`.
+You can mark several characters as `main`. An **Officer** can also move a character to another Discord
+user (the Discord user field of the edit form, or `discordUserId` in `PATCH /api/characters/:id`): the
+user must be in one of the guild's servers, the other player having a character with the same name is
+refused, and the previous player is removed once it has no characters left. Members cannot move
+characters, not even their own.
 
 After changing `src/bot/commands.json`, run `npm run commands:register`. The class choices of
 `/character-add` are a fixed list in `commands.json` (Discord needs them at registration); a test checks
@@ -537,7 +542,8 @@ directory; a directory without a config is ignored, and an invalid config stops 
 wrong. The shape (volatile: expect it to grow):
 
 - `gameVersion`: the name guilds store (`Forever`), unique.
-- `rules`: `{ lastNameRequired }`.
+- `requiresLastName` (optional): `true` when characters have a last name (`Name-Lastname`); left out, the
+  version has none and the forms do not show the field.
 - `allowedServers`: the servers a guild can be on, **per region** (`EU`, `US`, the regions of
   `config/regions.ts`); a region that is missing is not available for that version.
 - `classes`: every class, by name, each with its `specializations` (`{}` until defined; a specialization

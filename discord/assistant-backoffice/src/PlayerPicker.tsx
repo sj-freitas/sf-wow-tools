@@ -9,8 +9,10 @@ interface Props {
   /** Selected Discord user id, or '' when nothing is selected. */
   value: string;
   onChange: (discordUserId: string) => void;
-  /** The logged-in user: preselected, and marked "(you)". */
+  /** The logged-in user: marked "(you)", and who is selected when there is nothing else. */
   self: { discordId: string; label: string };
+  /** Who is selected at first when it is not the logged-in user (an existing character's owner). */
+  initial?: { discordId: string; label: string };
 }
 
 const personLabel = (person: Person) =>
@@ -24,13 +26,13 @@ const looksLikeId = (text: string) => /^\d{15,25}$/.test(text.trim());
  * Someone not listed can still be added by pasting their Discord user id, as long as
  * they are in one of the guild's servers (the API checks).
  */
-export function PlayerPicker({ guildId, value, onChange, self }: Props) {
+export function PlayerPicker({ guildId, value, onChange, self, initial }: Props) {
   const [people, setPeople] = useState<Person[]>([]);
   const [source, setSource] = useState<'servers' | 'known'>('servers');
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
   // Who is selected, by name: the user themselves at first, later whoever was picked.
-  const [pickedLabel, setPickedLabel] = useState(self.label);
+  const [pickedLabel, setPickedLabel] = useState(initial?.label ?? self.label);
   const root = useRef<HTMLDivElement>(null);
   const searchBox = useRef<HTMLInputElement>(null);
 

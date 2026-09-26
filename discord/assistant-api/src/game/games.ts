@@ -75,7 +75,7 @@ export const serversOf = (gameVersion: string, region: RegionId): readonly strin
 
 /** Characters must have a last name (`Name-Lastname`) in this version. */
 export const requiresLastName = (gameVersion: string): boolean =>
-  getGame(gameVersion)?.rules.lastNameRequired ?? false;
+  getGame(gameVersion)?.requiresLastName ?? false;
 
 export const lastNameRequiredMessage = (gameVersion: string): string =>
   `Characters in ${gameVersion} need a last name: use Name-Lastname (a dash between first and last name).`;
