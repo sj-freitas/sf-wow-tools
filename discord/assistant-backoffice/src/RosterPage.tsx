@@ -227,7 +227,11 @@ export function CharacterEditorPage({ guild, currentUser }: Props) {
       <CharacterForm
         guild={guild}
         currentUser={currentUser}
-        editing={{ character: found.character, playerLabel: playerLabel(found.player) }}
+        editing={{
+          character: found.character,
+          playerLabel: playerLabel(found.player),
+          playerId: found.player.discordUserId,
+        }}
         onSaved={() => navigate(back)}
         onCancel={() => navigate(back)}
       />

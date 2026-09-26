@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { createCharacter, updateCharacter } from './api';
 import { MultiSelect } from './MultiSelect';
 import { fetchArmoryCharacter } from './api';
+import { CopyableName } from './CopyableName';
 import { classNamesOf, gameOf, racesOf, requiresLastName, useArmory, useGames } from './game';
 import { PlayerPicker } from './PlayerPicker';
 import { ROLE_LABELS, type Character, type Guild, type Role, type User } from './types';
@@ -11,7 +12,7 @@ interface Props {
   /** The logged-in user: Officers add characters for themselves unless they pick someone else. */
   currentUser: User;
   /** When set the form edits this character instead of adding one. */
-  editing?: { character: Character; playerLabel: string };
+  editing?: { character: Character; playerLabel: string; playerId: string };
   onSaved: () => void;
   onCancel: () => void;
 }
@@ -134,7 +135,9 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
           <div className="field field-wide">
             Discord user
             {editing ? (
-              <input value={editing.playerLabel} disabled />
+              <div className="picked-player">
+                <CopyableName label={editing.playerLabel} id={editing.playerId} />
+              </div>
             ) : (
               <PlayerPicker
                 guildId={guild.id}
@@ -143,6 +146,14 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
                 self={{ discordId: currentUser.discordId, label: currentUser.displayName }}
               />
             )}
+          </div>
+        )}
+        {!armory && guild.isOfficer && (
+          <div className="field field-wide armory-load">
+            <small className="muted">
+              “Load from armory” (TEST) is off: the server has no Battle.net client. Set
+              BLIZZARD_CLIENT_ID and BLIZZARD_CLIENT_SECRET, restart it and reload this page.
+            </small>
           </div>
         )}
         {armory && guild.isOfficer && (

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { fetchPeople } from './api';
+import { CopyableName } from './CopyableName';
 import { fuzzyScore } from './fuzzy';
 import type { Person } from './types';
 
@@ -97,7 +98,7 @@ export function PlayerPicker({ guildId, value, onChange, self }: Props) {
     return (
       <div className="picked-player">
         <span>
-          <strong>{value === self.discordId ? self.label : pickedLabel}</strong>
+          <CopyableName label={value === self.discordId ? self.label : pickedLabel} id={value} />
           {value === self.discordId && <span className="muted"> (you)</span>}
         </span>
         <button type="button" className="btn btn-sm" onClick={change}>
@@ -161,13 +162,6 @@ export function PlayerPicker({ guildId, value, onChange, self }: Props) {
               onClick={() => choose(person.discordUserId, personLabel(person))}
             >
               <strong>{personLabel(person)}</strong>
-              {person.username && person.displayName && (
-                <span className="muted"> @{person.username}</span>
-              )}
-              <span className="muted"> · {person.discordUserId}</span>
-              {person.characterNames.length > 0 && (
-                <span className="muted option-sub">{person.characterNames.join(', ')}</span>
-              )}
             </button>
           ))}
           {idOption && (
