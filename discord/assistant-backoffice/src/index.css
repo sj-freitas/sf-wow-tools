@@ -1194,18 +1194,19 @@ label.btn.disabled {
   background: var(--surface-2);
 }
 .search-field {
-  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
+/* The icon sits beside the input, never over it. */
 .search-field > input {
-  width: 100%;
-  padding-left: 2rem;
+  flex: 1;
+  min-width: 0;
+  width: auto;
 }
 .search-icon {
-  position: absolute;
-  top: 50%;
-  left: 0.6rem;
-  transform: translateY(-50%);
-  font-size: 0.85rem;
+  flex: none;
+  font-size: 0.95rem;
   pointer-events: none;
 }
 
