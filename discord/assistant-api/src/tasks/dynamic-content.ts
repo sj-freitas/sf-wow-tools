@@ -24,10 +24,15 @@ export interface Reactor {
 
 /** How a token points at the post whose reactions it shows. */
 export interface PostRef {
-  /** `id:<uuid>`, `name:<lower-cased name>`, or `self` (the post the text is in). */
+  /**
+   * `name:<lower-cased name>` (a scheduled post), `msgid:<message id>` (a message the bot posted),
+   * `msg:<channel id>/<message id>` (any message, by its link) or `self` (the post the text is in).
+   */
   ref: string;
   /** As written, for messages. */
   label: string;
+  /** Set when written as a Discord message link. */
+  message?: { serverId: string; channelId: string; messageId: string };
 }
 
 /** One dynamic tag in a post's text. */
@@ -42,7 +47,9 @@ export interface DynamicToken extends PostRef {
 }
 
 const PRESETS: readonly ReactorFormat[] = ['names', 'mainNames', 'number', 'tags'];
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const MESSAGE_LINK =
+  /^https?:\/\/(?:(?:ptb|canary)\.)?discord(?:app)?\.com\/channels\/(\d{15,25})\/(\d{15,25})\/(\d{15,25})\/?$/;
+const MESSAGE_ID = /^\d{15,25}$/;
 /** `{{reactions post="Raid signup" emoji=👍 show=names}}` */
 const NEW_START = /\{\{\s*reactions(?=[\s}])/g;
 const HELP =
@@ -54,9 +61,17 @@ export const needsMains = (format: ReactorFormat): boolean =>
 
 function refOf(value: string): PostRef {
   const text = value.trim();
-  return UUID.test(text)
-    ? { ref: `id:${text.toLowerCase()}`, label: text }
-    : { ref: `name:${text.toLowerCase()}`, label: text };
+  const link = MESSAGE_LINK.exec(text);
+  if (link) {
+    const [, serverId, channelId, messageId] = link;
+    return {
+      ref: `msg:${channelId}/${messageId}`,
+      label: text,
+      message: { serverId, channelId, messageId },
+    };
+  }
+  if (MESSAGE_ID.test(text)) return { ref: `msgid:${text}`, label: text };
+  return { ref: `name:${text.toLowerCase()}`, label: text };
 }
 
 /**

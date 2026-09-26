@@ -16,7 +16,10 @@ const post = (over: Record<string, unknown> = {}): any => ({
   id: POST,
   guildId: 'g1',
   name: 'Raid signup',
-  config: { content: `Going: {{reactions post="${POST}" emoji=👍 show=names}}`, embedLinks: true },
+  config: {
+    content: `Going: {{reactions post="Raid signup" emoji=👍 show=names}}`,
+    embedLinks: true,
+  },
   state: { ...liveState },
   ...over,
 });
@@ -31,6 +34,9 @@ describe('TrackingService', () => {
   let deletedRows: string[];
   let taskUpdates: any[];
   let mains: Record<string, { firstName: string; lastName: string }[]>;
+  let servers: string[];
+  let channelServer: string | null;
+  let unreadable: boolean;
   let service: TrackingService;
 
   beforeEach(() => {
@@ -43,6 +49,9 @@ describe('TrackingService', () => {
     deletedRows = [];
     taskUpdates = [];
     mains = {};
+    servers = ['s1'];
+    channelServer = 's1';
+    unreadable = false;
     const prisma = {
       scheduledTask: {
         findMany: async (args: any) =>
@@ -53,10 +62,15 @@ describe('TrackingService', () => {
           ),
         findFirst: async (args: any) =>
           Object.values(tasks).find(
-            (t: any) => t.id === args.where.id && t.guildId === args.where.guildId,
+            (t: any) =>
+              t.guildId === args.where.guildId && t.state?.messageId === args.where.state.equals,
           ) ?? null,
         findUnique: async (args: any) => tasks[args.where.id] ?? null,
         update: async (args: any) => void taskUpdates.push(args.data),
+      },
+      discordServer: {
+        findFirst: async (args: any) =>
+          servers.includes(args.where.discordId) ? { id: 'x' } : null,
       },
       player: {
         findMany: async (args: any) =>
@@ -86,6 +100,10 @@ describe('TrackingService', () => {
         return reactors[emoji] ?? [];
       },
       editMessage: async (...args: unknown[]) => void edits.push(args),
+      getChannelServerId: async () => channelServer,
+      assertCanReadMessage: async () => {
+        if (unreadable) throw new Error('Missing Access');
+      },
     } as unknown as DiscordBotService;
     service = new TrackingService(prisma, bot);
   });
@@ -94,7 +112,9 @@ describe('TrackingService', () => {
     id: 'r1',
     taskId: POST,
     sourceTaskId: POST,
-    postRef: `id:${POST}`,
+    sourceChannelId: null,
+    sourceMessageId: null,
+    postRef: 'name:raid signup',
     emoji: '👍',
     type: 'names',
     lastHash: null,
@@ -106,18 +126,87 @@ describe('TrackingService', () => {
     const resolve = (text: string, guild = 'g1', self?: string) =>
       service.resolveSources(guild, parseDynamicTokens(text), self);
 
-    it('finds a post by id, but only in the same guild', async () => {
-      const sources = await resolve(`{{reactions post="${POST}" emoji=👍 show=names}}`);
-      assert.equal(sources.get(`id:${POST}`), POST);
+    it('finds a post by its name, but only in the same guild', async () => {
+      const sources = await resolve('{{reactions post="Raid signup" emoji=👍}}');
+      assert.deepEqual(sources.get('name:raid signup'), { taskId: POST });
       await assert.rejects(
-        resolve(`{{reactions post="${POST}" emoji=👍 show=names}}`, 'other-guild'),
-        /no post with the id/,
+        resolve('{{reactions post="Raid signup" emoji=👍}}', 'other-guild'),
+        /no post named/,
       );
     });
 
     it('finds a post by its name, whatever the letter case', async () => {
       const sources = await resolve('{{reactions post="RAID SIGNUP" emoji=👍}}');
-      assert.equal(sources.get('name:raid signup'), POST);
+      assert.deepEqual(sources.get('name:raid signup'), { taskId: POST });
+    });
+
+    it('finds the message of a post the bot made by its Discord message id', async () => {
+      tasks[POST].state = { messageId: '900000000000000001', channelId: '800000000000000001' };
+      const sources = await resolve('{{reactions post=900000000000000001 emoji=👍}}');
+      assert.deepEqual(sources.get('msgid:900000000000000001'), {
+        message: { channelId: '800000000000000001', messageId: '900000000000000001' },
+      });
+    });
+
+    it('needs a link for a message the bot did not post', async () => {
+      await assert.rejects(
+        resolve('{{reactions post=900000000000000009 emoji=👍}}'),
+        /not a message this bot posted.*link/,
+      );
+    });
+
+    describe("a message link (any message, not only the bot's)", () => {
+      const link = 'https://discord.com/channels/s1/800000000000000002/900000000000000002';
+      const numericLink =
+        'https://discord.com/channels/100000000000000001/800000000000000002/900000000000000002';
+      beforeEach(() => {
+        servers = ['100000000000000001'];
+        channelServer = '100000000000000001';
+      });
+
+      it('is accepted when its server belongs to the guild and the bot can read it', async () => {
+        const sources = await resolve(`{{reactions post="${numericLink}" emoji=👍}}`);
+        assert.deepEqual(sources.get('msg:800000000000000002/900000000000000002'), {
+          message: { channelId: '800000000000000002', messageId: '900000000000000002' },
+        });
+        assert.ok(link);
+      });
+
+      it('is refused for a server of another guild', async () => {
+        servers = [];
+        await assert.rejects(
+          resolve(`{{reactions post="${numericLink}" emoji=👍}}`),
+          /not part of this guild/,
+        );
+      });
+
+      it('is refused when the channel is not in that server (an edited link)', async () => {
+        channelServer = '199999999999999999';
+        await assert.rejects(
+          resolve(`{{reactions post="${numericLink}" emoji=👍}}`),
+          /does not point at a channel of that server/,
+        );
+      });
+
+      it('is refused, with the reason, when the bot cannot read the message', async () => {
+        unreadable = true;
+        await assert.rejects(
+          resolve(`{{reactions post="${numericLink}" emoji=👍}}`),
+          /bot cannot read.*Missing Access/,
+        );
+      });
+
+      it('reads its reactions, and keeps the message as the row source', async () => {
+        const tokens = parseDynamicTokens(`{{reactions post="${numericLink}" emoji=👍}}`);
+        const sources = await resolve(`{{reactions post="${numericLink}" emoji=👍}}`);
+        const people = await service.fetchPeople('g1', tokens, sources);
+        assert.deepEqual(people.get(`${tokens[0].ref}|👍|names`), [ana, bruno]);
+        await service.syncTracking(POST, tokens, sources);
+        assert.deepEqual(
+          [created[0].sourceTaskId, created[0].sourceChannelId, created[0].sourceMessageId],
+          [null, '800000000000000002', '900000000000000002'],
+        );
+      });
     });
 
     it('refuses a name nobody has, and a name two posts share', async () => {
@@ -133,14 +222,16 @@ describe('TrackingService', () => {
 
     it('lets a post point at itself, once it has an id', async () => {
       assert.equal((await resolve('{{reactions emoji=👍}}')).size, 0);
-      assert.equal((await resolve('{{reactions emoji=👍}}', 'g1', POST)).get('self'), POST);
+      assert.deepEqual((await resolve('{{reactions emoji=👍}}', 'g1', POST)).get('self'), {
+        taskId: POST,
+      });
     });
 
     it('keeps what was found on save, so renaming the other post breaks nothing', async () => {
       rows = [trackingRow({ postRef: 'name:old name' })];
       const tokens = parseDynamicTokens('{{reactions post="Old name" emoji=👍}}');
       const sources = await service.sourceMap(POST, 'g1', tokens);
-      assert.equal(sources.get('name:old name'), POST);
+      assert.deepEqual(sources.get('name:old name'), { taskId: POST });
     });
 
     it('shows nobody for a tag that points nowhere when posting', async () => {
@@ -155,24 +246,29 @@ describe('TrackingService', () => {
   describe('saving', () => {
     const sync = (text: string, people?: Map<string, any>) => {
       const tokens = parseDynamicTokens(text);
-      return service.syncTracking(POST, tokens, new Map(tokens.map((t) => [t.ref, POST])), people);
+      return service.syncTracking(
+        POST,
+        tokens,
+        new Map(tokens.map((t) => [t.ref, { taskId: POST }])),
+        people,
+      );
     };
 
     it('adds a row per tag, and removes rows whose tag is gone', async () => {
       rows = [trackingRow({ id: 'old', emoji: '🔥' })];
-      await sync(`{{reactions post="${POST}" emoji=👍 show=names}}`);
+      await sync(`{{reactions post="Raid signup" emoji=👍 show=names}}`);
       assert.deepEqual(deletedRows, ['old']);
       assert.deepEqual(
         created.map((c) => [c.taskId, c.sourceTaskId, c.postRef, c.emoji, c.type]),
-        [[POST, POST, `id:${POST}`, '👍', 'names']],
+        [[POST, POST, 'name:raid signup', '👍', 'names']],
       );
     });
 
     it('keeps a row that is still in the text and seeds new rows so nothing looks changed', async () => {
       rows = [trackingRow()];
-      const people = new Map([[`id:${POST}|👍|number`, [ana]]]);
+      const people = new Map([[`name:raid signup|👍|number`, [ana]]]);
       await sync(
-        `{{reactions post="${POST}" emoji=👍 show=names}} {{reactions post="${POST}" emoji=👍 show=number}}`,
+        `{{reactions post="Raid signup" emoji=👍 show=names}} {{reactions post="Raid signup" emoji=👍 show=number}}`,
         people,
       );
       assert.deepEqual(deletedRows, []);
@@ -194,13 +290,18 @@ describe('TrackingService', () => {
 
   describe('reading reactions', () => {
     it('leaves the bot out', async () => {
-      assert.deepEqual(await service.readReactors(tasks[POST], '👍'), [ana, bruno]);
+      assert.deepEqual(await service.readReactors(service.locationOfTask(tasks[POST]), '👍'), [
+        ana,
+        bruno,
+      ]);
     });
 
     it('finds nobody for a post that is not in Discord', async () => {
       tasks[POST].state = {};
-      assert.deepEqual(await service.readReactors(tasks[POST], '👍'), []);
+      assert.deepEqual(await service.readReactors(service.locationOfTask(tasks[POST]), '👍'), []);
       assert.deepEqual(await service.readReactors(null, '👍'), []);
+      tasks[POST].state = { messageId: 'm1', channelId: 'c1', messageDeleted: true };
+      assert.equal(service.locationOfTask(tasks[POST]), null);
     });
 
     it('finds nobody when the message was deleted, but reports other Discord errors', async () => {
@@ -212,9 +313,12 @@ describe('TrackingService', () => {
         '',
         {},
       );
-      assert.deepEqual(await service.readReactors(tasks[POST], '👍'), []);
+      assert.deepEqual(await service.readReactors(service.locationOfTask(tasks[POST]), '👍'), []);
       readFails = new Error('rate limited');
-      await assert.rejects(service.readReactors(tasks[POST], '👍'), /rate limited/);
+      await assert.rejects(
+        service.readReactors(service.locationOfTask(tasks[POST]), '👍'),
+        /rate limited/,
+      );
     });
   });
 
@@ -224,9 +328,15 @@ describe('TrackingService', () => {
         [ana.id]: [{ firstName: 'Merric', lastName: 'Stone' }],
         [bruno.id]: [],
       };
-      const [token] = parseDynamicTokens(`{{reactions post="${POST}" emoji=👍 show=mainNames}}`);
-      const people = await service.fetchPeople('g1', [token], new Map([[token.ref, POST]]));
-      assert.deepEqual(people.get(`id:${POST}|👍|mainNames`), [
+      const [token] = parseDynamicTokens(
+        `{{reactions post="Raid signup" emoji=👍 show=mainNames}}`,
+      );
+      const people = await service.fetchPeople(
+        'g1',
+        [token],
+        new Map([[token.ref, { taskId: POST }]]),
+      );
+      assert.deepEqual(people.get(`name:raid signup|👍|mainNames`), [
         { id: '1', name: 'Ana', mains: ['Merric Stone'] },
         { id: '2', name: 'Bruno', mains: [] },
       ]);
@@ -244,7 +354,8 @@ describe('TrackingService', () => {
     });
 
     it('updates the post when someone gets a main, even if the reactions did not change', async () => {
-      tasks[POST].config.content = `Going: {{reactions post="${POST}" emoji=👍 show=mainNames}}`;
+      tasks[POST].config.content =
+        `Going: {{reactions post="Raid signup" emoji=👍 show=mainNames}}`;
       rows = [trackingRow({ type: 'mainNames' })];
       await service.refreshDue();
       assert.equal(edits[0][2], 'Going: Ana, Bruno');
@@ -257,17 +368,25 @@ describe('TrackingService', () => {
     it('looks main characters up for expressions too', async () => {
       mains = { [ana.id]: [{ firstName: 'Merric', lastName: '' }] };
       const [token] = parseDynamicTokens(
-        `{{reactions post="${POST}" emoji=👍 show="reactions.map(r => r.mainName)"}}`,
+        `{{reactions post="Raid signup" emoji=👍 show="reactions.map(r => r.mainName)"}}`,
       );
-      const people = await service.fetchPeople('g1', [token], new Map([[token.ref, POST]]));
-      assert.deepEqual(people.get(`id:${POST}|👍|custom`)?.[0].mains, ['Merric']);
+      const people = await service.fetchPeople(
+        'g1',
+        [token],
+        new Map([[token.ref, { taskId: POST }]]),
+      );
+      assert.deepEqual(people.get(`name:raid signup|👍|custom`)?.[0].mains, ['Merric']);
     });
 
     it('does not touch the database for plain names', async () => {
       mains = { [ana.id]: [{ firstName: 'Merric', lastName: '' }] };
-      const [token] = parseDynamicTokens(`{{reactions post="${POST}" emoji=👍 show=names}}`);
-      const people = await service.fetchPeople('g1', [token], new Map([[token.ref, POST]]));
-      assert.equal(people.get(`id:${POST}|👍|names`)?.[0].name, 'Ana');
+      const [token] = parseDynamicTokens(`{{reactions post="Raid signup" emoji=👍 show=names}}`);
+      const people = await service.fetchPeople(
+        'g1',
+        [token],
+        new Map([[token.ref, { taskId: POST }]]),
+      );
+      assert.equal(people.get(`name:raid signup|👍|names`)?.[0].name, 'Ana');
     });
   });
 
@@ -276,11 +395,15 @@ describe('TrackingService', () => {
       reactors['raid:123456789012345678'] = [ana];
       for (const written of ['<:raid:123456789012345678>', '<a:raid:123456789012345678>']) {
         const [token] = parseDynamicTokens(
-          `{{reactions post="${POST}" emoji=${written} show=names}}`,
+          `{{reactions post="Raid signup" emoji=${written} show=names}}`,
         );
         assert.equal(token.emoji, 'raid:123456789012345678');
-        const people = await service.fetchPeople('g1', [token], new Map([[token.ref, POST]]));
-        assert.deepEqual(people.get(`id:${POST}|raid:123456789012345678|names`), [ana]);
+        const people = await service.fetchPeople(
+          'g1',
+          [token],
+          new Map([[token.ref, { taskId: POST }]]),
+        );
+        assert.deepEqual(people.get(`name:raid signup|raid:123456789012345678|names`), [ana]);
       }
     });
   });
@@ -327,9 +450,13 @@ describe('TrackingService', () => {
 
     it("shows another post's reactions in this post", async () => {
       const source = '99999999-2222-3333-4444-555555555555';
-      tasks[source] = post({ id: source, state: { messageId: 'm9', channelId: 'c9' } });
-      tasks[POST].config.content = `Signed up: {{reactions post="${source}" emoji=👍 show=number}}`;
-      rows = [trackingRow({ sourceTaskId: source, postRef: `id:${source}`, type: 'number' })];
+      tasks[source] = post({
+        id: source,
+        name: 'Roster',
+        state: { messageId: 'm9', channelId: 'c9' },
+      });
+      tasks[POST].config.content = `Signed up: {{reactions post="Roster" emoji=👍 show=number}}`;
+      rows = [trackingRow({ sourceTaskId: source, postRef: 'name:roster', type: 'number' })];
       await service.refreshDue();
       assert.equal(edits[0][0], 'c1');
       assert.equal(edits[0][2], 'Signed up: 2');

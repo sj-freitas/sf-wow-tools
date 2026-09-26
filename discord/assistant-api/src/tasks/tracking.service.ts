@@ -18,8 +18,23 @@ import { embedsShown, type PostConfig, type PostState } from './post-task';
 
 const isLive = (state: PostState): boolean => Boolean(state.messageId) && !state.messageDeleted;
 
-/** Which post each tag's `ref` stands for. */
-export type SourceMap = Map<string, string>;
+/** A message in Discord: where reactions are read. */
+export interface MessageLocation {
+  channelId: string;
+  messageId: string;
+}
+
+/**
+ * What a tag reads the reactions of: a scheduled post of the bot (whose message is looked up each
+ * time, since it may not be posted yet or be posted again), or any other message by its location.
+ */
+export interface Source {
+  taskId?: string;
+  message?: MessageLocation;
+}
+
+/** Which message each tag's `ref` stands for. */
+export type SourceMap = Map<string, Source>;
 
 /** Who reacted, by tracking key (see `trackingKey`). */
 export type PeopleByKey = Map<string, Reactor[]>;
@@ -40,9 +55,11 @@ export class TrackingService {
   ) {}
 
   /**
-   * Finds the post each token points at: by id, by name (case does not matter) or `self`. Throws
-   * for a post that does not exist in this guild, or a name that two posts share, so a wrong tag is
-   * refused on save. `selfId` is unknown while a post is being created; its own tags wait.
+   * Finds what each token points at: a scheduled post by name (case does not matter), `self`, a
+   * Discord message id (of a message the bot posted), or a message link (any message in one of the
+   * guild's servers that the bot can read). Throws when it cannot be found, is not in this guild,
+   * or a name is shared by two posts, so a wrong tag is refused on save. `selfId` is unknown while
+   * a post is being created; its own tags wait.
    */
   async resolveSources(
     guildId: string,
@@ -53,43 +70,82 @@ export class TrackingService {
     for (const token of tokens) {
       if (sources.has(token.ref)) continue;
       if (token.ref === 'self') {
-        if (selfId) sources.set(token.ref, selfId);
-        continue;
+        if (selfId) sources.set(token.ref, { taskId: selfId });
+      } else if (token.message) {
+        sources.set(token.ref, { message: await this.checkMessage(guildId, token) });
+      } else if (token.ref.startsWith('msgid:')) {
+        sources.set(token.ref, { message: await this.botMessage(guildId, token) });
+      } else {
+        sources.set(token.ref, { taskId: await this.postByName(guildId, token) });
       }
-      if (token.ref.startsWith('id:')) {
-        const id = token.ref.slice(3);
-        const found = await this.prisma.scheduledTask.findFirst({
-          where: { id, guildId },
-          select: { id: true },
-        });
-        if (!found) {
-          throw new BadRequestException(
-            `There is no post with the id ${id} in this guild (copy a post's id from the Posts page).`,
-          );
-        }
-        sources.set(token.ref, id);
-        continue;
-      }
-      const matches = await this.prisma.scheduledTask.findMany({
-        where: { guildId, name: { equals: token.label.trim(), mode: 'insensitive' } },
-        select: { id: true },
-      });
-      if (matches.length === 0) {
-        throw new BadRequestException(`There is no post named "${token.label}" in this guild.`);
-      }
-      if (matches.length > 1) {
-        throw new BadRequestException(
-          `${matches.length} posts are named "${token.label}": rename one, or use its id (Copy ID on the Posts page).`,
-        );
-      }
-      sources.set(token.ref, matches[0].id);
     }
     return sources;
   }
 
+  private async postByName(guildId: string, token: DynamicToken): Promise<string> {
+    const matches = await this.prisma.scheduledTask.findMany({
+      where: { guildId, name: { equals: token.label.trim(), mode: 'insensitive' } },
+      select: { id: true },
+    });
+    if (matches.length === 0) {
+      throw new BadRequestException(
+        `There is no post named "${token.label}" in this guild. To read another message, use its link (right-click → Copy Message Link).`,
+      );
+    }
+    if (matches.length > 1) {
+      throw new BadRequestException(
+        `${matches.length} posts are named "${token.label}": rename one, or use its message link.`,
+      );
+    }
+    return matches[0].id;
+  }
+
+  /** A bare message id only says which message, not where: it has to be one the bot posted. */
+  private async botMessage(guildId: string, token: DynamicToken): Promise<MessageLocation> {
+    const messageId = token.ref.slice('msgid:'.length);
+    const task = await this.prisma.scheduledTask.findFirst({
+      where: { guildId, state: { path: ['messageId'], equals: messageId } },
+    });
+    const state = task ? (task.state as PostState) : {};
+    if (!task || !state.channelId) {
+      throw new BadRequestException(
+        `${token.label} is not a message this bot posted. For any other message, use its link (right-click → Copy Message Link).`,
+      );
+    }
+    return { channelId: state.channelId, messageId };
+  }
+
+  /** A message link is accepted when its server belongs to this guild and the bot can read it. */
+  private async checkMessage(guildId: string, token: DynamicToken): Promise<MessageLocation> {
+    const link = token.message;
+    if (!link) throw new Error('not a message link');
+    const server = await this.prisma.discordServer.findFirst({
+      where: { guildId, discordId: link.serverId },
+      select: { id: true },
+    });
+    if (!server) {
+      throw new BadRequestException(
+        `${token.label} is in a server that is not part of this guild, so its reactions cannot be shown here.`,
+      );
+    }
+    try {
+      // The channel must really be in that server (a link can be edited by hand).
+      if ((await this.bot.getChannelServerId(link.channelId)) !== link.serverId) {
+        throw new BadRequestException(`${token.label} does not point at a channel of that server.`);
+      }
+      await this.bot.assertCanReadMessage(link.channelId, link.messageId);
+    } catch (error) {
+      if (error instanceof BadRequestException) throw error;
+      throw new BadRequestException(
+        `The bot cannot read ${token.label} (${describeDiscordError(error)}). It needs to see the channel and read its history.`,
+      );
+    }
+    return { channelId: link.channelId, messageId: link.messageId };
+  }
+
   /**
-   * The posts a saved post's tags point at, for the worker and for posting: what was found when
-   * the post was saved (so renaming the other post does not break this one), else looked up now.
+   * What a saved post's tags point at, for the worker and for posting: what was found when the
+   * post was saved (so renaming another post does not break this one), else looked up now.
    */
   async sourceMap(
     taskId: string,
@@ -98,19 +154,37 @@ export class TrackingService {
   ): Promise<SourceMap> {
     const sources: SourceMap = new Map();
     for (const row of await this.prisma.postTracking.findMany({ where: { taskId } })) {
-      sources.set(row.postRef, row.sourceTaskId);
+      sources.set(row.postRef, sourceOfRow(row));
     }
     const missing = tokens.filter((token) => !sources.has(token.ref));
     if (missing.length > 0) {
       try {
-        for (const [ref, id] of await this.resolveSources(guildId, missing, taskId)) {
-          sources.set(ref, id);
+        for (const [ref, source] of await this.resolveSources(guildId, missing, taskId)) {
+          sources.set(ref, source);
         }
       } catch {
         // A tag that points nowhere shows as nobody.
       }
     }
     return sources;
+  }
+
+  /** Where a source's message is in Discord right now, or null (a post that is not up). */
+  async locate(source: Source | undefined): Promise<MessageLocation | null> {
+    if (!source) return null;
+    if (source.taskId) {
+      const task = await this.prisma.scheduledTask.findUnique({ where: { id: source.taskId } });
+      return this.locationOfTask(task);
+    }
+    return source.message ?? null;
+  }
+
+  /** The message a scheduled post has in Discord, if it is up. */
+  locationOfTask(task: ScheduledTask | null | undefined): MessageLocation | null {
+    const state = task ? (task.state as PostState) : {};
+    return isLive(state) && state.channelId && state.messageId
+      ? { channelId: state.channelId, messageId: state.messageId }
+      : null;
   }
 
   /**
@@ -123,18 +197,13 @@ export class TrackingService {
     sources: SourceMap,
   ): Promise<PeopleByKey> {
     const people: PeopleByKey = new Map();
-    const posts = new Map<string, ScheduledTask | null>();
     for (const token of tokens) {
       const key = trackingKey(token);
       if (people.has(key)) continue;
-      const sourceId = sources.get(token.ref);
-      if (sourceId && !posts.has(sourceId)) {
-        posts.set(
-          sourceId,
-          await this.prisma.scheduledTask.findUnique({ where: { id: sourceId } }),
-        );
-      }
-      const reactors = await this.readReactors(sourceId ? posts.get(sourceId) : null, token.emoji);
+      const reactors = await this.readReactors(
+        await this.locate(sources.get(token.ref)),
+        token.emoji,
+      );
       people.set(
         key,
         needsMains(token.format) ? await this.withMains(guildId, reactors) : reactors,
@@ -143,13 +212,12 @@ export class TrackingService {
     return people;
   }
 
-  /** Who reacted to a post's message with an emoji, without the bot itself. */
-  async readReactors(source: ScheduledTask | null | undefined, emoji: string): Promise<Reactor[]> {
-    const state = source ? (source.state as PostState) : {};
-    if (!source || !isLive(state) || !state.channelId || !state.messageId) return [];
+  /** Who reacted to a message with an emoji, without the bot itself. */
+  async readReactors(location: MessageLocation | null, emoji: string): Promise<Reactor[]> {
+    if (!location) return [];
     try {
       const [users, botId] = await Promise.all([
-        this.bot.getReactionUsers(state.channelId, state.messageId, emoji),
+        this.bot.getReactionUsers(location.channelId, location.messageId, emoji),
         this.bot.getBotUserId(),
       ]);
       return users.filter((user) => user.id !== botId);
@@ -210,15 +278,20 @@ export class TrackingService {
       await this.prisma.postTracking.deleteMany({ where: { id: { in: stale.map((r) => r.id) } } });
     }
     for (const [key, token] of wanted) {
-      const sourceId = sources.get(token.ref);
-      if (!sourceId) continue;
+      const source = sources.get(token.ref);
+      if (!source) continue;
+      const target = sourceColumns(source);
       const existing = have.get(key);
       if (existing) {
-        // The tag may now point at another post (the name was moved): follow it.
-        if (existing.sourceTaskId !== sourceId) {
+        // The tag may now point somewhere else (the name was moved to another post): follow it.
+        if (
+          existing.sourceTaskId !== target.sourceTaskId ||
+          existing.sourceChannelId !== target.sourceChannelId ||
+          existing.sourceMessageId !== target.sourceMessageId
+        ) {
           await this.prisma.postTracking.update({
             where: { id: existing.id },
-            data: { sourceTaskId: sourceId, lastHash: null },
+            data: { ...target, lastHash: null },
           });
         }
         continue;
@@ -227,7 +300,7 @@ export class TrackingService {
       await this.prisma.postTracking.create({
         data: {
           taskId,
-          sourceTaskId: sourceId,
+          ...target,
           postRef: token.ref,
           emoji: token.emoji,
           type: token.format,
@@ -255,7 +328,12 @@ export class TrackingService {
       for (const row of rows) {
         if (!isLive(row.task.state as PostState)) continue;
         try {
-          const read = await this.readReactors(row.sourceTask, row.emoji);
+          const read = await this.readReactors(
+            row.sourceTask
+              ? this.locationOfTask(row.sourceTask)
+              : (sourceOfRow(row).message ?? null),
+            row.emoji,
+          );
           // Main characters are part of what is compared, so a new main updates the post too.
           const reactors = needsMains(row.type as ReactorFormat)
             ? await this.withMains(row.task.guildId, read)
@@ -336,3 +414,26 @@ export class TrackingService {
 
 /** Discord's "Unknown Emoji" error code. */
 const UNKNOWN_EMOJI = 10014;
+
+/** What a tracking row points at. */
+function sourceOfRow(row: {
+  sourceTaskId: string | null;
+  sourceChannelId: string | null;
+  sourceMessageId: string | null;
+}): Source {
+  return {
+    ...(row.sourceTaskId ? { taskId: row.sourceTaskId } : {}),
+    ...(row.sourceChannelId && row.sourceMessageId
+      ? { message: { channelId: row.sourceChannelId, messageId: row.sourceMessageId } }
+      : {}),
+  };
+}
+
+/** The columns of a tracking row that say where its reactions are read. */
+function sourceColumns(source: Source) {
+  return {
+    sourceTaskId: source.taskId ?? null,
+    sourceChannelId: source.message?.channelId ?? null,
+    sourceMessageId: source.message?.messageId ?? null,
+  };
+}

@@ -154,8 +154,12 @@ export function PostTaskForm({ guild, channels, editing, timezone, onSaved, onCa
           </p>
           <ul>
             <li>
-              <code>post</code>: the name of a scheduled post (case does not matter), or its id (
-              <strong>Copy ID</strong> on the Posts page). Leave it out for this post.
+              <code>post</code>: which message to read, in any of these ways. The{' '}
+              <strong>name</strong> of a scheduled post (case does not matter). The{' '}
+              <strong>link</strong> of any message in this guild's servers: right-click it in
+              Discord → Copy Message Link (or <strong>Copy link</strong> on a live post on the Posts
+              page); the bot must be able to see that channel. Or the message <strong>id</strong> of
+              a post the bot made. Leave it out for this post.
             </li>
             <li>
               <code>emoji</code>: 👍, or a server emoji as <code>&lt;:name:id&gt;</code> (type{' '}

@@ -309,6 +309,17 @@ export class DiscordBotService {
     return users.slice(0, max);
   }
 
+  /** The Discord server a channel is in (null for a DM). */
+  async getChannelServerId(channelId: string): Promise<string | null> {
+    const channel = (await this.rest.get(Routes.channel(channelId))) as APIChannel;
+    return 'guild_id' in channel && channel.guild_id ? channel.guild_id : null;
+  }
+
+  /** Throws (a Discord error) unless the bot can read that message. */
+  async assertCanReadMessage(channelId: string, messageId: string): Promise<void> {
+    await this.rest.get(Routes.channelMessage(channelId, messageId));
+  }
+
   /** Role ids of a member of the server; an empty list if they are not in it. */
   async fetchMemberRoles(serverId: string, userId: string): Promise<string[]> {
     try {

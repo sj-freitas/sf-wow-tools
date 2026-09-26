@@ -421,7 +421,7 @@ export class TasksService {
     const normalized = typeof emoji === 'string' ? normalizeEmoji(emoji) : null;
     if (!normalized) throw new BadRequestException('Say which emoji (custom ones as name:id).');
     try {
-      return await this.tracking.readReactors(task, normalized);
+      return await this.tracking.readReactors(this.tracking.locationOfTask(task), normalized);
     } catch (error) {
       throw new BadRequestException(describeDiscordError(error));
     }

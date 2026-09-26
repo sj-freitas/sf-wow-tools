@@ -140,6 +140,7 @@ describe('TasksService', () => {
       syncTracking: async (_id: string, tokens: unknown[]) => {
         trackingCalls.push(['sync', tokens.length]);
       },
+      locationOfTask: () => ({ channelId: 'c', messageId: 'm' }),
       readReactors: async () => [{ id: '1', name: 'Ana' }],
     } as unknown as TrackingService;
     service = new TasksService(prisma, bot, tracking);
@@ -270,8 +271,7 @@ describe('TasksService', () => {
   });
 
   describe('dynamic reactions in the text', () => {
-    const SOURCE = '11111111-2222-3333-4444-555555555555';
-    const withTag = `Going: {{reactions post="${SOURCE}" emoji=👍 show=names}}`;
+    const withTag = `Going: {{reactions post="Raid signup" emoji=👍 show=names}}`;
 
     it('keeps tracking rows in line with the text when a post is created', async () => {
       await service.create('g', 'u', { ...validInput, content: withTag });
@@ -299,7 +299,7 @@ describe('TasksService', () => {
     });
 
     it('edits a live post with the people filled in, quietly, and syncs the rows', async () => {
-      people = new Map([[`id:${SOURCE}|👍|names`, [{ id: '1', name: 'Ana' }]]]);
+      people = new Map([[`name:raid signup|👍|names`, [{ id: '1', name: 'Ana' }]]]);
       await service.update('t1', { content: withTag });
       assert.deepEqual(edits, [
         [CHANNEL, 'm1', 'Going: Ana', { suppressEmbeds: false, quiet: true }],

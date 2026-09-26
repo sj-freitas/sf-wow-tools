@@ -23,8 +23,8 @@ describe('parseDynamicTokens', () => {
     assert.deepEqual(
       tokens.map((t) => [t.ref, t.emoji, t.format]),
       [
-        [`id:${POST}`, '👍', 'names'],
-        [`id:${OTHER}`, 'raid:123456789012345678', 'number'],
+        [`name:${POST}`, '👍', 'names'],
+        [`name:${OTHER}`, 'raid:123456789012345678', 'number'],
       ],
     );
     assert.equal(tokens[0].raw, `{{reactions post="${POST}" emoji=👍 show=names}}`);
@@ -68,12 +68,35 @@ describe('the {{reactions …}} syntax', () => {
     assert.deepEqual([b.ref, b.format], ['name:roster', 'number']);
   });
 
-  it('points at a post by id, or at the post itself when post is left out', () => {
-    const [byId, self] = parseDynamicTokens(
-      `{{reactions post="${POST}" emoji=👍}} {{ reactions emoji=🔥 show=tags }}`,
-    );
-    assert.equal(byId.ref, `id:${POST}`);
+  it('points at the post itself when post is left out', () => {
+    const [self] = parseDynamicTokens('{{ reactions emoji=🔥 show=tags }}');
     assert.deepEqual([self.ref, self.format], ['self', 'tags']);
+  });
+
+  it('points at a Discord message by its id (a message the bot posted)', () => {
+    const [token] = parseDynamicTokens('{{reactions post=900000000000000001 emoji=👍}}');
+    assert.equal(token.ref, 'msgid:900000000000000001');
+    assert.equal(token.message, undefined);
+  });
+
+  it('points at any Discord message by its link', () => {
+    for (const host of ['discord.com', 'ptb.discord.com', 'canary.discord.com', 'discordapp.com']) {
+      const link = `https://${host}/channels/100000000000000001/800000000000000002/900000000000000003`;
+      const [token] = parseDynamicTokens(`{{reactions post="${link}" emoji=👍}}`);
+      assert.equal(token.ref, 'msg:800000000000000002/900000000000000003', host);
+      assert.deepEqual(token.message, {
+        serverId: '100000000000000001',
+        channelId: '800000000000000002',
+        messageId: '900000000000000003',
+      });
+    }
+  });
+
+  it('treats a link to something else as a post name', () => {
+    const [token] = parseDynamicTokens(
+      '{{reactions post="https://example.com/channels/1/2/3" emoji=👍}}',
+    );
+    assert.match(token.ref, /^name:/);
   });
 
   it('shows names unless told otherwise, and accepts any letter case for the format', () => {

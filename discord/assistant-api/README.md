@@ -244,8 +244,14 @@ modal; a modal handler answers with a private message. Unknown or failing button
 A post's text can show who reacted to a post:
 `{{reactions post="Raid signup" emoji=👍 show=mainNames}}`.
 
-- **`post`** is the name of a scheduled post of the guild (case does not matter; it must be unique, else
-  use the id) or its id (**Copy ID** on the Posts page). Leave it out for the post the text is in.
+- **`post`** says which message to read: the **name** of a scheduled post of the guild (case does not
+  matter; it must be unique), the **link** of any message in one of the guild's servers (right-click →
+  Copy Message Link, or **Copy link** on a live post), or the message **id** of a post the bot made (a
+  bare id has no channel, so it only works for the bot's own posts). Leave it out for the post the text
+  is in. A link is refused unless its server belongs to the guild, its channel really is in that server
+  and the bot can read the message (View Channel + Read Message History, which the invite link grants).
+  So a post can show the reactions of messages nobody scheduled here, e.g. a Raid-Helper signup or an
+  officer's own message.
   **`emoji`** is 👍 or a server emoji `<:name:id>` (or `<a:name:id>`; type `\:emoji:` in Discord to get
   it). **`show`** is optional (default `names`): `names` (`Ana, Bruno`, Discord display names),
   `mainNames` (their main characters in the guild, `Merric Stone / Olga` if they have several, else their
@@ -266,7 +272,7 @@ A post's text can show who reacted to a post:
   changed (the hash), so the cost is small.
 - **Tracking:** saving a post keeps one `post_tracking` row per tag in line with its text (rows appear,
   stay or go with the tags; deleting a post removes them). A row remembers how the text pointed at the
-  post (`post_ref`) and which post that was when saved, so renaming the other post does not break a post
+  message (`post_ref`) and which one that was when saved (a scheduled post, or the channel and message ids), so renaming the other post does not break a post
   that is already up; saving the text again looks the name up afresh. The post's text is the _template_;
   what is in Discord is kept in the task state (`renderedContent`).
 - **Refreshing:** every scheduler tick (a minute) the worker reads, for each tracked post that is in
