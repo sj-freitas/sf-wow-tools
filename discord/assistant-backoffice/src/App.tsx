@@ -4,6 +4,7 @@ import { fetchCurrentUser, fetchGuilds, fetchSetupInfo, logout, takeReturnPath }
 import { GuildShell } from './GuildShell';
 import { UserMenu } from './UserMenu';
 import { LoginScreen } from './LoginScreen';
+import { Spinner } from './Loading';
 import type { Guild, SetupInfo, User } from './types';
 
 const ROLE_REFRESH_MS = 60_000;
@@ -61,7 +62,7 @@ export function App() {
   }, [signedIn, reloadGuilds]);
 
   if (auth.status === 'loading') {
-    return <p className="status">Loading…</p>;
+    return <Spinner />;
   }
 
   if (auth.status === 'error') {

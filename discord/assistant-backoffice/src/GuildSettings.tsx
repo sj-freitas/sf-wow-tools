@@ -23,6 +23,7 @@ import { factionsOf, gameOf, regionsOf, serversFor, useGames } from './game';
 import { RegionSelect } from './RegionSelect';
 import { WelcomeEditor } from './WelcomeEditor';
 import { useConfirm } from './useConfirm';
+import { InlineSpinner } from './Loading';
 import {
   type EligibleServers,
   type Faction,
@@ -531,7 +532,7 @@ function WelcomeSection({ guild }: { guild: Guild }) {
       ) : error ? (
         <p className="status-error">{error}</p>
       ) : !home ? (
-        <p className="muted">Loading…</p>
+        <InlineSpinner className="muted" />
       ) : (
         <>
           <WelcomeEditor

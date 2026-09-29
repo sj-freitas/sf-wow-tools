@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { fetchReactionUsers, fetchTaskReactions } from './api';
 import type { Reaction } from './types';
+import { InlineSpinner } from './Loading';
 
 const REFRESH_MS = 10_000;
 
@@ -86,7 +87,7 @@ function Reactors({
       {error ? (
         <span className="status-error">{error}</span>
       ) : !people ? (
-        <span className="muted">Loading…</span>
+        <InlineSpinner className="muted" />
       ) : people.length === 0 ? (
         <span className="muted">Nobody yet.</span>
       ) : (

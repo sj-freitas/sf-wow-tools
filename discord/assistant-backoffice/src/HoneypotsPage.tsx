@@ -7,6 +7,7 @@ import type { Guild, Honeypot } from './types';
 import { useChannels } from './useChannels';
 import { useConfirm } from './useConfirm';
 import { guildPath } from './guildPath';
+import { Spinner } from './Loading';
 
 interface Props {
   guild: Guild;
@@ -65,7 +66,7 @@ export function HoneypotsPage({ guild, timezone }: Props) {
       )}
 
       {honeypots === null ? (
-        <p className="empty">Loading…</p>
+        <Spinner />
       ) : honeypots.length === 0 ? (
         <p className="empty">No honeypot channels yet.</p>
       ) : (

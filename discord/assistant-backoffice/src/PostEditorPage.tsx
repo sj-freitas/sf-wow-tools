@@ -6,6 +6,7 @@ import type { Guild, ScheduledPost } from './types';
 import { useChannels } from './useChannels';
 import { useReturnTo } from './useReturnTo';
 import { guildPath } from './guildPath';
+import { Spinner } from './Loading';
 
 interface Props {
   guild: Guild;
@@ -42,7 +43,7 @@ export function PostEditorPage({ guild, timezone }: Props) {
       );
     }
     if (error) return <p className="status-error">{error}</p>;
-    if (!post) return <p className="empty">Loading…</p>;
+    if (!post) return <Spinner />;
     return (
       <PostTaskForm
         guild={guild}

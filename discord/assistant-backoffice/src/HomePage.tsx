@@ -6,6 +6,7 @@ import { MarkdownView } from './MarkdownView';
 import { WelcomeEditor } from './WelcomeEditor';
 import { formatWhen } from './time';
 import type { Guild, GuildHome } from './types';
+import { Spinner } from './Loading';
 
 interface Props {
   guild: Guild;
@@ -49,7 +50,7 @@ export function HomePage({ guild, timezone }: Props) {
       {error ? (
         <p className="status-error">{error}</p>
       ) : !home ? (
-        <p className="empty">Loading…</p>
+        <Spinner />
       ) : home.markdown ? (
         <MarkdownView text={home.markdown} />
       ) : (
@@ -69,7 +70,7 @@ export function HomeEditPage({ guild }: { guild: Guild }) {
   const { home, error } = useHome(guild.id);
 
   if (error) return <p className="status-error tasks">{error}</p>;
-  if (!home) return <p className="empty">Loading…</p>;
+  if (!home) return <Spinner />;
 
   return (
     <div className="tasks">

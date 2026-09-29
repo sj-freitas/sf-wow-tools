@@ -8,6 +8,7 @@ import { useChannels } from './useChannels';
 import { useConfirm } from './useConfirm';
 import { useCurrentUrl } from './useReturnTo';
 import { guildPath } from './guildPath';
+import { Spinner } from './Loading';
 
 interface Props {
   guild: Guild;
@@ -203,7 +204,7 @@ export function PostsPage({ guild, timezone }: Props) {
       )}
 
       {!data ? (
-        <p className="empty">Loading…</p>
+        <Spinner />
       ) : data.items.length === 0 ? (
         <p className="empty">
           {query ? `No posts match "${query}".` : 'No posts yet. Create one with "+ New post".'}

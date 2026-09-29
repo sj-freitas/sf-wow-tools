@@ -14,6 +14,7 @@ import { formatWhen, timeAgo } from './time';
 import type { Conversation, ConversationsPage, Guild } from './types';
 import { useCurrentUrl, useReturnTo } from './useReturnTo';
 import { guildPath } from './guildPath';
+import { Spinner } from './Loading';
 
 interface Props {
   guild: Guild;
@@ -150,7 +151,7 @@ export function OfficerRequestsPage({ guild, timezone }: Props) {
       {error && <p className="status-error">{error}</p>}
 
       {!data ? (
-        <p className="empty">Loading…</p>
+        <Spinner />
       ) : data.items.length === 0 ? (
         <p className="empty">
           {query ? `No conversations match "${query}".` : 'No one has written to the officers yet.'}
@@ -319,7 +320,7 @@ export function ConversationPage({ guild, timezone }: Props) {
       {error && !conversation ? (
         <p className="status-error">{error}</p>
       ) : !conversation ? (
-        <p className="empty">Loading…</p>
+        <Spinner />
       ) : (
         <>
           <div className="tasks-head">

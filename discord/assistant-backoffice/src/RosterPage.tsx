@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { deleteCharacter, fetchPlayers, fetchRanks, refreshPlayerNames } from './api';
 import { CharacterForm } from './CharacterForm';
 import { CopyableName } from './CopyableName';
+import { SkeletonRows, Spinner } from './Loading';
 import { subscribeEvents } from './events';
 import { playerLabel } from './format';
 import { ROLE_LABELS, type Guild, type Player, type Ranks, type User } from './types';
@@ -72,14 +73,11 @@ export function RosterPage({ guild, currentUser }: Props) {
       </div>
     );
   }
-  if (!players) return <p className="status">Loading players…</p>;
-
-  const rows = players.flatMap((player) =>
-    player.characters.map((character) => ({ player, character })),
-  );
-  const missingNames = players.some(
-    (player) => !player.discordUsername && !player.discordDisplayName,
-  );
+  const rows = players
+    ? players.flatMap((player) => player.characters.map((character) => ({ player, character })))
+    : [];
+  const missingNames =
+    players?.some((player) => !player.discordUsername && !player.discordDisplayName) ?? false;
   const canEditRow = (player: Player) =>
     guild.isOfficer || player.discordUserId === currentUser.discordId;
 
@@ -119,7 +117,26 @@ export function RosterPage({ guild, currentUser }: Props) {
         </div>
       )}
 
-      {rows.length === 0 ? (
+      {!players ? (
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Character</th>
+                <th>Class</th>
+                <th>Roles</th>
+                <th>Level</th>
+                <th>Discord user</th>
+                <th>Rank</th>
+                <th />
+              </tr>
+            </thead>
+            <tbody>
+              <SkeletonRows columns={7} />
+            </tbody>
+          </table>
+        </div>
+      ) : rows.length === 0 ? (
         <p className="empty">No characters registered yet.</p>
       ) : (
         <div className="table-wrap">
@@ -214,7 +231,7 @@ export function CharacterEditorPage({ guild, currentUser }: Props) {
       );
     }
     if (error) return <p className="status-error">{error}</p>;
-    if (!players) return <p className="empty">Loading…</p>;
+    if (!players) return <Spinner />;
     if (!found) return <p className="empty">That character was not found in this guild.</p>;
     const mayEdit = guild.isOfficer || found.player.discordUserId === currentUser.discordId;
     if (!mayEdit) return <p className="empty">You can only edit your own characters.</p>;
