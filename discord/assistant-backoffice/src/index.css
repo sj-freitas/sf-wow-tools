@@ -250,6 +250,11 @@ tbody tr:last-child td {
 .cell-actions {
   text-align: right;
 }
+/* A row mid-delete: dimmed and unclickable until it either disappears or the error shows. */
+.row-pending {
+  opacity: 0.5;
+  pointer-events: none;
+}
 .muted {
   color: var(--muted);
 }

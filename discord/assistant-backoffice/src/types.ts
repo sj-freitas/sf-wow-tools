@@ -4,6 +4,8 @@ export type Role = 'HEALER' | 'TANK' | 'MELEE_DPS' | 'RANGED_DPS';
 export interface Character {
   id: string;
   class: string;
+  /** Empty when unknown (added before this was collected, or from Discord). */
+  race: string;
   roles: Role[];
   firstName: string;
   lastName: string;
@@ -170,6 +172,8 @@ export interface CharacterPatch {
   /** `Name` or `Name-Lastname`. */
   name?: string;
   class?: string;
+  /** Empty means unknown. */
+  race?: string;
   roles?: Role[];
   isMain?: boolean;
   level?: number;
@@ -183,6 +187,8 @@ export interface NewCharacterInput {
   /** `Name` or `Name-Lastname`. */
   name: string;
   class: string;
+  /** Empty means unknown. */
+  race: string;
   roles: Role[];
   isMain: boolean;
   level?: number;

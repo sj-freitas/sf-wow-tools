@@ -1,8 +1,15 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma, type Role } from '@prisma/client';
+import { Prisma, type Faction, type Role } from '@prisma/client';
 import { DiscordOAuthService } from '../auth/discord-oauth.service';
 import { PrismaService } from '../database/prisma.service';
-import { getGame, lastNameRequiredMessage, requiresLastName, rolesOfClass } from '../game/games';
+import {
+  classesOfRace,
+  getGame,
+  lastNameRequiredMessage,
+  raceInFaction,
+  requiresLastName,
+  rolesOfClass,
+} from '../game/games';
 import { ROLE_LABELS } from './role-labels';
 import { RealtimeService } from '../realtime/realtime.service';
 import type { CharacterName } from './character-name';
@@ -19,18 +26,21 @@ export interface CharacterOwner extends DiscordNames {
 
 export interface NewCharacter extends CharacterName {
   class: string;
+  /** Empty means unknown (a path that does not collect it, like the Discord command). */
+  race: string;
   roles: Role[];
   isMain: boolean;
   level?: number;
 }
 
 export type CharacterUpdate = Partial<
-  Pick<NewCharacter, 'class' | 'roles' | 'isMain' | 'level' | 'firstName' | 'lastName'>
+  Pick<NewCharacter, 'class' | 'race' | 'roles' | 'isMain' | 'level' | 'firstName' | 'lastName'>
 >;
 
 interface GuildRef {
   id: string;
   gameVersion: string;
+  faction: Faction;
 }
 
 export type AddResult =
@@ -39,7 +49,9 @@ export type AddResult =
   | 'no-guild'
   | 'last-name-required'
   | 'unknown-class'
-  | 'role-not-for-class';
+  | 'role-not-for-class'
+  | 'unknown-race'
+  | 'race-not-for-class';
 
 /**
  * The roles that do not fit a class in a version (empty when they all do, or when the version says
@@ -59,6 +71,7 @@ const classInGame = (gameVersion: string, characterClass: string): boolean => {
 
 export interface CharacterSummary extends CharacterName {
   class: string;
+  race: string;
   roles: Role[];
   isMain: boolean;
   level: number;
@@ -93,7 +106,7 @@ export class CharactersService {
   ): Promise<AddResult> {
     const guild = await this.prisma.guild.findUnique({
       where: { id: guildId },
-      select: { id: true, gameVersion: true },
+      select: { id: true, gameVersion: true, faction: true },
     });
     if (!guild) {
       return 'no-guild';
@@ -140,20 +153,22 @@ export class CharactersService {
       patch.firstName !== undefined ||
       patch.lastName !== undefined ||
       patch.class !== undefined ||
+      patch.race !== undefined ||
       patch.roles !== undefined
     ) {
       const character = await this.prisma.character.findUnique({
         where: { id: characterId },
         select: {
           class: true,
+          race: true,
           roles: true,
-          player: { select: { guild: { select: { gameVersion: true } } } },
+          player: { select: { guild: { select: { gameVersion: true, faction: true } } } },
         },
       });
       if (!character) {
         throw new NotFoundException('Character not found');
       }
-      const { gameVersion } = character.player.guild;
+      const { gameVersion, faction } = character.player.guild;
       if (
         (patch.firstName !== undefined || patch.lastName !== undefined) &&
         requiresLastName(gameVersion) &&
@@ -164,6 +179,13 @@ export class CharactersService {
       if (patch.class !== undefined && !classInGame(gameVersion, patch.class)) {
         throw new BadRequestException(`${gameVersion} has no ${patch.class} class.`);
       }
+      if (
+        patch.race !== undefined &&
+        patch.race !== '' &&
+        !raceInFaction(gameVersion, faction, patch.race)
+      ) {
+        throw new BadRequestException(`${gameVersion} has no ${patch.race} race for this faction.`);
+      }
       // Changing either the class or the roles: the roles must still fit the class.
       if (patch.class !== undefined || patch.roles !== undefined) {
         const characterClass = patch.class ?? character.class;
@@ -171,6 +193,17 @@ export class CharactersService {
         if (misfits.length > 0) {
           throw new BadRequestException(
             `A ${characterClass} in ${gameVersion} can be ${rolesOfClass(gameVersion, characterClass).join(', ')}, not ${misfits.map((role) => ROLE_LABELS[role]).join(', ')}.`,
+          );
+        }
+      }
+      // Changing either the race or the class, with a known race: the class must still fit it.
+      if (patch.race !== undefined || patch.class !== undefined) {
+        const race = patch.race ?? character.race;
+        const characterClass = patch.class ?? character.class;
+        const allowed = race ? classesOfRace(gameVersion, faction, race) : null;
+        if (allowed && !allowed.includes(characterClass)) {
+          throw new BadRequestException(
+            `A ${race} in ${gameVersion} can be ${allowed.join(', ')}, not ${characterClass}.`,
           );
         }
       }
@@ -249,6 +282,13 @@ export class CharactersService {
     if (rolesNotFor(guild.gameVersion, character.class, character.roles).length > 0) {
       return 'role-not-for-class';
     }
+    // Race is free-form and may be empty (a path that does not collect it, like the Discord
+    // command): only check it against the guild's faction when one was given.
+    if (character.race !== '') {
+      if (!raceInFaction(guild.gameVersion, guild.faction, character.race)) return 'unknown-race';
+      const allowed = classesOfRace(guild.gameVersion, guild.faction, character.race);
+      if (allowed && !allowed.includes(character.class)) return 'race-not-for-class';
+    }
 
     const player = await this.prisma.player.upsert({
       where: { guildId_discordUserId: { guildId: guild.id, discordUserId } },
@@ -269,6 +309,7 @@ export class CharactersService {
         data: {
           playerId: player.id,
           class: character.class,
+          race: character.race,
           roles: character.roles,
           firstName: character.firstName,
           lastName: character.lastName,
@@ -299,6 +340,7 @@ export class CharactersService {
         firstName: true,
         lastName: true,
         class: true,
+        race: true,
         roles: true,
         isMain: true,
         level: true,
@@ -331,7 +373,7 @@ export class CharactersService {
   private findGuild(discordServerId: string) {
     return this.prisma.guild.findFirst({
       where: { servers: { some: { discordId: discordServerId } } },
-      select: { id: true, gameVersion: true },
+      select: { id: true, gameVersion: true, faction: true },
     });
   }
 }

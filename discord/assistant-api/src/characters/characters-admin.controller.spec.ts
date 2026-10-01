@@ -11,7 +11,7 @@ type Access = { isAdmin: boolean; isOfficer: boolean } | null;
 const ME = '111111111111111111';
 const OTHER = '222222222222222222';
 const req = { user: { id: 'user-1', discordId: ME, username: 'me' } } as AuthenticatedRequest;
-const body = { name: 'Arthas', class: 'Paladin', roles: ['TANK'] };
+const body = { name: 'Arthas', class: 'Paladin', race: 'Human', roles: ['TANK'] };
 
 describe('CharactersAdminController permissions', () => {
   let access: Access;

@@ -1,5 +1,6 @@
 import { existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
+import type { Faction } from '@prisma/client';
 import type { RegionId } from '../config/regions';
 import { GAME_ROLES, gameConfigProblems, type GameConfig, type GameRole } from './game-config';
 
@@ -68,6 +69,45 @@ export function rolesOfClass(gameVersion: string, characterClass: string): GameR
 /** Whether any version of the game has this class. */
 export const isWowClass = (value: string): boolean =>
   games().some((game) => Object.hasOwn(game.classes, value));
+
+/** A race of a version's faction, and the classes it can be. */
+export interface RaceOption {
+  race: string;
+  classes: string[];
+}
+
+/**
+ * The races of a version's faction, with the classes each can be (empty for a version or faction
+ * we know nothing of, which means nothing is restricted).
+ */
+export function racesOf(gameVersion: string, faction: Faction): RaceOption[] {
+  const factions = getGame(gameVersion)?.factions ?? {};
+  const entry = Object.entries(factions).find(([name]) => name.toUpperCase() === faction);
+  return Object.entries(entry?.[1].races ?? {}).map(([race, { classes }]) => ({
+    race,
+    classes: [...classes],
+  }));
+}
+
+/** Whether a race exists in the guild's faction for this version (a version/faction we know nothing of accepts any). */
+export const raceInFaction = (gameVersion: string, faction: Faction, race: string): boolean => {
+  const races = racesOf(gameVersion, faction);
+  return races.length === 0 || races.some((entry) => entry.race === race);
+};
+
+/**
+ * The classes a race can be, in this version's faction; null when we know nothing of the version
+ * or faction (so any class fits).
+ */
+export function classesOfRace(
+  gameVersion: string,
+  faction: Faction,
+  race: string,
+): string[] | null {
+  const races = racesOf(gameVersion, faction);
+  if (races.length === 0) return null;
+  return races.find((entry) => entry.race === race)?.classes ?? [];
+}
 
 /** The servers a guild of this version can be on in a region (empty when it is not available there). */
 export const serversOf = (gameVersion: string, region: RegionId): readonly string[] =>

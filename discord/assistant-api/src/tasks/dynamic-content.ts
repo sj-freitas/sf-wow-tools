@@ -17,6 +17,8 @@ export interface ReactorCharacter {
   lastName: string;
   isMain: boolean;
   class: string;
+  /** Empty when unknown (added before this was collected, or from Discord). */
+  race: string;
   roles: string[];
   level: number;
 }

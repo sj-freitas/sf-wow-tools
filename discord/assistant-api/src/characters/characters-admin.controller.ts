@@ -86,6 +86,7 @@ export class CharactersAdminController {
       {
         ...name,
         class: fields.class as string,
+        race: fields.race as string,
         roles: fields.roles as Role[],
         isMain: fields.isMain ?? false,
         level: fields.level,
@@ -105,6 +106,12 @@ export class CharactersAdminController {
     }
     if (result === 'unknown-class') {
       throw new BadRequestException("This guild's game version has no such class");
+    }
+    if (result === 'unknown-race') {
+      throw new BadRequestException("That race is not in this guild's faction");
+    }
+    if (result === 'race-not-for-class') {
+      throw new BadRequestException("That race cannot be that class in this guild's game version");
     }
     if (result === 'last-name-required') {
       throw new BadRequestException(
@@ -213,6 +220,12 @@ function parseFields(
     }
     fields.class = body.class;
   } else missing('class');
+
+  // Checked against the guild's game version and faction in the service; empty means unknown.
+  if (body.race !== undefined) {
+    if (typeof body.race !== 'string') throw new BadRequestException('race must be a string');
+    fields.race = body.race;
+  } else missing('race');
 
   if (body.roles !== undefined) {
     const roles = body.roles;

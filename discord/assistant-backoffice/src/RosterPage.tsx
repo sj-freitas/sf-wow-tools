@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { deleteCharacter, fetchPlayers, fetchRanks, refreshPlayerNames } from './api';
 import { CharacterForm } from './CharacterForm';
 import { CopyableName } from './CopyableName';
-import { SkeletonRows, Spinner } from './Loading';
+import { InlineSpinner, SkeletonRows, Spinner } from './Loading';
 import { subscribeEvents } from './events';
 import { playerLabel } from './format';
 import { ROLE_LABELS, type Guild, type Player, type Ranks, type User } from './types';
@@ -21,6 +21,7 @@ export function RosterPage({ guild, currentUser }: Props) {
   const [ranks, setRanks] = useState<Ranks>({});
   const [loadError, setLoadError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
   const here = useCurrentUrl();
 
   const load = useCallback(() => {
@@ -61,6 +62,23 @@ export function RosterPage({ guild, currentUser }: Props) {
     action
       .then(load)
       .catch((err: unknown) => setActionError(err instanceof Error ? err.message : String(err)));
+  };
+
+  // Removing a character takes a moment (it waits on the server): the row stays, dimmed and
+  // disabled, with a spinner on the button, until it either disappears or the error shows.
+  const runDelete = (characterId: string) => {
+    setActionError(null);
+    setDeletingIds((prev) => new Set(prev).add(characterId));
+    deleteCharacter(characterId)
+      .then(load)
+      .catch((err: unknown) => setActionError(err instanceof Error ? err.message : String(err)))
+      .finally(() =>
+        setDeletingIds((prev) => {
+          const next = new Set(prev);
+          next.delete(characterId);
+          return next;
+        }),
+      );
   };
 
   if (loadError && !players) {
@@ -124,6 +142,7 @@ export function RosterPage({ guild, currentUser }: Props) {
               <tr>
                 <th>Character</th>
                 <th>Class</th>
+                <th>Race</th>
                 <th>Roles</th>
                 <th>Level</th>
                 <th>Discord user</th>
@@ -132,7 +151,7 @@ export function RosterPage({ guild, currentUser }: Props) {
               </tr>
             </thead>
             <tbody>
-              <SkeletonRows columns={7} />
+              <SkeletonRows columns={8} />
             </tbody>
           </table>
         </div>
@@ -145,6 +164,7 @@ export function RosterPage({ guild, currentUser }: Props) {
               <tr>
                 <th>Character</th>
                 <th>Class</th>
+                <th>Race</th>
                 <th>Roles</th>
                 <th>Level</th>
                 <th>Discord user</th>
@@ -153,43 +173,52 @@ export function RosterPage({ guild, currentUser }: Props) {
               </tr>
             </thead>
             <tbody>
-              {rows.map(({ player, character }) => (
-                <Fragment key={character.id}>
-                  <tr>
-                    <td>
-                      {`${character.firstName} ${character.lastName}`.trim()}
-                      {character.isMain && <span className="badge badge-main main-pill">Main</span>}
-                    </td>
-                    <td>{character.class}</td>
-                    <td>{character.roles.map((role) => ROLE_LABELS[role]).join(', ')}</td>
-                    <td>{character.level}</td>
-                    <td>
-                      <CopyableName label={playerLabel(player)} id={player.discordUserId} />
-                    </td>
-                    <td>{ranks[player.discordUserId]?.join(', ') ?? '—'}</td>
-                    <td className="cell-actions">
-                      {canEditRow(player) && (
-                        <>
-                          <Link
-                            className="btn btn-sm"
-                            to={guildPath(guild, `roster/edit/${character.id}`)}
-                            state={{ from: here }}
-                          >
-                            Edit
-                          </Link>{' '}
-                          <button
-                            type="button"
-                            className="btn btn-sm btn-danger"
-                            onClick={() => run(deleteCharacter(character.id))}
-                          >
-                            Remove
-                          </button>
-                        </>
-                      )}
-                    </td>
-                  </tr>
-                </Fragment>
-              ))}
+              {rows.map(({ player, character }) => {
+                const deleting = deletingIds.has(character.id);
+                return (
+                  <Fragment key={character.id}>
+                    <tr className={deleting ? 'row-pending' : undefined}>
+                      <td>
+                        {`${character.firstName} ${character.lastName}`.trim()}
+                        {character.isMain && (
+                          <span className="badge badge-main main-pill">Main</span>
+                        )}
+                      </td>
+                      <td>{character.class}</td>
+                      <td>{character.race || '—'}</td>
+                      <td>{character.roles.map((role) => ROLE_LABELS[role]).join(', ')}</td>
+                      <td>{character.level}</td>
+                      <td>
+                        <CopyableName label={playerLabel(player)} id={player.discordUserId} />
+                      </td>
+                      <td>{ranks[player.discordUserId]?.join(', ') ?? '—'}</td>
+                      <td className="cell-actions">
+                        {canEditRow(player) && (
+                          <>
+                            <Link
+                              className="btn btn-sm"
+                              to={guildPath(guild, `roster/edit/${character.id}`)}
+                              state={{ from: here }}
+                              aria-disabled={deleting}
+                              onClick={(e) => deleting && e.preventDefault()}
+                            >
+                              Edit
+                            </Link>{' '}
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-danger"
+                              disabled={deleting}
+                              onClick={() => runDelete(character.id)}
+                            >
+                              {deleting ? <InlineSpinner label="Removing…" /> : 'Remove'}
+                            </button>
+                          </>
+                        )}
+                      </td>
+                    </tr>
+                  </Fragment>
+                );
+              })}
             </tbody>
           </table>
         </div>

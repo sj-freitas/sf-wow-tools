@@ -67,6 +67,7 @@ export class PlayersService {
           select: {
             id: true,
             class: true,
+            race: true,
             roles: true,
             firstName: true,
             lastName: true,

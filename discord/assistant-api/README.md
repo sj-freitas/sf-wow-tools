@@ -262,8 +262,9 @@ A post's text can show who reacted to a message:
   `{ id, tag, name, displayName, characters }`. `tag` is `<@id>`; `name` the Discord name (global display
   name, else username; never the id, which is `id`); `displayName` the nickname they have in the
   message's server, else `name`; `characters` their characters in the guild (an empty array if none),
-  main first, each `{ name, firstName, lastName, isMain, class, roles, level }` (`name` is
-  "Merric Stone", `roles` a list of "Tank", "Healer", "Melee DPS", "Ranged DPS"). Left out, `show` is
+  main first, each `{ name, firstName, lastName, isMain, class, race, roles, level }` (`name` is
+  "Merric Stone", `race` empty when it is unknown, `roles` a list of "Tank", "Healer", "Melee DPS",
+  "Ranged DPS"). Left out, `show` is
   `reactions.map((r) => r.name)`. An array result is joined with ", ". Examples: `reactions.length`,
   `reactions.map(r => r.tag)`, `reactions.map(r => (r.characters.find(c => c.isMain) || r).name)` (the
   main, else the Discord name), `reactions.flatMap(r => r.characters).filter(c => c.roles.includes('Tank')).map(c => c.name)`.
@@ -301,9 +302,9 @@ syntax, same QuickJS sandbox, checked on save with sample data, `⚠️ (…)` i
 Its only option is `show` (left out: every character's name); the list is called `roster`.
 
 - **`roster`** is an array with one entry per character of the guild, sorted by name:
-  `{ name, firstName, lastName, isMain, class, roles, level, armoryLink, discordUser }` (the same character
-  fields as `characters` in a reactions tag, plus `armoryLink`: the character's armory page from the game
-  version's `armoryLink` template, or `null` when the version has none). A character belongs to a player (`players.discord_user_id`), so
+  `{ name, firstName, lastName, isMain, class, race, roles, level, armoryLink, discordUser }` (the same
+  character fields as `characters` in a reactions tag, plus `armoryLink`: the character's armory page from
+  the game version's `armoryLink` template, or `null` when the version has none). A character belongs to a player (`players.discord_user_id`), so
   `discordUser` is the Discord user who plays it: `{ id, tag, name, displayName, roles }` where `tag` is
   `<@id>`, `name` the Discord name we know (else the id), `displayName` their nickname in the guild's main
   server (else `name`) and `roles` the **names of their Discord roles** in that server (`@everyone` left
@@ -564,8 +565,12 @@ guild forms (version, region, **server** from `allowedServers`, faction) and the
 from it: **race → class → roles**, each locked until the one before it is chosen, and each narrowed by it
 (the roles of a class are those of its specializations; changing the race or class keeps what still
 fits and clears the rest). The API also refuses roles a class cannot play in that version, from the bot and
-the backoffice (a class whose specializations are not defined yet allows every role). Race is not stored on
-characters yet.
+the backoffice (a class whose specializations are not defined yet allows every role). The race itself is
+also checked against the guild's faction and the chosen class, the same way, and stored on the character
+(`characters.race`, a column `null`-like empty string); it is empty for characters added before this was
+collected, or from the `/character-add` Discord command, which does not ask for it yet. Editing a
+character whose race is unknown still offers every class, unlocked, instead of forcing a race to be
+picked retroactively.
 
 ## Load from armory (TEST)
 

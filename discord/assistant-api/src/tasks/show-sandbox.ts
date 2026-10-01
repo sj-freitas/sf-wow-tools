@@ -10,6 +10,8 @@ export interface ShowCharacter {
   isMain: boolean;
   /** The class, like "Warrior". */
   class: string;
+  /** The race, like "Human"; empty when unknown (added before this was collected, or from Discord). */
+  race: string;
   /** Their roles: "Tank", "Healer", "Melee DPS" and/or "Ranged DPS". */
   roles: string[];
   level: number;
@@ -122,6 +124,7 @@ const SAMPLE: ShowReactor[] = [
         lastName: 'Stone',
         isMain: true,
         class: 'Warrior',
+        race: 'Human',
         roles: ['Tank'],
         level: 60,
       },
@@ -154,6 +157,7 @@ const SAMPLE_ROSTER: ShowRosterEntry[] = [
     lastName: '',
     isMain: false,
     class: 'Priest',
+    race: 'Human',
     roles: ['Healer'],
     level: 58,
     armoryLink: 'https://armory.example/character/eu/pve/olga',

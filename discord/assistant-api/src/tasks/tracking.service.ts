@@ -304,6 +304,7 @@ export class TrackingService {
             lastName: true,
             isMain: true,
             class: true,
+            race: true,
             roles: true,
             level: true,
           },
@@ -337,6 +338,7 @@ export class TrackingService {
             lastName: true,
             isMain: true,
             class: true,
+            race: true,
             roles: true,
             level: true,
           },
@@ -751,6 +753,7 @@ function toCharacter(character: {
   lastName: string;
   isMain: boolean;
   class: string;
+  race: string;
   roles: Role[];
   level: number;
 }): ReactorCharacter {
@@ -760,6 +763,7 @@ function toCharacter(character: {
     lastName: character.lastName,
     isMain: character.isMain,
     class: character.class,
+    race: character.race,
     roles: character.roles.map((role) => ROLE_LABELS[role]),
     level: character.level,
   };

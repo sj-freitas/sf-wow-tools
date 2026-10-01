@@ -48,6 +48,8 @@ export class CharactersCommand {
     const result = await this.charactersService.add(owner, {
       ...name,
       class: characterClass,
+      // Not collected by this command yet; the backoffice can fill it in later.
+      race: '',
       roles: [role],
       isMain: getBooleanOption(interaction, 'main'),
       level: getNumberOption(interaction, 'level'),

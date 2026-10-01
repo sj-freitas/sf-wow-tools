@@ -12,8 +12,23 @@ const BOT = 'bot-1';
 const character = (
   firstName: string,
   lastName = '',
-  over: Partial<{ isMain: boolean; class: string; roles: string[]; level: number }> = {},
-) => ({ firstName, lastName, isMain: true, class: 'Warrior', roles: ['TANK'], level: 60, ...over });
+  over: Partial<{
+    isMain: boolean;
+    class: string;
+    race: string;
+    roles: string[];
+    level: number;
+  }> = {},
+) => ({
+  firstName,
+  lastName,
+  isMain: true,
+  class: 'Warrior',
+  race: '',
+  roles: ['TANK'],
+  level: 60,
+  ...over,
+});
 
 const ana = { id: '1', name: 'Ana' };
 const bruno = { id: '2', name: 'Bruno' };
@@ -464,6 +479,7 @@ describe('TrackingService', () => {
           lastName: 'Stone',
           isMain: true,
           class: 'Warrior',
+          race: '',
           roles: ['Tank', 'Melee DPS'],
           level: 60,
         },
@@ -685,6 +701,18 @@ describe('TrackingService', () => {
       assert.equal(
         entry.armoryLink,
         'https://classic-armory.org/character/eu/classic-sod/wild-growth/Merric',
+      );
+    });
+
+    it('carries the race through, empty when it is unknown', async () => {
+      roster = {
+        '10': [character('Merric', 'Stone', { race: 'Human' }), character('Zed', '')],
+      };
+      const entries = await service.loadRoster('g1');
+      // Sorted by name: "Merric Stone" before "Zed".
+      assert.deepEqual(
+        entries.map((e) => e.race),
+        ['Human', ''],
       );
     });
 

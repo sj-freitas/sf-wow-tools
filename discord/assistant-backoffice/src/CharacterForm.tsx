@@ -41,11 +41,12 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
   const game = gameOf(games, guild.gameVersion);
   const lastNameRequired = requiresLastName(games, guild.gameVersion);
   // The races of the guild's faction, and which classes each can be. Adding a character starts with
-  // the race: the class is locked until one is chosen, and then offers what that race can be. Race
-  // is not stored yet, so editing a character (whose race is unknown) offers every class.
+  // the race: the class is locked until one is chosen, and then offers what that race can be.
   const races = racesOf(game, guild.faction);
-  const [race, setRace] = useState('');
+  const [race, setRace] = useState(initial?.race ?? '');
   const allClasses = classNamesOf(game);
+  // New characters must have a race before a class; editing one whose race is unknown (added
+  // before this was collected, or from Discord) still offers every class, unlocked.
   const classLocked = !initial && races.length > 0 && race === '';
   const classOptions = classLocked
     ? []
@@ -147,6 +148,7 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
       // The API takes `Name` or `Name-Lastname`.
       name: last === '' ? firstName.trim() : `${firstName.trim()}-${last}`,
       class: characterClass,
+      race,
       roles,
       isMain,
       level: level === '' ? undefined : Number(level),
@@ -248,7 +250,7 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
             Race
             <select value={race} onChange={(e) => changeRace(e.target.value)} required={!initial}>
               <option value="" disabled={!initial}>
-                {initial ? 'Any (show every class)' : 'Choose a race…'}
+                {initial ? 'Unknown (show every class)' : 'Choose a race…'}
               </option>
               {races.map((r) => (
                 <option key={r.race}>{r.race}</option>

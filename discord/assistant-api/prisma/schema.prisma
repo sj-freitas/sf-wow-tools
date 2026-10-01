@@ -158,8 +158,11 @@ model Character {
   playerId  String   @map("player_id") @db.Uuid
   player    Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
   // Faction and realm are the owning guild's (player.guild).
-  // A WoW class name, locked to a known set in code like gameVersion.
+  // A WoW class name, locked to a known set in code like gameVersion. Race is too, but it is
+  // free-form: empty means unknown (characters added before this field existed, or from a path
+  // that does not collect it, like the Discord command).
   class     String
+  race      String   @default("")
   roles     Role[]
   // Both parts have at least 2 characters (CHECK constraints in the migrations). The last
   // name is empty when there is none, and required for game versions that say so.
