@@ -59,6 +59,50 @@
         ]
       },
       {
+        "name": "race",
+        "description": "The character's race",
+        "type": 3,
+        "required": true,
+        "choices": [
+          {
+            "name": "Dwarf",
+            "value": "Dwarf"
+          },
+          {
+            "name": "Gnome",
+            "value": "Gnome"
+          },
+          {
+            "name": "Human",
+            "value": "Human"
+          },
+          {
+            "name": "Night Elf",
+            "value": "Night Elf"
+          },
+          {
+            "name": "Orc",
+            "value": "Orc"
+          },
+          {
+            "name": "Skyborne",
+            "value": "Skyborne"
+          },
+          {
+            "name": "Tauren",
+            "value": "Tauren"
+          },
+          {
+            "name": "Troll",
+            "value": "Troll"
+          },
+          {
+            "name": "Undead",
+            "value": "Undead"
+          }
+        ]
+      },
+      {
         "name": "role",
         "description": "The role this character plays",
         "type": 3,

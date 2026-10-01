@@ -102,6 +102,13 @@ describe('CharactersAdminController permissions', () => {
         BadRequestException,
       );
     });
+
+    it('requires a race, and rejects an empty one', async () => {
+      await assert.rejects(controller.create(req, 'g', { ...body, race: '' }), BadRequestException);
+      const noRace: Record<string, unknown> = { ...body };
+      delete noRace.race;
+      await assert.rejects(controller.create(req, 'g', noRace), BadRequestException);
+    });
   });
 
   describe('editing and removing', () => {

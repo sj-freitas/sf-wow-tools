@@ -26,7 +26,6 @@ export interface CharacterOwner extends DiscordNames {
 
 export interface NewCharacter extends CharacterName {
   class: string;
-  /** Empty means unknown (a path that does not collect it, like the Discord command). */
   race: string;
   roles: Role[];
   isMain: boolean;
@@ -282,8 +281,9 @@ export class CharactersService {
     if (rolesNotFor(guild.gameVersion, character.class, character.roles).length > 0) {
       return 'role-not-for-class';
     }
-    // Race is free-form and may be empty (a path that does not collect it, like the Discord
-    // command): only check it against the guild's faction when one was given.
+    // Race is required (a CHECK on the table refuses an empty one); still guarded here in case
+    // it is ever blank, the same way class and roles fall back to "anything goes" for a version we
+    // know nothing of.
     if (character.race !== '') {
       if (!raceInFaction(guild.gameVersion, guild.faction, character.race)) return 'unknown-race';
       const allowed = classesOfRace(guild.gameVersion, guild.faction, character.race);

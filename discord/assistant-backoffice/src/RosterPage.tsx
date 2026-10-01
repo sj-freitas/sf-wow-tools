@@ -142,7 +142,6 @@ export function RosterPage({ guild, currentUser }: Props) {
               <tr>
                 <th>Character</th>
                 <th>Class</th>
-                <th>Race</th>
                 <th>Roles</th>
                 <th>Level</th>
                 <th>Discord user</th>
@@ -151,7 +150,7 @@ export function RosterPage({ guild, currentUser }: Props) {
               </tr>
             </thead>
             <tbody>
-              <SkeletonRows columns={8} />
+              <SkeletonRows columns={7} />
             </tbody>
           </table>
         </div>
@@ -164,7 +163,6 @@ export function RosterPage({ guild, currentUser }: Props) {
               <tr>
                 <th>Character</th>
                 <th>Class</th>
-                <th>Race</th>
                 <th>Roles</th>
                 <th>Level</th>
                 <th>Discord user</th>
@@ -178,20 +176,21 @@ export function RosterPage({ guild, currentUser }: Props) {
                 return (
                   <Fragment key={character.id}>
                     <tr className={deleting ? 'row-pending' : undefined}>
-                      <td>
+                      <td data-label="Character">
                         {`${character.firstName} ${character.lastName}`.trim()}
                         {character.isMain && (
                           <span className="badge badge-main main-pill">Main</span>
                         )}
                       </td>
-                      <td>{character.class}</td>
-                      <td>{character.race || '—'}</td>
-                      <td>{character.roles.map((role) => ROLE_LABELS[role]).join(', ')}</td>
-                      <td>{character.level}</td>
-                      <td>
+                      <td data-label="Class">{character.class}</td>
+                      <td data-label="Roles">
+                        {character.roles.map((role) => ROLE_LABELS[role]).join(', ')}
+                      </td>
+                      <td data-label="Level">{character.level}</td>
+                      <td data-label="Discord user">
                         <CopyableName label={playerLabel(player)} id={player.discordUserId} />
                       </td>
-                      <td>{ranks[player.discordUserId]?.join(', ') ?? '—'}</td>
+                      <td data-label="Rank">{ranks[player.discordUserId]?.join(', ') ?? '—'}</td>
                       <td className="cell-actions">
                         {canEditRow(player) && (
                           <>

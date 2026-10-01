@@ -221,9 +221,11 @@ function parseFields(
     fields.class = body.class;
   } else missing('class');
 
-  // Checked against the guild's game version and faction in the service; empty means unknown.
+  // Checked against the guild's game version and faction in the service.
   if (body.race !== undefined) {
-    if (typeof body.race !== 'string') throw new BadRequestException('race must be a string');
+    if (typeof body.race !== 'string' || body.race === '') {
+      throw new BadRequestException('race is required');
+    }
     fields.race = body.race;
   } else missing('race');
 

@@ -140,7 +140,7 @@ describe('CharactersService last name rule', () => {
       );
     });
 
-    it('does not check an empty race (unknown, e.g. added from Discord)', async () => {
+    it('does not check an empty race (a CHECK on the table refuses it; this is just a fallback)', async () => {
       assert.equal(await service.add(owner, { ...newCharacter, race: '' }), 'created');
       assert.equal(created[0].race, '');
     });

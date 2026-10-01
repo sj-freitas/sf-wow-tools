@@ -7,7 +7,7 @@ import {
   getStringOption,
   type DiscordInteraction,
 } from '../bot/discord-interaction.types';
-import { isWowClass } from '../game/games';
+import { isWowClass, isWowRace } from '../game/games';
 import { formatCharacterName, parseCharacterName } from './character-name';
 import { CharactersService, type CharacterOwner } from './characters.service';
 import type { Role } from '@prisma/client';
@@ -40,16 +40,16 @@ export class CharactersCommand {
       return BAD_NAME;
     }
     const characterClass = getStringOption(interaction, 'class') ?? '';
+    const race = getStringOption(interaction, 'race') ?? '';
     const role = getStringOption(interaction, 'role') as Role;
-    if (!isWowClass(characterClass) || !(role in ROLE_LABELS)) {
-      return 'Unknown class or role.';
+    if (!isWowClass(characterClass) || !isWowRace(race) || !(role in ROLE_LABELS)) {
+      return 'Unknown class, race or role.';
     }
 
     const result = await this.charactersService.add(owner, {
       ...name,
       class: characterClass,
-      // Not collected by this command yet; the backoffice can fill it in later.
-      race: '',
+      race,
       roles: [role],
       isMain: getBooleanOption(interaction, 'main'),
       level: getNumberOption(interaction, 'level'),
@@ -64,8 +64,11 @@ export class CharactersCommand {
     }
     if (result === 'unknown-class')
       return `This guild's game version has no ${characterClass} class.`;
+    if (result === 'unknown-race') return `${race} is not a race of this guild's faction.`;
+    if (result === 'race-not-for-class')
+      return `A ${race} in this guild's game version cannot be a ${characterClass}.`;
     if (result === 'duplicate') return `You already have a character named ${label}.`;
-    return `Added ${label} (${characterClass}, ${ROLE_LABELS[role]}).`;
+    return `Added ${label} (${race} ${characterClass}, ${ROLE_LABELS[role]}).`;
   }
 
   @Command('character-list', { ephemeral: true })

@@ -159,10 +159,7 @@ export function LiveTagsHelp() {
               <code>race</code>
             </td>
             <td>text</td>
-            <td>
-              Their race, like Human. Empty for a character added before this was collected, or from
-              Discord.
-            </td>
+            <td>Their race, like Human.</td>
           </tr>
           <tr>
             <td>

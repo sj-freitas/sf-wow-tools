@@ -77,4 +77,17 @@ describe('commands.json and the game configs', () => {
     const inGames = new Set(games().flatMap((game) => Object.keys(game.classes)));
     assert.deepEqual(new Set(choices?.map((choice) => choice.value)), inGames);
   });
+
+  it('offers, for /character-add, exactly the races the game versions have', () => {
+    const add = commands.find((command) => command.name === 'character-add');
+    const choices = (add?.options as { name: string; choices?: { value: string }[] }[]).find(
+      (option) => option.name === 'race',
+    )?.choices;
+    const inGames = new Set(
+      games().flatMap((game) =>
+        Object.values(game.factions).flatMap((faction) => Object.keys(faction.races)),
+      ),
+    );
+    assert.deepEqual(new Set(choices?.map((choice) => choice.value)), inGames);
+  });
 });

@@ -24,6 +24,12 @@
   box-sizing: border-box;
 }
 
+/* Safety net: nothing on the page should ever need a horizontal scrollbar. The layout rules
+   below are meant to make this a non-issue on their own; this just guarantees it. */
+html {
+  overflow-x: hidden;
+}
+
 body {
   margin: 0;
   min-height: 100vh;
@@ -129,9 +135,14 @@ h3 {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 0.5rem;
   padding: 0.75rem 1.5rem;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
+}
+/* Let the brand and the user menu shrink instead of forcing the header wider than the screen. */
+.header > * {
+  min-width: 0;
 }
 .brand {
   display: flex;
@@ -225,6 +236,8 @@ h3 {
 
 /* ---- table ---- */
 .table-wrap {
+  /* A safety net above the stacking breakpoint below; normal wrapping means it should never
+     actually need to scroll. */
   overflow-x: auto;
 }
 table {
@@ -236,6 +249,10 @@ td {
   text-align: left;
   padding: 0.7rem 1.25rem;
   border-bottom: 1px solid var(--border);
+}
+/* The roster table reads as one line per row above the stacking breakpoint. */
+.table-wrap th,
+.table-wrap td {
   white-space: nowrap;
 }
 th {
@@ -255,6 +272,59 @@ tbody tr:last-child td {
   opacity: 0.5;
   pointer-events: none;
 }
+
+/* Below this width the roster table reads as a stack of cards (one per character) instead of a
+   table that would otherwise need to scroll sideways: no header row, one "label: value" line per
+   field, no fixed-width columns. */
+@media (max-width: 720px) {
+  .table-wrap table,
+  .table-wrap tbody,
+  .table-wrap tr {
+    display: block;
+  }
+  .table-wrap thead {
+    display: none;
+  }
+  .table-wrap tbody tr {
+    margin-bottom: 0.75rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface-2);
+  }
+  .table-wrap tbody tr:last-child {
+    margin-bottom: 0;
+  }
+  .table-wrap td {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.5rem 0.75rem;
+    padding: 0.35rem 0;
+    border-bottom: none;
+    white-space: normal;
+    text-align: right;
+  }
+  .table-wrap td[data-label]::before {
+    content: attr(data-label);
+    flex-shrink: 0;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    text-align: left;
+  }
+  /* The actions cell has no label: its buttons just sit on their own line. */
+  .table-wrap td.cell-actions {
+    justify-content: flex-start;
+    padding-top: 0.6rem;
+    margin-top: 0.25rem;
+    border-top: 1px dashed var(--border);
+    text-align: left;
+  }
+}
+
 .muted {
   color: var(--muted);
 }
@@ -331,6 +401,7 @@ tbody tr:last-child td {
 }
 .form-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
   margin-top: 1.25rem;
 }
@@ -535,8 +606,10 @@ tbody tr:last-child td {
 }
 .settings-header {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
+  gap: 0.5rem;
 }
 .settings-section {
   display: grid;
@@ -590,6 +663,7 @@ tbody tr:last-child td {
 
 .banner {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
@@ -620,6 +694,7 @@ tbody tr:last-child td {
 /* ---- scheduled tasks ---- */
 .view-tabs {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.25rem;
   padding: 0.5rem 1.25rem 0;
   border-bottom: 1px solid var(--border);
@@ -674,10 +749,13 @@ tbody tr:last-child td {
 }
 .task-text-head {
   display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
   justify-content: space-between;
 }
 .task-text-actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.75rem;
 }
@@ -856,6 +934,7 @@ tbody tr:last-child td {
 /* ---- run feedback ---- */
 .run-status {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
   margin-top: 0.25rem;
@@ -1097,6 +1176,7 @@ a.btn {
   display: flex;
   align-items: center;
   gap: 0.6rem;
+  min-width: 0;
   padding: 0.25rem 0.6rem 0.25rem 0.3rem;
   border: 1px solid transparent;
   border-radius: 999px;
@@ -1104,6 +1184,19 @@ a.btn {
   color: var(--text);
   font: inherit;
   cursor: pointer;
+}
+/* Shrinks (ellipsis) before it can push the header wider than the screen; hidden entirely on the
+   narrowest phones, leaving just the avatar. */
+.username {
+  overflow: hidden;
+  max-width: 140px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media (max-width: 380px) {
+  .username {
+    display: none;
+  }
 }
 .user-menu-button:hover,
 .user-menu-button[aria-expanded='true'] {
@@ -1339,9 +1432,10 @@ label.btn.disabled {
 }
 .parts-head {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: 0.5rem 0.75rem;
 }
 .parts-head h4 {
   margin: 0;
@@ -1361,11 +1455,13 @@ label.btn.disabled {
 }
 .part-head {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.4rem 0.6rem;
 }
 .part-tools {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.35rem;
   margin-left: auto;
 }

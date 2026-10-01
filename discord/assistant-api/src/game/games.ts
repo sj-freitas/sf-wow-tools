@@ -70,6 +70,12 @@ export function rolesOfClass(gameVersion: string, characterClass: string): GameR
 export const isWowClass = (value: string): boolean =>
   games().some((game) => Object.hasOwn(game.classes, value));
 
+/** Whether any version of the game has this race, in any faction. */
+export const isWowRace = (value: string): boolean =>
+  games().some((game) =>
+    Object.values(game.factions).some((faction) => Object.hasOwn(faction.races, value)),
+  );
+
 /** A race of a version's faction, and the classes it can be. */
 export interface RaceOption {
   race: string;

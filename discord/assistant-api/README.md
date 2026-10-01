@@ -567,10 +567,11 @@ from it: **race → class → roles**, each locked until the one before it is ch
 fits and clears the rest). The API also refuses roles a class cannot play in that version, from the bot and
 the backoffice (a class whose specializations are not defined yet allows every role). The race itself is
 also checked against the guild's faction and the chosen class, the same way, and stored on the character
-(`characters.race`, a column `null`-like empty string); it is empty for characters added before this was
-collected, or from the `/character-add` Discord command, which does not ask for it yet. Editing a
-character whose race is unknown still offers every class, unlocked, instead of forcing a race to be
-picked retroactively.
+(`characters.race`): it is **required**, both from the backoffice and the `/character-add` Discord command,
+and a CHECK on the table refuses an empty one. (An old guard in the service still treats a blank race as
+"unknown, don't check it", the same lenient fallback class and roles use for a game version it knows
+nothing of — harmless since nothing can write one any more, but it means editing a character from before
+this was required still offers every class, unlocked, instead of forcing a race on it retroactively.)
 
 ## Load from armory (TEST)
 
