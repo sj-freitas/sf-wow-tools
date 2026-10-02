@@ -1,4 +1,7 @@
 import type {
+  BioImage,
+  Character,
+  CharacterBio,
   CharacterPatch,
   Conversation,
   ConversationsPage,
@@ -167,11 +170,48 @@ export const fetchPeople = (guildId: string): Promise<People> =>
 export const createCharacter = (guildId: string, input: NewCharacterInput): Promise<void> =>
   request('POST', `/api/guilds/${guildId}/characters`, input);
 
-export const updateCharacter = (id: string, patch: CharacterPatch): Promise<void> =>
-  request('PATCH', `/api/characters/${id}`, patch);
+/** The caller's (or, for an Officer asking about someone else, that member's) characters already
+ * on this guild's server and faction, not yet in it — offered as "migrate" instead of creating. */
+export const fetchMigratableCharacters = (
+  guildId: string,
+  discordUserId?: string,
+): Promise<Character[]> =>
+  request(
+    'GET',
+    `/api/guilds/${guildId}/characters/migratable${discordUserId ? `?discordUserId=${encodeURIComponent(discordUserId)}` : ''}`,
+  );
 
-export const deleteCharacter = (id: string): Promise<void> =>
-  request('DELETE', `/api/characters/${id}`);
+export const migrateCharacter = (guildId: string, characterId: string): Promise<void> =>
+  request('POST', `/api/guilds/${guildId}/characters/${characterId}/migrate`);
+
+export const updateCharacter = (
+  guildId: string,
+  id: string,
+  patch: CharacterPatch,
+): Promise<void> => request('PATCH', `/api/guilds/${guildId}/characters/${id}`, patch);
+
+export const deleteCharacter = (guildId: string, id: string): Promise<void> =>
+  request('DELETE', `/api/guilds/${guildId}/characters/${id}`);
+
+export const fetchCharacterBio = (guildId: string, namePath: string): Promise<CharacterBio> =>
+  request('GET', `/api/guilds/${guildId}/characters/bio/${encodeURIComponent(namePath)}`);
+
+export const updateCharacterBio = (
+  characterId: string,
+  patch: { bio?: string; bioVisible?: boolean },
+): Promise<void> => request('PATCH', `/api/characters/${characterId}/bio`, patch);
+
+/** Uploads an image for a character's bio; returns its id. */
+export function uploadBioImage(characterId: string, file: File): Promise<BioImage> {
+  const form = new FormData();
+  form.append('image', file);
+  return request('POST', `/api/characters/${characterId}/bio/images`, form);
+}
+
+export const deleteBioImage = (characterId: string, imageId: string): Promise<void> =>
+  request('DELETE', `/api/characters/${characterId}/bio/images/${imageId}`);
+
+export const bioImageUrl = (imageId: string): string => `/api/characters/bio/images/${imageId}`;
 
 export const fetchOfficerRequests = (
   guildId: string,

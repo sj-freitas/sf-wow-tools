@@ -13,12 +13,30 @@ export interface Character {
   level: number;
 }
 
+export interface BioImage {
+  id: string;
+  contentType: string;
+}
+
+/**
+ * A character's bio, as fetched for one viewer: only its own player (`isOwner`) can ever write it,
+ * and `bio`/`images` are only there when they may see it (the owner, or `bioVisible` is set). Only
+ * offered on guilds whose server has the 'RP' rule set.
+ */
+export interface CharacterBio {
+  characterId: string;
+  name: string;
+  isOwner: boolean;
+  bioVisible: boolean;
+  bio: string | null;
+  images: BioImage[];
+}
+
 export interface Player {
   id: string;
   discordUserId: string;
   discordUsername: string | null;
   discordDisplayName: string | null;
-  guildId: string;
   characters: Character[];
 }
 
@@ -148,8 +166,11 @@ export interface GameConfig {
   requiresLastName?: boolean;
   /** Link template of a character's armory page (`{name}`, `{lastName}`, `{region}`, `{server}`). */
   armoryLink?: string;
-  /** Servers a guild can be on, per region id; a region that is missing is not available. */
-  allowedServers: Record<string, string[]>;
+  /**
+   * Servers a guild can be on, per region id, each with the rule set it enforces (several servers
+   * can share one, e.g. `'Normal'`); a region that is missing is not available.
+   */
+  allowedServers: Record<string, Record<string, { ruleSet: string }>>;
   /** Every class, by name. */
   classes: Record<string, { specializations: Record<string, SpecializationConfig> }>;
   /** By name ("Alliance", "Horde"), each with its races and the classes they can be. */

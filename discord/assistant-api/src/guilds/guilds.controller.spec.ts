@@ -155,7 +155,9 @@ describe('GuildsController role mappings', () => {
       assert.deepEqual(Object.keys(games[0].factions), ['Alliance', 'Horde']);
       // Whatever the version's config says (it changes often): the API sends it as it is.
       assert.deepEqual(games[0], getGame('Forever'));
-      assert.deepEqual(games[0].allowedServers.EU, ['RP', 'PVP', 'PVE', 'Hardcore']);
+      const eu = games[0].allowedServers.EU;
+      assert.deepEqual(Object.keys(eu ?? {}), ['RP', 'PVP', 'PVE', 'Hardcore']);
+      assert.equal(eu?.RP.ruleSet, 'RP');
     });
   });
 });

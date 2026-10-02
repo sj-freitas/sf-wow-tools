@@ -35,6 +35,15 @@ export interface FactionConfig<C extends string = string> {
   races: Readonly<Record<string, RaceConfig<C>>>;
 }
 
+/**
+ * A server a guild can be on. `ruleSet` is the gameplay rules it enforces, not the server's name:
+ * several servers could share one (e.g. two PvE servers both `'Normal'`), and features can gate
+ * on it instead of hard-coding server names (bios need `'RP'`, say).
+ */
+export interface ServerConfig {
+  ruleSet: string;
+}
+
 export interface GameConfig<C extends string = string> {
   /** The name of the version, as guilds store it ("Forever"). Unique across versions. */
   gameVersion: string;
@@ -52,10 +61,10 @@ export interface GameConfig<C extends string = string> {
    */
   armoryLink?: string;
   /**
-   * The servers a guild of this version can be on, per region (the regions of `config/regions.ts`).
-   * A region with no entry is not available for this version.
+   * The servers a guild of this version can be on, per region (the regions of `config/regions.ts`),
+   * by name, each with its rule set. A region with no entry is not available for this version.
    */
-  allowedServers: Readonly<Partial<Record<RegionId, readonly string[]>>>;
+  allowedServers: Readonly<Partial<Record<RegionId, Readonly<Record<string, ServerConfig>>>>>;
   /** Every class of the game, by name. */
   classes: Readonly<Record<C, ClassConfig>>;
   /** By name ("Alliance", "Horde"). */
@@ -101,18 +110,21 @@ export function gameConfigProblems(config: unknown): string[] {
   if (!servers || typeof servers !== 'object') {
     problems.push('allowedServers is missing');
   } else {
-    for (const [region, list] of Object.entries(servers)) {
+    for (const [region, byName] of Object.entries(servers)) {
       if (!Object.hasOwn(REGIONS, region)) {
         problems.push(
           `allowedServers has "${region}", which is not a region (${Object.keys(REGIONS).join(', ')})`,
         );
       }
-      if (
-        !Array.isArray(list) ||
-        list.length === 0 ||
-        list.some((s) => typeof s !== 'string' || s === '')
-      ) {
-        problems.push(`allowedServers.${region} must be a list of server names`);
+      if (!byName || typeof byName !== 'object' || Object.keys(byName).length === 0) {
+        problems.push(`allowedServers.${region} must have at least one server`);
+        continue;
+      }
+      for (const [server, serverConfig] of Object.entries(byName as Record<string, unknown>)) {
+        const ruleSet = (serverConfig as ServerConfig | undefined)?.ruleSet;
+        if (typeof ruleSet !== 'string' || ruleSet === '') {
+          problems.push(`allowedServers.${region}.${server}.ruleSet must be a non-empty string`);
+        }
       }
     }
     if (Object.keys(servers).length === 0)

@@ -34,12 +34,18 @@ export interface NewCharacter extends CharacterName {
 
 export type CharacterUpdate = Partial<
   Pick<NewCharacter, 'class' | 'race' | 'roles' | 'isMain' | 'level' | 'firstName' | 'lastName'>
->;
+> & {
+  /** A deliberate faction change; the race (new or existing) must fit it, same as on creation. */
+  faction?: Faction;
+};
 
-interface GuildRef {
+/** The guild a character is being added to or migrated into: its server and its faction. */
+interface GuildServer {
   id: string;
   gameVersion: string;
   faction: Faction;
+  region: string;
+  realm: string;
 }
 
 export type AddResult =
@@ -51,6 +57,15 @@ export type AddResult =
   | 'role-not-for-class'
   | 'unknown-race'
   | 'race-not-for-class';
+
+export type MigrateResult =
+  | 'migrated'
+  | 'already-member'
+  | 'not-found'
+  | 'no-guild'
+  | 'wrong-server'
+  | 'wrong-faction'
+  | 'forbidden';
 
 /**
  * The roles that do not fit a class in a version (empty when they all do, or when the version says
@@ -69,12 +84,26 @@ const classInGame = (gameVersion: string, characterClass: string): boolean => {
 };
 
 export interface CharacterSummary extends CharacterName {
+  id: string;
   class: string;
   race: string;
+  faction: Faction;
   roles: Role[];
   isMain: boolean;
   level: number;
 }
+
+const CHARACTER_SELECT = {
+  id: true,
+  firstName: true,
+  lastName: true,
+  class: true,
+  race: true,
+  faction: true,
+  roles: true,
+  isMain: true,
+  level: true,
+} as const;
 
 @Injectable()
 export class CharactersService {
@@ -85,11 +114,11 @@ export class CharactersService {
   ) {}
 
   /**
-   * Adds a character for the user, registering them as a player of the
-   * guild managed by this Discord server on first use.
+   * Adds a character for the user, registering them as a player (globally, by Discord id) on
+   * first use.
    */
   async add(owner: CharacterOwner, character: NewCharacter): Promise<AddResult> {
-    const guild = await this.findGuild(owner.discordServerId);
+    const guild = await this.findGuildByServer(owner.discordServerId);
     if (!guild) {
       return 'no-guild';
     }
@@ -105,12 +134,86 @@ export class CharactersService {
   ): Promise<AddResult> {
     const guild = await this.prisma.guild.findUnique({
       where: { id: guildId },
-      select: { id: true, gameVersion: true, faction: true },
+      select: { id: true, gameVersion: true, faction: true, region: true, realm: true },
     });
     if (!guild) {
       return 'no-guild';
     }
     return this.createForPlayer(guild, discordUserId, character, names);
+  }
+
+  /**
+   * The player's other characters on this guild's server (same game version, region and realm)
+   * that fit its faction and are not already in it — offered as "migrate this character" instead
+   * of creating a new one, since the same account's character on this server is the same
+   * character, not a new one.
+   */
+  async migrateCandidates(guildId: string, discordUserId: string): Promise<CharacterSummary[]> {
+    const guild = await this.prisma.guild.findUnique({
+      where: { id: guildId },
+      select: { gameVersion: true, faction: true, region: true, realm: true },
+    });
+    const player = await this.prisma.player.findUnique({ where: { discordUserId } });
+    if (!guild || !player) return [];
+    return this.prisma.character.findMany({
+      where: {
+        playerId: player.id,
+        gameVersion: guild.gameVersion,
+        region: guild.region,
+        realm: guild.realm,
+        faction: guild.faction,
+        guilds: { none: { guildId } },
+      },
+      orderBy: [{ isMain: 'desc' }, { firstName: 'asc' }],
+      select: CHARACTER_SELECT,
+    });
+  }
+
+  /** Adds an existing character to another guild's roster, without creating a new row. */
+  async migrate(
+    guildId: string,
+    characterId: string,
+    requesterDiscordUserId: string,
+    allowAnyOwner: boolean,
+  ): Promise<MigrateResult> {
+    const guild = await this.prisma.guild.findUnique({
+      where: { id: guildId },
+      select: { gameVersion: true, faction: true, region: true, realm: true },
+    });
+    if (!guild) return 'no-guild';
+    const character = await this.prisma.character.findUnique({
+      where: { id: characterId },
+      select: {
+        gameVersion: true,
+        region: true,
+        realm: true,
+        faction: true,
+        player: { select: { discordUserId: true } },
+      },
+    });
+    if (!character) return 'not-found';
+    if (!allowAnyOwner && character.player.discordUserId !== requesterDiscordUserId) {
+      return 'forbidden';
+    }
+    if (
+      character.gameVersion !== guild.gameVersion ||
+      character.region !== guild.region ||
+      character.realm !== guild.realm
+    ) {
+      return 'wrong-server';
+    }
+    if (character.faction !== guild.faction) return 'wrong-faction';
+
+    try {
+      await this.prisma.characterGuildMembership.create({ data: { characterId, guildId } });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        return 'already-member';
+      }
+      throw error;
+    }
+    this.realtime.publish(guildId, 'characters');
+    return 'migrated';
   }
 
   /**
@@ -138,10 +241,11 @@ export class CharactersService {
   }
 
   /**
-   * Changes a character. With `newOwner` it moves to another Discord user of the same guild (their
-   * player is created if they have none), and the previous player is removed when it is left with no
-   * characters. The other player having a character with the same name is a unique violation, like a
-   * rename.
+   * Changes a character's own fields (name, class, race, roles, level, main). Guild-agnostic: the
+   * same character looks the same in every guild it is in, so this does not take a guild (a guild
+   * is only needed to check who may make the change, which the controller does separately). With
+   * `newOwner` it moves the character to another Discord user's (global) player, created if they
+   * have none; the previous player is removed when it is left with no characters anywhere.
    */
   async update(
     characterId: string,
@@ -153,21 +257,17 @@ export class CharactersService {
       patch.lastName !== undefined ||
       patch.class !== undefined ||
       patch.race !== undefined ||
-      patch.roles !== undefined
+      patch.roles !== undefined ||
+      patch.faction !== undefined
     ) {
       const character = await this.prisma.character.findUnique({
         where: { id: characterId },
-        select: {
-          class: true,
-          race: true,
-          roles: true,
-          player: { select: { guild: { select: { gameVersion: true, faction: true } } } },
-        },
+        select: { class: true, race: true, roles: true, gameVersion: true, faction: true },
       });
       if (!character) {
         throw new NotFoundException('Character not found');
       }
-      const { gameVersion, faction } = character.player.guild;
+      const { gameVersion } = character;
       if (
         (patch.firstName !== undefined || patch.lastName !== undefined) &&
         requiresLastName(gameVersion) &&
@@ -178,12 +278,15 @@ export class CharactersService {
       if (patch.class !== undefined && !classInGame(gameVersion, patch.class)) {
         throw new BadRequestException(`${gameVersion} has no ${patch.class} class.`);
       }
-      if (
-        patch.race !== undefined &&
-        patch.race !== '' &&
-        !raceInFaction(gameVersion, faction, patch.race)
-      ) {
-        throw new BadRequestException(`${gameVersion} has no ${patch.race} race for this faction.`);
+      // Changing either the race or the faction: the race (new or existing) must fit the faction
+      // (new or existing) — the same check creation does, just against the character's own faction
+      // rather than one specific guild's (it may be in several, or none).
+      if (patch.race !== undefined || patch.faction !== undefined) {
+        const faction = patch.faction ?? character.faction;
+        const race = patch.race ?? character.race;
+        if (race !== '' && !raceInFaction(gameVersion, faction, race)) {
+          throw new BadRequestException(`${gameVersion} has no ${race} race for that faction.`);
+        }
       }
       // Changing either the class or the roles: the roles must still fit the class.
       if (patch.class !== undefined || patch.roles !== undefined) {
@@ -195,8 +298,9 @@ export class CharactersService {
           );
         }
       }
-      // Changing either the race or the class, with a known race: the class must still fit it.
-      if (patch.race !== undefined || patch.class !== undefined) {
+      // Changing the race, the faction or the class, with a known race: the class must still fit it.
+      if (patch.race !== undefined || patch.faction !== undefined || patch.class !== undefined) {
+        const faction = patch.faction ?? character.faction;
         const race = patch.race ?? character.race;
         const characterClass = patch.class ?? character.class;
         const allowed = race ? classesOfRace(gameVersion, faction, race) : null;
@@ -213,15 +317,13 @@ export class CharactersService {
     if (newOwner) {
       const current = await this.prisma.character.findUnique({
         where: { id: characterId },
-        select: { playerId: true, player: { select: { guildId: true, discordUserId: true } } },
+        select: { playerId: true, player: { select: { discordUserId: true } } },
       });
       if (!current) throw new NotFoundException('Character not found');
       if (current.player.discordUserId !== newOwner.discordUserId) {
-        const { guildId } = current.player;
         const target = await this.prisma.player.upsert({
-          where: { guildId_discordUserId: { guildId, discordUserId: newOwner.discordUserId } },
+          where: { discordUserId: newOwner.discordUserId },
           create: {
-            guildId,
             discordUserId: newOwner.discordUserId,
             discordUsername: newOwner.names?.username,
             discordDisplayName: newOwner.names?.displayName,
@@ -236,40 +338,41 @@ export class CharactersService {
       }
     }
 
-    const { player } = await this.prisma.character.update({
+    await this.prisma.character.update({
       where: { id: characterId },
       data: playerId ? { ...patch, playerId } : patch,
-      select: { player: { select: { guildId: true } } },
+      select: { id: true },
     });
     if (previousPlayerId) {
-      // A player exists only through its characters: leaving none behind is cleaned up.
+      // A player with no characters left anywhere is removed.
       const left = await this.prisma.character.count({ where: { playerId: previousPlayerId } });
       if (left === 0) await this.prisma.player.deleteMany({ where: { id: previousPlayerId } });
     }
-    this.realtime.publish(player.guildId, 'characters');
+    await this.publishToItsGuilds(characterId);
   }
 
-  async removeById(characterId: string): Promise<void> {
-    const { player } = await this.prisma.character.delete({
-      where: { id: characterId },
-      select: { player: { select: { guildId: true } } },
+  /** Removes a character from one guild's roster; the character itself (and its other guilds, if
+   * any) are untouched — it just stops being a pointer into this guild. */
+  async removeFromGuild(guildId: string, characterId: string): Promise<'removed' | 'not-found'> {
+    const { count } = await this.prisma.characterGuildMembership.deleteMany({
+      where: { characterId, guildId },
     });
-    this.realtime.publish(player.guildId, 'characters');
+    if (count === 0) return 'not-found';
+    this.realtime.publish(guildId, 'characters');
+    return 'removed';
   }
 
-  async findOwnership(characterId: string): Promise<{ guildId: string; discordUserId: string }> {
+  /** The Discord id of the character's own player, or null if the character does not exist. */
+  async findOwnerDiscordId(characterId: string): Promise<string | null> {
     const character = await this.prisma.character.findUnique({
       where: { id: characterId },
-      select: { player: { select: { guildId: true, discordUserId: true } } },
+      select: { player: { select: { discordUserId: true } } },
     });
-    if (!character) {
-      throw new NotFoundException('Character not found');
-    }
-    return character.player;
+    return character?.player.discordUserId ?? null;
   }
 
   private async createForPlayer(
-    guild: GuildRef,
+    guild: GuildServer,
     discordUserId: string,
     character: NewCharacter,
     names?: DiscordNames,
@@ -290,24 +393,16 @@ export class CharactersService {
       if (allowed && !allowed.includes(character.class)) return 'race-not-for-class';
     }
 
-    const player = await this.prisma.player.upsert({
-      where: { guildId_discordUserId: { guildId: guild.id, discordUserId } },
-      create: {
-        guildId: guild.id,
-        discordUserId,
-        discordUsername: names?.username,
-        discordDisplayName: names?.displayName,
-      },
-      update: {
-        discordUsername: names?.username,
-        discordDisplayName: names?.displayName,
-      },
-    });
+    const player = await this.upsertPlayer(discordUserId, names);
 
     try {
-      await this.prisma.character.create({
+      const created = await this.prisma.character.create({
         data: {
           playerId: player.id,
+          gameVersion: guild.gameVersion,
+          region: guild.region,
+          realm: guild.realm,
+          faction: guild.faction,
           class: character.class,
           race: character.race,
           roles: character.roles,
@@ -316,6 +411,9 @@ export class CharactersService {
           isMain: character.isMain,
           level: character.level,
         },
+      });
+      await this.prisma.characterGuildMembership.create({
+        data: { characterId: created.id, guildId: guild.id },
       });
       this.realtime.publish(guild.id, 'characters');
       return 'created';
@@ -329,22 +427,18 @@ export class CharactersService {
 
   /** Returns null if this Discord server isn't linked to a guild. */
   async list(owner: CharacterOwner): Promise<CharacterSummary[] | null> {
-    const guild = await this.findGuild(owner.discordServerId);
+    const guild = await this.findGuildByServer(owner.discordServerId);
     if (!guild) {
       return null;
     }
+    const player = await this.prisma.player.findUnique({
+      where: { discordUserId: owner.discordUserId },
+    });
+    if (!player) return [];
     return this.prisma.character.findMany({
-      where: { player: { guildId: guild.id, discordUserId: owner.discordUserId } },
+      where: { playerId: player.id, guilds: { some: { guildId: guild.id } } },
       orderBy: [{ isMain: 'desc' }, { firstName: 'asc' }],
-      select: {
-        firstName: true,
-        lastName: true,
-        class: true,
-        race: true,
-        roles: true,
-        isMain: true,
-        level: true,
-      },
+      select: CHARACTER_SELECT,
     });
   }
 
@@ -352,28 +446,53 @@ export class CharactersService {
     owner: CharacterOwner,
     name: CharacterName,
   ): Promise<'removed' | 'not-found' | 'no-guild'> {
-    const guild = await this.findGuild(owner.discordServerId);
+    const guild = await this.findGuildByServer(owner.discordServerId);
     if (!guild) {
       return 'no-guild';
     }
-    const { count } = await this.prisma.character.deleteMany({
+    const character = await this.prisma.character.findFirst({
       where: {
         firstName: name.firstName,
         lastName: name.lastName,
-        player: { guildId: guild.id, discordUserId: owner.discordUserId },
+        player: { discordUserId: owner.discordUserId },
+        guilds: { some: { guildId: guild.id } },
       },
+      select: { id: true },
     });
-    if (count === 0) {
+    if (!character) {
       return 'not-found';
     }
-    this.realtime.publish(guild.id, 'characters');
-    return 'removed';
+    return this.removeFromGuild(guild.id, character.id);
   }
 
-  private findGuild(discordServerId: string) {
+  private upsertPlayer(discordUserId: string, names?: DiscordNames) {
+    return this.prisma.player.upsert({
+      where: { discordUserId },
+      create: {
+        discordUserId,
+        discordUsername: names?.username,
+        discordDisplayName: names?.displayName,
+      },
+      update: {
+        discordUsername: names?.username,
+        discordDisplayName: names?.displayName,
+      },
+    });
+  }
+
+  /** Every guild this character is a member of gets told its roster changed. */
+  private async publishToItsGuilds(characterId: string): Promise<void> {
+    const memberships = await this.prisma.characterGuildMembership.findMany({
+      where: { characterId },
+      select: { guildId: true },
+    });
+    for (const { guildId } of memberships) this.realtime.publish(guildId, 'characters');
+  }
+
+  private findGuildByServer(discordServerId: string) {
     return this.prisma.guild.findFirst({
       where: { servers: { some: { discordId: discordServerId } } },
-      select: { id: true, gameVersion: true, faction: true },
+      select: { id: true, gameVersion: true, faction: true, region: true, realm: true },
     });
   }
 }

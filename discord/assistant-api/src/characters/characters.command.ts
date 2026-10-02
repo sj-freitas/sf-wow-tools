@@ -105,7 +105,7 @@ export class CharactersCommand {
     const label = formatCharacterName(name);
     if (result === 'no-guild') return NO_GUILD;
     if (result === 'not-found') return `You don't have a character named ${label}.`;
-    return `Removed ${label}.`;
+    return `Removed ${label} from this server's roster.`;
   }
 }
 

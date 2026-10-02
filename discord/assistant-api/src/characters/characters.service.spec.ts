@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { beforeEach, describe, it } from 'node:test';
 import { BadRequestException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import type { DiscordOAuthService } from '../auth/discord-oauth.service';
 import type { PrismaService } from '../database/prisma.service';
 import type { RealtimeService } from '../realtime/realtime.service';
@@ -20,6 +21,8 @@ describe('CharactersService last name rule', () => {
   let gameVersion: string;
   let faction: string;
   let characterRace: string;
+  let characterClass: string;
+  let characterFaction: string;
   let created: any[];
   let updated: any[];
   let upserts: any[];
@@ -31,6 +34,8 @@ describe('CharactersService last name rule', () => {
     gameVersion = 'Forever';
     faction = 'ALLIANCE';
     characterRace = '';
+    characterClass = 'Paladin';
+    characterFaction = 'ALLIANCE';
     created = [];
     updated = [];
     upserts = [];
@@ -38,8 +43,8 @@ describe('CharactersService last name rule', () => {
     charactersLeft = 0;
     const prisma = {
       guild: {
-        findFirst: async () => ({ id: 'g', gameVersion, faction }),
-        findUnique: async () => ({ id: 'g', gameVersion, faction }),
+        findFirst: async () => ({ id: 'g', gameVersion, faction, region: 'EU', realm: 'RP' }),
+        findUnique: async () => ({ id: 'g', gameVersion, faction, region: 'EU', realm: 'RP' }),
       },
       player: {
         upsert: async (args: any) => {
@@ -49,19 +54,25 @@ describe('CharactersService last name rule', () => {
         deleteMany: async (args: any) => void removedPlayers.push(args.where.id),
       },
       character: {
-        create: async (args: any) => void created.push(args.data),
+        create: async (args: any) => {
+          created.push(args.data);
+          return { id: 'new-char' };
+        },
         findUnique: async () => ({
-          class: 'Paladin',
+          class: characterClass,
           race: characterRace,
+          faction: characterFaction,
           roles: ['TANK'],
+          gameVersion,
           playerId: 'old-player',
-          player: { guildId: 'g', discordUserId: 'old-user', guild: { gameVersion, faction } },
+          player: { discordUserId: 'old-user' },
         }),
         count: async () => charactersLeft,
-        update: async (args: any) => {
-          updated.push(args.data);
-          return { player: { guildId: 'g' } };
-        },
+        update: async (args: any) => void updated.push(args.data),
+      },
+      characterGuildMembership: {
+        create: async () => undefined,
+        findMany: async () => [{ guildId: 'g' }],
       },
     } as unknown as PrismaService;
     service = new CharactersService(
@@ -195,23 +206,43 @@ describe('CharactersService last name rule', () => {
       assert.equal(updated.at(-1).race, 'Gnome');
     });
 
-    it('rejects a race the guild’s faction does not have', async () => {
+    it('rejects a race the character’s (stored) faction does not have, even one of another faction, unless the faction changes too', async () => {
+      await assert.rejects(
+        service.update('c', { race: 'Bard' }),
+        /Forever has no Bard race for that faction/,
+      );
+      // Orc is a Horde race; this character's stored faction is Alliance.
       await assert.rejects(
         service.update('c', { race: 'Orc' }),
-        /Forever has no Orc race for this faction/,
+        /Forever has no Orc race for that faction/,
+      );
+      // A deliberate faction change alongside it lets it through.
+      await service.update('c', { race: 'Orc', faction: 'HORDE', class: 'Warrior' });
+      assert.deepEqual(updated.at(-1), { race: 'Orc', faction: 'HORDE', class: 'Warrior' });
+    });
+
+    it('lets a faction change through when the current race fits both (Skyborne, like Pandaren)', async () => {
+      characterRace = 'Skyborne';
+      characterClass = 'Warrior'; // the one role Skyborne can play on both sides.
+      await service.update('c', { faction: 'HORDE' });
+      assert.deepEqual(updated.at(-1), { faction: 'HORDE' });
+    });
+
+    it('rejects a faction change when the current race does not exist on the other side', async () => {
+      characterRace = 'Human'; // Alliance-only; this character's faction is already Alliance.
+      await assert.rejects(
+        service.update('c', { faction: 'HORDE' }),
+        /Forever has no Human race for that faction/,
       );
     });
 
     describe('moving a character to another Discord user', () => {
       const names = { username: 'them', displayName: 'Them' };
 
-      it('points the character at the other user’s player, creating it with their names', async () => {
+      it('points the character at the other user’s (global) player, creating it with their names', async () => {
         await service.update('c', { level: 60 }, { discordUserId: 'new-user', names });
-        assert.deepEqual(upserts[0].where, {
-          guildId_discordUserId: { guildId: 'g', discordUserId: 'new-user' },
-        });
+        assert.deepEqual(upserts[0].where, { discordUserId: 'new-user' });
         assert.deepEqual(upserts[0].create, {
-          guildId: 'g',
           discordUserId: 'new-user',
           discordUsername: 'them',
           discordDisplayName: 'Them',
@@ -252,6 +283,188 @@ describe('CharactersService last name rule', () => {
     it('does not look at the name when other fields change', async () => {
       await service.update('c', { level: 60 });
       assert.equal(updated.length, 1);
+    });
+  });
+});
+
+describe('CharactersService, a character in more than one guild', () => {
+  let guild: { gameVersion: string; faction: string; region: string; realm: string } | null;
+  let characters: Record<
+    string,
+    {
+      gameVersion: string;
+      region: string;
+      realm: string;
+      race: string;
+      faction: string;
+      playerId: string;
+      discordUserId: string;
+    }
+  >;
+  let memberships: { characterId: string; guildId: string }[];
+  let removedMemberships: { characterId: string; guildId: string }[];
+  let players: Record<string, { id: string }>;
+  let published: string[];
+  let service: CharactersService;
+
+  beforeEach(() => {
+    guild = { gameVersion: 'Forever', faction: 'ALLIANCE', region: 'EU', realm: 'RP' };
+    characters = {
+      c1: {
+        gameVersion: 'Forever',
+        region: 'EU',
+        realm: 'RP',
+        race: 'Human',
+        faction: 'ALLIANCE',
+        playerId: 'p1',
+        discordUserId: 'u1',
+      },
+    };
+    memberships = [];
+    removedMemberships = [];
+    players = { u1: { id: 'p1' } };
+    published = [];
+    const prisma = {
+      guild: { findUnique: async () => guild },
+      player: { findUnique: async (args: any) => players[args.where.discordUserId] ?? null },
+      character: {
+        findUnique: async (args: any) => {
+          const c = characters[args.where.id];
+          return c ? { ...c, player: { discordUserId: c.discordUserId } } : null;
+        },
+        findMany: async (args: any) =>
+          Object.entries(characters)
+            .filter(
+              ([id, c]) =>
+                c.playerId === args.where.playerId &&
+                c.gameVersion === args.where.gameVersion &&
+                c.region === args.where.region &&
+                c.realm === args.where.realm &&
+                c.faction === args.where.faction &&
+                !memberships.some(
+                  (m) => m.characterId === id && m.guildId === args.where.guilds.none.guildId,
+                ),
+            )
+            .map(([id, c]) => ({
+              id,
+              firstName: 'Zed',
+              lastName: '',
+              class: 'Warrior',
+              race: c.race,
+              faction: c.faction,
+              roles: ['TANK'],
+              isMain: false,
+              level: 60,
+            })),
+      },
+      characterGuildMembership: {
+        create: async (args: any) => {
+          if (
+            memberships.some(
+              (m) => m.characterId === args.data.characterId && m.guildId === args.data.guildId,
+            )
+          ) {
+            throw new Prisma.PrismaClientKnownRequestError('dup', {
+              code: 'P2002',
+              clientVersion: 'x',
+            });
+          }
+          memberships.push(args.data);
+        },
+        deleteMany: async (args: any) => {
+          const before = memberships.length;
+          memberships = memberships.filter(
+            (m) => !(m.characterId === args.where.characterId && m.guildId === args.where.guildId),
+          );
+          removedMemberships.push(args.where);
+          return { count: before - memberships.length };
+        },
+      },
+    } as unknown as PrismaService;
+    service = new CharactersService(
+      prisma,
+      { publish: (guildId: string) => void published.push(guildId) } as unknown as RealtimeService,
+      {} as DiscordOAuthService,
+    );
+  });
+
+  describe('migrating an existing character into another guild', () => {
+    it('adds a membership, not a new character, when the server and faction match', async () => {
+      assert.equal(await service.migrate('g2', 'c1', 'u1', false), 'migrated');
+      assert.deepEqual(memberships, [{ characterId: 'c1', guildId: 'g2' }]);
+      assert.deepEqual(published, ['g2']);
+    });
+
+    it('refuses someone else’s character unless the caller may act for anyone', async () => {
+      assert.equal(await service.migrate('g2', 'c1', 'someone-else', false), 'forbidden');
+      assert.equal(await service.migrate('g2', 'c1', 'someone-else', true), 'migrated');
+    });
+
+    it('refuses a character on a different server', async () => {
+      characters.c1.realm = 'PVE';
+      assert.equal(await service.migrate('g2', 'c1', 'u1', false), 'wrong-server');
+    });
+
+    it('refuses a character whose (stored) faction does not match the guild', async () => {
+      characters.c1.faction = 'HORDE'; // this guild is Alliance.
+      assert.equal(await service.migrate('g2', 'c1', 'u1', false), 'wrong-faction');
+    });
+
+    it('does not derive the faction from the race: Skyborne exists on both sides, so only the stored faction decides', async () => {
+      characters.c1.race = 'Skyborne';
+      characters.c1.faction = 'HORDE'; // this guild is Alliance: refused despite the shared race.
+      assert.equal(await service.migrate('g2', 'c1', 'u1', false), 'wrong-faction');
+      characters.c1.faction = 'ALLIANCE';
+      assert.equal(await service.migrate('g2', 'c1', 'u1', false), 'migrated');
+    });
+
+    it('is "already-member" when it is already in that guild', async () => {
+      memberships.push({ characterId: 'c1', guildId: 'g2' });
+      assert.equal(await service.migrate('g2', 'c1', 'u1', false), 'already-member');
+    });
+
+    it('is "not-found" for an unknown character or guild', async () => {
+      assert.equal(await service.migrate('g2', 'nope', 'u1', false), 'not-found');
+      guild = null;
+      assert.equal(await service.migrate('g2', 'c1', 'u1', false), 'no-guild');
+    });
+  });
+
+  describe('listing migration candidates', () => {
+    it('offers a matching character that is not already in the guild', async () => {
+      const candidates = await service.migrateCandidates('g2', 'u1');
+      assert.deepEqual(
+        candidates.map((c) => c.id),
+        ['c1'],
+      );
+    });
+
+    it('leaves out a character already in the guild', async () => {
+      memberships.push({ characterId: 'c1', guildId: 'g2' });
+      assert.deepEqual(await service.migrateCandidates('g2', 'u1'), []);
+    });
+
+    it('leaves out a character whose (stored) faction does not match', async () => {
+      characters.c1.faction = 'HORDE';
+      assert.deepEqual(await service.migrateCandidates('g2', 'u1'), []);
+    });
+
+    it('is empty for a player or guild we do not know', async () => {
+      assert.deepEqual(await service.migrateCandidates('g2', 'nobody'), []);
+      guild = null;
+      assert.deepEqual(await service.migrateCandidates('g2', 'u1'), []);
+    });
+  });
+
+  describe('removing a character from one guild', () => {
+    it('deletes the membership, not the character', async () => {
+      memberships.push({ characterId: 'c1', guildId: 'g2' });
+      assert.equal(await service.removeFromGuild('g2', 'c1'), 'removed');
+      assert.deepEqual(memberships, []);
+    });
+
+    it('is "not-found" when it was not a member', async () => {
+      assert.equal(await service.removeFromGuild('g2', 'c1'), 'not-found');
     });
   });
 });

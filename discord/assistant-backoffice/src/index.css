@@ -1025,6 +1025,15 @@ tbody tr:last-child td {
 .back-link:hover {
   color: var(--text);
 }
+.bio-link {
+  color: var(--muted);
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+.bio-link:hover {
+  color: var(--text);
+  text-decoration: underline;
+}
 a.btn {
   text-decoration: none;
 }
@@ -1160,6 +1169,26 @@ a.btn {
 .bubble-text {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+}
+/* A character's bio, read almost as its own page: a card with an optional image strip up top. */
+.bio-page-card {
+  padding: 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.bio-gallery {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 1.25rem;
+}
+.bio-gallery img {
+  width: 160px;
+  height: 160px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid var(--border);
 }
 
 .inline-select {
@@ -1531,6 +1560,26 @@ label.btn.disabled {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
+}
+
+.migrate-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  background: var(--surface-2);
+}
+.migrate-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+.migrate-row select {
+  flex: 1 1 220px;
+  width: auto;
 }
 
 .copy-name {

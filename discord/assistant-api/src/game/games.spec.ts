@@ -16,14 +16,16 @@ import {
   loadGames,
   requiresLastName,
   rolesOfClass,
+  ruleSetOf,
   serversOf,
+  supportsBios,
 } from './games';
 
 /** A minimal valid config, as source text, for a directory made in a test. */
 const configSource = (over: Record<string, unknown> = {}): string => {
   const config = {
     gameVersion: 'Test',
-    allowedServers: { EU: ['PVE'] },
+    allowedServers: { EU: { PVE: { ruleSet: 'Normal' } } },
     classes: { Mage: { specializations: {} } },
     factions: { Alliance: { races: { Human: { classes: ['Mage'] } } } },
     ...over,
@@ -127,12 +129,20 @@ describe('checking a config', () => {
 
   it('refuses regions that do not exist, empty server lists and empty races', () => {
     const config = valid();
-    config.allowedServers = { MARS: ['PVE'], EU: [] };
+    config.allowedServers = { MARS: { PVE: { ruleSet: 'Normal' } }, EU: {} };
     config.factions.Alliance.races.Human.classes = [];
     const problems = gameConfigProblems(config).join('\n');
     assert.match(problems, /"MARS", which is not a region/);
-    assert.match(problems, /allowedServers\.EU must be a list of server names/);
+    assert.match(problems, /allowedServers\.EU must have at least one server/);
     assert.match(problems, /Alliance Human needs at least one class/);
+  });
+
+  it('requires a non-empty ruleSet for every server', () => {
+    const config = valid();
+    config.allowedServers = { EU: { PVE: {}, RP: { ruleSet: '' } } };
+    const problems = gameConfigProblems(config).join('\n');
+    assert.match(problems, /allowedServers\.EU\.PVE\.ruleSet must be a non-empty string/);
+    assert.match(problems, /allowedServers\.EU\.RP\.ruleSet must be a non-empty string/);
   });
 
   it('checks specializations: their roles must be roles', () => {
@@ -153,13 +163,13 @@ describe('checking a config', () => {
   it('has classes checked when it is written (a class a race lists must exist)', () => {
     defineGame({
       gameVersion: 'T',
-      allowedServers: { EU: ['PVE'] },
+      allowedServers: { EU: { PVE: { ruleSet: 'Normal' } } },
       classes: { Mage: { specializations: {} } },
       factions: { Alliance: { races: { Human: { classes: ['Mage'] } } } },
     });
     defineGame({
       gameVersion: 'T',
-      allowedServers: { EU: ['PVE'] },
+      allowedServers: { EU: { PVE: { ruleSet: 'Normal' } } },
       classes: { Mage: { specializations: {} } },
       // @ts-expect-error "Bard" is not one of the game's classes
       factions: { Alliance: { races: { Human: { classes: ['Mage', 'Bard'] } } } },
@@ -225,6 +235,21 @@ describe('asking about a version', () => {
     assert.deepEqual(serversOf('Forever', 'EU'), ['RP', 'PVP', 'PVE', 'Hardcore']);
     assert.deepEqual(serversOf('Forever', 'US'), ['RP', 'PVP', 'PVE', 'Hardcore']);
     assert.deepEqual(serversOf('Retail', 'EU'), []);
+  });
+
+  it('gives the rule set a server enforces, by name, not by the server picked', () => {
+    assert.equal(ruleSetOf('Forever', 'EU', 'RP'), 'RP');
+    assert.equal(ruleSetOf('Forever', 'EU', 'PVE'), 'Normal');
+    assert.equal(ruleSetOf('Forever', 'EU', 'Hardcore'), 'Hardcore');
+    assert.equal(ruleSetOf('Forever', 'EU', 'Nowhere'), undefined);
+    assert.equal(ruleSetOf('Retail', 'EU', 'RP'), undefined);
+  });
+
+  it('supports bios only for a guild on an RP rule-set server', () => {
+    assert.equal(supportsBios('Forever', 'EU', 'RP'), true);
+    assert.equal(supportsBios('Forever', 'EU', 'PVP'), false);
+    assert.equal(supportsBios('Forever', 'EU', 'PVE'), false);
+    assert.equal(supportsBios('Retail', 'EU', 'RP'), false);
   });
 
   it('takes the last-name rule from the version’s config: only a version that says so has last names', () => {

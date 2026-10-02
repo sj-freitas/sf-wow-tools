@@ -17,6 +17,5 @@ export class PlayerDto {
   discordUserId!: string;
   discordUsername!: string | null;
   discordDisplayName!: string | null;
-  guildId!: string;
   characters!: CharacterDto[];
 }

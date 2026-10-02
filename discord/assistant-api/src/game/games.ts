@@ -2,7 +2,13 @@ import { existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Faction } from '@prisma/client';
 import type { RegionId } from '../config/regions';
-import { GAME_ROLES, gameConfigProblems, type GameConfig, type GameRole } from './game-config';
+import {
+  GAME_ROLES,
+  gameConfigProblems,
+  type GameConfig,
+  type GameRole,
+  type ServerConfig,
+} from './game-config';
 
 /**
  * The versions of the game, found by looking at the directories next to this file: every
@@ -117,7 +123,25 @@ export function classesOfRace(
 
 /** The servers a guild of this version can be on in a region (empty when it is not available there). */
 export const serversOf = (gameVersion: string, region: RegionId): readonly string[] =>
-  getGame(gameVersion)?.allowedServers[region] ?? [];
+  Object.keys(getGame(gameVersion)?.allowedServers[region] ?? {});
+
+/**
+ * The rule set a server enforces (e.g. `'RP'`, `'PVP'`), or undefined if we don't know it. Takes
+ * a plain region string (a guild's stored `region` is one, not always narrowed to `RegionId`).
+ */
+export const ruleSetOf = (
+  gameVersion: string,
+  region: string,
+  server: string,
+): string | undefined => {
+  const byRegion: Record<string, Readonly<Record<string, ServerConfig>>> | undefined =
+    getGame(gameVersion)?.allowedServers;
+  return byRegion?.[region]?.[server]?.ruleSet;
+};
+
+/** Bios are an RP (roleplay) feature: only guilds on an `'RP'` rule-set server get them. */
+export const supportsBios = (gameVersion: string, region: string, server: string): boolean =>
+  ruleSetOf(gameVersion, region, server) === 'RP';
 
 /** Characters must have a last name (`Name-Lastname`) in this version. */
 export const requiresLastName = (gameVersion: string): boolean =>

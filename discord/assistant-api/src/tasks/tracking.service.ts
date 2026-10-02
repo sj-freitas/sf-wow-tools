@@ -294,10 +294,14 @@ export class TrackingService {
   async withCharacters(guildId: string, reactors: readonly Reactor[]): Promise<Reactor[]> {
     if (reactors.length === 0) return [];
     const players = await this.prisma.player.findMany({
-      where: { guildId, discordUserId: { in: reactors.map((reactor) => reactor.id) } },
+      where: {
+        discordUserId: { in: reactors.map((reactor) => reactor.id) },
+        characters: { some: { guilds: { some: { guildId } } } },
+      },
       select: {
         discordUserId: true,
         characters: {
+          where: { guilds: { some: { guildId } } },
           orderBy: [{ isMain: 'desc' }, { createdAt: 'asc' }],
           select: {
             firstName: true,
@@ -327,12 +331,13 @@ export class TrackingService {
       select: { gameVersion: true, region: true, realm: true },
     });
     const players = await this.prisma.player.findMany({
-      where: { guildId },
+      where: { characters: { some: { guilds: { some: { guildId } } } } },
       select: {
         discordUserId: true,
         discordUsername: true,
         discordDisplayName: true,
         characters: {
+          where: { guilds: { some: { guildId } } },
           select: {
             firstName: true,
             lastName: true,

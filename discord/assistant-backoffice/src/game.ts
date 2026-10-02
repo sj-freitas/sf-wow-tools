@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react';
-import { ROLE_LABELS, type Faction, type GameConfig, type Role } from './types';
+import { ROLE_LABELS, type Faction, type GameConfig, type Guild, type Role } from './types';
 
 /** The game versions the API knows, provided once for every form that needs them. */
 export const GamesContext = createContext<GameConfig[]>([]);
@@ -37,9 +37,20 @@ export function rolesOfClass(game: GameConfig | undefined, className: string): R
 export const classNamesOf = (game: GameConfig | undefined): string[] =>
   Object.keys(game?.classes ?? {});
 
-/** The servers a guild of a version can be on in a region. */
+/** The servers a guild of a version can be on in a region, by name. */
 export const serversFor = (game: GameConfig | undefined, region: string): string[] =>
-  game?.allowedServers[region] ?? [];
+  Object.keys(game?.allowedServers[region] ?? {});
+
+/** The rule set a server enforces (e.g. `'RP'`, `'PVP'`), or undefined if we don't know it. */
+export const ruleSetFor = (
+  game: GameConfig | undefined,
+  region: string,
+  server: string,
+): string | undefined => game?.allowedServers[region]?.[server]?.ruleSet;
+
+/** Bios are an RP (roleplay) feature: only a guild on an `'RP'` rule-set server gets them. */
+export const guildSupportsBios = (guild: Guild, games: readonly GameConfig[]): boolean =>
+  ruleSetFor(gameOf(games, guild.gameVersion), guild.region, guild.realm) === 'RP';
 
 /** The regions (ids) a version is available in. */
 export const regionsOf = (game: GameConfig | undefined): string[] =>

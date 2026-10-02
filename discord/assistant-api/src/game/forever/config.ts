@@ -12,9 +12,21 @@ export default defineGame({
   // yet. When it does, this becomes something like
   // 'https://<armory>/character/{region}/{server}/{name}' and follows the guild.
   armoryLink: 'https://classic-armory.org/character/eu/classic-sod/wild-growth/{name}',
+  // Each server's name and the gameplay rules it enforces (several could share one; features
+  // gate on the rule set, not the name, e.g. bios need 'RP').
   allowedServers: {
-    US: ['RP', 'PVP', 'PVE', 'Hardcore'],
-    EU: ['RP', 'PVP', 'PVE', 'Hardcore'],
+    US: {
+      RP: { ruleSet: 'RP' },
+      PVP: { ruleSet: 'PVP' },
+      PVE: { ruleSet: 'Normal' },
+      Hardcore: { ruleSet: 'Hardcore' },
+    },
+    EU: {
+      RP: { ruleSet: 'RP' },
+      PVP: { ruleSet: 'PVP' },
+      PVE: { ruleSet: 'Normal' },
+      Hardcore: { ruleSet: 'Hardcore' },
+    },
   },
   factions: {
     Alliance: {

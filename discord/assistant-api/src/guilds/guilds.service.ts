@@ -474,12 +474,15 @@ export class GuildsService {
   async findPeople(guildId: string): Promise<PeopleDto> {
     const [players, servers] = await Promise.all([
       this.prisma.player.findMany({
-        where: { guildId },
+        where: { characters: { some: { guilds: { some: { guildId } } } } },
         select: {
           discordUserId: true,
           discordUsername: true,
           discordDisplayName: true,
-          characters: { select: { firstName: true, lastName: true } },
+          characters: {
+            where: { guilds: { some: { guildId } } },
+            select: { firstName: true, lastName: true },
+          },
         },
       }),
       this.prisma.discordServer.findMany({ where: { guildId }, select: { discordId: true } }),

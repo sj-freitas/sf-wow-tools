@@ -23,7 +23,11 @@ describe('RanksService', () => {
         { guildRole: 'SOCIAL', discordRoleId: 'social' },
       ],
       servers: [{ discordId: 'main' }],
-      players: [{ discordUserId: 'a' }, { discordUserId: 'b' }, { discordUserId: 'c' }],
+      characterMemberships: [
+        { character: { player: { discordUserId: 'a' } } },
+        { character: { player: { discordUserId: 'b' } } },
+        { character: { player: { discordUserId: 'c' } } },
+      ],
     };
     listCalls = 0;
     lookedUp = [];

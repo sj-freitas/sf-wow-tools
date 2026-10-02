@@ -56,36 +56,36 @@ enum HoneypotAction {
 
 // A WoW guild. It can be managed from more than one Discord server.
 model Guild {
-  id                      String                @id @default(uuid()) @db.Uuid
+  id                      String                     @id @default(uuid()) @db.Uuid
   name                    String
   realm                   String
   faction                 Faction
   // One of GAME_VERSIONS (src/game/game-version.ts); a string so adding a
   // version doesn't need a migration.
-  gameVersion             String                @map("game_version")
+  gameVersion             String                     @map("game_version")
   // Officers hold this role in the guild's main server (see DiscordServer.isMain)
   // and can manage the guild like a Guild-Assistant. Null = no officer role set.
-  officerRoleId           String?               @map("officer_role_id")
-  officerRoleName         String?               @map("officer_role_name")
+  officerRoleId           String?                    @map("officer_role_id")
+  officerRoleName         String?                    @map("officer_role_name")
   // One of the keys of REGIONS (src/config/regions.ts); decides the timezone schedules run in.
-  region                  String                @default("EU")
+  region                  String                     @default("EU")
   // Optional welcome post (markdown) shown on the guild's home page; null = none written yet.
-  homeMarkdown            String?               @map("home_markdown")
-  homeUpdatedAt           DateTime?             @map("home_updated_at")
-  homeUpdatedById         String?               @map("home_updated_by_id") @db.Uuid
+  homeMarkdown            String?                    @map("home_markdown")
+  homeUpdatedAt           DateTime?                  @map("home_updated_at")
+  homeUpdatedById         String?                    @map("home_updated_by_id") @db.Uuid
   // Where members' messages to the officers are posted; null until set in the guild settings.
-  officerRequestServerId  String?               @map("officer_request_server_id")
-  officerRequestChannelId String?               @map("officer_request_channel_id")
+  officerRequestServerId  String?                    @map("officer_request_server_id")
+  officerRequestChannelId String?                    @map("officer_request_channel_id")
   banner                  GuildBanner?
   officerConversations    OfficerConversation[]
   scheduledTasks          ScheduledTask[]
   honeypots               Honeypot[]
   servers                 DiscordServer[]
   roleMappings            GuildRoleMapping[]
-  players                 Player[]
+  characterMemberships    CharacterGuildMembership[]
   access                  GuildAccess[]
-  createdAt               DateTime              @default(now()) @map("created_at")
-  updatedAt               DateTime              @updatedAt @map("updated_at")
+  createdAt               DateTime                   @default(now()) @map("created_at")
+  updatedAt               DateTime                   @updatedAt @map("updated_at")
 
   @@unique([name, realm, gameVersion, region])
   @@map("guilds")
@@ -134,46 +134,96 @@ model GuildRoleMapping {
   @@map("guild_role_mappings")
 }
 
-// A Discord user's membership in one guild: one Player per (guild, Discord
-// user), so a user in several guilds has several Players. Not linked to User,
-// since players may never log in to the backoffice.
+// A Discord user, globally: one Player per Discord account, however many guilds they are in.
+// Not linked to User, since players may never log in to the backoffice. Holds every character
+// that account has registered, on any server; which guilds a character appears in is
+// `CharacterGuildMembership`, not this.
 model Player {
   id                 String      @id @default(uuid()) @db.Uuid
-  discordUserId      String      @map("discord_user_id")
-  // Best-effort display info; null until the user is seen by the bot or looked up.
+  discordUserId      String      @unique @map("discord_user_id")
+  // Best-effort display info; null until the user is seen by the bot or looked up. Global too
+  // (their Discord username), even though a per-server nickname could in principle differ.
   discordUsername    String?     @map("discord_username")
   discordDisplayName String?     @map("discord_display_name")
-  guildId            String      @map("guild_id") @db.Uuid
-  guild              Guild       @relation(fields: [guildId], references: [id], onDelete: Cascade)
   characters         Character[]
   createdAt          DateTime    @default(now()) @map("created_at")
   updatedAt          DateTime    @updatedAt @map("updated_at")
 
-  @@unique([guildId, discordUserId])
   @@map("players")
 }
 
+// A character belongs to a player, not a guild: its identity (this row) survives being renamed,
+// changing race, class or faction, and being in several guilds' rosters at once (or none). What
+// guilds it is in is `CharacterGuildMembership`. Its server (gameVersion/region/realm) is fixed at
+// creation — moving a character to another realm is not supported.
 model Character {
-  id        String   @id @default(uuid()) @db.Uuid
-  playerId  String   @map("player_id") @db.Uuid
-  player    Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
-  // Faction and realm are the owning guild's (player.guild).
+  id          String                     @id @default(uuid()) @db.Uuid
+  playerId    String                     @map("player_id") @db.Uuid
+  player      Player                     @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  // One of the game versions/regions/servers in src/game/<version>/config.ts; which guilds can
+  // list this character (`addToGuild`) and faction compatibility (for migrating) key off these.
+  gameVersion String                     @map("game_version")
+  region      String
+  realm       String
+  // Stored, not derived from race: some races (e.g. Forever's Skyborne, like Pandaren) exist in
+  // both factions, so race alone can't say which one a given character committed to. Set from the
+  // guild's faction when the character is created; changing it (a "faction change") is a deliberate
+  // edit, checked the same way creation is (the new race, if any, must fit the new faction).
+  faction     Faction
   // A WoW class name, locked to a known set in code like gameVersion. Race is too (checked
-  // against the guild's faction and class), always set (never empty; a CHECK enforces it).
-  class     String
-  race      String
-  roles     Role[]
+  // against `faction` and the class), always set (never empty; a CHECK enforces it).
+  class       String
+  race        String
+  roles       Role[]
   // Both parts have at least 2 characters (CHECK constraints in the migrations). The last
   // name is empty when there is none, and required for game versions that say so.
-  firstName String   @map("first_name")
-  lastName  String   @default("") @map("last_name")
-  isMain    Boolean  @default(false) @map("is_main")
-  level     Int      @default(1)
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  firstName   String                     @map("first_name")
+  lastName    String                     @default("") @map("last_name")
+  isMain      Boolean                    @default(false) @map("is_main")
+  level       Int                        @default(1)
+  // Free text written by the character's own player (never an Officer), on guilds whose server's
+  // rule set is 'RP'. Shown to others only when bioVisible is set; always visible to its owner.
+  // Guild-agnostic like the character itself: the same bio shows in every guild it is in.
+  bio         String                     @default("")
+  bioVisible  Boolean                    @default(false) @map("bio_visible")
+  images      CharacterImage[]
+  guilds      CharacterGuildMembership[]
+  createdAt   DateTime                   @default(now()) @map("created_at")
+  updatedAt   DateTime                   @updatedAt @map("updated_at")
 
-  @@unique([playerId, firstName, lastName])
+  @@unique([playerId, gameVersion, region, realm, firstName, lastName], map: "characters_unique_per_server")
   @@map("characters")
+}
+
+// A character's presence in one guild's roster. Adding an existing character to another guild
+// (whose server and faction it fits) just creates one of these — "migrating" a character does not
+// copy it, it points the new guild at the same row. Removing a character from a guild's roster
+// deletes this, not the character (which may still be in other guilds, or none).
+model CharacterGuildMembership {
+  id          String    @id @default(uuid()) @db.Uuid
+  characterId String    @map("character_id") @db.Uuid
+  character   Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  guildId     String    @map("guild_id") @db.Uuid
+  guild       Guild     @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  @@unique([characterId, guildId])
+  @@index([guildId])
+  @@map("character_guild_memberships")
+}
+
+// An image in a character's bio (see Character.bio), up to CharacterBioService.MAX_BIO_IMAGES.
+model CharacterImage {
+  id          String    @id @default(uuid()) @db.Uuid
+  characterId String    @map("character_id") @db.Uuid
+  character   Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  contentType String    @map("content_type")
+  size        Int
+  data        Bytes
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  @@index([characterId, createdAt])
+  @@map("character_images")
 }
 
 // A backoffice user, created on first Discord login.

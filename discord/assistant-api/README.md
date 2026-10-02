@@ -550,7 +550,10 @@ wrong. The shape (volatile: expect it to grow):
   `{name}`, `{lastName}`, `{region}` and `{server}` (filled from the character and the guild). It feeds
   `roster[i].armoryLink`.
 - `allowedServers`: the servers a guild can be on, **per region** (`EU`, `US`, the regions of
-  `config/regions.ts`); a region that is missing is not available for that version.
+  `config/regions.ts`); a region that is missing is not available for that version. Each server is an
+  object with a `ruleSet` (e.g. `'RP'`, `'PVP'`, `'Normal'`, `'Hardcore'`): the gameplay rules it
+  enforces, not its name — several servers can share one, and features gate on the rule set instead of
+  hard-coding server names (bios need `'RP'`, below).
 - `classes`: every class, by name, each with its `specializations` (`{}` until defined; a specialization
   has `roles` and optional `raidBuffs`/`groupBuffs`).
 - `factions`: by name (`Alliance`, `Horde`), each with its `races`, and each race with the `classes` it
@@ -597,14 +600,94 @@ character is added by hand as before.
   is listed ("Orc is not a race of this guild's faction"). Roles are not on the armory, and the name is
   left as typed. Blizzard's data for Classic can be slow or missing (new characters often 404).
 
+## Characters, players and guilds (guild-agnostic characters)
+
+A character belongs to a **player** (a Discord account) and a **server** (`gameVersion`/`region`/`realm`),
+never to a guild directly. Which guilds a character is in is a separate table,
+`character_guild_memberships` — usually one row, but a character can be in several guilds' rosters at
+once, or none. This matters because, in the game, a character's _name_, _class_, _race_ and even
+_faction_ can all change while it stays the same character (a rename, a race change, a faction change),
+and because the same character might raid with more than one guild.
+
+- **`Player`** is one row per Discord account, globally — not one per guild any more. Its
+  `discord_user_id` is unique across the whole table. `CharactersService` upserts it by that id alone
+  (`upsertPlayer`); nothing about a guild is on this row.
+- **`Character`** carries its own `game_version`/`region`/`realm` (copied from the guild it was first
+  created in, fixed from then on — moving a character to another realm is not supported), its `player_id`,
+  and its own **`faction`** — stored explicitly, **not derived from race**. A race can't reliably say the
+  faction: Forever's Skyborne (like WoW's Pandaren) is a race of both factions, with a different class list
+  on each side, so the same race string exists in both `factions.Alliance.races` and `factions.Horde.races`
+  in the config. `faction` is set from the guild's when a character is created, and changes only on a
+  deliberate edit (a "faction change": `CharacterUpdate.faction`). Its name is unique **per player and
+  server** (`characters_unique_per_server`), not per guild.
+- **`CharacterGuildMembership`** (`character_id`, `guild_id`) is the roster entry. **Removing a character
+  from a guild's roster deletes this row, not the character** — `CharactersService.removeFromGuild`. The
+  character (and its bio, and its other memberships, if any) are untouched.
+- **Migrating** a character into another guild — `POST /api/guilds/:guildId/characters/:id/migrate` —
+  just adds one of these rows; it never copies the character. Officers can migrate for any member, like
+  adding a character; everyone else only for themselves. It is refused when the character's server doesn't
+  match the guild's (`wrong-server`) or its stored faction doesn't match the guild's (`wrong-faction`).
+  `GET /api/guilds/:guildId/characters/migratable?discordUserId=` lists the candidates — that Discord
+  account's characters already on this guild's server and faction, not in it yet — which the backoffice's
+  "add character" form offers (as a dropdown) instead of creating a duplicate of the same character.
+- Editing a character's own fields (`CharactersService.update`) takes no guild at all any more: `class`,
+  `race`, `roles` and `faction` are checked against each other and the game version
+  (`raceInFaction`/`classesOfRace`, same functions creation uses) — against the character's **own** stored
+  faction, not any one guild's, since it may be in several (or none). Changing `race` alone must still fit
+  the current faction; changing `faction` alone must find the current race on the other side too (Skyborne
+  can; Human, Alliance-only, can't without also changing race). The permission check for _who_ may edit a
+  character is done by the controller from the guild in the URL
+  (`PATCH /api/guilds/:guildId/characters/:id`), separately.
+
+Two migrations moved existing data over: `20261003090000_character_guild_agnostic` merges what used to
+be one `Player` row per (guild, Discord user) into one global row per Discord user (the oldest wins), and
+turns every existing character → player → guild chain into a `character_guild_memberships` row;
+`20261004090000_character_faction` then backfills the new `faction` column from one of each character's
+guild memberships (falling back to Alliance, an arbitrary tie-break, for the rare one left with none).
+
+## Character bios
+
+A character can have a free-text bio (and a few images), on a guild whose server's **rule set is
+`'RP'`** only (`allowedServers.<region>.<server>.ruleSet`, above) — checked by `supportsBios`
+(`src/game/games.ts`) against the **character's own** server fields (every guild it is in necessarily
+shares them, by the `wrong-server` check above), never a hard-coded server name or a specific guild.
+`CharacterBioService` and `CharacterBioController` (`src/characters/character-bio.*`) hold the feature; it
+does not go through `CharactersService`, because its permission model is different from the rest of the
+character, and because it is guild-agnostic like the character itself — the same bio (and images) show in
+every guild the character is in:
+
+- **Only the character's own player writes it** — the Discord account that matches
+  `characters.player.discord_user_id` — never an Officer, unlike everything else about a character.
+  `PATCH /api/characters/:id/bio` (`{ bio?, bioVisible? }`) checks that and nothing else; a bio over
+  4000 characters (`MAX_BIO_LENGTH`) is refused.
+- **Written and stored as markdown**, the same renderer as the welcome post (`MarkdownView`, GitHub
+  flavour — headings, bold, lists, links, images, tables; never raw HTML, so a bio can't inject
+  anything into what other members see). The backoffice renders it full width with its images as a
+  strip at the top, closer to a little personal page than a settings field; the owner gets a
+  "Preview" toggle on the editor, like the welcome post's.
+- **Visible to the owner always; to everyone else only once `bioVisible` is set.** `bioVisible` defaults
+  to `false`, so a bio is private until its player opts in. Images follow the same rule (hidden entirely,
+  not just the text, when the bio isn't visible and the viewer isn't the owner).
+- **Up to `MAX_BIO_IMAGES` (4) images:** `POST /api/characters/:id/bio/images` (multipart, field `image`,
+  PNG/JPEG/GIF/WebP, same `MAX_IMAGE_BYTES` limit as post images), `DELETE .../images/:imageId`, both
+  owner-only like the text; `GET /api/characters/bio/images/:imageId` serves the bytes to any logged-in
+  user (the id is only ever handed out through `find`, which already applies the visibility rule — not
+  rechecked on every byte fetch, the same trade-off as a Discord CDN link).
+- **Looked up by name, not id:** `GET /api/guilds/:guildId/characters/bio/:namePath` (any member of the
+  guild) takes the deep-link path — `Name-Lastname` for a version with last names, `Name` otherwise —
+  split on the first dash, case-insensitively, among the characters **in that guild**
+  (`guilds: { some: { guildId } }`). Character names are unique **per player and server**, not per guild,
+  so two different players could in principle share one; the lookup returns whichever matches first. The
+  backoffice link is `.../roster/<namePath>/bio`, shown on the roster only when `supportsBios` is true for
+  the guild.
+- `characters.bio` (default `''`) and `characters.bio_visible` (default `false`) are plain columns on the
+  character; `character_images` is a separate table (mirrors `post_images`), one row per image.
+
 ## Database
 
 Postgres, hosted on [Supabase](https://supabase.com/), accessed through [Prisma](https://www.prisma.io/)
 via the `@prisma/adapter-pg` driver adapter (required since Prisma 7 — see `prisma.config.ts`,
 which is where `DATABASE_URL` is read from instead of `schema.prisma`).
-
-`prisma/schema.prisma` currently has placeholder `Player`/`Guild` models to support the
-`list-players` command/endpoint — expect this to change as the domain model is defined.
 
 `DATABASE_URL` must be Supabase's **direct connection** string (port `5432`), not the pooled
 "Transaction" one (port `6543`) — the pooler doesn't support the session features Prisma Migrate

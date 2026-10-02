@@ -149,7 +149,7 @@
   },
   {
     "name": "character-remove",
-    "description": "Removes one of your registered characters",
+    "description": "Removes one of your characters from this server's guild roster",
     "options": [
       {
         "name": "name",

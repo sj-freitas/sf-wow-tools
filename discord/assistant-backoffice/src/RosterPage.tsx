@@ -5,7 +5,8 @@ import { CharacterForm } from './CharacterForm';
 import { CopyableName } from './CopyableName';
 import { InlineSpinner, SkeletonRows, Spinner } from './Loading';
 import { subscribeEvents } from './events';
-import { playerLabel } from './format';
+import { characterPath, playerLabel } from './format';
+import { guildSupportsBios, useGames } from './game';
 import { ROLE_LABELS, type Guild, type Player, type Ranks, type User } from './types';
 import { useCurrentUrl, useReturnTo } from './useReturnTo';
 import { guildPath } from './guildPath';
@@ -23,6 +24,8 @@ export function RosterPage({ guild, currentUser }: Props) {
   const [actionError, setActionError] = useState<string | null>(null);
   const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
   const here = useCurrentUrl();
+  const games = useGames();
+  const bios = guildSupportsBios(guild, games);
 
   const load = useCallback(() => {
     fetchPlayers(guild.id)
@@ -69,7 +72,7 @@ export function RosterPage({ guild, currentUser }: Props) {
   const runDelete = (characterId: string) => {
     setActionError(null);
     setDeletingIds((prev) => new Set(prev).add(characterId));
-    deleteCharacter(characterId)
+    deleteCharacter(guild.id, characterId)
       .then(load)
       .catch((err: unknown) => setActionError(err instanceof Error ? err.message : String(err)))
       .finally(() =>
@@ -181,6 +184,18 @@ export function RosterPage({ guild, currentUser }: Props) {
                         {character.isMain && (
                           <span className="badge badge-main main-pill">Main</span>
                         )}
+                        {bios && (
+                          <>
+                            {' '}
+                            <Link
+                              className="bio-link"
+                              to={guildPath(guild, `roster/${characterPath(character)}/bio`)}
+                              state={{ from: here }}
+                            >
+                              Bio
+                            </Link>
+                          </>
+                        )}
                       </td>
                       <td data-label="Class">{character.class}</td>
                       <td data-label="Roles">
@@ -207,6 +222,7 @@ export function RosterPage({ guild, currentUser }: Props) {
                               type="button"
                               className="btn btn-sm btn-danger"
                               disabled={deleting}
+                              title="Removes it from this guild's roster only; the character itself is kept, in case it's migrated back or is in another guild"
                               onClick={() => runDelete(character.id)}
                             >
                               {deleting ? <InlineSpinner label="Removing…" /> : 'Remove'}

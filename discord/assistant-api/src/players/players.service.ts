@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import type { Prisma } from '@prisma/client';
 import { DiscordOAuthService } from '../auth/discord-oauth.service';
 import { PrismaService } from '../database/prisma.service';
 import { PlayerDto } from './dto/player.dto';
@@ -13,9 +12,10 @@ export class PlayersService {
     private readonly discord: DiscordOAuthService,
   ) {}
 
-  /** The players of one guild. */
+  /** The players with at least one character in one guild's roster, each with that guild's characters only
+   * (a player's characters on other servers, or not yet in this guild, are not this guild's business). */
   findForGuild(guildId: string): Promise<PlayerDto[]> {
-    return this.findMany({ guildId });
+    return this.findMany(guildId);
   }
 
   /**
@@ -26,7 +26,11 @@ export class PlayersService {
    */
   async refreshMissingNames(guildId: string): Promise<number> {
     const missing = await this.prisma.player.findMany({
-      where: { guildId, discordUsername: null, discordDisplayName: null },
+      where: {
+        discordUsername: null,
+        discordDisplayName: null,
+        characters: { some: { guilds: { some: { guildId } } } },
+      },
       select: { id: true, discordUserId: true },
       take: MAX_NAME_LOOKUPS,
     });
@@ -48,21 +52,25 @@ export class PlayersService {
   }
 
   /** Players in the guild managed from the given Discord server (by Discord id). */
-  findForDiscordServer(discordServerId: string): Promise<PlayerDto[]> {
-    return this.findMany({ guild: { servers: { some: { discordId: discordServerId } } } });
+  async findForDiscordServer(discordServerId: string): Promise<PlayerDto[]> {
+    const guild = await this.prisma.guild.findFirst({
+      where: { servers: { some: { discordId: discordServerId } } },
+      select: { id: true },
+    });
+    return guild ? this.findMany(guild.id) : [];
   }
 
-  private findMany(where: Prisma.PlayerWhereInput): Promise<PlayerDto[]> {
+  private findMany(guildId: string): Promise<PlayerDto[]> {
     return this.prisma.player.findMany({
-      where,
+      where: { characters: { some: { guilds: { some: { guildId } } } } },
       orderBy: { createdAt: 'asc' },
       select: {
         id: true,
         discordUserId: true,
         discordUsername: true,
         discordDisplayName: true,
-        guildId: true,
         characters: {
+          where: { guilds: { some: { guildId } } },
           orderBy: [{ isMain: 'desc' }, { firstName: 'asc' }],
           select: {
             id: true,

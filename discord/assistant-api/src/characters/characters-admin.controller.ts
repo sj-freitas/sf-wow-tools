@@ -5,25 +5,36 @@ import {
   Controller,
   ForbiddenException,
   Delete,
+  Get,
   HttpCode,
   HttpStatus,
   NotFoundException,
   Param,
   Patch,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
 import { Prisma, type Role } from '@prisma/client';
 import { AuthGuard } from '../auth/auth.guard';
 import type { AuthenticatedRequest, SessionUser } from '../auth/auth.types';
-import { canEditCharacter, canManageAllCharacters } from '../auth/access-rules';
+import {
+  canEditCharacter,
+  canManageAllCharacters,
+  type GuildAccessFlags,
+} from '../auth/access-rules';
 import { GuildAccessService } from '../auth/guild-access.service';
 import { isWowClass } from '../game/games';
 import { parseCharacterName } from './character-name';
-import { CharactersService, type CharacterUpdate } from './characters.service';
+import {
+  CharactersService,
+  type CharacterSummary,
+  type CharacterUpdate,
+} from './characters.service';
 
 const ROLES: readonly Role[] = ['TANK', 'HEALER', 'MELEE_DPS', 'RANGED_DPS'];
+const DISCORD_ID = /^\d{15,25}$/;
 
 /**
  * Backoffice character management. Officers manage every player's characters;
@@ -56,33 +67,11 @@ export class CharactersAdminController {
       );
     }
     const fields = parseFields(body, { partial: false });
-
-    let discordUserId = req.user.discordId;
-    let names: { username: string; displayName: string | null } | null = {
-      username: req.user.username,
-      displayName: req.user.displayName === req.user.username ? null : req.user.displayName,
-    };
-    if (canManageAllCharacters(access)) {
-      // Officers may add characters for any member of the guild's servers (default: themselves).
-      if (body.discordUserId !== undefined && body.discordUserId !== req.user.discordId) {
-        if (typeof body.discordUserId !== 'string' || !/^\d{15,25}$/.test(body.discordUserId)) {
-          throw new BadRequestException('discordUserId must be a Discord user id (digits)');
-        }
-        discordUserId = body.discordUserId;
-        names = await this.charactersService.findGuildMemberNames(guildId, discordUserId);
-        if (!names) {
-          throw new BadRequestException(
-            "That user is not a member of any of this guild's Discord servers",
-          );
-        }
-      }
-    } else if (body.discordUserId !== undefined && body.discordUserId !== req.user.discordId) {
-      throw new ForbiddenException('You can only add your own characters');
-    }
+    const discordUserId = await this.resolveTargetUser(req, guildId, access, body);
 
     const result = await this.charactersService.addToGuild(
       guildId,
-      discordUserId,
+      discordUserId.id,
       {
         ...name,
         class: fields.class as string,
@@ -91,7 +80,7 @@ export class CharactersAdminController {
         isMain: fields.isMain ?? false,
         level: fields.level,
       },
-      names,
+      discordUserId.names,
     );
     if (result === 'duplicate') {
       throw new ConflictException('That player already has a character with this name');
@@ -120,16 +109,72 @@ export class CharactersAdminController {
     }
   }
 
-  @Patch('characters/:id')
+  /**
+   * The requester's (or, for an Officer, another member's) characters already on this guild's
+   * server and faction that are not in it yet — offered as "migrate" in the add-character form.
+   */
+  @Get('guilds/:guildId/characters/migratable')
+  async migratable(
+    @Req() req: AuthenticatedRequest,
+    @Param('guildId') guildId: string,
+    @Query('discordUserId') queriedUserId: string | undefined,
+  ): Promise<CharacterSummary[]> {
+    const access = await this.guildAccess.find(req.user.id, guildId);
+    if (!access) {
+      throw new ForbiddenException('You are not a member of this guild');
+    }
+    const discordUserId = await this.resolveTargetUser(req, guildId, access, {
+      discordUserId: queriedUserId,
+    });
+    return this.charactersService.migrateCandidates(guildId, discordUserId.id);
+  }
+
+  /** Adds an existing character (the requester's, or anyone's for an Officer) to this guild. */
+  @Post('guilds/:guildId/characters/:id/migrate')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async migrate(
+    @Req() req: AuthenticatedRequest,
+    @Param('guildId') guildId: string,
+    @Param('id') id: string,
+  ): Promise<void> {
+    const access = await this.guildAccess.find(req.user.id, guildId);
+    if (!access) {
+      throw new ForbiddenException('You are not a member of this guild');
+    }
+    const result = await this.charactersService.migrate(
+      guildId,
+      id,
+      req.user.discordId,
+      canManageAllCharacters(access),
+    );
+    if (result === 'not-found' || result === 'no-guild') {
+      throw new NotFoundException('Character not found');
+    }
+    if (result === 'forbidden') {
+      throw new ForbiddenException('You can only migrate your own characters');
+    }
+    if (result === 'wrong-server') {
+      throw new BadRequestException("That character is not on this guild's server");
+    }
+    if (result === 'wrong-faction') {
+      throw new BadRequestException("That character's faction does not match this guild's");
+    }
+    if (result === 'already-member') {
+      throw new ConflictException('That character is already in this guild');
+    }
+  }
+
+  @Patch('guilds/:guildId/characters/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async update(
     @Req() req: AuthenticatedRequest,
+    @Param('guildId') guildId: string,
     @Param('id') id: string,
     @Body() body: Record<string, unknown>,
   ): Promise<void> {
-    await this.assertCanEdit(req.user, id);
+    await this.assertCanEdit(req.user, guildId, id);
     const patch = parseFields(body, { partial: true });
-    const newOwner = await this.parseNewOwner(req.user, id, body);
+    const newOwner = await this.parseNewOwner(req.user, guildId, body);
     if (body.name !== undefined) {
       const name = parseCharacterName(typeof body.name === 'string' ? body.name : '');
       if (!name) {
@@ -149,18 +194,50 @@ export class CharactersAdminController {
     }
   }
 
-  @Delete('characters/:id')
+  /** Removes the character from this guild's roster only; it (and its other guilds) are kept. */
+  @Delete('guilds/:guildId/characters/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async remove(@Req() req: AuthenticatedRequest, @Param('id') id: string): Promise<void> {
-    await this.assertCanEdit(req.user, id);
-    try {
-      await this.charactersService.removeById(id);
-    } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
-        throw new NotFoundException('Character not found');
-      }
-      throw error;
+  async remove(
+    @Req() req: AuthenticatedRequest,
+    @Param('guildId') guildId: string,
+    @Param('id') id: string,
+  ): Promise<void> {
+    await this.assertCanEdit(req.user, guildId, id);
+    const result = await this.charactersService.removeFromGuild(guildId, id);
+    if (result === 'not-found') throw new NotFoundException('Character not found');
+  }
+
+  /**
+   * Who the request is for: the requester, unless they are an Officer asking for someone else (a
+   * member of the guild's servers) by `discordUserId`.
+   */
+  private async resolveTargetUser(
+    req: AuthenticatedRequest,
+    guildId: string,
+    access: GuildAccessFlags,
+    body: { discordUserId?: unknown },
+  ): Promise<{ id: string; names: { username: string; displayName: string | null } }> {
+    const self = {
+      id: req.user.discordId,
+      names: {
+        username: req.user.username,
+        displayName: req.user.displayName === req.user.username ? null : req.user.displayName,
+      },
+    };
+    if (body.discordUserId === undefined || body.discordUserId === req.user.discordId) return self;
+    if (!canManageAllCharacters(access)) {
+      throw new ForbiddenException('You can only act for yourself');
     }
+    if (typeof body.discordUserId !== 'string' || !DISCORD_ID.test(body.discordUserId)) {
+      throw new BadRequestException('discordUserId must be a Discord user id (digits)');
+    }
+    const names = await this.charactersService.findGuildMemberNames(guildId, body.discordUserId);
+    if (!names) {
+      throw new BadRequestException(
+        "That user is not a member of any of this guild's Discord servers",
+      );
+    }
+    return { id: body.discordUserId, names };
   }
 
   /**
@@ -169,20 +246,18 @@ export class CharactersAdminController {
    */
   private async parseNewOwner(
     user: SessionUser,
-    characterId: string,
+    guildId: string,
     body: Record<string, unknown>,
   ): Promise<
     | { discordUserId: string; names?: { username?: string; displayName?: string | null } }
     | undefined
   > {
     if (body.discordUserId === undefined) return undefined;
-    const { guildId, discordUserId: current } =
-      await this.charactersService.findOwnership(characterId);
-    const access = await this.guildAccess.find(user.id, guildId);
-    if (typeof body.discordUserId !== 'string' || !/^\d{15,25}$/.test(body.discordUserId)) {
+    if (typeof body.discordUserId !== 'string' || !DISCORD_ID.test(body.discordUserId)) {
       throw new BadRequestException('discordUserId must be a Discord user id (digits)');
     }
-    if (body.discordUserId === current) return undefined;
+    if (body.discordUserId === user.discordId) return undefined;
+    const access = await this.guildAccess.find(user.id, guildId);
     if (!access || !canManageAllCharacters(access)) {
       throw new ForbiddenException('Only Officers can move a character to another player');
     }
@@ -196,10 +271,17 @@ export class CharactersAdminController {
   }
 
   /** Officers can edit any character of their guild; members only their own. */
-  private async assertCanEdit(user: SessionUser, characterId: string): Promise<void> {
-    const { guildId, discordUserId } = await this.charactersService.findOwnership(characterId);
+  private async assertCanEdit(
+    user: SessionUser,
+    guildId: string,
+    characterId: string,
+  ): Promise<void> {
     const access = await this.guildAccess.find(user.id, guildId);
-    if (!canEditCharacter(access, discordUserId, user.discordId)) {
+    const ownerDiscordId = await this.charactersService.findOwnerDiscordId(characterId);
+    if (ownerDiscordId === null) {
+      throw new NotFoundException('Character not found');
+    }
+    if (!canEditCharacter(access, ownerDiscordId, user.discordId)) {
       throw new ForbiddenException('You can only change your own characters');
     }
   }
@@ -221,13 +303,22 @@ function parseFields(
     fields.class = body.class;
   } else missing('class');
 
-  // Checked against the guild's game version and faction in the service.
+  // Checked against the character's faction (the guild's, for a new one) in the service.
   if (body.race !== undefined) {
     if (typeof body.race !== 'string' || body.race === '') {
       throw new BadRequestException('race is required');
     }
     fields.race = body.race;
   } else missing('race');
+
+  // A new character's faction always comes from the guild it is created in; only an edit (a
+  // deliberate faction change) may set it.
+  if (options.partial && body.faction !== undefined) {
+    if (body.faction !== 'ALLIANCE' && body.faction !== 'HORDE') {
+      throw new BadRequestException('faction must be ALLIANCE or HORDE');
+    }
+    fields.faction = body.faction;
+  }
 
   if (body.roles !== undefined) {
     const roles = body.roles;

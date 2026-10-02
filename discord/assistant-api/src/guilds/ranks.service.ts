@@ -50,7 +50,9 @@ export class RanksService {
         officerRoleId: true,
         roleMappings: { select: { guildRole: true, discordRoleId: true } },
         servers: { where: { isMain: true }, select: { discordId: true } },
-        players: { select: { discordUserId: true } },
+        characterMemberships: {
+          select: { character: { select: { player: { select: { discordUserId: true } } } } },
+        },
       },
     });
     const main = guild?.servers[0];
@@ -66,7 +68,9 @@ export class RanksService {
       return {};
     }
 
-    const playerIds = guild.players.map((player) => player.discordUserId);
+    const playerIds = [
+      ...new Set(guild.characterMemberships.map((m) => m.character.player.discordUserId)),
+    ];
     const rolesByUser = await this.readMemberRoles(main.discordId, playerIds);
     const ranks: RanksDto = {};
     for (const userId of playerIds) {

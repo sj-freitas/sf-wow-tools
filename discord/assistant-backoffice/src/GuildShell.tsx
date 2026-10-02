@@ -1,6 +1,7 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import { Link, NavLink, Navigate, Route, Routes, useParams } from 'react-router-dom';
 import { bannerUrl } from './api';
+import { BioPage } from './BioPage';
 import { CreateGuildPage } from './CreateGuildPage';
 import { ArmoryContext, GamesContext } from './game';
 import { subscribeEvents } from './events';
@@ -38,6 +39,7 @@ interface Props {
  *       /roster               roster                       everyone in the guild
  *       /roster/create        add a character              everyone (members: their own)
  *       /roster/edit/:id      edit a character             Officers, or its owner
+ *       /roster/:characterPath/bio   a character's bio (RP servers only)  everyone; written by its owner
  *       /posts                posts (?q=&page=)            Officers
  *       /posts/create         new post                     Officers
  *       /posts/edit/:id       edit a post                  Officers
@@ -144,6 +146,7 @@ function GuildRoutes({ guilds, setup, currentUser, onGuildsChanged }: Props) {
           path="roster/edit/:characterId"
           element={<CharacterEditorPage guild={guild} currentUser={currentUser} />}
         />
+        <Route path="roster/:characterPath/bio" element={<BioPage guild={guild} />} />
         <Route
           path="posts"
           element={officersOnly(<PostsPage guild={guild} timezone={timezone} />)}

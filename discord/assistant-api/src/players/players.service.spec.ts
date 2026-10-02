@@ -16,6 +16,8 @@ describe('PlayersService', () => {
       },
     } as unknown as PrismaService;
     await new PlayersService(prisma, {} as DiscordOAuthService).findForGuild('guild-a');
-    assert.deepEqual(where, { guildId: 'guild-a' });
+    assert.deepEqual(where, {
+      characters: { some: { guilds: { some: { guildId: 'guild-a' } } } },
+    });
   });
 });

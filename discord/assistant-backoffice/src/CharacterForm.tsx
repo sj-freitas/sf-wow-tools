@@ -1,5 +1,10 @@
-import { useState, type FormEvent } from 'react';
-import { createCharacter, updateCharacter } from './api';
+import { useEffect, useState, type FormEvent } from 'react';
+import {
+  createCharacter,
+  fetchMigratableCharacters,
+  migrateCharacter,
+  updateCharacter,
+} from './api';
 import { MultiSelect } from './MultiSelect';
 import { fetchArmoryCharacter } from './api';
 import { CopyableName } from './CopyableName';
@@ -94,6 +99,39 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
   const [isMain, setIsMain] = useState(initial?.isMain ?? false);
   const [error, setError] = useState<string | null>(null);
 
+  // Adding a character: the chosen player's characters already on this server and faction, not in
+  // this guild yet — "migrate" one instead of creating a duplicate of the same character.
+  const [migratable, setMigratable] = useState<Character[]>([]);
+  const [toMigrate, setToMigrate] = useState('');
+  const [migrating, setMigrating] = useState(false);
+  useEffect(() => {
+    if (initial || discordUserId === '') {
+      setMigratable([]);
+      return;
+    }
+    let current = true;
+    fetchMigratableCharacters(guild.id, discordUserId)
+      .then((found) => {
+        if (!current) return;
+        setMigratable(found);
+        setToMigrate(found[0]?.id ?? '');
+      })
+      .catch(() => current && setMigratable([]));
+    return () => {
+      current = false;
+    };
+  }, [guild.id, discordUserId, initial]);
+
+  const runMigrate = () => {
+    if (toMigrate === '') return;
+    setError(null);
+    setMigrating(true);
+    migrateCharacter(guild.id, toMigrate)
+      .then(onSaved)
+      .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)))
+      .finally(() => setMigrating(false));
+  };
+
   // TEST: fill race, class and level from the armory (Officers), with the name typed above.
   const armory = useArmory();
   const [armoryBusy, setArmoryBusy] = useState(false);
@@ -157,7 +195,10 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
     const moved =
       editing && guild.isOfficer && discordUserId !== editing.playerId ? discordUserId : undefined;
     (initial
-      ? updateCharacter(initial.id, { ...fields, ...(moved ? { discordUserId: moved } : {}) })
+      ? updateCharacter(guild.id, initial.id, {
+          ...fields,
+          ...(moved ? { discordUserId: moved } : {}),
+        })
       : createCharacter(guild.id, { ...fields, discordUserId: discordUserId || undefined })
     )
       .then(onSaved)
@@ -185,6 +226,31 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
                 }
               />
             )}
+          </div>
+        )}
+        {!initial && migratable.length > 0 && (
+          <div className="field field-wide migrate-list">
+            <span>
+              Already on this server: migrate an existing character instead of creating a new one
+            </span>
+            <div className="migrate-row">
+              <select value={toMigrate} onChange={(e) => setToMigrate(e.target.value)}>
+                {migratable.map((character) => (
+                  <option key={character.id} value={character.id}>
+                    {`${character.firstName} ${character.lastName}`.trim()} — {character.class}
+                    {character.isMain ? ' (Main)' : ''}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                className="btn btn-sm"
+                disabled={migrating || toMigrate === ''}
+                onClick={runMigrate}
+              >
+                {migrating ? 'Migrating…' : 'Migrate'}
+              </button>
+            </div>
           </div>
         )}
         {!armory && guild.isOfficer && (
