@@ -15,6 +15,7 @@ import {
   lastNameRequiredMessage,
   loadGames,
   requiresLastName,
+  resolveServer,
   rolesOfClass,
   ruleSetOf,
   serversOf,
@@ -250,6 +251,25 @@ describe('asking about a version', () => {
     assert.equal(supportsBios('Forever', 'EU', 'PVP'), false);
     assert.equal(supportsBios('Forever', 'EU', 'PVE'), false);
     assert.equal(supportsBios('Retail', 'EU', 'RP'), false);
+  });
+
+  it('resolves a server from a URL of any case to its exact stored casing', () => {
+    assert.deepEqual(resolveServer('forever', 'eu', 'rp'), {
+      gameVersion: 'Forever',
+      region: 'EU',
+      realm: 'RP',
+    });
+    assert.deepEqual(resolveServer('FOREVER', 'EU', 'Hardcore'), {
+      gameVersion: 'Forever',
+      region: 'EU',
+      realm: 'Hardcore',
+    });
+  });
+
+  it('is undefined for a version, region or server that does not exist', () => {
+    assert.equal(resolveServer('nope', 'eu', 'rp'), undefined);
+    assert.equal(resolveServer('forever', 'mars', 'rp'), undefined);
+    assert.equal(resolveServer('forever', 'eu', 'nope'), undefined);
   });
 
   it('takes the last-name rule from the version’s config: only a version that says so has last names', () => {

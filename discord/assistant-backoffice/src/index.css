@@ -1025,13 +1025,11 @@ tbody tr:last-child td {
 .back-link:hover {
   color: var(--text);
 }
-.bio-link {
-  color: var(--muted);
-  font-size: 0.85rem;
+.character-link {
+  color: inherit;
   text-decoration: none;
 }
-.bio-link:hover {
-  color: var(--text);
+.character-link:hover {
   text-decoration: underline;
 }
 a.btn {
@@ -1189,6 +1187,107 @@ a.btn {
   border-radius: 8px;
   object-fit: cover;
   border: 1px solid var(--border);
+}
+
+/* A character's page: armory/logs placeholder links (not real buttons yet). */
+.character-links {
+  display: flex;
+  gap: 0.5rem;
+}
+.character-links .disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* ---- bio editor: Write/Preview tabs ---- */
+.write-tabs {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+.write-tab {
+  padding: 0.4rem 0.8rem;
+  border: 1px solid var(--border);
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  background: var(--surface-2);
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.write-tab-active {
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 600;
+}
+.write-tabs-count {
+  margin-left: auto;
+  font-size: 0.8rem;
+}
+.write-preview {
+  min-height: 200px;
+}
+
+/* ---- bio editor: image dropzone ---- */
+.image-dropzone {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  transition: border-color 0.15s;
+}
+.image-dropzone-active {
+  border-color: var(--blurple);
+  background: color-mix(in srgb, var(--blurple) 8%, transparent);
+}
+.image-tile {
+  position: relative;
+  display: flex;
+  width: 120px;
+  height: 120px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.image-tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.image-tile-remove {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 50%;
+  background: rgb(0 0 0 / 65%);
+  color: #fff;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+.image-tile-add {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  border: 1px dashed var(--border);
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.image-tile-add:hover {
+  border-color: var(--blurple);
+  color: var(--text);
+}
+.image-tile-add-icon {
+  font-size: 1.5rem;
+  line-height: 1;
 }
 
 .inline-select {

@@ -2,26 +2,33 @@ import assert from 'node:assert/strict';
 import { beforeEach, describe, it } from 'node:test';
 import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import type { AuthenticatedRequest } from '../auth/auth.types';
-import type { GuildAccessService } from '../auth/guild-access.service';
 import { CharacterBioController } from './character-bio.controller';
-import type { CharacterBioService, FindBioResult, UpdateBioResult } from './character-bio.service';
+import type {
+  CharacterBioService,
+  FindProfileResult,
+  UpdateBioResult,
+} from './character-bio.service';
 
 const ME = '111111111111111111';
 const req = { user: { id: 'user-1', discordId: ME } } as AuthenticatedRequest;
 
 describe('CharacterBioController', () => {
-  let isMember: boolean;
-  let findResult: FindBioResult;
+  let findResult: FindProfileResult;
   let updateResult: UpdateBioResult;
   let updates: { id: string; discordUserId: string; patch: unknown }[];
   let controller: CharacterBioController;
 
   beforeEach(() => {
-    isMember = true;
     findResult = {
       characterId: 'c1',
       name: 'Merric Stone',
+      class: 'Warrior',
+      race: 'Human',
+      level: 60,
+      roles: ['Tank'],
+      isMain: true,
       isOwner: true,
+      bioSupported: true,
       bioVisible: false,
       bio: 'Text',
       images: [],
@@ -29,34 +36,30 @@ describe('CharacterBioController', () => {
     updateResult = 'updated';
     updates = [];
     const bioService = {
-      findBio: async () => findResult,
+      findProfile: async () => findResult,
       updateBio: async (id: string, discordUserId: string, patch: unknown) => {
         updates.push({ id, discordUserId, patch });
         return updateResult;
       },
     } as unknown as CharacterBioService;
-    const guildAccess = {
-      find: async () => (isMember ? { isAdmin: false, isOfficer: false } : null),
-    } as unknown as GuildAccessService;
-    controller = new CharacterBioController(bioService, guildAccess);
+    controller = new CharacterBioController(bioService);
   });
 
   describe('find', () => {
-    it('returns the bio for a member of the guild', async () => {
-      assert.deepEqual(await controller.find(req, 'g', 'Merric-Stone'), findResult);
+    it('returns the character’s page for any logged-in user', async () => {
+      assert.deepEqual(
+        await controller.find(req, 'forever', 'eu', 'rp', 'Merric-Stone'),
+        findResult,
+      );
     });
 
-    it('forbids a non-member', async () => {
-      isMember = false;
-      await assert.rejects(controller.find(req, 'g', 'Merric-Stone'), ForbiddenException);
+    it('is a 404 when the service says "not-found"', async () => {
+      findResult = 'not-found';
+      await assert.rejects(
+        controller.find(req, 'forever', 'eu', 'rp', 'Merric-Stone'),
+        NotFoundException,
+      );
     });
-
-    for (const outcome of ['no-guild', 'not-supported', 'not-found'] as const) {
-      it(`is a 404 when the service says "${outcome}"`, async () => {
-        findResult = outcome;
-        await assert.rejects(controller.find(req, 'g', 'Merric-Stone'), NotFoundException);
-      });
-    }
   });
 
   describe('update', () => {

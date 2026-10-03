@@ -167,13 +167,13 @@ describe('GuildsService', () => {
       );
     });
 
-    it('gives the guild its address: version/region/server/guild-name', async () => {
+    it('gives the guild its address: version/region/server/guilds/guild-name', async () => {
       const guild = await service.create('u', {
         ...input,
         discordServerIds: ['free'],
         mainServerId: 'free',
       });
-      assert.equal(guild.path, 'forever/eu/firemaw/relic-hunters');
+      assert.equal(guild.path, 'forever/eu/firemaw/guilds/relic-hunters');
     });
 
     it('rejects a name whose address is already taken, ignoring case and punctuation', async () => {

@@ -21,6 +21,10 @@ export interface GuildAddress {
   name: string;
 }
 
-/** Where a guild lives in the backoffice: `<version>/<region>/<server>/<guild-name>`. */
+/**
+ * Where a guild lives in the backoffice: `<version>/<region>/<server>/guilds/<guild-name>`. The
+ * literal `guilds` segment keeps this from colliding with `<version>/<region>/<server>/characters/…`
+ * (a character's own, guild-agnostic page) at the same position in the address.
+ */
 export const guildPath = (guild: GuildAddress): string =>
-  [guild.gameVersion, guild.region, guild.realm, guild.name].map(slugify).join('/');
+  [guild.gameVersion, guild.region, guild.realm, 'guilds', guild.name].map(slugify).join('/');

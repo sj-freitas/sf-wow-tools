@@ -1,7 +1,7 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import { Link, NavLink, Navigate, Route, Routes, useParams } from 'react-router-dom';
 import { bannerUrl } from './api';
-import { BioPage } from './BioPage';
+import { CharacterPage } from './CharacterPage';
 import { CreateGuildPage } from './CreateGuildPage';
 import { ArmoryContext, GamesContext } from './game';
 import { subscribeEvents } from './events';
@@ -30,16 +30,23 @@ interface Props {
 /**
  * Everything behind the login.
  *
- *   /                                     goes to the guild you last used (a cookie), else to /overview
- *   /overview                             your guilds: pick one or add one
- *   /guilds/create                        set up a new guild
- *   /<version>/<region>/<server>/<guild>  a guild, e.g. /forever/eu/firemaw/relic-hunters, and under it:
+ *   /                                               goes to the guild you last used (a cookie), else /overview
+ *   /overview                                       your guilds: pick one or add one
+ *   /guilds/create                                  set up a new guild
+ *   /<version>/<region>/<server>/characters/<name>  a character's own page (guild-agnostic: the
+ *                                                    same one regardless of which guild it is in,
+ *                                                    or none); basic info to everyone, its bio too
+ *                                                    once its player shares it (RP servers only)
+ *   /<version>/<region>/<server>/characters/<name>/bio   writing that bio; its own player only
+ *   /<version>/<region>/<server>/guilds/<guild>      a guild, e.g. /forever/eu/firemaw/guilds/relic-hunters
+ *                                                    (the literal "guilds" keeps this from
+ *                                                    colliding with a character's address above),
+ *                                                    and under it:
  *       /                     Welcome (the welcome post)   everyone in the guild
  *       /edit                 write the welcome post       Officers
  *       /roster               roster                       everyone in the guild
  *       /roster/create        add a character              everyone (members: their own)
  *       /roster/edit/:id      edit a character             Officers, or its owner
- *       /roster/:characterPath/bio   a character's bio (RP servers only)  everyone; written by its owner
  *       /posts                posts (?q=&page=)            Officers
  *       /posts/create         new post                     Officers
  *       /posts/edit/:id       edit a post                  Officers
@@ -70,7 +77,15 @@ export function GuildShell({ guilds, setup, currentUser, onGuildsChanged }: Prop
             element={<CreateGuildPage setup={setup} onCreated={onGuildsChanged} />}
           />
           <Route
-            path=":version/:region/:realm/:guildSlug/*"
+            path=":version/:region/:realm/characters/:namePath"
+            element={<CharacterPage editMode={false} />}
+          />
+          <Route
+            path=":version/:region/:realm/characters/:namePath/bio"
+            element={<CharacterPage editMode={true} />}
+          />
+          <Route
+            path=":version/:region/:realm/guilds/:guildSlug/*"
             element={
               <GuildRoutes
                 guilds={guilds}
@@ -104,7 +119,7 @@ function LastGuildRedirect({ guilds }: { guilds: Guild[] }) {
 /** Finds the guild the address points to and shows its pages, or says it wasn't found. */
 function GuildRoutes({ guilds, setup, currentUser, onGuildsChanged }: Props) {
   const { version, region, realm, guildSlug } = useParams();
-  const path = [version, region, realm, guildSlug].join('/');
+  const path = [version, region, realm, 'guilds', guildSlug].join('/');
   const guild = guilds.find((g) => g.path === path);
 
   // Opening a guild makes it the one `/` goes to next time.
@@ -146,7 +161,6 @@ function GuildRoutes({ guilds, setup, currentUser, onGuildsChanged }: Props) {
           path="roster/edit/:characterId"
           element={<CharacterEditorPage guild={guild} currentUser={currentUser} />}
         />
-        <Route path="roster/:characterPath/bio" element={<BioPage guild={guild} />} />
         <Route
           path="posts"
           element={officersOnly(<PostsPage guild={guild} timezone={timezone} />)}

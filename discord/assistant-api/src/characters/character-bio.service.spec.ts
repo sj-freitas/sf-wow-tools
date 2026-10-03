@@ -14,9 +14,17 @@ describe('CharacterBioService', () => {
     id: string;
     firstName: string;
     lastName: string;
+    class: string;
+    race: string;
+    level: number;
+    roles: ('TANK' | 'HEALER')[];
+    isMain: boolean;
     bio: string;
     bioVisible: boolean;
     discordUserId: string;
+    gameVersion: string;
+    region: string;
+    realm: string;
   } | null;
   let updates: Record<string, unknown>[];
   let service: CharacterBioService;
@@ -29,19 +37,27 @@ describe('CharacterBioService', () => {
       id: 'c1',
       firstName: 'Merric',
       lastName: 'Stone',
+      class: 'Warrior',
+      race: 'Human',
+      level: 60,
+      roles: ['TANK'],
+      isMain: true,
       bio: 'A quiet blacksmith.',
       bioVisible: false,
       discordUserId: OWNER,
+      gameVersion,
+      region,
+      realm,
     };
     updates = [];
     const prisma = {
-      guild: {
-        findUnique: async () => ({ gameVersion, region, realm }),
-      },
       character: {
         findFirst: async (args: any) => {
           if (!character) return null;
           const matches =
+            character.gameVersion === args.where.gameVersion &&
+            character.region === args.where.region &&
+            character.realm === args.where.realm &&
             character.firstName.toLowerCase() === args.where.firstName.equals.toLowerCase() &&
             character.lastName.toLowerCase() === args.where.lastName.equals.toLowerCase();
           if (!matches) return null;
@@ -49,6 +65,11 @@ describe('CharacterBioService', () => {
             id: character.id,
             firstName: character.firstName,
             lastName: character.lastName,
+            class: character.class,
+            race: character.race,
+            level: character.level,
+            roles: character.roles,
+            isMain: character.isMain,
             bio: character.bio,
             bioVisible: character.bioVisible,
             images: [],
@@ -58,9 +79,9 @@ describe('CharacterBioService', () => {
         findUnique: async (args: any) => {
           if (!character || args.where.id !== character.id) return null;
           return {
-            gameVersion,
-            region,
-            realm,
+            gameVersion: character.gameVersion,
+            region: character.region,
+            realm: character.realm,
             player: { discordUserId: character.discordUserId },
           };
         },
@@ -74,12 +95,22 @@ describe('CharacterBioService', () => {
     service = new CharacterBioService(prisma);
   });
 
-  describe('finding a bio', () => {
-    it('finds a character by Name-Lastname, splitting on the first dash', async () => {
-      const result = await service.findBio('g', 'Merric-Stone', OTHER);
+  describe('finding a character’s page', () => {
+    const base = {
+      characterId: 'c1',
+      name: 'Merric Stone',
+      class: 'Warrior',
+      race: 'Human',
+      level: 60,
+      roles: ['Tank'],
+      isMain: true,
+      bioSupported: true,
+    };
+
+    it('finds a character by server and Name-Lastname, splitting on the first dash', async () => {
+      const result = await service.findProfile('forever', 'eu', 'rp', 'Merric-Stone', OTHER);
       assert.deepEqual(result, {
-        characterId: 'c1',
-        name: 'Merric Stone',
+        ...base,
         isOwner: false,
         bioVisible: false,
         bio: null, // not visible, and the viewer is not the owner
@@ -87,16 +118,15 @@ describe('CharacterBioService', () => {
       });
     });
 
-    it('is case-insensitive', async () => {
-      const result = await service.findBio('g', 'merric-STONE', OTHER);
+    it('resolves the server case-insensitively', async () => {
+      const result = await service.findProfile('FOREVER', 'EU', 'RP', 'merric-STONE', OTHER);
       assert.notEqual(result, 'not-found');
     });
 
     it('shows the bio to its own player even when not visible', async () => {
-      const result = await service.findBio('g', 'Merric-Stone', OWNER);
+      const result = await service.findProfile('forever', 'eu', 'rp', 'Merric-Stone', OWNER);
       assert.deepEqual(result, {
-        characterId: 'c1',
-        name: 'Merric Stone',
+        ...base,
         isOwner: true,
         bioVisible: false,
         bio: 'A quiet blacksmith.',
@@ -106,10 +136,9 @@ describe('CharacterBioService', () => {
 
     it('shows the bio to anyone once it is visible', async () => {
       character!.bioVisible = true;
-      const result = await service.findBio('g', 'Merric-Stone', OTHER);
+      const result = await service.findProfile('forever', 'eu', 'rp', 'Merric-Stone', OTHER);
       assert.deepEqual(result, {
-        characterId: 'c1',
-        name: 'Merric Stone',
+        ...base,
         isOwner: false,
         bioVisible: true,
         bio: 'A quiet blacksmith.',
@@ -118,25 +147,34 @@ describe('CharacterBioService', () => {
     });
 
     it('is "not-found" for a character that does not exist', async () => {
-      assert.equal(await service.findBio('g', 'Nobody', OTHER), 'not-found');
+      assert.equal(await service.findProfile('forever', 'eu', 'rp', 'Nobody', OTHER), 'not-found');
     });
 
-    it('is "no-guild" when the guild does not exist', async () => {
-      const prisma = { guild: { findUnique: async () => null } } as unknown as PrismaService;
+    it('is "not-found" for a server that does not exist', async () => {
       assert.equal(
-        await new CharacterBioService(prisma).findBio('g', 'Merric-Stone', OWNER),
-        'no-guild',
+        await service.findProfile('retail', 'eu', 'rp', 'Merric-Stone', OWNER),
+        'not-found',
       );
     });
 
-    it('is "not-supported" off an RP server, even to the owner', async () => {
+    it('always shows class/race/level, but hides the bio off an RP server, even to the owner', async () => {
       realm = 'PVE';
-      assert.equal(await service.findBio('g', 'Merric-Stone', OWNER), 'not-supported');
+      character!.realm = 'PVE';
+      character!.bioVisible = true;
+      const result = await service.findProfile('forever', 'eu', 'pve', 'Merric-Stone', OWNER);
+      assert.deepEqual(result, {
+        ...base,
+        bioSupported: false,
+        isOwner: true,
+        bioVisible: false,
+        bio: null,
+        images: [],
+      });
     });
 
     it('splits only on the first dash (a last name never has one, but just in case)', async () => {
       character!.lastName = 'Von-Stone';
-      const result = await service.findBio('g', 'Merric-Von-Stone', OWNER);
+      const result = await service.findProfile('forever', 'eu', 'rp', 'Merric-Von-Stone', OWNER);
       assert.notEqual(result, 'not-found');
     });
   });
@@ -159,13 +197,14 @@ describe('CharacterBioService', () => {
 
     it('is "not-supported" off an RP server, even to the owner', async () => {
       realm = 'PVE';
+      character!.realm = 'PVE';
       assert.equal(await service.updateBio('c1', OWNER, { bio: 'x' }), 'not-supported');
     });
 
     it('refuses a bio over the length limit', async () => {
       await assert.rejects(
         service.updateBio('c1', OWNER, { bio: 'x'.repeat(MAX_BIO_LENGTH + 1) }),
-        /4000 characters/,
+        /20000 characters/,
       );
       assert.equal(updates.length, 0);
     });

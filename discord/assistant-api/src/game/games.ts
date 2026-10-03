@@ -125,6 +125,39 @@ export function classesOfRace(
 export const serversOf = (gameVersion: string, region: RegionId): readonly string[] =>
   Object.keys(getGame(gameVersion)?.allowedServers[region] ?? {});
 
+/** A server, with the exact casing it is stored as (guilds, characters: `gameVersion`/`region`/`realm`). */
+export interface ServerId {
+  gameVersion: string;
+  region: string;
+  realm: string;
+}
+
+/**
+ * Resolves a server from URL segments of any case (a character's page is addressed by its server,
+ * lower case in the address, e.g. `/forever/eu/rp/characters/…`) to the exact casing it is stored
+ * as. Undefined when no such server exists.
+ */
+export function resolveServer(
+  urlVersion: string,
+  urlRegion: string,
+  urlRealm: string,
+): ServerId | undefined {
+  const gameVersion = gameVersions().find(
+    (version) => version.toLowerCase() === urlVersion.toLowerCase(),
+  );
+  if (!gameVersion) return undefined;
+  const allowedServers = getGame(gameVersion)?.allowedServers ?? {};
+  const region = Object.keys(allowedServers).find(
+    (id) => id.toLowerCase() === urlRegion.toLowerCase(),
+  );
+  if (!region) return undefined;
+  const realm = serversOf(gameVersion, region as RegionId).find(
+    (server) => server.toLowerCase() === urlRealm.toLowerCase(),
+  );
+  if (!realm) return undefined;
+  return { gameVersion, region, realm };
+}
+
 /**
  * The rule set a server enforces (e.g. `'RP'`, `'PVP'`), or undefined if we don't know it. Takes
  * a plain region string (a guild's stored `region` is one, not always narrowed to `RegionId`).

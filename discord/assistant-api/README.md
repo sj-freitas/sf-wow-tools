@@ -165,31 +165,36 @@ right, your Discord username) links to the Overview, lists your guilds to switch
 guild, and logs out.
 
 Every guild page lives under the guild's own address, built by the API (`path` on each guild):
-`/<version>/<region>/<server>/<guild-name>`, all lower case with hyphens, for example
-`/forever/eu/firemaw/relic-hunters`. "Server" is the WoW realm. Two guilds can't share an address:
-the database keeps name, realm, game version and region unique and the API also compares names
-ignoring case and punctuation, and renaming a guild moves its address (the
-settings page follows it).
+`/<version>/<region>/<server>/guilds/<guild-name>`, all lower case with hyphens, for example
+`/forever/eu/firemaw/guilds/relic-hunters`. "Server" is the WoW realm. The literal `guilds` segment
+is there so this never collides with a character's own address (below), which sits at the same
+depth: `/<version>/<region>/<server>/characters/<name>`. Two guilds can't share an address: the
+database keeps name, realm, game version and region unique and the API also compares names ignoring
+case and punctuation, and renaming a guild moves its address (the settings page follows it).
 
-| Path                                 | Page                                          | Who                               |
-| ------------------------------------ | --------------------------------------------- | --------------------------------- |
-| `/`                                  | Your last guild, else `/overview`             | anyone logged in                  |
-| `/overview`                          | Overview: your guilds                         | anyone logged in                  |
-| `/guilds/create`                     | Set up a new guild                            | anyone logged in                  |
-| `<guild>/`                           | Welcome: the guild's welcome post             | everyone in the guild             |
-| `<guild>/edit`                       | Write the welcome post                        | Officers                          |
-| `<guild>/roster`                     | Roster                                        | everyone in the guild             |
-| `<guild>/roster/create`, `/edit/:id` | Add / edit a character                        | members: their own; Officers: any |
-| `<guild>/posts?q=&page=`             | Posts (search and page in the address)        | Officers                          |
-| `<guild>/posts/create`, `/edit/:id`  | New / edit post                               | Officers                          |
-| `<guild>/honeypots`, `/create`       | Honeypots (`/honeypot` redirects)             | Officers                          |
-| `<guild>/officer-requests`, `/:id`   | Members' messages to officers; officers reply | Officers                          |
-| `<guild>/settings`                   | Guild settings, incl. the welcome post        | Guild-Assistants and Officers     |
+| Path                                                 | Page                                                     | Who                               |
+| ---------------------------------------------------- | -------------------------------------------------------- | --------------------------------- |
+| `/`                                                  | Your last guild, else `/overview`                        | anyone logged in                  |
+| `/overview`                                          | Overview: your guilds                                    | anyone logged in                  |
+| `/guilds/create`                                     | Set up a new guild                                       | anyone logged in                  |
+| `/<version>/<region>/<server>/characters/<name>`     | A character's own page (guild-agnostic, below)           | anyone logged in                  |
+| `/<version>/<region>/<server>/characters/<name>/bio` | Writing its bio                                          | its own player                    |
+| `<guild>/`                                           | Welcome: the guild's welcome post                        | everyone in the guild             |
+| `<guild>/edit`                                       | Write the welcome post                                   | Officers                          |
+| `<guild>/roster`                                     | Roster (a character's name links to its own page, above) | everyone in the guild             |
+| `<guild>/roster/create`, `/edit/:id`                 | Add / edit a character                                   | members: their own; Officers: any |
+| `<guild>/posts?q=&page=`                             | Posts (search and page in the address)                   | Officers                          |
+| `<guild>/posts/create`, `/edit/:id`                  | New / edit post                                          | Officers                          |
+| `<guild>/honeypots`, `/create`                       | Honeypots (`/honeypot` redirects)                        | Officers                          |
+| `<guild>/officer-requests`, `/:id`                   | Members' messages to officers; officers reply            | Officers                          |
+| `<guild>/settings`                                   | Guild settings, incl. the welcome post                   | Guild-Assistants and Officers     |
 
 Members only see Welcome and Roster in the navigation; opening any other page sends them to the guild's
 welcome page. An address that isn't one of your guilds says so and links back to the Overview. Save and
 Cancel on a create/edit page return to the list you came from, search included. After logging in
-you land back on the page you were on.
+you land back on the page you were on. A character's own page is the exception: it isn't under any
+guild's address (see "Characters, players and guilds" below), so there is no "list you came from" to
+return to — its own back link falls back to the Overview.
 
 **Welcome post.** Optional markdown text on the guild (`guilds.home_markdown`, null until an Officer
 writes one), shown on the Welcome page to everyone in the guild (`GET /api/guilds/:id/home`) and written by
@@ -645,43 +650,54 @@ turns every existing character → player → guild chain into a `character_guil
 `20261004090000_character_faction` then backfills the new `faction` column from one of each character's
 guild memberships (falling back to Alliance, an arbitrary tie-break, for the rare one left with none).
 
-## Character bios
+## A character's own page, and its bio
 
-A character can have a free-text bio (and a few images), on a guild whose server's **rule set is
-`'RP'`** only (`allowedServers.<region>.<server>.ruleSet`, above) — checked by `supportsBios`
-(`src/game/games.ts`) against the **character's own** server fields (every guild it is in necessarily
-shares them, by the `wrong-server` check above), never a hard-coded server name or a specific guild.
-`CharacterBioService` and `CharacterBioController` (`src/characters/character-bio.*`) hold the feature; it
-does not go through `CharactersService`, because its permission model is different from the rest of the
-character, and because it is guild-agnostic like the character itself — the same bio (and images) show in
-every guild the character is in:
+Every character has one page, **guild-agnostic**: `/<version>/<region>/<server>/characters/<name>`
+in the backoffice, the same address no matter which guild(s) it is in, or none — clicking a
+character's name anywhere in a guild's roster goes there. It shows the character's class, race,
+level and roles, placeholder links for an armory and logs (wired up for real later), and — on a
+server whose **rule set is `'RP'`** only (`allowedServers.<region>.<server>.ruleSet`, above) — its
+bio: free text and a few images, written by its own player. `CharacterBioService` and
+`CharacterBioController` (`src/characters/character-bio.*`) hold all of this; it does not go through
+`CharactersService`, because the page is reached by server + name instead of by a guild, and the
+bio's permission model is different from the rest of the character.
 
+- **`GET /api/game/:gameVersion/:region/:realm/characters/:namePath`** (any logged-in user — no guild
+  membership check at all) returns the whole page: class/race/level/roles plus the bio as this viewer
+  may see it. The URL segments are case-insensitive (`resolveServer`, `src/game/games.ts`, matches
+  them to the exact stored casing); `namePath` is `Name-Lastname` for a version with last names,
+  `Name` otherwise, split on the first dash, matched case-insensitively among **all** characters of
+  that server — not scoped to any one guild, since the page isn't either. Character names are unique
+  per player and server, not globally, so two different players could in principle share one; this
+  returns whichever matches first.
+- **Visible globally, not at the guild level.** Whether the viewer can see the bio depends only on
+  `bioVisible` (and whether they are the owner) — never on which guild, if any, they share with the
+  character. `bioSupported` in the response is `false` when the server's rule set isn't `'RP'`: the
+  whole bio section (text, images, `bioVisible`) doesn't apply then, rather than being merely hidden.
 - **Only the character's own player writes it** — the Discord account that matches
   `characters.player.discord_user_id` — never an Officer, unlike everything else about a character.
   `PATCH /api/characters/:id/bio` (`{ bio?, bioVisible? }`) checks that and nothing else; a bio over
-  4000 characters (`MAX_BIO_LENGTH`) is refused.
+  `MAX_BIO_LENGTH` (20,000) characters is refused — generous on purpose, a few thousand words of
+  backstory, not an open-ended text dump.
 - **Written and stored as markdown**, the same renderer as the welcome post (`MarkdownView`, GitHub
   flavour — headings, bold, lists, links, images, tables; never raw HTML, so a bio can't inject
   anything into what other members see). The backoffice renders it full width with its images as a
-  strip at the top, closer to a little personal page than a settings field; the owner gets a
-  "Preview" toggle on the editor, like the welcome post's.
+  strip at the top, closer to a little personal page than a settings field; the editor has a
+  GitHub-style Write/Preview tab switch and a drag-and-drop image dropzone.
 - **Visible to the owner always; to everyone else only once `bioVisible` is set.** `bioVisible` defaults
   to `false`, so a bio is private until its player opts in. Images follow the same rule (hidden entirely,
   not just the text, when the bio isn't visible and the viewer isn't the owner).
 - **Up to `MAX_BIO_IMAGES` (4) images:** `POST /api/characters/:id/bio/images` (multipart, field `image`,
   PNG/JPEG/GIF/WebP, same `MAX_IMAGE_BYTES` limit as post images), `DELETE .../images/:imageId`, both
   owner-only like the text; `GET /api/characters/bio/images/:imageId` serves the bytes to any logged-in
-  user (the id is only ever handed out through `find`, which already applies the visibility rule — not
-  rechecked on every byte fetch, the same trade-off as a Discord CDN link).
-- **Looked up by name, not id:** `GET /api/guilds/:guildId/characters/bio/:namePath` (any member of the
-  guild) takes the deep-link path — `Name-Lastname` for a version with last names, `Name` otherwise —
-  split on the first dash, case-insensitively, among the characters **in that guild**
-  (`guilds: { some: { guildId } }`). Character names are unique **per player and server**, not per guild,
-  so two different players could in principle share one; the lookup returns whichever matches first. The
-  backoffice link is `.../roster/<namePath>/bio`, shown on the roster only when `supportsBios` is true for
-  the guild.
+  user (the id is only ever handed out through the page fetch above, which already applies the
+  visibility rule — not rechecked on every byte fetch, the same trade-off as a Discord CDN link).
+  Saving the editor sends the player back to the character's own (view) page.
 - `characters.bio` (default `''`) and `characters.bio_visible` (default `false`) are plain columns on the
   character; `character_images` is a separate table (mirrors `post_images`), one row per image.
+
+"Visible globally" is still **behind login**: the whole backoffice sits behind Discord OAuth, so
+viewing a character's page needs a backoffice account, just not membership of any particular guild.
 
 ## Database
 

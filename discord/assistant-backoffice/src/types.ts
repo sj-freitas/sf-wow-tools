@@ -19,14 +19,22 @@ export interface BioImage {
 }
 
 /**
- * A character's bio, as fetched for one viewer: only its own player (`isOwner`) can ever write it,
- * and `bio`/`images` are only there when they may see it (the owner, or `bioVisible` is set). Only
- * offered on guilds whose server has the 'RP' rule set.
+ * A character's own page, guild-agnostic (the same one regardless of which guild it is in, or
+ * none), as fetched for one viewer: only its own player (`isOwner`) can ever write the bio, and
+ * `bio`/`images` are only there when they may see it (the owner, or `bioVisible` is set).
+ * `bioSupported` is false when its server's rule set isn't 'RP' — the bio section (and
+ * `bioVisible`/`bio`/`images`) don't apply at all then, rather than being merely hidden.
  */
-export interface CharacterBio {
+export interface CharacterProfile {
   characterId: string;
   name: string;
+  class: string;
+  race: string;
+  level: number;
+  roles: string[];
+  isMain: boolean;
   isOwner: boolean;
+  bioSupported: boolean;
   bioVisible: boolean;
   bio: string | null;
   images: BioImage[];

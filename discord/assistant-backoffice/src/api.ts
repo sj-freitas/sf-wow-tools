@@ -1,7 +1,7 @@
 import type {
   BioImage,
   Character,
-  CharacterBio,
+  CharacterProfile,
   CharacterPatch,
   Conversation,
   ConversationsPage,
@@ -193,8 +193,17 @@ export const updateCharacter = (
 export const deleteCharacter = (guildId: string, id: string): Promise<void> =>
   request('DELETE', `/api/guilds/${guildId}/characters/${id}`);
 
-export const fetchCharacterBio = (guildId: string, namePath: string): Promise<CharacterBio> =>
-  request('GET', `/api/guilds/${guildId}/characters/bio/${encodeURIComponent(namePath)}`);
+/** A character's own page (guild-agnostic: by its server, not any one guild). */
+export const fetchCharacterProfile = (
+  gameVersion: string,
+  region: string,
+  realm: string,
+  namePath: string,
+): Promise<CharacterProfile> =>
+  request(
+    'GET',
+    `/api/game/${encodeURIComponent(gameVersion)}/${encodeURIComponent(region)}/${encodeURIComponent(realm)}/characters/${encodeURIComponent(namePath)}`,
+  );
 
 export const updateCharacterBio = (
   characterId: string,

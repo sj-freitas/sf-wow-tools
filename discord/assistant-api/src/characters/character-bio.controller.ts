@@ -21,45 +21,41 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import type { Response } from 'express';
 import { AuthGuard } from '../auth/auth.guard';
 import type { AuthenticatedRequest } from '../auth/auth.types';
-import { GuildAccessService } from '../auth/guild-access.service';
 import { MAX_IMAGE_BYTES } from '../officer-requests/attachments';
 import {
   CharacterBioService,
   MAX_BIO_IMAGES,
   type BioImage,
-  type BioView,
+  type CharacterProfile,
 } from './character-bio.service';
 
 /**
- * A character's bio: free text, personal to its own player, shown to others only when they choose
- * (and only at all on a guild whose server has the 'RP' rule set). See `CharacterBioService`.
+ * A character's own page (guild-agnostic: the same one address regardless of which guild it is
+ * in, or none) and its bio: free text, personal to its own player, shown to others only when they
+ * choose (and only at all on a server whose rule set is 'RP'). See `CharacterBioService`.
  */
 @Controller()
 @UseGuards(AuthGuard)
 export class CharacterBioController {
-  constructor(
-    private readonly bioService: CharacterBioService,
-    private readonly guildAccess: GuildAccessService,
-  ) {}
+  constructor(private readonly bioService: CharacterBioService) {}
 
-  /** Any member of the guild; the bio text itself only if the viewer may see it. */
-  @Get('guilds/:guildId/characters/bio/:namePath')
+  /** Any logged-in user; the bio text and images only if the viewer may see them. */
+  @Get('game/:gameVersion/:region/:realm/characters/:namePath')
   async find(
     @Req() req: AuthenticatedRequest,
-    @Param('guildId') guildId: string,
+    @Param('gameVersion') gameVersion: string,
+    @Param('region') region: string,
+    @Param('realm') realm: string,
     @Param('namePath') namePath: string,
-  ): Promise<BioView> {
-    if (!(await this.guildAccess.find(req.user.id, guildId))) {
-      throw new ForbiddenException('You are not a member of this guild');
-    }
-    const result = await this.bioService.findBio(guildId, namePath, req.user.discordId);
-    if (result === 'no-guild' || result === 'not-supported' || result === 'not-found') {
-      throw new NotFoundException(
-        result === 'not-supported'
-          ? 'Bios are only for guilds on an RP server'
-          : 'Character not found',
-      );
-    }
+  ): Promise<CharacterProfile> {
+    const result = await this.bioService.findProfile(
+      gameVersion,
+      region,
+      realm,
+      namePath,
+      req.user.discordId,
+    );
+    if (result === 'not-found') throw new NotFoundException('Character not found');
     return result;
   }
 

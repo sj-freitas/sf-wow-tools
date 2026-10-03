@@ -29,10 +29,10 @@ describe('slugify', () => {
 });
 
 describe('guildPath', () => {
-  it('is version/region/server/guild-name, all lower case', () => {
+  it('is version/region/server/guilds/guild-name, all lower case', () => {
     assert.equal(
       guildPath({ gameVersion: 'Forever', region: 'EU', realm: 'Firemaw', name: 'Relic Hunters' }),
-      'forever/eu/firemaw/relic-hunters',
+      'forever/eu/firemaw/guilds/relic-hunters',
     );
   });
 

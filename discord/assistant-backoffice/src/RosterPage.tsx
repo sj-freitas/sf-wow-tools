@@ -6,10 +6,9 @@ import { CopyableName } from './CopyableName';
 import { InlineSpinner, SkeletonRows, Spinner } from './Loading';
 import { subscribeEvents } from './events';
 import { characterPath, playerLabel } from './format';
-import { guildSupportsBios, useGames } from './game';
 import { ROLE_LABELS, type Guild, type Player, type Ranks, type User } from './types';
 import { useCurrentUrl, useReturnTo } from './useReturnTo';
-import { guildPath } from './guildPath';
+import { characterPagePath, guildPath } from './guildPath';
 
 interface Props {
   guild: Guild;
@@ -24,8 +23,6 @@ export function RosterPage({ guild, currentUser }: Props) {
   const [actionError, setActionError] = useState<string | null>(null);
   const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
   const here = useCurrentUrl();
-  const games = useGames();
-  const bios = guildSupportsBios(guild, games);
 
   const load = useCallback(() => {
     fetchPlayers(guild.id)
@@ -180,21 +177,15 @@ export function RosterPage({ guild, currentUser }: Props) {
                   <Fragment key={character.id}>
                     <tr className={deleting ? 'row-pending' : undefined}>
                       <td data-label="Character">
-                        {`${character.firstName} ${character.lastName}`.trim()}
+                        <Link
+                          className="character-link"
+                          to={characterPagePath(guild, characterPath(character))}
+                          state={{ from: here }}
+                        >
+                          {`${character.firstName} ${character.lastName}`.trim()}
+                        </Link>
                         {character.isMain && (
                           <span className="badge badge-main main-pill">Main</span>
-                        )}
-                        {bios && (
-                          <>
-                            {' '}
-                            <Link
-                              className="bio-link"
-                              to={guildPath(guild, `roster/${characterPath(character)}/bio`)}
-                              state={{ from: here }}
-                            >
-                              Bio
-                            </Link>
-                          </>
                         )}
                       </td>
                       <td data-label="Class">{character.class}</td>

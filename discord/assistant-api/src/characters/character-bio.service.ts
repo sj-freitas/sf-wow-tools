@@ -2,10 +2,12 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { sniffImageType } from '../guilds/banner';
 import { MAX_IMAGE_BYTES } from '../officer-requests/attachments';
-import { supportsBios } from '../game/games';
+import { resolveServer, supportsBios } from '../game/games';
 import { formatCharacterName } from './character-name';
+import { ROLE_LABELS } from './role-labels';
 
-export const MAX_BIO_LENGTH = 4000;
+/** Generous, but bounded: a few thousand words of backstory, not an open-ended upload target. */
+export const MAX_BIO_LENGTH = 20_000;
 export const MAX_BIO_IMAGES = 4;
 
 export interface BioPatch {
@@ -18,19 +20,30 @@ export interface BioImage {
   contentType: string;
 }
 
-export interface BioView {
+/**
+ * A character's own page: who it is (guild-agnostic — the same page regardless of which guild it
+ * is in, or none), and its bio as this viewer may see it.
+ */
+export interface CharacterProfile {
   characterId: string;
   name: string;
-  /** Whether the viewer is the character's own player: only they may edit it. */
+  class: string;
+  race: string;
+  level: number;
+  roles: string[];
+  isMain: boolean;
+  /** Whether the viewer is the character's own player: only they may edit the bio. */
   isOwner: boolean;
+  /** Whether this server offers bios at all (its rule set is 'RP'); hide the section if not. */
+  bioSupported: boolean;
   bioVisible: boolean;
-  /** The text, only when the viewer may see it (the owner, or `bioVisible` is set). */
+  /** The bio text, only when the viewer may see it (the owner, or `bioVisible` is set). */
   bio: string | null;
   /** Images, same visibility rule as the text; always empty (not null) when hidden. */
   images: BioImage[];
 }
 
-export type FindBioResult = BioView | 'no-guild' | 'not-supported' | 'not-found';
+export type FindProfileResult = CharacterProfile | 'not-found';
 export type UpdateBioResult = 'updated' | 'not-found' | 'forbidden' | 'not-supported';
 export type AddImageResult = BioImage | 'not-found' | 'forbidden' | 'not-supported' | 'too-many';
 export type RemoveImageResult = 'removed' | 'not-found' | 'forbidden';
@@ -38,48 +51,53 @@ export type RemoveImageResult = 'removed' | 'not-found' | 'forbidden';
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
- * A character's bio: free text (and a few images) its own player writes about it, on guilds whose
- * server has the 'RP' rule set (src/game/<version>/config.ts). Unlike the rest of the character, an
- * Officer cannot write it for someone else — it is personal, roleplay flavor text, not roster data.
- * Guild-agnostic like the character itself: whether it is offered at all is checked against the
- * character's own server, not any one guild it happens to be in (every guild a character is in
- * shares its server, so these always agree).
+ * A character's own page and its bio: free text (and a few images) its own player writes about
+ * it, offered on a server whose rule set is 'RP' (src/game/<version>/config.ts). Unlike the rest
+ * of the character, an Officer cannot write the bio for someone else — it is personal, roleplay
+ * flavor text, not roster data. Both are guild-agnostic: reached by the character's server and
+ * name, not by any one guild it happens to be in (every guild it is in shares that server).
  */
 @Injectable()
 export class CharacterBioService {
   constructor(private readonly prisma: PrismaService) {}
 
   /**
-   * Looks a character up by name within a guild (`Name-Lastname` split on the first dash, only
-   * for versions that have last names), and returns its bio as this viewer may see it: always to
-   * its own player, otherwise only when `bioVisible` is set.
+   * Looks a character up by its server (from a URL, any case) and name (`Name-Lastname` split on
+   * the first dash, only for versions that have last names, case-insensitive), and returns its
+   * page: bio text and images only as this viewer may see them (always to its own player,
+   * otherwise only when `bioVisible` is set).
    *
-   * Character names are unique per player and server, not per guild, so two different players
+   * Character names are unique per player and server, not globally, so two different players
    * could in principle share a name; this returns whichever matches first.
    */
-  async findBio(
-    guildId: string,
+  async findProfile(
+    urlVersion: string,
+    urlRegion: string,
+    urlRealm: string,
     namePath: string,
     viewerDiscordUserId: string | undefined,
-  ): Promise<FindBioResult> {
-    const guild = await this.prisma.guild.findUnique({
-      where: { id: guildId },
-      select: { gameVersion: true, region: true, realm: true },
-    });
-    if (!guild) return 'no-guild';
-    if (!supportsBios(guild.gameVersion, guild.region, guild.realm)) return 'not-supported';
+  ): Promise<FindProfileResult> {
+    const server = resolveServer(urlVersion, urlRegion, urlRealm);
+    if (!server) return 'not-found';
 
     const [firstName, lastName] = splitNamePath(namePath);
     const character = await this.prisma.character.findFirst({
       where: {
+        gameVersion: server.gameVersion,
+        region: server.region,
+        realm: server.realm,
         firstName: { equals: firstName, mode: 'insensitive' },
         lastName: { equals: lastName, mode: 'insensitive' },
-        guilds: { some: { guildId } },
       },
       select: {
         id: true,
         firstName: true,
         lastName: true,
+        class: true,
+        race: true,
+        level: true,
+        roles: true,
+        isMain: true,
         bio: true,
         bioVisible: true,
         images: { select: { id: true, contentType: true }, orderBy: { createdAt: 'asc' } },
@@ -90,13 +108,20 @@ export class CharacterBioService {
 
     const isOwner = character.player.discordUserId === viewerDiscordUserId;
     const visible = isOwner || character.bioVisible;
+    const bioOffered = supportsBios(server.gameVersion, server.region, server.realm);
     return {
       characterId: character.id,
       name: formatCharacterName(character),
+      class: character.class,
+      race: character.race,
+      level: character.level,
+      roles: character.roles.map((role) => ROLE_LABELS[role]),
+      isMain: character.isMain,
       isOwner,
-      bioVisible: character.bioVisible,
-      bio: visible ? character.bio : null,
-      images: visible ? character.images : [],
+      bioSupported: bioOffered,
+      bioVisible: bioOffered && character.bioVisible,
+      bio: bioOffered && visible ? character.bio : null,
+      images: bioOffered && visible ? character.images : [],
     };
   }
 
