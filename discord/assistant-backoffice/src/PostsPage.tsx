@@ -349,23 +349,41 @@ export function PostsPage({ guild, timezone }: Props) {
                   Delete post
                 </button>
               )}
-              <button
-                type="button"
-                className="btn btn-sm btn-danger"
-                title="Stops tracking this post here and removes it from the database. Whatever is in Discord stays."
-                onClick={() =>
-                  void confirm({
-                    title: 'Untrack this post?',
-                    message: isLive(post)
-                      ? `"${post.name}" is removed from Posts and from the database. The message stays in Discord and can no longer be deleted from the backoffice. To remove it from Discord too, cancel and use Delete post first.`
-                      : `"${post.name}" is removed from Posts and from the database. Nothing is left in Discord to delete.`,
-                    confirmLabel: isLive(post) ? 'Untrack anyway' : 'Untrack',
-                    danger: true,
-                  }).then((ok) => ok && run(deleteTask(post.id)))
-                }
-              >
-                Untrack
-              </button>
+              {/* "Untrack" only means something while there is a message in Discord to leave
+                  behind; with nothing there, removing the post is simply deleting it. */}
+              {isLive(post) ? (
+                <button
+                  type="button"
+                  className="btn btn-sm btn-danger"
+                  title="Stops tracking this post here and removes it from the database. The message stays in Discord."
+                  onClick={() =>
+                    void confirm({
+                      title: 'Untrack this post?',
+                      message: `"${post.name}" is removed from Posts and from the database. The message stays in Discord and can no longer be deleted from the backoffice. To remove it from Discord too, cancel and use Delete post first.`,
+                      confirmLabel: 'Untrack anyway',
+                      danger: true,
+                    }).then((ok) => ok && run(deleteTask(post.id)))
+                  }
+                >
+                  Untrack
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="btn btn-sm btn-danger"
+                  title="Removes this post. Nothing of it is in Discord."
+                  onClick={() =>
+                    void confirm({
+                      title: 'Delete this post?',
+                      message: `"${post.name}" is removed from Posts. It was never sent, or is no longer in Discord, so nothing there changes.`,
+                      confirmLabel: 'Delete',
+                      danger: true,
+                    }).then((ok) => ok && run(deleteTask(post.id)))
+                  }
+                >
+                  Delete
+                </button>
+              )}
             </div>
           </div>
         ))

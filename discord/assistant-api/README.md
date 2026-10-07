@@ -422,7 +422,10 @@ previews the markdown with mentions shown by name. A post moves through these st
   but the post stays, so it can be sent again with "Post now" or a new date.
 - _Untracked_ (**Untrack**, `DELETE /api/tasks/:id`): the row and its history are removed from the
   backoffice and the database. Whatever it posted stays in Discord and can no longer be deleted from
-  the backoffice (the UI warns about this; delete the post first if it should go too).
+  the backoffice (the UI warns about this; delete the post first if it should go too). The button is
+  only offered while the post has a message in Discord; for one that was never sent (or was
+  already deleted from Discord) the same call is labelled **Delete**, since there is nothing to leave
+  behind.
 
 **Several messages.** `config.parts` is the list (1 to 10) of `{ id, content, seedReactions,
 embedLinks, delaySeconds, imageIds }`; `state.messages` records, per part id, the Discord message
