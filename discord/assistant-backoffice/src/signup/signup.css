@@ -99,9 +99,6 @@
   display: grid;
   gap: 0.75rem;
 }
-.signup-editor .form-grid {
-  align-items: end;
-}
 .signup-editor .form-actions {
   margin-top: 0;
 }

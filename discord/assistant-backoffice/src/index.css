@@ -478,6 +478,9 @@ tbody tr:last-child td {
 }
 .field {
   display: grid;
+  /* Rows packed at the top: when a field sits next to a taller one (one with a hint under it),
+     the extra height goes below it instead of being spread between its label and its input. */
+  align-content: start;
   gap: 0.35rem;
   font-size: 0.85rem;
   color: var(--muted);
