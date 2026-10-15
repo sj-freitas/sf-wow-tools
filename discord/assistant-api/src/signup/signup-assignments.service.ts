@@ -148,7 +148,12 @@ export class SignupAssignmentsService {
   /** The guild's other events that have assignments, newest first: what can be copied here. */
   async sources(event: EventRow) {
     const events = await this.prisma.signupEvent.findMany({
-      where: { guildId: event.guildId, id: { not: event.id }, assignments: { some: {} } },
+      where: {
+        guildId: event.guildId,
+        id: { not: event.id },
+        kind: 'CHARACTERS',
+        assignments: { some: {} },
+      },
       orderBy: { startsAt: 'desc' },
       take: 20,
       select: {

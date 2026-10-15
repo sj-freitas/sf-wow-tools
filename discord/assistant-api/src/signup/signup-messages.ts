@@ -3,7 +3,8 @@ import type { APIEmbed } from 'discord-api-types/v10';
 import type { RichMessage } from '../discord/discord-bot.service';
 import { renderLine, type AssignmentLine } from './assignment-lines';
 import { PREFIX, compactId, customId } from './signup-ids';
-import { GROUP_COUNT, ROLE_CATEGORIES, ROLE_EMOJI, STATUS_CATEGORIES } from './signup-rules';
+import { groupLabel, type EventKindConfig } from './event-kinds';
+import { ROLE_CATEGORIES, ROLE_EMOJI, STATUS_CATEGORIES } from './signup-rules';
 import { discordTimestamp } from './signup-time';
 
 /**
@@ -24,6 +25,8 @@ export interface EventView {
   startsAt: Date;
   closed: boolean;
   createdByName: string;
+  /** Characters or members (`event-kinds.ts`). */
+  kind: EventKindConfig;
   /** On the website: the event's page and the guild's "add a character" page. */
   eventUrl: string;
   addCharacterUrl: string;
@@ -79,6 +82,20 @@ const personLine = (entry: EntryView, number: number, dot: ClassDot): string =>
 const SPACER = { name: '\u200b', value: '\u200b', inline: true };
 
 /**
+ * A long list as up to three columns side by side (inline fields), the first one titled. Short
+ * lists stay one column.
+ */
+function columns(title: string, lines: readonly string[]): NonNullable<APIEmbed['fields']> {
+  const count = lines.length <= 8 ? 1 : Math.min(3, Math.ceil(lines.length / 8));
+  const perColumn = Math.max(1, Math.ceil(lines.length / count));
+  return Array.from({ length: count }, (_, column) => ({
+    name: column === 0 ? title : '\u200b',
+    value: nameList(lines.slice(column * perColumn, (column + 1) * perColumn)),
+    inline: true,
+  }));
+}
+
+/**
  * The sign-up post: the event; who leads it, when, and how many are coming; then one column per
  * role (🛡️ Tank, 💚 Healer, 🏹 Ranged, ⚔️ Melee) listing who signed up, each with their sign-up
  * number and class colour; then Late, Tentative and Absent as short lists; and the buttons.
@@ -99,14 +116,24 @@ export function renderEventMessage(
   const tentative = inStatus('TENTATIVE').length;
 
   const fields: NonNullable<APIEmbed['fields']> = [];
-  for (const [index, { role, label }] of ROLE_CATEGORIES.entries()) {
-    const inRole = available.filter(({ entry }) => entry.role === role);
-    fields.push({
-      name: `${label} (${inRole.length})`,
-      value: nameList(inRole.map(({ entry, number }) => personLine(entry, number, dot))),
-      inline: true,
-    });
-    if (index % 2 === 1) fields.push(SPACER);
+  if (event.kind.usesCharacters) {
+    for (const [index, { role, label }] of ROLE_CATEGORIES.entries()) {
+      const inRole = available.filter(({ entry }) => entry.role === role);
+      fields.push({
+        name: `${label} (${inRole.length})`,
+        value: nameList(inRole.map(({ entry, number }) => personLine(entry, number, dot))),
+        inline: true,
+      });
+      if (index % 2 === 1) fields.push(SPACER);
+    }
+  } else {
+    // A members event: everyone coming in one list, by server nickname.
+    fields.push(
+      ...columns(
+        `✅ Signed up (${available.length})`,
+        available.map(({ entry, number }) => personLine(entry, number, dot)),
+      ),
+    );
   }
   for (const { status, label } of STATUS_CATEGORIES) {
     const people = inStatus(status);
@@ -159,7 +186,7 @@ export function renderEventMessage(
       {
         type: 1,
         components: [
-          link('Add character', event.addCharacterUrl),
+          ...(event.kind.usesCharacters ? [link('Add character', event.addCharacterUrl)] : []),
           link('Open on the website', event.eventUrl),
         ],
       },
@@ -169,42 +196,41 @@ export function renderEventMessage(
 
 /** The raid setup: groups 1-8 with whoever is in them. Mentions ping the players in groups. */
 export function renderSetupMessage(
-  event: Pick<EventView, 'title' | 'startsAt' | 'eventUrl'>,
+  event: Pick<EventView, 'title' | 'startsAt' | 'eventUrl' | 'kind'>,
   entries: readonly EntryView[],
   mention: boolean,
   dot: ClassDot = noDots,
 ): RichMessage {
   const fields: NonNullable<APIEmbed['fields']> = [];
   const placed: EntryView[] = [];
-  for (let group = 1; group <= GROUP_COUNT; group++) {
+  for (let group = 1; group <= event.kind.groupCount; group++) {
     const members = entries
       .filter((entry) => entry.groupNumber === group)
       .sort((a, b) => (a.groupSlot ?? 0) - (b.groupSlot ?? 0));
     if (members.length === 0) continue;
     placed.push(...members);
-    fields.push({
-      name: `Group ${group}`,
-      value: nameList(
-        members.map((entry) =>
-          // "🛡️ – <icon> Name": the dash keeps the role emoji and the class icon apart.
-          [
-            entry.role ? `${ROLE_EMOJI[entry.role]} –` : '',
-            dot(entry.characterClass),
-            entryName(entry),
-          ]
-            .filter((part) => part !== '')
-            .join(' '),
-        ),
-      ),
-      inline: true,
-    });
+    const lines = members.map((entry) =>
+      // "🛡️ – <icon> Name": the dash keeps the role emoji and the class icon apart.
+      [entry.role ? `${ROLE_EMOJI[entry.role]} –` : '', dot(entry.characterClass), entryName(entry)]
+        .filter((part) => part !== '')
+        .join(' '),
+    );
+    const name = groupLabel(event.kind, group);
+    // One unlimited group (a members event's invited) can be long: spread it over columns.
+    fields.push(
+      ...(event.kind.groupSize === null
+        ? columns(`${name} (${members.length})`, lines)
+        : [{ name, value: nameList(lines), inline: true }]),
+    );
   }
   const embed: APIEmbed = {
-    title: `Raid setup · ${event.title}`,
+    title: `${event.kind.setupTitle} · ${event.title}`,
     url: event.eventUrl,
     description:
       fields.length === 0
-        ? 'Nobody has been placed in a group yet.'
+        ? event.kind.groupCount === 1
+          ? 'Nobody has been invited yet.'
+          : 'Nobody has been placed in a group yet.'
         : `🗓️ ${discordTimestamp(event.startsAt, 'F')}`,
     color: COLOR,
     fields,

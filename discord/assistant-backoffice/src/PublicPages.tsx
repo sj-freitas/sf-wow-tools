@@ -124,6 +124,53 @@ export function PublicHome() {
         ))}
       </div>
 
+      <h2>Event sign-ups, step by step</h2>
+      <p className="section-intro">
+        Like a raid sign-up bot, built in: events your members answer from Discord or the website,
+        with the raid groups and assignments in the same place.
+      </p>
+      <ol className="steps">
+        <li>
+          <strong>Set it up once.</strong> On the website’s Events page, an officer picks the
+          channel where events are posted and, if they like, an <em>EventCreator</em> role for
+          members who may create events too. Officers always can.
+        </li>
+        <li>
+          <strong>Create an event</strong> with <code>/create-event</code> in Discord, or from the
+          website with a date picker. Give it a name, a date and a time (in server time unless you
+          choose another timezone; Discord shows everyone their own), and a description. Choose its
+          type:
+          <ul>
+            <li>
+              <strong>Characters</strong>, for raids: people sign up with one of their characters
+              and a role.
+            </li>
+            <li>
+              <strong>Members</strong>, for everything else: people sign up as themselves.
+            </li>
+          </ul>
+        </li>
+        <li>
+          <strong>Members answer from the post.</strong> <em>Sign up</em> offers their characters on
+          your realm, in each role they play, and one pick does it. <em>Late</em> and{' '}
+          <em>Tentative</em> let them leave a note for the organisers, and <em>Absent</em> says they
+          can’t come. The post keeps itself up to date: who is coming, sorted by Tank, Healer,
+          Ranged and Melee, each with their class icon and sign-up number.
+        </li>
+        <li>
+          <strong>Organise it on the website.</strong> Drag the people who signed up into raid
+          groups, or into the invited list for a members event, and post it to Discord, pinging them
+          if you like. Write assignments (“Darkshivan heals Tearyn”, “Arthas tanks Skull”), with
+          images, and post them in the event’s channel; copy them from an earlier event to save
+          time. Remind whoever hasn’t answered with a direct message, one by one or all at once.
+        </li>
+        <li>
+          <strong>Close and keep it.</strong> Sign-ups close on their own when the event starts, or
+          by hand. Archiving an event clears it from Discord and keeps its sign-ups, groups and
+          assignments as history you can search by date.
+        </li>
+      </ol>
+
       <h2>Getting started</h2>
       <ol className="steps">
         <li>Add the bot to your guild’s Discord server.</li>

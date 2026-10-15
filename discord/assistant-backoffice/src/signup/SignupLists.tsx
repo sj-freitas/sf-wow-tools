@@ -109,23 +109,37 @@ export function SignupLists({
     <>
       {dialog}
       {error && <p className="status-error">{error}</p>}
-      <div className="signup-columns">
-        {ROLE_CATEGORIES.map(({ role, label, emoji }) => {
-          const inRole = available.filter((entry) => entry.role === role);
-          return (
-            <section key={role} className="signup-column">
-              <h4>
-                {emoji} {label} <span className="muted">({inRole.length})</span>
-              </h4>
-              {inRole.length === 0 ? (
-                <p className="muted">—</p>
-              ) : (
-                <ul className="signup-people">{inRole.map(row)}</ul>
-              )}
-            </section>
-          );
-        })}
-      </div>
+      {event.layout.usesCharacters ? (
+        <div className="signup-columns">
+          {ROLE_CATEGORIES.map(({ role, label, emoji }) => {
+            const inRole = available.filter((entry) => entry.role === role);
+            return (
+              <section key={role} className="signup-column">
+                <h4>
+                  {emoji} {label} <span className="muted">({inRole.length})</span>
+                </h4>
+                {inRole.length === 0 ? (
+                  <p className="muted">—</p>
+                ) : (
+                  <ul className="signup-people">{inRole.map(row)}</ul>
+                )}
+              </section>
+            );
+          })}
+        </div>
+      ) : (
+        // A members event: everyone coming in one list.
+        <section className="signup-column">
+          <h4>
+            ✅ Signed up <span className="muted">({available.length})</span>
+          </h4>
+          {available.length === 0 ? (
+            <p className="muted">—</p>
+          ) : (
+            <ul className="signup-people signup-people-wide">{available.map(row)}</ul>
+          )}
+        </section>
+      )}
       {OTHER_STATUSES.map((status) => {
         const inStatus = event.entries.filter((entry) => entry.status === status).sort(bySignup);
         if (inStatus.length === 0) return null;

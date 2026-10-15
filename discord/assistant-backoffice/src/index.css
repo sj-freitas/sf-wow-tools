@@ -201,6 +201,20 @@ h3 {
   padding-left: 1.25rem;
   line-height: 1.5;
 }
+.steps ul {
+  margin: 0.4rem 0 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.25rem;
+}
+/* A sentence under a landing page heading, as wide as the steps below it. */
+.section-intro {
+  max-width: 640px;
+  margin: 0 auto 1rem;
+  color: var(--muted);
+  line-height: 1.5;
+  text-align: center;
+}
 .public-footer {
   display: flex;
   flex-wrap: wrap;

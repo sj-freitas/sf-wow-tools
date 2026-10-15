@@ -278,6 +278,22 @@
         "type": 7,
         "required": false,
         "channel_types": [0, 5]
+      },
+      {
+        "name": "type",
+        "description": "What people sign up with: a character and role (default), or themselves",
+        "type": 3,
+        "required": false,
+        "choices": [
+          {
+            "name": "Characters",
+            "value": "CHARACTERS"
+          },
+          {
+            "name": "Members",
+            "value": "MEMBERS"
+          }
+        ]
       }
     ]
   }

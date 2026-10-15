@@ -763,7 +763,17 @@ then ⏰ Late, ❔ Tentative and ❌ Absent. Its buttons:
   character steps if you hadn't signed up yet). Notes show only to organisers, on the website.
 - **Absent** → no character needed.
 
-**Archiving.** An event is archived with **Archive event** on its page (the owner and Officers),
+**Two kinds of event** (`/create-event type:` or the website's form; fixed once created), set
+up in `src/signup/event-kinds.ts`, which is the config for both:
+
+- **Characters** (the default): sign up with a character and role; the setup is groups (8 of 5,
+  `groupCount`/`groupSize`) and there are assignments. Everything above.
+- **Members**: sign up as yourself (shown by server nickname): **Sign up** needs no menu, Late and
+  Tentative go straight to the note. The post lists everyone in one "✅ Signed up" list. The setup
+  is a single unlimited **Invited** list, everyone else on the bench, posted (optionally pinging
+  the invited) like the raid setup. No assignments.
+
+An event is archived with **Archive event** on its page (the owner and Officers),
 or on its own when its sign-up post is deleted in Discord: the worker's live connection notices
 the deletion (or, if it is down, the next update of the post does). Archiving removes the event's
 messages from Discord (post, raid setup, assignments) and keeps the event, its sign-ups, setup and
@@ -806,15 +816,15 @@ Links the bot puts in Discord point at `SITE_URL` (optional; else the origin of
 
 ### Removing the sign-up feature
 
-Everything is in two migrations, `prisma/migrations/20261015090000_signup` and
-`20261016090000_signup_archive`, which only create and change `signup_*` tables and types (each in
-one transaction). To take the feature out:
+Everything is in three migrations, `prisma/migrations/20261015090000_signup`,
+`20261016090000_signup_archive` and `20261017090000_signup_event_kind`, which only create and
+change `signup_*` tables and types (each in one transaction). To take the feature out:
 
 1. Undo the database part (this **deletes every event, sign-up and assignment**):
    `npx prisma db execute --file prisma/rollback/20261015090000_signup.down.sql`. It drops the
-   tables and also forgets both migrations in `_prisma_migrations`.
-2. Delete `prisma/signup.prisma`, `prisma/migrations/20261015090000_signup/` and
-   `20261016090000_signup_archive/`, the `signupSettings`/`signupEvents`/`signupEntries` lines in
+   tables and also forgets the three migrations in `_prisma_migrations`.
+2. Delete `prisma/signup.prisma`, `prisma/migrations/20261015090000_signup/`,
+   `20261016090000_signup_archive/` and `20261017090000_signup_event_kind/`, the `signupSettings`/`signupEvents`/`signupEntries` lines in
    `schema.prisma` (marked "Event sign-ups"), `src/signup/`, and its imports in `app.module.ts`,
    `worker/worker.module.ts` and `worker/worker.service.ts` (with the `onMessageDeleted` hook
    there); remove `create-event` from `src/bot/commands.json` and run `npm run commands:register`.

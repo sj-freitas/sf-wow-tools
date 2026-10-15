@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
+import { EVENT_KINDS } from './event-kinds';
 import {
   canCreateEvents,
   canManageEvent,
@@ -7,6 +8,7 @@ import {
   canPostIn,
   isClosed,
   validatePlacements,
+  type Placement,
   type SignupViewer,
 } from './signup-rules';
 
@@ -66,6 +68,11 @@ describe('permissions', () => {
   });
 });
 
+const validatePlacementsFor = (
+  placements: Placement[],
+  entries: Parameters<typeof validatePlacements>[1],
+) => validatePlacements(placements, entries, EVENT_KINDS.CHARACTERS);
+
 describe('validatePlacements', () => {
   const entries = [
     { id: 'a', status: 'AVAILABLE' as const },
@@ -75,7 +82,7 @@ describe('validatePlacements', () => {
 
   it('accepts groups, places and the bench', () => {
     assert.equal(
-      validatePlacements(
+      validatePlacementsFor(
         [
           { entryId: 'a', group: 1, slot: 0 },
           { entryId: 'b', group: 8, slot: 4 },
@@ -88,9 +95,12 @@ describe('validatePlacements', () => {
   });
 
   it('refuses unknown people, duplicates, taken places and impossible groups', () => {
-    assert.match(validatePlacements([{ entryId: 'z', group: 1, slot: 0 }], entries)!, /no longer/);
     assert.match(
-      validatePlacements(
+      validatePlacementsFor([{ entryId: 'z', group: 1, slot: 0 }], entries)!,
+      /no longer/,
+    );
+    assert.match(
+      validatePlacementsFor(
         [
           { entryId: 'a', group: 1, slot: 0 },
           { entryId: 'a', group: 2, slot: 0 },
@@ -100,7 +110,7 @@ describe('validatePlacements', () => {
       /twice/,
     );
     assert.match(
-      validatePlacements(
+      validatePlacementsFor(
         [
           { entryId: 'a', group: 1, slot: 0 },
           { entryId: 'b', group: 1, slot: 0 },
@@ -109,11 +119,33 @@ describe('validatePlacements', () => {
       )!,
       /same place/,
     );
-    assert.match(validatePlacements([{ entryId: 'a', group: 9, slot: 0 }], entries)!, /1 to 8/);
-    assert.match(validatePlacements([{ entryId: 'a', group: 1, slot: 5 }], entries)!, /5 places/);
+    assert.match(validatePlacementsFor([{ entryId: 'a', group: 9, slot: 0 }], entries)!, /1 to 8/);
+    assert.match(
+      validatePlacementsFor([{ entryId: 'a', group: 1, slot: 5 }], entries)!,
+      /5 places/,
+    );
   });
 
   it('keeps absent people out of groups', () => {
-    assert.match(validatePlacements([{ entryId: 'x', group: 1, slot: 0 }], entries)!, /absent/);
+    assert.match(validatePlacementsFor([{ entryId: 'x', group: 1, slot: 0 }], entries)!, /absent/);
+  });
+});
+
+describe('validatePlacements for a Members event (one unlimited group)', () => {
+  const entries = Array.from({ length: 12 }, (_, i) => ({
+    id: `e${i}`,
+    status: 'AVAILABLE' as const,
+  }));
+
+  it('takes any number of people in its single group', () => {
+    const placements = entries.map((entry, slot) => ({ entryId: entry.id, group: 1, slot }));
+    assert.equal(validatePlacements(placements, entries, EVENT_KINDS.MEMBERS), null);
+  });
+
+  it('has no second group', () => {
+    assert.match(
+      validatePlacements([{ entryId: 'e0', group: 2, slot: 0 }], entries, EVENT_KINDS.MEMBERS)!,
+      /only one group/,
+    );
   });
 });

@@ -27,13 +27,16 @@ interface Props {
   entry: Entry | null;
   /** Someone else's sign-up (an organiser editing it): wording changes, no "add character" link. */
   forSomeone?: string;
+  /** False for a members event: people sign up as themselves, no character or role. */
+  usesCharacters?: boolean;
   onSave: (input: SignupInput) => Promise<void>;
   onWithdraw?: () => Promise<void>;
   onCancel?: () => void;
 }
 
 /**
- * Status, character, role (of those the character plays) and note. The only
+ * Status, character, role (of those the character plays) and note; on a members event only status
+ * and note. The only
  * link to the roster is for someone with no characters at all; sign-ups are not where characters
  * are managed.
  */
@@ -42,6 +45,7 @@ export function SignupEditor({
   characters,
   entry,
   forSomeone,
+  usesCharacters = true,
   onSave,
   onWithdraw,
   onCancel,
@@ -79,7 +83,7 @@ export function SignupEditor({
     if (role === '' || !playable.includes(role)) setRole(playable[0] ?? '');
   };
 
-  const needsCharacter = status !== 'ABSENT';
+  const needsCharacter = usesCharacters && status !== 'ABSENT';
   const run = (action: () => Promise<void>) => {
     setBusy(true);
     setError(null);
@@ -93,7 +97,7 @@ export function SignupEditor({
     run(() =>
       onSave({
         status,
-        ...(characterId && (needsCharacter || entry?.characterId)
+        ...(usesCharacters && characterId && (needsCharacter || entry?.characterId)
           ? { characterId, role: role || undefined }
           : {}),
         ...(status === 'LATE' || status === 'TENTATIVE' ? { note } : {}),
@@ -118,53 +122,54 @@ export function SignupEditor({
         ))}
       </div>
 
-      {characters.length === 0 ? (
-        needsCharacter && (
-          <p className="muted">
-            {forSomeone
-              ? `${forSomeone} has no characters on ${guild.realm} for this faction.`
-              : `You have no characters on ${guild.realm} for this faction yet.`}{' '}
-            {!forSomeone && <Link to={guildPath(guild, 'roster/create')}>Add a character</Link>}
-          </p>
-        )
-      ) : (
-        <div className="form-grid">
-          <label className="field">
-            Character
-            <select value={characterId} onChange={(e) => pickCharacter(e.target.value)}>
-              {characters.map((option) => (
-                <option key={option.id} value={option.id}>
-                  {option.name} · {option.class}
-                  {option.isMain ? ' · Main' : ''}
-                  {option.inGuild ? '' : ' · not in the guild yet'}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="field">
-            Role
-            <select value={role} onChange={(e) => setRole(e.target.value as Role)}>
-              {roles.map((value) => (
-                <option key={value} value={value}>
-                  {ROLE_EMOJI[value]} {ROLE_NAME[value]}
-                </option>
-              ))}
-            </select>
-          </label>
-          {(status === 'LATE' || status === 'TENTATIVE') && (
-            <label className="field field-wide">
-              Note for the organisers (optional)
-              <input
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                maxLength={MAX_NOTE}
-                placeholder={
-                  status === 'LATE' ? 'e.g. I’ll be 30 minutes late' : 'e.g. Depends on work'
-                }
-              />
+      {usesCharacters &&
+        (characters.length === 0 ? (
+          needsCharacter && (
+            <p className="muted">
+              {forSomeone
+                ? `${forSomeone} has no characters on ${guild.realm} for this faction.`
+                : `You have no characters on ${guild.realm} for this faction yet.`}{' '}
+              {!forSomeone && <Link to={guildPath(guild, 'roster/create')}>Add a character</Link>}
+            </p>
+          )
+        ) : (
+          <div className="form-grid">
+            <label className="field">
+              Character
+              <select value={characterId} onChange={(e) => pickCharacter(e.target.value)}>
+                {characters.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {option.name} · {option.class}
+                    {option.isMain ? ' · Main' : ''}
+                    {option.inGuild ? '' : ' · not in the guild yet'}
+                  </option>
+                ))}
+              </select>
             </label>
-          )}
-        </div>
+            <label className="field">
+              Role
+              <select value={role} onChange={(e) => setRole(e.target.value as Role)}>
+                {roles.map((value) => (
+                  <option key={value} value={value}>
+                    {ROLE_EMOJI[value]} {ROLE_NAME[value]}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+        ))}
+      {(status === 'LATE' || status === 'TENTATIVE') && (
+        <label className="field">
+          Note for the organisers (optional)
+          <input
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            maxLength={MAX_NOTE}
+            placeholder={
+              status === 'LATE' ? 'e.g. I’ll be 30 minutes late' : 'e.g. Depends on work'
+            }
+          />
+        </label>
       )}
 
       {character && !character.inGuild && needsCharacter && (

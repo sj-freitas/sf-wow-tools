@@ -23,6 +23,15 @@ enum SignupLockMode {
   @@map("signup_lock_mode")
 }
 
+// What people sign up with (see src/signup/event-kinds.ts): a character and role (with groups and
+// assignments), or themselves (one "invited" list, no assignments).
+enum SignupEventKind {
+  CHARACTERS
+  MEMBERS
+
+  @@map("signup_event_kind")
+}
+
 // How wide an assignment applies: the whole event, one raid (instance), or one boss.
 enum SignupAssignmentScope {
   GLOBAL
@@ -52,6 +61,8 @@ model SignupEvent {
   id                 String             @id @default(uuid()) @db.Uuid
   guildId            String             @map("guild_id") @db.Uuid
   guild              Guild              @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  // Fixed once created: changing it would strand the characters, groups and assignments.
+  kind               SignupEventKind    @default(CHARACTERS)
   title              String
   description        String             @default("")
   startsAt           DateTime           @map("starts_at")

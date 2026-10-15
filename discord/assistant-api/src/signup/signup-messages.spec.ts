@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
+import { EVENT_KINDS } from './event-kinds';
 import {
   nameList,
   renderAssignmentMessage,
@@ -16,6 +17,7 @@ const EVENT: EventView = {
   startsAt: new Date('2026-10-20T18:00:00Z'),
   closed: false,
   createdByName: 'Shivan',
+  kind: EVENT_KINDS.CHARACTERS,
   eventUrl: 'https://example.test/e',
   addCharacterUrl: 'https://example.test/add',
 };
@@ -179,5 +181,48 @@ describe('renderAssignmentMessage', () => {
     const message = renderAssignmentMessage({ ...assignment, mentions: true }, entries);
     assert.match(message.content ?? '', /\n\n<@u-a>$/);
     assert.equal(message.mention, true);
+  });
+});
+
+describe('a members event', () => {
+  const MEMBERS = { ...EVENT, kind: EVENT_KINDS.MEMBERS };
+
+  it('lists who signed up in one list, by name, and has no Add character link', () => {
+    const message = renderEventMessage(MEMBERS, [
+      entry({
+        id: 'a',
+        characterName: null,
+        characterClass: null,
+        role: null,
+        discordName: 'Shivan',
+      }),
+      entry({ id: 'b', characterName: null, characterClass: null, role: null, status: 'LATE' }),
+    ]);
+    const fields = fieldsOf(message);
+    assert.deepEqual(
+      fields.map((field) => field.name),
+      ['✅ Signed up (1)', '⏰ Late (1)'],
+    );
+    assert.equal(fields[0].value, '`1` **Shivan**');
+    assert.ok(!buttonsOf(message).some((button) => button.label === 'Add character'));
+  });
+
+  it('spreads a long list over up to three columns', () => {
+    const many = Array.from({ length: 20 }, (_, i) =>
+      entry({ id: `p${i}`, characterName: null, characterClass: null, role: null }),
+    );
+    const fields = fieldsOf(renderEventMessage(MEMBERS, many));
+    assert.equal(fields.length, 3);
+    assert.equal(fields[0].name, '✅ Signed up (20)');
+  });
+
+  it('posts the invited (one unlimited group), mentioning them when asked', () => {
+    const invited = Array.from({ length: 7 }, (_, i) =>
+      entry({ id: `p${i}`, characterName: null, role: null, groupNumber: 1, groupSlot: i }),
+    );
+    const message = renderSetupMessage(MEMBERS, invited, true);
+    assert.equal(message.embeds?.[0].title, 'Invited · Naxxramas');
+    assert.equal((message.embeds?.[0].fields as Field[])[0].name, 'Invited (7)');
+    assert.equal(message.content?.split(' ').length, 7);
   });
 });

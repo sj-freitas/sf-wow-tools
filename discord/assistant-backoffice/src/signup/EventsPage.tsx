@@ -161,6 +161,7 @@ export function EventsPage({ guild, timezone }: { guild: Guild; timezone: string
             >
               <div className="signup-event-card-head">
                 <strong>{event.title}</strong>
+                {event.kind === 'MEMBERS' && <span className="badge">Members</span>}
                 {event.archivedAt ? (
                   <span className="badge">Archived</span>
                 ) : (

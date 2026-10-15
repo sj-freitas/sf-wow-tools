@@ -4,6 +4,7 @@ import { formatCharacterName } from '../characters/character-name';
 import { PrismaService } from '../database/prisma.service';
 import { RealtimeService } from '../realtime/realtime.service';
 import { SignupEventsService, type EventRow, type SignupGuild } from './signup-events.service';
+import { EVENT_KINDS } from './event-kinds';
 import { MAX_NOTE_LENGTH, isClosed, validatePlacements, type Placement } from './signup-rules';
 
 /** One of a person's characters that could go to an event of the guild. */
@@ -87,6 +88,9 @@ export class SignupEntriesService {
     override = false,
   ): Promise<{ characterName: string }> {
     if (!override && isClosed(event)) throw new BadRequestException(CLOSED_MESSAGE);
+    if (!EVENT_KINDS[event.kind].usesCharacters) {
+      throw new BadRequestException('People sign up to this event as themselves, not a character.');
+    }
     const options = await this.characterOptions(guild, person.discordUserId);
     const character = options.find((option) => option.id === choice.characterId);
     if (!character) {
@@ -126,7 +130,8 @@ export class SignupEntriesService {
 
   /**
    * Changes only the status (and note) of the person's sign-up, keeping its character. Absent
-   * works without one; Late and Tentative need a sign-up with a character first
+   * works without one, and so does everything on a members event; on a characters event, Signed
+   * up, Late and Tentative need a sign-up with a character first
    * ('needs-character' returned).
    */
   async setStatus(
@@ -138,7 +143,10 @@ export class SignupEntriesService {
   ): Promise<'updated' | 'needs-character'> {
     if (!override && isClosed(event)) throw new BadRequestException(CLOSED_MESSAGE);
     const existing = event.entries.find((entry) => entry.discordUserId === person.discordUserId);
-    if (status !== 'ABSENT' && !existing?.characterId) return 'needs-character';
+    // A characters event needs one to come (Absent doesn't); a members event never does.
+    if (EVENT_KINDS[event.kind].usesCharacters && status !== 'ABSENT' && !existing?.characterId) {
+      return 'needs-character';
+    }
     const data = {
       discordName: person.name,
       status,
@@ -164,7 +172,7 @@ export class SignupEntriesService {
 
   /** Saves the raid setup: who is in which group and place; everyone else is on the bench. */
   async savePlacements(event: EventRow, placements: readonly Placement[]): Promise<void> {
-    const problem = validatePlacements(placements, event.entries);
+    const problem = validatePlacements(placements, event.entries, EVENT_KINDS[event.kind]);
     if (problem) throw new BadRequestException(problem);
     await this.prisma.$transaction([
       this.prisma.signupEntry.updateMany({

@@ -49,6 +49,7 @@ function makeEvent(over: Partial<EventRow> = {}): EventRow {
   return {
     id: EVENT_ID,
     guildId: GUILD.id,
+    kind: 'CHARACTERS',
     title: 'Naxxramas',
     description: '',
     startsAt: new Date(Date.now() + 86_400_000),
@@ -130,6 +131,7 @@ describe('SignupCommand', () => {
       loadById: () => Promise.resolve(event),
       peek: () =>
         Promise.resolve({
+          kind: event.kind,
           lockMode: event.lockMode,
           startsAt: event.startsAt,
           archivedAt: event.archivedAt,
@@ -333,5 +335,43 @@ describe('SignupCommand', () => {
       assert.ok(typeof reply === 'object' && 'defer' in reply);
       assert.equal(await reply.work(), 'Not yours.');
     });
+  });
+
+  describe('a members event', () => {
+    beforeEach(() => {
+      event = makeEvent({ kind: 'MEMBERS' });
+    });
+
+    it('signs up as yourself, with no menu', async () => {
+      const reply = command.join(interaction(customId(PREFIX.join, ID)));
+      assert.ok(typeof reply === 'object' && 'defer' in reply);
+      assert.match((await reply.work()) as string, /✅ You are signed up/);
+      assert.deepEqual(statuses, [{ status: 'AVAILABLE', note: undefined }]);
+      assert.equal(signUps.length, 0);
+    });
+
+    it('Late opens the note form straight away, even when not signed up yet', async () => {
+      const reply = await command.late(interaction(customId(PREFIX.late, ID)));
+      assert.ok(typeof reply === 'object' && 'modal' in reply);
+      assert.equal(reply.modal.custom_id, customId(PREFIX.note, ID, statusCode('LATE')));
+    });
+  });
+
+  it('/create-event takes the type, characters by default', async () => {
+    viewer = { ...viewer, isEventCreator: true };
+    let kind: unknown;
+    const events = (command as unknown as { events: Record<string, unknown> }).events;
+    events.create = (_g: unknown, _c: unknown, input: { kind?: string }) => {
+      kind = input.kind;
+      return Promise.resolve(makeEvent());
+    };
+    await command.createEvent(
+      commandInteraction({ name: 'Social', date: '2030-10-20', time: '20:00', type: 'MEMBERS' }),
+    );
+    assert.equal(kind, 'MEMBERS');
+    await command.createEvent(
+      commandInteraction({ name: 'Raid', date: '2030-10-20', time: '20:00' }),
+    );
+    assert.equal(kind, 'CHARACTERS');
   });
 });

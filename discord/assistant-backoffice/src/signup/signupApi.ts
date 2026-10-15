@@ -4,6 +4,27 @@ import type { Role } from '../types';
 /** Event sign-ups (API: /api/guilds/:guildId/signup/...). */
 
 export type SignupStatus = 'AVAILABLE' | 'LATE' | 'TENTATIVE' | 'ABSENT';
+/** What people sign up with: a character and role, or themselves. */
+export type EventKind = 'CHARACTERS' | 'MEMBERS';
+
+/** What a kind of event has, from the API's config (event-kinds.ts). */
+export interface EventLayout {
+  label: string;
+  usesCharacters: boolean;
+  hasAssignments: boolean;
+  groupCount: number;
+  /** Places per group; null = no limit. */
+  groupSize: number | null;
+  /** "Group" (Group 1, …), or the single group's name ("Invited"). */
+  groupName: string;
+  /** The setup tab: "Raid setup", "Invited". */
+  setupTitle: string;
+}
+
+export const EVENT_KIND_LABELS: Record<EventKind, string> = {
+  CHARACTERS: 'Characters',
+  MEMBERS: 'Members',
+};
 export type LockMode = 'AUTO' | 'LOCKED' | 'UNLOCKED';
 export type AssignmentScope = 'GLOBAL' | 'RAID' | 'BOSS';
 export type Marker =
@@ -27,6 +48,7 @@ export interface EventSummary {
   closed: boolean;
   /** When it was archived; null for an event that isn't. */
   archivedAt: string | null;
+  kind: EventKind;
   createdByName: string;
   counts: Record<SignupStatus, number>;
   myStatus: SignupStatus | null;
@@ -84,6 +106,8 @@ export interface Assignment {
 
 export interface SignupEvent {
   id: string;
+  kind: EventKind;
+  layout: EventLayout;
   title: string;
   description: string;
   startsAt: string;
@@ -124,6 +148,8 @@ export interface EventForm {
   timezone: string;
   /** Officers only, when creating; left out = the guild's event channel. */
   channel?: { serverId: string; channelId: string };
+  /** Only when creating (it can't change later); left out = characters. */
+  type?: EventKind;
 }
 
 export interface SignupInput {

@@ -13,9 +13,6 @@ import {
   type SignupEvent,
 } from './signupApi';
 
-const GROUPS = 8;
-const GROUP_SIZE = 5;
-
 /** entry id -> its place; people not in it are on the bench. */
 type Places = Record<string, { group: number; slot: number }>;
 
@@ -57,6 +54,11 @@ export function SetupEditor({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { confirm, dialog } = useConfirm();
+  // How many groups and places, from the event's kind: 8 groups of 5 for a raid, one unlimited
+  // "Invited" list for a members event.
+  const { groupCount, groupSize, groupName } = event.layout;
+  const groupTitle = (group: number) => (groupCount === 1 ? groupName : `${groupName} ${group}`);
+  const groups = Array.from({ length: groupCount }, (_, i) => i + 1);
 
   // Someone signed up or changed meanwhile: take the saved setup, or (with unsaved changes) keep
   // ours, dropping anyone who left or became absent.
@@ -111,8 +113,9 @@ export function SetupEditor({
     change((current) => {
       const next = { ...current };
       const waiting = [...bench];
-      for (let group = 1; group <= GROUPS; group++) {
-        for (let slot = 0; slot < GROUP_SIZE; slot++) {
+      for (let group = 1; group <= groupCount; group++) {
+        // An unlimited group takes everyone left (the loop ends when the bench is empty).
+        for (let slot = 0; slot < (groupSize ?? Infinity); slot++) {
           const taken = Object.values(next).some((p) => p.group === group && p.slot === slot);
           const person = waiting.shift();
           if (!person) return next;
@@ -182,8 +185,8 @@ export function SetupEditor({
       {dialog}
       <div className="tasks-head">
         <span className="muted">
-          Drag people into groups, or tap someone and then a place. Saving also updates the setup
-          posted in Discord.
+          Drag people in from the bench, or tap someone and then a place. Saving also updates the{' '}
+          {event.layout.setupTitle.toLowerCase()} posted in Discord.
         </span>
         <div className="settings-actions">
           <button type="button" className="btn btn-sm" onClick={fill} disabled={bench.length === 0}>
@@ -195,7 +198,7 @@ export function SetupEditor({
             onClick={() => change(() => ({}))}
             disabled={Object.keys(places).length === 0}
           >
-            Clear groups
+            {groupCount === 1 ? 'Clear' : 'Clear groups'}
           </button>
           <button
             type="button"
@@ -210,26 +213,44 @@ export function SetupEditor({
       {error && <p className="status-error">{error}</p>}
 
       <div className="setup-groups">
-        {Array.from({ length: GROUPS }, (_, i) => i + 1).map((group) => (
-          <section key={group} className="setup-group">
-            <h4>Group {group}</h4>
-            {Array.from({ length: GROUP_SIZE }, (_, slot) => {
-              const id = at(group, slot);
-              const entry = id ? byId.get(id) : undefined;
-              return (
-                <div
-                  key={slot}
-                  className={selected && !entry ? 'setup-slot setup-slot-target' : 'setup-slot'}
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={(e) => onDrop(e, { group, slot })}
-                  onClick={() => selected && moveTo(selected, group, slot)}
-                >
-                  {entry ? chip(entry) : <span className="setup-empty">Empty</span>}
-                </div>
-              );
-            })}
-          </section>
-        ))}
+        {groups.map((group) => {
+          // An unlimited group shows who is in it plus one empty place to drop the next person.
+          const used = Object.values(places).filter((p) => p.group === group);
+          const slots =
+            groupSize ?? (used.length === 0 ? 0 : Math.max(...used.map((p) => p.slot)) + 1) + 1;
+          return (
+            <section
+              key={group}
+              className={groupSize === null ? 'setup-group setup-group-open' : 'setup-group'}
+            >
+              <h4>
+                {groupTitle(group)}
+                {groupSize === null && <span className="muted"> ({used.length})</span>}
+              </h4>
+              {Array.from({ length: slots }, (_, slot) => {
+                const id = at(group, slot);
+                const entry = id ? byId.get(id) : undefined;
+                return (
+                  <div
+                    key={slot}
+                    className={selected && !entry ? 'setup-slot setup-slot-target' : 'setup-slot'}
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={(e) => onDrop(e, { group, slot })}
+                    onClick={() => selected && moveTo(selected, group, slot)}
+                  >
+                    {entry ? (
+                      chip(entry)
+                    ) : (
+                      <span className="setup-empty">
+                        {groupSize === null ? 'Drop here' : 'Empty'}
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </section>
+          );
+        })}
       </div>
 
       <section
@@ -242,7 +263,11 @@ export function SetupEditor({
           Bench <span className="muted">({bench.length})</span>
         </h4>
         {bench.length === 0 ? (
-          <p className="muted">Everyone who signed up is in a group.</p>
+          <p className="muted">
+            {groupCount === 1
+              ? `Everyone who signed up is in ${groupName}.`
+              : 'Everyone who signed up is in a group.'}
+          </p>
         ) : (
           <div className="setup-bench-list">{bench.map(chip)}</div>
         )}
@@ -251,7 +276,8 @@ export function SetupEditor({
       <div className="task-card">
         <strong>In Discord</strong>
         <p className="muted">
-          The setup is posted as its own message, replying to the event’s post.
+          The {event.layout.setupTitle.toLowerCase()} list is posted as its own message, replying to
+          the event’s post.
           {event.setupPostUrl && (
             <>
               {' '}
@@ -263,7 +289,9 @@ export function SetupEditor({
         </p>
         <label className="field-toggle">
           <input type="checkbox" checked={mention} onChange={(e) => setMention(e.target.checked)} />
-          Mention (ping) the players in groups
+          {groupCount === 1
+            ? `Mention (ping) everyone in ${groupName}`
+            : 'Mention (ping) the players in groups'}
         </label>
         <div className="settings-actions">
           <button
@@ -277,7 +305,9 @@ export function SetupEditor({
               })
             }
           >
-            {event.setupPostUrl ? 'Save and update the post' : 'Post the setup'}
+            {event.setupPostUrl
+              ? 'Save and update the post'
+              : `Post the ${event.layout.setupTitle.toLowerCase()} list`}
           </button>
           {event.setupPostUrl && (
             <button
@@ -286,8 +316,8 @@ export function SetupEditor({
               disabled={busy}
               onClick={() =>
                 void confirm({
-                  title: 'Remove the setup from Discord?',
-                  message: 'The message is deleted. The groups stay here and can be posted again.',
+                  title: `Remove the ${event.layout.setupTitle.toLowerCase()} list from Discord?`,
+                  message: 'The message is deleted. It stays here and can be posted again.',
                   confirmLabel: 'Remove',
                   danger: true,
                 }).then((ok) => ok && run(() => removeSetupPost(guild.id, event.id)))

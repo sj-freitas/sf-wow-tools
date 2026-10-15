@@ -13,6 +13,7 @@ import {
 import { timezoneOfRegion } from '../config/regions';
 import { guildPath } from '../guilds/guild-path';
 import { ClassEmojiService } from './class-emojis.service';
+import { EVENT_KINDS, isEventKind } from './event-kinds';
 import { SignupAccessService } from './signup-access.service';
 import { SignupEntriesService, type CharacterOption, type Person } from './signup-entries.service';
 import { SignupEventsService, type EventRow, type SignupGuild } from './signup-events.service';
@@ -62,6 +63,9 @@ interface Invoker extends Person {
  *                -> signed up
  *   Late / Tentative -> (no character signed up yet: the same menu) -> a form for a note -> saved
  *   Absent    -> saved (no character needed)
+ *
+ * A members event (`type: Members`) has no characters: Sign up signs you up as yourself, and Late
+ * and Tentative go straight to the note.
  *
  * Discord waits only 3 seconds for an answer, so anything that reads or writes more than a little
  * answers "thinking…" first (`defer`) and fills the answer in when done. Forms (modals) must be
@@ -125,6 +129,7 @@ export class SignupCommand {
         guild,
         { discordId: invoker.id, name: invoker.name },
         {
+          kind: kindOption(getStringOption(interaction, 'type')),
           title: getStringOption(interaction, 'name') ?? '',
           description: getStringOption(interaction, 'description') ?? '',
           startsAt,
@@ -146,9 +151,14 @@ export class SignupCommand {
     return {
       defer: 'reply',
       work: () =>
-        this.withEvent(interaction, (event, guild, invoker) =>
-          this.characterMenu(event, guild, invoker, 'AVAILABLE'),
-        ),
+        this.withEvent(interaction, async (event, guild, invoker) => {
+          if (EVENT_KINDS[event.kind].usesCharacters) {
+            return this.characterMenu(event, guild, invoker, 'AVAILABLE');
+          }
+          // A members event: you sign up as yourself, nothing to pick.
+          await this.entries.setStatus(event, invoker, 'AVAILABLE');
+          return `✅ You are signed up for **${event.title}**.`;
+        }),
     };
   }
 
@@ -258,7 +268,9 @@ export class SignupCommand {
     const peek = await this.events.peek(parsed.eventId, invoker.id);
     if (!peek) return NO_EVENT;
     if (isClosed(peek)) return CLOSED;
-    if (peek.hasCharacter) {
+    // Straight to the note when there's no character to pick: already signed up with one, or a
+    // members event (people sign up as themselves).
+    if (peek.hasCharacter || !EVENT_KINDS[peek.kind].usesCharacters) {
       return noteForm(customId(PREFIX.note, compactId(parsed.eventId), statusCode(status)), status);
     }
     return {
@@ -437,6 +449,9 @@ const describeCharacter = (option: CharacterOption, current: boolean): string =>
 
 const statusSuffix = (status: SignupStatus): string =>
   status === 'LATE' ? ' (late)' : status === 'TENTATIVE' ? ' (tentative)' : '';
+
+/** The `type:` option: characters unless it says members. */
+const kindOption = (value: string | undefined) => (isEventKind(value) ? value : 'CHARACTERS');
 
 const faction = (guild: SignupGuild) => (guild.faction === 'ALLIANCE' ? 'Alliance' : 'Horde');
 

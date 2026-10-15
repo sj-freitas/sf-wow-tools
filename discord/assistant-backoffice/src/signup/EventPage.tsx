@@ -61,8 +61,10 @@ export function EventPage({ guild }: { guild: Guild }) {
   const requested = (params.get('tab') ?? 'signups') as Tab;
   // Archived events are read-only: nothing to organise.
   const organize = (event?.permissions.canOrganize ?? false) && !event?.archivedAt;
-  const tab: Tab =
-    !organize && (requested === 'setup' || requested === 'missing') ? 'signups' : requested;
+  const unavailable =
+    (!organize && (requested === 'setup' || requested === 'missing')) ||
+    (requested === 'assignments' && event?.layout.hasAssignments === false);
+  const tab: Tab = unavailable ? 'signups' : requested;
   const selectTab = (value: Tab) =>
     setParams(value === 'signups' ? {} : { tab: value }, { replace: true });
 
@@ -254,16 +256,18 @@ export function EventPage({ guild }: { guild: Guild }) {
         </button>
         {organize && (
           <button type="button" aria-selected={tab === 'setup'} onClick={() => selectTab('setup')}>
-            Raid setup
+            {event.layout.setupTitle}
           </button>
         )}
-        <button
-          type="button"
-          aria-selected={tab === 'assignments'}
-          onClick={() => selectTab('assignments')}
-        >
-          Assignments
-        </button>
+        {event.layout.hasAssignments && (
+          <button
+            type="button"
+            aria-selected={tab === 'assignments'}
+            onClick={() => selectTab('assignments')}
+          >
+            Assignments
+          </button>
+        )}
         {organize && (
           <button
             type="button"
@@ -324,7 +328,9 @@ export function EventPage({ guild }: { guild: Guild }) {
         />
       )}
       {tab === 'setup' && organize && <SetupEditor guild={guild} event={shown} onChanged={load} />}
-      {tab === 'assignments' && <AssignmentsTab guild={guild} event={shown} onChanged={load} />}
+      {tab === 'assignments' && event.layout.hasAssignments && (
+        <AssignmentsTab guild={guild} event={shown} onChanged={load} />
+      )}
       {tab === 'missing' && organize && <MissingTab guild={guild} event={shown} onChanged={load} />}
     </div>
   );

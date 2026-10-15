@@ -141,6 +141,9 @@
   padding: 0;
   list-style: none;
 }
+.signup-people-wide {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
+}
 .signup-person {
   display: flex;
   flex-wrap: wrap;
@@ -216,6 +219,14 @@
 .setup-bench h4 {
   margin: 0 0 0.2rem;
   font-size: 0.9rem;
+}
+/* One unlimited group (a members event's invited): full width, its places in columns. */
+.setup-group-open {
+  grid-column: 1 / -1;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 11rem), 1fr));
+}
+.setup-group-open h4 {
+  grid-column: 1 / -1;
 }
 .setup-slot {
   display: flex;

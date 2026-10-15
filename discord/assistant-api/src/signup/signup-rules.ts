@@ -1,4 +1,5 @@
 import type { Role, SignupLockMode, SignupStatus } from '@prisma/client';
+import type { EventKindConfig } from './event-kinds';
 
 /**
  * The rules of event sign-ups, free of I/O. Who may do what:
@@ -12,9 +13,6 @@ import type { Role, SignupLockMode, SignupStatus } from '@prisma/client';
  *   - they and every EventCreator also organise it: the raid setup, assignments, reminders to
  *     people who haven't signed up, and reading the notes left with Late and Tentative.
  */
-
-export const GROUP_COUNT = 8;
-export const GROUP_SIZE = 5;
 
 export const MAX_TITLE_LENGTH = 100;
 export const MAX_DESCRIPTION_LENGTH = 2000;
@@ -86,7 +84,10 @@ export const STATUS_CATEGORIES: readonly { status: SignupStatus; label: string }
   { status: 'ABSENT', label: '❌ Absent' },
 ];
 
-/** Where an entry sits in the raid setup: group 1-8 and place 0-4, or the bench (both null). */
+/**
+ * Where an entry sits in the setup: group 1..groupCount and a place in it (0..groupSize-1, or any
+ * when the group has no limit), or the bench (both null).
+ */
 export interface Placement {
   entryId: string;
   group: number | null;
@@ -94,12 +95,13 @@ export interface Placement {
 }
 
 /**
- * What is wrong with a new raid setup, or null. Every placed entry must be one of the event's,
- * at most once, not Absent, in a free place of a group 1-8.
+ * What is wrong with a new setup, or null. Every placed entry must be one of the event's, at most
+ * once, not Absent, in a free place of one of the event kind's groups (`event-kinds.ts`).
  */
 export function validatePlacements(
   placements: readonly Placement[],
   entries: readonly { id: string; status: SignupStatus }[],
+  layout: Pick<EventKindConfig, 'groupCount' | 'groupSize'>,
 ): string | null {
   const byId = new Map(entries.map((entry) => [entry.id, entry]));
   const seen = new Set<string>();
@@ -113,11 +115,14 @@ export function validatePlacements(
       if (slot !== null) return 'The bench has no places.';
       continue;
     }
-    if (!Number.isInteger(group) || group < 1 || group > GROUP_COUNT) {
-      return `Groups go from 1 to ${GROUP_COUNT}.`;
+    if (!Number.isInteger(group) || group < 1 || group > layout.groupCount) {
+      return layout.groupCount === 1
+        ? 'There is only one group.'
+        : `Groups go from 1 to ${layout.groupCount}.`;
     }
-    if (slot === null || !Number.isInteger(slot) || slot < 0 || slot >= GROUP_SIZE) {
-      return `A group has ${GROUP_SIZE} places.`;
+    const tooFar = layout.groupSize !== null && slot !== null && slot >= layout.groupSize;
+    if (slot === null || !Number.isInteger(slot) || slot < 0 || tooFar) {
+      return `A group has ${layout.groupSize} places.`;
     }
     if (entry.status === 'ABSENT') return 'Someone who is absent cannot be in a group.';
     const place = `${group}:${slot}`;

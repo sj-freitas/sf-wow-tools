@@ -12,6 +12,7 @@ import {
   fetchEvent,
   fetchSignupSettings,
   updateEvent,
+  type EventKind,
   type SignupSettings,
 } from './signupApi';
 
@@ -37,6 +38,7 @@ export function EventFormPage({ guild, serverTimezone }: { guild: Guild; serverT
   const [time, setTime] = useState('20:00');
   const [timezone, setTimezone] = useState('ST');
   const [channel, setChannel] = useState('');
+  const [kind, setKind] = useState<EventKind>('CHARACTERS');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const zones = useMemo(allTimezones, []);
@@ -77,6 +79,7 @@ export function EventFormPage({ guild, serverTimezone }: { guild: Guild; serverT
       time,
       timezone,
       ...(!editing && settings?.isOfficer && channel ? { channel: splitChannelKey(channel) } : {}),
+      ...(!editing ? { type: kind } : {}),
     };
     const saved = eventId
       ? updateEvent(guild.id, eventId, form).then(() => eventId)
@@ -98,6 +101,20 @@ export function EventFormPage({ guild, serverTimezone }: { guild: Guild; serverT
       </Link>
       <h3>{editing ? 'Edit event' : 'New event'}</h3>
       <div className="form-grid">
+        {!editing && (
+          <label className="field field-wide">
+            Type
+            <select value={kind} onChange={(e) => setKind(e.target.value as EventKind)}>
+              <option value="CHARACTERS">
+                Characters: sign up with a character and role (raid groups, assignments)
+              </option>
+              <option value="MEMBERS">
+                Members: sign up as yourself (a list of who is invited)
+              </option>
+            </select>
+            <small>Can’t be changed later.</small>
+          </label>
+        )}
         <label className="field field-wide">
           Name
           <input

@@ -31,6 +31,7 @@ import { PrismaService } from '../database/prisma.service';
 import { RealtimeService } from '../realtime/realtime.service';
 import { parseSnowflake } from '../tasks/post-task';
 import { readLines } from './assignment-lines';
+import { EVENT_KINDS, isEventKind } from './event-kinds';
 import { SignupAccessService } from './signup-access.service';
 import { SignupAssignmentsService } from './signup-assignments.service';
 import { SignupEntriesService } from './signup-entries.service';
@@ -59,6 +60,13 @@ const LOCK_MODES: readonly SignupLockMode[] = ['AUTO', 'LOCKED', 'UNLOCKED'];
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 type Body = Record<string, unknown>;
+
+/** Members events have no assignments (event-kinds.ts). */
+function assertHasAssignments(event: EventRow): void {
+  if (!EVENT_KINDS[event.kind].hasAssignments) {
+    throw new BadRequestException('This kind of event has no assignments.');
+  }
+}
 
 /**
  * The backoffice side of event sign-ups, all under `/api/guilds/:guildId/signup`. Who may do what
@@ -219,6 +227,7 @@ export class SignupController {
         timezone: event.timezone,
         closed: isClosed(event, now),
         archivedAt: event.archivedAt?.toISOString() ?? null,
+        kind: event.kind,
         createdByName: event.createdByName,
         counts,
         myStatus:
@@ -254,7 +263,7 @@ export class SignupController {
     const event = await this.events.create(
       guild,
       { discordId: req.user.discordId, name: req.user.displayName },
-      this.eventInput(guild, body),
+      { ...this.eventInput(guild, body), kind: isEventKind(body.type) ? body.type : 'CHARACTERS' },
       channel,
     );
     this.realtime.publish(guildId, 'signup');
@@ -277,6 +286,9 @@ export class SignupController {
     const serverTime = timezoneOfRegion(guild.region);
     return {
       id: event.id,
+      kind: event.kind,
+      // What this kind of event has: groups, assignments, characters (event-kinds.ts).
+      layout: EVENT_KINDS[event.kind],
       title: event.title,
       description: event.description,
       startsAt: event.startsAt.toISOString(),
@@ -553,6 +565,7 @@ export class SignupController {
     @Body() body: Body,
   ): Promise<void> {
     const { event } = await this.eventContext(req, guildId, eventId, 'organize');
+    assertHasAssignments(event);
     await this.assignments.create(event, this.assignments.parseInput(event, body));
   }
 
@@ -566,6 +579,7 @@ export class SignupController {
     @Body() body: Body,
   ): Promise<void> {
     const { event } = await this.eventContext(req, guildId, eventId, 'organize');
+    assertHasAssignments(event);
     await this.assignments.update(event, assignmentId, this.assignments.parseInput(event, body));
   }
 
@@ -592,6 +606,7 @@ export class SignupController {
     @Body() body: Body,
   ): Promise<void> {
     const { event } = await this.eventContext(req, guildId, eventId, 'organize');
+    assertHasAssignments(event);
     const ids = Array.isArray(body.ids)
       ? (body.ids as unknown[]).filter((id): id is string => typeof id === 'string')
       : [];
@@ -618,6 +633,7 @@ export class SignupController {
     @Body() body: Body,
   ): Promise<{ copied: number; dropped: number }> {
     const { event } = await this.eventContext(req, guildId, eventId, 'organize');
+    assertHasAssignments(event);
     const ids = Array.isArray(body.assignmentIds)
       ? (body.assignmentIds as unknown[]).filter((id): id is string => typeof id === 'string')
       : [];
@@ -637,6 +653,7 @@ export class SignupController {
     @Param('eventId') eventId: string,
   ): Promise<void> {
     const { event } = await this.eventContext(req, guildId, eventId, 'organize');
+    assertHasAssignments(event);
     await this.assignments.postAll(event);
   }
 
@@ -661,6 +678,7 @@ export class SignupController {
     @UploadedFile() file?: { buffer: Buffer },
   ): Promise<{ id: string; contentType: string }> {
     const { event } = await this.eventContext(req, guildId, eventId, 'organize');
+    assertHasAssignments(event);
     if (!file) throw new BadRequestException('No image was sent.');
     return this.assignments.uploadImage(event, file.buffer);
   }
@@ -759,7 +777,10 @@ export class SignupController {
     if (!STATUSES.includes(status)) throw new BadRequestException('Unknown sign-up status.');
     const note = typeof body.note === 'string' ? body.note : undefined;
     if (typeof body.characterId !== 'string' || body.characterId === '') {
-      if (status !== 'ABSENT') throw new BadRequestException('Pick a character.');
+      // Members events never take a character; characters events need one to come.
+      if (status !== 'ABSENT' && EVENT_KINDS[event.kind].usesCharacters) {
+        throw new BadRequestException('Pick a character.');
+      }
       await this.entries.setStatus(event, person, status, note, override);
       return;
     }

@@ -55,6 +55,7 @@ export function SignupDrawer({
       <SignupEditor
         guild={guild}
         characters={event.myCharacters}
+        usesCharacters={event.layout.usesCharacters}
         entry={event.mine}
         onSave={(input) => saveMySignup(guild.id, event.id, input).then(done)}
         onWithdraw={() => withdrawMySignup(guild.id, event.id).then(done)}
@@ -105,14 +106,19 @@ function SomeonesCharacters({
   onDone: () => void;
   onCancel: () => void;
 }) {
-  const [characters, setCharacters] = useState<CharacterOption[] | null>(null);
+  const usesCharacters = event.layout.usesCharacters;
+  // A members event has no characters to load.
+  const [characters, setCharacters] = useState<CharacterOption[] | null>(
+    usesCharacters ? null : [],
+  );
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!usesCharacters) return;
     fetchCharacterOptions(guild.id, event.id, person.discordUserId)
       .then(setCharacters)
       .catch((err: unknown) => setError(errorText(err)));
-  }, [guild.id, event.id, person.discordUserId]);
+  }, [guild.id, event.id, person.discordUserId, usesCharacters]);
 
   if (error) return <p className="status-error">{error}</p>;
   if (!characters) return <Spinner />;
@@ -120,6 +126,7 @@ function SomeonesCharacters({
     <SignupEditor
       guild={guild}
       characters={characters}
+      usesCharacters={usesCharacters}
       entry={entry}
       forSomeone={person.name}
       onSave={(input) =>

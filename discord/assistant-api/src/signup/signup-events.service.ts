@@ -1,11 +1,12 @@
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import type { Prisma, SignupLockMode } from '@prisma/client';
+import type { Prisma, SignupEventKind, SignupLockMode } from '@prisma/client';
 import { formatCharacterName } from '../characters/character-name';
 import { PrismaService } from '../database/prisma.service';
 import { DiscordBotService } from '../discord/discord-bot.service';
 import { describeDiscordError, isDiscordError, UNKNOWN_MESSAGE } from '../discord/discord-errors';
 import { ClassEmojiService, emojiText } from './class-emojis.service';
+import { EVENT_KINDS } from './event-kinds';
 import { addCharacterUrl, eventPageUrl, siteOrigin } from './signup-links';
 import {
   renderEventMessage,
@@ -40,6 +41,8 @@ export const EVENT_INCLUDE = {
 export type EventRow = Prisma.SignupEventGetPayload<{ include: typeof EVENT_INCLUDE }>;
 
 export interface EventInput {
+  /** Only read when creating: an event's kind never changes. Left out: characters. */
+  kind?: SignupEventKind;
   title: string;
   description: string;
   startsAt: Date;
@@ -129,6 +132,7 @@ export class SignupEventsService {
     eventId: string,
     discordUserId: string,
   ): Promise<{
+    kind: SignupEventKind;
     lockMode: SignupLockMode;
     startsAt: Date;
     archivedAt: Date | null;
@@ -137,6 +141,7 @@ export class SignupEventsService {
     const event = await this.prisma.signupEvent.findUnique({
       where: { id: eventId },
       select: {
+        kind: true,
         lockMode: true,
         startsAt: true,
         archivedAt: true,
@@ -145,6 +150,7 @@ export class SignupEventsService {
     });
     if (!event) return null;
     return {
+      kind: event.kind,
       lockMode: event.lockMode,
       startsAt: event.startsAt,
       archivedAt: event.archivedAt,
@@ -161,7 +167,14 @@ export class SignupEventsService {
     guild: SignupGuild,
     event: Pick<
       EventRow,
-      'id' | 'title' | 'description' | 'startsAt' | 'lockMode' | 'archivedAt' | 'createdByName'
+      | 'id'
+      | 'title'
+      | 'description'
+      | 'startsAt'
+      | 'lockMode'
+      | 'archivedAt'
+      | 'createdByName'
+      | 'kind'
     >,
   ): EventView {
     return {
@@ -171,6 +184,7 @@ export class SignupEventsService {
       startsAt: event.startsAt,
       closed: isClosed(event),
       createdByName: event.createdByName,
+      kind: EVENT_KINDS[event.kind],
       eventUrl: eventPageUrl(this.origin, guild, event.id),
       addCharacterUrl: addCharacterUrl(this.origin, guild),
     };
@@ -218,6 +232,7 @@ export class SignupEventsService {
     const event = await this.prisma.signupEvent.create({
       data: {
         guildId: guild.id,
+        kind: input.kind ?? 'CHARACTERS',
         title: valid.title,
         description: valid.description,
         startsAt: valid.startsAt,
