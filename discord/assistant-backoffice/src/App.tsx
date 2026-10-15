@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, Route, Routes, useNavigate } from 'react-router-dom';
 import { fetchCurrentUser, fetchGuilds, fetchSetupInfo, logout, takeReturnPath } from './api';
 import { GuildShell } from './GuildShell';
 import { UserMenu } from './UserMenu';
-import { LoginScreen } from './LoginScreen';
+import { PrivacyPage, PublicHome } from './PublicPages';
 import { Spinner } from './Loading';
+import { usePageMeta } from './usePageMeta';
 import type { Guild, SetupInfo, User } from './types';
 
 const ROLE_REFRESH_MS = 60_000;
@@ -70,7 +71,14 @@ export function App() {
   }
 
   if (!auth.user) {
-    return <LoginScreen />;
+    // Logged out: the public landing page for any address (so deep links still explain the site
+    // and offer to log in), plus the privacy policy.
+    return (
+      <Routes>
+        <Route path="privacy" element={<PrivacyPage />} />
+        <Route path="*" element={<PublicHome />} />
+      </Routes>
+    );
   }
 
   const handleLogout = () => {
@@ -93,6 +101,7 @@ export function App() {
           onLogout={handleLogout}
         />
       </header>
+      <NoIndex />
       <main className="page">
         {auth.setup && (
           <GuildShell
@@ -103,6 +112,15 @@ export function App() {
           />
         )}
       </main>
+      <footer className="app-footer">
+        <Link to="/privacy">Privacy policy</Link>
+      </footer>
     </>
   );
+}
+
+/** Pages behind the login are nobody's search result (`/privacy` sets its own, indexable, meta). */
+function NoIndex() {
+  usePageMeta({ index: false });
+  return null;
 }

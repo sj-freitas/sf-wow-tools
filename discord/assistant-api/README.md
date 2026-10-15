@@ -157,6 +157,16 @@ server can't be removed directly.
 
 ### Backoffice pages and routes
 
+**Before logging in** every address shows the public landing page (`PublicPages.tsx`): what Guild
+Assistant does, an **Add the bot to your server** button, and a secondary **Log in with Discord**.
+`/privacy` is the privacy policy, readable logged in or out. Both read `GET /api/public/info` (no
+login): the bot invite link (`BOT_INVITE_URL`, or, when unset, built from `DISCORD_APPLICATION_ID`
+with the bot's permissions — the same link the guild setup instructions use), the admin role name, and
+the contact address shown on the privacy page (`CONTACT_EMAIL`, optional). The public pages use the
+app's own purple-and-gold colours and say plainly that the site is fan-made and not affiliated with
+Blizzard or Discord; a Discord-coloured page that is only a "log in with Discord" button looks like a
+phishing kit to Google Safe Browsing, which flagged the site once.
+
 The backoffice is a single-page app with real addresses (the API serves `index.html` for any path
 outside `/api`, so deep links and reloads work). `/` goes to the guild you last opened (remembered in
 a cookie holding the guild id, so renaming a guild doesn't matter); with none, or one you have left,

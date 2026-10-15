@@ -403,3 +403,13 @@ export interface Conversation {
   locked: boolean;
   messages: ConversationMessage[];
 }
+
+/** What the public pages (landing, privacy) show before anyone logs in. */
+export interface PublicInfo {
+  /** Adds the bot to a Discord server. */
+  botInviteUrl: string;
+  /** The Discord role that lets someone set a guild up. */
+  adminRoleName: string;
+  /** Who to contact about the site and its data; null when not configured. */
+  contactEmail: string | null;
+}

@@ -14,6 +14,7 @@ import { forgetLastGuild, readLastGuildId, rememberLastGuild } from './lastGuild
 import { ConversationPage, OfficerRequestsPage } from './OfficerRequestsPage';
 import { PostEditorPage } from './PostEditorPage';
 import { PostsPage } from './PostsPage';
+import { PrivacyPage } from './PublicPages';
 import { RequireAccess } from './RequireAccess';
 import { CharacterEditorPage, RosterPage } from './RosterPage';
 import { SettingsPage } from './SettingsPage';
@@ -32,6 +33,7 @@ interface Props {
  *
  *   /                                               goes to the guild you last used (a cookie), else /overview
  *   /overview                                       your guilds: pick one or add one
+ *   /privacy                                        the privacy policy (also before logging in)
  *   /guilds/create                                  set up a new guild
  *   /<version>/<region>/<server>/characters/<name>  a character's own page (guild-agnostic: the
  *                                                    same one regardless of which guild it is in,
@@ -72,6 +74,7 @@ export function GuildShell({ guilds, setup, currentUser, onGuildsChanged }: Prop
         <Routes>
           <Route index element={<LastGuildRedirect guilds={guilds} />} />
           <Route path="overview" element={<LandingPage guilds={guilds} setup={setup} />} />
+          <Route path="privacy" element={<PrivacyPage framed={false} />} />
           <Route
             path="guilds/create"
             element={<CreateGuildPage setup={setup} onCreated={onGuildsChanged} />}

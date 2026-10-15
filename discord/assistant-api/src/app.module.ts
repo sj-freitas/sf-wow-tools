@@ -16,6 +16,7 @@ import { ModerationModule } from './moderation/moderation.module';
 import { ArmoryModule } from './armory/armory.module';
 import { OfficerRequestsModule } from './officer-requests/officer-requests.module';
 import { PlayersModule } from './players/players.module';
+import { PublicModule } from './public/public.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { PlayersModule } from './players/players.module';
     DiscordBotModule,
     AuthModule,
     BotModule,
+    PublicModule,
     PlayersModule,
     CharactersModule,
     GuildsModule,

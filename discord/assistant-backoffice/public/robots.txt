@@ -1,0 +1,6 @@
+# Guild Assistant: only the public pages (landing and privacy policy) are meant for search
+# engines. Everything else needs a login; those pages tell crawlers "noindex" themselves.
+User-agent: *
+Disallow: /api/
+
+Sitemap: https://guildassistant.app/sitemap.xml

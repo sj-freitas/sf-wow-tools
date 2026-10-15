@@ -2,6 +2,7 @@ import type {
   BioImage,
   Character,
   CharacterProfile,
+  PublicInfo,
   CharacterPatch,
   Conversation,
   ConversationsPage,
@@ -91,6 +92,10 @@ async function request<T>(
   const text = await response.text();
   return (text === '' ? undefined : JSON.parse(text)) as T;
 }
+
+/** For the public pages: no login needed. */
+export const fetchPublicInfo = (): Promise<PublicInfo> =>
+  request('GET', '/api/public/info', undefined, { redirectOn401: false });
 
 export const fetchPlayers = (guildId: string): Promise<Player[]> =>
   request('GET', `/api/guilds/${guildId}/players`);

@@ -22,6 +22,7 @@ import { AuthService } from '../auth/auth.service';
 import type { AuthenticatedRequest } from '../auth/auth.types';
 import { GuildAccessService } from '../auth/guild-access.service';
 import { APP_CONFIG } from '../config/app.config';
+import { botInviteUrl } from '../config/bot-invite';
 import { isRegion, REGIONS, regionOptions } from '../config/regions';
 import { TEST_ARMORY } from '../armory/armory.config';
 import { games, getGame, isGameVersion, serversOf } from '../game/games';
@@ -46,7 +47,7 @@ type Payload = Record<string, unknown>;
 @Controller('guilds')
 @UseGuards(AuthGuard)
 export class GuildsController {
-  private readonly applicationId: string;
+  private readonly botInviteUrl: string;
   /** The armory test feature is offered when the Battle.net client is configured. */
   private readonly armoryDescription: string | null;
 
@@ -57,7 +58,7 @@ export class GuildsController {
     private readonly ranksService: RanksService,
     configService: ConfigService,
   ) {
-    this.applicationId = configService.getOrThrow<string>('DISCORD_APPLICATION_ID');
+    this.botInviteUrl = botInviteUrl(configService);
     this.armoryDescription =
       configService.get<string>('BLIZZARD_CLIENT_ID') &&
       configService.get<string>('BLIZZARD_CLIENT_SECRET')
@@ -74,14 +75,9 @@ export class GuildsController {
   /** How to get a server ready for Guild Assistant, including the bot invite link. */
   @Get('setup-info')
   setupInfo(): SetupInfoDto {
-    const params = new URLSearchParams({
-      client_id: this.applicationId,
-      scope: 'bot applications.commands',
-      permissions: APP_CONFIG.botInvitePermissions,
-    });
     return {
       adminRoleName: APP_CONFIG.adminRoleName,
-      botInviteUrl: `https://discord.com/oauth2/authorize?${params.toString()}`,
+      botInviteUrl: this.botInviteUrl,
       regions: regionOptions(),
       // What the forms are built from: versions, their servers per region, factions, races and classes.
       games: games(),

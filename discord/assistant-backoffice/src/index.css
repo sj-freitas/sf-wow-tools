@@ -1,15 +1,18 @@
 :root {
   color-scheme: light dark;
-  --blurple: #5865f2;
-  --blurple-dark: #4752c4;
-  --bg: light-dark(#f2f3f5, #1e1f22);
-  --surface: light-dark(#ffffff, #2b2d31);
-  --surface-2: light-dark(#f7f8f9, #313338);
-  --border: light-dark(#e3e5e8, #3f4147);
-  --text: light-dark(#1e1f22, #f2f3f5);
-  --muted: light-dark(#5c5e66, #a3a6aa);
-  --danger: #da373c;
-  --success: #248046;
+  /* Arcane purple, with a touch of old gold for highlights: the app's own colours. */
+  --accent: light-dark(#6d43c2, #9b74e3);
+  --accent-dark: light-dark(#56339e, #8560d4);
+  --accent-contrast: #ffffff;
+  --gold: light-dark(#a07a2c, #d2ab5c);
+  --bg: light-dark(#f4f2f7, #15121c);
+  --surface: light-dark(#ffffff, #1e1a27);
+  --surface-2: light-dark(#f8f6fb, #262131);
+  --border: light-dark(#e2dcea, #372f45);
+  --text: light-dark(#1d1828, #ece8f3);
+  --muted: light-dark(#625a70, #a59db3);
+  --danger: #cf4444;
+  --success: #2f8a4f;
   --radius: 10px;
   font-family:
     'Segoe UI',
@@ -66,12 +69,12 @@ h3 {
   cursor: not-allowed;
 }
 .btn-primary {
-  background: var(--blurple);
-  border-color: var(--blurple);
+  background: var(--accent);
+  border-color: var(--accent);
   color: #fff;
 }
 .btn-primary:hover:not(:disabled) {
-  background: var(--blurple-dark);
+  background: var(--accent-dark);
 }
 .btn-danger {
   color: var(--danger);
@@ -81,50 +84,165 @@ h3 {
   font-size: 0.8rem;
 }
 
-/* ---- login ---- */
-.login {
+/* ---- public pages (landing, privacy): before anyone logs in ---- */
+.public {
   min-height: 100vh;
-  display: grid;
-  place-items: center;
-  padding: 1rem;
-  background: radial-gradient(circle at 20% 20%, #7983f5 0%, var(--blurple) 40%, #3c45a5 100%);
+  display: flex;
+  flex-direction: column;
+  background:
+    radial-gradient(
+      ellipse at top,
+      color-mix(in srgb, var(--accent) 14%, transparent),
+      transparent 60%
+    ),
+    var(--bg);
 }
-.login-card {
+.public-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
   width: 100%;
-  max-width: 400px;
-  padding: 2.5rem 2rem;
-  text-align: center;
-  background: var(--surface);
-  border-radius: 16px;
-  box-shadow: 0 20px 60px rgb(0 0 0 / 35%);
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 1rem 1.5rem;
 }
-.login-logo {
-  width: 104px;
-  height: 104px;
-  margin: 0 auto 1.25rem;
+.public-main {
+  flex: 1;
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 1rem 1.5rem 3rem;
+}
+.hero {
+  display: grid;
+  justify-items: center;
+  gap: 1rem;
+  padding: 3rem 0 2.5rem;
+  text-align: center;
+}
+.hero-logo {
+  width: 96px;
+  height: 96px;
   display: grid;
   place-items: center;
-  border-radius: 24px;
+  border-radius: 22px;
   background: #fff;
-  box-shadow: 0 0 0 1px var(--border);
+  box-shadow:
+    0 0 0 1px var(--border),
+    0 0 0 4px color-mix(in srgb, var(--gold) 35%, transparent);
 }
-.login-logo img {
-  width: 88px;
-  height: 88px;
+.hero-logo img {
+  width: 80px;
+  height: 80px;
   object-fit: contain;
 }
-.login-card h1 {
-  font-size: 1.6rem;
+.hero h1 {
+  font-size: clamp(1.8rem, 5vw, 2.6rem);
+  letter-spacing: -0.01em;
 }
-.login-card p {
-  margin: 0.6rem 0 1.75rem;
+.hero-tagline {
+  max-width: 640px;
+  margin: 0;
   color: var(--muted);
+  font-size: 1.1rem;
+  line-height: 1.5;
 }
-.login-card .btn {
-  width: 100%;
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
   justify-content: center;
-  padding: 0.8rem 1rem;
+  gap: 0.6rem;
+  margin-top: 0.5rem;
+}
+.btn-lg {
+  padding: 0.75rem 1.2rem;
   font-size: 1rem;
+}
+.public h2 {
+  margin: 2.5rem 0 1rem;
+  font-size: 1.3rem;
+  text-align: center;
+}
+.public h2::after {
+  content: '';
+  display: block;
+  width: 48px;
+  height: 2px;
+  margin: 0.6rem auto 0;
+  background: var(--gold);
+}
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+}
+.feature {
+  padding: 1.1rem 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.feature h3 {
+  margin-bottom: 0.4rem;
+  font-size: 1rem;
+}
+.feature p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+.steps {
+  display: grid;
+  gap: 0.75rem;
+  max-width: 640px;
+  margin: 0 auto;
+  padding-left: 1.25rem;
+  line-height: 1.5;
+}
+.public-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem 1.25rem;
+  padding: 1.5rem;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.85rem;
+  text-align: center;
+}
+.public-footer a,
+.prose a {
+  color: var(--accent);
+}
+.prose {
+  max-width: 720px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+.prose h1 {
+  margin: 1.5rem 0 0.25rem;
+}
+.prose h2 {
+  margin: 2rem 0 0.5rem;
+  font-size: 1.15rem;
+  text-align: left;
+}
+.prose h2::after {
+  display: none;
+}
+.prose ul {
+  padding-left: 1.25rem;
+}
+.app-footer {
+  padding: 1rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+  text-align: center;
+}
+.app-footer a {
+  color: inherit;
 }
 
 /* ---- header ---- */
@@ -169,7 +287,7 @@ h3 {
   height: 32px;
   border-radius: 50%;
   object-fit: cover;
-  background: var(--blurple);
+  background: var(--accent);
   color: #fff;
   display: grid;
   place-items: center;
@@ -224,9 +342,9 @@ h3 {
   color: var(--muted);
 }
 .badge-admin {
-  background: color-mix(in srgb, var(--blurple) 15%, transparent);
-  border-color: var(--blurple);
-  color: var(--blurple);
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 .badge-main {
   background: color-mix(in srgb, var(--success) 15%, transparent);
@@ -428,7 +546,7 @@ tbody tr:last-child td {
   margin-right: 0.5rem;
   vertical-align: -2px;
   border: 2px solid var(--border);
-  border-top-color: var(--blurple);
+  border-top-color: var(--accent);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }
@@ -496,7 +614,7 @@ tbody tr:last-child td {
   gap: 0.4rem;
 }
 .setup a {
-  color: var(--blurple);
+  color: var(--accent);
 }
 
 .server-picker {
@@ -710,7 +828,7 @@ tbody tr:last-child td {
 }
 .view-tabs button[aria-selected='true'] {
   color: var(--text);
-  border-bottom-color: var(--blurple);
+  border-bottom-color: var(--accent);
 }
 .tasks {
   display: grid;
@@ -818,7 +936,7 @@ tbody tr:last-child td {
 .md-preview {
   padding: 0.8rem 1rem;
   border: 1px solid var(--border);
-  border-left: 3px solid var(--blurple);
+  border-left: 3px solid var(--accent);
   border-radius: 6px;
   background: var(--surface);
   color: var(--text);
@@ -867,8 +985,8 @@ tbody tr:last-child td {
 .md-mention {
   padding: 0 0.2rem;
   border-radius: 4px;
-  background: color-mix(in srgb, var(--blurple) 25%, transparent);
-  color: var(--blurple);
+  background: color-mix(in srgb, var(--accent) 25%, transparent);
+  color: var(--accent);
 }
 .md-spoiler {
   border-radius: 4px;
@@ -947,7 +1065,7 @@ tbody tr:last-child td {
   width: 0.9rem;
   height: 0.9rem;
   border: 2px solid var(--border);
-  border-top-color: var(--blurple);
+  border-top-color: var(--accent);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -1015,7 +1133,7 @@ tbody tr:last-child td {
 }
 .view-tabs a[aria-current='page'] {
   color: var(--text);
-  border-bottom-color: var(--blurple);
+  border-bottom-color: var(--accent);
 }
 .back-link {
   color: var(--muted);
@@ -1071,7 +1189,7 @@ a.btn {
   font-size: 1.1rem;
 }
 .markdown a {
-  color: var(--blurple);
+  color: var(--accent);
 }
 .markdown img {
   max-width: 100%;
@@ -1132,7 +1250,7 @@ a.btn {
   text-decoration: none;
 }
 .conversation-card:hover {
-  border-color: var(--blurple);
+  border-color: var(--accent);
 }
 .conversation {
   display: grid;
@@ -1241,8 +1359,8 @@ a.btn {
   transition: border-color 0.15s;
 }
 .image-dropzone-active {
-  border-color: var(--blurple);
-  background: color-mix(in srgb, var(--blurple) 8%, transparent);
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
 }
 .image-tile {
   position: relative;
@@ -1282,7 +1400,7 @@ a.btn {
   cursor: pointer;
 }
 .image-tile-add:hover {
-  border-color: var(--blurple);
+  border-color: var(--accent);
   color: var(--text);
 }
 .image-tile-add-icon {
@@ -1372,7 +1490,7 @@ a.btn {
   background: var(--surface-2);
 }
 .user-menu-item.current {
-  background: color-mix(in srgb, var(--blurple) 15%, transparent);
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
 }
 
 /* ---- landing ---- */
@@ -1396,7 +1514,7 @@ a.btn {
   text-decoration: none;
 }
 .guild-card:hover {
-  border-color: var(--blurple);
+  border-color: var(--accent);
 }
 
 .reply-form {
@@ -1438,7 +1556,7 @@ a.btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--blurple);
+  background: var(--accent);
   color: #fff;
   font-size: 1.5rem;
   font-weight: 700;
@@ -1465,7 +1583,7 @@ label.btn.disabled {
   gap: 0.75rem;
   min-height: var(--control-height);
   padding: 0 0.6rem 0 0.8rem;
-  border: 1px solid var(--blurple);
+  border: 1px solid var(--accent);
   border-radius: 6px;
   background: var(--surface-2);
 }
@@ -1579,7 +1697,7 @@ label.btn.disabled {
   background: var(--surface);
 }
 .part-card-posted {
-  border-left-color: var(--blurple);
+  border-left-color: var(--accent);
 }
 .part-head {
   display: flex;

@@ -1,0 +1,13 @@
+{
+  "name": "Guild Assistant",
+  "short_name": "Guild Assistant",
+  "description": "A fan-made helper for World of Warcraft guilds on Discord.",
+  "start_url": "/",
+  "display": "browser",
+  "background_color": "#15121c",
+  "theme_color": "#6d43c2",
+  "icons": [
+    { "src": "/favicon.png", "sizes": "64x64", "type": "image/png" },
+    { "src": "/logo.png", "sizes": "256x256", "type": "image/png" }
+  ]
+}
