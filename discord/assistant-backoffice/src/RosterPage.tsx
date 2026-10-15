@@ -8,6 +8,7 @@ import { subscribeEvents } from './events';
 import { characterPath, playerLabel } from './format';
 import { ROLE_LABELS, type Guild, type Player, type Ranks, type User } from './types';
 import { useCurrentUrl, useReturnTo } from './useReturnTo';
+import { ClassMark } from './ClassMark';
 import { characterPagePath, guildPath } from './guildPath';
 
 interface Props {
@@ -188,7 +189,10 @@ export function RosterPage({ guild, currentUser }: Props) {
                           <span className="badge badge-main main-pill">Main</span>
                         )}
                       </td>
-                      <td data-label="Class">{character.class}</td>
+                      <td data-label="Class">
+                        <ClassMark gameVersion={guild.gameVersion} className={character.class} />
+                        {character.class}
+                      </td>
                       <td data-label="Roles">
                         {character.roles.map((role) => ROLE_LABELS[role]).join(', ')}
                       </td>

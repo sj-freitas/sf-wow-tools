@@ -21,6 +21,11 @@ export interface SpecializationConfig {
 }
 
 export interface ClassConfig {
+  /**
+   * The class colour as `#RRGGBB` (Paladin pink, Druid orange, ...). Sign-ups show it in place of
+   * the class name: as a dot emoji in Discord, and on the website. Left out, a neutral grey.
+   */
+  color?: string;
   /** By name. Empty until a version defines them. */
   specializations: Readonly<Record<string, SpecializationConfig>>;
 }
@@ -135,6 +140,10 @@ export function gameConfigProblems(config: unknown): string[] {
   const classNames = classes && typeof classes === 'object' ? Object.keys(classes) : [];
   if (classNames.length === 0) problems.push('classes needs at least one class');
   for (const [name, entry] of Object.entries(classes ?? {})) {
+    const color = (entry as ClassConfig | undefined)?.color;
+    if (color !== undefined && (typeof color !== 'string' || !/^#[0-9a-f]{6}$/i.test(color))) {
+      problems.push(`classes.${name}.color must be a colour like #FF7C0A`);
+    }
     const specializations = (entry as ClassConfig | undefined)?.specializations;
     if (!specializations || typeof specializations !== 'object') {
       problems.push(`classes.${name}.specializations is missing (use {} when there are none yet)`);

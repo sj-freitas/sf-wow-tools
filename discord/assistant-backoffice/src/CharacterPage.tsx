@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type DragEvent, type FormEvent } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { ClassMark } from './ClassMark';
 import {
   bioImageUrl,
   deleteBioImage,
@@ -64,19 +65,29 @@ export function CharacterPage({ editMode }: Props) {
           </p>
         )
       ) : (
-        <CharacterView profile={profile} editUrl={editUrl} />
+        <CharacterView profile={profile} editUrl={editUrl} gameVersion={version} />
       )}
     </div>
   );
 }
 
-function CharacterView({ profile, editUrl }: { profile: CharacterProfile; editUrl: string }) {
+function CharacterView({
+  profile,
+  editUrl,
+  gameVersion,
+}: {
+  profile: CharacterProfile;
+  editUrl: string;
+  /** As in the address (`forever`); only used for the class icon. */
+  gameVersion: string;
+}) {
   return (
     <>
       <div className="tasks-head">
         <div>
           <h2>{profile.name}</h2>
           <div className="card-meta">
+            <ClassMark gameVersion={gameVersion} className={profile.class} />
             {profile.class} · {profile.race} · Level {profile.level} · {profile.roles.join(', ')}
             {profile.isMain && <span className="badge badge-main main-pill">Main</span>}
           </div>

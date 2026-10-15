@@ -45,13 +45,43 @@ export interface DiscordInteraction {
     resolved?: { attachments?: Record<string, DiscordAttachment> };
     /** Buttons and modals: the id we gave the component. */
     custom_id?: string;
+    /** Select menus: the values of the options picked. */
+    values?: string[];
     /** Modal submissions: the fields, one per row. */
     components?: { components: { custom_id: string; value?: string }[] }[];
   };
 }
 
-/** What a button or modal handler answers: a private message, or a pop-up form to open. */
-export type ComponentReply = string | { modal: ModalData };
+/**
+ * What a button, select menu or modal handler answers: a private message (plain text, or
+ * `message` with embeds and components), a pop-up form to open, or `update`: new contents for the
+ * message the component is on. Only use `update` on the user's own private messages (a step of a
+ * flow the bot showed them), never for a component on a message everyone sees, nor for a modal
+ * opened from one.
+ */
+export type ComponentReply =
+  | string
+  | { modal: ModalData }
+  | { message: ReplyMessage }
+  | { update: ReplyMessage }
+  | DeferredReply;
+
+/**
+ * For work that may take longer than the 3 seconds Discord waits for an answer: Discord is told
+ * "thinking…" at once, then `work` runs and its result replaces that. `reply`: a new private
+ * message (shows "… is thinking"); `update`: the message the component is on (same rule as
+ * `update` above: only the user's own private messages, or a form opened from one).
+ */
+export interface DeferredReply {
+  defer: 'reply' | 'update';
+  work: () => Promise<string | ReplyMessage>;
+}
+
+export interface ReplyMessage {
+  content?: string;
+  embeds?: unknown[];
+  components?: unknown[];
+}
 
 export interface ModalData {
   custom_id: string;

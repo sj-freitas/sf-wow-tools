@@ -231,5 +231,54 @@
         "channel_types": [0, 5]
       }
     ]
+  },
+  {
+    "name": "create-event",
+    "description": "Creates an event people sign up to (Officers and EventCreators)",
+    "options": [
+      {
+        "name": "name",
+        "description": "The event's name, shown as its title",
+        "type": 3,
+        "required": true,
+        "max_length": 100
+      },
+      {
+        "name": "date",
+        "description": "The day, as YYYY-MM-DD (e.g. 2026-10-20)",
+        "type": 3,
+        "required": true,
+        "min_length": 8,
+        "max_length": 10
+      },
+      {
+        "name": "time",
+        "description": "The start time, as HH:mm (e.g. 20:00), in server time unless a timezone is given",
+        "type": 3,
+        "required": true,
+        "max_length": 8
+      },
+      {
+        "name": "description",
+        "description": "Shown in the body of the post",
+        "type": 3,
+        "required": false,
+        "max_length": 2000
+      },
+      {
+        "name": "timezone",
+        "description": "ST (server time, the default), UTC, an offset like +02:00, or a name like Europe/Lisbon",
+        "type": 3,
+        "required": false,
+        "max_length": 40
+      },
+      {
+        "name": "channel",
+        "description": "Where to post it (Officers only; others always use the event channel)",
+        "type": 7,
+        "required": false,
+        "channel_types": [0, 5]
+      }
+    ]
   }
 ]

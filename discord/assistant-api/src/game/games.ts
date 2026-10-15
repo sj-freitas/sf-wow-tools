@@ -2,6 +2,7 @@ import { existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Faction } from '@prisma/client';
 import type { RegionId } from '../config/regions';
+import { readClassIcons, readMarkerIcons, type ClassIcon } from './class-icons';
 import {
   GAME_ROLES,
   gameConfigProblems,
@@ -38,11 +39,28 @@ export function loadGames(root: string = __dirname): GameConfig[] {
         `Two game configs are for "${game.gameVersion}" ("${directory}" is the second).`,
       );
     }
+    const { icons, problems: classIconProblems } = readClassIcons(
+      join(root, directory),
+      Object.keys(game.classes),
+    );
+    const { icons: markers, problems: markerProblems } = readMarkerIcons(join(root, directory));
+    const iconProblems = [...classIconProblems, ...markerProblems];
+    if (iconProblems.length > 0) {
+      throw new Error(
+        `The class icons of "${directory}" are not valid: ${iconProblems.join('; ')}.`,
+      );
+    }
+    classIconsByGame.set(game, icons);
+    markerIconsByGame.set(game, markers);
     games.push(game);
   }
   if (games.length === 0) throw new Error(`No game config was found in ${root}.`);
   return games;
 }
+
+/** Each loaded version's class icons (see class-icons.ts), kept out of the config itself. */
+const classIconsByGame = new WeakMap<GameConfig, Map<string, ClassIcon>>();
+const markerIconsByGame = new WeakMap<GameConfig, Map<string, ClassIcon>>();
 
 let loaded: GameConfig[] | null = null;
 
@@ -53,6 +71,22 @@ export const gameVersions = (): string[] => games().map((game) => game.gameVersi
 
 export const getGame = (gameVersion: string): GameConfig | undefined =>
   games().find((game) => game.gameVersion === gameVersion);
+
+/** A class's icon file, if its version has one (`src/game/<version>/class-icons/<Class>.png`). */
+export function classIcon(gameVersion: string, className: string): ClassIcon | null {
+  const game = gameAnyCase(gameVersion);
+  return (game && classIconsByGame.get(game)?.get(className)) ?? null;
+}
+
+/** A raid marker's icon (`Skull`, ...), if its version has one (`raid-markers/<Marker>.png`). */
+export function markerIcon(gameVersion: string, marker: string): ClassIcon | null {
+  const game = gameAnyCase(gameVersion);
+  return (game && markerIconsByGame.get(game)?.get(marker)) ?? null;
+}
+
+/** Any casing: the website may only have the version from an address (`forever`). */
+const gameAnyCase = (gameVersion: string): GameConfig | undefined =>
+  games().find((g) => g.gameVersion.toLowerCase() === gameVersion.toLowerCase());
 
 export const isGameVersion = (value: unknown): value is string =>
   typeof value === 'string' && getGame(value) !== undefined;

@@ -1,7 +1,9 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, HttpStatus, Param, Res } from '@nestjs/common';
+import type { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { APP_CONFIG } from '../config/app.config';
 import { botInviteUrl } from '../config/bot-invite';
+import { classIcon, markerIcon } from '../game/games';
 
 export interface PublicInfoDto {
   /** Adds the bot to a Discord server (`BOT_INVITE_URL`, else built from the application id). */
@@ -28,5 +30,35 @@ export class PublicController {
   @Get('info')
   getInfo(): PublicInfoDto {
     return this.info;
+  }
+
+  /** A class's icon (game artwork, not private), for the website; 404 when it has none. */
+  @Get('games/:gameVersion/classes/:className/icon')
+  classIcon(
+    @Param('gameVersion') gameVersion: string,
+    @Param('className') className: string,
+    @Res() res: Response,
+  ): void {
+    this.sendIcon(res, classIcon(gameVersion, className));
+  }
+
+  /** A raid marker's icon (`Skull`, ...), for the website; 404 when it has none. */
+  @Get('games/:gameVersion/markers/:marker/icon')
+  markerIcon(
+    @Param('gameVersion') gameVersion: string,
+    @Param('marker') marker: string,
+    @Res() res: Response,
+  ): void {
+    this.sendIcon(res, markerIcon(gameVersion, marker));
+  }
+
+  private sendIcon(res: Response, icon: ReturnType<typeof classIcon>): void {
+    res.set('Cache-Control', 'public, max-age=86400');
+    if (!icon) {
+      res.status(HttpStatus.NOT_FOUND).json({ message: 'No icon' });
+      return;
+    }
+    res.set({ 'Content-Type': icon.contentType, 'X-Content-Type-Options': 'nosniff' });
+    res.sendFile(icon.file);
   }
 }

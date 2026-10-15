@@ -229,9 +229,11 @@ what an Officer writes can't inject scripts into what members see.
 
 Clicks on message buttons and submitted pop-up forms (modals) arrive at the same interactions endpoint
 as slash commands, so nothing extra is configured in the Developer Portal. Handlers are methods marked
-`@Button('prefix')` or `@Modal('prefix')` (`src/bot/decorators/interaction-handler.decorator.ts`); the
-button's `custom_id` is `<prefix>:<state>`. A button handler answers with a private message or opens a
-modal; a modal handler answers with a private message. Unknown or failing buttons get a private
+`@Button('prefix')`, `@Select('prefix')` (select menus) or `@Modal('prefix')`
+(`src/bot/decorators/interaction-handler.decorator.ts`); the component's `custom_id` is
+`<prefix>:<state>`. A handler answers with a private message (text, or `{ message }` with embeds and
+components), opens a modal, or (`{ update }`) replaces the user's own private message it was clicked
+on — used to step through a flow like the event sign-up's character and role menus. Unknown or failing buttons get a private
 "no longer available" / "something went wrong".
 
 - **Reply button** (`contact-reply:<guildId>:<conversationId>`) under an officer's answer in the
@@ -573,7 +575,20 @@ wrong. The shape (volatile: expect it to grow):
   enforces, not its name — several servers can share one, and features gate on the rule set instead of
   hard-coding server names (bios need `'RP'`, below).
 - `classes`: every class, by name, each with its `specializations` (`{}` until defined; a specialization
-  has `roles` and optional `raidBuffs`/`groupBuffs`).
+  has `roles` and optional `raidBuffs`/`groupBuffs`) and an optional `color` (`#RRGGBB`).
+- **Class icons** (optional) are files, not config: `src/game/<version>/class-icons/<Class>.png`, named
+  after the class exactly (PNG, JPEG or GIF, at most 256 KB, square ~128×128). Event sign-ups show a
+  class as its icon, or a dot in its `color` when it has no icon, instead of its name: in Discord as
+  an emoji the bot uploads to its application once (`i_druid_<hash>` / `c_druid_ff7c0a`; a changed
+  image or colour is uploaded as a new one, which needs `DISCORD_APPLICATION_ID`), and on the website
+  from `GET /api/public/games/:version/classes/:class/icon`. Start-up stops if a file there isn't an
+  image, is too big, or isn't named after a class. `npm run build` copies the folder into `dist/`
+  (`scripts/copy-game-assets.js`).
+- **Raid marker icons** (optional), the same way: `src/game/<version>/raid-markers/<Marker>.png` for
+  `Skull`, `Cross`, `Square`, `Moon`, `Triangle`, `Diamond`, `Circle` and `Star`. Assignment targets
+  show them (an emoji `m_skull_<hash>` in Discord, and on the website from
+  `GET /api/public/games/:version/markers/:marker/icon`); a marker without one is written as text,
+  `[Circle]`.
 - `factions`: by name (`Alliance`, `Horde`), each with its `races`, and each race with the `classes` it
   can be. **A race can only list classes that are keys of `classes`**: `defineGame` makes that a compile
   error, and the loader checks it again for the config it finds.
@@ -712,6 +727,102 @@ bio's permission model is different from the rest of the character.
 "Visible globally" is still **behind login**: the whole backoffice sits behind Discord OAuth, so
 viewing a character's page needs a backoffice account, just not membership of any particular guild.
 
+## Event sign-ups (`src/signup/`)
+
+Like Raid-Helper, built in: events people sign up to from Discord or the backoffice, a raid setup
+(groups) and assignments. Self-contained on purpose — its own folder here
+(`src/signup/`) and in the backoffice (`assistant-backoffice/src/signup/`), its own tables
+(`signup_*`, in `prisma/signup.prisma`) — so it can be taken out on its own (see below).
+
+**Who can do what** (`signup-rules.ts`):
+
+- **Anyone** who can see the event's post (or is in the guild, on the website) signs themselves up
+  while it is open.
+- **Officers** and holders of the guild's optional **EventCreator** role create events (Officers
+  always count as EventCreators). Only Officers can post in a channel other than the guild's
+  **event channel**. Both are set on the website's Events page (Guild-Assistants and Officers).
+- The event's **owner** and **Officers** edit, lock, unlock and delete it, and add, change or remove
+  anyone's sign-up — even after it has closed.
+- They and **every EventCreator** organise it: raid setup, assignments, reminders, and reading the
+  notes left with Late/Tentative.
+
+**Creating** — `/create-event name date time [description] [timezone] [channel]`, or the website's
+form (date picker, timezone list). `date` is `YYYY-MM-DD` and `time` `HH:mm` (`8pm` works too), in
+**server time** (`ST`: the region's zone, e.g. Europe/Paris for EU) unless `timezone` says
+otherwise (`UTC`, `+02:00`, `Europe/Lisbon`). Discord shows everyone the time in their own zone.
+Run `npm run commands:register` once so Discord knows the command.
+
+**The sign-up post** lists everyone signed up under 🛡️ Tank, 💚 Healer, 🏹 Ranged and ⚔️ Melee,
+then ⏰ Late, ❔ Tentative and ❌ Absent. Its buttons:
+
+- **Sign up** → a private menu of your characters on the guild's server and faction (the bot knows
+  you from the click; mains first) → the role, if the character plays several → done. Picking a
+  character that isn't on the guild's roster yet adds it there. **Add character** and **Edit**
+  link to the website.
+- **Late** / **Tentative** → a form for an optional note to the organisers (after the same
+  character steps if you hadn't signed up yet). Notes show only to organisers, on the website.
+- **Absent** → no character needed.
+
+**Archiving.** An event is archived with **Archive event** on its page (the owner and Officers),
+or on its own when its sign-up post is deleted in Discord: the worker's live connection notices
+the deletion (or, if it is down, the next update of the post does). Archiving removes the event's
+messages from Discord (post, raid setup, assignments) and keeps the event, its sign-ups, setup and
+assignments, read-only (the API refuses changes), under **Archived** on the Events page, searchable
+by date and name. From there it can be **restored** (posted again, sign-ups as they were) or
+**deleted for good**. Its assignments can still be copied into other events.
+
+One sign-up per person per event: answering again replaces it. An event **closes** when it starts
+(the worker updates the post within a minute, and its buttons are disabled); the owner or an
+Officer can lock or unlock it by hand, or put it back on automatic.
+
+**On the website** (`/<guild>/signup`): the event list; each event has tabs for the sign-ups (your
+own form, everyone's list), **Raid setup**, **Assignments**, and **Not signed up**.
+
+- **Not signed up** lists everyone in the guild's Discord servers (people, not bots; characters or
+  not) who hasn't answered, filterable to the Raider role or people with a main. **Remind** DMs one
+  person a link to the post; **Remind all** goes through the list one by one. Each reminder is
+  recorded (`signup_contacts`: when, by whom, whether Discord delivered it), as many as you like.
+  The owner and Officers can also sign someone up from here.
+- **Raid setup**: drag signed-up characters (not the absent) into groups 1-8, five places each;
+  everyone else is on the **bench**. On a phone, tap someone and then a place. It is posted as its
+  own message replying to the sign-up post, optionally mentioning the players; saving later edits
+  it, and it can be removed and posted again.
+- **Assignments**: each one is for **Everyone**, a **Raid** or a **Boss** (the raid/boss name is free
+  text for now) and has lines giving players a task, optionally aimed at a raid marker (Skull,
+  Cross, … shown as text for now) or another player — "Darkshivan heals Tearyn", "Darkshivan tanks
+  [Cross]", "Darkshivan moves to the end of the room" — plus up to 4 images and a per-assignment
+  "mention the players" toggle. Each is its own message in the event's channel, posted in order
+  (Everyone, then raids, then bosses). While they're posted, editing one edits its message and
+  deleting one deletes its message; **Remove from Discord** deletes all the messages but keeps
+  the assignments, which can be posted again.
+
+**Plugins** are not implemented, only planned for: `plugins.ts` describes them (automatic
+assignments and setups, guild-wide or per instance, run by the worker in the hour before the event,
+switched off by a manual edit), and the tables already have their columns (`plugin_key`,
+`plugin_auto_run`, `edited_manually`).
+
+Links the bot puts in Discord point at `SITE_URL` (optional; else the origin of
+`DISCORD_OAUTH_REDIRECT_URI`, else https://guildassistant.app).
+
+### Removing the sign-up feature
+
+Everything is in two migrations, `prisma/migrations/20261015090000_signup` and
+`20261016090000_signup_archive`, which only create and change `signup_*` tables and types (each in
+one transaction). To take the feature out:
+
+1. Undo the database part (this **deletes every event, sign-up and assignment**):
+   `npx prisma db execute --file prisma/rollback/20261015090000_signup.down.sql`. It drops the
+   tables and also forgets both migrations in `_prisma_migrations`.
+2. Delete `prisma/signup.prisma`, `prisma/migrations/20261015090000_signup/` and
+   `20261016090000_signup_archive/`, the `signupSettings`/`signupEvents`/`signupEntries` lines in
+   `schema.prisma` (marked "Event sign-ups"), `src/signup/`, and its imports in `app.module.ts`,
+   `worker/worker.module.ts` and `worker/worker.service.ts` (with the `onMessageDeleted` hook
+   there); remove `create-event` from `src/bot/commands.json` and run `npm run commands:register`.
+3. In the backoffice: delete `src/signup/` and the `signup/*` route and Events tab in
+   `GuildShell.tsx`.
+
+Deploying the feature again later re-creates the tables, empty.
+
 ## Database
 
 Postgres, hosted on [Supabase](https://supabase.com/), accessed through [Prisma](https://www.prisma.io/)
@@ -734,6 +845,9 @@ against a fresh Supabase database is what "creates the database" schema-wise.
   (including the initial one, on a fresh database).
 - `npm run prisma:deploy` — applies pending migrations only, no diffing/shadow database. Use this
   in CI/production, or if you'd rather not grant the Supabase user shadow-database permissions.
+
+The schema is split over the `.prisma` files in `prisma/` (`prisma.config.ts` points at the
+folder): `schema.prisma`, and `signup.prisma` for event sign-ups.
 
 To change the schema: edit `prisma/schema.prisma`, then run `npm run prisma:migrate` against a
 reachable database — it'll prompt for a migration name and generate the SQL for you.

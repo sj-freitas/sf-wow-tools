@@ -1816,3 +1816,25 @@ label.btn.disabled {
 .main-pill {
   margin-left: 0.6rem;
 }
+
+/* A class's icon, or a dot in its colour when it has none (both from the game config). */
+.class-icon {
+  display: inline-block;
+  flex: none;
+  width: 1.15rem;
+  height: 1.15rem;
+  margin-right: 0.35rem;
+  border-radius: 3px;
+  vertical-align: -0.25rem;
+  object-fit: cover;
+}
+.class-dot {
+  display: inline-block;
+  flex: none;
+  width: 0.7rem;
+  height: 0.7rem;
+  margin-right: 0.35rem;
+  border-radius: 50%;
+  vertical-align: -0.05rem;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--text) 35%, transparent);
+}

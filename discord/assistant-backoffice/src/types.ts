@@ -179,8 +179,14 @@ export interface GameConfig {
    * can share one, e.g. `'Normal'`); a region that is missing is not available.
    */
   allowedServers: Record<string, Record<string, { ruleSet: string }>>;
-  /** Every class, by name. */
-  classes: Record<string, { specializations: Record<string, SpecializationConfig> }>;
+  /**
+   * Every class, by name, with its colour (`#RRGGBB`). Sign-ups show the class's icon (served by
+   * the API) or, without one, a dot in this colour, instead of the class name.
+   */
+  classes: Record<
+    string,
+    { color?: string; specializations: Record<string, SpecializationConfig> }
+  >;
   /** By name ("Alliance", "Horde"), each with its races and the classes they can be. */
   factions: Record<string, { races: Record<string, { classes: string[] }> }>;
 }

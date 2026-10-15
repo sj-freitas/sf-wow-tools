@@ -1,11 +1,12 @@
 import { fetchCurrentUser, redirectToLogin } from './api';
 
-export type GuildEventType = 'characters' | 'guild' | 'officer-requests';
+export type GuildEventType = 'characters' | 'guild' | 'officer-requests' | 'signup';
 
 const handlers: Record<GuildEventType, Set<() => void>> = {
   characters: new Set(),
   guild: new Set(),
   'officer-requests': new Set(),
+  signup: new Set(),
 };
 let source: EventSource | null = null;
 

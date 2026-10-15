@@ -59,7 +59,7 @@ export function takeReturnPath(): string | null {
   }
 }
 
-async function request<T>(
+export async function request<T>(
   method: string,
   url: string,
   body?: unknown,

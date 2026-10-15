@@ -67,6 +67,10 @@ export class CommandRegistryService {
     return this.handlers.has(name);
   }
 
+  isDeferred(name: string): boolean {
+    return this.handlers.get(name)?.options.defer ?? false;
+  }
+
   isEphemeral(name: string): boolean {
     return this.handlers.get(name)?.options.ephemeral ?? false;
   }

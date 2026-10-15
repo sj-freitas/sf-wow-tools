@@ -163,7 +163,7 @@ describe('OfficerRequestsCommand', () => {
 
     it('opens a form for the message when the member may write', async () => {
       const reply = await command.openReplyForm(dmInteraction());
-      assert.ok(typeof reply === 'object');
+      assert.ok(typeof reply === 'object' && 'modal' in reply);
       assert.equal(reply.modal.custom_id, CUSTOM_ID);
       assert.match(reply.modal.title, /#12345678/);
       assert.ok(reply.modal.title.length <= 45);

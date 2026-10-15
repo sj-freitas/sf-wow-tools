@@ -17,6 +17,7 @@ import { ArmoryModule } from './armory/armory.module';
 import { OfficerRequestsModule } from './officer-requests/officer-requests.module';
 import { PlayersModule } from './players/players.module';
 import { PublicModule } from './public/public.module';
+import { SignupModule } from './signup/signup.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { PublicModule } from './public/public.module';
     OfficerRequestsModule,
     ModerationModule,
     ArmoryModule,
+    SignupModule,
     WorkerModule,
   ],
 })

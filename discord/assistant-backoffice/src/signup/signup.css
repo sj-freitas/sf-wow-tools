@@ -1,0 +1,488 @@
+/* Event sign-ups (src/signup). Uses the site's tokens from index.css; nothing here is used
+   elsewhere, so the feature's styles go with its folder. */
+
+/* ---- event list ---- */
+.signup-segments {
+  display: inline-flex;
+  justify-self: start;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.signup-segments button {
+  padding: 0.4rem 1rem;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  cursor: pointer;
+}
+.signup-segments button[aria-selected='true'] {
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  color: var(--text);
+}
+.signup-event-list {
+  display: grid;
+  gap: 0.75rem;
+}
+.signup-event-card {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: inherit;
+  text-decoration: none;
+}
+.signup-event-card:hover {
+  border-color: var(--accent);
+}
+.signup-event-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+.signup-counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  font-size: 0.9rem;
+}
+.signup-settings summary {
+  cursor: pointer;
+}
+.signup-settings[open] summary {
+  margin-bottom: 0.75rem;
+}
+.signup-form {
+  display: grid;
+  gap: 0.75rem;
+}
+.signup-fixed-value {
+  display: flex;
+  align-items: center;
+  min-height: var(--control-height);
+  color: var(--text);
+}
+
+/* ---- one event ---- */
+.signup-event-head {
+  display: grid;
+  gap: 0.5rem;
+}
+.signup-event-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+.signup-event-title h3 {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.signup-when,
+.signup-event-head > p {
+  margin: 0;
+}
+.signup-description {
+  padding: 0.75rem 1rem;
+  border-left: 3px solid var(--accent);
+  background: var(--surface-2);
+  border-radius: 0 6px 6px 0;
+  overflow-wrap: anywhere;
+}
+
+/* ---- sign-up form ---- */
+.signup-editor {
+  display: grid;
+  gap: 0.75rem;
+}
+.signup-editor .form-grid {
+  align-items: end;
+}
+.signup-editor .form-actions {
+  margin-top: 0;
+}
+.signup-status-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.signup-status {
+  padding: 0.4rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.signup-status-active {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+/* ---- lists of people ---- */
+.signup-columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+  gap: 0.75rem;
+}
+.signup-column h4 {
+  margin: 0 0 0.4rem;
+}
+.signup-people {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.signup-person {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem 0.75rem;
+  padding: 0.45rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-2);
+  overflow-wrap: anywhere;
+}
+.signup-person .badge {
+  margin-left: 0.4rem;
+}
+.signup-note {
+  display: block;
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-style: italic;
+}
+.signup-person-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.signup-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+.signup-filters .field {
+  flex: 1 1 9rem;
+  min-width: 0;
+}
+.signup-filters .signup-filter-search {
+  flex: 2 1 12rem;
+}
+.signup-filters .field input {
+  width: 100%;
+}
+.signup-filters input[type='search'] {
+  flex: 1 1 14rem;
+  min-width: 0;
+  height: var(--control-height);
+  padding: 0 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+}
+
+/* ---- raid setup ---- */
+.setup-groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 170px), 1fr));
+  gap: 0.75rem;
+}
+.setup-group,
+.setup-bench {
+  display: grid;
+  gap: 0.35rem;
+  align-content: start;
+  padding: 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-2);
+}
+.setup-group h4,
+.setup-bench h4 {
+  margin: 0 0 0.2rem;
+  font-size: 0.9rem;
+}
+.setup-slot {
+  display: flex;
+  min-height: 2.25rem;
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+}
+.setup-slot-target {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  cursor: pointer;
+}
+.setup-empty {
+  align-self: center;
+  padding: 0 0.6rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+.setup-bench-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+.setup-chip {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+  padding: 0.35rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.85rem;
+  text-align: left;
+  cursor: grab;
+}
+.setup-bench-list .setup-chip {
+  flex: 0 1 auto;
+}
+.setup-chip-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.setup-chip-selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+/* ---- assignments ---- */
+.assignment-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.assignment-head h4 {
+  margin: 0.15rem 0 0;
+  overflow-wrap: anywhere;
+}
+.assignment-head a.badge {
+  text-decoration: none;
+}
+.assignment-lines {
+  margin: 0;
+  padding-left: 1.2rem;
+  overflow-wrap: anywhere;
+}
+/* A raid marker in a line, at the size of the text around it. */
+.marker-icon {
+  display: inline-block;
+  width: 1.1rem;
+  height: 1.1rem;
+  vertical-align: -0.2rem;
+}
+.assignment-images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.assignment-images img {
+  display: block;
+  max-width: min(100%, 220px);
+  max-height: 140px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+.assignment-editor {
+  border-color: var(--accent);
+}
+.assignment-line-list {
+  display: grid;
+  gap: 0.6rem;
+  justify-items: start;
+}
+.assignment-line {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.5fr) minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 0.5rem;
+  width: 100%;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid var(--border);
+}
+.assignment-line-remove {
+  height: var(--control-height);
+}
+.assignment-preview {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.75rem 1rem;
+  border-left: 3px solid var(--accent);
+  border-radius: 0 6px 6px 0;
+  background: var(--surface);
+}
+@media (max-width: 720px) {
+  .assignment-line {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .assignment-line > .field {
+    grid-column: 1 / -1;
+  }
+  .assignment-line-remove {
+    grid-column: 2;
+    justify-self: end;
+  }
+}
+
+/* "Sign up a player": the people to pick from, as buttons. */
+.signup-pick {
+  width: 100%;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.signup-pick:hover {
+  border-color: var(--accent);
+}
+
+/* In a setup chip the gap already separates the icon from the name. The role emoji and the class
+   icon get a dash between them, so the two pictures don't run together. */
+.setup-chip-sep {
+  color: var(--muted);
+  margin: 0 0.1rem;
+}
+.setup-chip .class-icon,
+.setup-chip .class-dot {
+  margin-right: 0;
+}
+
+/* The sign-up number, as in the Discord post. */
+.signup-number {
+  display: inline-block;
+  min-width: 1.6rem;
+  margin-right: 0.4rem;
+  padding: 0 0.3rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- sign-up drawer ---- */
+.signup-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem 1rem;
+}
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  justify-content: flex-end;
+  background: color-mix(in srgb, #000 45%, transparent);
+}
+.drawer {
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 28rem);
+  height: 100%;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  box-shadow: -8px 0 24px color-mix(in srgb, #000 25%, transparent);
+  outline: none;
+  animation: drawer-in 0.18s ease-out;
+}
+@keyframes drawer-in {
+  from {
+    transform: translateX(2rem);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .drawer {
+    animation: none;
+  }
+}
+.drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: max(1rem, env(safe-area-inset-top, 0px)) max(1.25rem, env(safe-area-inset-right, 0px))
+    1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+.drawer-head h3 {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.25rem max(1.25rem, env(safe-area-inset-right, 0px))
+    max(1.25rem, env(safe-area-inset-bottom, 0px)) 1.25rem;
+}
+/* In the narrow drawer the form's fields stack. */
+.drawer .form-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+.drawer-search {
+  box-sizing: border-box;
+  width: 100%;
+  height: var(--control-height);
+  padding: 0 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+}
+
+/* ---- copying assignments ---- */
+.copy-list {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.copy-list legend {
+  padding: 0 0.3rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+.copy-item {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+
+/* An archived event's notice, inside its header card. */
+.signup-archived {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-2);
+}

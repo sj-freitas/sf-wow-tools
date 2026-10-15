@@ -31,6 +31,8 @@ export interface GuildMemberInfo {
   name: string;
   /** Ids of the roles they hold (the everyone role is not listed). */
   roles: string[];
+  /** A bot account, not a person. */
+  bot: boolean;
 }
 
 const toMemberInfo = (member: APIGuildMember): GuildMemberInfo => ({
@@ -38,7 +40,21 @@ const toMemberInfo = (member: APIGuildMember): GuildMemberInfo => ({
   nick: member.nick ?? null,
   name: member.user.global_name ?? member.user.username,
   roles: member.roles,
+  bot: member.user.bot === true,
 });
+
+/**
+ * A message with any of text, embeds and components (buttons, select menus). `mention` lets the
+ * users mentioned in the text be pinged; otherwise nobody is, whatever it mentions.
+ */
+export interface RichMessage {
+  content?: string;
+  embeds?: APIEmbed[];
+  components?: unknown[];
+  mention?: boolean;
+  /** Shown as a reply to that message (and still posted if it was deleted). */
+  replyTo?: string;
+}
 
 /** Only files Discord itself hosts are downloaded. */
 const DISCORD_FILE_HOSTS = new Set(['cdn.discordapp.com', 'media.discordapp.net']);
@@ -265,6 +281,49 @@ export class DiscordBotService {
     });
   }
 
+  /** Posts a `RichMessage`, with `files` attached (images show under it). */
+  async sendRichMessage(
+    channelId: string,
+    message: RichMessage,
+    files: BotFile[] = [],
+  ): Promise<string> {
+    const sent = (await this.rest.post(Routes.channelMessages(channelId), {
+      files: files.length > 0 ? files : undefined,
+      body: {
+        content: message.content ?? '',
+        embeds: message.embeds ?? [],
+        components: message.components ?? [],
+        allowed_mentions: { parse: message.mention ? ['users'] : [] },
+        ...(message.replyTo
+          ? { message_reference: { message_id: message.replyTo, fail_if_not_exists: false } }
+          : {}),
+      },
+    })) as APIMessage;
+    return sent.id;
+  }
+
+  /**
+   * Replaces a message's text, embeds and components. Edits never ping anyone. With `files` (an
+   * empty list too) its attachments are replaced by exactly these; without it they are kept.
+   */
+  async editRichMessage(
+    channelId: string,
+    messageId: string,
+    message: RichMessage,
+    files?: BotFile[],
+  ): Promise<void> {
+    await this.rest.patch(Routes.channelMessage(channelId, messageId), {
+      files: files && files.length > 0 ? files : undefined,
+      body: {
+        content: message.content ?? '',
+        embeds: message.embeds ?? [],
+        components: message.components ?? [],
+        allowed_mentions: { parse: [] },
+        ...(files ? { attachments: files.map((file, id) => ({ id, filename: file.name })) } : {}),
+      },
+    });
+  }
+
   async deleteMessage(channelId: string, messageId: string): Promise<void> {
     await this.rest.delete(Routes.channelMessage(channelId, messageId));
   }
@@ -295,6 +354,42 @@ export class DiscordBotService {
       body: { content, allowed_mentions: { parse: [] } },
       auth: false,
     });
+  }
+
+  /**
+   * Replaces the bot's answer to an interaction (a command, a click or a form) with a rich
+   * message, after answering "thinking…" first. Valid for 15 minutes; never pings anyone.
+   */
+  async editInteractionResponse(
+    applicationId: string,
+    token: string,
+    message: { content?: string; embeds?: APIEmbed[]; components?: unknown[] },
+  ): Promise<void> {
+    await this.rest.patch(Routes.webhookMessage(applicationId, token, '@original'), {
+      body: { ...message, allowed_mentions: { parse: [] } },
+      auth: false,
+    });
+  }
+
+  /** The emojis uploaded to the bot's application (usable in every server). */
+  async listApplicationEmojis(): Promise<{ id: string; name: string }[]> {
+    if (!this.applicationId) throw new Error('DISCORD_APPLICATION_ID is not set');
+    const result = (await this.rest.get(Routes.applicationEmojis(this.applicationId))) as {
+      items: { id: string; name: string }[];
+    };
+    return result.items;
+  }
+
+  /** Uploads an image (PNG, JPEG or GIF, at most 256 KB) as an emoji of the bot's application. */
+  async createApplicationEmoji(
+    name: string,
+    image: Buffer,
+    contentType = 'image/png',
+  ): Promise<{ id: string; name: string }> {
+    if (!this.applicationId) throw new Error('DISCORD_APPLICATION_ID is not set');
+    return (await this.rest.post(Routes.applicationEmojis(this.applicationId), {
+      body: { name, image: `data:${contentType};base64,${image.toString('base64')}` },
+    })) as { id: string; name: string };
   }
 
   async addReaction(channelId: string, messageId: string, emoji: string): Promise<void> {

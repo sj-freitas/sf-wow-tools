@@ -79,13 +79,17 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
   const roleLocked = characterClass === '';
   const roleOptions = roleLocked ? [] : roleOptionsFor(characterClass);
 
-  /** Changing the class keeps the roles the new class can play and drops the others. */
+  /**
+   * Changing the class keeps the roles the new class can play and drops the others. A class that
+   * plays only one role gets it selected: there is nothing else to choose.
+   */
   const applyClass = (next: string) => {
     setCharacterClass(next);
+    const options = next === '' ? [] : roleOptionsFor(next);
     setRoles((current) =>
-      next === ''
-        ? []
-        : current.filter((role) => roleOptionsFor(next).some((option) => option.value === role)),
+      options.length === 1
+        ? [options[0].value]
+        : current.filter((role) => options.some((option) => option.value === role)),
     );
   };
 

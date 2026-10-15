@@ -1,0 +1,179 @@
+// Event sign-ups (src/signup): events members sign up to from Discord or the backoffice, the raid
+// setup (groups) and assignments posted for them. Kept in its own file and its own tables
+// (`signup_*`) so the feature can be taken out on its own: see "Removing the sign-up feature" in
+// the README (prisma/rollback/ has the SQL). The only references to it from schema.prisma are the
+// back-relation fields Prisma requires on Guild and Character.
+
+enum SignupStatus {
+  AVAILABLE
+  LATE
+  TENTATIVE
+  ABSENT
+
+  @@map("signup_status")
+}
+
+// AUTO: open until the event starts, closed after. LOCKED / UNLOCKED: set by hand by the event's
+// owner or an Officer, regardless of the time.
+enum SignupLockMode {
+  AUTO
+  LOCKED
+  UNLOCKED
+
+  @@map("signup_lock_mode")
+}
+
+// How wide an assignment applies: the whole event, one raid (instance), or one boss.
+enum SignupAssignmentScope {
+  GLOBAL
+  RAID
+  BOSS
+
+  @@map("signup_assignment_scope")
+}
+
+// A guild's sign-up settings. No row = nothing set.
+model SignupSettings {
+  guildId              String   @id @map("guild_id") @db.Uuid
+  guild                Guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  // Where events are posted unless an Officer picks another channel; one for the whole guild, in
+  // any of its servers. Members with only the EventCreator role can post nowhere else.
+  channelServerId      String?  @map("channel_server_id")
+  channelId            String?  @map("channel_id")
+  // Optional role in the main server whose holders may create events (Officers always can).
+  eventCreatorRoleId   String?  @map("event_creator_role_id")
+  eventCreatorRoleName String?  @map("event_creator_role_name")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  @@map("signup_settings")
+}
+
+model SignupEvent {
+  id                 String             @id @default(uuid()) @db.Uuid
+  guildId            String             @map("guild_id") @db.Uuid
+  guild              Guild              @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  title              String
+  description        String             @default("")
+  startsAt           DateTime           @map("starts_at")
+  // The IANA timezone the time was entered in (shown with it); Discord shows everyone their own.
+  timezone           String
+  // Where the sign-up post is; `messageId` null while it isn't in Discord (deleted, or failed).
+  serverId           String             @map("server_id")
+  channelId          String             @map("channel_id")
+  messageId          String?            @map("message_id")
+  createdByDiscordId String             @map("created_by_discord_id")
+  createdByName      String             @map("created_by_name")
+  lockMode           SignupLockMode     @default(AUTO) @map("lock_mode")
+  // AUTO only: whether the Discord post already shows the event as closed. The worker sets it,
+  // re-rendering the post, once the event has started.
+  closedShown        Boolean            @default(false) @map("closed_shown")
+  // The raid setup (groups, from SignupEntry.groupNumber), posted as its own message.
+  setupMessageId     String?            @map("setup_message_id")
+  setupMentions      Boolean            @default(false) @map("setup_mentions")
+  // Reserved for plugins (src/signup/plugins.ts), which will create assignments automatically:
+  // which one the event uses, and whether it still runs on its own (turned off by a manual edit).
+  pluginKey          String?            @map("plugin_key")
+  pluginAutoRun      Boolean            @default(true) @map("plugin_auto_run")
+  // Set when the event is archived: by hand ("Archive event", which removes its messages from
+  // Discord), or because its post was deleted in Discord. Archived events are kept as history,
+  // read-only, and can be restored (posted again) or deleted for good.
+  archivedAt         DateTime?          @map("archived_at")
+  entries            SignupEntry[]
+  contacts           SignupContact[]
+  assignments        SignupAssignment[]
+  images             SignupImage[]
+  createdAt          DateTime           @default(now()) @map("created_at")
+  updatedAt          DateTime           @updatedAt @map("updated_at")
+
+  @@index([guildId, startsAt])
+  @@index([guildId, archivedAt])
+  @@index([lockMode, closedShown, startsAt])
+  @@map("signup_events")
+}
+
+// One Discord user's answer to an event: at most one per user (and so one character).
+model SignupEntry {
+  id            String       @id @default(uuid()) @db.Uuid
+  eventId       String       @map("event_id") @db.Uuid
+  event         SignupEvent  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  discordUserId String       @map("discord_user_id")
+  // Their name when they signed up, for lists that don't load the player.
+  discordName   String       @map("discord_name")
+  // Null only for someone who said they are absent without picking a character.
+  characterId   String?      @map("character_id") @db.Uuid
+  character     Character?   @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  role          Role?
+  status        SignupStatus
+  // Late and Tentative: what they told the organisers.
+  note          String       @default("")
+  // The raid setup: group 1-8 and place 0-4 in it; null = the bench.
+  groupNumber   Int?         @map("group_number")
+  groupSlot     Int?         @map("group_slot")
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @updatedAt @map("updated_at")
+
+  @@unique([eventId, discordUserId])
+  @@index([characterId])
+  @@map("signup_entries")
+}
+
+// A reminder sent by DM to someone who hadn't signed up. Officers can send as many as they like;
+// each one is kept so the list shows who was reminded and when.
+model SignupContact {
+  id              String      @id @default(uuid()) @db.Uuid
+  eventId         String      @map("event_id") @db.Uuid
+  event           SignupEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  discordUserId   String      @map("discord_user_id")
+  sentByDiscordId String      @map("sent_by_discord_id")
+  sentByName      String      @map("sent_by_name")
+  // False when Discord refused the DM (they don't accept DMs from the server's members).
+  delivered       Boolean
+  sentAt          DateTime    @default(now()) @map("sent_at")
+
+  @@index([eventId, discordUserId])
+  @@map("signup_contacts")
+}
+
+// A task given to some of the signed-up players, posted as one message in the event's channel.
+model SignupAssignment {
+  id             String                @id @default(uuid()) @db.Uuid
+  eventId        String                @map("event_id") @db.Uuid
+  event          SignupEvent           @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  scope          SignupAssignmentScope
+  // The raid or boss it is for (free text until plugins define them); empty for GLOBAL.
+  scopeLabel     String                @default("") @map("scope_label")
+  // Order within the event: messages go out in this order.
+  position       Int
+  title          String
+  // [{ entryIds, task, target }] — see src/signup/assignment-lines.ts.
+  lines          Json                  @default("[]")
+  // Whether the message mentions (pings) the players in it.
+  mentions       Boolean               @default(false)
+  messageId      String?               @map("message_id")
+  // Reserved for plugins: the plugin that created it, and whether someone edited it since.
+  pluginKey      String?               @map("plugin_key")
+  editedManually Boolean               @default(false) @map("edited_manually")
+  images         SignupImage[]
+  createdAt      DateTime              @default(now()) @map("created_at")
+  updatedAt      DateTime              @updatedAt @map("updated_at")
+
+  @@index([eventId, position])
+  @@map("signup_assignments")
+}
+
+// An image shown under an assignment. Uploaded before the assignment is saved (`assignmentId`
+// null until then); the worker removes ones no assignment took after a day.
+model SignupImage {
+  id           String            @id @default(uuid()) @db.Uuid
+  eventId      String            @map("event_id") @db.Uuid
+  event        SignupEvent       @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  assignmentId String?           @map("assignment_id") @db.Uuid
+  assignment   SignupAssignment? @relation(fields: [assignmentId], references: [id], onDelete: SetNull)
+  contentType  String            @map("content_type")
+  size         Int
+  data         Bytes
+  createdAt    DateTime          @default(now()) @map("created_at")
+
+  @@index([eventId, assignmentId])
+  @@map("signup_images")
+}

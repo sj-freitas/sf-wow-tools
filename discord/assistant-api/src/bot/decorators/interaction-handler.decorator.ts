@@ -26,5 +26,12 @@ const handler =
  */
 export const Button = handler('button');
 
+/**
+ * Handles a choice in a select menu whose `custom_id` starts with `<prefix>` (the picked values are
+ * in `data.values`). Select menus arrive as component interactions just like buttons, so they share
+ * the buttons' prefixes: a prefix is either a button's or a select menu's.
+ */
+export const Select = handler('button');
+
 /** Handles the submission of a modal whose `custom_id` starts with `<prefix>`. */
 export const Modal = handler('modal');

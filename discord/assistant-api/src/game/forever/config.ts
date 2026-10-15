@@ -33,7 +33,7 @@ export default defineGame({
       races: {
         Dwarf: { classes: ['Hunter', 'Paladin', 'Priest', 'Rogue', 'Warrior', 'Shaman'] },
         Gnome: { classes: ['Mage', 'Rogue', 'Warlock', 'Warrior', 'Priest'] },
-        Human: { classes: ['Paladin', 'Hunter', 'Priest', 'Rogue', 'Warrior'] },
+        Human: { classes: ['Paladin', 'Hunter', 'Priest', 'Rogue', 'Warrior', 'Warlock', 'Mage'] },
         'Night Elf': { classes: ['Druid', 'Hunter', 'Priest', 'Warrior', 'Rogue'] },
         Skyborne: { classes: ['Druid', 'Hunter', 'Mage', 'Rogue', 'Warrior'] },
       },
@@ -48,8 +48,11 @@ export default defineGame({
       },
     },
   },
+  // Each class's colour (the usual WoW class colours) is what sign-ups show instead of its name,
+  // unless the class has an icon: class-icons/<Class>.png next to this file (see that folder).
   classes: {
     Druid: {
+      color: '#FF7C0A',
       specializations: {
         Balance: {
           roles: ['Ranged DPS'],
@@ -65,6 +68,7 @@ export default defineGame({
       },
     },
     Hunter: {
+      color: '#AAD372',
       specializations: {
         Survival: {
           roles: ['Ranged DPS'],
@@ -78,6 +82,7 @@ export default defineGame({
       },
     },
     Mage: {
+      color: '#3FC7EB',
       specializations: {
         Arcane: {
           roles: ['Ranged DPS'],
@@ -91,6 +96,7 @@ export default defineGame({
       },
     },
     Paladin: {
+      color: '#F48CBA',
       specializations: {
         Protection: {
           roles: ['Tank'],
@@ -104,6 +110,7 @@ export default defineGame({
       },
     },
     Priest: {
+      color: '#FFFFFF',
       specializations: {
         Shadow: {
           roles: ['Ranged DPS'],
@@ -117,6 +124,7 @@ export default defineGame({
       },
     },
     Rogue: {
+      color: '#FFF468',
       specializations: {
         Assassination: {
           roles: ['Melee DPS'],
@@ -130,6 +138,7 @@ export default defineGame({
       },
     },
     Shaman: {
+      color: '#0070DD',
       specializations: {
         Elemental: {
           roles: ['Ranged DPS'],
@@ -143,6 +152,7 @@ export default defineGame({
       },
     },
     Warlock: {
+      color: '#8788EE',
       specializations: {
         Affliction: {
           roles: ['Ranged DPS'],
@@ -156,6 +166,7 @@ export default defineGame({
       },
     },
     Warrior: {
+      color: '#C69B6D',
       specializations: {
         Arms: {
           roles: ['Melee DPS'],

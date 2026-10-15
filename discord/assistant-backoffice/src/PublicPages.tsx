@@ -55,8 +55,12 @@ const FEATURES: { title: string; text: string }[] = [
     text: 'Every member registers their characters — class, race, roles, level, main or alt — from the website or with a slash command in Discord. Officers see the whole roster and its ranks at a glance.',
   },
   {
+    title: 'Event sign-ups',
+    text: 'Create a raid with a slash command or on the website. Members sign up with one of their characters from Discord; organisers build the groups and post assignments, and remind whoever hasn’t answered.',
+  },
+  {
     title: 'Scheduled posts that stay up to date',
-    text: 'Write raid sign-ups and announcements once, schedule them, and let them update themselves: who reacted, which roles are covered, or any slice of the roster.',
+    text: 'Write announcements once, schedule them, and let them update themselves: who reacted, which roles are covered, or any slice of the roster.',
   },
   {
     title: 'Character pages and RP bios',
@@ -175,6 +179,10 @@ export function PrivacyPage({ framed = true }: { framed?: boolean }) {
           so replies can reach you.
         </li>
         <li>Scheduled posts and their images, and who reacted to them.</li>
+        <li>
+          Events: who signed up, with which character and role, any note left for the organisers,
+          the raid groups and assignments, and when an organiser sent you a reminder.
+        </li>
         <li>
           Spam protection: when someone posts in a honeypot channel, their Discord id and username
           are logged with what was done.

@@ -6,6 +6,11 @@ export const COMMAND_OPTIONS_METADATA = 'command_options_metadata';
 export interface CommandOptions {
   /** Reply is only visible to the user who invoked the command. */
   ephemeral?: boolean;
+  /**
+   * The handler may take longer than Discord's 3 seconds: answer "thinking…" at once and show the
+   * handler's text when it is done.
+   */
+  defer?: boolean;
 }
 
 /**

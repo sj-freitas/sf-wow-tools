@@ -18,6 +18,7 @@ import { PrivacyPage } from './PublicPages';
 import { RequireAccess } from './RequireAccess';
 import { CharacterEditorPage, RosterPage } from './RosterPage';
 import { SettingsPage } from './SettingsPage';
+import { SignupRoutes } from './signup/SignupRoutes';
 import type { Guild, SetupInfo, User } from './types';
 
 interface Props {
@@ -56,6 +57,8 @@ interface Props {
  *       /honeypots/create     new honeypot                 Officers
  *       /officer-requests     members' messages to officers           Officers
  *       /officer-requests/:conversationId   one conversation          Officers
+ *       /signup/...           events people sign up to     everyone in the guild (see
+ *                                                          signup/SignupRoutes.tsx)
  *       /settings             guild settings               Guild-Assistants and Officers
  */
 export function GuildShell({ guilds, setup, currentUser, onGuildsChanged }: Props) {
@@ -193,6 +196,7 @@ function GuildRoutes({ guilds, setup, currentUser, onGuildsChanged }: Props) {
           path="officer-requests/:conversationId"
           element={officersOnly(<ConversationPage guild={guild} timezone={timezone} />)}
         />
+        <Route path="signup/*" element={<SignupRoutes guild={guild} timezone={timezone} />} />
         <Route
           path="settings"
           element={
@@ -246,6 +250,7 @@ function GuildFrame({
           Welcome
         </NavLink>
         <NavLink to={guildPath(guild, 'roster')}>Roster</NavLink>
+        <NavLink to={guildPath(guild, 'signup')}>Events</NavLink>
         {guild.isOfficer && <NavLink to={guildPath(guild, 'posts')}>Posts</NavLink>}
         {guild.isOfficer && <NavLink to={guildPath(guild, 'honeypots')}>Honeypots</NavLink>}
         {guild.isOfficer && (

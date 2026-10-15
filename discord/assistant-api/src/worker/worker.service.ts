@@ -1,5 +1,7 @@
 import { Injectable, Logger, OnApplicationShutdown } from '@nestjs/common';
 import { HoneypotGatewayService } from '../honeypot/honeypot-gateway.service';
+import { SignupEventsService } from '../signup/signup-events.service';
+import { SignupSchedulerService } from '../signup/signup-scheduler.service';
 import { SchedulerService } from '../tasks/scheduler.service';
 
 /**
@@ -14,10 +16,17 @@ export class WorkerService implements OnApplicationShutdown {
   constructor(
     private readonly scheduler: SchedulerService,
     private readonly honeypotGateway: HoneypotGatewayService,
+    private readonly signupScheduler: SignupSchedulerService,
+    private readonly signupEvents: SignupEventsService,
   ) {}
 
   async start(): Promise<void> {
     this.scheduler.start();
+    this.signupScheduler.start();
+    // An event whose sign-up post is deleted in Discord is archived.
+    this.honeypotGateway.onMessageDeleted((messageId) => {
+      void this.signupEvents.onMessageDeleted(messageId);
+    });
     try {
       await this.honeypotGateway.start();
     } catch (error) {
