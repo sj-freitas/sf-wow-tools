@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { InlineSpinner, SkeletonLines } from '../Loading';
 import { timeAgo } from '../time';
 import type { Guild } from '../types';
@@ -29,8 +30,14 @@ export function MissingTab({
 }) {
   const [missing, setMissing] = useState<Missing | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [raidersOnly, setRaidersOnly] = useState(false);
-  const [withMainOnly, setWithMainOnly] = useState(false);
+  // "Raiders only" is on unless the address says `raiders=0`, so the filter can be linked to.
+  const [params, setParams] = useSearchParams();
+  const raidersOnly = params.get('raiders') !== '0';
+  const setRaidersOnly = (on: boolean) => {
+    const next = new URLSearchParams(params);
+    next.set('raiders', on ? '1' : '0');
+    setParams(next, { replace: true });
+  };
   const [query, setQuery] = useState('');
   const [sending, setSending] = useState<string | null>(null);
   const [bulk, setBulk] = useState<{ done: number; total: number } | null>(null);
@@ -49,8 +56,8 @@ export function MissingTab({
 
   const shown = (missing?.people ?? []).filter(
     (person) =>
-      (!raidersOnly || person.isRaider) &&
-      (!withMainOnly || person.mains.length > 0) &&
+      // Without a Raider role set for the guild there is nothing to filter on.
+      (!raidersOnly || !missing?.hasRaiderRole || person.isRaider) &&
       (query.trim() === '' ||
         `${person.name} ${person.mains.join(' ')}`
           .toLowerCase()
@@ -168,14 +175,6 @@ export function MissingTab({
             Raiders only
           </label>
         )}
-        <label className="field-toggle">
-          <input
-            type="checkbox"
-            checked={withMainOnly}
-            onChange={(e) => setWithMainOnly(e.target.checked)}
-          />
-          With a main only
-        </label>
       </div>
 
       {signingUp && (

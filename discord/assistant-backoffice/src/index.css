@@ -1838,3 +1838,16 @@ label.btn.disabled {
   vertical-align: -0.05rem;
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--text) 35%, transparent);
 }
+
+/* An icon-only button (edit, remove): square, the icon centred. */
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2rem;
+  padding-left: 0.45rem;
+  padding-right: 0.45rem;
+}
+.btn-icon .spinner {
+  margin-right: 0;
+}

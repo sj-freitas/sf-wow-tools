@@ -9,6 +9,7 @@ import { characterPath, playerLabel } from './format';
 import { ROLE_LABELS, type Guild, type Player, type Ranks, type User } from './types';
 import { useCurrentUrl, useReturnTo } from './useReturnTo';
 import { ClassMark } from './ClassMark';
+import { BinIcon, PencilIcon } from './Icons';
 import { characterPagePath, guildPath } from './guildPath';
 
 interface Props {
@@ -205,22 +206,25 @@ export function RosterPage({ guild, currentUser }: Props) {
                         {canEditRow(player) && (
                           <>
                             <Link
-                              className="btn btn-sm"
+                              className="btn btn-sm btn-icon"
                               to={guildPath(guild, `roster/edit/${character.id}`)}
                               state={{ from: here }}
                               aria-disabled={deleting}
+                              aria-label={`Edit ${character.firstName}`}
+                              title="Edit"
                               onClick={(e) => deleting && e.preventDefault()}
                             >
-                              Edit
+                              <PencilIcon />
                             </Link>{' '}
                             <button
                               type="button"
-                              className="btn btn-sm btn-danger"
+                              className="btn btn-sm btn-danger btn-icon"
                               disabled={deleting}
-                              title="Removes it from this guild's roster only; the character itself is kept, in case it's migrated back or is in another guild"
+                              aria-label={`Remove ${character.firstName} from the roster`}
+                              title="Remove from this guild's roster (the character itself is kept, in case it's migrated back or is in another guild)"
                               onClick={() => runDelete(character.id)}
                             >
-                              {deleting ? <InlineSpinner label="Removing…" /> : 'Remove'}
+                              {deleting ? <InlineSpinner label="" /> : <BinIcon />}
                             </button>
                           </>
                         )}
