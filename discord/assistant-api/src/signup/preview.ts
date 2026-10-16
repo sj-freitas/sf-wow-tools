@@ -82,6 +82,8 @@ function entries(members: boolean): EntryView[] {
       status,
       groupNumber: slot === null ? null : members ? 1 : Math.floor(slot / 5) + 1,
       groupSlot: slot === null ? null : members ? slot : slot % 5,
+      // Two officers with assist.
+      assist: index === 4 || index === 8,
     };
   });
 }
@@ -97,6 +99,9 @@ function main(): void {
     startsAt: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
     closed: false,
     createdByName: 'Blitzrn',
+    // Blitzrn leads, Clayr is master looter.
+    leaderDiscordUserId: '100000000000000000',
+    masterLooterDiscordUserId: '100000000000000002',
     kind: members ? EVENT_KINDS.MEMBERS : EVENT_KINDS.CHARACTERS,
     eventUrl: 'https://guildassistant.app/example/event',
     addCharacterUrl: 'https://guildassistant.app/example/roster/create',

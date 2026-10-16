@@ -521,3 +521,13 @@
   flex: 1 1 10rem;
   min-width: 0;
 }
+
+/* "Lead and loot": the raid roles above the groups. */
+.setup-roles .form-grid {
+  margin-top: 0.25rem;
+}
+.setup-roles .field > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}

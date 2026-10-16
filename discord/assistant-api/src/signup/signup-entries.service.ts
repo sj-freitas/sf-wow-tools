@@ -28,6 +28,18 @@ export interface SignupChoice {
 export interface Person {
   discordUserId: string;
   name: string;
+  /** An Officer gets raid assist when first signing up (organisers can change it after). */
+  isOfficer?: boolean;
+}
+
+/** The raid roles of the setup. Left out = unchanged. */
+export interface RaidRoles {
+  /** Discord account; null = back to the event's creator. */
+  leaderDiscordUserId?: string | null;
+  /** Discord account; null = no master looter. */
+  masterLooterDiscordUserId?: string | null;
+  /** Exactly the sign-ups that have assist. */
+  assistEntryIds?: readonly string[];
 }
 
 export const CLOSED_MESSAGE = 'Sign-ups for this event are closed.';
@@ -113,7 +125,12 @@ export class SignupEntriesService {
     };
     await this.prisma.signupEntry.upsert({
       where: { eventId_discordUserId: { eventId: event.id, discordUserId: person.discordUserId } },
-      create: { eventId: event.id, discordUserId: person.discordUserId, ...data },
+      create: {
+        eventId: event.id,
+        discordUserId: person.discordUserId,
+        assist: person.isOfficer ?? false,
+        ...data,
+      },
       update: data,
     });
     if (!character.inGuild) {
@@ -155,7 +172,12 @@ export class SignupEntriesService {
     };
     await this.prisma.signupEntry.upsert({
       where: { eventId_discordUserId: { eventId: event.id, discordUserId: person.discordUserId } },
-      create: { eventId: event.id, discordUserId: person.discordUserId, ...data },
+      create: {
+        eventId: event.id,
+        discordUserId: person.discordUserId,
+        assist: person.isOfficer ?? false,
+        ...data,
+      },
       update: data,
     });
     this.changed(event);
@@ -171,10 +193,58 @@ export class SignupEntriesService {
   }
 
   /** Saves the raid setup: who is in which group and place; everyone else is on the bench. */
-  async savePlacements(event: EventRow, placements: readonly Placement[]): Promise<void> {
+  /**
+   * Saves the setup: who is in which group and place (everyone else on the bench), and, when
+   * given, the raid roles. The leader and master looter must be signed up (and not absent).
+   */
+  async savePlacements(
+    event: EventRow,
+    placements: readonly Placement[],
+    roles: RaidRoles = {},
+  ): Promise<void> {
     const problem = validatePlacements(placements, event.entries, EVENT_KINDS[event.kind]);
     if (problem) throw new BadRequestException(problem);
+    const coming = new Set(
+      event.entries.filter((entry) => entry.status !== 'ABSENT').map((e) => e.discordUserId),
+    );
+    for (const [id, what] of [
+      [roles.leaderDiscordUserId, 'The leader'],
+      [roles.masterLooterDiscordUserId, 'The master looter'],
+    ] as const) {
+      if (id && !coming.has(id)) throw new BadRequestException(`${what} isn’t signed up.`);
+    }
+    const ids = new Set(event.entries.map((entry) => entry.id));
+    if (roles.assistEntryIds?.some((id) => !ids.has(id))) {
+      throw new BadRequestException('Someone with assist is no longer signed up. Reload the page.');
+    }
     await this.prisma.$transaction([
+      ...(roles.leaderDiscordUserId !== undefined || roles.masterLooterDiscordUserId !== undefined
+        ? [
+            this.prisma.signupEvent.update({
+              where: { id: event.id },
+              data: {
+                ...(roles.leaderDiscordUserId !== undefined
+                  ? { leaderDiscordUserId: roles.leaderDiscordUserId }
+                  : {}),
+                ...(roles.masterLooterDiscordUserId !== undefined
+                  ? { masterLooterDiscordUserId: roles.masterLooterDiscordUserId }
+                  : {}),
+              },
+            }),
+          ]
+        : []),
+      ...(roles.assistEntryIds
+        ? [
+            this.prisma.signupEntry.updateMany({
+              where: { eventId: event.id },
+              data: { assist: false },
+            }),
+            this.prisma.signupEntry.updateMany({
+              where: { eventId: event.id, id: { in: [...roles.assistEntryIds] } },
+              data: { assist: true },
+            }),
+          ]
+        : []),
       this.prisma.signupEntry.updateMany({
         where: { eventId: event.id },
         data: { groupNumber: null, groupSlot: null },

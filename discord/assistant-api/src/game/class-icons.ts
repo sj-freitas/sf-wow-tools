@@ -10,7 +10,8 @@ import { extname, join } from 'node:path';
  *   raid-markers/<Marker>.png       `Skull.png`: a raid target marker, in assignments; a marker
  *                                   without one is written as text ("[Skull]")
  *   role-icons/<Role>.png           `Tank.png`, `Healer.png`, `Melee.png`, `Ranged.png`, and
- *                                   `Leader.png` for the event's leader: sign-ups and groups; one
+ *                                   `Leader.png`, `Assist.png`, `MasterLooter.png` for the raid's
+ *                                   leader, assists and master looter: sign-ups and groups; one
  *                                   without an image keeps its emoji (🛡️, 👑, …)
  *
  * Each becomes a Discord emoji the bot uploads, and the website shows the same file. The files
@@ -31,8 +32,16 @@ export const MARKER_NAMES = [
   'Star',
 ] as const;
 export const ROLE_ICONS_FOLDER = 'role-icons';
-/** The role icons, as their files are named: the four roles, and the event's leader. */
-export const ROLE_ICON_NAMES = ['Tank', 'Healer', 'Melee', 'Ranged', 'Leader'] as const;
+/** The role icons, as their files are named: the four roles, and the leader, assists and master looter. */
+export const ROLE_ICON_NAMES = [
+  'Tank',
+  'Healer',
+  'Melee',
+  'Ranged',
+  'Leader',
+  'Assist',
+  'MasterLooter',
+] as const;
 /** Discord's limit for an emoji. Square images around 128×128 look best. */
 export const MAX_ICON_BYTES = 256 * 1024;
 

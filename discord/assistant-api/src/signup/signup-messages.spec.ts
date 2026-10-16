@@ -18,6 +18,8 @@ const EVENT: EventView = {
   startsAt: new Date('2026-10-20T18:00:00Z'),
   closed: false,
   createdByName: 'Shivan',
+  leaderDiscordUserId: 'u-lead',
+  masterLooterDiscordUserId: null,
   kind: EVENT_KINDS.CHARACTERS,
   eventUrl: 'https://example.test/e',
   addCharacterUrl: 'https://example.test/add',
@@ -32,6 +34,7 @@ const entry = (over: Partial<EntryView> & { id: string }): EntryView => ({
   status: 'AVAILABLE',
   groupNumber: null,
   groupSlot: null,
+  assist: false,
   ...over,
 });
 
@@ -91,7 +94,7 @@ describe('renderEventMessage', () => {
     assert.equal(fields[8].value, '`4` Discord d' + GAP);
   });
 
-  it('shows the leader, the time, and how many are coming (+ tentative)', () => {
+  it('shows when, how long until, and how many are coming (+ tentative), one per line', () => {
     const message = renderEventMessage(EVENT, [
       entry({ id: 'a' }),
       entry({ id: 'b', status: 'LATE' }),
@@ -99,8 +102,12 @@ describe('renderEventMessage', () => {
       entry({ id: 'd', status: 'ABSENT' }),
     ]);
     const description = message.embeds?.[0].description ?? '';
-    assert.match(description, /^Bring flasks\.\n\n🗓️ <t:\d+:F> · ⏳ <t:\d+:R>/);
-    assert.match(description, /👑 Shivan · 👥 \*\*2\*\* \(\+1\)$/);
+    assert.match(
+      description,
+      /^Bring flasks\.\n\n🗓️ <t:\d+:F>\n⏳ <t:\d+:R>\n👥 \*\*2\*\* \(\+1\)$/,
+    );
+    // The leader isn't in the post (the setup shows them).
+    assert.doesNotMatch(description, /Shivan/);
     assert.equal(message.embeds?.[0].footer, undefined);
   });
 
@@ -245,12 +252,10 @@ describe('role and leader icons', () => {
   it('uses the icons given, falling back to emoji for the ones missing', () => {
     const message = renderEventMessage(EVENT, [entry({ id: 'a', role: 'TANK' })], {
       role: (role) => (role === 'TANK' ? '<:r_tank_1:1>' : ''),
-      leader: '<:r_leader_1:2>',
     });
     const names = fieldsOf(message).map((field) => field.name);
     assert.equal(names[0], '<:r_tank_1:1> Tank (1)');
     assert.equal(names[1], '💚 Healer (0)');
-    assert.match(message.embeds?.[0].description ?? '', /<:r_leader_1:2> Shivan/);
   });
 
   it('puts the role icon in front of each person in the groups', () => {
@@ -269,5 +274,68 @@ describe('location', () => {
     const withLocation = renderEventMessage({ ...EVENT, location: 'Naxxramas' }, []);
     assert.match(withLocation.embeds?.[0].description ?? '', /\n\n📍 Naxxramas\n🗓️ <t:/);
     assert.doesNotMatch(renderEventMessage(EVENT, []).embeds?.[0].description ?? '', /📍/);
+  });
+});
+
+describe('raid roles in the setup', () => {
+  const people = [
+    entry({
+      id: 'a',
+      discordUserId: 'u-lead',
+      characterName: 'Lead',
+      groupNumber: 1,
+      groupSlot: 0,
+      role: null,
+    }),
+    entry({
+      id: 'b',
+      characterName: 'Helper',
+      assist: true,
+      groupNumber: 1,
+      groupSlot: 1,
+      role: null,
+    }),
+    entry({
+      id: 'c',
+      discordUserId: 'u-loot',
+      characterName: 'Looter',
+      groupNumber: 1,
+      groupSlot: 2,
+      role: null,
+    }),
+    entry({
+      id: 'd',
+      discordUserId: 'u-lead2',
+      characterName: 'Both',
+      assist: true,
+      groupNumber: 1,
+      groupSlot: 3,
+      role: null,
+    }),
+  ];
+  const look = { leader: '<:lead:1>', assist: '<:assist:2>', masterLooter: '<:ml:3>' };
+
+  it('marks the leader, assists and master looter after their names', () => {
+    const message = renderSetupMessage(
+      { ...EVENT, masterLooterDiscordUserId: 'u-loot' },
+      people,
+      false,
+      look,
+    );
+    assert.equal(
+      fieldsOf(message)[0].value,
+      ['Lead <:lead:1>', 'Helper <:assist:2>', 'Looter <:ml:3>', 'Both <:assist:2>'].join('\n') +
+        GAP,
+    );
+  });
+
+  it('shows only the leader’s crown for a leader who also has assist, and works for the invited', () => {
+    const message = renderSetupMessage(
+      { ...EVENT, kind: EVENT_KINDS.MEMBERS, leaderDiscordUserId: 'u-lead2' },
+      people,
+      false,
+      look,
+    );
+    assert.match(fieldsOf(message)[0].value, /Both <:lead:1>\n/);
   });
 });

@@ -84,6 +84,7 @@ export const toEntryView = (entry: EntryRow): EntryView => ({
   status: entry.status,
   groupNumber: entry.groupNumber,
   groupSlot: entry.groupSlot,
+  assist: entry.assist,
 });
 
 /**
@@ -196,6 +197,9 @@ export class SignupEventsService {
       | 'archivedAt'
       | 'publishAt'
       | 'createdByName'
+      | 'createdByDiscordId'
+      | 'leaderDiscordUserId'
+      | 'masterLooterDiscordUserId'
       | 'kind'
     >,
   ): EventView {
@@ -207,6 +211,8 @@ export class SignupEventsService {
       startsAt: event.startsAt,
       closed: isClosed(event),
       createdByName: event.createdByName,
+      leaderDiscordUserId: event.leaderDiscordUserId ?? event.createdByDiscordId,
+      masterLooterDiscordUserId: event.masterLooterDiscordUserId,
       kind: EVENT_KINDS[event.kind],
       eventUrl: eventPageUrl(this.origin, guild, event.id),
       addCharacterUrl: addCharacterUrl(this.origin, guild),
@@ -226,6 +232,8 @@ export class SignupEventsService {
       dot: (className) => emojiText(classOf(className)),
       role: (role) => emojiText(roleOf(ROLE_ICON_NAME[role])),
       leader: emojiText(roleOf('Leader')),
+      assist: emojiText(roleOf('Assist')),
+      masterLooter: emojiText(roleOf('MasterLooter')),
     };
   }
 

@@ -58,51 +58,55 @@ model SignupSettings {
 }
 
 model SignupEvent {
-  id                 String             @id @default(uuid()) @db.Uuid
-  guildId            String             @map("guild_id") @db.Uuid
-  guild              Guild              @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  id                        String             @id @default(uuid()) @db.Uuid
+  guildId                   String             @map("guild_id") @db.Uuid
+  guild                     Guild              @relation(fields: [guildId], references: [id], onDelete: Cascade)
   // Fixed once created: changing it would strand the characters, groups and assignments.
-  kind               SignupEventKind    @default(CHARACTERS)
-  title              String
-  description        String             @default("")
+  kind                      SignupEventKind    @default(CHARACTERS)
+  title                     String
+  description               String             @default("")
   // Where it happens: a dungeon or raid, or any place (free text); empty when not given.
-  location           String             @default("")
-  startsAt           DateTime           @map("starts_at")
+  location                  String             @default("")
+  startsAt                  DateTime           @map("starts_at")
   // The IANA timezone the time was entered in (shown with it); Discord shows everyone their own.
-  timezone           String
+  timezone                  String
   // Where the sign-up post is; `messageId` null while it isn't in Discord (deleted, or failed).
-  serverId           String             @map("server_id")
-  channelId          String             @map("channel_id")
-  messageId          String?            @map("message_id")
-  createdByDiscordId String             @map("created_by_discord_id")
-  createdByName      String             @map("created_by_name")
-  lockMode           SignupLockMode     @default(AUTO) @map("lock_mode")
+  serverId                  String             @map("server_id")
+  channelId                 String             @map("channel_id")
+  messageId                 String?            @map("message_id")
+  createdByDiscordId        String             @map("created_by_discord_id")
+  createdByName             String             @map("created_by_name")
+  lockMode                  SignupLockMode     @default(AUTO) @map("lock_mode")
   // AUTO only: whether the Discord post already shows the event as closed. The worker sets it,
   // re-rendering the post, once the event has started.
-  closedShown        Boolean            @default(false) @map("closed_shown")
+  closedShown               Boolean            @default(false) @map("closed_shown")
   // The raid setup (groups, from SignupEntry.groupNumber), posted as its own message.
-  setupMessageId     String?            @map("setup_message_id")
-  setupMentions      Boolean            @default(false) @map("setup_mentions")
+  setupMessageId            String?            @map("setup_message_id")
+  setupMentions             Boolean            @default(false) @map("setup_mentions")
   // Reserved for plugins (src/signup/plugins.ts), which will create assignments automatically:
   // which one the event uses, and whether it still runs on its own (turned off by a manual edit).
-  pluginKey          String?            @map("plugin_key")
-  pluginAutoRun      Boolean            @default(true) @map("plugin_auto_run")
+  pluginKey                 String?            @map("plugin_key")
+  pluginAutoRun             Boolean            @default(true) @map("plugin_auto_run")
   // Set when the event is archived: by hand ("Archive event", which removes its messages from
   // Discord), or because its post was deleted in Discord. Archived events are kept as history,
   // read-only, and can be restored (posted again) or deleted for good.
-  archivedAt         DateTime?          @map("archived_at")
+  archivedAt                DateTime?          @map("archived_at")
   // Scheduled: the sign-up post goes out at this time (the worker posts it), not when the event
   // was created; null once it is posted, or for an event posted at once. While set, the event is
   // a draft: closed, seen only by organisers, and editable. `publishError`: why the last attempt
   // to post it failed (the worker tries again each minute).
-  publishAt          DateTime?          @map("publish_at")
-  publishError       String?            @map("publish_error")
-  entries            SignupEntry[]
-  contacts           SignupContact[]
-  assignments        SignupAssignment[]
-  images             SignupImage[]
-  createdAt          DateTime           @default(now()) @map("created_at")
-  updatedAt          DateTime           @updatedAt @map("updated_at")
+  publishAt                 DateTime?          @map("publish_at")
+  publishError              String?            @map("publish_error")
+  // Raid roles shown in the setup: the leader (whoever runs it; null = the event's creator) and
+  // the master looter (null = none), by Discord account. Assists are on each sign-up.
+  leaderDiscordUserId       String?            @map("leader_discord_user_id")
+  masterLooterDiscordUserId String?            @map("master_looter_discord_user_id")
+  entries                   SignupEntry[]
+  contacts                  SignupContact[]
+  assignments               SignupAssignment[]
+  images                    SignupImage[]
+  createdAt                 DateTime           @default(now()) @map("created_at")
+  updatedAt                 DateTime           @updatedAt @map("updated_at")
 
   @@index([guildId, startsAt])
   @@index([guildId, archivedAt])
@@ -129,6 +133,8 @@ model SignupEntry {
   // The raid setup: group 1-8 and place 0-4 in it; null = the bench.
   groupNumber   Int?         @map("group_number")
   groupSlot     Int?         @map("group_slot")
+  // Has raid assist (shown in the setup). Set for Officers when they sign up; organisers change it.
+  assist        Boolean      @default(false)
   createdAt     DateTime     @default(now()) @map("created_at")
   updatedAt     DateTime     @updatedAt @map("updated_at")
 

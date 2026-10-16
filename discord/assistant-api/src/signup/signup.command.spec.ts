@@ -69,6 +69,8 @@ function makeEvent(over: Partial<EventRow> = {}): EventRow {
     archivedAt: null,
     publishAt: null,
     publishError: null,
+    leaderDiscordUserId: null,
+    masterLooterDiscordUserId: null,
     createdAt: new Date(),
     updatedAt: new Date(),
     entries: [],
@@ -117,6 +119,7 @@ describe('SignupCommand', () => {
   let created: { channel: unknown; startsAt: Date } | null;
   let signUps: SignupChoice[];
   let statuses: { status: string; note?: string }[];
+  let lastPerson: { isOfficer?: boolean } | null = null;
   let command: SignupCommand;
 
   beforeEach(() => {
@@ -147,8 +150,9 @@ describe('SignupCommand', () => {
     } as unknown as SignupEventsService;
     const entries = {
       characterOptions: () => Promise.resolve(CHARACTERS),
-      signUp: (_e: unknown, _g: unknown, _p: unknown, choice: SignupChoice) => {
+      signUp: (_e: unknown, _g: unknown, person: { isOfficer?: boolean }, choice: SignupChoice) => {
         signUps.push(choice);
+        lastPerson = person;
         const name = CHARACTERS.find((c) => c.id === choice.characterId)?.name ?? '?';
         return Promise.resolve({ characterName: name });
       },
@@ -376,5 +380,17 @@ describe('SignupCommand', () => {
       commandInteraction({ name: 'Raid', date: '2030-10-20', time: '20:00' }),
     );
     assert.equal(kind, 'CHARACTERS');
+  });
+
+  it('tells the sign-up whether you are an Officer (Officers get raid assist)', async () => {
+    viewer = { ...viewer, isOfficer: true };
+    const reply = command.pick(
+      interaction(customId(PREFIX.pick, ID, statusCode('AVAILABLE')), {
+        values: [`${compactId(HEALER_ID)}.${roleCode('HEALER')}`],
+      }),
+    );
+    assert.ok(typeof reply === 'object' && 'defer' in reply);
+    await reply.work();
+    assert.equal(lastPerson?.isOfficer, true);
   });
 });

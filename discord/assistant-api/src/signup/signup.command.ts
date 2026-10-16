@@ -304,6 +304,9 @@ export class SignupCommand {
     if (isClosed(event)) return CLOSED;
     const guild = await this.events.findGuild(event.guildId);
     try {
+      // An Officer signing up gets raid assist (only read when their sign-up is first made).
+      const viewer = await this.access.forDiscordMember(guild, invoker, interaction.guild_id ?? '');
+      invoker.isOfficer = viewer.isOfficer;
       return await handle(event, guild, invoker, parsed);
     } catch (error) {
       return explain(error);

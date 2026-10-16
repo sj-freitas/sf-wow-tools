@@ -27,6 +27,9 @@ export interface EventView {
   startsAt: Date;
   closed: boolean;
   createdByName: string;
+  /** Who leads it (its creator unless changed) and who is master looter, by Discord account. */
+  leaderDiscordUserId: string;
+  masterLooterDiscordUserId: string | null;
   /** Characters or members (`event-kinds.ts`). */
   kind: EventKindConfig;
   /** On the website: the event's page and the guild's "add a character" page. */
@@ -45,6 +48,8 @@ export interface EntryView {
   status: SignupStatus;
   groupNumber: number | null;
   groupSlot: number | null;
+  /** Has raid assist. */
+  assist: boolean;
 }
 
 /** "Darkshivan", or the person's Discord name when they gave no character. */
@@ -63,6 +68,10 @@ export interface Look {
   role?: (role: Role) => string;
   /** `<:r_leader_…:id>`, or '' for 👑. */
   leader?: string;
+  /** `<:r_assist_…:id>`, or '' for 🥈. */
+  assist?: string;
+  /** `<:r_masterlooter_…:id>`, or '' for 💰. */
+  masterLooter?: string;
 }
 
 const dotOf = (look: Look): ClassDot => look.dot ?? (() => '');
@@ -184,10 +193,12 @@ export function renderEventMessage(
     });
   }
 
+  // One line each: where, when, how long until, and how many are coming.
   const header = [
     ...(event.location.trim() ? [`📍 ${event.location.trim()}`] : []),
-    `🗓️ ${discordTimestamp(event.startsAt, 'F')} · ⏳ ${discordTimestamp(event.startsAt, 'R')}`,
-    `${look.leader || '👑'} ${event.createdByName} · 👥 **${coming}**${tentative > 0 ? ` (+${tentative})` : ''}`,
+    `🗓️ ${discordTimestamp(event.startsAt, 'F')}`,
+    `⏳ ${discordTimestamp(event.startsAt, 'R')}`,
+    `👥 **${coming}**${tentative > 0 ? ` (+${tentative})` : ''}`,
   ].join('\n');
   const embed: APIEmbed = {
     title: event.title,
@@ -230,9 +241,30 @@ export function renderEventMessage(
   };
 }
 
+/**
+ * After a name in the setup: the leader's crown, or the silver one for an assist, and the bag for
+ * the master looter.
+ */
+function raidMarks(
+  event: Pick<EventView, 'leaderDiscordUserId' | 'masterLooterDiscordUserId'>,
+  entry: EntryView,
+  look: Look,
+): string {
+  const marks: string[] = [];
+  if (entry.discordUserId === event.leaderDiscordUserId) marks.push(look.leader || '👑');
+  else if (entry.assist) marks.push(look.assist || '🥈');
+  if (entry.discordUserId === event.masterLooterDiscordUserId) {
+    marks.push(look.masterLooter || '💰');
+  }
+  return marks.join(' ');
+}
+
 /** The raid setup: groups 1-8 with whoever is in them. Mentions ping the players in groups. */
 export function renderSetupMessage(
-  event: Pick<EventView, 'title' | 'startsAt' | 'eventUrl' | 'kind'>,
+  event: Pick<
+    EventView,
+    'title' | 'startsAt' | 'eventUrl' | 'kind' | 'leaderDiscordUserId' | 'masterLooterDiscordUserId'
+  >,
   entries: readonly EntryView[],
   mention: boolean,
   look: Look = {},
@@ -247,8 +279,13 @@ export function renderSetupMessage(
     if (members.length === 0) continue;
     placed.push(...members);
     const lines = members.map((entry) =>
-      // "<role icon> <class icon> Name".
-      [entry.role ? roleIconOf(look, entry.role) : '', dot(entry.characterClass), entryName(entry)]
+      // "<role icon> <class icon> Name <leader / assist> <master looter>".
+      [
+        entry.role ? roleIconOf(look, entry.role) : '',
+        dot(entry.characterClass),
+        entryName(entry),
+        raidMarks(event, entry, look),
+      ]
         .filter((part) => part !== '')
         .join(' '),
     );

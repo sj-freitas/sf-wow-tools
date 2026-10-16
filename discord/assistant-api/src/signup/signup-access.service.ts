@@ -70,6 +70,12 @@ export class SignupAccessService {
     };
   }
 
+  /** Whether someone holds the guild's Officer role in its main server (read from Discord). */
+  async isOfficer(guild: SignupGuild, discordUserId: string): Promise<boolean> {
+    if (!guild.officerRoleId) return false;
+    return (await this.mainServerRoles(guild, discordUserId)).includes(guild.officerRoleId);
+  }
+
   private async eventCreatorRole(guildId: string): Promise<string | null> {
     const settings = await this.prisma.signupSettings.findUnique({
       where: { guildId },

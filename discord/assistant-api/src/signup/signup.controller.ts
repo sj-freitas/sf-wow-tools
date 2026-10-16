@@ -35,7 +35,7 @@ import { readLines } from './assignment-lines';
 import { EVENT_KINDS, isEventKind } from './event-kinds';
 import { SignupAccessService } from './signup-access.service';
 import { SignupAssignmentsService } from './signup-assignments.service';
-import { SignupEntriesService } from './signup-entries.service';
+import { SignupEntriesService, type Person } from './signup-entries.service';
 import { toEntryDto } from './signup-dto';
 import {
   SignupEventsService,
@@ -336,6 +336,9 @@ export class SignupController {
         ? messageUrl(event.serverId, event.channelId, event.setupMessageId)
         : null,
       setupMentions: event.setupMentions,
+      // Raid roles: the leader (its creator unless changed) and the master looter (or null).
+      leaderDiscordUserId: event.leaderDiscordUserId ?? event.createdByDiscordId,
+      masterLooterDiscordUserId: event.masterLooterDiscordUserId,
       permissions: {
         canManage: canManageEvent(viewer, event),
         canOrganize: organizer,
@@ -456,8 +459,12 @@ export class SignupController {
     @Param('eventId') eventId: string,
     @Body() body: Body,
   ): Promise<void> {
-    const { guild, event } = await this.eventContext(req, guildId, eventId);
-    const person = { discordUserId: req.user.discordId, name: req.user.displayName };
+    const { guild, viewer, event } = await this.eventContext(req, guildId, eventId);
+    const person = {
+      discordUserId: req.user.discordId,
+      name: req.user.displayName,
+      isOfficer: viewer.isOfficer,
+    };
     await this.saveEntry(guild, event, person, body, false);
   }
 
@@ -504,7 +511,8 @@ export class SignupController {
       typeof body.name === 'string' && body.name.trim() !== ''
         ? body.name.trim().slice(0, 100)
         : (existing?.discordName ?? id);
-    await this.saveEntry(guild, event, { discordUserId: id, name }, body, true);
+    const isOfficer = await this.access.isOfficer(guild, id);
+    await this.saveEntry(guild, event, { discordUserId: id, name, isOfficer }, body, true);
   }
 
   @Delete('events/:eventId/entries/:entryId')
@@ -538,7 +546,17 @@ export class SignupController {
       group: typeof p.group === 'number' ? p.group : null,
       slot: typeof p.slot === 'number' ? p.slot : null,
     }));
-    await this.entries.savePlacements(event, placements);
+    // Raid roles, each optional: `leaderDiscordUserId` / `masterLooterDiscordUserId` (null clears
+    // them: the creator leads, no master looter) and `assistEntryIds` (exactly who has assist).
+    const discordId = (value: unknown, what: string) =>
+      value === undefined ? undefined : value === null ? null : parseSnowflake(value, what);
+    await this.entries.savePlacements(event, placements, {
+      leaderDiscordUserId: discordId(body.leaderDiscordUserId, 'The leader'),
+      masterLooterDiscordUserId: discordId(body.masterLooterDiscordUserId, 'The master looter'),
+      assistEntryIds: Array.isArray(body.assistEntryIds)
+        ? (body.assistEntryIds as unknown[]).filter((id): id is string => typeof id === 'string')
+        : undefined,
+    });
   }
 
   /** Posts the setup (or, when posted, updates it). `mention`: ping the players in it. */
@@ -826,7 +844,7 @@ export class SignupController {
   private async saveEntry(
     guild: SignupGuild,
     event: EventRow,
-    person: { discordUserId: string; name: string },
+    person: Person,
     body: Body,
     override: boolean,
   ): Promise<void> {

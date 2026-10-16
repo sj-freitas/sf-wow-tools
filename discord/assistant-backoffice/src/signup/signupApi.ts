@@ -70,6 +70,8 @@ export interface Entry {
   note: string | null;
   groupNumber: number | null;
   groupSlot: number | null;
+  /** Has raid assist (shown in the setup). */
+  assist: boolean;
   /** When they first answered: sign-ups are numbered in this order, as in Discord. */
   createdAt: string;
   updatedAt: string;
@@ -137,6 +139,9 @@ export interface SignupEvent {
   postUrl: string | null;
   setupPostUrl: string | null;
   setupMentions: boolean;
+  /** Raid roles shown in the setup: the leader (its creator unless changed) and master looter. */
+  leaderDiscordUserId: string;
+  masterLooterDiscordUserId: string | null;
   /** Manage: edit, lock, delete, anyone's sign-up. Organise: setup, assignments, reminders. */
   permissions: {
     canManage: boolean;
@@ -289,11 +294,19 @@ export const saveSomeonesSignup = (
 export const removeEntry = (guildId: string, eventId: string, entryId: string): Promise<void> =>
   request('DELETE', `${ev(guildId, eventId)}/entries/${entryId}`);
 
+/** The raid roles saved with the setup: leader and master looter (Discord accounts), assists. */
+export interface RaidRoles {
+  leaderDiscordUserId: string;
+  masterLooterDiscordUserId: string | null;
+  assistEntryIds: string[];
+}
+
 export const saveSetup = (
   guildId: string,
   eventId: string,
   placements: Placement[],
-): Promise<void> => request('PUT', `${ev(guildId, eventId)}/setup`, { placements });
+  roles: RaidRoles,
+): Promise<void> => request('PUT', `${ev(guildId, eventId)}/setup`, { placements, ...roles });
 
 export const postSetup = (guildId: string, eventId: string, mention: boolean): Promise<void> =>
   request('POST', `${ev(guildId, eventId)}/setup/post`, { mention });

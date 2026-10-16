@@ -1,7 +1,7 @@
 -- Removes the event sign-up feature's data and tables: the reverse of
 -- prisma/migrations/20261015090000_signup, 20261016090000_signup_archive,
--- 20261017090000_signup_event_kind and 20261018090000_signup_schedule. Nothing outside the
--- signup_* tables is touched.
+-- 20261017090000_signup_event_kind, 20261018090000_signup_schedule and
+-- 20261019090000_signup_raid_roles. Nothing outside the signup_* tables is touched.
 --
 -- Run it (with DATABASE_URL set) from discord/assistant-api:
 --   npx prisma db execute --file prisma/rollback/20261015090000_signup.down.sql
@@ -29,7 +29,8 @@ DELETE FROM "_prisma_migrations"
     '20261015090000_signup',
     '20261016090000_signup_archive',
     '20261017090000_signup_event_kind',
-    '20261018090000_signup_schedule'
+    '20261018090000_signup_schedule',
+    '20261019090000_signup_raid_roles'
   );
 
 COMMIT;

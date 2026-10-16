@@ -7,13 +7,15 @@ const ROLE_ICONS: Record<string, { file: string; emoji: string; label: string }>
   MELEE_DPS: { file: 'Melee', emoji: '⚔️', label: 'Melee' },
   RANGED_DPS: { file: 'Ranged', emoji: '🏹', label: 'Ranged' },
   LEADER: { file: 'Leader', emoji: '👑', label: 'Leader' },
+  ASSIST: { file: 'Assist', emoji: '🥈', label: 'Assist' },
+  MASTER_LOOTER: { file: 'MasterLooter', emoji: '💰', label: 'Master looter' },
 };
 
 const iconUrl = (gameVersion: string, file: string): string =>
   `/api/public/games/${encodeURIComponent(gameVersion)}/roles/${file}/icon`;
 
 /**
- * A raid role (or `LEADER`) as its icon from the game config, or its emoji (🛡️ 💚 ⚔️ 🏹 👑) when
+ * A raid role (or `LEADER`, `ASSIST`, `MASTER_LOOTER`) as its icon from the game config, or its emoji (🛡️ 💚 ⚔️ 🏹 👑) when
  * the version has none — the same as in Discord.
  */
 export function RoleMark({ gameVersion, role }: { gameVersion: string; role: string }) {

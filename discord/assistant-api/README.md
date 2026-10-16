@@ -777,6 +777,13 @@ up in `src/signup/event-kinds.ts`, which is the config for both:
   is a single unlimited **Invited** list, everyone else on the bench, posted (optionally pinging
   the invited) like the raid setup. No assignments.
 
+**Lead and loot.** The setup shows, after names, the leader's crown (the event's creator unless
+changed), a silver crown for raid assists, and a bag for the master looter. Officers get assist
+when they sign up; on the Raid setup (or Invited) tab organisers change the leader, the master
+looter (optional) and who has assist, saved with the setup (`signup_events.leader_discord_user_id`,
+`master_looter_discord_user_id`, `signup_entries.assist`). The sign-up post shows location, date,
+countdown and the number coming on a line each, and no longer the leader.
+
 **Scheduling.** On the website's form, **Post: At a date and time** (in the event's timezone,
 before it starts) saves the event without posting it; the worker posts it then. Until then it is
 a draft: only organisers see it (EventCreators and Officers all of them, others their own), it is
@@ -837,17 +844,17 @@ Links the bot puts in Discord point at `SITE_URL` (optional; else the origin of
 
 ### Removing the sign-up feature
 
-Everything is in four migrations, `prisma/migrations/20261015090000_signup`,
-`20261016090000_signup_archive`, `20261017090000_signup_event_kind` and
-`20261018090000_signup_schedule`, which only create and change `signup_*` tables and types (each in
+Everything is in five migrations, `prisma/migrations/20261015090000_signup`,
+`20261016090000_signup_archive`, `20261017090000_signup_event_kind`,
+`20261018090000_signup_schedule` and `20261019090000_signup_raid_roles`, which only create and change `signup_*` tables and types (each in
 one transaction). To take the feature out:
 
 1. Undo the database part (this **deletes every event, sign-up and assignment**):
    `npx prisma db execute --file prisma/rollback/20261015090000_signup.down.sql`. It drops the
-   tables and also forgets the four migrations in `_prisma_migrations`.
+   tables and also forgets the five migrations in `_prisma_migrations`.
 2. Delete `prisma/signup.prisma`, `prisma/migrations/20261015090000_signup/`,
-   `20261016090000_signup_archive/`, `20261017090000_signup_event_kind/` and
-   `20261018090000_signup_schedule/`, the `signupSettings`/`signupEvents`/`signupEntries` lines in
+   `20261016090000_signup_archive/`, `20261017090000_signup_event_kind/`,
+   `20261018090000_signup_schedule/` and `20261019090000_signup_raid_roles/`, the `signupSettings`/`signupEvents`/`signupEntries` lines in
    `schema.prisma` (marked "Event sign-ups"), `src/signup/`, and its imports in `app.module.ts`,
    `worker/worker.module.ts` and `worker/worker.service.ts` (with the `onMessageDeleted` hook
    there); remove `create-event` from `src/bot/commands.json` and run `npm run commands:register`.

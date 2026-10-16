@@ -14,6 +14,7 @@ export const toEntryDto = (entry: EntryRow, withNote: boolean) => ({
   note: withNote ? entry.note : null,
   groupNumber: entry.groupNumber,
   groupSlot: entry.groupSlot,
+  assist: entry.assist,
   /** When they first answered: the order of the sign-up numbers. */
   createdAt: entry.createdAt.toISOString(),
   updatedAt: entry.updatedAt.toISOString(),
