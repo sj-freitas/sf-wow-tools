@@ -331,14 +331,24 @@ describe('raid roles in the setup', () => {
     );
   });
 
-  it('shows only the leader’s crown for a leader who also has assist, and works for the invited', () => {
+  it('shows only the leader’s crown for a leader who also has assist', () => {
     const message = renderSetupMessage(
-      { ...EVENT, kind: EVENT_KINDS.MEMBERS, leaderDiscordUserId: 'u-lead2' },
+      { ...EVENT, leaderDiscordUserId: 'u-lead2' },
       people,
       false,
       look,
     );
     assert.match(fieldsOf(message)[0].value, /Both <:lead:1>\n/);
+  });
+
+  it('shows no raid roles on a members event’s invited list', () => {
+    const message = renderSetupMessage(
+      { ...EVENT, kind: EVENT_KINDS.MEMBERS, masterLooterDiscordUserId: 'u-loot' },
+      people,
+      false,
+      look,
+    );
+    assert.doesNotMatch(fieldsOf(message)[0].value, /<:(lead|assist|ml):/);
   });
 });
 

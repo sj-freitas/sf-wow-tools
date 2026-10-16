@@ -12,6 +12,8 @@ export interface EventLayout {
   label: string;
   usesCharacters: boolean;
   hasAssignments: boolean;
+  /** Leader, assists and master looter in the setup (not on members events). */
+  hasRaidRoles: boolean;
   groupCount: number;
   /** Places per group; null = no limit. */
   groupSize: number | null;
@@ -305,7 +307,8 @@ export const saveSetup = (
   guildId: string,
   eventId: string,
   placements: Placement[],
-  roles: RaidRoles,
+  /** Left out on members events, which have none. */
+  roles?: RaidRoles,
 ): Promise<void> => request('PUT', `${ev(guildId, eventId)}/setup`, { placements, ...roles });
 
 export const postSetup = (guildId: string, eventId: string, mention: boolean): Promise<void> =>

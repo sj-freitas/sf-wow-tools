@@ -8,7 +8,8 @@ import type { SignupEventKind } from '@prisma/client';
  *               (a raid composition) and there are assignments. The default.
  *   MEMBERS     people sign up as themselves (their Discord account, shown by server nickname);
  *               the setup is one list of who is invited, with everyone else on the bench, and it
- *               is posted the same way (optionally mentioning the invited). No assignments.
+ *               is posted the same way (optionally mentioning the invited). No assignments, and
+ *               no raid roles (leader, assists, master looter).
  */
 export interface EventKindConfig {
   /** As people see it: in `/create-event type:` and on the website. */
@@ -16,6 +17,8 @@ export interface EventKindConfig {
   /** People sign up with a character and a role (else as themselves). */
   usesCharacters: boolean;
   hasAssignments: boolean;
+  /** The setup has raid roles: a leader, assists and a master looter (crowns and bag by names). */
+  hasRaidRoles: boolean;
   /** How many groups the setup has, and how many places each; null = no limit. */
   groupCount: number;
   groupSize: number | null;
@@ -30,6 +33,7 @@ export const EVENT_KINDS: Record<SignupEventKind, EventKindConfig> = {
     label: 'Characters',
     usesCharacters: true,
     hasAssignments: true,
+    hasRaidRoles: true,
     groupCount: 8,
     groupSize: 5,
     groupName: 'Group',
@@ -39,6 +43,7 @@ export const EVENT_KINDS: Record<SignupEventKind, EventKindConfig> = {
     label: 'Members',
     usesCharacters: false,
     hasAssignments: false,
+    hasRaidRoles: false,
     groupCount: 1,
     groupSize: null,
     groupName: 'Invited',

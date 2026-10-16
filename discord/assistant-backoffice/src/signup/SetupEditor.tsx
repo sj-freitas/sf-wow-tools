@@ -153,14 +153,24 @@ export function SetupEditor({
       group: places[entry.id]?.group ?? null,
       slot: places[entry.id]?.slot ?? null,
     }));
+  // Members events have no raid roles: only the placements go.
   const save = () =>
-    saveSetup(guild.id, event.id, placements(), {
-      leaderDiscordUserId: leader,
-      // Someone who left or became absent can't stay master looter.
-      masterLooterDiscordUserId:
-        masterLooter && people.some((p) => p.discordUserId === masterLooter) ? masterLooter : null,
-      assistEntryIds: assists.filter((id) => byId.has(id)),
-    }).then(() => setDirty(false));
+    saveSetup(
+      guild.id,
+      event.id,
+      placements(),
+      !event.layout.hasRaidRoles
+        ? undefined
+        : {
+            leaderDiscordUserId: leader,
+            // Someone who left or became absent can't stay master looter.
+            masterLooterDiscordUserId:
+              masterLooter && people.some((p) => p.discordUserId === masterLooter)
+                ? masterLooter
+                : null,
+            assistEntryIds: assists.filter((id) => byId.has(id)),
+          },
+    ).then(() => setDirty(false));
   const changeRoles = (update: () => void) => {
     update();
     setDirty(true);
@@ -190,12 +200,12 @@ export function SetupEditor({
       {entry.role && <RoleMark gameVersion={guild.gameVersion} role={entry.role} />}
       <ClassMark gameVersion={guild.gameVersion} className={entry.characterClass} />
       <span className="setup-chip-name">{entryName(entry)}</span>
-      {entry.discordUserId === leader ? (
+      {!event.layout.hasRaidRoles ? null : entry.discordUserId === leader ? (
         <RoleMark gameVersion={guild.gameVersion} role="LEADER" />
       ) : (
         assists.includes(entry.id) && <RoleMark gameVersion={guild.gameVersion} role="ASSIST" />
       )}
-      {entry.discordUserId === masterLooter && (
+      {event.layout.hasRaidRoles && entry.discordUserId === masterLooter && (
         <RoleMark gameVersion={guild.gameVersion} role="MASTER_LOOTER" />
       )}
       {entry.status !== 'AVAILABLE' && (
@@ -236,57 +246,60 @@ export function SetupEditor({
       </div>
       {error && <p className="status-error">{error}</p>}
 
-      <div className="task-card setup-roles">
-        <strong>Lead and loot</strong>
-        <div className="form-grid">
-          <label className="field">
-            <span>
-              <RoleMark gameVersion={guild.gameVersion} role="LEADER" /> Leader
-            </span>
-            <select value={leader} onChange={(e) => changeRoles(() => setLeader(e.target.value))}>
-              {!people.some((p) => p.discordUserId === leader) && (
-                <option value={leader}>{event.createdByName} (not signed up)</option>
-              )}
-              {people.map((entry) => (
-                <option key={entry.id} value={entry.discordUserId}>
-                  {entryName(entry)}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="field">
-            <span>
-              <RoleMark gameVersion={guild.gameVersion} role="MASTER_LOOTER" /> Master looter
-            </span>
-            <select
-              value={masterLooter ?? ''}
-              onChange={(e) => changeRoles(() => setMasterLooter(e.target.value || null))}
-            >
-              <option value="">None</option>
-              {people.map((entry) => (
-                <option key={entry.id} value={entry.discordUserId}>
-                  {entryName(entry)}
-                </option>
-              ))}
-            </select>
-          </label>
-          <div className="field">
-            <span>
-              <RoleMark gameVersion={guild.gameVersion} role="ASSIST" /> Assist
-            </span>
-            <MultiSelect
-              options={people.map((entry) => ({ value: entry.id, label: entryName(entry) }))}
-              value={assists.filter((id) => byId.has(id))}
-              onChange={(value) => changeRoles(() => setAssists(value))}
-              placeholder="Nobody"
-            />
+      {/* Raid roles: not on members events. */}
+      {event.layout.hasRaidRoles && (
+        <div className="task-card setup-roles">
+          <strong>Lead and loot</strong>
+          <div className="form-grid">
+            <label className="field">
+              <span>
+                <RoleMark gameVersion={guild.gameVersion} role="LEADER" /> Leader
+              </span>
+              <select value={leader} onChange={(e) => changeRoles(() => setLeader(e.target.value))}>
+                {!people.some((p) => p.discordUserId === leader) && (
+                  <option value={leader}>{event.createdByName} (not signed up)</option>
+                )}
+                {people.map((entry) => (
+                  <option key={entry.id} value={entry.discordUserId}>
+                    {entryName(entry)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="field">
+              <span>
+                <RoleMark gameVersion={guild.gameVersion} role="MASTER_LOOTER" /> Master looter
+              </span>
+              <select
+                value={masterLooter ?? ''}
+                onChange={(e) => changeRoles(() => setMasterLooter(e.target.value || null))}
+              >
+                <option value="">None</option>
+                {people.map((entry) => (
+                  <option key={entry.id} value={entry.discordUserId}>
+                    {entryName(entry)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <div className="field">
+              <span>
+                <RoleMark gameVersion={guild.gameVersion} role="ASSIST" /> Assist
+              </span>
+              <MultiSelect
+                options={people.map((entry) => ({ value: entry.id, label: entryName(entry) }))}
+                value={assists.filter((id) => byId.has(id))}
+                onChange={(value) => changeRoles(() => setAssists(value))}
+                placeholder="Nobody"
+              />
+            </div>
           </div>
+          <small className="muted">
+            Shown after their names in the setup. Officers get assist when they sign up; saving the
+            setup saves these too.
+          </small>
         </div>
-        <small className="muted">
-          Shown after their names in the setup. Officers get assist when they sign up; saving the
-          setup saves these too.
-        </small>
-      </div>
+      )}
 
       <div className="setup-groups">
         {groups.map((group) => {

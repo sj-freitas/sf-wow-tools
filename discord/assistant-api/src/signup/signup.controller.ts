@@ -550,13 +550,26 @@ export class SignupController {
     // them: the creator leads, no master looter) and `assistEntryIds` (exactly who has assist).
     const discordId = (value: unknown, what: string) =>
       value === undefined ? undefined : value === null ? null : parseSnowflake(value, what);
-    await this.entries.savePlacements(event, placements, {
-      leaderDiscordUserId: discordId(body.leaderDiscordUserId, 'The leader'),
-      masterLooterDiscordUserId: discordId(body.masterLooterDiscordUserId, 'The master looter'),
-      assistEntryIds: Array.isArray(body.assistEntryIds)
-        ? (body.assistEntryIds as unknown[]).filter((id): id is string => typeof id === 'string')
-        : undefined,
-    });
+    // Members events have no raid roles: only the placements are saved.
+    const roles = EVENT_KINDS[event.kind].hasRaidRoles;
+    await this.entries.savePlacements(
+      event,
+      placements,
+      !roles
+        ? {}
+        : {
+            leaderDiscordUserId: discordId(body.leaderDiscordUserId, 'The leader'),
+            masterLooterDiscordUserId: discordId(
+              body.masterLooterDiscordUserId,
+              'The master looter',
+            ),
+            assistEntryIds: Array.isArray(body.assistEntryIds)
+              ? (body.assistEntryIds as unknown[]).filter(
+                  (id): id is string => typeof id === 'string',
+                )
+              : undefined,
+          },
+    );
   }
 
   /** Posts the setup (or, when posted, updates it). `mention`: ping the players in it. */

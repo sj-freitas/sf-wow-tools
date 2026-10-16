@@ -253,10 +253,12 @@ export function renderEventMessage(
  * the master looter.
  */
 function raidMarks(
-  event: Pick<EventView, 'leaderDiscordUserId' | 'masterLooterDiscordUserId'>,
+  event: Pick<EventView, 'leaderDiscordUserId' | 'masterLooterDiscordUserId' | 'kind'>,
   entry: EntryView,
   look: Look,
 ): string {
+  // Members events have no raid roles.
+  if (!event.kind.hasRaidRoles) return '';
   const marks: string[] = [];
   if (entry.discordUserId === event.leaderDiscordUserId) marks.push(look.leader || '👑');
   else if (entry.assist) marks.push(look.assist || '🥈');

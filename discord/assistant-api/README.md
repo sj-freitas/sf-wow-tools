@@ -788,9 +788,10 @@ up in `src/signup/event-kinds.ts`, which is the config for both:
   is a single unlimited **Invited** list, everyone else on the bench, posted (optionally pinging
   the invited) like the raid setup. No assignments.
 
-**Lead and loot.** The setup shows, after names, the leader's crown (the event's creator unless
+**Lead and loot** (Characters events only; Members events have none, `hasRaidRoles` in
+`event-kinds.ts`). The setup shows, after names, the leader's crown (the event's creator unless
 changed), a silver crown for raid assists, and a bag for the master looter. Officers get assist
-when they sign up; on the Raid setup (or Invited) tab organisers change the leader, the master
+when they sign up; on the Raid setup tab organisers change the leader, the master
 looter (optional) and who has assist, saved with the setup (`signup_events.leader_discord_user_id`,
 `master_looter_discord_user_id`, `signup_entries.assist`). The sign-up post shows, right under its title and before the description, the 📍 location
 and then the date ("🗓️ Sunday, 1 November 2026 at 19:00", in each reader's timezone); the number coming is in its title ("First Guild Meeting - 👥 8 (+2)", the + counting late
