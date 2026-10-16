@@ -23,7 +23,12 @@ import {
   type EntryView,
   type EventView,
 } from './signup-messages';
-import { MAX_DESCRIPTION_LENGTH, MAX_TITLE_LENGTH, isClosed } from './signup-rules';
+import {
+  MAX_DESCRIPTION_LENGTH,
+  MAX_LOCATION_LENGTH,
+  MAX_TITLE_LENGTH,
+  isClosed,
+} from './signup-rules';
 
 /** What every sign-up feature needs to know about the guild. */
 export const GUILD_SELECT = {
@@ -51,8 +56,15 @@ export type EventRow = Prisma.SignupEventGetPayload<{ include: typeof EVENT_INCL
 export interface EventInput {
   /** Only read when creating: an event's kind never changes. Left out: characters. */
   kind?: SignupEventKind;
+  /**
+   * When to post it: left out (or a time already passed) posts it at once. Only for an event that
+   * isn't posted yet: creating one, or changing a scheduled one's time.
+   */
+  publishAt?: Date;
   title: string;
   description: string;
+  /** Where: a dungeon or raid, or any place. Optional (empty). */
+  location?: string;
   startsAt: Date;
   timezone: string;
 }
@@ -178,9 +190,11 @@ export class SignupEventsService {
       | 'id'
       | 'title'
       | 'description'
+      | 'location'
       | 'startsAt'
       | 'lockMode'
       | 'archivedAt'
+      | 'publishAt'
       | 'createdByName'
       | 'kind'
     >,
@@ -189,6 +203,7 @@ export class SignupEventsService {
       id: event.id,
       title: event.title,
       description: event.description,
+      location: event.location,
       startsAt: event.startsAt,
       closed: isClosed(event),
       createdByName: event.createdByName,
@@ -218,6 +233,12 @@ export class SignupEventsService {
   static validate(input: EventInput): EventInput {
     const title = input.title.trim();
     const description = input.description.trim();
+    const location = (input.location ?? '').trim();
+    if (location.length > MAX_LOCATION_LENGTH) {
+      throw new BadRequestException(
+        `The location can be at most ${MAX_LOCATION_LENGTH} characters.`,
+      );
+    }
     if (title === '') throw new BadRequestException('Give the event a name.');
     if (title.length > MAX_TITLE_LENGTH) {
       throw new BadRequestException(`The name can be at most ${MAX_TITLE_LENGTH} characters.`);
@@ -227,7 +248,7 @@ export class SignupEventsService {
         `The description can be at most ${MAX_DESCRIPTION_LENGTH} characters.`,
       );
     }
-    return { ...input, title, description };
+    return { ...input, title, description, location };
   }
 
   /**
@@ -247,12 +268,18 @@ export class SignupEventsService {
     if (!guild.servers.some((server) => server.discordId === channel.serverId)) {
       throw new BadRequestException('That channel is not in one of the guild’s servers.');
     }
+    const scheduled = input.publishAt && input.publishAt > new Date() ? input.publishAt : null;
+    if (scheduled && scheduled >= input.startsAt) {
+      throw new BadRequestException('Post it before the event starts.');
+    }
     const event = await this.prisma.signupEvent.create({
       data: {
         guildId: guild.id,
         kind: input.kind ?? 'CHARACTERS',
+        publishAt: scheduled,
         title: valid.title,
         description: valid.description,
+        location: valid.location ?? '',
         startsAt: valid.startsAt,
         timezone: valid.timezone,
         serverId: channel.serverId,
@@ -262,6 +289,8 @@ export class SignupEventsService {
       },
       include: EVENT_INCLUDE,
     });
+    // Scheduled: saved as a draft; the worker posts it at `publishAt` (see publishDue).
+    if (scheduled) return event;
     try {
       const messageId = await this.discord.sendRichMessage(
         channel.channelId,
@@ -280,11 +309,24 @@ export class SignupEventsService {
 
   async update(event: EventRow, input: EventInput): Promise<void> {
     const valid = SignupEventsService.validate(input);
+    // A scheduled event can move its posting time (still in the future, before it starts).
+    let publishAt: Date | undefined;
+    if (event.publishAt && input.publishAt) {
+      if (input.publishAt <= new Date()) {
+        throw new BadRequestException('Pick a posting time still to come, or use Post now.');
+      }
+      if (input.publishAt >= valid.startsAt) {
+        throw new BadRequestException('Post it before the event starts.');
+      }
+      publishAt = input.publishAt;
+    }
     await this.prisma.signupEvent.update({
       where: { id: event.id },
       data: {
+        ...(publishAt ? { publishAt } : {}),
         title: valid.title,
         description: valid.description,
+        location: valid.location ?? '',
         startsAt: valid.startsAt,
         timezone: valid.timezone,
         // Moved to later: the post opens again (AUTO) and the worker closes it at the new time.
@@ -300,6 +342,68 @@ export class SignupEventsService {
       data: { lockMode, closedShown: lockMode === 'AUTO' ? false : true },
     });
     this.refresh(eventId);
+  }
+
+  /**
+   * Posts a scheduled event's sign-up post now (the worker at its time, or "Post now"). It stops
+   * being scheduled, with any sign-ups organisers already added. If Discord refuses, it stays
+   * scheduled with the reason in `publishError`, and the reason is thrown.
+   */
+  async publish(eventId: string): Promise<void> {
+    const event = await this.prisma.signupEvent.findUniqueOrThrow({
+      where: { id: eventId },
+      include: { ...EVENT_INCLUDE, guild: { select: GUILD_SELECT } },
+    });
+    if (!event.publishAt || event.archivedAt) return;
+    const live = { ...event, publishAt: null };
+    let messageId: string;
+    try {
+      messageId = await this.discord.sendRichMessage(
+        event.channelId,
+        renderEventMessage(
+          this.eventView(event.guild, live),
+          event.entries.map(toEntryView),
+          await this.look(event.guild),
+        ),
+      );
+    } catch (error) {
+      const reason = describeDiscordError(error);
+      await this.prisma.signupEvent.update({
+        where: { id: eventId },
+        data: { publishError: reason },
+      });
+      throw new BadRequestException(`Could not post the event: ${reason}`);
+    }
+    await this.prisma.signupEvent.update({
+      where: { id: eventId },
+      data: { messageId, publishAt: null, publishError: null },
+    });
+  }
+
+  /**
+   * The worker's part: posts every scheduled event whose time has come. Each is claimed first (its
+   * time pushed a minute on), so two workers never post one twice; one that fails is tried again
+   * next minute. Never throws.
+   */
+  async publishDue(now: Date = new Date()): Promise<void> {
+    const due = await this.prisma.signupEvent.findMany({
+      where: { publishAt: { lte: now }, archivedAt: null },
+      select: { id: true, publishAt: true, title: true },
+      take: 20,
+    });
+    for (const event of due) {
+      const { count } = await this.prisma.signupEvent.updateMany({
+        where: { id: event.id, publishAt: event.publishAt },
+        data: { publishAt: new Date(now.getTime() + 60 * 1000) },
+      });
+      if (count === 0) continue;
+      try {
+        await this.publish(event.id);
+        this.logger.log(`Posted the scheduled event “${event.title}”`);
+      } catch (error) {
+        this.logger.warn(`Could not post the scheduled event “${event.title}”: ${String(error)}`);
+      }
+    }
   }
 
   /** Every message the bot has in Discord for the event: its post, the setup, the assignments. */
@@ -374,7 +478,14 @@ export class SignupEventsService {
   async restore(eventId: string): Promise<void> {
     const event = await this.prisma.signupEvent.update({
       where: { id: eventId },
-      data: { archivedAt: null, messageId: null, closedShown: false },
+      // Posted now, so no longer scheduled either.
+      data: {
+        archivedAt: null,
+        messageId: null,
+        closedShown: false,
+        publishAt: null,
+        publishError: null,
+      },
       include: { ...EVENT_INCLUDE, guild: { select: GUILD_SELECT } },
     });
     try {

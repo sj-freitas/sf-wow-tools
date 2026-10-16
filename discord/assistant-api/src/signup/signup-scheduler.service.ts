@@ -7,7 +7,8 @@ const TICK_MS = 60 * 1000;
 const ORPHAN_IMAGE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
 /**
- * The sign-up feature's part of the background worker, once a minute: shows events that have
+ * The sign-up feature's part of the background worker, once a minute: posts scheduled events
+ * whose time has come, shows events that have
  * started as closed on Discord (the buttons stop working on their own; this updates the post to
  * say so) and removes abandoned image uploads. (Plugin runs would go here: see plugins.ts.)
  */
@@ -38,8 +39,16 @@ export class SignupSchedulerService implements OnApplicationShutdown {
     if (this.ticking) return;
     this.ticking = true;
     try {
+      // Scheduled events whose time has come are posted.
+      await this.events.publishDue(now);
       const started = await this.prisma.signupEvent.findMany({
-        where: { lockMode: 'AUTO', closedShown: false, archivedAt: null, startsAt: { lte: now } },
+        where: {
+          lockMode: 'AUTO',
+          closedShown: false,
+          archivedAt: null,
+          publishAt: null,
+          startsAt: { lte: now },
+        },
         select: { id: true },
         take: 50,
       });

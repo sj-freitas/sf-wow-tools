@@ -266,6 +266,13 @@
         "max_length": 2000
       },
       {
+        "name": "location",
+        "description": "Where: a dungeon or raid, or any place (optional)",
+        "type": 3,
+        "required": false,
+        "max_length": 100
+      },
+      {
         "name": "timezone",
         "description": "ST (server time, the default), UTC, an offset like +02:00, or a name like Europe/Lisbon",
         "type": 3,

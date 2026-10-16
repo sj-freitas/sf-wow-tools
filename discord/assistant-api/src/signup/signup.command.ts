@@ -132,6 +132,7 @@ export class SignupCommand {
           kind: kindOption(getStringOption(interaction, 'type')),
           title: getStringOption(interaction, 'name') ?? '',
           description: getStringOption(interaction, 'description') ?? '',
+          location: getStringOption(interaction, 'location') ?? '',
           startsAt,
           timezone: zone,
         },

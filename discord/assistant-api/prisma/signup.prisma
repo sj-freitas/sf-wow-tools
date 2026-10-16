@@ -65,6 +65,8 @@ model SignupEvent {
   kind               SignupEventKind    @default(CHARACTERS)
   title              String
   description        String             @default("")
+  // Where it happens: a dungeon or raid, or any place (free text); empty when not given.
+  location           String             @default("")
   startsAt           DateTime           @map("starts_at")
   // The IANA timezone the time was entered in (shown with it); Discord shows everyone their own.
   timezone           String
@@ -89,6 +91,12 @@ model SignupEvent {
   // Discord), or because its post was deleted in Discord. Archived events are kept as history,
   // read-only, and can be restored (posted again) or deleted for good.
   archivedAt         DateTime?          @map("archived_at")
+  // Scheduled: the sign-up post goes out at this time (the worker posts it), not when the event
+  // was created; null once it is posted, or for an event posted at once. While set, the event is
+  // a draft: closed, seen only by organisers, and editable. `publishError`: why the last attempt
+  // to post it failed (the worker tries again each minute).
+  publishAt          DateTime?          @map("publish_at")
+  publishError       String?            @map("publish_error")
   entries            SignupEntry[]
   contacts           SignupContact[]
   assignments        SignupAssignment[]
@@ -98,6 +106,7 @@ model SignupEvent {
 
   @@index([guildId, startsAt])
   @@index([guildId, archivedAt])
+  @@index([publishAt])
   @@index([lockMode, closedShown, startsAt])
   @@map("signup_events")
 }

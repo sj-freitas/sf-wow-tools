@@ -7,6 +7,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  NotFoundException,
   Param,
   Post,
   Put,
@@ -50,6 +51,7 @@ import {
   canOrganizeEvent,
   canPostIn,
   isClosed,
+  isScheduled,
   type SignupViewer,
 } from './signup-rules';
 import { localParts, parseEventStart, resolveTimezone } from './signup-time';
@@ -60,6 +62,15 @@ const LOCK_MODES: readonly SignupLockMode[] = ['AUTO', 'LOCKED', 'UNLOCKED'];
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 type Body = Record<string, unknown>;
+
+/** Nothing goes to Discord for an event whose own post isn't there yet. */
+function assertPosted(event: EventRow): void {
+  if (isScheduled(event)) {
+    throw new BadRequestException(
+      'The event isn’t posted yet. Post it first (or wait for its time).',
+    );
+  }
+}
 
 /** Members events have no assignments (event-kinds.ts). */
 function assertHasAssignments(event: EventRow): void {
@@ -177,7 +188,7 @@ export class SignupController {
     @Query('to') to?: string,
     @Query('q') q?: string,
   ) {
-    const { guild } = await this.context(req, guildId);
+    const { guild, viewer } = await this.context(req, guildId);
     const now = new Date();
     let where: Prisma.SignupEventWhereInput;
     let orderBy: Prisma.SignupEventOrderByWithRelationInput;
@@ -206,6 +217,13 @@ export class SignupController {
       orderBy = { startsAt: past ? 'desc' : 'asc' };
       take = past ? 30 : 100;
     }
+    // Scheduled events are drafts: only organisers see them (EventCreators and Officers all of
+    // them, anyone else only their own).
+    if (!viewer.isEventCreator) {
+      where = {
+        AND: [where, { OR: [{ publishAt: null }, { createdByDiscordId: viewer.discordId }] }],
+      };
+    }
     const events = await this.prisma.signupEvent.findMany({
       where,
       orderBy,
@@ -227,6 +245,8 @@ export class SignupController {
         timezone: event.timezone,
         closed: isClosed(event, now),
         archivedAt: event.archivedAt?.toISOString() ?? null,
+        publishAt: event.publishAt?.toISOString() ?? null,
+        location: event.location,
         kind: event.kind,
         createdByName: event.createdByName,
         counts,
@@ -278,6 +298,8 @@ export class SignupController {
   ) {
     const { guild, viewer, event } = await this.eventContext(req, guildId, eventId);
     const organizer = canOrganizeEvent(viewer, event);
+    // A scheduled event is a draft only organisers see.
+    if (isScheduled(event) && !organizer) throw new NotFoundException('Event not found');
     const [myCharacters, assignments] = await Promise.all([
       this.entries.characterOptions(guild, req.user.discordId),
       this.assignments.list(event.id),
@@ -291,6 +313,7 @@ export class SignupController {
       layout: EVENT_KINDS[event.kind],
       title: event.title,
       description: event.description,
+      location: event.location,
       startsAt: event.startsAt.toISOString(),
       timezone: event.timezone,
       serverTimezone: serverTime,
@@ -298,6 +321,11 @@ export class SignupController {
       lockMode: event.lockMode,
       closed: isClosed(event),
       archivedAt: event.archivedAt?.toISOString() ?? null,
+      // Scheduled: when the post goes out (and in the event's timezone, for the edit form), and
+      // why the last attempt failed, if it did.
+      publishAt: event.publishAt?.toISOString() ?? null,
+      publishLocal: event.publishAt ? localParts(event.publishAt, event.timezone) : null,
+      publishError: event.publishError,
       createdByName: event.createdByName,
       isOwner: event.createdByDiscordId === req.user.discordId,
       channel: { serverId: event.serverId, channelId: event.channelId },
@@ -387,6 +415,19 @@ export class SignupController {
   ): Promise<void> {
     const { event } = await this.eventContext(req, guildId, eventId, 'manage');
     await this.events.archive(event.id);
+    this.realtime.publish(guildId, 'signup');
+  }
+
+  /** Posts a scheduled event now instead of at its time. */
+  @Post('events/:eventId/publish')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async publish(
+    @Req() req: AuthenticatedRequest,
+    @Param('guildId') guildId: string,
+    @Param('eventId') eventId: string,
+  ): Promise<void> {
+    const { event } = await this.eventContext(req, guildId, eventId, 'manage');
+    await this.events.publish(event.id);
     this.realtime.publish(guildId, 'signup');
   }
 
@@ -510,6 +551,7 @@ export class SignupController {
     @Body() body: Body,
   ): Promise<void> {
     const { event } = await this.eventContext(req, guildId, eventId, 'organize');
+    assertPosted(event);
     await this.events.postSetup(event.id, body.mention === true);
     this.realtime.publish(guildId, 'signup');
   }
@@ -546,6 +588,7 @@ export class SignupController {
     @Body() body: Body,
   ): Promise<{ delivered: boolean; sentAt: string }> {
     const { guild, event } = await this.eventContext(req, guildId, eventId, 'organize');
+    assertPosted(event);
     return this.reminders.remind(
       guild,
       event,
@@ -653,6 +696,7 @@ export class SignupController {
     @Param('eventId') eventId: string,
   ): Promise<void> {
     const { event } = await this.eventContext(req, guildId, eventId, 'organize');
+    assertPosted(event);
     assertHasAssignments(event);
     await this.assignments.postAll(event);
   }
@@ -758,9 +802,22 @@ export class SignupController {
       zone,
     );
     if (typeof startsAt === 'string') throw new BadRequestException(startsAt);
+    // Scheduling: `publishDate` and `publishTime`, in the same timezone as the event.
+    let publishAt: Date | undefined;
+    if (typeof body.publishDate === 'string' && body.publishDate !== '') {
+      const parsed = parseEventStart(
+        body.publishDate,
+        typeof body.publishTime === 'string' ? body.publishTime : '',
+        zone,
+      );
+      if (typeof parsed === 'string') throw new BadRequestException(`Posting time: ${parsed}`);
+      publishAt = parsed;
+    }
     return {
+      publishAt,
       title: typeof body.title === 'string' ? body.title : '',
       description: typeof body.description === 'string' ? body.description : '',
+      location: typeof body.location === 'string' ? body.location : '',
       startsAt,
       timezone: zone,
     };

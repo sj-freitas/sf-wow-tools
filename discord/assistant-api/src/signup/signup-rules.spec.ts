@@ -32,6 +32,10 @@ describe('isClosed', () => {
     assert.equal(isClosed({ lockMode: 'UNLOCKED', startsAt: later, archivedAt: null }, NOW), false);
   });
 
+  it('a scheduled event (not posted yet) is closed', () => {
+    assert.equal(isClosed({ lockMode: 'UNLOCKED', startsAt: later, publishAt: later }, NOW), true);
+  });
+
   it('LOCKED and UNLOCKED ignore the time', () => {
     assert.equal(isClosed({ lockMode: 'LOCKED', startsAt: later }, NOW), true);
     assert.equal(isClosed({ lockMode: 'UNLOCKED', startsAt: earlier }, NOW), false);

@@ -92,7 +92,8 @@ export function AssignmentsTab({
               <button
                 type="button"
                 className="btn btn-sm"
-                disabled={busy}
+                disabled={busy || event.publishAt !== null}
+                title={event.publishAt ? 'The event isn’t posted yet: post it first.' : undefined}
                 onClick={() => run(() => postAssignments(guild.id, event.id))}
               >
                 {busy ? (

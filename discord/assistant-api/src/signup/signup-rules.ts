@@ -16,16 +16,30 @@ import type { EventKindConfig } from './event-kinds';
 
 export const MAX_TITLE_LENGTH = 100;
 export const MAX_DESCRIPTION_LENGTH = 2000;
+export const MAX_LOCATION_LENGTH = 100;
 export const MAX_NOTE_LENGTH = 200;
 
-/** Whether sign-ups are closed: archived, locked by hand, or (AUTO) the event has started. */
+/**
+ * Whether sign-ups are closed: archived, scheduled (not posted yet), locked by hand, or (AUTO)
+ * the event has started.
+ */
 export const isClosed = (
-  event: { lockMode: SignupLockMode; startsAt: Date; archivedAt?: Date | null },
+  event: {
+    lockMode: SignupLockMode;
+    startsAt: Date;
+    archivedAt?: Date | null;
+    publishAt?: Date | null;
+  },
   now: Date = new Date(),
 ): boolean =>
   (event.archivedAt ?? null) !== null ||
+  (event.publishAt ?? null) !== null ||
   event.lockMode === 'LOCKED' ||
   (event.lockMode === 'AUTO' && event.startsAt <= now);
+
+/** Scheduled: saved, but its sign-up post isn't in Discord yet (the worker posts it later). */
+export const isScheduled = (event: { publishAt?: Date | null }): boolean =>
+  (event.publishAt ?? null) !== null;
 
 export interface SignupViewer {
   discordId: string;

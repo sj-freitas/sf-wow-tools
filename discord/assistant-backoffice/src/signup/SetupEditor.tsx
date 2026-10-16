@@ -292,7 +292,8 @@ export function SetupEditor({
           <button
             type="button"
             className="btn btn-primary"
-            disabled={busy}
+            disabled={busy || event.publishAt !== null}
+            title={event.publishAt ? 'The event isn’t posted yet: post it first.' : undefined}
             onClick={() =>
               run(async () => {
                 if (dirty) await save();

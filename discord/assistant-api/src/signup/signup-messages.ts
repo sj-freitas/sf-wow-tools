@@ -22,6 +22,8 @@ export interface EventView {
   id: string;
   title: string;
   description: string;
+  /** Where (a dungeon, raid or any place); empty when not given. */
+  location: string;
   startsAt: Date;
   closed: boolean;
   createdByName: string;
@@ -183,6 +185,7 @@ export function renderEventMessage(
   }
 
   const header = [
+    ...(event.location.trim() ? [`📍 ${event.location.trim()}`] : []),
     `🗓️ ${discordTimestamp(event.startsAt, 'F')} · ⏳ ${discordTimestamp(event.startsAt, 'R')}`,
     `${look.leader || '👑'} ${event.createdByName} · 👥 **${coming}**${tentative > 0 ? ` (+${tentative})` : ''}`,
   ].join('\n');

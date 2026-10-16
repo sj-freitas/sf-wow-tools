@@ -14,6 +14,7 @@ const EVENT: EventView = {
   id: '0b6f3c2e-5d4a-4f1b-9c8d-7e6f5a4b3c2d',
   title: 'Naxxramas',
   description: 'Bring flasks.',
+  location: '',
   startsAt: new Date('2026-10-20T18:00:00Z'),
   closed: false,
   createdByName: 'Shivan',
@@ -260,5 +261,13 @@ describe('role and leader icons', () => {
       { role: () => '<:r_tank_1:1>' },
     );
     assert.equal(fieldsOf(message)[0].value, '<:r_tank_1:1> Tanky' + GAP);
+  });
+});
+
+describe('location', () => {
+  it('shows above the time when given, and nothing when empty', () => {
+    const withLocation = renderEventMessage({ ...EVENT, location: 'Naxxramas' }, []);
+    assert.match(withLocation.embeds?.[0].description ?? '', /\n\n📍 Naxxramas\n🗓️ <t:/);
+    assert.doesNotMatch(renderEventMessage(EVENT, []).embeds?.[0].description ?? '', /📍/);
   });
 });

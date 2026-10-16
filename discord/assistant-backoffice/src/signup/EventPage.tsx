@@ -21,6 +21,7 @@ import {
   archiveEvent,
   deleteEvent,
   fetchEvent,
+  publishEvent,
   restoreEvent,
   setEventLock,
   type SignupEvent,
@@ -117,9 +118,10 @@ export function EventPage({ guild }: { guild: Guild }) {
         <div className="signup-event-title">
           <h3>{event.title}</h3>
           <span className={event.closed ? 'badge' : 'badge badge-main'}>
-            {event.closed ? '🔒 Closed' : 'Open'}
+            {event.publishAt ? '🕒 Scheduled' : event.closed ? '🔒 Closed' : 'Open'}
           </span>
         </div>
+        {event.location && <p className="signup-when">📍 {event.location}</p>}
         <p className="signup-when">
           🗓️ {formatEventTime(event.startsAt, event.timezone)}{' '}
           <span className="muted">{zoneLabel(event.timezone, event.serverTimezone)}</span>
@@ -144,6 +146,30 @@ export function EventPage({ guild }: { guild: Guild }) {
           </div>
         )}
 
+        {event.publishAt && (
+          <div className="banner signup-archived">
+            <span>
+              🕒 Scheduled: the post goes out {formatEventTime(event.publishAt, event.timezone)}.
+              Until then only organisers see this event, and sign-ups are closed.
+              {event.publishError && (
+                <span className="status-error">
+                  {' '}
+                  The last try failed: {event.publishError} It is tried again every minute.
+                </span>
+              )}
+            </span>
+            {event.permissions.canManage && (
+              <button
+                type="button"
+                className="btn btn-sm btn-primary"
+                disabled={busy}
+                onClick={() => act(() => publishEvent(guild.id, event.id))}
+              >
+                Post now
+              </button>
+            )}
+          </div>
+        )}
         {archived && (
           <div className="banner signup-archived">
             <span>

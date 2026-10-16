@@ -152,7 +152,9 @@ export function MissingTab({
       </div>
       {!event.postUrl && (
         <p className="status-error">
-          The event is not in Discord; post it again to send reminders.
+          {event.publishAt
+            ? 'The event isn’t posted yet: reminders can be sent once it is.'
+            : 'The event is not in Discord; post it again to send reminders.'}
         </p>
       )}
       {error && <p className="status-error">{error}</p>}

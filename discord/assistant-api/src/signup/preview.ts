@@ -93,6 +93,7 @@ function main(): void {
     id: '0b6f3c2e-5d4a-4f1b-9c8d-7e6f5a4b3c2d',
     title: members ? 'Social night at the inn' : 'Black Temple',
     description: members ? 'Drinks, music and bad dancing.' : '3SR. Bring flasks and pots.',
+    location: members ? 'The Slaughtered Lamb, Stormwind' : 'Black Temple',
     startsAt: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
     closed: false,
     createdByName: 'Blitzrn',

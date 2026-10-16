@@ -48,7 +48,10 @@ export interface EventSummary {
   closed: boolean;
   /** When it was archived; null for an event that isn't. */
   archivedAt: string | null;
+  /** Scheduled: when its post goes out (only organisers see these); null once posted. */
+  publishAt: string | null;
   kind: EventKind;
+  location: string;
   createdByName: string;
   counts: Record<SignupStatus, number>;
   myStatus: SignupStatus | null;
@@ -110,6 +113,8 @@ export interface SignupEvent {
   layout: EventLayout;
   title: string;
   description: string;
+  /** Where: a dungeon or raid, or any place; empty when not given. */
+  location: string;
   startsAt: string;
   /** The zone the time was entered in, and the guild's server time. */
   timezone: string;
@@ -120,6 +125,12 @@ export interface SignupEvent {
   closed: boolean;
   /** Archived (read-only, not in Discord) since then; null for an event that isn't. */
   archivedAt: string | null;
+  /** Scheduled: when its post goes out; null once posted (or posted at once). */
+  publishAt: string | null;
+  /** The same in the event's timezone, for the edit form. */
+  publishLocal: { date: string; time: string } | null;
+  /** Why the last attempt to post it failed (it's tried again each minute). */
+  publishError: string | null;
   createdByName: string;
   isOwner: boolean;
   channel: { serverId: string; channelId: string };
@@ -142,6 +153,8 @@ export interface SignupEvent {
 export interface EventForm {
   title: string;
   description: string;
+  /** Optional. */
+  location?: string;
   /** YYYY-MM-DD and HH:mm in `timezone` (`ST` for server time). */
   date: string;
   time: string;
@@ -150,6 +163,12 @@ export interface EventForm {
   channel?: { serverId: string; channelId: string };
   /** Only when creating (it can't change later); left out = characters. */
   type?: EventKind;
+  /**
+   * Schedule the post (same timezone as the event): YYYY-MM-DD and HH:mm. Left out = post at once.
+   * When editing, only for an event that is still scheduled.
+   */
+  publishDate?: string;
+  publishTime?: string;
 }
 
 export interface SignupInput {
@@ -238,6 +257,10 @@ export const deleteEvent = (guildId: string, eventId: string): Promise<void> =>
 /** Removes the event's messages from Discord and keeps it, read-only, under Archived. */
 export const archiveEvent = (guildId: string, eventId: string): Promise<void> =>
   request('POST', `${ev(guildId, eventId)}/archive`);
+
+/** Posts a scheduled event now instead of at its time. */
+export const publishEvent = (guildId: string, eventId: string): Promise<void> =>
+  request('POST', `${ev(guildId, eventId)}/publish`);
 
 /** Takes an archived event back out and posts it again. */
 export const restoreEvent = (guildId: string, eventId: string): Promise<void> =>

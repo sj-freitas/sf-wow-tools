@@ -34,11 +34,18 @@ export function EventFormPage({ guild, serverTimezone }: { guild: Guild; serverT
   const [loaded, setLoaded] = useState(!editing);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [location, setLocation] = useState('');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('20:00');
   const [timezone, setTimezone] = useState('ST');
   const [channel, setChannel] = useState('');
   const [kind, setKind] = useState<EventKind>('CHARACTERS');
+  // When the post goes out: now, or later (date and time in the event's timezone). Editing shows
+  // it only for an event that is still scheduled.
+  const [postLater, setPostLater] = useState(false);
+  const [canSchedule, setCanSchedule] = useState(!editing);
+  const [publishDate, setPublishDate] = useState('');
+  const [publishTime, setPublishTime] = useState('18:00');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const zones = useMemo(allTimezones, []);
@@ -58,9 +65,18 @@ export function EventFormPage({ guild, serverTimezone }: { guild: Guild; serverT
       .then((event) => {
         setTitle(event.title);
         setDescription(event.description);
+        setLocation(event.location);
         setDate(event.local.date);
         setTime(event.local.time);
         setTimezone(event.timezone === event.serverTimezone ? 'ST' : event.timezone);
+        if (event.publishLocal) {
+          setCanSchedule(true);
+          setPostLater(true);
+          setPublishDate(event.publishLocal.date);
+          setPublishTime(event.publishLocal.time);
+        } else {
+          setCanSchedule(false);
+        }
         setLoaded(true);
       })
       .catch((err: unknown) => setError(errorText(err)));
@@ -75,11 +91,13 @@ export function EventFormPage({ guild, serverTimezone }: { guild: Guild; serverT
     const form = {
       title,
       description,
+      location,
       date,
       time,
       timezone,
       ...(!editing && settings?.isOfficer && channel ? { channel: splitChannelKey(channel) } : {}),
       ...(!editing ? { type: kind } : {}),
+      ...(canSchedule && postLater ? { publishDate, publishTime } : {}),
     };
     const saved = eventId
       ? updateEvent(guild.id, eventId, form).then(() => eventId)
@@ -126,6 +144,15 @@ export function EventFormPage({ guild, serverTimezone }: { guild: Guild; serverT
           />
         </label>
         <label className="field field-wide">
+          Location (optional)
+          <input
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+            maxLength={100}
+            placeholder="e.g. Naxxramas, or Goldshire inn"
+          />
+        </label>
+        <label className="field field-wide">
           Description
           <textarea
             value={description}
@@ -161,6 +188,54 @@ export function EventFormPage({ guild, serverTimezone }: { guild: Guild; serverT
           </select>
           <small>Discord shows everyone the time in their own timezone.</small>
         </label>
+        {canSchedule && (
+          <fieldset className="field field-wide signup-post-when">
+            <legend>Post</legend>
+            <label className="field-toggle">
+              <input
+                type="radio"
+                name="post-when"
+                checked={!postLater}
+                disabled={editing}
+                onChange={() => setPostLater(false)}
+              />
+              {editing ? 'Use “Post now” on the event page' : 'Now'}
+            </label>
+            <label className="field-toggle">
+              <input
+                type="radio"
+                name="post-when"
+                checked={postLater}
+                onChange={() => setPostLater(true)}
+              />
+              At a date and time
+            </label>
+            {postLater && (
+              <div className="signup-post-at">
+                <input
+                  type="date"
+                  aria-label="Posting date"
+                  value={publishDate}
+                  max={date || undefined}
+                  onChange={(e) => setPublishDate(e.target.value)}
+                  required
+                />
+                <input
+                  type="time"
+                  aria-label="Posting time"
+                  value={publishTime}
+                  onChange={(e) => setPublishTime(e.target.value)}
+                  required
+                />
+              </div>
+            )}
+            <small>
+              {postLater
+                ? 'Saved now and posted then, in the same timezone as the event. Until then only organisers see it, and you can keep editing it and prepare its setup and assignments.'
+                : 'Posted in Discord as soon as you create it.'}
+            </small>
+          </fieldset>
+        )}
         {!editing && (
           <ChannelField guild={guild} settings={settings} value={channel} onChange={setChannel} />
         )}
@@ -172,6 +247,8 @@ export function EventFormPage({ guild, serverTimezone }: { guild: Guild; serverT
             <InlineSpinner label={editing ? 'Saving…' : 'Posting…'} />
           ) : editing ? (
             'Save'
+          ) : postLater ? (
+            'Create and schedule'
           ) : (
             'Create and post'
           )}

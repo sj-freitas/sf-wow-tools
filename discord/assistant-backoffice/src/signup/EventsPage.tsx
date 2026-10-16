@@ -162,7 +162,11 @@ export function EventsPage({ guild, timezone }: { guild: Guild; timezone: string
               <div className="signup-event-card-head">
                 <strong>{event.title}</strong>
                 {event.kind === 'MEMBERS' && <span className="badge">Members</span>}
-                {event.archivedAt ? (
+                {event.publishAt ? (
+                  <span className="badge">
+                    🕒 Scheduled · posts {formatEventTime(event.publishAt, event.timezone)}
+                  </span>
+                ) : event.archivedAt ? (
                   <span className="badge">Archived</span>
                 ) : (
                   event.closed && <span className="badge">Closed</span>
@@ -174,7 +178,8 @@ export function EventsPage({ guild, timezone }: { guild: Guild; timezone: string
                 )}
               </div>
               <span className="muted">
-                {formatEventTime(event.startsAt, event.timezone)} · by {event.createdByName}
+                {formatEventTime(event.startsAt, event.timezone)}
+                {event.location && ` · 📍 ${event.location}`} · by {event.createdByName}
               </span>
               <span className="signup-counts">
                 {(['AVAILABLE', 'LATE', 'TENTATIVE', 'ABSENT'] as const).map((status) => (
