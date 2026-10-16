@@ -121,7 +121,7 @@ export function EventFormPage({ guild, serverTimezone }: { guild: Guild; serverT
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             maxLength={MAX_TITLE}
-            placeholder="e.g. Naxxramas — first clear"
+            placeholder="e.g. Molten Core, Warsong Gulch, Guild Meeting"
             required
           />
         </label>
