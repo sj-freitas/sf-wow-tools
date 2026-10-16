@@ -781,9 +781,10 @@ up in `src/signup/event-kinds.ts`, which is the config for both:
 changed), a silver crown for raid assists, and a bag for the master looter. Officers get assist
 when they sign up; on the Raid setup (or Invited) tab organisers change the leader, the master
 looter (optional) and who has assist, saved with the setup (`signup_events.leader_discord_user_id`,
-`master_looter_discord_user_id`, `signup_entries.assist`). The sign-up post shows location, date and
-countdown on a line each, the number coming in its title ("First Guild Meeting - 👥 8 (+2)"), and
-no longer the leader.
+`master_looter_discord_user_id`, `signup_entries.assist`). The sign-up post shows, right under its title and before the description, the 📍 location
+and then the date and countdown on one line ("🗓️ Sunday, 1 November 2026 at 19:00 - ⏳ in 16
+days"); the number coming is in its title ("First Guild Meeting - 👥 8 (+2)", the + counting late
+and tentative), and the leader is no longer shown.
 
 **Scheduling.** On the website's form, **Post: At a date and time** (in the event's timezone,
 before it starts) saves the event without posting it; the worker posts it then. Until then it is
@@ -792,8 +793,8 @@ closed for sign-ups, and it can be edited and its setup and assignments prepared
 **Post now** posts it early. If Discord refuses, it stays scheduled, the reason shows on its page,
 and the worker tries again each minute. `/create-event` always posts at once.
 
-**Location** (optional, any text: a dungeon, a raid, a place) shows as `📍 …` in the post, above
-the time; `/create-event location:` or the website's form.
+**Location** (optional, any text: a dungeon, a raid, a place) shows as `📍 …` at the top of the
+post, above the time; `/create-event location:` or the website's form.
 
 An event is archived with **Archive event** on its page (the owner and Officers),
 or on its own when its sign-up post is deleted in Discord: the worker's live connection notices

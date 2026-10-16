@@ -94,7 +94,7 @@ describe('renderEventMessage', () => {
     assert.equal(fields[8].value, '`4` Discord d' + GAP);
   });
 
-  it('shows when and how long until, one per line, and the count in the title', () => {
+  it('shows when and how long until on one line above the description, and the count in the title', () => {
     const message = renderEventMessage(EVENT, [
       entry({ id: 'a' }),
       entry({ id: 'b', status: 'LATE' }),
@@ -102,7 +102,7 @@ describe('renderEventMessage', () => {
       entry({ id: 'd', status: 'ABSENT' }),
     ]);
     const description = message.embeds?.[0].description ?? '';
-    assert.match(description, /^Bring flasks\.\n\n🗓️ <t:\d+:F>\n⏳ <t:\d+:R>$/);
+    assert.match(description, /^🗓️ <t:\d+:F> - ⏳ <t:\d+:R>\n\nBring flasks\.$/);
     // In the title: 1 signed up, (+2) late or tentative; absent not counted.
     assert.equal(message.embeds?.[0].title, 'Naxxramas - 👥 1 (+2)');
     // The leader isn't in the post (the setup shows them).
@@ -269,9 +269,9 @@ describe('role and leader icons', () => {
 });
 
 describe('location', () => {
-  it('shows above the time when given, and nothing when empty', () => {
+  it('shows first, above the time, when given, and nothing when empty', () => {
     const withLocation = renderEventMessage({ ...EVENT, location: 'Naxxramas' }, []);
-    assert.match(withLocation.embeds?.[0].description ?? '', /\n\n📍 Naxxramas\n🗓️ <t:/);
+    assert.match(withLocation.embeds?.[0].description ?? '', /^📍 Naxxramas\n🗓️ <t:/);
     assert.doesNotMatch(renderEventMessage(EVENT, []).embeds?.[0].description ?? '', /📍/);
   });
 });

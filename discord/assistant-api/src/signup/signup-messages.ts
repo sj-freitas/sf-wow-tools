@@ -196,18 +196,17 @@ export function renderEventMessage(
     });
   }
 
-  // One line each: where, when, and how long until.
+  // Right under the title, before the description: where, then when and how long until.
   const header = [
     ...(event.location.trim() ? [`📍 ${event.location.trim()}`] : []),
-    `🗓️ ${discordTimestamp(event.startsAt, 'F')}`,
-    `⏳ ${discordTimestamp(event.startsAt, 'R')}`,
+    `🗓️ ${discordTimestamp(event.startsAt, 'F')} - ⏳ ${discordTimestamp(event.startsAt, 'R')}`,
   ].join('\n');
   // How many are coming goes in the title (the link): "First Guild Meeting - 👥 8 (+2)".
   const count = ` - 👥 ${coming}${maybe > 0 ? ` (+${maybe})` : ''}`;
   const embed: APIEmbed = {
     title: event.title.slice(0, MAX_TITLE - count.length) + count,
     url: event.eventUrl,
-    description: [event.description.trim(), header].filter((part) => part !== '').join('\n\n'),
+    description: [header, event.description.trim()].filter((part) => part !== '').join('\n\n'),
     color: COLOR,
     fields,
     ...(event.closed ? { footer: { text: '🔒 Sign-ups are closed' } } : {}),
