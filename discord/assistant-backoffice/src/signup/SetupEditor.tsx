@@ -165,14 +165,7 @@ export function SetupEditor({
       className={selected === entry.id ? 'setup-chip setup-chip-selected' : 'setup-chip'}
       title={entry.note ?? undefined}
     >
-      {entry.role && (
-        <>
-          <RoleMark gameVersion={guild.gameVersion} role={entry.role} />
-          <span className="setup-chip-sep" aria-hidden="true">
-            –
-          </span>
-        </>
-      )}
+      {entry.role && <RoleMark gameVersion={guild.gameVersion} role={entry.role} />}
       <ClassMark gameVersion={guild.gameVersion} className={entry.characterClass} />
       <span className="setup-chip-name">{entryName(entry)}</span>
       {entry.status !== 'AVAILABLE' && (

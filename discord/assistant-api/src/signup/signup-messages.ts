@@ -92,9 +92,9 @@ export function nameList(names: readonly string[], limit = MAX_FIELD, separator 
   return items.join(separator);
 }
 
-/** One person in a list: their sign-up number, class colour and name. "`12` 🟠 **Darkshivan**" */
+/** One person in a list: their sign-up number, class icon and name. "`12` 🟠 Darkshivan" */
 const personLine = (entry: EntryView, number: number, dot: ClassDot): string =>
-  [`\`${number}\``, dot(entry.characterClass), `**${entryName(entry)}**`]
+  [`\`${number}\``, dot(entry.characterClass), entryName(entry)]
     .filter((part) => part !== '')
     .join(' ');
 
@@ -244,12 +244,8 @@ export function renderSetupMessage(
     if (members.length === 0) continue;
     placed.push(...members);
     const lines = members.map((entry) =>
-      // "🛡️ – <icon> Name": the dash keeps the role emoji and the class icon apart.
-      [
-        entry.role ? `${roleIconOf(look, entry.role)} –` : '',
-        dot(entry.characterClass),
-        entryName(entry),
-      ]
+      // "<role icon> <class icon> Name".
+      [entry.role ? roleIconOf(look, entry.role) : '', dot(entry.characterClass), entryName(entry)]
         .filter((part) => part !== '')
         .join(' '),
     );

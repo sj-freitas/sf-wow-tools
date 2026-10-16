@@ -368,12 +368,7 @@
   border-color: var(--accent);
 }
 
-/* In a setup chip the gap already separates the icon from the name. The role emoji and the class
-   icon get a dash between them, so the two pictures don't run together. */
-.setup-chip-sep {
-  color: var(--muted);
-  margin: 0 0.1rem;
-}
+/* In a setup chip the gap already separates the role icon, the class icon and the name. */
 .setup-chip .class-icon,
 .setup-chip .class-dot {
   margin-right: 0;

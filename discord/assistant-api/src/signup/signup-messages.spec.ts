@@ -83,14 +83,11 @@ describe('renderEventMessage', () => {
       ],
     );
     // Numbered in sign-up order, one per line, no class names.
-    assert.equal(
-      fields[0].value,
-      '`1` <:c_warrior:1> **Darkshivan**\n`6` <:c_warrior:1> **Aaron**' + GAP,
-    );
-    assert.equal(fields[1].value, '`2` **Tearyn**' + GAP);
+    assert.equal(fields[0].value, '`1` <:c_warrior:1> Darkshivan\n`6` <:c_warrior:1> Aaron' + GAP);
+    assert.equal(fields[1].value, '`2` Tearyn' + GAP);
     assert.equal(fields[3].value, '—' + GAP);
-    assert.equal(fields[6].value, '`3` **Late Guy**' + GAP);
-    assert.equal(fields[8].value, '`4` **Discord d**' + GAP);
+    assert.equal(fields[6].value, '`3` Late Guy' + GAP);
+    assert.equal(fields[8].value, '`4` Discord d' + GAP);
   });
 
   it('shows the leader, the time, and how many are coming (+ tentative)', () => {
@@ -147,7 +144,7 @@ describe('renderSetupMessage', () => {
     const message = renderSetupMessage(EVENT, entries, false);
     const fields = (message.embeds?.[0].fields ?? []) as Field[];
     assert.deepEqual(fields, [
-      { name: 'Group 2:', value: '🛡️ – First\n💚 – Second' + GAP, inline: true },
+      { name: 'Group 2:', value: '🛡️ First\n💚 Second' + GAP, inline: true },
     ]);
     assert.equal(message.content, '');
     assert.equal(message.mention, false);
@@ -208,7 +205,7 @@ describe('a members event', () => {
       fields.map((field) => field.name),
       ['✅ Signed up (1)', '⏰ Late (1)'],
     );
-    assert.equal(fields[0].value, '`1` **Shivan**' + GAP);
+    assert.equal(fields[0].value, '`1` Shivan' + GAP);
     assert.ok(!buttonsOf(message).some((button) => button.label === 'Add character'));
   });
 
@@ -251,6 +248,6 @@ describe('role and leader icons', () => {
       false,
       { role: () => '<:r_tank_1:1>' },
     );
-    assert.equal(fieldsOf(message)[0].value, '<:r_tank_1:1> – Tanky' + GAP);
+    assert.equal(fieldsOf(message)[0].value, '<:r_tank_1:1> Tanky' + GAP);
   });
 });
