@@ -86,12 +86,9 @@
 .signup-event-head > p {
   margin: 0;
 }
+/* The description: the Discord-style box of DiscordMarkdown (.md-preview) is the only frame. */
 .signup-description {
-  padding: 0.75rem 1rem;
-  border-left: 3px solid var(--accent);
-  background: var(--surface-2);
-  border-radius: 0 6px 6px 0;
-  overflow-wrap: anywhere;
+  min-width: 0;
 }
 
 /* ---- sign-up form ---- */
