@@ -102,7 +102,9 @@ describe('renderEventMessage', () => {
       entry({ id: 'd', status: 'ABSENT' }),
     ]);
     const description = message.embeds?.[0].description ?? '';
-    assert.match(description, /^🗓️ <t:\d+:F> - ⏳ <t:\d+:R>\n\nBring flasks\.$/);
+    // A blank line (GAP) between it and the lists.
+    assert.equal(description.endsWith('Bring flasks.' + GAP), true);
+    assert.match(description, /^🗓️ <t:\d+:F> - ⏳ <t:\d+:R>\n\nBring flasks\./);
     // In the title: 1 signed up, (+2) late or tentative; absent not counted.
     assert.equal(message.embeds?.[0].title, 'Naxxramas - 👥 1 (+2)');
     // The leader isn't in the post (the setup shows them).

@@ -206,7 +206,10 @@ export function renderEventMessage(
   const embed: APIEmbed = {
     title: event.title.slice(0, MAX_TITLE - count.length) + count,
     url: event.eventUrl,
-    description: [header, event.description.trim()].filter((part) => part !== '').join('\n\n'),
+    // Ends with a blank line (GAP; Discord drops plain trailing ones) so the lists below don't
+    // sit right against it.
+    description:
+      [header, event.description.trim()].filter((part) => part !== '').join('\n\n') + GAP,
     color: COLOR,
     fields,
     ...(event.closed ? { footer: { text: '🔒 Sign-ups are closed' } } : {}),
