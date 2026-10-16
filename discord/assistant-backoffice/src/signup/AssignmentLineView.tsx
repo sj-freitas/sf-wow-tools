@@ -1,27 +1,13 @@
-import { useState } from 'react';
-import { entryName, MARKERS } from './labels';
+import { Fragment } from 'react';
+import { MARKERS } from './labels';
+import { MarkerMark } from './MarkerMark';
+import { PlayerMark } from './PlayerMark';
 import type { AssignmentLine, Entry } from './signupApi';
 
-/** Served by the API from `src/game/<version>/raid-markers/<Marker>.png`. */
-const markerUrl = (gameVersion: string, marker: string): string =>
-  `/api/public/games/${encodeURIComponent(gameVersion)}/markers/${encodeURIComponent(marker)}/icon`;
-
-/** A raid marker as its icon, or "[Skull]" when it has none (as in Discord). */
-function MarkerMark({ gameVersion, label }: { gameVersion: string; label: string }) {
-  const [noIcon, setNoIcon] = useState(false);
-  if (noIcon) return <>[{label}]</>;
-  return (
-    <img
-      className="marker-icon"
-      src={markerUrl(gameVersion, label)}
-      alt={label}
-      title={label}
-      onError={() => setNoIcon(true)}
-    />
-  );
-}
-
-/** One assignment line the way Discord shows it: players, the task, and the target. */
+/**
+ * One assignment line the way Discord shows it: the players (with their role and class icons),
+ * the task, and the target (a raid marker's icon, or another player).
+ */
 export function AssignmentLineView({
   line,
   entries,
@@ -31,15 +17,18 @@ export function AssignmentLineView({
   entries: Entry[];
   gameVersion: string;
 }) {
-  const name = (id: string) => {
-    const entry = entries.find((e) => e.id === id);
-    return entry ? entryName(entry) : null;
-  };
-  const players = line.entryIds.map(name).filter((n): n is string => n !== null);
+  const find = (id: string) => entries.find((e) => e.id === id) ?? null;
+  const players = line.entryIds.map(find).filter((e): e is Entry => e !== null);
   const target = line.target;
+  const targetPlayer = target?.kind === 'player' ? find(target.entryId) : null;
   return (
     <>
-      {players.length > 0 && <strong>{players.join(', ')}</strong>}
+      {players.map((entry, i) => (
+        <Fragment key={entry.id}>
+          {i > 0 && ', '}
+          <PlayerMark gameVersion={gameVersion} entry={entry} bold />
+        </Fragment>
+      ))}
       {line.task && ` ${line.task}`}
       {target?.kind === 'marker' && (
         <>
@@ -50,10 +39,10 @@ export function AssignmentLineView({
           />
         </>
       )}
-      {target?.kind === 'player' && name(target.entryId) && (
+      {targetPlayer && (
         <>
           {' '}
-          <strong>{name(target.entryId)}</strong>
+          <PlayerMark gameVersion={gameVersion} entry={targetPlayer} bold />
         </>
       )}
     </>

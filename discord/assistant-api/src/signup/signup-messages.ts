@@ -310,14 +310,24 @@ export function renderAssignmentMessage(
   entries: readonly EntryView[],
   /** A raid marker's emoji by name (`Skull`), or '' to write the marker as text. */
   markerEmoji: (marker: string) => string = () => '',
+  /** The role and class icons put in front of each player, as on the sign-up post. */
+  look: Look = {},
 ): RichMessage {
   const byId = new Map(entries.map((entry) => [entry.id, entry]));
   const nameOf = (entryId: string) => {
     const entry = byId.get(entryId);
     return entry ? entryName(entry) : null;
   };
+  const dot = dotOf(look);
+  const iconsOf = (entryId: string) => {
+    const entry = byId.get(entryId);
+    if (!entry) return '';
+    return [entry.role ? roleIconOf(look, entry.role) : '', dot(entry.characterClass)]
+      .filter((part) => part !== '')
+      .join(' ');
+  };
   const lines = assignment.lines
-    .map((line) => renderLine(line, nameOf, markerEmoji))
+    .map((line) => renderLine(line, nameOf, markerEmoji, iconsOf))
     .filter((line): line is string => line !== null);
   const heading = `### ${assignment.title}\n-# ${scopeHeading(assignment.scope, assignment.scopeLabel)}`;
   const mentioned = assignment.mentions

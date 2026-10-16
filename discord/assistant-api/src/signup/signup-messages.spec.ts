@@ -174,9 +174,20 @@ describe('renderAssignmentMessage', () => {
     const message = renderAssignmentMessage(assignment, entries);
     assert.equal(
       message.content,
-      '### Healers\n-# Boss · Patchwerk\n• **Darkshivan** heals **Tearyn**',
+      '### Healers\n-# Boss · Patchwerk\n• 💚 **Darkshivan** heals 💚 **Tearyn**',
     );
     assert.equal(message.mention, false);
+  });
+
+  it('puts role and class icons in front of the players and the target player', () => {
+    const message = renderAssignmentMessage(assignment, entries, () => '', {
+      role: () => '<:r_healer:1>',
+      dot: () => '<:i_priest:2>',
+    });
+    assert.match(
+      message.content ?? '',
+      /• <:r_healer:1> <:i_priest:2> \*\*Darkshivan\*\* heals <:r_healer:1> <:i_priest:2> \*\*Tearyn\*\*/,
+    );
   });
 
   it('mentions the assigned players (not the targets) when its toggle is on', () => {

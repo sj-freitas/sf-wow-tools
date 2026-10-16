@@ -4,7 +4,10 @@ import { MultiSelect } from '../MultiSelect';
 import type { Guild } from '../types';
 import { AssignmentLineView } from './AssignmentLineView';
 import { lineText } from './assignmentText';
-import { MARKERS, ROLE_EMOJI, SCOPE_LABELS, entryName, errorText } from './labels';
+import { ClassMark } from '../ClassMark';
+import { RoleMark } from '../RoleMark';
+import { SCOPE_LABELS, entryName, errorText } from './labels';
+import { TargetPicker } from './TargetPicker';
 import {
   assignmentImageUrl,
   createAssignment,
@@ -13,28 +16,12 @@ import {
   type Assignment,
   type AssignmentLine,
   type AssignmentScope,
-  type AssignmentTarget,
-  type Marker,
   type SignupEvent,
 } from './signupApi';
 
 const MAX_IMAGES = 4;
 const SCOPES: AssignmentScope[] = ['GLOBAL', 'RAID', 'BOSS'];
 const emptyLine = (): AssignmentLine => ({ entryIds: [], task: '', target: null });
-
-/** A target as one dropdown value: '', `marker:SKULL` or `player:<entry id>`. */
-const targetValue = (target: AssignmentTarget): string =>
-  target === null
-    ? ''
-    : target.kind === 'marker'
-      ? `marker:${target.marker}`
-      : `player:${target.entryId}`;
-function parseTarget(value: string): AssignmentTarget {
-  const [kind, id] = value.split(':');
-  if (kind === 'marker') return { kind: 'marker', marker: id as Marker };
-  if (kind === 'player') return { kind: 'player', entryId: id };
-  return null;
-}
 
 /**
  * Writing an assignment: who it is for (everyone, a raid or a boss), a title, and lines that give
@@ -66,12 +53,18 @@ export function AssignmentEditor({
   const [error, setError] = useState<string | null>(null);
 
   const players = event.entries.filter((entry) => entry.status !== 'ABSENT');
-  const playerOptions = players
-    .map((entry) => ({
-      value: entry.id,
-      label: `${entry.role ? `${ROLE_EMOJI[entry.role]} ` : ''}${entryName(entry)}`,
-    }))
-    .sort((a, b) => a.label.localeCompare(b.label));
+  const sortedPlayers = [...players].sort((a, b) => entryName(a).localeCompare(entryName(b)));
+  // Each player with their role and class icons in the list, as in Discord.
+  const playerOptions = sortedPlayers.map((entry) => ({
+    value: entry.id,
+    label: entryName(entry),
+    icon: (
+      <span className="player-mark">
+        {entry.role && <RoleMark gameVersion={guild.gameVersion} role={entry.role} />}
+        <ClassMark gameVersion={guild.gameVersion} className={entry.characterClass} />
+      </span>
+    ),
+  }));
   const knownLabels = [
     ...new Set(
       event.assignments.filter((a) => a.scope === scope && a.scopeLabel).map((a) => a.scopeLabel),
@@ -189,29 +182,15 @@ export function AssignmentEditor({
                 placeholder="heals / tanks / moves to the end of the room"
               />
             </label>
-            <label className="field">
-              Target
-              <select
-                value={targetValue(line.target)}
-                onChange={(e) => setLine(index, { target: parseTarget(e.target.value) })}
-              >
-                <option value="">No target</option>
-                <optgroup label="Raid markers">
-                  {MARKERS.map(({ marker, label }) => (
-                    <option key={marker} value={`marker:${marker}`}>
-                      {label}
-                    </option>
-                  ))}
-                </optgroup>
-                <optgroup label="Players">
-                  {playerOptions.map((option) => (
-                    <option key={option.value} value={`player:${option.value}`}>
-                      {option.label}
-                    </option>
-                  ))}
-                </optgroup>
-              </select>
-            </label>
+            <div className="field">
+              <span>Target</span>
+              <TargetPicker
+                gameVersion={guild.gameVersion}
+                players={sortedPlayers}
+                value={line.target}
+                onChange={(target) => setLine(index, { target })}
+              />
+            </div>
             <button
               type="button"
               className="btn btn-sm assignment-line-remove"

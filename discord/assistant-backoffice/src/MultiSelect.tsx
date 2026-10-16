@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 
 interface Props<T extends string> {
-  options: { value: T; label: string }[];
+  /** `icon`: shown before the label in the list (the button shows labels only). */
+  options: { value: T; label: string; icon?: ReactNode }[];
   value: T[];
   onChange: (value: T[]) => void;
   placeholder?: string;
@@ -63,6 +64,7 @@ export function MultiSelect<T extends string>({
                 checked={value.includes(option.value)}
                 onChange={() => toggle(option.value)}
               />
+              {option.icon}
               {option.label}
             </label>
           ))}

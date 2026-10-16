@@ -296,6 +296,19 @@
   padding-left: 1.2rem;
   overflow-wrap: anywhere;
 }
+/* A player with their role and class icons; a marker with its name. */
+.player-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  vertical-align: bottom;
+}
+.player-mark .role-icon,
+.player-mark .class-icon,
+.player-mark .class-dot {
+  margin-right: 0;
+}
+
 /* A raid marker in a line, at the size of the text around it. */
 .marker-icon {
   display: inline-block;

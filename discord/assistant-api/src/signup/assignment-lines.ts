@@ -130,20 +130,22 @@ export function renderLine(
   nameOf: (entryId: string) => string | null,
   /** A marker's emoji (`<:m_skull_…:id>`), or '' to write it as text: "[Skull]". */
   markerEmoji: (marker: string) => string = () => '',
+  /** Pictures in front of a player's name (their role and class icons), or ''. */
+  iconsOf: (entryId: string) => string = () => '',
 ): string | null {
-  const players = line.entryIds
-    .map(nameOf)
-    .filter((name): name is string => name !== null)
-    .map((name) => `**${name}**`);
+  const person = (entryId: string): string | null => {
+    const name = nameOf(entryId);
+    if (name === null) return null;
+    const icons = iconsOf(entryId);
+    return icons ? `${icons} **${name}**` : `**${name}**`;
+  };
+  const players = line.entryIds.map(person).filter((name): name is string => name !== null);
   let target = '';
   if (line.target?.kind === 'marker') {
     const label = MARKER_LABELS[line.target.marker];
     target = markerEmoji(label) || `[${label}]`;
   }
-  if (line.target?.kind === 'player') {
-    const name = nameOf(line.target.entryId);
-    if (name) target = `**${name}**`;
-  }
+  if (line.target?.kind === 'player') target = person(line.target.entryId) ?? '';
   const text = [players.join(', '), line.task, target].filter((part) => part !== '').join(' ');
   return text === '' ? null : `• ${text}`;
 }

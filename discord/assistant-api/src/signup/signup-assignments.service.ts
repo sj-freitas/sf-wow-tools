@@ -390,11 +390,15 @@ export class SignupAssignmentsService {
       this.events.loadById(event.id).then((row) => (row?.entries ?? []).map(toEntryView)),
     ]);
     const guild = await this.events.findGuild(event.guildId);
-    const markerOf = await this.emojis.markersFor(guild.gameVersion);
+    const [markerOf, look] = await Promise.all([
+      this.emojis.markersFor(guild.gameVersion),
+      this.events.look(guild),
+    ]);
     const message = renderAssignmentMessage(
       { ...assignment, lines: readLines(assignment.lines) },
       entries,
       (marker) => emojiText(markerOf(marker)),
+      look,
     );
     const files: BotFile[] = assignment.images.map((image, index) => ({
       name: `assignment-${index + 1}.${image.contentType.split('/')[1] ?? 'png'}`,
