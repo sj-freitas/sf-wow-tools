@@ -50,7 +50,27 @@ export const entryName = (entry: EntryView): string => entry.characterName ?? en
 
 /** A class's colour dot as message text (`<:c_druid_ff7c0a:123>`), or '' when there is none. */
 export type ClassDot = (className: string | null) => string;
-const noDots: ClassDot = () => '';
+
+/**
+ * The pictures a post uses, as message text: each class's icon or dot, each role's icon, and the
+ * leader's. Anything left out falls back to plain emoji (🛡️ 💚 🏹 ⚔️ 👑) or nothing (classes).
+ */
+export interface Look {
+  dot?: ClassDot;
+  /** `<:r_tank_…:id>`, or '' to use the role's emoji. */
+  role?: (role: Role) => string;
+  /** `<:r_leader_…:id>`, or '' for 👑. */
+  leader?: string;
+}
+
+const dotOf = (look: Look): ClassDot => look.dot ?? (() => '');
+const roleIconOf = (look: Look, role: Role): string => look.role?.(role) || ROLE_EMOJI[role];
+
+/**
+ * A blank line under a column's names, so the next row of columns (Ranged, Melee under Tank,
+ * Healer) and the lists below don't sit right against it.
+ */
+const GAP = '\n\u200b';
 
 /**
  * Items joined by `separator`, cut short with "+N more" so the field stays within Discord's limit.
@@ -81,6 +101,11 @@ const personLine = (entry: EntryView, number: number, dot: ClassDot): string =>
 /** An empty cell, to keep the role columns two to a row. */
 const SPACER = { name: '\u200b', value: '\u200b', inline: true };
 
+/** The role names the role columns are titled with. */
+const ROLE_TITLES: Record<Role, string> = Object.fromEntries(
+  ROLE_CATEGORIES.map(({ role, label }) => [role, label.split(' ').slice(1).join(' ')]),
+) as Record<Role, string>;
+
 /**
  * A long list as up to three columns side by side (inline fields), the first one titled. Short
  * lists stay one column.
@@ -90,7 +115,9 @@ function columns(title: string, lines: readonly string[]): NonNullable<APIEmbed[
   const perColumn = Math.max(1, Math.ceil(lines.length / count));
   return Array.from({ length: count }, (_, column) => ({
     name: column === 0 ? title : '\u200b',
-    value: nameList(lines.slice(column * perColumn, (column + 1) * perColumn)),
+    value:
+      nameList(lines.slice(column * perColumn, (column + 1) * perColumn), MAX_FIELD - GAP.length) +
+      GAP,
     inline: true,
   }));
 }
@@ -106,8 +133,9 @@ function columns(title: string, lines: readonly string[]): NonNullable<APIEmbed[
 export function renderEventMessage(
   event: EventView,
   entries: readonly EntryView[],
-  dot: ClassDot = noDots,
+  look: Look = {},
 ): RichMessage {
+  const dot = dotOf(look);
   const numbered = entries.map((entry, index) => ({ entry, number: index + 1 }));
   const inStatus = (status: SignupStatus) =>
     numbered.filter(({ entry }) => entry.status === status);
@@ -117,11 +145,15 @@ export function renderEventMessage(
 
   const fields: NonNullable<APIEmbed['fields']> = [];
   if (event.kind.usesCharacters) {
-    for (const [index, { role, label }] of ROLE_CATEGORIES.entries()) {
+    for (const [index, { role }] of ROLE_CATEGORIES.entries()) {
       const inRole = available.filter(({ entry }) => entry.role === role);
       fields.push({
-        name: `${label} (${inRole.length})`,
-        value: nameList(inRole.map(({ entry, number }) => personLine(entry, number, dot))),
+        name: `${roleIconOf(look, role)} ${ROLE_TITLES[role]} (${inRole.length})`,
+        value:
+          nameList(
+            inRole.map(({ entry, number }) => personLine(entry, number, dot)),
+            MAX_FIELD - GAP.length,
+          ) + GAP,
         inline: true,
       });
       if (index % 2 === 1) fields.push(SPACER);
@@ -140,18 +172,19 @@ export function renderEventMessage(
     if (people.length === 0) continue;
     fields.push({
       name: `${label} (${people.length})`,
-      value: nameList(
-        people.map(({ entry, number }) => personLine(entry, number, dot)),
-        MAX_FIELD,
-        ', ',
-      ),
+      value:
+        nameList(
+          people.map(({ entry, number }) => personLine(entry, number, dot)),
+          MAX_FIELD - GAP.length,
+          ', ',
+        ) + GAP,
       inline: false,
     });
   }
 
   const header = [
     `🗓️ ${discordTimestamp(event.startsAt, 'F')} · ⏳ ${discordTimestamp(event.startsAt, 'R')}`,
-    `👑 ${event.createdByName} · 👥 **${coming}**${tentative > 0 ? ` (+${tentative})` : ''}`,
+    `${look.leader || '👑'} ${event.createdByName} · 👥 **${coming}**${tentative > 0 ? ` (+${tentative})` : ''}`,
   ].join('\n');
   const embed: APIEmbed = {
     title: event.title,
@@ -199,8 +232,9 @@ export function renderSetupMessage(
   event: Pick<EventView, 'title' | 'startsAt' | 'eventUrl' | 'kind'>,
   entries: readonly EntryView[],
   mention: boolean,
-  dot: ClassDot = noDots,
+  look: Look = {},
 ): RichMessage {
+  const dot = dotOf(look);
   const fields: NonNullable<APIEmbed['fields']> = [];
   const placed: EntryView[] = [];
   for (let group = 1; group <= event.kind.groupCount; group++) {
@@ -211,16 +245,27 @@ export function renderSetupMessage(
     placed.push(...members);
     const lines = members.map((entry) =>
       // "🛡️ – <icon> Name": the dash keeps the role emoji and the class icon apart.
-      [entry.role ? `${ROLE_EMOJI[entry.role]} –` : '', dot(entry.characterClass), entryName(entry)]
+      [
+        entry.role ? `${roleIconOf(look, entry.role)} –` : '',
+        dot(entry.characterClass),
+        entryName(entry),
+      ]
         .filter((part) => part !== '')
         .join(' '),
     );
-    const name = groupLabel(event.kind, group);
-    // One unlimited group (a members event's invited) can be long: spread it over columns.
+    const label = groupLabel(event.kind, group);
+    // "Group 1:", or for one unlimited group (a members event's invited) "Invited (7):", spread
+    // over columns since it can be long. A blank line under each keeps the rows apart.
     fields.push(
       ...(event.kind.groupSize === null
-        ? columns(`${name} (${members.length})`, lines)
-        : [{ name, value: nameList(lines), inline: true }]),
+        ? columns(`${label} (${members.length}):`, lines)
+        : [
+            {
+              name: `${label}:`,
+              value: nameList(lines, MAX_FIELD - GAP.length) + GAP,
+              inline: true,
+            },
+          ]),
     );
   }
   const embed: APIEmbed = {

@@ -1,17 +1,25 @@
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import type { Prisma, SignupEventKind, SignupLockMode } from '@prisma/client';
+import type { Prisma, Role, SignupEventKind, SignupLockMode } from '@prisma/client';
 import { formatCharacterName } from '../characters/character-name';
 import { PrismaService } from '../database/prisma.service';
 import { DiscordBotService } from '../discord/discord-bot.service';
 import { describeDiscordError, isDiscordError, UNKNOWN_MESSAGE } from '../discord/discord-errors';
 import { ClassEmojiService, emojiText } from './class-emojis.service';
 import { EVENT_KINDS } from './event-kinds';
+
+/** Each role's icon file (`role-icons/<name>.png`). */
+const ROLE_ICON_NAME: Record<Role, string> = {
+  TANK: 'Tank',
+  HEALER: 'Healer',
+  MELEE_DPS: 'Melee',
+  RANGED_DPS: 'Ranged',
+};
 import { addCharacterUrl, eventPageUrl, siteOrigin } from './signup-links';
 import {
   renderEventMessage,
   renderSetupMessage,
-  type ClassDot,
+  type Look,
   type EntryView,
   type EventView,
 } from './signup-messages';
@@ -190,10 +198,20 @@ export class SignupEventsService {
     };
   }
 
-  /** The guild's class colour dots, for the posts (none when Discord's emojis are unavailable). */
-  async dots(guild: Pick<SignupGuild, 'gameVersion'>): Promise<ClassDot> {
-    const emojiOf = await this.classEmojis.forGame(guild.gameVersion);
-    return (className) => emojiText(emojiOf(className));
+  /**
+   * The pictures the guild's posts use: class icons (or colour dots) and role and leader icons,
+   * as Discord emojis of the bot; anything missing falls back to plain emoji.
+   */
+  async look(guild: Pick<SignupGuild, 'gameVersion'>): Promise<Look> {
+    const [classOf, roleOf] = await Promise.all([
+      this.classEmojis.forGame(guild.gameVersion),
+      this.classEmojis.rolesFor(guild.gameVersion),
+    ]);
+    return {
+      dot: (className) => emojiText(classOf(className)),
+      role: (role) => emojiText(roleOf(ROLE_ICON_NAME[role])),
+      leader: emojiText(roleOf('Leader')),
+    };
   }
 
   /** Checks the title and description, trimmed; throws with what is wrong. */
@@ -247,7 +265,7 @@ export class SignupEventsService {
     try {
       const messageId = await this.discord.sendRichMessage(
         channel.channelId,
-        renderEventMessage(this.eventView(guild, event), [], await this.dots(guild)),
+        renderEventMessage(this.eventView(guild, event), [], await this.look(guild)),
       );
       return await this.prisma.signupEvent.update({
         where: { id: event.id },
@@ -365,7 +383,7 @@ export class SignupEventsService {
         renderEventMessage(
           this.eventView(event.guild, event),
           event.entries.map(toEntryView),
-          await this.dots(event.guild),
+          await this.look(event.guild),
         ),
       );
       await this.prisma.signupEvent.update({ where: { id: eventId }, data: { messageId } });
@@ -415,13 +433,13 @@ export class SignupEventsService {
     if (!event) return;
     const view = this.eventView(event.guild, event);
     const entries = event.entries.map(toEntryView);
-    const dot = await this.dots(event.guild);
+    const look = await this.look(event.guild);
     if (event.messageId) {
       try {
         await this.discord.editRichMessage(
           event.channelId,
           event.messageId,
-          renderEventMessage(view, entries, dot),
+          renderEventMessage(view, entries, look),
         );
       } catch (error) {
         if (!isDiscordError(error, UNKNOWN_MESSAGE)) throw error;
@@ -435,7 +453,7 @@ export class SignupEventsService {
         await this.discord.editRichMessage(
           event.channelId,
           event.setupMessageId,
-          renderSetupMessage(view, entries, event.setupMentions, dot),
+          renderSetupMessage(view, entries, event.setupMentions, look),
         );
       } catch (error) {
         if (!isDiscordError(error, UNKNOWN_MESSAGE)) throw error;
@@ -466,7 +484,7 @@ export class SignupEventsService {
         this.eventView(event.guild, event),
         event.entries.map(toEntryView),
         mention,
-        await this.dots(event.guild),
+        await this.look(event.guild),
       );
       const setupMessageId = await this.discord.sendRichMessage(event.channelId, {
         ...message,

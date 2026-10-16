@@ -2,7 +2,7 @@ import { existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Faction } from '@prisma/client';
 import type { RegionId } from '../config/regions';
-import { readClassIcons, readMarkerIcons, type ClassIcon } from './class-icons';
+import { readClassIcons, readMarkerIcons, readRoleIcons, type ClassIcon } from './class-icons';
 import {
   GAME_ROLES,
   gameConfigProblems,
@@ -44,7 +44,8 @@ export function loadGames(root: string = __dirname): GameConfig[] {
       Object.keys(game.classes),
     );
     const { icons: markers, problems: markerProblems } = readMarkerIcons(join(root, directory));
-    const iconProblems = [...classIconProblems, ...markerProblems];
+    const { icons: roles, problems: roleProblems } = readRoleIcons(join(root, directory));
+    const iconProblems = [...classIconProblems, ...markerProblems, ...roleProblems];
     if (iconProblems.length > 0) {
       throw new Error(
         `The class icons of "${directory}" are not valid: ${iconProblems.join('; ')}.`,
@@ -52,6 +53,7 @@ export function loadGames(root: string = __dirname): GameConfig[] {
     }
     classIconsByGame.set(game, icons);
     markerIconsByGame.set(game, markers);
+    roleIconsByGame.set(game, roles);
     games.push(game);
   }
   if (games.length === 0) throw new Error(`No game config was found in ${root}.`);
@@ -61,6 +63,7 @@ export function loadGames(root: string = __dirname): GameConfig[] {
 /** Each loaded version's class icons (see class-icons.ts), kept out of the config itself. */
 const classIconsByGame = new WeakMap<GameConfig, Map<string, ClassIcon>>();
 const markerIconsByGame = new WeakMap<GameConfig, Map<string, ClassIcon>>();
+const roleIconsByGame = new WeakMap<GameConfig, Map<string, ClassIcon>>();
 
 let loaded: GameConfig[] | null = null;
 
@@ -82,6 +85,12 @@ export function classIcon(gameVersion: string, className: string): ClassIcon | n
 export function markerIcon(gameVersion: string, marker: string): ClassIcon | null {
   const game = gameAnyCase(gameVersion);
   return (game && markerIconsByGame.get(game)?.get(marker)) ?? null;
+}
+
+/** A role's icon (`Tank`, `Healer`, `Melee`, `Ranged`, `Leader`), if its version has one. */
+export function roleIcon(gameVersion: string, role: string): ClassIcon | null {
+  const game = gameAnyCase(gameVersion);
+  return (game && roleIconsByGame.get(game)?.get(role)) ?? null;
 }
 
 /** Any casing: the website may only have the version from an address (`forever`). */

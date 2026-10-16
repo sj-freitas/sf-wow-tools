@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { describe, it } from 'node:test';
 import { colorDotPng } from '../signup/color-dot';
 import { MAX_ICON_BYTES, readClassIcons, readMarkerIcons } from './class-icons';
-import { classIcon, markerIcon } from './games';
+import { classIcon, markerIcon, roleIcon } from './games';
 
 const CLASSES = ['Druid', 'Death Knight', 'Mage'];
 
@@ -87,6 +87,12 @@ describe('readMarkerIcons', () => {
       assert.match(problems.join(), /Skulls\.png is not named after a raid marker/);
     } finally {
       rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
+  it('has Forever’s role icons, Leader included', () => {
+    for (const role of ['Tank', 'Healer', 'Melee', 'Ranged', 'Leader']) {
+      assert.equal(roleIcon('forever', role)?.contentType, 'image/png', role);
     }
   });
 

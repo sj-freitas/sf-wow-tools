@@ -589,6 +589,10 @@ wrong. The shape (volatile: expect it to grow):
   show them (an emoji `m_skull_<hash>` in Discord, and on the website from
   `GET /api/public/games/:version/markers/:marker/icon`); a marker without one is written as text,
   `[Circle]`.
+- **Role icons** (optional), likewise: `src/game/<version>/role-icons/` with `Tank`, `Healer`,
+  `Melee`, `Ranged` and `Leader` (`.png`): the sign-up post's role columns and leader line, and the
+  raid setup (emoji `r_tank_<hash>`; website: `GET /api/public/games/:version/roles/:role/icon`).
+  One without an image keeps its emoji (🛡️ 💚 ⚔️ 🏹 👑).
 - `factions`: by name (`Alliance`, `Horde`), each with its `races`, and each race with the `classes` it
   can be. **A race can only list classes that are keys of `classes`**: `defineGame` makes that a compile
   error, and the loader checks it again for the config it finds.
@@ -810,6 +814,13 @@ own form, everyone's list), **Raid setup**, **Assignments**, and **Not signed up
 assignments and setups, guild-wide or per instance, run by the worker in the hour before the event,
 switched off by a manual edit), and the tables already have their columns (`plugin_key`,
 `plugin_auto_run`, `edited_manually`).
+
+**Previewing the posts.** `npm run signup:preview` prints the sign-up post of a sample 25-person
+raid as JSON (`-- setup`, `-- assignment`, `-- event members`, `-- setup members` for the others),
+built by the same functions the bot uses (`src/signup/signup-messages.ts`), with no database or
+Discord. Paste it into [Discohook](https://discohook.org)'s JSON editor to see it as Discord shows
+it, try changes there, then make them in `signup-messages.ts`. Class icons and raid markers (our
+bot's own emojis) print as coloured squares and marker names.
 
 Links the bot puts in Discord point at `SITE_URL` (optional; else the origin of
 `DISCORD_OAUTH_REDIRECT_URI`, else https://guildassistant.app).

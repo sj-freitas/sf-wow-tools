@@ -3,7 +3,7 @@ import type { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { APP_CONFIG } from '../config/app.config';
 import { botInviteUrl } from '../config/bot-invite';
-import { classIcon, markerIcon } from '../game/games';
+import { classIcon, markerIcon, roleIcon } from '../game/games';
 
 export interface PublicInfoDto {
   /** Adds the bot to a Discord server (`BOT_INVITE_URL`, else built from the application id). */
@@ -50,6 +50,16 @@ export class PublicController {
     @Res() res: Response,
   ): void {
     this.sendIcon(res, markerIcon(gameVersion, marker));
+  }
+
+  /** A role's icon (`Tank`, `Healer`, `Melee`, `Ranged`, `Leader`); 404 when it has none. */
+  @Get('games/:gameVersion/roles/:role/icon')
+  roleIcon(
+    @Param('gameVersion') gameVersion: string,
+    @Param('role') role: string,
+    @Res() res: Response,
+  ): void {
+    this.sendIcon(res, roleIcon(gameVersion, role));
   }
 
   private sendIcon(res: Response, icon: ReturnType<typeof classIcon>): void {

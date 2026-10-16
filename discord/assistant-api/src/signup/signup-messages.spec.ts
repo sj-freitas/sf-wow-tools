@@ -43,6 +43,9 @@ interface Button {
   url?: string;
   label: string;
 }
+/** Every list field ends with a blank line, for the space between rows. */
+const GAP = '\n\u200b';
+
 const fieldsOf = (message: ReturnType<typeof renderEventMessage>) =>
   (message.embeds?.[0].fields ?? []) as Field[];
 const buttonsOf = (message: ReturnType<typeof renderEventMessage>) =>
@@ -61,7 +64,7 @@ describe('renderEventMessage', () => {
         entry({ id: 'e', characterName: 'Maybe', status: 'TENTATIVE' }),
         entry({ id: 'f', characterName: 'Aaron', role: 'TANK', characterClass: 'Warrior' }),
       ],
-      dot,
+      { dot },
     );
     const fields = fieldsOf(message);
     // Two role columns per row (an empty cell keeps them aligned), then the other answers.
@@ -82,12 +85,12 @@ describe('renderEventMessage', () => {
     // Numbered in sign-up order, one per line, no class names.
     assert.equal(
       fields[0].value,
-      '`1` <:c_warrior:1> **Darkshivan**\n`6` <:c_warrior:1> **Aaron**',
+      '`1` <:c_warrior:1> **Darkshivan**\n`6` <:c_warrior:1> **Aaron**' + GAP,
     );
-    assert.equal(fields[1].value, '`2` **Tearyn**');
-    assert.equal(fields[3].value, '—');
-    assert.equal(fields[6].value, '`3` **Late Guy**');
-    assert.equal(fields[8].value, '`4` **Discord d**');
+    assert.equal(fields[1].value, '`2` **Tearyn**' + GAP);
+    assert.equal(fields[3].value, '—' + GAP);
+    assert.equal(fields[6].value, '`3` **Late Guy**' + GAP);
+    assert.equal(fields[8].value, '`4` **Discord d**' + GAP);
   });
 
   it('shows the leader, the time, and how many are coming (+ tentative)', () => {
@@ -143,7 +146,9 @@ describe('renderSetupMessage', () => {
   it('shows the groups in order and leaves the bench out', () => {
     const message = renderSetupMessage(EVENT, entries, false);
     const fields = (message.embeds?.[0].fields ?? []) as Field[];
-    assert.deepEqual(fields, [{ name: 'Group 2', value: '🛡️ – First\n💚 – Second', inline: true }]);
+    assert.deepEqual(fields, [
+      { name: 'Group 2:', value: '🛡️ – First\n💚 – Second' + GAP, inline: true },
+    ]);
     assert.equal(message.content, '');
     assert.equal(message.mention, false);
   });
@@ -203,7 +208,7 @@ describe('a members event', () => {
       fields.map((field) => field.name),
       ['✅ Signed up (1)', '⏰ Late (1)'],
     );
-    assert.equal(fields[0].value, '`1` **Shivan**');
+    assert.equal(fields[0].value, '`1` **Shivan**' + GAP);
     assert.ok(!buttonsOf(message).some((button) => button.label === 'Add character'));
   });
 
@@ -222,7 +227,30 @@ describe('a members event', () => {
     );
     const message = renderSetupMessage(MEMBERS, invited, true);
     assert.equal(message.embeds?.[0].title, 'Invited · Naxxramas');
-    assert.equal((message.embeds?.[0].fields as Field[])[0].name, 'Invited (7)');
+    assert.equal((message.embeds?.[0].fields as Field[])[0].name, 'Invited (7):');
     assert.equal(message.content?.split(' ').length, 7);
+  });
+});
+
+describe('role and leader icons', () => {
+  it('uses the icons given, falling back to emoji for the ones missing', () => {
+    const message = renderEventMessage(EVENT, [entry({ id: 'a', role: 'TANK' })], {
+      role: (role) => (role === 'TANK' ? '<:r_tank_1:1>' : ''),
+      leader: '<:r_leader_1:2>',
+    });
+    const names = fieldsOf(message).map((field) => field.name);
+    assert.equal(names[0], '<:r_tank_1:1> Tank (1)');
+    assert.equal(names[1], '💚 Healer (0)');
+    assert.match(message.embeds?.[0].description ?? '', /<:r_leader_1:2> Shivan/);
+  });
+
+  it('puts the role icon in front of each person in the groups', () => {
+    const message = renderSetupMessage(
+      EVENT,
+      [entry({ id: 'a', role: 'TANK', groupNumber: 1, groupSlot: 0, characterName: 'Tanky' })],
+      false,
+      { role: () => '<:r_tank_1:1>' },
+    );
+    assert.equal(fieldsOf(message)[0].value, '<:r_tank_1:1> – Tanky' + GAP);
   });
 });

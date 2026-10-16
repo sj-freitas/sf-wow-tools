@@ -1,15 +1,9 @@
 import { useState } from 'react';
 import type { Guild } from '../types';
 import { useConfirm } from '../useConfirm';
-import {
-  ROLE_CATEGORIES,
-  ROLE_EMOJI,
-  STATUS_EMOJI,
-  STATUS_LABELS,
-  entryName,
-  errorText,
-} from './labels';
+import { ROLE_CATEGORIES, STATUS_EMOJI, STATUS_LABELS, entryName, errorText } from './labels';
 import { ClassMark } from '../ClassMark';
+import { RoleMark } from '../RoleMark';
 import type { DrawerTarget } from './SignupDrawer';
 import {
   removeEntry,
@@ -77,7 +71,11 @@ export function SignupLists({
   const row = (entry: Entry) => (
     <li key={entry.id} className="signup-person">
       <span>
-        {entry.status !== 'AVAILABLE' && entry.role && `${ROLE_EMOJI[entry.role]} `}
+        {entry.status !== 'AVAILABLE' && entry.role && (
+          <>
+            <RoleMark gameVersion={guild.gameVersion} role={entry.role} />{' '}
+          </>
+        )}
         <span className="signup-number">{numbers.get(entry.id)}</span>
         <ClassMark gameVersion={guild.gameVersion} className={entry.characterClass} />
         <strong>{entryName(entry)}</strong>
@@ -111,12 +109,13 @@ export function SignupLists({
       {error && <p className="status-error">{error}</p>}
       {event.layout.usesCharacters ? (
         <div className="signup-columns">
-          {ROLE_CATEGORIES.map(({ role, label, emoji }) => {
+          {ROLE_CATEGORIES.map(({ role, label }) => {
             const inRole = available.filter((entry) => entry.role === role);
             return (
               <section key={role} className="signup-column">
                 <h4>
-                  {emoji} {label} <span className="muted">({inRole.length})</span>
+                  <RoleMark gameVersion={guild.gameVersion} role={role} /> {label}{' '}
+                  <span className="muted">({inRole.length})</span>
                 </h4>
                 {inRole.length === 0 ? (
                   <p className="muted">—</p>

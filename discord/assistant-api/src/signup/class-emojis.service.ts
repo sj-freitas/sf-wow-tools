@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { Injectable, Logger } from '@nestjs/common';
 import { DiscordBotService } from '../discord/discord-bot.service';
-import { MARKER_NAMES } from '../game/class-icons';
-import { classIcon, getGame, markerIcon } from '../game/games';
+import { MARKER_NAMES, ROLE_ICON_NAMES, type ClassIcon } from '../game/class-icons';
+import { classIcon, getGame, markerIcon, roleIcon } from '../game/games';
 import { colorDotPng } from './color-dot';
 
 /** After a failure (no application id, Discord refusing), try again only this much later. */
@@ -67,21 +67,38 @@ export class ClassEmojiService {
    * The raid marker icons of a game version (`raid-markers/<Marker>.png`) as emojis, by marker
    * name (`Skull`); null for a marker without an icon. Never throws.
    */
-  async markersFor(gameVersion: string): Promise<(marker: string) => ClassEmoji | null> {
-    const wanted = new Map<string, string>(); // marker -> emoji name
+  markersFor(gameVersion: string): Promise<(marker: string) => ClassEmoji | null> {
+    return this.iconSet(MARKER_NAMES, (name) => markerIcon(gameVersion, name), 'm');
+  }
+
+  /**
+   * The role icons of a game version (`role-icons/<Role>.png`: Tank, Healer, Melee, Ranged and
+   * Leader) as emojis, by name; null for one without an icon. Never throws.
+   */
+  rolesFor(gameVersion: string): Promise<(role: string) => ClassEmoji | null> {
+    return this.iconSet(ROLE_ICON_NAMES, (name) => roleIcon(gameVersion, name), 'r');
+  }
+
+  /** A set of named icon files as emojis (`<prefix>_<name>_<hash>`), uploading missing ones. */
+  private async iconSet(
+    names: readonly string[],
+    iconOf: (name: string) => ClassIcon | null,
+    prefix: string,
+  ): Promise<(name: string) => ClassEmoji | null> {
+    const wanted = new Map<string, string>(); // name -> emoji name
     const images = new Map<string, () => EmojiImage>();
-    for (const marker of MARKER_NAMES) {
-      const icon = markerIcon(gameVersion, marker);
+    for (const name of names) {
+      const icon = iconOf(name);
       if (!icon) continue;
-      const name = `m_${slug(marker)}_${icon.hash}`;
-      wanted.set(marker, name);
-      images.set(name, () => ({ data: readFileSync(icon.file), contentType: icon.contentType }));
+      const emoji = `${prefix}_${slug(name)}_${icon.hash}`;
+      wanted.set(name, emoji);
+      images.set(emoji, () => ({ data: readFileSync(icon.file), contentType: icon.contentType }));
     }
     await this.ensure(images);
-    return (marker) => {
-      const name = wanted.get(marker);
-      const id = name ? this.known?.get(name) : undefined;
-      return name && id ? { name, id } : null;
+    return (name) => {
+      const emoji = wanted.get(name);
+      const id = emoji ? this.known?.get(emoji) : undefined;
+      return emoji && id ? { name: emoji, id } : null;
     };
   }
 

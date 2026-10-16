@@ -9,6 +9,9 @@ import { extname, join } from 'node:path';
  *                                   a class without one keeps its colour dot
  *   raid-markers/<Marker>.png       `Skull.png`: a raid target marker, in assignments; a marker
  *                                   without one is written as text ("[Skull]")
+ *   role-icons/<Role>.png           `Tank.png`, `Healer.png`, `Melee.png`, `Ranged.png`, and
+ *                                   `Leader.png` for the event's leader: sign-ups and groups; one
+ *                                   without an image keeps its emoji (🛡️, 👑, …)
  *
  * Each becomes a Discord emoji the bot uploads, and the website shows the same file. The files
  * are checked when the configs load, so a bad one stops start-up with a reason.
@@ -27,6 +30,9 @@ export const MARKER_NAMES = [
   'Circle',
   'Star',
 ] as const;
+export const ROLE_ICONS_FOLDER = 'role-icons';
+/** The role icons, as their files are named: the four roles, and the event's leader. */
+export const ROLE_ICON_NAMES = ['Tank', 'Healer', 'Melee', 'Ranged', 'Leader'] as const;
 /** Discord's limit for an emoji. Square images around 128×128 look best. */
 export const MAX_ICON_BYTES = 256 * 1024;
 
@@ -61,6 +67,10 @@ export const readClassIcons = (versionDirectory: string, classNames: readonly st
 /** Reads a version's raid marker icons (no folder = none), with what is wrong in it. */
 export const readMarkerIcons = (versionDirectory: string) =>
   readIcons(versionDirectory, MARKER_ICONS_FOLDER, MARKER_NAMES, 'a raid marker');
+
+/** Reads a version's role icons (no folder = none), with what is wrong in it. */
+export const readRoleIcons = (versionDirectory: string) =>
+  readIcons(versionDirectory, ROLE_ICONS_FOLDER, ROLE_ICON_NAMES, 'a role (or Leader)');
 
 function readIcons(
   versionDirectory: string,

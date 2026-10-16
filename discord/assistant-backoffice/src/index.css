@@ -1834,6 +1834,15 @@ label.btn.disabled {
   margin-left: 0.6rem;
 }
 
+/* A raid role's icon (Tank, Healer, …, Leader), at the size of the text around it. */
+.role-icon {
+  display: inline-block;
+  flex: none;
+  width: 1.15rem;
+  height: 1.15rem;
+  vertical-align: -0.2rem;
+}
+
 /* A class's icon, or a dot in its colour when it has none (both from the game config). */
 .class-icon {
   display: inline-block;

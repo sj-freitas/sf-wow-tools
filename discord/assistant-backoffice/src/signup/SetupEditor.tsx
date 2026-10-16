@@ -3,7 +3,8 @@ import type { Guild } from '../types';
 import { useConfirm } from '../useConfirm';
 import { InlineSpinner } from '../Loading';
 import { ClassMark } from '../ClassMark';
-import { ROLE_CATEGORIES, ROLE_EMOJI, STATUS_EMOJI, entryName, errorText } from './labels';
+import { RoleMark } from '../RoleMark';
+import { ROLE_CATEGORIES, STATUS_EMOJI, entryName, errorText } from './labels';
 import {
   postSetup,
   removeSetupPost,
@@ -166,7 +167,7 @@ export function SetupEditor({
     >
       {entry.role && (
         <>
-          <span aria-hidden="true">{ROLE_EMOJI[entry.role]}</span>
+          <RoleMark gameVersion={guild.gameVersion} role={entry.role} />
           <span className="setup-chip-sep" aria-hidden="true">
             –
           </span>
@@ -223,9 +224,10 @@ export function SetupEditor({
               key={group}
               className={groupSize === null ? 'setup-group setup-group-open' : 'setup-group'}
             >
+              {/* "Group 1:", as in the post ("Invited (7):" for one unlimited group). */}
               <h4>
                 {groupTitle(group)}
-                {groupSize === null && <span className="muted"> ({used.length})</span>}
+                {groupSize === null && <span className="muted"> ({used.length})</span>}:
               </h4>
               {Array.from({ length: slots }, (_, slot) => {
                 const id = at(group, slot);
