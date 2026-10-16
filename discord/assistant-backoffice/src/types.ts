@@ -419,3 +419,18 @@ export interface PublicInfo {
   /** Who to contact about the site and its data; null when not configured. */
   contactEmail: string | null;
 }
+
+/**
+ * The guild's Officers' private note about a character (markdown, with images). Only Officers can
+ * read or write it; its player never sees it.
+ */
+export interface OfficerNote {
+  characterId: string;
+  characterName: string;
+  characterClass: string;
+  markdown: string;
+  updatedAt: string | null;
+  /** The Officer who saved it last. */
+  updatedByName: string | null;
+  images: BioImage[];
+}

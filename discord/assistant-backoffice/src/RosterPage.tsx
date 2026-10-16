@@ -1,6 +1,12 @@
 import { Fragment, useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { deleteCharacter, fetchPlayers, fetchRanks, refreshPlayerNames } from './api';
+import {
+  deleteCharacter,
+  fetchCharacterNoteIds,
+  fetchPlayers,
+  fetchRanks,
+  refreshPlayerNames,
+} from './api';
 import { CharacterForm } from './CharacterForm';
 import { CopyableName } from './CopyableName';
 import { InlineSpinner, SkeletonRows, Spinner } from './Loading';
@@ -9,7 +15,7 @@ import { characterPath, playerLabel } from './format';
 import { ROLE_LABELS, type Guild, type Player, type Ranks, type User } from './types';
 import { useCurrentUrl, useReturnTo } from './useReturnTo';
 import { ClassMark } from './ClassMark';
-import { BinIcon, PencilIcon } from './Icons';
+import { BinIcon, NoteIcon, PencilIcon } from './Icons';
 import { characterPagePath, guildPath } from './guildPath';
 
 interface Props {
@@ -41,6 +47,15 @@ export function RosterPage({ guild, currentUser }: Props) {
       .then(setRanks)
       .catch(() => setRanks({}));
   }, [guild.id]);
+
+  // Officers: which characters have an Officer note, to mark their note button.
+  const [notedIds, setNotedIds] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    if (!guild.isOfficer) return;
+    fetchCharacterNoteIds(guild.id)
+      .then(({ characterIds }) => setNotedIds(new Set(characterIds)))
+      .catch(() => setNotedIds(new Set()));
+  }, [guild.id, guild.isOfficer]);
 
   useEffect(load, [load]);
   useEffect(loadRanks, [loadRanks]);
@@ -203,6 +218,27 @@ export function RosterPage({ guild, currentUser }: Props) {
                       </td>
                       <td data-label="Rank">{ranks[player.discordUserId]?.join(', ') ?? '—'}</td>
                       <td className="cell-actions">
+                        {guild.isOfficer && (
+                          <>
+                            <Link
+                              className={
+                                notedIds.has(character.id)
+                                  ? 'btn btn-sm btn-icon btn-note btn-note-has'
+                                  : 'btn btn-sm btn-icon btn-note'
+                              }
+                              to={guildPath(guild, `roster/notes/${character.id}`)}
+                              state={{ from: here }}
+                              aria-label={`Officer note about ${character.firstName}${notedIds.has(character.id) ? ' (has one)' : ''}`}
+                              title={
+                                notedIds.has(character.id)
+                                  ? 'Officer note (only Officers see it)'
+                                  : 'Write an Officer note (only Officers see it)'
+                              }
+                            >
+                              <NoteIcon />
+                            </Link>{' '}
+                          </>
+                        )}
                         {canEditRow(player) && (
                           <>
                             <Link

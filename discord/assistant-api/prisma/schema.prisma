@@ -84,6 +84,7 @@ model Guild {
   roleMappings            GuildRoleMapping[]
   characterMemberships    CharacterGuildMembership[]
   access                  GuildAccess[]
+  officerNotes            CharacterOfficerNote[]
   // Event sign-ups (prisma/signup.prisma).
   signupSettings          SignupSettings?
   signupEvents            SignupEvent[]
@@ -191,6 +192,7 @@ model Character {
   bioVisible    Boolean                    @default(false) @map("bio_visible")
   images        CharacterImage[]
   guilds        CharacterGuildMembership[]
+  officerNotes  CharacterOfficerNote[]
   // Event sign-ups (prisma/signup.prisma).
   signupEntries SignupEntry[]
   createdAt     DateTime                   @default(now()) @map("created_at")
@@ -229,6 +231,40 @@ model CharacterImage {
 
   @@index([characterId, createdAt])
   @@map("character_images")
+}
+
+// A guild's Officers' private note about one character (markdown, with images). Only Officers of
+// that guild read or write it; its player never sees it. Keyed by guild and character rather than
+// by the roster membership, so it survives the character leaving the roster and coming back.
+model CharacterOfficerNote {
+  id            String                      @id @default(uuid()) @db.Uuid
+  guildId       String                      @map("guild_id") @db.Uuid
+  guild         Guild                       @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  characterId   String                      @map("character_id") @db.Uuid
+  character     Character                   @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  markdown      String                      @default("")
+  // Who saved it last (the Officer's display name), for the note's page.
+  updatedByName String?                     @map("updated_by_name")
+  images        CharacterOfficerNoteImage[]
+  createdAt     DateTime                    @default(now()) @map("created_at")
+  updatedAt     DateTime                    @updatedAt @map("updated_at")
+
+  @@unique([guildId, characterId])
+  @@map("character_officer_notes")
+}
+
+// An image of an Officer note (see CharacterOfficerNote), up to CharacterNotesService.MAX_NOTE_IMAGES.
+model CharacterOfficerNoteImage {
+  id          String               @id @default(uuid()) @db.Uuid
+  noteId      String               @map("note_id") @db.Uuid
+  note        CharacterOfficerNote @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  contentType String               @map("content_type")
+  size        Int
+  data        Bytes
+  createdAt   DateTime             @default(now()) @map("created_at")
+
+  @@index([noteId, createdAt])
+  @@map("character_officer_note_images")
 }
 
 // A backoffice user, created on first Discord login.

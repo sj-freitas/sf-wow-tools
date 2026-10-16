@@ -1,5 +1,6 @@
 import type {
   BioImage,
+  OfficerNote,
   Character,
   CharacterProfile,
   PublicInfo,
@@ -376,3 +377,39 @@ export async function fetchCurrentUser(): Promise<User | null> {
 export async function logout(): Promise<void> {
   await fetch('/api/auth/logout', { method: 'POST' });
 }
+
+// ---- Officers' private notes about characters ----
+
+/** Ids of the guild's characters that have an Officer note (Officers only). */
+export const fetchCharacterNoteIds = (guildId: string): Promise<{ characterIds: string[] }> =>
+  request('GET', `/api/guilds/${guildId}/character-notes`);
+
+export const fetchOfficerNote = (guildId: string, characterId: string): Promise<OfficerNote> =>
+  request('GET', `/api/guilds/${guildId}/characters/${characterId}/note`);
+
+export const saveOfficerNote = (
+  guildId: string,
+  characterId: string,
+  markdown: string,
+): Promise<void> =>
+  request('PUT', `/api/guilds/${guildId}/characters/${characterId}/note`, { markdown });
+
+export function uploadOfficerNoteImage(
+  guildId: string,
+  characterId: string,
+  file: File,
+): Promise<BioImage> {
+  const form = new FormData();
+  form.append('image', file);
+  return request('POST', `/api/guilds/${guildId}/characters/${characterId}/note/images`, form);
+}
+
+export const deleteOfficerNoteImage = (
+  guildId: string,
+  characterId: string,
+  imageId: string,
+): Promise<void> =>
+  request('DELETE', `/api/guilds/${guildId}/characters/${characterId}/note/images/${imageId}`);
+
+export const officerNoteImageUrl = (guildId: string, imageId: string): string =>
+  `/api/guilds/${guildId}/character-notes/images/${imageId}`;

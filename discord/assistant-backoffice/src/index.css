@@ -1877,3 +1877,19 @@ label.btn.disabled {
 .btn-icon .spinner {
   margin-right: 0;
 }
+
+/* The roster's Officer note button: highlighted when the character has a note. */
+.btn-note-has {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+.officer-note {
+  display: grid;
+  gap: 1rem;
+}
+.officer-note h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+}

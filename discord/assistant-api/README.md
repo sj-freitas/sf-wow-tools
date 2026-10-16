@@ -682,6 +682,17 @@ turns every existing character → player → guild chain into a `character_guil
 `20261004090000_character_faction` then backfills the new `faction` column from one of each character's
 guild memberships (falling back to Alliance, an arbitrary tie-break, for the rare one left with none).
 
+## Officer notes about characters
+
+Officers can keep a private note about any character on their guild's roster: markdown and up to
+8 images (`character_officer_notes`, `character_officer_note_images`). The roster shows a note
+button on each row for Officers (gold when the character has a note), which opens
+`/roster/notes/:characterId`. Only the guild's Officers can read or write it — every route
+(`/api/guilds/:guildId/characters/:characterId/note…`, `/api/guilds/:guildId/character-notes…`)
+checks the Officer role — so the player never sees it, not even about their own character. A note
+belongs to a guild and a character, not to the roster entry: it is kept if the character leaves
+the roster and comes back, and goes when the guild or the character is deleted.
+
 ## A character's own page, and its bio
 
 Every character has one page, **guild-agnostic**: `/<version>/<region>/<server>/characters/<name>`

@@ -221,6 +221,10 @@ export function PrivacyPage({ framed = true }: { framed?: boolean }) {
           A bio is private until you choose to share it.
         </li>
         <li>
+          Notes a guild’s officers keep about the characters on its roster, with any images they
+          add. Only that guild’s officers can see them.
+        </li>
+        <li>
           Messages to the officers and the officers’ replies, with any image attached. If you choose
           to stay anonymous, your name is not shown to the officers; your Discord id is still kept
           so replies can reach you.

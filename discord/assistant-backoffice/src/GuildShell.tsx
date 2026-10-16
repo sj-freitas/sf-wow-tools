@@ -12,6 +12,7 @@ import { HoneypotCreatePage, HoneypotsPage } from './HoneypotsPage';
 import { LandingPage } from './LandingPage';
 import { forgetLastGuild, readLastGuildId, rememberLastGuild } from './lastGuild';
 import { ConversationPage, OfficerRequestsPage } from './OfficerRequestsPage';
+import { OfficerNotePage } from './OfficerNotePage';
 import { PostEditorPage } from './PostEditorPage';
 import { PostsPage } from './PostsPage';
 import { PrivacyPage } from './PublicPages';
@@ -50,6 +51,7 @@ interface Props {
  *       /roster               roster                       everyone in the guild
  *       /roster/create        add a character              everyone (members: their own)
  *       /roster/edit/:id      edit a character             Officers, or its owner
+ *       /roster/notes/:id     Officers' private note about a character   Officers
  *       /posts                posts (?q=&page=)            Officers
  *       /posts/create         new post                     Officers
  *       /posts/edit/:id       edit a post                  Officers
@@ -166,6 +168,10 @@ function GuildRoutes({ guilds, setup, currentUser, onGuildsChanged }: Props) {
         <Route
           path="roster/edit/:characterId"
           element={<CharacterEditorPage guild={guild} currentUser={currentUser} />}
+        />
+        <Route
+          path="roster/notes/:characterId"
+          element={officersOnly(<OfficerNotePage guild={guild} />)}
         />
         <Route
           path="posts"
