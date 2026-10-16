@@ -141,8 +141,7 @@ function columns(title: string, lines: readonly string[]): NonNullable<APIEmbed[
  * number and class colour; then Late, Tentative and Absent as short lists; and the buttons.
  * `entries` come in sign-up order (that is where the numbers come from).
  *
- * The title carries the count, "Name - 👥 N (+M)": N are coming (signed up or late), M are
- * tentative.
+ * The title carries the count, "Name - 👥 N (+M)": N signed up, M late or tentative.
  */
 export function renderEventMessage(
   event: EventView,
@@ -154,8 +153,9 @@ export function renderEventMessage(
   const inStatus = (status: SignupStatus) =>
     numbered.filter(({ entry }) => entry.status === status);
   const available = inStatus('AVAILABLE');
-  const coming = available.length + inStatus('LATE').length;
-  const tentative = inStatus('TENTATIVE').length;
+  // Signed up, and maybe (late or tentative).
+  const coming = available.length;
+  const maybe = inStatus('LATE').length + inStatus('TENTATIVE').length;
 
   const fields: NonNullable<APIEmbed['fields']> = [];
   if (event.kind.usesCharacters) {
@@ -203,7 +203,7 @@ export function renderEventMessage(
     `⏳ ${discordTimestamp(event.startsAt, 'R')}`,
   ].join('\n');
   // How many are coming goes in the title (the link): "First Guild Meeting - 👥 8 (+2)".
-  const count = ` - 👥 ${coming}${tentative > 0 ? ` (+${tentative})` : ''}`;
+  const count = ` - 👥 ${coming}${maybe > 0 ? ` (+${maybe})` : ''}`;
   const embed: APIEmbed = {
     title: event.title.slice(0, MAX_TITLE - count.length) + count,
     url: event.eventUrl,

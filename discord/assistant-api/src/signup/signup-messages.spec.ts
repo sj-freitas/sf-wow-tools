@@ -103,8 +103,8 @@ describe('renderEventMessage', () => {
     ]);
     const description = message.embeds?.[0].description ?? '';
     assert.match(description, /^Bring flasks\.\n\n🗓️ <t:\d+:F>\n⏳ <t:\d+:R>$/);
-    // How many are coming (signed up or late), and tentative, are in the title.
-    assert.equal(message.embeds?.[0].title, 'Naxxramas - 👥 2 (+1)');
+    // In the title: 1 signed up, (+2) late or tentative; absent not counted.
+    assert.equal(message.embeds?.[0].title, 'Naxxramas - 👥 1 (+2)');
     // The leader isn't in the post (the setup shows them).
     assert.doesNotMatch(description, /Shivan/);
     assert.equal(message.embeds?.[0].footer, undefined);
