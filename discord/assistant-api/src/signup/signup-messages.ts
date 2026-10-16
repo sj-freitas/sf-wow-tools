@@ -196,10 +196,11 @@ export function renderEventMessage(
     });
   }
 
-  // Right under the title, before the description: where, then when and how long until.
+  // Right under the title, before the description: where, then when.
   const header = [
     ...(event.location.trim() ? [`📍 ${event.location.trim()}`] : []),
-    `🗓️ ${discordTimestamp(event.startsAt, 'F')} - ⏳ ${discordTimestamp(event.startsAt, 'R')}`,
+    // Just the date: Discord shows it in each reader's own timezone, and the full date on hover.
+    `🗓️ ${discordTimestamp(event.startsAt, 'F')}`,
   ].join('\n');
   // How many are coming goes in the title (the link): "First Guild Meeting - 👥 8 (+2)".
   const count = ` - 👥 ${coming}${maybe > 0 ? ` (+${maybe})` : ''}`;

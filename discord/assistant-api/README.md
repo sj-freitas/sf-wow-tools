@@ -793,8 +793,7 @@ changed), a silver crown for raid assists, and a bag for the master looter. Offi
 when they sign up; on the Raid setup (or Invited) tab organisers change the leader, the master
 looter (optional) and who has assist, saved with the setup (`signup_events.leader_discord_user_id`,
 `master_looter_discord_user_id`, `signup_entries.assist`). The sign-up post shows, right under its title and before the description, the 📍 location
-and then the date and countdown on one line ("🗓️ Sunday, 1 November 2026 at 19:00 - ⏳ in 16
-days"); the number coming is in its title ("First Guild Meeting - 👥 8 (+2)", the + counting late
+and then the date ("🗓️ Sunday, 1 November 2026 at 19:00", in each reader's timezone); the number coming is in its title ("First Guild Meeting - 👥 8 (+2)", the + counting late
 and tentative), and the leader is no longer shown.
 
 **Scheduling.** On the website's form, **Post: At a date and time** (in the event's timezone,
