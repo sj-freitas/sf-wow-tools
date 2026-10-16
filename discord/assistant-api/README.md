@@ -781,8 +781,9 @@ up in `src/signup/event-kinds.ts`, which is the config for both:
 changed), a silver crown for raid assists, and a bag for the master looter. Officers get assist
 when they sign up; on the Raid setup (or Invited) tab organisers change the leader, the master
 looter (optional) and who has assist, saved with the setup (`signup_events.leader_discord_user_id`,
-`master_looter_discord_user_id`, `signup_entries.assist`). The sign-up post shows location, date,
-countdown and the number coming on a line each, and no longer the leader.
+`master_looter_discord_user_id`, `signup_entries.assist`). The sign-up post shows location, date and
+countdown on a line each, the number coming in its title ("First Guild Meeting - 👥 8 (+2)"), and
+no longer the leader.
 
 **Scheduling.** On the website's form, **Post: At a date and time** (in the event's timezone,
 before it starts) saves the event without posting it; the worker posts it then. Until then it is

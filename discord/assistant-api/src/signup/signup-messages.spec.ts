@@ -94,7 +94,7 @@ describe('renderEventMessage', () => {
     assert.equal(fields[8].value, '`4` Discord d' + GAP);
   });
 
-  it('shows when, how long until, and how many are coming (+ tentative), one per line', () => {
+  it('shows when and how long until, one per line, and the count in the title', () => {
     const message = renderEventMessage(EVENT, [
       entry({ id: 'a' }),
       entry({ id: 'b', status: 'LATE' }),
@@ -102,10 +102,9 @@ describe('renderEventMessage', () => {
       entry({ id: 'd', status: 'ABSENT' }),
     ]);
     const description = message.embeds?.[0].description ?? '';
-    assert.match(
-      description,
-      /^Bring flasks\.\n\n🗓️ <t:\d+:F>\n⏳ <t:\d+:R>\n👥 \*\*2\*\* \(\+1\)$/,
-    );
+    assert.match(description, /^Bring flasks\.\n\n🗓️ <t:\d+:F>\n⏳ <t:\d+:R>$/);
+    // How many are coming (signed up or late), and tentative, are in the title.
+    assert.equal(message.embeds?.[0].title, 'Naxxramas - 👥 2 (+1)');
     // The leader isn't in the post (the setup shows them).
     assert.doesNotMatch(description, /Shivan/);
     assert.equal(message.embeds?.[0].footer, undefined);
@@ -337,5 +336,17 @@ describe('raid roles in the setup', () => {
       look,
     );
     assert.match(fieldsOf(message)[0].value, /Both <:lead:1>\n/);
+  });
+});
+
+describe('the count in the title', () => {
+  it('leaves out (+0) and keeps the title within Discord’s 256 characters', () => {
+    assert.equal(
+      renderEventMessage(EVENT, [entry({ id: 'a' })]).embeds?.[0].title,
+      'Naxxramas - 👥 1',
+    );
+    const long = renderEventMessage({ ...EVENT, title: 'x'.repeat(300) }, []);
+    assert.ok((long.embeds?.[0].title ?? '').length <= 256);
+    assert.match(long.embeds?.[0].title ?? '', / - 👥 0$/);
   });
 });

@@ -17,6 +17,8 @@ const COLOR = 0x6d43c2;
 /** Discord refuses embed fields longer than this. */
 const MAX_FIELD = 1024;
 const MAX_CONTENT = 2000;
+/** Discord refuses embed titles longer than this. */
+const MAX_TITLE = 256;
 
 export interface EventView {
   id: string;
@@ -139,7 +141,8 @@ function columns(title: string, lines: readonly string[]): NonNullable<APIEmbed[
  * number and class colour; then Late, Tentative and Absent as short lists; and the buttons.
  * `entries` come in sign-up order (that is where the numbers come from).
  *
- * The count is "**N** (+M)": N are coming (signed up or late), M are tentative.
+ * The title carries the count, "Name - 👥 N (+M)": N are coming (signed up or late), M are
+ * tentative.
  */
 export function renderEventMessage(
   event: EventView,
@@ -193,15 +196,16 @@ export function renderEventMessage(
     });
   }
 
-  // One line each: where, when, how long until, and how many are coming.
+  // One line each: where, when, and how long until.
   const header = [
     ...(event.location.trim() ? [`📍 ${event.location.trim()}`] : []),
     `🗓️ ${discordTimestamp(event.startsAt, 'F')}`,
     `⏳ ${discordTimestamp(event.startsAt, 'R')}`,
-    `👥 **${coming}**${tentative > 0 ? ` (+${tentative})` : ''}`,
   ].join('\n');
+  // How many are coming goes in the title (the link): "First Guild Meeting - 👥 8 (+2)".
+  const count = ` - 👥 ${coming}${tentative > 0 ? ` (+${tentative})` : ''}`;
   const embed: APIEmbed = {
-    title: event.title,
+    title: event.title.slice(0, MAX_TITLE - count.length) + count,
     url: event.eventUrl,
     description: [event.description.trim(), header].filter((part) => part !== '').join('\n\n'),
     color: COLOR,
