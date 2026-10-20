@@ -7,8 +7,8 @@ const REFRESH_MS = 10_000;
 
 /**
  * Live reaction counts of a post (poll results), shown right on the post. Clicking a reaction shows
- * who reacted. Refreshes every 10 seconds while the page is visible; shows nothing until somebody
- * has reacted.
+ * who reacted. Refreshes every 10 seconds while the page is visible. A spinner until the first
+ * counts arrive, then nothing until somebody has reacted.
  */
 export function ReactionsPanel({ taskId, part = 1 }: { taskId: string; part?: number }) {
   const [reactions, setReactions] = useState<Reaction[] | null>(null);
@@ -16,6 +16,9 @@ export function ReactionsPanel({ taskId, part = 1 }: { taskId: string; part?: nu
   const [open, setOpen] = useState<string | null>(null);
 
   useEffect(() => {
+    // Another post or message: its counts aren't known yet.
+    setReactions(null);
+    setError(null);
     const load = () => {
       if (document.hidden) return Promise.resolve();
       return fetchTaskReactions(taskId, part)
@@ -31,7 +34,9 @@ export function ReactionsPanel({ taskId, part = 1 }: { taskId: string; part?: nu
   }, [taskId, part]);
 
   if (error) return <p className="status-error">{error}</p>;
-  if (!reactions || reactions.length === 0) return null;
+  if (!reactions)
+    return <InlineSpinner className="muted reactions-loading" label="Loading reactions…" />;
+  if (reactions.length === 0) return null;
   const opened = reactions.find((reaction) => reaction.emoji === open);
   return (
     <>

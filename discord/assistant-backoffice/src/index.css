@@ -935,6 +935,13 @@ tbody tr:last-child td {
   border-color: var(--danger);
   color: var(--danger);
 }
+/* In place of the reaction counts until they arrive: the height of a row of them. */
+.reactions-loading {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2rem;
+  font-size: 0.85rem;
+}
 .reaction-list {
   display: flex;
   flex-wrap: wrap;
