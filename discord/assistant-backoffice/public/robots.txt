@@ -1,6 +1,10 @@
 # Guild Assistant: only the public pages (landing and privacy policy) are meant for search
 # engines. Everything else needs a login; those pages tell crawlers "noindex" themselves.
+# The landing page asks /api/auth/me whether someone is logged in, and shows the game's icons
+# from /api/public/: crawlers must be able to load those to see the page as visitors do.
 User-agent: *
+Allow: /api/auth/me
+Allow: /api/public/
 Disallow: /api/
 
 Sitemap: https://guildassistant.app/sitemap.xml

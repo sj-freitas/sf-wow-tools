@@ -67,11 +67,9 @@ export function App() {
     return <Spinner />;
   }
 
-  if (auth.status === 'error') {
-    return <p className="status status-error">Failed to check login: {auth.message}</p>;
-  }
-
-  if (!auth.user) {
+  // Not knowing whether someone is logged in (the API is down, or a crawler can't reach it) shows
+  // the public pages, as to someone logged out, rather than only an error.
+  if (auth.status === 'error' || !auth.user) {
     // Logged out: the public landing page for any address (so deep links still explain the site
     // and offer to log in), plus the privacy policy.
     return (

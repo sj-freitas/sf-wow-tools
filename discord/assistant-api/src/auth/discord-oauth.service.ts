@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 const DISCORD_API = 'https://discord.com/api/v10';
@@ -50,6 +50,7 @@ export interface DiscordRole {
 
 @Injectable()
 export class DiscordOAuthService {
+  private readonly logger = new Logger(DiscordOAuthService.name);
   private readonly clientId: string;
   private readonly clientSecret: string;
   private readonly botToken: string;
@@ -88,6 +89,16 @@ export class DiscordOAuthService {
       }),
     });
     if (!response.ok) {
+      // Discord says why (`invalid_grant`: the code was already used or has expired; a wrong
+      // redirect_uri or client secret otherwise). Its error fields hold no secrets.
+      const reason = (await response.json().catch(() => ({}))) as {
+        error?: string;
+        error_description?: string;
+      };
+      this.logger.warn(
+        `Discord rejected a login code (${response.status}): ${reason.error ?? 'unknown'}` +
+          (reason.error_description ? ` - ${reason.error_description}` : ''),
+      );
       throw new UnauthorizedException('Discord rejected the login code');
     }
     const body = (await response.json()) as { access_token: string; expires_in: number };
