@@ -1,0 +1,14 @@
+## Interface: 16001, 11509
+## Title: Raid Sort
+## Notes: Sorts your raid's groups from a pasted setup, with assists, master looter, main tanks and marks.
+## Version: 2.0.0
+## Author: Sérgio Freitas
+## X-License: MIT
+## X-Curse-Project-ID: 1755800
+## IconTexture: Interface\Icons\inv_misc_enggizmos_19
+# 16001 is WoW Forever (client 1.60.1), 11509 Classic Era. Nothing is saved between sessions.
+
+Core.lua
+Raid.lua
+UI.lua
+Main.lua

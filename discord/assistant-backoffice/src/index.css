@@ -1058,6 +1058,36 @@ tbody tr:last-child td {
   justify-content: flex-end;
   margin-top: 0;
 }
+.addon-export-dialog {
+  width: min(640px, calc(100vw - 2rem));
+}
+.addon-export-code {
+  max-height: min(50vh, 420px);
+  overflow: auto;
+  margin: 0 0 0.75rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--text) 6%, var(--surface));
+  font-size: 0.85rem;
+  line-height: 1.5;
+  white-space: pre;
+  user-select: all;
+}
+.addon-export-code .lua-comment {
+  color: var(--muted);
+}
+.addon-export-code .lua-string {
+  color: #3f9d5a;
+}
+.addon-export-code .lua-key {
+  color: #b07a12;
+}
+.addon-export-notes {
+  margin: 0 0 1rem;
+  padding-left: 1.2rem;
+  font-size: 0.9rem;
+}
 .btn-danger-solid {
   background: var(--danger);
   border-color: var(--danger);

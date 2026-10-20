@@ -5,7 +5,9 @@ import { InlineSpinner } from '../Loading';
 import { ClassMark } from '../ClassMark';
 import { MultiSelect } from '../MultiSelect';
 import { RoleMark } from '../RoleMark';
-import { ROLE_CATEGORIES, STATUS_EMOJI, entryName, errorText } from './labels';
+import { ROLE_CATEGORIES, STATUS_EMOJI, entryName, errorText, formatEventTime } from './labels';
+import { toAddonSetup, type AddonExport } from './addonExport';
+import { AddonExportDialog } from './AddonExportDialog';
 import {
   postSetup,
   removeSetupPost,
@@ -61,6 +63,8 @@ export function SetupEditor({
     event.entries.filter((entry) => entry.assist).map((entry) => entry.id),
   );
   const [busy, setBusy] = useState(false);
+  // The setup as the Raid Sort addon reads it, shown in a dialog to copy.
+  const [exported, setExported] = useState<AddonExport | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { confirm, dialog } = useConfirm();
   // How many groups and places, from the event's kind: 8 groups of 5 for a raid, one unlimited
@@ -171,6 +175,20 @@ export function SetupEditor({
             assistEntryIds: assists.filter((id) => byId.has(id)),
           },
     ).then(() => setDirty(false));
+  // What is on screen, saved or not.
+  const exportForAddon = () =>
+    setExported(
+      toAddonSetup({
+        title: event.title,
+        when: formatEventTime(event.startsAt, event.timezone),
+        entries: people,
+        places,
+        groupCount,
+        leaderDiscordUserId: leader,
+        masterLooterDiscordUserId: masterLooter,
+        assistEntryIds: assists,
+      }),
+    );
   const changeRoles = (update: () => void) => {
     update();
     setDirty(true);
@@ -217,6 +235,7 @@ export function SetupEditor({
   return (
     <div className="tasks">
       {dialog}
+      {exported && <AddonExportDialog exported={exported} onClose={() => setExported(null)} />}
       <div className="tasks-head">
         <span className="muted">
           Drag people in from the bench, or tap someone and then a place. Saving also updates the{' '}
@@ -234,6 +253,17 @@ export function SetupEditor({
           >
             {groupCount === 1 ? 'Clear' : 'Clear groups'}
           </button>
+          {/* The addon sorts raids: only for events with raid groups and roles. */}
+          {event.layout.hasRaidRoles && (
+            <button
+              type="button"
+              className="btn btn-sm"
+              onClick={exportForAddon}
+              title="The setup as the Raid Sort addon reads it, to paste in game"
+            >
+              Export for addon
+            </button>
+          )}
           <button
             type="button"
             className="btn btn-sm btn-primary"
