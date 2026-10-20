@@ -11,7 +11,7 @@ Made for WoW Forever; works on Classic Era too.
    then **Copy**. (Or write a setup by hand, see [The setup](#the-setup).)
 2. In game, type `/raidsort` and press **Upload Config**.
 3. Paste the setup and press **Save**.
-4. Once everyone is in the raid, press **Sort**.
+4. Press **Invite & Sort**: it invites everyone, makes the group a raid and sorts it as they join.
 
 The setup stays loaded until you close the game or upload another one. Nothing is saved between
 sessions.
@@ -39,7 +39,8 @@ sessions.
 groups and players the setup has.
 
 - **Re-upload Config**: opens the upload window with the current setup in it, to change or replace.
-- **Sort**: sorts the raid.
+- **Invite & Sort**: invites everyone in the setup who isn't in the group, turns the party into a
+  raid, and sorts it (see [Invite & Sort](#invite--sort)).
 - **Close**.
 
 **Upload window**: paste the setup into the text box.
@@ -50,9 +51,17 @@ groups and players the setup has.
 
 Drag a window by its title bar. Escape closes it.
 
+## Invite & Sort
+
+**Invite & Sort** does the whole thing: it invites everyone in the setup who isn't in your group
+(see [Inviting](#inviting)), then sorts the raid. If you're already in a raid it sorts right away,
+and again each time someone joins, with a short "Sorted; waiting for: …" while people are still
+missing. Once everyone is in, you get the full report below. It stops waiting after 2 minutes,
+sorting one last time; press it again for anyone joining later.
+
 ## Sorting
 
-Press **Sort** (or type `/raidsort sort`). You need to be the raid leader or an assistant, out of
+`/raidsort sort` only sorts, without inviting. You need to be the raid leader or an assistant, out of
 combat.
 
 - Everyone in the setup goes to their group. Moving players takes the game a moment, so Raid Sort

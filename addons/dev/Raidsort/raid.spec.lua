@@ -1,15 +1,23 @@
 -- Tests of Raidsort/Raid.lua against a fake raid (the game's raid API, timers and events).
 -- Run with `npm test` in addons/ (or any Lua 5.1+ from addons/: lua dev/Raidsort/raid.spec.lua).
 
-local raid, timers, calls, printed = {}, {}, {}, {}
+local raid, timers, later, calls, printed = {}, {}, {}, {}, {}
 local function reset(members)
-    raid, timers, calls, printed = {}, {}, {}, {}
+    raid, timers, later, calls, printed = {}, {}, {}, {}, {}
     for i, m in ipairs(members) do raid[i] = { name = m[1], group = m[2], rank = m[3] or 0 } end
 end
 
 -- The game API Raid.lua uses -------------------------------------------------------------------
 MAX_RAID_MEMBERS = 40
-C_Timer = { After = function(delay, fn) timers[#timers + 1] = fn end }
+-- Long timers (giving up after minutes) wait in `later`, for a test to fire them.
+C_Timer = {
+    After = function(delay, fn)
+        local queue = delay >= 60 and later or timers
+        queue[#queue + 1] = fn
+    end,
+}
+function GetNumGroupMembers() return #raid end
+function InviteUnit(name) calls[#calls + 1] = "InviteUnit:" .. name end
 function print(text) printed[#printed + 1] = text end
 function IsInRaid() return true end
 function IsInGroup() return true end
@@ -118,6 +126,31 @@ it("refuses to sort for someone who isn't leader or assistant", function()
     Raid.sort(assert(Core.read('{ { "Other" } }')))
     has(printed, "Only the raid leader or an assistant")
     assert(#calls == 0, "nothing moved")
+end)
+
+it("Invite & Sort invites who is missing and sorts again as they join", function()
+    reset({ { "Me", 2, 2 }, { "Tank", 1 } })
+    Raid.inviteAndSort(assert(Core.read('{ { "Me", "Tank", "Healer" } }')))
+    has(calls, "InviteUnit:Healer")
+    runGame()
+    has(printed, "Sorted; waiting for: Healer")
+    assert(raid[1].group == 1, "sorted before everyone is in")
+    raid[3] = { name = "Healer", group = 4, rank = 0 }
+    Raid.onRosterUpdate()
+    runGame()
+    assert(raid[3].group == 1, "the one who joined is sorted too")
+    has(printed, "Raid sorted.")
+    assert(not printed[#printed]:find("Not in the raid"), "everyone is in")
+end)
+
+it("Invite & Sort stops waiting after a while, with a last full sort", function()
+    reset({ { "Me", 1, 2 } })
+    Raid.inviteAndSort(assert(Core.read('{ { "Me", "Late" } }')))
+    runGame()
+    for _, fn in ipairs(later) do fn() end
+    runGame()
+    has(printed, "Stopped waiting for invites")
+    has(printed, "Not in the raid: Late")
 end)
 
 io.write(("%d passed, %d failed\n"):format(passed, failed))

@@ -1,6 +1,7 @@
 -- Raidsort: what is done in the game. Sorting moves people a batch at a time and waits for the
 -- raid to update before looking again (moving is not instant), until everyone is in place; then
 -- it hands out the raid roles. Inviting asks everyone in the setup who isn't in the group yet.
+-- Invite & Sort does both: it invites, then sorts again each time someone joins.
 
 local _, ns = ...
 local Core = ns.Core
@@ -13,6 +14,8 @@ local MAX_ROUNDS = 10
 local ROUND_TIMEOUT = 2
 -- After an update, wait this long for more of them before looking again.
 local SETTLE = 0.3
+-- Invite & Sort keeps sorting as people join for this long (invites expire after a while too).
+local FOLLOW_TIME = 120
 
 -- Classic and newer clients name these differently; use whichever this one has.
 local InviteUnit = (C_PartyInfo and C_PartyInfo.InviteUnit) or InviteUnit
@@ -82,6 +85,7 @@ local function currentLootMaster()
 end
 
 local sorting -- { setup, rounds, token } while a sort runs
+local following -- { setup, members, token } while Invite & Sort waits for people to join
 
 local function finish(roster, matched, plan)
     local me = { leader = UnitIsGroupLeader("player"), assist = UnitIsGroupAssistant("player") }
@@ -102,6 +106,11 @@ local function finish(roster, matched, plan)
         end
     end
 
+    if following and #plan.missing > 0 then
+        -- Still waiting for some to join: a short line, the full report once everyone is in.
+        return say("Sorted; waiting for: %s.", list(plan.missing))
+    end
+    following = nil
     say("Raid sorted.")
     if #plan.missing > 0 then say("Not in the raid: %s.", list(plan.missing)) end
     if #plan.extras > 0 then say("Not in the setup (put in the free places): %s.", list(plan.extras)) end
@@ -126,7 +135,7 @@ local function round()
     sorting.rounds = sorting.rounds + 1
     if sorting.rounds > MAX_ROUNDS then
         sorting = nil
-        return say("Couldn't get everyone into place; press Sort again.")
+        return say("Couldn't get everyone into place; press Invite & Sort again.")
     end
     for _, move in ipairs(moves) do
         if move.op == "move" then
@@ -192,9 +201,11 @@ local function sendInvites()
     return sent
 end
 
+--- Invites everyone in the setup who isn't in the group: false when it can't.
 function Raid.invite(setup)
     if IsInGroup() and not (UnitIsGroupLeader("player") or UnitIsGroupAssistant("player")) then
-        return say("Only the leader or an assistant can invite.")
+        say("Only the leader or an assistant can invite.")
+        return false
     end
     local people = groupNames()
     local matched = Core.match(setup, people)
@@ -206,7 +217,8 @@ function Raid.invite(setup)
     end
     if #inviting == 0 then
         inviting = nil
-        return say("Everyone in the setup is already in the group.")
+        say("Everyone in the setup is already in the group.")
+        return true
     end
     local total = #inviting
     local sent = sendInvites()
@@ -215,6 +227,35 @@ function Raid.invite(setup)
     else
         say("Invited %d: %s.", #sent, list(sent))
     end
+    return true
+end
+
+--- Invites everyone missing, makes the group a raid, and sorts it: now if it's a raid already,
+--- and again each time someone joins, until everyone is in or FOLLOW_TIME runs out.
+function Raid.inviteAndSort(setup)
+    if InCombatLockdown() then return say("You can't sort the raid in combat.") end
+    if not Raid.invite(setup) then return end
+    local token = (following and following.token or 0) + 1
+    following = { setup = setup, members = -1, token = token }
+    C_Timer.After(FOLLOW_TIME, function()
+        if following and following.token == token then
+            following = nil
+            say("Stopped waiting for invites; press Invite & Sort again for anyone joining later.")
+            -- One last sort, for the full report of who is missing and what couldn't be set.
+            if IsInRaid() and not sorting then Raid.sort(setup) end
+        end
+    end)
+    Raid.followUp()
+end
+
+--- Invite & Sort: sorts when the raid has someone new (not on every change, as sorting causes
+--- changes of its own).
+function Raid.followUp()
+    if not following or sorting or not IsInRaid() or InCombatLockdown() then return end
+    local members = GetNumGroupMembers()
+    if members == following.members then return end
+    following.members = members
+    Raid.sort(following.setup)
 end
 
 --- The group changed: carry on sorting or inviting.
@@ -228,4 +269,6 @@ function Raid.onRosterUpdate()
             if sent and #sent > 0 then say("Invited %d more: %s.", #sent, list(sent)) end
         end
     end
+    -- Once a sort ends (or none runs), sort for whoever just joined.
+    if following then C_Timer.After(SETTLE, Raid.followUp) end
 end

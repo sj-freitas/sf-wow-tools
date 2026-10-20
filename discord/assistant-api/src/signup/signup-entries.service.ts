@@ -217,6 +217,14 @@ export class SignupEntriesService {
     if (roles.assistEntryIds?.some((id) => !ids.has(id))) {
       throw new BadRequestException('Someone with assist is no longer signed up. Reload the page.');
     }
+    // The leader (the creator when none is set) never also has assist.
+    const leader =
+      (roles.leaderDiscordUserId !== undefined
+        ? roles.leaderDiscordUserId
+        : event.leaderDiscordUserId) ?? event.createdByDiscordId;
+    const assistEntryIds = roles.assistEntryIds?.filter(
+      (id) => event.entries.find((entry) => entry.id === id)?.discordUserId !== leader,
+    );
     await this.prisma.$transaction([
       ...(roles.leaderDiscordUserId !== undefined || roles.masterLooterDiscordUserId !== undefined
         ? [
@@ -233,14 +241,14 @@ export class SignupEntriesService {
             }),
           ]
         : []),
-      ...(roles.assistEntryIds
+      ...(assistEntryIds
         ? [
             this.prisma.signupEntry.updateMany({
               where: { eventId: event.id },
               data: { assist: false },
             }),
             this.prisma.signupEntry.updateMany({
-              where: { eventId: event.id, id: { in: [...roles.assistEntryIds] } },
+              where: { eventId: event.id, id: { in: [...assistEntryIds] } },
               data: { assist: true },
             }),
           ]

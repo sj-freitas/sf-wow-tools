@@ -63,8 +63,8 @@ export function AddonExportDialog({
       <h3 id="addon-export-title">Export for Raid Sort</h3>
       <p>
         In game, type <code>/raidsort</code>, press <strong>Upload Config</strong>, paste this in
-        and save; then <strong>Sort</strong> puts everyone in their group and hands out the leader,
-        assists and master looter.
+        and save; then <strong>Invite &amp; Sort</strong> invites everyone, makes the group a raid,
+        puts everyone in their group and hands out the leader, assists and master looter.
       </p>
       <p className="muted">
         Don’t have the addon? Get{' '}

@@ -77,7 +77,7 @@ local function buildMain()
 
     uploadButton = newButton(main, "Upload Config", function() UI.showUpload() end)
     reuploadButton = newButton(main, "Re-upload Config", function() UI.showUpload() end)
-    sortButton = newButton(main, "Sort", function() ns.Raid.sort(ns.setup) end)
+    sortButton = newButton(main, "Invite & Sort", function() ns.Raid.inviteAndSort(ns.setup) end)
     closeButton = newButton(main, CLOSE or "Close", function() main:Hide() end)
     mainButtons = { uploadButton, reuploadButton, sortButton, closeButton }
 end

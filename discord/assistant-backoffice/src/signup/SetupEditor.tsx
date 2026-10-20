@@ -91,6 +91,12 @@ export function SetupEditor({
   }, [people]);
 
   const byId = new Map(people.map((entry) => [entry.id, entry]));
+  // The leader already leads: never also an assist (an Officer who creates the event gets both).
+  const assistIds = assists.filter((id) => byId.has(id) && byId.get(id)!.discordUserId !== leader);
+  const chooseLeader = (discordUserId: string) => {
+    setLeader(discordUserId);
+    setAssists((current) => current.filter((id) => byId.get(id)?.discordUserId !== discordUserId));
+  };
   const at = (group: number, slot: number) =>
     Object.entries(places).find(([, p]) => p.group === group && p.slot === slot)?.[0] ?? null;
   const bench = people.filter((entry) => !places[entry.id]).sort(benchOrder);
@@ -172,7 +178,7 @@ export function SetupEditor({
               masterLooter && people.some((p) => p.discordUserId === masterLooter)
                 ? masterLooter
                 : null,
-            assistEntryIds: assists.filter((id) => byId.has(id)),
+            assistEntryIds: assistIds,
           },
     ).then(() => setDirty(false));
   // What is on screen, saved or not.
@@ -186,7 +192,7 @@ export function SetupEditor({
         groupCount,
         leaderDiscordUserId: leader,
         masterLooterDiscordUserId: masterLooter,
-        assistEntryIds: assists,
+        assistEntryIds: assistIds,
       }),
     );
   const changeRoles = (update: () => void) => {
@@ -221,7 +227,7 @@ export function SetupEditor({
       {!event.layout.hasRaidRoles ? null : entry.discordUserId === leader ? (
         <RoleMark gameVersion={guild.gameVersion} role="LEADER" />
       ) : (
-        assists.includes(entry.id) && <RoleMark gameVersion={guild.gameVersion} role="ASSIST" />
+        assistIds.includes(entry.id) && <RoleMark gameVersion={guild.gameVersion} role="ASSIST" />
       )}
       {event.layout.hasRaidRoles && entry.discordUserId === masterLooter && (
         <RoleMark gameVersion={guild.gameVersion} role="MASTER_LOOTER" />
@@ -288,7 +294,10 @@ export function SetupEditor({
               <span>
                 <RoleMark gameVersion={guild.gameVersion} role="LEADER" /> Leader
               </span>
-              <select value={leader} onChange={(e) => changeRoles(() => setLeader(e.target.value))}>
+              <select
+                value={leader}
+                onChange={(e) => changeRoles(() => chooseLeader(e.target.value))}
+              >
                 {!people.some((p) => p.discordUserId === leader) && (
                   <option value={leader}>{event.createdByName} (not signed up)</option>
                 )}
@@ -320,16 +329,18 @@ export function SetupEditor({
                 <RoleMark gameVersion={guild.gameVersion} role="ASSIST" /> Assist
               </span>
               <MultiSelect
-                options={people.map((entry) => ({ value: entry.id, label: entryName(entry) }))}
-                value={assists.filter((id) => byId.has(id))}
+                options={people
+                  .filter((entry) => entry.discordUserId !== leader)
+                  .map((entry) => ({ value: entry.id, label: entryName(entry) }))}
+                value={assistIds}
                 onChange={(value) => changeRoles(() => setAssists(value))}
                 placeholder="Nobody"
               />
             </div>
           </div>
           <small className="muted">
-            Shown after their names in the setup. Officers get assist when they sign up; saving the
-            setup saves these too.
+            Shown after their names in the setup. Officers get assist when they sign up; the leader
+            never has it, as leading covers it. Saving the setup saves these too.
           </small>
         </div>
       )}
