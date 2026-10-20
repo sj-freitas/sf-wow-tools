@@ -319,6 +319,10 @@ export const deleteTask = (id: string): Promise<void> => request('DELETE', `/api
 export const deletePostMessage = (id: string): Promise<void> =>
   request('POST', `/api/tasks/${id}/delete-post`);
 
+/** Turns a post's live updates (live tags, reaction counts) on or off. */
+export const setTaskTracked = (id: string, tracked: boolean): Promise<ScheduledPost> =>
+  request('POST', `/api/tasks/${id}/tracked`, { tracked });
+
 export const runTaskNow = (id: string): Promise<void> =>
   request('POST', `/api/tasks/${id}/run-now`);
 
@@ -363,6 +367,10 @@ export const updateHoneypot = (
 
 export const deleteHoneypot = (id: string): Promise<void> =>
   request('DELETE', `/api/honeypots/${id}`);
+
+/** A guild's address now, for an old address of it (from before a rename); null otherwise. */
+export const resolveGuildPath = (path: string): Promise<{ path: string | null }> =>
+  request('GET', `/api/guilds/resolve-path?path=${encodeURIComponent(path)}`);
 
 /** Returns the logged-in user, or null when there's no valid session. */
 export async function fetchCurrentUser(): Promise<User | null> {

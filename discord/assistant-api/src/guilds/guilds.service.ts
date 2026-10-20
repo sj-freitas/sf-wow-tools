@@ -233,6 +233,8 @@ export class GuildsService {
     await this.assertAddressFree(input);
 
     try {
+      // An address another guild once had now belongs to this one: it no longer redirects.
+      await this.prisma.guildPathAlias.deleteMany({ where: { path: guildPath(input) } });
       const guild = await this.prisma.guild.create({
         data: {
           name: input.name,
@@ -267,9 +269,25 @@ export class GuildsService {
       select: { name: true, realm: true, gameVersion: true, region: true },
     });
     if (!current) throw new NotFoundException('Guild not found');
-    await this.assertAddressFree({ ...current, ...details } as GuildDetails, guildId);
+    const next = { ...current, ...details } as GuildDetails;
+    await this.assertAddressFree(next, guildId);
+    const [before, after] = [guildPath(current), guildPath(next)];
     try {
-      await this.prisma.guild.update({ where: { id: guildId }, data: details });
+      await this.prisma.$transaction([
+        this.prisma.guild.update({ where: { id: guildId }, data: details }),
+        // A new address: the old one keeps working (redirected), and the new one is this guild's
+        // alone, even if it once belonged to another guild.
+        ...(before === after
+          ? []
+          : [
+              this.prisma.guildPathAlias.deleteMany({ where: { path: after } }),
+              this.prisma.guildPathAlias.upsert({
+                where: { path: before },
+                create: { path: before, guildId },
+                update: { guildId },
+              }),
+            ]),
+      ]);
     } catch (error) {
       if (isUniqueViolation(error)) {
         throw new ConflictException(

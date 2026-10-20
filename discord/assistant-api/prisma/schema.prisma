@@ -84,6 +84,7 @@ model Guild {
   honeypots               Honeypot[]
   // Plugins (prisma/plugins.prisma).
   plugins                 GuildPlugin[]
+  pathAliases             GuildPathAlias[]
   servers                 DiscordServer[]
   roleMappings            GuildRoleMapping[]
   characterMemberships    CharacterGuildMembership[]
@@ -102,6 +103,20 @@ model Guild {
 
 // The optional banner image of a guild, kept apart from the guild row so listing guilds never
 // loads the image bytes.
+// An address a guild had before it was renamed (or its realm, region or game version changed), so
+// old links still work: the server redirects them to the guild's address now. A guild that takes
+// an address over removes its alias.
+model GuildPathAlias {
+  // `<version>/<region>/<realm>/guilds/<name>`, as `guildPath` writes it.
+  path      String   @id
+  guildId   String   @map("guild_id") @db.Uuid
+  guild     Guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([guildId])
+  @@map("guild_path_aliases")
+}
+
 model GuildBanner {
   guildId     String   @id @map("guild_id") @db.Uuid
   guild       Guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
@@ -374,34 +389,40 @@ model Session {
 // `nextRunAt` (UTC) is what the worker queries. `config`/`state` are per-type JSON (validated
 // in code): for POST, config = channel, content, seed reactions; state = the posted message.
 model ScheduledTask {
-  id           String         @id @default(uuid()) @db.Uuid
-  guildId      String         @map("guild_id") @db.Uuid
-  guild        Guild          @relation(fields: [guildId], references: [id], onDelete: Cascade)
-  type         TaskType
-  name         String
-  enabled      Boolean        @default(true)
-  scheduleKind ScheduleKind   @map("schedule_kind")
+  id             String         @id @default(uuid()) @db.Uuid
+  guildId        String         @map("guild_id") @db.Uuid
+  guild          Guild          @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  type           TaskType
+  name           String
+  enabled        Boolean        @default(true)
+  scheduleKind   ScheduleKind   @map("schedule_kind")
   // ONCE: the instant to run. DAILY/WEEKLY: wall-clock "HH:mm" (and ISO weekday 1-7) in the guild's timezone.
-  runAt        DateTime?      @map("run_at")
-  timeOfDay    String?        @map("time_of_day")
-  weekday      Int?
-  nextRunAt    DateTime?      @map("next_run_at")
+  runAt          DateTime?      @map("run_at")
+  timeOfDay      String?        @map("time_of_day")
+  weekday        Int?
+  nextRunAt      DateTime?      @map("next_run_at")
   // Set while a worker is executing the task, so no other worker picks it up.
-  leaseUntil   DateTime?      @map("lease_until")
-  lastRunAt    DateTime?      @map("last_run_at")
-  lastStatus   TaskRunStatus? @map("last_status")
-  lastError    String?        @map("last_error")
-  config       Json
-  state        Json           @default("{}")
-  createdById  String?        @map("created_by_id") @db.Uuid
-  runs         TaskRun[]
+  leaseUntil     DateTime?      @map("lease_until")
+  lastRunAt      DateTime?      @map("last_run_at")
+  lastStatus     TaskRunStatus? @map("last_status")
+  lastError      String?        @map("last_error")
+  config         Json
+  state          Json           @default("{}")
+  // Live updates (POST): while true, the worker keeps the post's live tags up to date and the
+  // backoffice re-reads its reaction counts; false freezes both as they last were.
+  tracked        Boolean        @default(true)
+  // The reaction counts of each message as last read from Discord, shown in the backoffice:
+  // { [part id]: { at: ISO time, reactions: [{ emoji, emojiId, count }] } }.
+  reactionCounts Json           @default("{}") @map("reaction_counts")
+  createdById    String?        @map("created_by_id") @db.Uuid
+  runs           TaskRun[]
   // The dynamic features (e.g. [reactions:...]) this post's text uses, and the posts whose
   // reactions other posts read.
-  images       PostImage[]
-  tracking     PostTracking[] @relation("TrackedPost")
-  trackedBy    PostTracking[] @relation("TrackingSource")
-  createdAt    DateTime       @default(now()) @map("created_at")
-  updatedAt    DateTime       @updatedAt @map("updated_at")
+  images         PostImage[]
+  tracking       PostTracking[] @relation("TrackedPost")
+  trackedBy      PostTracking[] @relation("TrackingSource")
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
 
   @@index([enabled, nextRunAt])
   @@map("scheduled_tasks")

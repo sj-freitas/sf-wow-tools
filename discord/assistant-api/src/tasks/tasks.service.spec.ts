@@ -6,7 +6,7 @@ import type { PrismaService } from '../database/prisma.service';
 import type { DiscordBotService } from '../discord/discord-bot.service';
 import type { PostImagesService } from './post-images.service';
 import type { TrackingService } from './tracking.service';
-import { TasksService } from './tasks.service';
+import { REACTIONS_FRESH_MS, TasksService } from './tasks.service';
 
 const CHANNEL = '333333333333333333';
 const SERVER = '222222222222222222';
@@ -118,9 +118,16 @@ describe('TasksService', () => {
       lastError: null,
       config: { serverId: SERVER, channelId: CHANNEL, parts: [part(P1)] },
       state: { messages: [posted(P1, 'm1')] },
+      tracked: true,
+      reactionCounts: {},
       createdAt: new Date(),
     };
     const prisma = {
+      // Saving one message's reaction counts (jsonb_set on reaction_counts).
+      $executeRaw: async (_sql: unknown, partId: string, entry: string) => {
+        if (task) task.reactionCounts = { ...task.reactionCounts, [partId]: JSON.parse(entry) };
+        return 1;
+      },
       guild: { findUnique: async () => ({ region: 'EU' }) },
       $queryRaw: async (sql: any) => {
         rawQueries.push(sql);
@@ -835,6 +842,73 @@ describe('TasksService', () => {
       assert.deepEqual(await service.reactions('t1'), []);
       assert.equal(updated.state.messages[0].deleted, true);
       service['bot'].getReactions = original;
+    });
+
+    it('saves the counts on the post and serves them while fresh, without asking Discord', async () => {
+      await service.reactions('t1');
+      assert.equal(task.reactionCounts[P1].messageId, 'm1');
+      assert.deepEqual(task.reactionCounts[P1].reactions, reactionsResult);
+      reactionsResult = [{ emoji: '👍', emojiId: null, count: 9 }];
+      const [again] = await service.reactions('t1');
+      assert.equal(again.count, 3, 'still the saved count');
+      assert.deepEqual(reactionsFor, ['m1'], 'Discord was asked once');
+    });
+
+    it('asks Discord again once the saved counts are old', async () => {
+      task.reactionCounts = {
+        [P1]: {
+          at: new Date(Date.now() - REACTIONS_FRESH_MS - 1).toISOString(),
+          messageId: 'm1',
+          reactions: [],
+        },
+      };
+      assert.equal((await service.reactions('t1'))[0].count, 3);
+      assert.deepEqual(reactionsFor, ['m1']);
+    });
+
+    it('keeps the last counts of an untracked post, however old', async () => {
+      task.tracked = false;
+      task.reactionCounts = {
+        [P1]: {
+          at: '2020-01-01T00:00:00.000Z',
+          messageId: 'm1',
+          reactions: [{ emoji: '🎉', emojiId: null, count: 1 }],
+        },
+      };
+      assert.deepEqual(await service.reactions('t1'), [
+        { emoji: '🎉', emojiId: null, count: 1, imageUrl: null },
+      ]);
+      assert.deepEqual(reactionsFor, []);
+    });
+
+    it('shares one Discord read between overlapping requests', async () => {
+      await Promise.all([
+        service.reactions('t1'),
+        service.reactions('t1'),
+        service.reactions('t1'),
+      ]);
+      assert.deepEqual(reactionsFor, ['m1']);
+    });
+
+    it('shows the last counts when Discord fails, rather than an error', async () => {
+      task.reactionCounts = {
+        [P1]: {
+          at: '2020-01-01T00:00:00.000Z',
+          messageId: 'm1',
+          reactions: [{ emoji: '👍', emojiId: null, count: 2 }],
+        },
+      };
+      const original = service['bot'].getReactions;
+      service['bot'].getReactions = async () => {
+        throw new Error('Discord is down');
+      };
+      assert.equal((await service.reactions('t1'))[0].count, 2);
+      service['bot'].getReactions = original;
+    });
+
+    it('turns live updates off and on', async () => {
+      assert.equal((await service.setTracked('t1', false)).tracked, false);
+      assert.equal(updated.tracked, false);
     });
   });
 

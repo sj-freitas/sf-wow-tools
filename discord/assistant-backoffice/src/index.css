@@ -1204,6 +1204,22 @@ tbody tr:last-child td {
   color: var(--text);
   border-bottom-color: var(--accent);
 }
+/* The guild's sections as a dropdown, for phones (there are up to 8 tabs). */
+.view-tabs-select {
+  display: none;
+  padding: 0.75rem 1rem 0;
+}
+.view-tabs-select select {
+  width: 100%;
+}
+@media (max-width: 600px) {
+  .guild-tabs {
+    display: none;
+  }
+  .view-tabs-select {
+    display: block;
+  }
+}
 .back-link {
   color: var(--muted);
   text-decoration: none;

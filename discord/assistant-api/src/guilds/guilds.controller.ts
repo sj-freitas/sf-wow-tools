@@ -5,6 +5,7 @@ import {
   Delete,
   ForbiddenException,
   Get,
+  Query,
   HttpCode,
   HttpStatus,
   Param,
@@ -27,6 +28,7 @@ import { isRegion, REGIONS, regionOptions } from '../config/regions';
 import { TEST_ARMORY } from '../armory/armory.config';
 import { games, getGame, isGameVersion, serversOf } from '../game/games';
 import { MAX_BANNER_BYTES, readBody } from './banner';
+import { GuildRedirectsService } from './guild-redirects.service';
 import { RanksService, type RanksDto } from './ranks.service';
 import {
   GUILD_ROLE_KEYS,
@@ -56,6 +58,7 @@ export class GuildsController {
     private readonly guildAccess: GuildAccessService,
     private readonly authService: AuthService,
     private readonly ranksService: RanksService,
+    private readonly redirects: GuildRedirectsService,
     configService: ConfigService,
   ) {
     this.botInviteUrl = botInviteUrl(configService);
@@ -70,6 +73,16 @@ export class GuildsController {
   @Get()
   list(@Req() req: AuthenticatedRequest): Promise<UserGuildDto[]> {
     return this.guildsService.findForUser(req.user.id);
+  }
+
+  /**
+   * `?path=<version>/<region>/<realm>/guilds/<name>`: the guild's address now, when that is an old
+   * address of it (from before a rename); `path: null` otherwise. For links followed inside the
+   * backoffice (page loads are redirected by the server).
+   */
+  @Get('resolve-path')
+  async resolvePath(@Query('path') path?: string): Promise<{ path: string | null }> {
+    return { path: path ? await this.redirects.resolve(path) : null };
   }
 
   /** How to get a server ready for Guild Assistant, including the bot invite link. */

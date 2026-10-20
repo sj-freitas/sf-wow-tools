@@ -1,6 +1,7 @@
 import { DiscordAPIError, REST } from '@discordjs/rest';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { CacheService } from '../cache/cache.service';
 import {
   ChannelType,
   Routes,
@@ -95,6 +96,10 @@ const TEXT_CHANNEL_TYPES = new Set<number>([ChannelType.GuildText, ChannelType.G
  * `@discordjs/rest` queues requests to respect Discord's rate limits. Mentions in posts
  * never ping @everyone/@here.
  */
+/** How long a server's channel list is kept (see listTextChannels). */
+const CHANNELS_CACHE_MS = 60_000;
+const channelsKey = (serverId: string) => `discord:channels:${serverId}`;
+
 @Injectable()
 export class DiscordBotService {
   private readonly rest: REST;
@@ -104,7 +109,10 @@ export class DiscordBotService {
   /** Command ids only change if a command is deleted and created again, so they are kept. */
   private readonly commandIds = new Map<string, string>();
 
-  constructor(configService: ConfigService) {
+  constructor(
+    configService: ConfigService,
+    private readonly cache: CacheService,
+  ) {
     this.applicationId = configService.get<string>('DISCORD_APPLICATION_ID');
     this.devServerId = configService.get<string>('DISCORD_GUILD_ID') || undefined;
     this.rest = new REST({ version: '10' }).setToken(
@@ -172,12 +180,18 @@ export class DiscordBotService {
     return data.length > maxBytes ? null : data;
   }
 
+  /**
+   * A server's text channels, by name. Kept for a minute (every page with a channel picker asks),
+   * so a channel made or renamed in Discord can take that long to show.
+   */
   async listTextChannels(serverId: string): Promise<ServerChannel[]> {
-    const channels = (await this.rest.get(Routes.guildChannels(serverId))) as APIChannel[];
-    return channels
-      .filter((channel) => TEXT_CHANNEL_TYPES.has(channel.type) && 'name' in channel)
-      .map((channel) => ({ id: channel.id, name: (channel as { name: string }).name }))
-      .sort((a, b) => a.name.localeCompare(b.name));
+    return this.cache.getOrLoad(channelsKey(serverId), CHANNELS_CACHE_MS, async () => {
+      const channels = (await this.rest.get(Routes.guildChannels(serverId))) as APIChannel[];
+      return channels
+        .filter((channel) => TEXT_CHANNEL_TYPES.has(channel.type) && 'name' in channel)
+        .map((channel) => ({ id: channel.id, name: (channel as { name: string }).name }))
+        .sort((a, b) => a.name.localeCompare(b.name));
+    });
   }
 
   async createTextChannel(
@@ -188,6 +202,8 @@ export class DiscordBotService {
       body: { name: options.name, type: ChannelType.GuildText, topic: options.topic },
       reason: 'Guild Assistant: honeypot channel',
     })) as APIChannel & { name: string };
+    // The new channel shows in the pickers at once.
+    await this.cache.delete(channelsKey(serverId));
     return { id: channel.id, name: channel.name };
   }
 

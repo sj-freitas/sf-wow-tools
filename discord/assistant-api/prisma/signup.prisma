@@ -113,6 +113,8 @@ model SignupEvent {
 
   @@index([guildId, startsAt])
   @@index([guildId, archivedAt])
+  // Every message deleted in Discord is looked up here (is it an event's post?).
+  @@index([messageId])
   @@index([publishAt])
   @@index([lockMode, closedShown, startsAt])
   @@map("signup_events")

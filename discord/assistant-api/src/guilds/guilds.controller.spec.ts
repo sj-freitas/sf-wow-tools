@@ -6,6 +6,7 @@ import type { AuthService } from '../auth/auth.service';
 import type { AuthenticatedRequest } from '../auth/auth.types';
 import type { GuildAccessService } from '../auth/guild-access.service';
 import { getGame } from '../game/games';
+import type { GuildRedirectsService } from './guild-redirects.service';
 import { GuildsController } from './guilds.controller';
 import type { RanksService } from './ranks.service';
 import type { GuildsService } from './guilds.service';
@@ -45,6 +46,7 @@ describe('GuildsController role mappings', () => {
       guildAccess,
       {} as AuthService,
       { findRanks: async () => ({ a: ['Raider'] }) } as unknown as RanksService,
+      {} as GuildRedirectsService,
       {
         getOrThrow: () => 'app-id',
         get: (key: string) => (key.startsWith('BLIZZARD') ? blizzard : undefined),

@@ -110,6 +110,19 @@ export class TasksController {
     await this.tasks.remove(id);
   }
 
+  /** `{ tracked }`: turns the post's live updates (live tags, reaction counts) on or off. */
+  @Post('tasks/:id/tracked')
+  async setTracked(
+    @Req() req: AuthenticatedRequest,
+    @Param('id') id: string,
+    @Body() body: { tracked?: unknown },
+  ): Promise<TaskDto> {
+    await this.assertOfficerOfTask(req, id);
+    if (typeof body.tracked !== 'boolean')
+      throw new BadRequestException('Say tracked: true or false.');
+    return this.tasks.setTracked(id, body.tracked);
+  }
+
   @Post('tasks/:id/run-now')
   @HttpCode(HttpStatus.NO_CONTENT)
   async runNow(@Req() req: AuthenticatedRequest, @Param('id') id: string): Promise<void> {

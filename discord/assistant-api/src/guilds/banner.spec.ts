@@ -11,6 +11,7 @@ import type { PrismaService } from '../database/prisma.service';
 import type { DiscordOAuthService } from '../auth/discord-oauth.service';
 import type { RealtimeService } from '../realtime/realtime.service';
 import { readBody, sniffImageType } from './banner';
+import type { GuildRedirectsService } from './guild-redirects.service';
 import { GuildsController } from './guilds.controller';
 import { GuildsService } from './guilds.service';
 import type { RanksService } from './ranks.service';
@@ -142,6 +143,7 @@ describe('GuildsController banner routes', () => {
       guildAccess,
       {} as AuthService,
       {} as RanksService,
+      {} as GuildRedirectsService,
       { getOrThrow: () => 'app-id', get: () => undefined } as unknown as ConfigService,
     );
   };

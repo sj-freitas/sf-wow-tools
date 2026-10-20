@@ -157,6 +157,12 @@ server can't be removed directly.
 
 ### Backoffice pages and routes
 
+**Old guild addresses.** A guild's address comes from its game version, region, realm and name, so
+renaming it (or changing those) changes it. The old address is kept (`guild_path_aliases`) and
+leads to the new one: the server redirects page loads (a link in Discord, a bookmark) with a 302,
+keeping the page and query, and the backoffice resolves in-app links with `GET
+/api/guilds/resolve-path?path=`. A guild that takes an old address over removes its alias.
+
 **Before logging in** every address shows the public landing page (`PublicPages.tsx`): what Guild
 Assistant does, an **Add the bot to your server** button, and a secondary **Log in with Discord**.
 `/privacy` is the privacy policy, readable logged in or out. Both read `GET /api/public/info` (no
@@ -458,8 +464,14 @@ previews the markdown with mentions shown by name. A post moves through these st
   (resuming one whose time has passed sends it immediately).
 - _Posted_: every message is in Discord. Saving edits those messages; the live reaction counts of each
   (`GET /api/tasks/:id/reactions?part=n`, without the bot's own vote) show right on the post and
-  refresh every 10 s while the page is visible. While it is live it cannot be sent again or moved to
-  a new date or channel.
+  refresh every 10 s while the page is visible. The counts are kept on the post
+  (`scheduled_tasks.reaction_counts`) and read from Discord again at most every 15 s per message,
+  however many people have the page open (overlapping reads share one; if Discord fails, the last
+  counts are shown). While it is live it cannot be sent again or moved to a new date or channel.
+- _Tracked_ (on by default; **Track reactions and live tags** on the post, or `POST
+  /api/tasks/:id/tracked` with `{ tracked }`): the worker keeps the post's live tags (reactions,
+  roster) up to date and its counts are re-read. Off, both stay as they last were: worth it for an
+  old post, as the worker checks every tracked post every minute.
 - _Partly posted_: a run stopped halfway (Discord refused the third message, say). What was sent is
   kept, and the retry (or "Post now") sends only the missing messages, so nothing is sent twice.
 - _Deleted from Discord_ (**Delete post**, `POST /api/tasks/:id/delete-post`): every message is removed
@@ -525,7 +537,7 @@ bot, other bots, the server owner and Administrators.
 - Bot permissions used: View Channel, Send Messages, Manage Channels (to create the channel), Ban
   Members. The bot's role must be above the people it bans.
 
-**Not built yet:** channel cleanup and the raid task (see `TODO.md`). Live updates between the worker
+**Not built yet:** the raid task (see `TODO.md`); channel cleanup is the Channel Clean Up plugin (see Plugins). Live updates between the worker
 and the browser use polling until a shared bus (Redis or Postgres `LISTEN/NOTIFY`) exists.
 
 ### Fresh Discord data and live updates
@@ -545,6 +557,12 @@ and the browser use polling until a shared bus (Redis or Postgres `LISTEN/NOTIFY
 - **Bot requirement:** the bot must be in a server for its roles to be read. The backoffice shows
   the setup steps and the invite link (`GET /api/guilds/setup-info`, built from
   `DISCORD_APPLICATION_ID` and `botInvitePermissions`).
+- **Server-side cache:** `src/cache` (`CacheService`) keeps slow or rate-limited Discord answers for
+  a while: each server's channel list for 60 s (dropped when the bot creates a channel). It sits on a
+  `CacheStore` (get / set with a TTL / delete, values as JSON) kept in memory today; a Redis store
+  can replace it in `CacheModule` without touching its users.
+- **Old history** (post runs, plugin runs, honeypot events) older than 6 months is deleted by the
+  worker once a day (`src/maintenance/retention.service.ts`).
 - **Live updates:** `GET /api/events` is a Server-Sent Events stream. Character changes (from the
   bot or the backoffice) and server removals are published on an in-memory bus
   (`realtime.service.ts`) and forwarded to users with access to that guild; the backoffice reloads

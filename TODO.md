@@ -1,35 +1,38 @@
 - Addon
-    - Sort Groups
-    - Auto Invite
+    - Done: Raid Sort (addons/Raidsort) sorts groups and auto-invites (Invite & Sort)
 - Bot
-    - Prompts user to reigster their characters
+    - Prompts user to register their characters
         - Class;Specs;Main Spec;
-    - Character registration via WoW Armory API
-        - Fetch class/role (and level) from the armory using name + realm, instead of asking the user
-        - /character-add currently takes class + role by hand and leaves level at 1
+        - Partly: signing up with no character links to the backoffice's add-character page
+    - Character registration via WoW Armory API: see "Armory" below (waits on Forever's armory)
     - Discord Commands
-        - /list
-        - 
+        - Done: /list-players
     - Backoffice
-        - Discord Auth
-        - 
+        - Done: Discord login
 
 
-- Armory
+- Armory (no correct Forever integration yet)
     - "Open in armory" (roster ⋯ menu) is in place but Forever has no armory yet: it says
       "This feature doesn't exist on Forever yet". When the Forever armory exists, set the real
       `armoryLink` in discord/assistant-api/src/game/forever/config.ts and remove `armoryPending`
-      there (marked TODO(armory)); the menu then opens the character's page, and the
-      `roster[i].armoryLink` post tag follows the same link.
+      there; the menu then opens the character's page, and the `roster[i].armoryLink` post tag
+      follows the same link.
+    - The lookup that fills race, class and level (character form, Officers, marked TEST in
+      discord/assistant-backoffice/src/CharacterForm.tsx) reads a stand-in armory
+      (discord/assistant-api/src/armory/armory.config.ts), not Forever's. Point it at the Forever
+      armory once there is one, then drop the TEST label and offer it to everyone.
+    - /character-add still takes class + role by hand and leaves level at 1: fill them from the
+      armory once the Forever lookup works.
 
 - Guild setup
-    - Realms ("server" in a guild's address) should come from a config instead of free text
-        - Per game version and region; a picker in the create guild / settings forms, validated by the API
-        - In Forever the realms are called rulesets: PvP, Normal, RP and Hardcore
-        - Today the realm is free text, so typos change a guild's address (`/<version>/<region>/<realm>/<guild>`)
-    - Guild addresses change when a guild is renamed (or its realm/region changes): keep old addresses and redirect
+    - Done: realms come from the game config (per version and region; Forever's rulesets), picked in
+      the create guild / settings forms and validated by the API
+    - Done: old guild addresses (before a rename, or a realm/region/version change) redirect to the
+      current one (guild_path_aliases; the server redirects page loads, the backoffice in-app links)
 - Infrastructure
     - Replace the in-memory caches with a shared one (looking into Redis)
+        - The server-side cache (discord/assistant-api/src/cache) is ready for it: write a Redis
+          `CacheStore` and provide it in `CacheModule`
         - Guild ranks cache (discord/assistant-api/src/guilds/ranks.service.ts, `ranksCacheMs`)
         - In-flight Discord syncs per user (`inFlightSyncs` in auth.service.ts)
         - Live updates event bus (realtime.service.ts): also per-process, Redis pub/sub would allow several API instances
@@ -42,7 +45,7 @@ Notes:
 
 # Background worker + scheduled tasks (Guild Assistant)
 
-Status: scheduled post (phase 1 and 2) and honeypot (phase 4, test mode by default) are built; channel cleanup (phase 3) and the raid (phase 5) are not. See discord/assistant-api/README.md.
+Status: scheduled post (phase 1 and 2), honeypot (phase 4, test mode by default) and channel cleanup (phase 3, the Channel Clean Up plugin) are built; the raid (phase 5) is not. See discord/assistant-api/README.md.
 
 ## Context
 - Monorepo: `discord/assistant-api` (NestJS 12, Prisma/Postgres on Supabase, discord bot via HTTP

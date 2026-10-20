@@ -10,7 +10,9 @@ const LEASE_MINUTES = 5;
 const BATCH_SIZE = 10;
 
 /**
- * Wakes up every minute, runs whatever is due and refreshes the posts that show live reactions. Due tasks are claimed in the database
+ * Wakes up every minute and runs whatever is due; separately, also every minute, refreshes the posts
+ * that show live reactions. The two never wait for each other, so a slow refresh (many tracked
+ * posts, a slow Discord) can't hold up a post that is due. Due tasks are claimed in the database
  * (`FOR UPDATE SKIP LOCKED` plus a lease), so several workers can run side by side without
  * doing anything twice. The first tick happens at start-up, which also picks up everything
  * that came due while no worker was running.
@@ -19,7 +21,9 @@ const BATCH_SIZE = 10;
 export class SchedulerService implements OnApplicationShutdown {
   private readonly logger = new Logger(SchedulerService.name);
   private timer: NodeJS.Timeout | null = null;
+  private trackingTimer: NodeJS.Timeout | null = null;
   private ticking = false;
+  private refreshing = false;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -32,12 +36,30 @@ export class SchedulerService implements OnApplicationShutdown {
     if (this.timer) return;
     this.logger.log(`Scheduler started (every ${TICK_MS / 1000}s)`);
     void this.tick();
+    void this.refreshTracked();
     this.timer = setInterval(() => void this.tick(), TICK_MS);
+    this.trackingTimer = setInterval(() => void this.refreshTracked(), TICK_MS);
   }
 
   onApplicationShutdown(): void {
     if (this.timer) clearInterval(this.timer);
+    if (this.trackingTimer) clearInterval(this.trackingTimer);
     this.timer = null;
+    this.trackingTimer = null;
+  }
+
+  /** Posts whose text shows who reacted, and uploads no post used. Skipped while one runs. */
+  async refreshTracked(): Promise<void> {
+    if (this.refreshing) return;
+    this.refreshing = true;
+    try {
+      await this.tracking.refreshDue();
+      await this.images.deleteOrphans();
+    } catch (error) {
+      this.logger.error(`Refreshing tracked posts failed: ${String(error)}`);
+    } finally {
+      this.refreshing = false;
+    }
   }
 
   /** One pass: claim due tasks and run them. Never throws. */
@@ -61,10 +83,6 @@ export class SchedulerService implements OnApplicationShutdown {
         }
         if (claimed.length < BATCH_SIZE) break;
       }
-      // Posts whose text shows who reacted are brought up to date once a minute.
-      await this.tracking.refreshDue();
-      // Uploaded images that no post ever used.
-      await this.images.deleteOrphans();
     } catch (error) {
       this.logger.error(`Scheduler tick failed: ${String(error)}`);
     } finally {

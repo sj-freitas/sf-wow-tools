@@ -4,6 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { AuthModule } from './auth/auth.module';
 import { BotModule } from './bot/bot.module';
+import { CacheModule } from './cache/cache.module';
 import { DiscordBotModule } from './discord/discord-bot.module';
 import { HoneypotModule } from './honeypot/honeypot.module';
 import { PluginsModule } from './plugins/plugins.module';
@@ -31,6 +32,7 @@ import { SignupModule } from './signup/signup.module';
       exclude: ['/api/{*splat}'],
     }),
     DatabaseModule,
+    CacheModule,
     DiscordBotModule,
     AuthModule,
     BotModule,

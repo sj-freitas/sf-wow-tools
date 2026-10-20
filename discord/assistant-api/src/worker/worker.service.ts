@@ -1,5 +1,6 @@
 import { Injectable, Logger, OnApplicationShutdown } from '@nestjs/common';
 import { HoneypotGatewayService } from '../honeypot/honeypot-gateway.service';
+import { RetentionService } from '../maintenance/retention.service';
 import { PluginRunnerService } from '../plugins/plugin-runner.service';
 import { SignupEventsService } from '../signup/signup-events.service';
 import { SignupSchedulerService } from '../signup/signup-scheduler.service';
@@ -20,12 +21,15 @@ export class WorkerService implements OnApplicationShutdown {
     private readonly signupScheduler: SignupSchedulerService,
     private readonly signupEvents: SignupEventsService,
     private readonly plugins: PluginRunnerService,
+    private readonly retention: RetentionService,
   ) {}
 
   async start(): Promise<void> {
     this.scheduler.start();
     this.signupScheduler.start();
     this.plugins.start();
+    // History older than 6 months, once a day.
+    this.retention.start();
     // An event whose sign-up post is deleted in Discord is archived.
     this.honeypotGateway.onMessageDeleted((messageId) => {
       void this.signupEvents.onMessageDeleted(messageId);

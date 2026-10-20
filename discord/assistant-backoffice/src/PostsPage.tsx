@@ -1,6 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { deletePostMessage, deleteTask, fetchTasks, runTaskNow, updateTask } from './api';
+import {
+  deletePostMessage,
+  deleteTask,
+  fetchTasks,
+  runTaskNow,
+  setTaskTracked,
+  updateTask,
+} from './api';
 import { ReactionsPanel } from './ReactionsPanel';
 import { formatWhen, timeAgo } from './time';
 import type { Guild, PostsPage as PostsPageData, ScheduledPost } from './types';
@@ -287,9 +294,22 @@ export function PostsPage({ guild, timezone }: Props) {
                 part.posted && (
                   <div key={part.id} className="part-reactions">
                     {post.post.parts.length > 1 && <span className="muted">Message {i + 1}</span>}
-                    <ReactionsPanel taskId={post.id} part={i + 1} />
+                    <ReactionsPanel taskId={post.id} part={i + 1} live={post.tracked} />
                   </div>
                 ),
+            )}
+            {isLive(post) && (
+              <label
+                className="field-toggle"
+                title="Off: the reaction counts and live tags stay as they last were"
+              >
+                <input
+                  type="checkbox"
+                  checked={post.tracked}
+                  onChange={(e) => run(setTaskTracked(post.id, e.target.checked))}
+                />
+                Track reactions and live tags
+              </label>
             )}
             <div className="settings-actions task-actions">
               {post.post.parts.length === 1 && post.post.parts[0].posted && (

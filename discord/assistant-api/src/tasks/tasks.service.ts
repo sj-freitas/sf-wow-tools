@@ -42,6 +42,8 @@ export interface TaskDto {
   name: string;
   type: 'POST';
   enabled: boolean;
+  /** Live updates: the post's live tags and reaction counts are kept up to date. */
+  tracked: boolean;
   schedule: {
     /** When the post goes out, ISO. */
     runAt: string | null;
@@ -108,6 +110,8 @@ export interface TaskInput {
   runAtLocal?: unknown;
   /** Post right away instead of at `runAtLocal`. */
   postNow?: unknown;
+  /** Keep the post's live tags and reaction counts up to date (default: yes). */
+  tracked?: unknown;
   serverId?: unknown;
   channelId?: unknown;
   /** The messages of the post: `[{ id?, content, seedReactions?, embedLinks?, delaySeconds?, imageIds? }]`. */
@@ -118,6 +122,22 @@ export interface ReactionDto extends MessageReaction {
   /** Image of a custom emoji. */
   imageUrl: string | null;
 }
+
+/** Reaction counts this recent are shown as they are; older ones are read from Discord again. */
+export const REACTIONS_FRESH_MS = 15_000;
+
+/** `ScheduledTask.reactionCounts`: each message's counts as last read, by part id. */
+type ReactionCounts = Record<
+  string,
+  { at: string; messageId: string; reactions: MessageReaction[] } | undefined
+>;
+
+const withImage = (reaction: MessageReaction): ReactionDto => ({
+  ...reaction,
+  imageUrl: reaction.emojiId
+    ? `https://cdn.discordapp.com/emojis/${reaction.emojiId}.png?size=32`
+    : null,
+});
 
 const ALREADY_POSTED =
   'This post is already in Discord. Edit it there, or delete it first to post it again.';
@@ -144,6 +164,9 @@ function nextRunFor(
 
 @Injectable()
 export class TasksService {
+  /** Reads of a message's reactions under way, so overlapping requests share one. */
+  private readonly readingReactions = new Map<string, Promise<MessageReaction[]>>();
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly bot: DiscordBotService,
@@ -265,6 +288,7 @@ export class TasksService {
         type: 'POST',
         name: this.parseName(input.name, undefined),
         enabled,
+        tracked: input.tracked !== false,
         scheduleKind: 'ONCE',
         runAt,
         nextRunAt: nextRunFor(config, {}, runAt, enabled, now),
@@ -345,6 +369,7 @@ export class TasksService {
       data: {
         name: this.parseName(input.name, task.name),
         enabled,
+        ...(typeof input.tracked === 'boolean' ? { tracked: input.tracked } : {}),
         runAt,
         ...(rescheduled || enabled !== task.enabled
           ? { nextRunAt: nextRunFor(config, newState, runAt, enabled, now) }
@@ -556,20 +581,24 @@ export class TasksService {
   }
 
   /** Live reaction counts of one message of the post (`part` from 1), read from Discord. */
+  /**
+   * The reaction counts of one message of the post, as saved on the post. They're read from
+   * Discord again when older than REACTIONS_FRESH_MS, and only while the post is tracked, so
+   * however many people look, Discord is asked at most that often per message.
+   */
   async reactions(taskId: string, part = 1): Promise<ReactionDto[]> {
     const task = await this.find(taskId);
     const state = task.state as PostState;
     const target = (task.config as unknown as PostConfig).parts[part - 1];
     const posted = target ? liveMessageOf(state, target.id) : undefined;
-    if (!posted) return [];
+    if (!target || !posted) return [];
+    const saved = (task.reactionCounts as ReactionCounts)[target.id];
+    const known = saved?.messageId === posted.messageId ? saved : undefined;
+    if (known && (!task.tracked || Date.now() - Date.parse(known.at) < REACTIONS_FRESH_MS)) {
+      return known.reactions.map(withImage);
+    }
     try {
-      const reactions = await this.bot.getReactions(posted.channelId, posted.messageId);
-      return reactions.map((reaction) => ({
-        ...reaction,
-        imageUrl: reaction.emojiId
-          ? `https://cdn.discordapp.com/emojis/${reaction.emojiId}.png?size=32`
-          : null,
-      }));
+      return (await this.readReactions(task.id, target.id, posted)).map(withImage);
     } catch (error) {
       if (isDiscordError(error, UNKNOWN_MESSAGE)) {
         await this.saveState(taskId, {
@@ -579,8 +608,43 @@ export class TasksService {
         });
         return [];
       }
+      // Discord didn't answer: the last counts beat an error.
+      if (known) return known.reactions.map(withImage);
       throw new BadRequestException(describeDiscordError(error));
     }
+  }
+
+  /** Turns live updates on or off. Off freezes the live tags and reaction counts as they are. */
+  async setTracked(taskId: string, tracked: boolean): Promise<TaskDto> {
+    const task = await this.find(taskId);
+    const updated = await this.prisma.scheduledTask.update({
+      where: { id: taskId },
+      data: { tracked },
+    });
+    return this.toDto(updated, await this.timezoneOf(task.guildId));
+  }
+
+  /** Reads a message's reactions from Discord and saves them on the post (one read at a time). */
+  private readReactions(
+    taskId: string,
+    partId: string,
+    posted: { channelId: string; messageId: string },
+  ): Promise<MessageReaction[]> {
+    const key = `${posted.channelId}:${posted.messageId}`;
+    const pending = this.readingReactions.get(key);
+    if (pending) return pending;
+    const read = (async () => {
+      const reactions = await this.bot.getReactions(posted.channelId, posted.messageId);
+      const entry = { at: new Date().toISOString(), messageId: posted.messageId, reactions };
+      // Only this message's entry, so reads of the post's other messages aren't overwritten.
+      await this.prisma.$executeRaw`
+        UPDATE scheduled_tasks
+        SET reaction_counts = jsonb_set(reaction_counts, ARRAY[${partId}], ${JSON.stringify(entry)}::jsonb)
+        WHERE id = ${taskId}::uuid`;
+      return reactions;
+    })().finally(() => this.readingReactions.delete(key));
+    this.readingReactions.set(key, read);
+    return read;
   }
 
   /** Who reacted to one message of the post with an emoji: the names behind a reaction's count. */
@@ -608,6 +672,7 @@ export class TasksService {
       name: task.name,
       type: 'POST',
       enabled: task.enabled,
+      tracked: task.tracked,
       schedule: {
         runAt: task.runAt?.toISOString() ?? null,
         runAtLocal: task.runAt ? localWallClock(task.runAt, timezone) : null,

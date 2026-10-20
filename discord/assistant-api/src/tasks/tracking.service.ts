@@ -607,11 +607,15 @@ export class TrackingService {
     }
   }
 
-  /** One pass of the worker: refresh every live post that has dynamic features. Never throws. */
+  /**
+   * One pass of the worker: refresh every live, tracked post that has dynamic features (a post
+   * whose live updates were turned off is skipped, and stays as it last was). Never throws.
+   */
   async refreshDue(): Promise<number> {
     let edited = 0;
     try {
       const rows = await this.prisma.postTracking.findMany({
+        where: { task: { tracked: true } },
         include: { task: true, sourceTask: true },
         orderBy: [{ taskId: 'asc' }, { createdAt: 'asc' }],
       });
@@ -738,6 +742,7 @@ export class TrackingService {
     const found = await this.prisma.$queryRaw<{ id: string }[]>`
       SELECT id FROM scheduled_tasks
       WHERE type = 'POST'
+        AND tracked
         AND config::text LIKE '%{{roster%'
         AND jsonb_array_length(COALESCE(state->'messages', '[]'::jsonb)) > 0`;
     let edited = 0;

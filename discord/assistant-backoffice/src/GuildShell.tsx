@@ -1,28 +1,71 @@
-import { useEffect, useRef, type ReactNode } from 'react';
-import { Link, NavLink, Navigate, Route, Routes, useParams } from 'react-router-dom';
-import { bannerUrl } from './api';
-import { CharacterPage } from './CharacterPage';
-import { CreateGuildPage } from './CreateGuildPage';
+import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
+import {
+  Link,
+  NavLink,
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+  useNavigate,
+  useParams,
+} from 'react-router-dom';
+import { bannerUrl, resolveGuildPath } from './api';
 import { ArmoryContext, GamesContext } from './game';
 import { subscribeEvents } from './events';
 import { canConfigure } from './guildAccess';
 import { guildPath } from './guildPath';
-import { HomeEditPage, HomePage } from './HomePage';
-import { HoneypotCreatePage, HoneypotsPage } from './HoneypotsPage';
-import { PluginFormPage } from './plugins/PluginFormPage';
-import { PluginsPage } from './plugins/PluginsPage';
 import { LandingPage } from './LandingPage';
 import { forgetLastGuild, readLastGuildId, rememberLastGuild } from './lastGuild';
-import { ConversationPage, OfficerRequestsPage } from './OfficerRequestsPage';
-import { OfficerNotePage } from './OfficerNotePage';
-import { PostEditorPage } from './PostEditorPage';
-import { PostsPage } from './PostsPage';
 import { PrivacyPage } from './PublicPages';
 import { RequireAccess } from './RequireAccess';
-import { CharacterEditorPage, RosterPage } from './RosterPage';
-import { SettingsPage } from './SettingsPage';
-import { SignupRoutes } from './signup/SignupRoutes';
 import type { Guild, SetupInfo, User } from './types';
+import { Spinner } from './Loading';
+
+// Each page is loaded when first opened, so the first visit (and the public landing page, which
+// loads none of this) downloads less.
+const CharacterPage = lazy(() =>
+  import('./CharacterPage').then((m) => ({ default: m.CharacterPage })),
+);
+const CreateGuildPage = lazy(() =>
+  import('./CreateGuildPage').then((m) => ({ default: m.CreateGuildPage })),
+);
+const HomeEditPage = lazy(() => import('./HomePage').then((m) => ({ default: m.HomeEditPage })));
+const HomePage = lazy(() => import('./HomePage').then((m) => ({ default: m.HomePage })));
+const HoneypotCreatePage = lazy(() =>
+  import('./HoneypotsPage').then((m) => ({ default: m.HoneypotCreatePage })),
+);
+const HoneypotsPage = lazy(() =>
+  import('./HoneypotsPage').then((m) => ({ default: m.HoneypotsPage })),
+);
+const PluginFormPage = lazy(() =>
+  import('./plugins/PluginFormPage').then((m) => ({ default: m.PluginFormPage })),
+);
+const PluginsPage = lazy(() =>
+  import('./plugins/PluginsPage').then((m) => ({ default: m.PluginsPage })),
+);
+const ConversationPage = lazy(() =>
+  import('./OfficerRequestsPage').then((m) => ({ default: m.ConversationPage })),
+);
+const OfficerRequestsPage = lazy(() =>
+  import('./OfficerRequestsPage').then((m) => ({ default: m.OfficerRequestsPage })),
+);
+const OfficerNotePage = lazy(() =>
+  import('./OfficerNotePage').then((m) => ({ default: m.OfficerNotePage })),
+);
+const PostEditorPage = lazy(() =>
+  import('./PostEditorPage').then((m) => ({ default: m.PostEditorPage })),
+);
+const PostsPage = lazy(() => import('./PostsPage').then((m) => ({ default: m.PostsPage })));
+const CharacterEditorPage = lazy(() =>
+  import('./RosterPage').then((m) => ({ default: m.CharacterEditorPage })),
+);
+const RosterPage = lazy(() => import('./RosterPage').then((m) => ({ default: m.RosterPage })));
+const SettingsPage = lazy(() =>
+  import('./SettingsPage').then((m) => ({ default: m.SettingsPage })),
+);
+const SignupRoutes = lazy(() =>
+  import('./signup/SignupRoutes').then((m) => ({ default: m.SignupRoutes })),
+);
 
 interface Props {
   guilds: Guild[];
@@ -81,35 +124,37 @@ export function GuildShell({ guilds, setup, currentUser, onGuildsChanged }: Prop
   return (
     <GamesContext.Provider value={setup.games}>
       <ArmoryContext.Provider value={setup.armoryTest}>
-        <Routes>
-          <Route index element={<LastGuildRedirect guilds={guilds} />} />
-          <Route path="overview" element={<LandingPage guilds={guilds} setup={setup} />} />
-          <Route path="privacy" element={<PrivacyPage framed={false} />} />
-          <Route
-            path="guilds/create"
-            element={<CreateGuildPage setup={setup} onCreated={onGuildsChanged} />}
-          />
-          <Route
-            path=":version/:region/:realm/characters/:namePath"
-            element={<CharacterPage editMode={false} />}
-          />
-          <Route
-            path=":version/:region/:realm/characters/:namePath/bio"
-            element={<CharacterPage editMode={true} />}
-          />
-          <Route
-            path=":version/:region/:realm/guilds/:guildSlug/*"
-            element={
-              <GuildRoutes
-                guilds={guilds}
-                setup={setup}
-                currentUser={currentUser}
-                onGuildsChanged={onGuildsChanged}
-              />
-            }
-          />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        <Suspense fallback={<Spinner />}>
+          <Routes>
+            <Route index element={<LastGuildRedirect guilds={guilds} />} />
+            <Route path="overview" element={<LandingPage guilds={guilds} setup={setup} />} />
+            <Route path="privacy" element={<PrivacyPage framed={false} />} />
+            <Route
+              path="guilds/create"
+              element={<CreateGuildPage setup={setup} onCreated={onGuildsChanged} />}
+            />
+            <Route
+              path=":version/:region/:realm/characters/:namePath"
+              element={<CharacterPage editMode={false} />}
+            />
+            <Route
+              path=":version/:region/:realm/characters/:namePath/bio"
+              element={<CharacterPage editMode={true} />}
+            />
+            <Route
+              path=":version/:region/:realm/guilds/:guildSlug/*"
+              element={
+                <GuildRoutes
+                  guilds={guilds}
+                  setup={setup}
+                  currentUser={currentUser}
+                  onGuildsChanged={onGuildsChanged}
+                />
+              }
+            />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
       </ArmoryContext.Provider>
     </GamesContext.Provider>
   );
@@ -130,6 +175,37 @@ function LastGuildRedirect({ guilds }: { guilds: Guild[] }) {
 }
 
 /** Finds the guild the address points to and shows its pages, or says it wasn't found. */
+/**
+ * An address that is none of your guilds: maybe a guild's old one, from before a rename (links in
+ * Discord keep it). The API says where it lives now; a guild of yours goes there, same page.
+ */
+function UnknownGuildAddress({ path, guilds }: { path: string; guilds: Guild[] }) {
+  const rest = useParams()['*'] ?? '';
+  const [moved, setMoved] = useState<string | null | undefined>(undefined);
+  useEffect(() => {
+    let current = true;
+    resolveGuildPath(path)
+      .then((result) => current && setMoved(result.path))
+      .catch(() => current && setMoved(null));
+    return () => {
+      current = false;
+    };
+  }, [path]);
+
+  if (moved === undefined) return <Spinner />;
+  if (moved && guilds.some((g) => g.path === moved)) {
+    return <Navigate to={`/${moved}${rest ? `/${rest}` : ''}`} replace />;
+  }
+  return (
+    <div className="card empty">
+      <p>You are not in a guild at this address.</p>
+      <Link className="btn btn-primary" to="/overview">
+        Overview
+      </Link>
+    </div>
+  );
+}
+
 function GuildRoutes({ guilds, setup, currentUser, onGuildsChanged }: Props) {
   const { version, region, realm, guildSlug } = useParams();
   const path = [version, region, realm, 'guilds', guildSlug].join('/');
@@ -141,16 +217,7 @@ function GuildRoutes({ guilds, setup, currentUser, onGuildsChanged }: Props) {
     if (guildId) rememberLastGuild(guildId);
   }, [guildId]);
 
-  if (!guild) {
-    return (
-      <div className="card empty">
-        <p>You are not in a guild at this address.</p>
-        <Link className="btn btn-primary" to="/overview">
-          Overview
-        </Link>
-      </div>
-    );
-  }
+  if (!guild) return <UnknownGuildAddress path={path} guilds={guilds} />;
 
   const timezone = setup.regions.find((r) => r.id === guild.region)?.timezone ?? 'UTC';
   const home = guildPath(guild);
@@ -162,78 +229,83 @@ function GuildRoutes({ guilds, setup, currentUser, onGuildsChanged }: Props) {
 
   return (
     <GuildFrame guild={guild} setup={setup}>
-      <Routes>
-        <Route index element={<HomePage guild={guild} timezone={timezone} />} />
-        <Route path="edit" element={officersOnly(<HomeEditPage guild={guild} />)} />
-        <Route path="roster" element={<RosterPage guild={guild} currentUser={currentUser} />} />
-        <Route
-          path="roster/create"
-          element={<CharacterEditorPage guild={guild} currentUser={currentUser} />}
-        />
-        <Route
-          path="roster/edit/:characterId"
-          element={<CharacterEditorPage guild={guild} currentUser={currentUser} />}
-        />
-        <Route
-          path="roster/notes/:characterId"
-          element={officersOnly(<OfficerNotePage guild={guild} />)}
-        />
-        <Route
-          path="posts"
-          element={officersOnly(<PostsPage guild={guild} timezone={timezone} />)}
-        />
-        <Route
-          path="posts/create"
-          element={officersOnly(<PostEditorPage guild={guild} timezone={timezone} />)}
-        />
-        <Route
-          path="posts/edit/:id"
-          element={officersOnly(<PostEditorPage guild={guild} timezone={timezone} />)}
-        />
-        <Route
-          path="honeypots"
-          element={officersOnly(<HoneypotsPage guild={guild} timezone={timezone} />)}
-        />
-        <Route
-          path="honeypots/create"
-          element={officersOnly(<HoneypotCreatePage guild={guild} />)}
-        />
-        <Route path="honeypot" element={<Navigate to={guildPath(guild, 'honeypots')} replace />} />
-        <Route
-          path="plugins"
-          element={officersOnly(<PluginsPage guild={guild} timezone={timezone} />)}
-        />
-        <Route
-          path="plugins/create/:kind"
-          element={officersOnly(<PluginFormPage guild={guild} timezone={timezone} />)}
-        />
-        <Route
-          path="plugins/edit/:id"
-          element={officersOnly(<PluginFormPage guild={guild} timezone={timezone} />)}
-        />
-        <Route
-          path="officer-requests"
-          element={officersOnly(<OfficerRequestsPage guild={guild} timezone={timezone} />)}
-        />
-        <Route
-          path="officer-requests/:conversationId"
-          element={officersOnly(<ConversationPage guild={guild} timezone={timezone} />)}
-        />
-        <Route path="signup/*" element={<SignupRoutes guild={guild} timezone={timezone} />} />
-        <Route
-          path="settings"
-          element={
-            <RequireAccess allowed={canConfigure(guild)} fallback={home}>
-              <SettingsPage
-                guild={guild}
-                regions={setup.regions}
-                onGuildsChanged={onGuildsChanged}
-              />
-            </RequireAccess>
-          }
-        />
-        <Route path="*" element={<Navigate to={home} replace />} />
-      </Routes>
+      <Suspense fallback={<Spinner />}>
+        <Routes>
+          <Route index element={<HomePage guild={guild} timezone={timezone} />} />
+          <Route path="edit" element={officersOnly(<HomeEditPage guild={guild} />)} />
+          <Route path="roster" element={<RosterPage guild={guild} currentUser={currentUser} />} />
+          <Route
+            path="roster/create"
+            element={<CharacterEditorPage guild={guild} currentUser={currentUser} />}
+          />
+          <Route
+            path="roster/edit/:characterId"
+            element={<CharacterEditorPage guild={guild} currentUser={currentUser} />}
+          />
+          <Route
+            path="roster/notes/:characterId"
+            element={officersOnly(<OfficerNotePage guild={guild} />)}
+          />
+          <Route
+            path="posts"
+            element={officersOnly(<PostsPage guild={guild} timezone={timezone} />)}
+          />
+          <Route
+            path="posts/create"
+            element={officersOnly(<PostEditorPage guild={guild} timezone={timezone} />)}
+          />
+          <Route
+            path="posts/edit/:id"
+            element={officersOnly(<PostEditorPage guild={guild} timezone={timezone} />)}
+          />
+          <Route
+            path="honeypots"
+            element={officersOnly(<HoneypotsPage guild={guild} timezone={timezone} />)}
+          />
+          <Route
+            path="honeypots/create"
+            element={officersOnly(<HoneypotCreatePage guild={guild} />)}
+          />
+          <Route
+            path="honeypot"
+            element={<Navigate to={guildPath(guild, 'honeypots')} replace />}
+          />
+          <Route
+            path="plugins"
+            element={officersOnly(<PluginsPage guild={guild} timezone={timezone} />)}
+          />
+          <Route
+            path="plugins/create/:kind"
+            element={officersOnly(<PluginFormPage guild={guild} timezone={timezone} />)}
+          />
+          <Route
+            path="plugins/edit/:id"
+            element={officersOnly(<PluginFormPage guild={guild} timezone={timezone} />)}
+          />
+          <Route
+            path="officer-requests"
+            element={officersOnly(<OfficerRequestsPage guild={guild} timezone={timezone} />)}
+          />
+          <Route
+            path="officer-requests/:conversationId"
+            element={officersOnly(<ConversationPage guild={guild} timezone={timezone} />)}
+          />
+          <Route path="signup/*" element={<SignupRoutes guild={guild} timezone={timezone} />} />
+          <Route
+            path="settings"
+            element={
+              <RequireAccess allowed={canConfigure(guild)} fallback={home}>
+                <SettingsPage
+                  guild={guild}
+                  regions={setup.regions}
+                  onGuildsChanged={onGuildsChanged}
+                />
+              </RequireAccess>
+            }
+          />
+          <Route path="*" element={<Navigate to={home} replace />} />
+        </Routes>
+      </Suspense>
     </GuildFrame>
   );
 }
@@ -249,6 +321,30 @@ function GuildFrame({
   children: ReactNode;
 }) {
   const regionLabel = setup.regions.find((r) => r.id === guild.region)?.label ?? guild.region;
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+  // The guild's sections this person sees: tabs, or (on a phone) a dropdown.
+  const sections: { label: string; to: string; end?: boolean }[] = [
+    { label: 'Welcome', to: guildPath(guild), end: true },
+    { label: 'Roster', to: guildPath(guild, 'roster') },
+    { label: 'Events', to: guildPath(guild, 'signup') },
+    ...(guild.isOfficer
+      ? [
+          { label: 'Posts', to: guildPath(guild, 'posts') },
+          { label: 'Honeypots', to: guildPath(guild, 'honeypots') },
+          { label: 'Plugins', to: guildPath(guild, 'plugins') },
+          { label: 'Officer requests', to: guildPath(guild, 'officer-requests') },
+        ]
+      : []),
+    ...(canConfigure(guild) ? [{ label: 'Settings', to: guildPath(guild, 'settings') }] : []),
+  ];
+  // The section open now: the longest one the address is in (Welcome only when exactly on it).
+  const current =
+    [...sections]
+      .sort((a, b) => b.to.length - a.to.length)
+      .find((s) =>
+        s.end ? pathname === s.to : pathname === s.to || pathname.startsWith(`${s.to}/`),
+      )?.to ?? '';
 
   return (
     <section className="card">
@@ -268,20 +364,28 @@ function GuildFrame({
         </div>
       </div>
 
-      <nav className="view-tabs" aria-label="Guild sections">
-        <NavLink to={guildPath(guild)} end>
-          Welcome
-        </NavLink>
-        <NavLink to={guildPath(guild, 'roster')}>Roster</NavLink>
-        <NavLink to={guildPath(guild, 'signup')}>Events</NavLink>
-        {guild.isOfficer && <NavLink to={guildPath(guild, 'posts')}>Posts</NavLink>}
-        {guild.isOfficer && <NavLink to={guildPath(guild, 'honeypots')}>Honeypots</NavLink>}
-        {guild.isOfficer && <NavLink to={guildPath(guild, 'plugins')}>Plugins</NavLink>}
-        {guild.isOfficer && (
-          <NavLink to={guildPath(guild, 'officer-requests')}>Officer requests</NavLink>
-        )}
-        {canConfigure(guild) && <NavLink to={guildPath(guild, 'settings')}>Settings</NavLink>}
+      <nav className="view-tabs guild-tabs" aria-label="Guild sections">
+        {sections.map((section) => (
+          <NavLink key={section.to} to={section.to} end={section.end}>
+            {section.label}
+          </NavLink>
+        ))}
       </nav>
+      {/* Phones: the same sections in a dropdown (CSS shows one or the other). */}
+      <div className="view-tabs-select">
+        <select
+          aria-label="Guild section"
+          value={current}
+          onChange={(e) => navigate(e.target.value)}
+        >
+          {current === '' && <option value="">Choose a section…</option>}
+          {sections.map((section) => (
+            <option key={section.to} value={section.to}>
+              {section.label}
+            </option>
+          ))}
+        </select>
+      </div>
 
       {children}
     </section>

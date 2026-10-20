@@ -2,6 +2,7 @@ import 'reflect-metadata';
 import { Logger, Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
+import { CacheModule } from './cache/cache.module';
 import { DatabaseModule } from './database/database.module';
 import { DiscordBotModule } from './discord/discord-bot.module';
 import { WorkerModule } from './worker/worker.module';
@@ -12,6 +13,7 @@ import { WorkerService } from './worker/worker.service';
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     DatabaseModule,
+    CacheModule,
     DiscordBotModule,
     WorkerModule,
   ],

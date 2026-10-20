@@ -53,6 +53,10 @@ describe('GuildsService', () => {
         update: async () => 'update',
       },
       userAdminServer: { findMany: async () => adminServers },
+      guildPathAlias: {
+        deleteMany: async (args: any) => ['aliasDelete', args.where.path],
+        upsert: async (args: any) => ['aliasSave', args.create.path, args.create.guildId],
+      },
       guildRoleMapping: {
         deleteMany: async (args: any) => {
           mappingCalls.push(['delete', args.where]);
@@ -235,6 +239,17 @@ describe('GuildsService', () => {
         { id: 'g', name: 'Relic Hunters', realm: 'Firemaw', gameVersion: 'Forever', region: 'EU' },
       ];
       await service.update('g', { name: 'Relic hunters' });
+      // Same address: nothing to redirect.
+      assert.deepEqual(transactionOps, ['guildUpdate']);
+    });
+
+    it('keeps the old address, redirected to the new one, and frees the new one', async () => {
+      await service.update('g', { name: 'Relic Seekers' });
+      assert.deepEqual(transactionOps, [
+        'guildUpdate',
+        ['aliasDelete', 'forever/eu/firemaw/guilds/relic-seekers'],
+        ['aliasSave', 'forever/eu/firemaw/guilds/relic-hunters', 'g'],
+      ]);
     });
   });
 

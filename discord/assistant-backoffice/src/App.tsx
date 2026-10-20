@@ -1,13 +1,15 @@
-import { useCallback, useEffect, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import { Link, Route, Routes, useNavigate } from 'react-router-dom';
 import { fetchCurrentUser, fetchGuilds, fetchSetupInfo, logout, takeReturnPath } from './api';
-import { GuildShell } from './GuildShell';
 import { UserMenu } from './UserMenu';
 import { PrivacyPage, PublicHome } from './PublicPages';
 import { Spinner } from './Loading';
 import { Toasts } from './Toasts';
 import { usePageMeta } from './usePageMeta';
 import type { Guild, SetupInfo, User } from './types';
+
+// Everything behind the login, loaded once someone is logged in: the public pages don't need it.
+const GuildShell = lazy(() => import('./GuildShell').then((m) => ({ default: m.GuildShell })));
 
 const ROLE_REFRESH_MS = 60_000;
 
@@ -104,12 +106,14 @@ export function App() {
       <Toasts />
       <main className="page">
         {auth.setup && (
-          <GuildShell
-            guilds={auth.guilds}
-            setup={auth.setup}
-            currentUser={auth.user}
-            onGuildsChanged={reloadGuilds}
-          />
+          <Suspense fallback={<Spinner />}>
+            <GuildShell
+              guilds={auth.guilds}
+              setup={auth.setup}
+              currentUser={auth.user}
+              onGuildsChanged={reloadGuilds}
+            />
+          </Suspense>
         )}
       </main>
       <footer className="app-footer">

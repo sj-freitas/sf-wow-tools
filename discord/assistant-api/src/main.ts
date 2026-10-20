@@ -3,6 +3,7 @@ import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import { GuildRedirectsService } from './guilds/guild-redirects.service';
 import { WorkerService } from './worker/worker.service';
 
 async function bootstrap(): Promise<void> {
@@ -13,6 +14,9 @@ async function bootstrap(): Promise<void> {
   const configService = app.get(ConfigService);
 
   app.setGlobalPrefix('api');
+  // Old guild addresses (before a rename) redirect to the current one; registered before the
+  // backoffice's static files, which are only set up when the app starts listening.
+  app.use(app.get(GuildRedirectsService).middleware);
 
   const corsOrigin = configService.get<string>('CORS_ORIGIN');
   app.enableCors({

@@ -42,6 +42,7 @@ export function PostTaskForm({ guild, channels, editing, timezone, onSaved, onCa
     editing ? editing.post.parts.map(draftOf) : [newDraft()],
   );
   const [sequence, setSequence] = useState(false);
+  const [tracked, setTracked] = useState(editing?.tracked ?? true);
   const [names, setNames] = useState<MentionNames | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -108,6 +109,7 @@ export function PostTaskForm({ guild, channels, editing, timezone, onSaved, onCa
       serverId,
       channelId,
       parts: parts.map(inputOf),
+      tracked,
       // A post that is live keeps its messages: its date and "post now" no longer apply.
       ...(live ? {} : postNow ? { postNow: true } : { runAtLocal }),
     };
@@ -247,6 +249,12 @@ export function PostTaskForm({ guild, channels, editing, timezone, onSaved, onCa
           {totalWait > 0 && <span className="muted">The waits add up to {totalWait} seconds.</span>}
         </div>
       </div>
+
+      <label className="field-toggle">
+        <input type="checkbox" checked={tracked} onChange={(e) => setTracked(e.target.checked)} />
+        Track reactions and live tags: keep the reaction counts and any live tags (who reacted, the
+        roster) up to date. Turn it off for an old post: it stays as it last was.
+      </label>
 
       {error && <p className="status-error">{error}</p>}
       <div className="form-actions">

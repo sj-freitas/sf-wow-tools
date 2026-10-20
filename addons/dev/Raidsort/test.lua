@@ -106,7 +106,6 @@ function FindAFreeGroup(raidInfo)
             i = i + 1
         end
     end
-    -- TODO There is a fix, just find whoever is in the wrong spot and swap them
     print("If the raid is full this will not work...")
     return -1
 end

@@ -7,10 +7,20 @@ const REFRESH_MS = 10_000;
 
 /**
  * Live reaction counts of a post (poll results), shown right on the post. Clicking a reaction shows
- * who reacted. Refreshes every 10 seconds while the page is visible. A spinner until the first
+ * who reacted. Refreshes every 10 seconds while the page is visible and the post is tracked (the
+ * API keeps the counts on the post and asks Discord again at most every 15 seconds). A spinner until the first
  * counts arrive, then nothing until somebody has reacted.
  */
-export function ReactionsPanel({ taskId, part = 1 }: { taskId: string; part?: number }) {
+export function ReactionsPanel({
+  taskId,
+  part = 1,
+  live = true,
+}: {
+  taskId: string;
+  part?: number;
+  /** The post is tracked: refresh the counts. Untracked, they're read once (they don't change). */
+  live?: boolean;
+}) {
   const [reactions, setReactions] = useState<Reaction[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState<string | null>(null);
@@ -29,9 +39,10 @@ export function ReactionsPanel({ taskId, part = 1 }: { taskId: string; part?: nu
         .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)));
     };
     void load();
+    if (!live) return;
     const timer = setInterval(() => void load(), REFRESH_MS);
     return () => clearInterval(timer);
-  }, [taskId, part]);
+  }, [taskId, part, live]);
 
   if (error) return <p className="status-error">{error}</p>;
   if (!reactions)

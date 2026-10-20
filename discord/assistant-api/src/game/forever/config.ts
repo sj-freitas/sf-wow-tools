@@ -12,9 +12,8 @@ export default defineGame({
   // yet. When it does, this becomes something like
   // 'https://<armory>/character/{region}/{server}/{name}' and follows the guild.
   armoryLink: 'https://classic-armory.org/character/eu/classic-sod/wild-growth/{name}',
-  // TODO(armory): the Forever armory doesn't exist yet, so the roster's "Open in armory" says so
-  // instead of opening the stand-in above. When it exists: set the real `armoryLink` and remove
-  // this line (see TODO.md).
+  // The Forever armory doesn't exist yet, so the roster's "Open in armory" says so instead of
+  // opening the stand-in above (TODO.md, "Armory", says what changes when it does).
   armoryPending: true,
   // Each server's name and the gameplay rules it enforces (several could share one; features
   // gate on the rule set, not the name, e.g. bios need 'RP').

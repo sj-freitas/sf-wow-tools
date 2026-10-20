@@ -240,6 +240,8 @@ export interface ScheduledPost {
   name: string;
   type: 'POST';
   enabled: boolean;
+  /** Live updates: its live tags and reaction counts are kept up to date (off: frozen). */
+  tracked: boolean;
   schedule: {
     /** When the post goes out. */
     runAt: string | null;
@@ -299,6 +301,8 @@ export interface PostInput {
   runAtLocal?: string;
   /** Post right away instead of at a date. */
   postNow?: boolean;
+  /** Keep its live tags and reaction counts up to date (default: yes). */
+  tracked?: boolean;
   serverId: string;
   channelId: string;
   parts: PostPartInput[];
