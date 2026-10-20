@@ -379,12 +379,15 @@ plugins with their next run and last 5 runs, and Run now / Edit / Pause / Remove
   A run stops after 3 minutes (within the worker's 5-minute lease) and the next carries on a minute
   later from where it stopped, until the channel is done. Creating one asks for confirmation.
 - **Recurring Event** (`RECURRING_EVENT`, event sign-ups' kind: `src/signup/recurring-event.plugin.ts`):
-  weekly (e.g. every Wednesday at 23:00), it archives the events still open in its channel and
-  posts the next one from its saved event form (type, name, location, description, timezone) for
+  weekly (e.g. every Wednesday at 23:00), it archives the events still open in its channel,
+  deletes every other message there, pinned and bots' ones too (the Channel Clean Up code with
+  `keepPinned: false`; a big channel carries on a minute later, and the event is posted once it is
+  empty), and posts the
+  next one from its saved event form (type, name, location, description, timezone) for
   the next chosen weekday and time (e.g. next Wednesday at 20:00). The events belong to the Officer
   who added the plugin. When it is added, its first event is posted right away or at a date and
   time picked in the form (`firstRun` on create: `now` or `yyyy-MM-ddTHH:mm`, any plugin kind);
-  that first post archives nothing, then the weekly schedule takes over. Editing it changes the
+  that first post archives and deletes nothing, then the weekly schedule takes over. Editing it changes the
   events it posts from then on, not the one already posted; **Pause** suspends it (nothing is
   archived or posted until resumed).
 - **Tables:** `guild_plugins` (one row per plugin: kind, name, schedule, `config` and `state` JSON

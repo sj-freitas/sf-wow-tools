@@ -10,8 +10,10 @@ const ageMs = (messageId: string, now: number): number =>
   now - Number((BigInt(messageId) >> 22n) + DISCORD_EPOCH);
 
 export interface CleanOptions {
-  /** Keep messages sent by bots and webhooks (pinned messages are always kept). */
+  /** Keep messages sent by bots and webhooks. */
   keepBotMessages?: boolean;
+  /** Keep pinned messages (default: yes; Recurring Event empties its channel completely). */
+  keepPinned?: boolean;
   /** Start below this message (where an earlier, unfinished pass stopped). */
   before?: string;
   /** Stop at this time (ms since the epoch), to carry on later from `cursor`. */
@@ -30,7 +32,7 @@ const logger = new Logger('ChannelCleaner');
 
 /**
  * Walks a channel from the newest message back (or from `before`), deleting every message but the
- * pinned ones (and, with `keepBotMessages`, those of bots). Young messages go in bulk, older ones
+ * pinned ones (unless `keepPinned` is false) and, with `keepBotMessages`, those of bots. Young messages go in bulk, older ones
  * one by one, as Discord requires. Used by `/clear-channel` and the Channel Clean Up plugin.
  */
 export async function cleanChannel(
@@ -51,7 +53,9 @@ export async function cleanChannel(
 
     const now = clock();
     const doomed = page.filter(
-      (message) => !message.pinned && !(options.keepBotMessages && message.bot),
+      (message) =>
+        !(message.pinned && options.keepPinned !== false) &&
+        !(options.keepBotMessages && message.bot),
     );
     const recent = doomed.filter((m) => ageMs(m.id, now) < BULK_MAX_AGE_MS).map((m) => m.id);
     const old = doomed.filter((m) => ageMs(m.id, now) >= BULK_MAX_AGE_MS).map((m) => m.id);

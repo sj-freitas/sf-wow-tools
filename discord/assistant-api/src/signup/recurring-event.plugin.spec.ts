@@ -26,7 +26,17 @@ const CONFIG: RecurringEventConfig = {
   timezone: 'ST',
 };
 
-function setup(openEvents: string[] = ['old-1'], successfulRuns = 1) {
+/** A message id (snowflake) from an hour before NOW, so Discord would bulk-delete it. */
+const messageId = (n: number) =>
+  ((BigInt(NOW - 3_600_000 - n * 1000) - 1_420_070_400_000n) << 22n).toString();
+
+interface FakeMessage {
+  id: string;
+  pinned: boolean;
+  bot: boolean;
+}
+
+function setup(openEvents: string[] = ['old-1'], successfulRuns = 1, messages: FakeMessage[] = []) {
   const archived: string[] = [];
   const created: { creator: unknown; input: Record<string, unknown>; channel: unknown }[] = [];
   const events = {
@@ -52,11 +62,20 @@ function setup(openEvents: string[] = ['old-1'], successfulRuns = 1) {
   const registry = new PluginKindRegistry();
   const plugin = new RecurringEventPlugin(registry, events, prisma);
   plugin.onModuleInit();
+  // The channel, newest first, read two messages at a time.
+  const deletedMessages: string[] = [];
   const bot = {
     listTextChannels: async () => [{ id: CHANNEL, name: 'wednesday-raid' }],
+    listMessages: async (_channel: string, before?: string) => {
+      const from = before ? messages.findIndex((m) => m.id === before) + 1 : 0;
+      return messages.slice(from, from + 2);
+    },
+    bulkDeleteMessages: async (_channel: string, ids: string[]) =>
+      void deletedMessages.push(...ids),
+    deleteMessage: async (_channel: string, id: string) => void deletedMessages.push(id),
   } as unknown as DiscordBotService;
   const context: PluginContext = { bot, guildId: 'g1', serverIds: [SERVER], clock: () => NOW };
-  const run = () =>
+  const run = (state: Record<string, unknown> = {}, deadline = NOW + 60_000) =>
     plugin.def.run(
       {
         id: 'p1',
@@ -64,11 +83,12 @@ function setup(openEvents: string[] = ['old-1'], successfulRuns = 1) {
         createdById: 'u1',
         name: 'Wednesday raid',
         config: CONFIG,
+        state,
       } as Omit<GuildPlugin, 'config'> & { config: RecurringEventConfig },
       context,
-      NOW + 60_000,
+      deadline,
     );
-  return { registry, plugin, context, run, archived, created };
+  return { registry, plugin, context, run, archived, created, deletedMessages };
 }
 
 describe('RecurringEventPlugin', () => {
@@ -97,10 +117,39 @@ describe('RecurringEventPlugin', () => {
     assert.deepEqual(outcome.state, { lastEventId: 'new-1' });
   });
 
-  it('archives nothing on its first post', async () => {
-    const { run, archived, created } = setup(['manual-1'], 0);
+  it("deletes all the channel's messages before posting, pinned and bots' too", async () => {
+    const messages = [
+      { id: messageId(1), pinned: false, bot: false },
+      { id: messageId(2), pinned: true, bot: false },
+      { id: messageId(3), pinned: false, bot: true },
+      { id: messageId(4), pinned: false, bot: false },
+    ];
+    const { run, deletedMessages, created } = setup(['old-1'], 1, messages);
+    const outcome = await run();
+    assert.deepEqual([...deletedMessages].sort(), messages.map((m) => m.id).sort());
+    assert.equal(created.length, 1);
+    assert.match(outcome.result, /^Archived 1 event, deleted 4 messages; posted “Naxxramas”/);
+  });
+
+  it('carries on clearing a big channel over several runs, then posts', async () => {
+    const messages = [1, 2, 3].map((n) => ({ id: messageId(n), pinned: false, bot: false }));
+    const { run, created, deletedMessages } = setup(['old-1'], 1, messages);
+    // Out of time at once: nothing posted yet, and it asks to carry on.
+    const first = await run({}, NOW);
+    assert.equal(first.more, true);
+    assert.equal(created.length, 0);
+    const second = await run(first.state);
+    assert.equal(second.more, undefined);
+    assert.equal(deletedMessages.length, 3);
+    assert.equal(created.length, 1);
+  });
+
+  it('archives and deletes nothing on its first post', async () => {
+    const messages = [{ id: messageId(1), pinned: false, bot: false }];
+    const { run, archived, created, deletedMessages } = setup(['manual-1'], 0, messages);
     const outcome = await run();
     assert.deepEqual(archived, []);
+    assert.deepEqual(deletedMessages, []);
     assert.equal(created.length, 1);
     assert.match(outcome.result, /^Posted “Naxxramas” for Wed 29 Oct, 20:00\.$/);
   });

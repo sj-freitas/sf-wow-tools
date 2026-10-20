@@ -3,6 +3,7 @@ import type { SignupEventKind } from '@prisma/client';
 import { DateTime } from 'luxon';
 import { timezoneOfRegion } from '../config/regions';
 import { PrismaService } from '../database/prisma.service';
+import { cleanChannel } from '../moderation/channel-cleaner';
 import { parseGuildChannel } from '../plugins/plugin-channel';
 import { PluginKindRegistry, type PluginKindDef } from '../plugins/plugin-kinds';
 import { nextOccurrence } from '../tasks/schedule';
@@ -26,12 +27,22 @@ export interface RecurringEventConfig {
   timezone: string;
 }
 
+/** Between runs: where an unfinished clearing of the channel carries on, and its counts. */
+interface RecurringEventState {
+  cursor?: string;
+  deletedSoFar?: number;
+  archivedSoFar?: number;
+  lastEventId?: string;
+}
+
 const plural = (count: number) => `${count} event${count === 1 ? '' : 's'}`;
+const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 
 /**
  * Recurring Event, a plugin kind of event sign-ups: each time it runs (e.g. every Wednesday at
- * 23:00) it archives the events still open in its channel and posts the next one (e.g. next
- * Wednesday's raid at 20:00) from its saved form. Its first run (right after it is added, or at
+ * 23:00) it archives the events still open in its channel, deletes every other message there
+ * (pinned ones too) and posts the next event (e.g. next Wednesday's
+ * raid at 20:00) from its saved form. Its first run (right after it is added, or at
  * a time picked for it: the plugins' `firstRun`) only posts. Editing the plugin changes the events it posts
  * from then on, never the one already posted; pausing it stops both the archiving and the posting.
  * Registered from here, not in `src/plugins`, so sign-ups stay removable on their own.
@@ -52,7 +63,7 @@ export class RecurringEventPlugin implements OnModuleInit {
     kind: 'RECURRING_EVENT',
     label: 'Recurring Event',
     description:
-      'Posts the same sign-up event every week (e.g. a raid night), archiving the previous one in its channel.',
+      'Posts the same sign-up event every week (e.g. a raid night), first archiving the previous one and deleting every other message of its channel, pinned ones too.',
     scheduleKinds: ['WEEKLY'],
 
     parseConfig: async (input, context) => {
@@ -99,15 +110,16 @@ export class RecurringEventPlugin implements OnModuleInit {
       };
     },
 
-    run: async (plugin, context) => {
+    run: async (plugin, context, deadline) => {
       const config = plugin.config;
+      const state = plugin.state as RecurringEventState;
       const guild = await this.events.findGuild(plugin.guildId);
       const serverZone = timezoneOfRegion(guild.region);
       const zone = resolveTimezone(config.timezone, serverZone) ?? serverZone;
       const now = new Date(context.clock());
 
-      // The first post (when the plugin is added, or at the time picked for it) archives nothing;
-      // from then on each run replaces the channel's open events with the next one.
+      // The first post (when the plugin is added, or at the time picked for it) archives and
+      // deletes nothing; from then on each run empties the channel and posts the next event.
       const firstPost =
         (await this.prisma.pluginRun.count({
           where: { pluginId: plugin.id, status: 'SUCCESS' },
@@ -119,6 +131,27 @@ export class RecurringEventPlugin implements OnModuleInit {
             select: { id: true },
           });
       for (const event of open) await this.events.archive(event.id);
+      const archivedSoFar = (state.archivedSoFar ?? 0) + open.length;
+
+      // Then every message of the channel, pinned and bots' ones too (Channel Clean Up's code, set
+      // to keep nothing). A big channel takes a few runs a minute apart; the event is posted after.
+      let deleted = state.deletedSoFar ?? 0;
+      if (!firstPost) {
+        const cleaned = await cleanChannel(
+          context.bot,
+          config.channelId,
+          { keepBotMessages: false, keepPinned: false, before: state.cursor, deadline },
+          context.clock,
+        );
+        deleted += cleaned.deleted;
+        if (!cleaned.done) {
+          return {
+            result: `Deleting the channel's messages (${deleted} so far); posting after.`,
+            state: { cursor: cleaned.cursor, deletedSoFar: deleted, archivedSoFar },
+            more: true,
+          };
+        }
+      }
 
       const startsAt = nextOccurrence(
         { kind: 'WEEKLY', weekday: config.weekday, timeOfDay: config.time },
@@ -139,9 +172,16 @@ export class RecurringEventPlugin implements OnModuleInit {
         { serverId: config.serverId, channelId: config.channelId },
       );
       const when = DateTime.fromJSDate(startsAt, { zone }).toFormat('ccc d LLL, HH:mm');
-      const archived = open.length > 0 ? `Archived ${plural(open.length)}; posted` : 'Posted';
+      const cleared = [
+        archivedSoFar > 0 ? `archived ${plural(archivedSoFar)}` : '',
+        deleted > 0 ? `deleted ${deleted} message${deleted === 1 ? '' : 's'}` : '',
+      ].filter(Boolean);
+      const posted = `“${event.title}” for ${when}.`;
       return {
-        result: `${archived} “${event.title}” for ${when}.`,
+        result:
+          cleared.length > 0
+            ? `${capitalize(cleared.join(', '))}; posted ${posted}`
+            : `Posted ${posted}`,
         state: { lastEventId: event.id },
       };
     },

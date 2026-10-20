@@ -17,7 +17,8 @@ import './signup.css';
 
 /**
  * A Recurring Event plugin (event sign-ups' plugin kind, shown in the Plugins tab): when it runs
- * (weekly), it archives the events still open in its channel and posts the next one from this
+ * (weekly), it archives the events still open in its channel, deletes all its other messages (pinned
+ * ones too) and posts the next one from this
  * form. Changes apply to the events it posts from then on; Pause in the Plugins tab suspends it.
  */
 export function RecurringEventForm({
@@ -78,7 +79,8 @@ export function RecurringEventForm({
       },
       {
         title: 'Add Recurring Event?',
-        message: `${first} Then, ${describeSchedule(schedule)} (${timezone}), it archives the events still open in ${where} and posts the next one.`,
+        message: `${first} Then, ${describeSchedule(schedule)} (${timezone}), it archives the events still open in ${where}, deletes every other message there, pinned ones too, and posts the next one. Deleted messages can’t be brought back.`,
+        danger: true,
       },
     );
   };
@@ -88,7 +90,7 @@ export function RecurringEventForm({
       {dialog}
       <PluginFormFrame
         title={editing ? `Edit ${editing.name}` : 'New Recurring Event'}
-        intro="Posts the same sign-up event every week. Each time it runs, it archives the events still open in its channel and posts the next one. Changes here apply to the events it posts from then on, not to the one already posted. Pause it in the Plugins tab to suspend it."
+        intro="Posts the same sign-up event every week. Each time it runs, it archives the events still open in its channel, deletes every other message there, pinned ones too, and posts the next one. Changes here apply to the events it posts from then on, not to the one already posted. Pause it in the Plugins tab to suspend it."
         back={back}
         busy={busy}
         error={error}
@@ -127,7 +129,7 @@ export function RecurringEventForm({
             Sign-up channel
             <ChannelSelect groups={usable} value={channel} onChange={setChannel} required />
             <small>
-              Its open events are archived each time. Best a channel for this event only.
+              Emptied each time, pinned messages too: use a channel for this event only.
             </small>
           </div>
         </div>
@@ -194,7 +196,8 @@ export function RecurringEventForm({
               {firstLater
                 ? `Then (${timezone}) it posts the event for the next ${WEEKDAYS[eventWeekday - 1]} at ${eventTime}. `
                 : `Within a minute it posts the event for the next ${WEEKDAYS[eventWeekday - 1]} at ${eventTime}. `}
-              The first post archives nothing; after it, the weekly schedule above takes over.
+              The first post archives and deletes nothing; after it, the weekly schedule above takes
+              over.
             </small>
           </fieldset>
         )}
