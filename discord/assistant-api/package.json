@@ -37,6 +37,7 @@
     "discord-api-types": "^0.38.55",
     "discord-interactions": "^4.4.0",
     "discord.js": "^14.27.0",
+    "ioredis": "^6.0.0",
     "luxon": "^3.7.2",
     "pg": "^8.23.0",
     "quickjs-emscripten": "^0.32.0",

@@ -537,7 +537,7 @@ bot, other bots, the server owner and Administrators.
 - Bot permissions used: View Channel, Send Messages, Manage Channels (to create the channel), Ban
   Members. The bot's role must be above the people it bans.
 
-**Not built yet:** the raid task (see `TODO.md`); channel cleanup is the Channel Clean Up plugin (see Plugins). Live updates between the worker
+**Not built yet:** the raid task (Raid-Helper integration, see `TODO.md`); channel cleanup is the Channel Clean Up plugin (see Plugins). Live updates between the worker
 and the browser use polling until a shared bus (Redis or Postgres `LISTEN/NOTIFY`) exists.
 
 ### Fresh Discord data and live updates
@@ -559,8 +559,9 @@ and the browser use polling until a shared bus (Redis or Postgres `LISTEN/NOTIFY
   `DISCORD_APPLICATION_ID` and `botInvitePermissions`).
 - **Server-side cache:** `src/cache` (`CacheService`) keeps slow or rate-limited Discord answers for
   a while: each server's channel list for 60 s (dropped when the bot creates a channel). It sits on a
-  `CacheStore` (get / set with a TTL / delete, values as JSON) kept in memory today; a Redis store
-  can replace it in `CacheModule` without touching its users.
+  `CacheStore` (get / set with a TTL / delete, values as JSON): Redis when `REDIS_URL` is set (on
+  Render, the Key Value instance's internal URL, shared by the API and the worker), else in memory
+  (local runs). While Redis is unreachable the cache just misses; requests don't fail.
 - **Old history** (post runs, plugin runs, honeypot events) older than 6 months is deleted by the
   worker once a day (`src/maintenance/retention.service.ts`).
 - **Live updates:** `GET /api/events` is a Server-Sent Events stream. Character changes (from the

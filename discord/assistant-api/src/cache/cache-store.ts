@@ -1,8 +1,7 @@
 /**
- * Where cached values live. The API runs as a single instance today, so the store is in memory
- * (`MemoryCacheStore`); a shared store (e.g. Redis: GET / SET with PX / DEL) can replace it by
- * providing another implementation under `CACHE_STORE` in `CacheModule`. Values are JSON, as they
- * would be in Redis, so nothing relies on sharing objects by reference.
+ * Where cached values live: Redis (`RedisCacheStore`) when `REDIS_URL` is set, else this process's
+ * memory (`MemoryCacheStore`); `CacheModule` picks one. Values are JSON, as they are in Redis, so
+ * nothing relies on sharing objects by reference.
  */
 export interface CacheStore {
   /** The value's JSON, or undefined when it isn't there or has expired. */
