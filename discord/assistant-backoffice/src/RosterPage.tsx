@@ -271,9 +271,6 @@ export function RosterPage({ guild, currentUser }: Props) {
         <>
           <div className="roster-filters">
             <div className="search-field">
-              <span className="search-icon" aria-hidden="true">
-                🔍
-              </span>
               <input
                 className="post-search"
                 type="search"
