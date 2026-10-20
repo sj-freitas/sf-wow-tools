@@ -319,10 +319,6 @@ export const deleteTask = (id: string): Promise<void> => request('DELETE', `/api
 export const deletePostMessage = (id: string): Promise<void> =>
   request('POST', `/api/tasks/${id}/delete-post`);
 
-/** Turns a post's live updates (live tags, reaction counts) on or off. */
-export const setTaskTracked = (id: string, tracked: boolean): Promise<ScheduledPost> =>
-  request('POST', `/api/tasks/${id}/tracked`, { tracked });
-
 export const runTaskNow = (id: string): Promise<void> =>
   request('POST', `/api/tasks/${id}/run-now`);
 

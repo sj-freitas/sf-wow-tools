@@ -2230,60 +2230,56 @@ label.btn.disabled {
   white-space: normal;
 }
 
-/* ---- the roster on a phone: one compact card per character ----
-   Top line: the name (with Main and attributes) and the "⋯" menu. Then class, roles and level
-   together on one line, and the Discord user and rank as labelled lines. */
+/* ---- the roster on a phone: a plain list of compact cards instead of the table ----
+   Line 1: class icon, name (with Main and attributes) and the "⋯" menu. Line 2: class, roles and
+   level. Line 3: the Discord user and rank. */
+.roster-list {
+  display: none;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.roster-item {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-2);
+}
+.roster-item + .roster-item {
+  margin-top: 0.5rem;
+}
+.roster-item-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.roster-item-name {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 600;
+}
+.roster-item-name .attributes-badge {
+  margin-left: 0;
+}
+.roster-item-meta {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
 @media (max-width: 720px) {
-  .roster-table tbody tr {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    column-gap: 0.75rem;
+  .roster-list {
+    display: block;
   }
-  .roster-table td {
-    padding: 0.15rem 0;
-  }
-  .roster-table td.cell-name {
-    order: 1;
-    flex: 1 1 0;
-    min-width: 0;
-    justify-content: flex-start;
-    text-align: left;
-    font-size: 1rem;
-  }
-  .roster-table td.cell-name::before {
+  .roster-table {
     display: none;
   }
-  .roster-table td.cell-actions {
-    order: 2;
-    flex: 0 0 auto;
-    margin: 0;
-    padding: 0;
-    border-top: none;
-  }
-  .roster-table td.cell-compact {
-    order: 3;
-    flex: 0 0 auto;
-    gap: 0.3rem;
-    color: var(--muted);
-    font-size: 0.85rem;
-  }
-  .roster-table td.cell-compact::before {
-    display: none;
-  }
-  /* Level keeps a small label: "LEVEL 60". */
-  .roster-table td.cell-level::before {
-    display: inline;
-  }
-  .roster-table td.cell-detail {
-    order: 4;
-    flex: 1 1 100%;
-  }
-  /* A dashed line between the summary and the details. */
-  .roster-table td.cell-compact + td.cell-detail {
-    margin-top: 0.35rem;
-    padding-top: 0.45rem;
-    border-top: 1px dashed var(--border);
+  .tasks {
+    padding: 1rem;
   }
 }
 

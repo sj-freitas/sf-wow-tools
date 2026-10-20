@@ -207,6 +207,92 @@ export function RosterPage({ guild, currentUser }: Props) {
   };
   const canEditRow = (player: Player) =>
     guild.isOfficer || player.discordUserId === currentUser.discordId;
+  const rowMenu = (player: Player, character: Player['characters'][number], name: string) => (
+    <RowMenu
+      label={`Actions for ${name}`}
+      busy={deletingIds.has(character.id) ? <InlineSpinner label="" /> : undefined}
+      items={[
+        ...(canEditRow(player)
+          ? [
+              {
+                label: (
+                  <>
+                    <PencilIcon /> Edit
+                  </>
+                ),
+                to: guildPath(guild, `roster/edit/${character.id}`),
+                state: { from: here },
+              },
+            ]
+          : []),
+        // Everyone: the character's armory page (or, until the version's armory exists, a note
+        // that it doesn't yet).
+        armoryItem(character),
+        ...(guild.isOfficer
+          ? [
+              {
+                label: (
+                  <>
+                    <TagIcon /> Attributes
+                  </>
+                ),
+                onSelect: () => setTagging({ id: character.id, name }),
+              },
+              {
+                label: (
+                  <>
+                    <NoteIcon />
+                    {notedIds.has(character.id) ? ' Officer note' : ' Write an officer note'}
+                    {notedIds.has(character.id) && (
+                      <span className="row-menu-dot" aria-label="(written)" />
+                    )}
+                  </>
+                ),
+                to: guildPath(guild, `roster/notes/${character.id}`),
+                state: { from: here },
+              },
+            ]
+          : []),
+        ...(canEditRow(player)
+          ? [
+              {
+                label: (
+                  <>
+                    <BinIcon /> Remove from roster
+                  </>
+                ),
+                danger: true,
+                onSelect: () =>
+                  void confirm({
+                    title: `Remove ${name} from the roster?`,
+                    message:
+                      'The character itself is kept (its other guilds, its bio), so it can be added back later.',
+                    confirmLabel: 'Remove',
+                    danger: true,
+                  }).then((ok) => ok && runDelete(character.id)),
+              },
+            ]
+          : []),
+      ]}
+    />
+  );
+  const characterLink = (character: Player['characters'][number], name: string) => (
+    <Link
+      className="character-link"
+      to={characterPagePath(guild, characterPath(character))}
+      state={{ from: here }}
+    >
+      {name}
+    </Link>
+  );
+  const attributesBadge = (characterId: string, name: string) => (
+    <AttributesBadge
+      attributes={attributesOf(characterId)}
+      onEdit={guild.isOfficer ? () => setTagging({ id: characterId, name }) : undefined}
+    />
+  );
+  const rolesOf = (character: Player['characters'][number]) =>
+    character.roles.map((role) => ROLE_LABELS[role]).join(', ');
 
   return (
     <div className="tasks">
@@ -272,7 +358,7 @@ export function RosterPage({ guild, currentUser }: Props) {
       )}
 
       {!players ? (
-        <div className="table-wrap roster-table">
+        <div className="table-wrap">
           <table>
             <thead>
               <tr>
@@ -342,146 +428,96 @@ export function RosterPage({ guild, currentUser }: Props) {
           {shown.length === 0 ? (
             <p className="empty">No characters match.</p>
           ) : (
-            <div className="table-wrap roster-table">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Character</th>
-                    <th>Class</th>
-                    <th>Roles</th>
-                    <th>Level</th>
-                    <th>Discord user</th>
-                    <th>Rank</th>
-                    <th />
-                  </tr>
-                </thead>
-                <tbody>
-                  {shown.map(({ player, character }) => {
-                    const deleting = deletingIds.has(character.id);
-                    const name = `${character.firstName} ${character.lastName}`.trim();
-                    return (
-                      <Fragment key={character.id}>
-                        <tr className={deleting ? 'row-pending' : undefined}>
-                          <td data-label="Character" className="cell-name">
-                            <Link
-                              className="character-link"
-                              to={characterPagePath(guild, characterPath(character))}
-                              state={{ from: here }}
-                            >
-                              {name}
-                            </Link>
-                            {character.isMain && (
-                              <span className="badge badge-main main-pill">Main</span>
-                            )}
-                            <AttributesBadge
-                              attributes={attributesOf(character.id)}
-                              onEdit={
-                                guild.isOfficer
-                                  ? () => setTagging({ id: character.id, name })
-                                  : undefined
-                              }
-                            />
-                          </td>
-                          <td data-label="Class" className="cell-compact">
-                            <ClassMark
-                              gameVersion={guild.gameVersion}
-                              className={character.class}
-                            />
-                            {character.class}
-                          </td>
-                          <td data-label="Roles" className="cell-compact">
-                            {character.roles.map((role) => ROLE_LABELS[role]).join(', ')}
-                          </td>
-                          <td data-label="Level" className="cell-compact cell-level">
-                            {character.level}
-                          </td>
-                          <td data-label="Discord user" className="cell-detail">
-                            <DiscordName label={playerLabel(player)} id={player.discordUserId} />
-                          </td>
-                          <td data-label="Rank" className="cell-detail">
-                            {ranks[player.discordUserId]?.join(', ') ?? '—'}
-                          </td>
-                          <td className="cell-actions">
-                            <RowMenu
-                              label={`Actions for ${name}`}
-                              busy={deleting ? <InlineSpinner label="" /> : undefined}
-                              items={[
-                                ...(canEditRow(player)
-                                  ? [
-                                      {
-                                        label: (
-                                          <>
-                                            <PencilIcon /> Edit
-                                          </>
-                                        ),
-                                        to: guildPath(guild, `roster/edit/${character.id}`),
-                                        state: { from: here },
-                                      },
-                                    ]
-                                  : []),
-                                // Everyone: the character's armory page (or, until the version's
-                                // armory exists, a note that it doesn't yet).
-                                armoryItem(character),
-                                ...(guild.isOfficer
-                                  ? [
-                                      {
-                                        label: (
-                                          <>
-                                            <TagIcon /> Attributes
-                                          </>
-                                        ),
-                                        onSelect: () => setTagging({ id: character.id, name }),
-                                      },
-                                      {
-                                        label: (
-                                          <>
-                                            <NoteIcon />
-                                            {notedIds.has(character.id)
-                                              ? ' Officer note'
-                                              : ' Write an officer note'}
-                                            {notedIds.has(character.id) && (
-                                              <span
-                                                className="row-menu-dot"
-                                                aria-label="(written)"
-                                              />
-                                            )}
-                                          </>
-                                        ),
-                                        to: guildPath(guild, `roster/notes/${character.id}`),
-                                        state: { from: here },
-                                      },
-                                    ]
-                                  : []),
-                                ...(canEditRow(player)
-                                  ? [
-                                      {
-                                        label: (
-                                          <>
-                                            <BinIcon /> Remove from roster
-                                          </>
-                                        ),
-                                        danger: true,
-                                        onSelect: () =>
-                                          void confirm({
-                                            title: `Remove ${name} from the roster?`,
-                                            message:
-                                              'The character itself is kept (its other guilds, its bio), so it can be added back later.',
-                                            confirmLabel: 'Remove',
-                                            danger: true,
-                                          }).then((ok) => ok && runDelete(character.id)),
-                                      },
-                                    ]
-                                  : []),
-                              ]}
-                            />
-                          </td>
-                        </tr>
-                      </Fragment>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+            <>
+              {/* Phones: one compact card per character instead of the table. */}
+              <ul className="roster-list">
+                {shown.map(({ player, character }) => {
+                  const name = `${character.firstName} ${character.lastName}`.trim();
+                  const rank = ranks[player.discordUserId]?.join(', ');
+                  return (
+                    <li
+                      key={character.id}
+                      className={
+                        deletingIds.has(character.id) ? 'roster-item row-pending' : 'roster-item'
+                      }
+                    >
+                      <div className="roster-item-head">
+                        <ClassMark gameVersion={guild.gameVersion} className={character.class} />
+                        <span className="roster-item-name">
+                          {characterLink(character, name)}
+                          {character.isMain && <span className="badge badge-main">Main</span>}
+                          {attributesBadge(character.id, name)}
+                        </span>
+                        {rowMenu(player, character, name)}
+                      </div>
+                      <div className="roster-item-meta">
+                        {[character.class, rolesOf(character), `Lv ${character.level}`]
+                          .filter(Boolean)
+                          .join(' · ')}
+                      </div>
+                      <div className="roster-item-meta">
+                        <DiscordName label={playerLabel(player)} id={player.discordUserId} />
+                        {rank && ` · ${rank}`}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+              <div className="table-wrap roster-table">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Character</th>
+                      <th>Class</th>
+                      <th>Roles</th>
+                      <th>Level</th>
+                      <th>Discord user</th>
+                      <th>Rank</th>
+                      <th />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {shown.map(({ player, character }) => {
+                      const deleting = deletingIds.has(character.id);
+                      const name = `${character.firstName} ${character.lastName}`.trim();
+                      return (
+                        <Fragment key={character.id}>
+                          <tr className={deleting ? 'row-pending' : undefined}>
+                            <td data-label="Character" className="cell-name">
+                              {characterLink(character, name)}
+                              {character.isMain && (
+                                <span className="badge badge-main main-pill">Main</span>
+                              )}
+                              {attributesBadge(character.id, name)}
+                            </td>
+                            <td data-label="Class" className="cell-compact">
+                              <ClassMark
+                                gameVersion={guild.gameVersion}
+                                className={character.class}
+                              />
+                              {character.class}
+                            </td>
+                            <td data-label="Roles" className="cell-compact">
+                              {rolesOf(character)}
+                            </td>
+                            <td data-label="Level" className="cell-compact cell-level">
+                              {character.level}
+                            </td>
+                            <td data-label="Discord user" className="cell-detail">
+                              <DiscordName label={playerLabel(player)} id={player.discordUserId} />
+                            </td>
+                            <td data-label="Rank" className="cell-detail">
+                              {ranks[player.discordUserId]?.join(', ') ?? '—'}
+                            </td>
+                            <td className="cell-actions">{rowMenu(player, character, name)}</td>
+                          </tr>
+                        </Fragment>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </>
       )}
