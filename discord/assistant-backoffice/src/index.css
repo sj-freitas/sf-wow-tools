@@ -1878,11 +1878,6 @@ label.btn.disabled {
   margin-right: 0;
 }
 
-/* The roster's Officer note button: highlighted when the character has a note. */
-.btn-note-has {
-  border-color: var(--gold);
-  color: var(--gold);
-}
 .officer-note {
   display: grid;
   gap: 1rem;
@@ -1892,4 +1887,297 @@ label.btn.disabled {
   align-items: center;
   gap: 0.4rem;
   margin: 0;
+}
+
+/* ---- drawer: a panel sliding in from the side (Drawer.tsx) ---- */
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  justify-content: flex-end;
+  background: color-mix(in srgb, #000 45%, transparent);
+}
+.drawer {
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 28rem);
+  height: 100%;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  box-shadow: -8px 0 24px color-mix(in srgb, #000 25%, transparent);
+  outline: none;
+  animation: drawer-in 0.18s ease-out;
+}
+@keyframes drawer-in {
+  from {
+    transform: translateX(2rem);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .drawer {
+    animation: none;
+  }
+}
+.drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: max(1rem, env(safe-area-inset-top, 0px)) max(1.25rem, env(safe-area-inset-right, 0px))
+    1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+.drawer-head h3 {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.25rem max(1.25rem, env(safe-area-inset-right, 0px))
+    max(1.25rem, env(safe-area-inset-bottom, 0px)) 1.25rem;
+}
+/* In the narrow drawer the form's fields stack. */
+.drawer .form-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+.drawer-search {
+  box-sizing: border-box;
+  width: 100%;
+  height: var(--control-height);
+  padding: 0 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+}
+
+/* ---- guild attributes ---- */
+/* A label on its colour: white text, which the twelve colours are dark enough for. */
+.attribute-chip {
+  display: inline-block;
+  padding: 0.05rem 0.5rem;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+.attribute-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.3rem;
+}
+.attribute-manager {
+  display: grid;
+  gap: 1rem;
+}
+.attribute-form {
+  display: grid;
+  gap: 0.6rem;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-2);
+}
+.attribute-form-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+.attribute-input {
+  height: var(--control-height);
+  padding: 0 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+.attribute-list {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.attribute-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.attribute-row-actions {
+  display: flex;
+  gap: 0.35rem;
+  margin-left: auto;
+}
+.attribute-check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.25rem;
+  cursor: pointer;
+}
+.color-picker {
+  display: grid;
+  grid-template-columns: repeat(6, 1.75rem);
+  gap: 0.4rem;
+}
+.color-swatch {
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.color-swatch-active {
+  border-color: var(--text);
+  box-shadow: 0 0 0 2px var(--surface);
+}
+
+/* ---- a row's "⋯" actions menu (RowMenu) ---- */
+.row-menu {
+  position: relative;
+  display: inline-block;
+}
+.row-menu-dots {
+  font-size: 1.1rem;
+  line-height: 1;
+  letter-spacing: 0.05em;
+}
+/* Opens towards the left, under the button, wide enough for its labels. */
+.row-menu-list {
+  left: auto;
+  right: 0;
+  min-width: 13rem;
+  text-align: left;
+}
+.row-menu-list .dropdown-item {
+  gap: 0.55rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.row-menu-danger {
+  color: var(--danger);
+}
+.row-menu-dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  margin-left: auto;
+  border-radius: 50%;
+  background: var(--gold);
+}
+
+/* ---- a character's attributes as a tag icon and count (AttributesBadge) ---- */
+.attributes-badge {
+  position: relative;
+  display: inline-block;
+  margin-left: 0.5rem;
+  vertical-align: middle;
+}
+.attributes-badge-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.1rem 0.45rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+.attributes-badge-button svg {
+  width: 12px;
+  height: 12px;
+}
+.attributes-badge-button:hover,
+.attributes-badge-button[aria-expanded='true'] {
+  border-color: var(--accent);
+  color: var(--text);
+}
+.attributes-popover {
+  position: absolute;
+  z-index: 6;
+  top: calc(100% + 6px);
+  left: 0;
+  display: grid;
+  gap: 0.5rem;
+  justify-items: start;
+  width: max-content;
+  max-width: min(18rem, calc(100vw - 3rem));
+  padding: 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: 0 8px 24px color-mix(in srgb, #000 25%, transparent);
+  white-space: normal;
+}
+
+/* ---- the roster on a phone: one compact card per character ----
+   Top line: the name (with Main and attributes) and the "⋯" menu. Then class, roles and level
+   together on one line, and the Discord user and rank as labelled lines. */
+@media (max-width: 720px) {
+  .roster-table tbody tr {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: 0.75rem;
+  }
+  .roster-table td {
+    padding: 0.15rem 0;
+  }
+  .roster-table td.cell-name {
+    order: 1;
+    flex: 1 1 0;
+    min-width: 0;
+    justify-content: flex-start;
+    text-align: left;
+    font-size: 1rem;
+  }
+  .roster-table td.cell-name::before {
+    display: none;
+  }
+  .roster-table td.cell-actions {
+    order: 2;
+    flex: 0 0 auto;
+    margin: 0;
+    padding: 0;
+    border-top: none;
+  }
+  .roster-table td.cell-compact {
+    order: 3;
+    flex: 0 0 auto;
+    gap: 0.3rem;
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+  .roster-table td.cell-compact::before {
+    display: none;
+  }
+  /* Level keeps a small label: "LEVEL 60". */
+  .roster-table td.cell-level::before {
+    display: inline;
+  }
+  .roster-table td.cell-detail {
+    order: 4;
+    flex: 1 1 100%;
+  }
+  /* A dashed line between the summary and the details. */
+  .roster-table td.cell-compact + td.cell-detail {
+    margin-top: 0.35rem;
+    padding-top: 0.45rem;
+    border-top: 1px dashed var(--border);
+  }
 }

@@ -50,6 +50,8 @@ export interface ShowRosterEntry extends ShowCharacter {
   discordUser: ShowDiscordUser;
   /** The character's page in the armory (the version's `armoryLink`); null when it has none. */
   armoryLink: string | null;
+  /** The names of the guild attributes it has ("Switcher", …), A–Z; empty when none. */
+  attributes: string[];
 }
 
 /** The name an expression uses for its list: `reactions` in a reactions tag, `roster` in a roster tag. */
@@ -143,6 +145,7 @@ const SAMPLE_ROSTER: ShowRosterEntry[] = [
   {
     ...SAMPLE[0].characters[0],
     armoryLink: 'https://armory.example/character/eu/pve/merric',
+    attributes: ['Switcher'],
     discordUser: {
       id: SAMPLE[0].id,
       tag: SAMPLE[0].tag,
@@ -161,6 +164,7 @@ const SAMPLE_ROSTER: ShowRosterEntry[] = [
     roles: ['Healer'],
     level: 58,
     armoryLink: 'https://armory.example/character/eu/pve/olga',
+    attributes: [],
     discordUser: {
       id: SAMPLE[1].id,
       tag: SAMPLE[1].tag,

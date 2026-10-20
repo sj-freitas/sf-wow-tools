@@ -319,14 +319,17 @@ syntax, same QuickJS sandbox, checked on save with sample data, `⚠️ (…)` i
 Its only option is `show` (left out: every character's name); the list is called `roster`.
 
 - **`roster`** is an array with one entry per character of the guild, sorted by name:
-  `{ name, firstName, lastName, isMain, class, race, roles, level, armoryLink, discordUser }` (the same
-  character fields as `characters` in a reactions tag, plus `armoryLink`: the character's armory page from
-  the game version's `armoryLink` template, or `null` when the version has none). A character belongs to a player (`players.discord_user_id`), so
+  `{ name, firstName, lastName, isMain, class, race, roles, level, armoryLink, attributes, discordUser }`
+  (the same character fields as `characters` in a reactions tag, plus `armoryLink`: the character's armory
+  page from the game version's `armoryLink` template, or `null` when the version has none; and
+  `attributes`: the names of the guild attributes it has, A–Z, e.g. `['Switcher']`, empty when none). A character belongs to a player (`players.discord_user_id`), so
   `discordUser` is the Discord user who plays it: `{ id, tag, name, displayName, roles }` where `tag` is
   `<@id>`, `name` the Discord name we know (else the id), `displayName` their nickname in the guild's main
   server (else `name`) and `roles` the **names of their Discord roles** in that server (`@everyone` left
   out). Examples: `roster.length`, `roster.filter(c => c.isMain).map(c => c.name)`,
-  `roster.filter(c => c.discordUser.roles.includes('Raider')).map(c => c.name)`.
+  `roster.filter(c => c.discordUser.roles.includes('Raider')).map(c => c.name)`,
+  `roster.filter(c => c.attributes.includes('Switcher')).map(c => c.name)`. Attributes are part of the
+  roster hash, so giving or taking one updates the posts that show it.
 - **Nicknames and roles come from Discord**, so they are read with one member listing and one role listing
   of the main server (the bot's Server Members Intent), or one lookup per player (at most 100) when that
   intent is off, and kept for 5 minutes. They are part of the roster hash, so a role change shows in a post
@@ -681,6 +684,17 @@ be one `Player` row per (guild, Discord user) into one global row per Discord us
 turns every existing character → player → guild chain into a `character_guild_memberships` row;
 `20261004090000_character_faction` then backfills the new `faction` column from one of each character's
 guild memberships (falling back to Alliance, an arbitrary tie-break, for the rare one left with none).
+
+## Guild attributes
+
+Labels a guild gives some of its characters ("Switcher", "Recruit", "Bank alt"…), each with one of
+12 colours (`ATTRIBUTE_COLORS` in `src/characters/guild-attributes.service.ts`; names are unique in
+the guild, colours can repeat). Tables `guild_attributes` and `character_attributes`. Officers
+manage them on the roster: **Attributes** (top of the roster) adds, renames, recolours and deletes
+them, and the tag button on a character's row ticks which it has. Everyone in the guild sees them
+under the characters' names. Roster post tags read them as `roster[i].attributes` (see above). Like
+officer notes, they belong to the guild and the character, so they are kept if the character
+leaves the roster and comes back.
 
 ## Officer notes about characters
 

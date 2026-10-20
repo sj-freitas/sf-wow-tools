@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { Drawer } from './Drawer';
+import { Drawer } from '../Drawer';
 import { Spinner } from '../Loading';
 import type { Guild } from '../types';
 import { entryName, errorText } from './labels';

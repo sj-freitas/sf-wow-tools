@@ -230,10 +230,12 @@ export function LiveTagsHelp() {
         is an object with the character fields above (<code>name</code>, <code>firstName</code>,{' '}
         <code>lastName</code>, <code>isMain</code>, <code>class</code>, <code>race</code>,{' '}
         <code>roles</code>, <code>level</code>), <code>armoryLink</code> (the link to its armory
-        page, or <code>null</code>) and <code>discordUser</code>: the Discord user who plays it,
-        with <code>id</code>, <code>tag</code> (a mention), <code>name</code> (their Discord name),{' '}
-        <code>displayName</code> (their nickname in the guild's main server, else the Discord name)
-        and <code>roles</code> (the names of their Discord roles there, a list of text).
+        page, or <code>null</code>), <code>attributes</code> (the names of the guild attributes it
+        has, like <code>['Switcher']</code>; empty when none) and <code>discordUser</code>: the
+        Discord user who plays it, with <code>id</code>, <code>tag</code> (a mention),{' '}
+        <code>name</code> (their Discord name), <code>displayName</code> (their nickname in the
+        guild's main server, else the Discord name) and <code>roles</code> (the names of their
+        Discord roles there, a list of text).
       </p>
       <table className="syntax-table">
         <tbody>
@@ -252,6 +254,16 @@ export function LiveTagsHelp() {
               </code>
             </td>
             <td>Every main tank</td>
+          </tr>
+          <tr>
+            <td>
+              <code>
+                {
+                  '{{roster show="roster.filter(c => c.attributes.includes(\'Switcher\')).map(c => c.name)"}}'
+                }
+              </code>
+            </td>
+            <td>Every character with the Switcher attribute</td>
           </tr>
           <tr>
             <td>

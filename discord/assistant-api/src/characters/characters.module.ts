@@ -4,13 +4,26 @@ import { CharacterBioController } from './character-bio.controller';
 import { CharacterBioService } from './character-bio.service';
 import { CharacterNotesController } from './character-notes.controller';
 import { CharacterNotesService } from './character-notes.service';
+import { GuildAttributesController } from './guild-attributes.controller';
+import { GuildAttributesService } from './guild-attributes.service';
 import { CharactersAdminController } from './characters-admin.controller';
 import { CharactersCommand } from './characters.command';
 import { CharactersService } from './characters.service';
 
 @Module({
   imports: [AuthModule],
-  controllers: [CharactersAdminController, CharacterBioController, CharacterNotesController],
-  providers: [CharactersService, CharactersCommand, CharacterBioService, CharacterNotesService],
+  controllers: [
+    CharactersAdminController,
+    CharacterBioController,
+    CharacterNotesController,
+    GuildAttributesController,
+  ],
+  providers: [
+    CharactersService,
+    CharactersCommand,
+    CharacterBioService,
+    CharacterNotesService,
+    GuildAttributesService,
+  ],
 })
 export class CharactersModule {}

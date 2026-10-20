@@ -398,77 +398,13 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* ---- sign-up drawer ---- */
+/* ---- the Sign-ups tab toolbar ---- */
 .signup-toolbar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 0.6rem 1rem;
-}
-.drawer-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-  display: flex;
-  justify-content: flex-end;
-  background: color-mix(in srgb, #000 45%, transparent);
-}
-.drawer {
-  display: flex;
-  flex-direction: column;
-  width: min(100%, 28rem);
-  height: 100%;
-  background: var(--surface);
-  border-left: 1px solid var(--border);
-  box-shadow: -8px 0 24px color-mix(in srgb, #000 25%, transparent);
-  outline: none;
-  animation: drawer-in 0.18s ease-out;
-}
-@keyframes drawer-in {
-  from {
-    transform: translateX(2rem);
-    opacity: 0;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .drawer {
-    animation: none;
-  }
-}
-.drawer-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  padding: max(1rem, env(safe-area-inset-top, 0px)) max(1.25rem, env(safe-area-inset-right, 0px))
-    1rem 1.25rem;
-  border-bottom: 1px solid var(--border);
-}
-.drawer-head h3 {
-  margin: 0;
-  overflow-wrap: anywhere;
-}
-.drawer-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: 1.25rem max(1.25rem, env(safe-area-inset-right, 0px))
-    max(1.25rem, env(safe-area-inset-bottom, 0px)) 1.25rem;
-}
-/* In the narrow drawer the form's fields stack. */
-.drawer .form-grid {
-  grid-template-columns: minmax(0, 1fr);
-}
-.drawer-search {
-  box-sizing: border-box;
-  width: 100%;
-  height: var(--control-height);
-  padding: 0 0.7rem;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--surface-2);
-  color: var(--text);
-  font: inherit;
 }
 
 /* ---- copying assignments ---- */

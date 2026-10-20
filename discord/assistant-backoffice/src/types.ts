@@ -434,3 +434,32 @@ export interface OfficerNote {
   updatedByName: string | null;
   images: BioImage[];
 }
+
+/** The colours a guild attribute can have (the API's ATTRIBUTE_COLORS). */
+export const ATTRIBUTE_COLORS = {
+  red: '#d64545',
+  orange: '#e07b2e',
+  amber: '#d9a21b',
+  yellow: '#c9b81c',
+  lime: '#7fb52f',
+  green: '#3a9a5b',
+  teal: '#2a9d8f',
+  cyan: '#2fa8c9',
+  blue: '#3b74d4',
+  indigo: '#5b5fd6',
+  purple: '#8e5bd4',
+  pink: '#d4589a',
+} as const;
+export type AttributeColor = keyof typeof ATTRIBUTE_COLORS;
+
+/**
+ * A label a guild gives some of its characters ("Switcher"), with a colour. Officers manage them;
+ * everyone in the guild sees them; roster post tags read them as `roster[i].attributes`.
+ */
+export interface GuildAttribute {
+  id: string;
+  name: string;
+  color: AttributeColor;
+  /** The roster characters that have it. */
+  characterIds: string[];
+}

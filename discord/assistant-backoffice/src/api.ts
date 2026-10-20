@@ -1,5 +1,7 @@
 import type {
+  AttributeColor,
   BioImage,
+  GuildAttribute,
   OfficerNote,
   Character,
   CharacterProfile,
@@ -413,3 +415,30 @@ export const deleteOfficerNoteImage = (
 
 export const officerNoteImageUrl = (guildId: string, imageId: string): string =>
   `/api/guilds/${guildId}/character-notes/images/${imageId}`;
+
+// ---- guild attributes (labels Officers give characters) ----
+
+export const fetchAttributes = (guildId: string): Promise<GuildAttribute[]> =>
+  request('GET', `/api/guilds/${guildId}/attributes`);
+
+export const createAttribute = (
+  guildId: string,
+  input: { name: string; color: AttributeColor },
+): Promise<void> => request('POST', `/api/guilds/${guildId}/attributes`, input);
+
+export const updateAttribute = (
+  guildId: string,
+  attributeId: string,
+  input: { name?: string; color?: AttributeColor },
+): Promise<void> => request('PATCH', `/api/guilds/${guildId}/attributes/${attributeId}`, input);
+
+export const deleteAttribute = (guildId: string, attributeId: string): Promise<void> =>
+  request('DELETE', `/api/guilds/${guildId}/attributes/${attributeId}`);
+
+/** Exactly which attributes the character has from now on. */
+export const setCharacterAttributes = (
+  guildId: string,
+  characterId: string,
+  attributeIds: string[],
+): Promise<void> =>
+  request('PUT', `/api/guilds/${guildId}/characters/${characterId}/attributes`, { attributeIds });

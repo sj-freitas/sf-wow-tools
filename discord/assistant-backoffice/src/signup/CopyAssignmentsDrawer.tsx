@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { InlineSpinner, Spinner } from '../Loading';
 import type { Guild } from '../types';
 import { scopeHeading } from './assignmentText';
-import { Drawer } from './Drawer';
+import { Drawer } from '../Drawer';
 import { errorText, formatEventTime } from './labels';
 import {
   copyAssignments,

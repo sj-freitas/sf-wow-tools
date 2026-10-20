@@ -167,6 +167,7 @@ describe('the roster variable', () => {
       roles: ['Tank'],
       level: 60,
       armoryLink: null,
+      attributes: ['Switcher', 'Officer alt'],
       discordUser: { id: '1', tag: '<@1>', name: 'Ana', displayName: 'Ana', roles: [] },
     },
     {
@@ -179,9 +180,25 @@ describe('the roster variable', () => {
       roles: ['Healer'],
       level: 58,
       armoryLink: null,
+      attributes: [],
       discordUser: { id: '2', tag: '<@2>', name: 'Bruno', displayName: 'Bruno', roles: [] },
     },
   ];
+
+  it('gives each character its guild attributes, to filter on', async () => {
+    assert.equal(
+      await runShowExpression(
+        "roster.filter(c => c.attributes.includes('Switcher')).map(c => c.name)",
+        roster,
+        'roster',
+      ),
+      'Merric Stone',
+    );
+    assert.equal(
+      await runShowExpression("roster.map(c => c.attributes.join('/'))", roster, 'roster'),
+      'Switcher/Officer alt, ',
+    );
+  });
 
   it('gives every character with who plays it', async () => {
     assert.equal(

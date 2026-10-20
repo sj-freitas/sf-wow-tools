@@ -85,6 +85,7 @@ model Guild {
   characterMemberships    CharacterGuildMembership[]
   access                  GuildAccess[]
   officerNotes            CharacterOfficerNote[]
+  attributes              GuildAttribute[]
   // Event sign-ups (prisma/signup.prisma).
   signupSettings          SignupSettings?
   signupEvents            SignupEvent[]
@@ -193,6 +194,7 @@ model Character {
   images        CharacterImage[]
   guilds        CharacterGuildMembership[]
   officerNotes  CharacterOfficerNote[]
+  attributes    CharacterAttribute[]
   // Event sign-ups (prisma/signup.prisma).
   signupEntries SignupEntry[]
   createdAt     DateTime                   @default(now()) @map("created_at")
@@ -265,6 +267,37 @@ model CharacterOfficerNoteImage {
 
   @@index([noteId, createdAt])
   @@map("character_officer_note_images")
+}
+
+// A label a guild gives some of its characters ("Switcher", "Recruit", "Bank alt"…), with a colour
+// it is shown in. As many as the guild wants; Officers manage them on the roster, everyone in the
+// guild sees them, and roster post tags read them (`roster[i].attributes`). The name is unique
+// within the guild; colours can repeat. `color` is one of ATTRIBUTE_COLORS (guild-attributes.ts).
+model GuildAttribute {
+  id         String               @id @default(uuid()) @db.Uuid
+  guildId    String               @map("guild_id") @db.Uuid
+  guild      Guild                @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  name       String
+  color      String
+  characters CharacterAttribute[]
+  createdAt  DateTime             @default(now()) @map("created_at")
+
+  @@unique([guildId, name])
+  @@map("guild_attributes")
+}
+
+// A character having one of its guild's attributes. Kept if the character leaves the roster and
+// comes back, like officer notes; it goes when the attribute or the character is deleted.
+model CharacterAttribute {
+  attributeId String         @map("attribute_id") @db.Uuid
+  attribute   GuildAttribute @relation(fields: [attributeId], references: [id], onDelete: Cascade)
+  characterId String         @map("character_id") @db.Uuid
+  character   Character      @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  createdAt   DateTime       @default(now()) @map("created_at")
+
+  @@id([attributeId, characterId])
+  @@index([characterId])
+  @@map("character_attributes")
 }
 
 // A backoffice user, created on first Discord login.

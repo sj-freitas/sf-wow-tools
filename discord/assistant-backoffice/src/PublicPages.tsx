@@ -221,6 +221,10 @@ export function PrivacyPage({ framed = true }: { framed?: boolean }) {
           A bio is private until you choose to share it.
         </li>
         <li>
+          Labels a guild’s officers give the characters on its roster (such as “Switcher”), visible
+          to the guild’s members.
+        </li>
+        <li>
           Notes a guild’s officers keep about the characters on its roster, with any images they
           add. Only that guild’s officers can see them.
         </li>

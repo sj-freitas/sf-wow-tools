@@ -2,6 +2,7 @@ import { Fragment, useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   deleteCharacter,
+  fetchAttributes,
   fetchCharacterNoteIds,
   fetchPlayers,
   fetchRanks,
@@ -12,10 +13,21 @@ import { CopyableName } from './CopyableName';
 import { InlineSpinner, SkeletonRows, Spinner } from './Loading';
 import { subscribeEvents } from './events';
 import { characterPath, playerLabel } from './format';
-import { ROLE_LABELS, type Guild, type Player, type Ranks, type User } from './types';
+import {
+  ROLE_LABELS,
+  type Guild,
+  type GuildAttribute,
+  type Player,
+  type Ranks,
+  type User,
+} from './types';
 import { useCurrentUrl, useReturnTo } from './useReturnTo';
 import { ClassMark } from './ClassMark';
-import { BinIcon, NoteIcon, PencilIcon } from './Icons';
+import { BinIcon, NoteIcon, PencilIcon, TagIcon } from './Icons';
+import { AttributesBadge } from './AttributesBadge';
+import { CharacterAttributesDrawer, ManageAttributesDrawer } from './AttributeDrawers';
+import { RowMenu } from './RowMenu';
+import { useConfirm } from './useConfirm';
 import { characterPagePath, guildPath } from './guildPath';
 
 interface Props {
@@ -47,6 +59,21 @@ export function RosterPage({ guild, currentUser }: Props) {
       .then(setRanks)
       .catch(() => setRanks({}));
   }, [guild.id]);
+
+  // The guild's attributes (labels like "Switcher"), shown under names; Officers edit them.
+  const [attributes, setAttributes] = useState<GuildAttribute[]>([]);
+  const [managing, setManaging] = useState(false);
+  const { confirm, dialog } = useConfirm();
+  const [tagging, setTagging] = useState<{ id: string; name: string } | null>(null);
+  const loadAttributes = useCallback(() => {
+    fetchAttributes(guild.id)
+      .then(setAttributes)
+      .catch(() => setAttributes([]));
+  }, [guild.id]);
+  useEffect(loadAttributes, [loadAttributes]);
+  useEffect(() => subscribeEvents('characters', loadAttributes), [loadAttributes]);
+  const attributesOf = (characterId: string) =>
+    attributes.filter((attribute) => attribute.characterIds.includes(characterId));
 
   // Officers: which characters have an Officer note, to mark their note button.
   const [notedIds, setNotedIds] = useState<Set<string>>(new Set());
@@ -118,11 +145,38 @@ export function RosterPage({ guild, currentUser }: Props) {
 
   return (
     <div className="tasks">
+      {dialog}
+      {managing && (
+        <ManageAttributesDrawer
+          guild={guild}
+          attributes={attributes}
+          onClose={() => setManaging(false)}
+          onChanged={loadAttributes}
+        />
+      )}
+      {tagging && (
+        <CharacterAttributesDrawer
+          guild={guild}
+          character={tagging}
+          attributes={attributes}
+          onClose={() => setTagging(null)}
+          onChanged={loadAttributes}
+          onManage={() => {
+            setTagging(null);
+            setManaging(true);
+          }}
+        />
+      )}
       <div className="tasks-head">
         <div>
           <h3>Roster</h3>
         </div>
         <div className="settings-actions">
+          {guild.isOfficer && (
+            <button type="button" className="btn" onClick={() => setManaging(true)}>
+              Attributes
+            </button>
+          )}
           {guild.isOfficer && missingNames && (
             <button
               type="button"
@@ -153,7 +207,7 @@ export function RosterPage({ guild, currentUser }: Props) {
       )}
 
       {!players ? (
-        <div className="table-wrap">
+        <div className="table-wrap roster-table">
           <table>
             <thead>
               <tr>
@@ -174,7 +228,7 @@ export function RosterPage({ guild, currentUser }: Props) {
       ) : rows.length === 0 ? (
         <p className="empty">No characters registered yet.</p>
       ) : (
-        <div className="table-wrap">
+        <div className="table-wrap roster-table">
           <table>
             <thead>
               <tr>
@@ -190,80 +244,113 @@ export function RosterPage({ guild, currentUser }: Props) {
             <tbody>
               {rows.map(({ player, character }) => {
                 const deleting = deletingIds.has(character.id);
+                const name = `${character.firstName} ${character.lastName}`.trim();
                 return (
                   <Fragment key={character.id}>
                     <tr className={deleting ? 'row-pending' : undefined}>
-                      <td data-label="Character">
+                      <td data-label="Character" className="cell-name">
                         <Link
                           className="character-link"
                           to={characterPagePath(guild, characterPath(character))}
                           state={{ from: here }}
                         >
-                          {`${character.firstName} ${character.lastName}`.trim()}
+                          {name}
                         </Link>
                         {character.isMain && (
                           <span className="badge badge-main main-pill">Main</span>
                         )}
+                        <AttributesBadge
+                          attributes={attributesOf(character.id)}
+                          onEdit={
+                            guild.isOfficer
+                              ? () => setTagging({ id: character.id, name })
+                              : undefined
+                          }
+                        />
                       </td>
-                      <td data-label="Class">
+                      <td data-label="Class" className="cell-compact">
                         <ClassMark gameVersion={guild.gameVersion} className={character.class} />
                         {character.class}
                       </td>
-                      <td data-label="Roles">
+                      <td data-label="Roles" className="cell-compact">
                         {character.roles.map((role) => ROLE_LABELS[role]).join(', ')}
                       </td>
-                      <td data-label="Level">{character.level}</td>
-                      <td data-label="Discord user">
+                      <td data-label="Level" className="cell-compact cell-level">
+                        {character.level}
+                      </td>
+                      <td data-label="Discord user" className="cell-detail">
                         <CopyableName label={playerLabel(player)} id={player.discordUserId} />
                       </td>
-                      <td data-label="Rank">{ranks[player.discordUserId]?.join(', ') ?? '—'}</td>
+                      <td data-label="Rank" className="cell-detail">
+                        {ranks[player.discordUserId]?.join(', ') ?? '—'}
+                      </td>
                       <td className="cell-actions">
-                        {guild.isOfficer && (
-                          <>
-                            <Link
-                              className={
-                                notedIds.has(character.id)
-                                  ? 'btn btn-sm btn-icon btn-note btn-note-has'
-                                  : 'btn btn-sm btn-icon btn-note'
-                              }
-                              to={guildPath(guild, `roster/notes/${character.id}`)}
-                              state={{ from: here }}
-                              aria-label={`Officer note about ${character.firstName}${notedIds.has(character.id) ? ' (has one)' : ''}`}
-                              title={
-                                notedIds.has(character.id)
-                                  ? 'Officer note (only Officers see it)'
-                                  : 'Write an Officer note (only Officers see it)'
-                              }
-                            >
-                              <NoteIcon />
-                            </Link>{' '}
-                          </>
-                        )}
-                        {canEditRow(player) && (
-                          <>
-                            <Link
-                              className="btn btn-sm btn-icon"
-                              to={guildPath(guild, `roster/edit/${character.id}`)}
-                              state={{ from: here }}
-                              aria-disabled={deleting}
-                              aria-label={`Edit ${character.firstName}`}
-                              title="Edit"
-                              onClick={(e) => deleting && e.preventDefault()}
-                            >
-                              <PencilIcon />
-                            </Link>{' '}
-                            <button
-                              type="button"
-                              className="btn btn-sm btn-danger btn-icon"
-                              disabled={deleting}
-                              aria-label={`Remove ${character.firstName} from the roster`}
-                              title="Remove from this guild's roster (the character itself is kept, in case it's migrated back or is in another guild)"
-                              onClick={() => runDelete(character.id)}
-                            >
-                              {deleting ? <InlineSpinner label="" /> : <BinIcon />}
-                            </button>
-                          </>
-                        )}
+                        <RowMenu
+                          label={`Actions for ${name}`}
+                          busy={deleting ? <InlineSpinner label="" /> : undefined}
+                          items={[
+                            ...(canEditRow(player)
+                              ? [
+                                  {
+                                    label: (
+                                      <>
+                                        <PencilIcon /> Edit
+                                      </>
+                                    ),
+                                    to: guildPath(guild, `roster/edit/${character.id}`),
+                                    state: { from: here },
+                                  },
+                                ]
+                              : []),
+                            ...(guild.isOfficer
+                              ? [
+                                  {
+                                    label: (
+                                      <>
+                                        <TagIcon /> Attributes
+                                      </>
+                                    ),
+                                    onSelect: () => setTagging({ id: character.id, name }),
+                                  },
+                                  {
+                                    label: (
+                                      <>
+                                        <NoteIcon />
+                                        {notedIds.has(character.id)
+                                          ? ' Officer note'
+                                          : ' Write an officer note'}
+                                        {notedIds.has(character.id) && (
+                                          <span className="row-menu-dot" aria-label="(written)" />
+                                        )}
+                                      </>
+                                    ),
+                                    to: guildPath(guild, `roster/notes/${character.id}`),
+                                    state: { from: here },
+                                  },
+                                ]
+                              : []),
+                            ...(canEditRow(player)
+                              ? [
+                                  {
+                                    label: (
+                                      <>
+                                        <BinIcon /> Remove from roster
+                                      </>
+                                    ),
+                                    danger: true,
+                                    onSelect: () =>
+                                      void confirm({
+                                        title: `Remove ${name} from the roster?`,
+                                        message:
+                                          'The character itself is kept (its other guilds, its bio), so it can be added back later.',
+                                        confirmLabel: 'Remove',
+                                        danger: true,
+                                      }).then((ok) => ok && runDelete(character.id)),
+                                  },
+                                ]
+                              : []),
+                          ]}
+                        />
                       </td>
                     </tr>
                   </Fragment>

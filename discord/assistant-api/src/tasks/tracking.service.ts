@@ -339,6 +339,11 @@ export class TrackingService {
         characters: {
           where: { guilds: { some: { guildId } } },
           select: {
+            // The guild's attributes it has (other guilds' are not this roster's business).
+            attributes: {
+              where: { attribute: { guildId } },
+              select: { attribute: { select: { name: true } } },
+            },
             firstName: true,
             lastName: true,
             isMain: true,
@@ -361,6 +366,9 @@ export class TrackingService {
         const member = members.get(player.discordUserId);
         return player.characters.map((character): ShowRosterEntry => ({
           ...toCharacter(character),
+          attributes: character.attributes
+            .map((link) => link.attribute.name)
+            .sort((a, b) => a.localeCompare(b)),
           armoryLink: guild
             ? armoryLinkFor(guild.gameVersion, {
                 name: character.firstName,

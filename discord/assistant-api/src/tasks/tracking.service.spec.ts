@@ -27,6 +27,8 @@ const character = (
   race: '',
   roles: ['TANK'],
   level: 60,
+  // The guild attributes it has, as the roster query returns them.
+  attributes: [] as { attribute: { name: string } }[],
   ...over,
 });
 
@@ -701,6 +703,25 @@ describe('TrackingService', () => {
       assert.equal(
         entry.armoryLink,
         'https://classic-armory.org/character/eu/classic-sod/wild-growth/Merric',
+      );
+    });
+
+    it('gives every character its guild attributes, as names A–Z', async () => {
+      roster = {
+        '10': [
+          character('Merric', 'Stone', {
+            attributes: [{ attribute: { name: 'Switcher' } }, { attribute: { name: 'Bank' } }],
+          } as never),
+          character('Zed', ''),
+        ],
+      };
+      const entries = await service.loadRoster('g1');
+      assert.deepEqual(
+        entries.map((entry) => [entry.firstName, entry.attributes]),
+        [
+          ['Merric', ['Bank', 'Switcher']],
+          ['Zed', []],
+        ],
       );
     });
 
