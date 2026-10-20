@@ -7,9 +7,12 @@ import { subscribeEvents } from '../events';
 import { guildPath } from '../guildPath';
 import { InlineSpinner, SkeletonLines } from '../Loading';
 import type { Guild, RoleOption } from '../types';
+import { showToast } from '../toast';
 import { useChannels } from '../useChannels';
+import { useConfirm } from '../useConfirm';
 import { STATUS_EMOJI, STATUS_LABELS, errorText, formatEventTime } from './labels';
 import {
+  deleteEvent,
   fetchEvents,
   fetchSignupSettings,
   saveSignupSettings,
@@ -30,6 +33,8 @@ export function EventsPage({ guild, timezone }: { guild: Guild; timezone: string
   const [query, setQuery] = useState('');
   const [search, setSearch] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
+  const { confirm, dialog } = useConfirm();
 
   useEffect(() => {
     const timer = setTimeout(() => setSearch(query), 300);
@@ -54,8 +59,28 @@ export function EventsPage({ guild, timezone }: { guild: Guild; timezone: string
   }, [load]);
   useEffect(() => subscribeEvents('signup', load), [load]);
 
+  // Archived events can be deleted for good right from the list.
+  const deleteForGood = (event: EventSummary) =>
+    void confirm({
+      title: `Delete “${event.title}” for good?`,
+      message: 'Its sign-ups, setup and assignments are deleted and can’t be brought back.',
+      confirmLabel: 'Delete for good',
+      danger: true,
+    }).then((ok) => {
+      if (!ok) return;
+      setDeleting(event.id);
+      deleteEvent(guild.id, event.id)
+        .then(() => {
+          setEvents((current) => current?.filter((e) => e.id !== event.id) ?? null);
+          showToast('Event deleted');
+        })
+        .catch((err: unknown) => setError(errorText(err)))
+        .finally(() => setDeleting(null));
+    });
+
   return (
     <div className="tasks">
+      {dialog}
       <div className="tasks-head">
         <div>
           <h3>Events</h3>
@@ -113,12 +138,12 @@ export function EventsPage({ guild, timezone }: { guild: Guild; timezone: string
             />
           </label>
           <label className="field signup-filter-search">
-            Name
+            Name or Discord post
             <input
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="e.g. Naxxramas"
+              placeholder="e.g. Naxxramas, or a post id or link"
             />
           </label>
           {(from || to || query) && (
@@ -154,41 +179,49 @@ export function EventsPage({ guild, timezone }: { guild: Guild; timezone: string
       ) : (
         <div className="signup-event-list">
           {events.map((event) => (
-            <Link
-              key={event.id}
-              className="signup-event-card"
-              to={guildPath(guild, `signup/${event.id}`)}
-            >
-              <div className="signup-event-card-head">
-                <strong>{event.title}</strong>
-                {event.kind === 'MEMBERS' && <span className="badge">Members</span>}
-                {event.publishAt ? (
-                  <span className="badge">
-                    🕒 Scheduled · posts {formatEventTime(event.publishAt, event.timezone)}
-                  </span>
-                ) : event.archivedAt ? (
-                  <span className="badge">Archived</span>
-                ) : (
-                  event.closed && <span className="badge">Closed</span>
-                )}
-                {event.myStatus && (
-                  <span className="badge badge-main">
-                    {STATUS_EMOJI[event.myStatus]} {STATUS_LABELS[event.myStatus]}
-                  </span>
-                )}
-              </div>
-              <span className="muted">
-                {formatEventTime(event.startsAt, event.timezone)}
-                {event.location && ` · 📍 ${event.location}`} · by {event.createdByName}
-              </span>
-              <span className="signup-counts">
-                {(['AVAILABLE', 'LATE', 'TENTATIVE', 'ABSENT'] as const).map((status) => (
-                  <span key={status} title={STATUS_LABELS[status]}>
-                    {STATUS_EMOJI[status]} {event.counts[status]}
-                  </span>
-                ))}
-              </span>
-            </Link>
+            <div key={event.id} className="signup-event-row">
+              <Link className="signup-event-card" to={guildPath(guild, `signup/${event.id}`)}>
+                <div className="signup-event-card-head">
+                  <strong>{event.title}</strong>
+                  {event.kind === 'MEMBERS' && <span className="badge">Members</span>}
+                  {event.publishAt ? (
+                    <span className="badge">
+                      🕒 Scheduled · posts {formatEventTime(event.publishAt, event.timezone)}
+                    </span>
+                  ) : event.archivedAt ? (
+                    <span className="badge">Archived</span>
+                  ) : (
+                    event.closed && <span className="badge">Closed</span>
+                  )}
+                  {event.myStatus && (
+                    <span className="badge badge-main">
+                      {STATUS_EMOJI[event.myStatus]} {STATUS_LABELS[event.myStatus]}
+                    </span>
+                  )}
+                </div>
+                <span className="muted">
+                  {formatEventTime(event.startsAt, event.timezone)}
+                  {event.location && ` · 📍 ${event.location}`} · by {event.createdByName}
+                </span>
+                <span className="signup-counts">
+                  {(['AVAILABLE', 'LATE', 'TENTATIVE', 'ABSENT'] as const).map((status) => (
+                    <span key={status} title={STATUS_LABELS[status]}>
+                      {STATUS_EMOJI[status]} {event.counts[status]}
+                    </span>
+                  ))}
+                </span>
+              </Link>
+              {event.archivedAt && event.canManage && (
+                <button
+                  type="button"
+                  className="btn btn-sm btn-danger signup-event-delete"
+                  disabled={deleting === event.id}
+                  onClick={() => deleteForGood(event)}
+                >
+                  {deleting === event.id ? <InlineSpinner label="Deleting…" /> : 'Delete'}
+                </button>
+              )}
+            </div>
           ))}
         </div>
       )}

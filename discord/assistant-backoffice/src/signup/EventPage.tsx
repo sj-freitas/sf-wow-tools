@@ -4,6 +4,7 @@ import { DiscordMarkdown } from '../DiscordMarkdown';
 import { subscribeEvents } from '../events';
 import { guildPath } from '../guildPath';
 import { SkeletonLines } from '../Loading';
+import { showToast } from '../toast';
 import type { Guild } from '../types';
 import { useConfirm } from '../useConfirm';
 import { AssignmentsTab } from './AssignmentsTab';
@@ -139,6 +140,24 @@ export function EventPage({ guild }: { guild: Guild }) {
               </a>
             </>
           ) : null}
+          {event.discordPostId && (
+            <>
+              {' · '}
+              <button
+                type="button"
+                className="link-button"
+                title="The Discord post's id: find the event by it, even once archived"
+                onClick={() =>
+                  void navigator.clipboard
+                    .writeText(event.discordPostId!)
+                    .then(() => showToast('Discord post id copied'))
+                    .catch(() => showToast('Couldn’t copy the id'))
+                }
+              >
+                Post id {event.discordPostId}
+              </button>
+            </>
+          )}
         </p>
         {event.description && (
           <div className="signup-description">

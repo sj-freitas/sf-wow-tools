@@ -52,6 +52,10 @@ export interface EventSummary {
   archivedAt: string | null;
   /** Scheduled: when its post goes out (only organisers see these); null once posted. */
   publishAt: string | null;
+  /** The sign-up post's Discord id, kept after it is archived; null until first posted. */
+  discordPostId: string | null;
+  /** The viewer may delete it (its creator, or an Officer). */
+  canManage: boolean;
   kind: EventKind;
   location: string;
   createdByName: string;
@@ -129,6 +133,8 @@ export interface SignupEvent {
   closed: boolean;
   /** Archived (read-only, not in Discord) since then; null for an event that isn't. */
   archivedAt: string | null;
+  /** The sign-up post's Discord id, kept after it is archived; null until first posted. */
+  discordPostId: string | null;
   /** Scheduled: when its post goes out; null once posted (or posted at once). */
   publishAt: string | null;
   /** The same in the event's timezone, for the edit form. */

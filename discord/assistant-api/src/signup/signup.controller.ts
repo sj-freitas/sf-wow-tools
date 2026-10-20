@@ -61,6 +61,20 @@ const STATUSES: readonly SignupStatus[] = ['AVAILABLE', 'LATE', 'TENTATIVE', 'AB
 const LOCK_MODES: readonly SignupLockMode[] = ['AUTO', 'LOCKED', 'UNLOCKED'];
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+/**
+ * A Discord post's id, from the id itself or a message link
+ * (https://discord.com/channels/<server>/<channel>/<message>); null for anything else.
+ */
+export function discordPostIdOf(text: string | undefined): string | null {
+  const value = (text ?? '').trim();
+  if (/^\d{15,25}$/.test(value)) return value;
+  return (
+    /^https:\/\/(?:\w+\.)?discord(?:app)?\.com\/channels\/(?:\d+|@me)\/\d+\/(\d{15,25})\/?$/.exec(
+      value,
+    )?.[1] ?? null
+  );
+}
+
 type Body = Record<string, unknown>;
 
 /** Nothing goes to Discord for an event whose own post isn't there yet. */
@@ -177,7 +191,8 @@ export class SignupController {
   /**
    * `?view=`: `upcoming` (default; soonest first), `past` (started, newest first) or `archived`
    * (newest first). Archived can be narrowed by `from` / `to` (YYYY-MM-DD, the event's day in
-   * server time, both included) and `q` (words in the name).
+   * server time, both included) and `q` (words in the name, or its Discord post's id or link).
+   * `?discordPostId=` (an id or a message link): the event with that Discord post, in any view.
    */
   @Get('events')
   async list(
@@ -187,13 +202,21 @@ export class SignupController {
     @Query('from') from?: string,
     @Query('to') to?: string,
     @Query('q') q?: string,
+    @Query('discordPostId') discordPostId?: string,
   ) {
     const { guild, viewer } = await this.context(req, guildId);
     const now = new Date();
     let where: Prisma.SignupEventWhereInput;
     let orderBy: Prisma.SignupEventOrderByWithRelationInput;
     let take: number;
-    if (view === 'archived') {
+    const searchedPost = discordPostIdOf(q);
+    if (discordPostId !== undefined) {
+      const postId = discordPostIdOf(discordPostId);
+      if (!postId) throw new BadRequestException('That is not a Discord post id or message link.');
+      where = { guildId, discordPostId: postId };
+      orderBy = { startsAt: 'desc' };
+      take = 1;
+    } else if (view === 'archived') {
       const zone = timezoneOfRegion(guild.region);
       const day = (value: string | undefined, end: boolean): Date | undefined => {
         if (!value) return undefined;
@@ -207,7 +230,11 @@ export class SignupController {
         guildId,
         archivedAt: { not: null },
         ...(after || before ? { startsAt: { gte: after, lte: before } } : {}),
-        ...(q?.trim() ? { title: { contains: q.trim(), mode: 'insensitive' } } : {}),
+        ...(searchedPost
+          ? { discordPostId: searchedPost }
+          : q?.trim()
+            ? { title: { contains: q.trim(), mode: 'insensitive' } }
+            : {}),
       };
       orderBy = { startsAt: 'desc' };
       take = 100;
@@ -246,6 +273,9 @@ export class SignupController {
         closed: isClosed(event, now),
         archivedAt: event.archivedAt?.toISOString() ?? null,
         publishAt: event.publishAt?.toISOString() ?? null,
+        discordPostId: event.discordPostId,
+        // May delete it (the archived list's Delete button).
+        canManage: canManageEvent(viewer, event),
         location: event.location,
         kind: event.kind,
         createdByName: event.createdByName,
@@ -290,6 +320,23 @@ export class SignupController {
     return { id: event.id };
   }
 
+  /** The event whose sign-up post has this Discord id (kept after it is archived). */
+  @Get('events/by-discord-post/:postId')
+  async getByDiscordPost(
+    @Req() req: AuthenticatedRequest,
+    @Param('guildId') guildId: string,
+    @Param('postId') postId: string,
+  ) {
+    const id = discordPostIdOf(postId);
+    if (!id) throw new BadRequestException('That is not a Discord post id.');
+    const event = await this.prisma.signupEvent.findFirst({
+      where: { guildId, discordPostId: id },
+      select: { id: true },
+    });
+    if (!event) throw new NotFoundException('No event has that Discord post.');
+    return this.get(req, guildId, event.id);
+  }
+
   @Get('events/:eventId')
   async get(
     @Req() req: AuthenticatedRequest,
@@ -329,6 +376,8 @@ export class SignupController {
       createdByName: event.createdByName,
       isOwner: event.createdByDiscordId === req.user.discordId,
       channel: { serverId: event.serverId, channelId: event.channelId },
+      // The sign-up post's Discord id, kept after it is gone (null until first posted).
+      discordPostId: event.discordPostId,
       postUrl: event.messageId
         ? messageUrl(event.serverId, event.channelId, event.messageId)
         : null,

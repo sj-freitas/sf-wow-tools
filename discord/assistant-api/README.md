@@ -855,8 +855,16 @@ or on its own when its sign-up post is deleted in Discord: the worker's live con
 the deletion (or, if it is down, the next update of the post does). Archiving removes the event's
 messages from Discord (post, raid setup, assignments) and keeps the event, its sign-ups, setup and
 assignments, read-only (the API refuses changes), under **Archived** on the Events page, searchable
-by date and name. From there it can be **restored** (posted again, sign-ups as they were) or
-**deleted for good**. Its assignments can still be copied into other events.
+by date, name or Discord post (id or link). From there it can be **restored** (posted again,
+sign-ups as they were) or **deleted for good**, from its page or with **Delete** on its row in the
+list (the owner and Officers). Its assignments can still be copied into other events.
+
+**Discord post id.** `discordPostId` is the sign-up post's Discord id: set when it is posted (a
+restore posts a new one and replaces it) and kept after the post is deleted or the event archived,
+so the event can always be found by it. It is in the list and the event (`GET
+/api/guilds/:guildId/signup/events`, `…/events/:id`) and shown on the event page (click to copy).
+Find an event by it with `GET …/signup/events/by-discord-post/:postId` (the full event, as
+`…/events/:id`) or `GET …/signup/events?discordPostId=<id or message link>` (in any view).
 
 One sign-up per person per event: answering again replaces it. An event **closes** when it starts
 (the worker updates the post within a minute, and its buttons are disabled); the owner or an

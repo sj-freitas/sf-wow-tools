@@ -512,3 +512,34 @@
   gap: 0.55rem;
   white-space: nowrap;
 }
+
+/* An event in the list, with a Delete button over its top right corner when it is archived. */
+.signup-event-row {
+  position: relative;
+}
+.signup-event-row .signup-event-card {
+  height: 100%;
+}
+.signup-event-delete {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+}
+/* Room under the button for the badges of a long title. */
+.signup-event-row:has(.signup-event-delete) .signup-event-card-head {
+  padding-right: 5.5rem;
+}
+
+/* The Discord post id after "Open in Discord": a link-like button that copies it. */
+.link-button {
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline dotted;
+  cursor: copy;
+}
+.link-button:hover {
+  color: var(--accent);
+}

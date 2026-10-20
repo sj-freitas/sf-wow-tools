@@ -74,6 +74,9 @@ model SignupEvent {
   serverId                  String             @map("server_id")
   channelId                 String             @map("channel_id")
   messageId                 String?            @map("message_id")
+  // The sign-up post's Discord id: set when it is posted (a restore posts a new one), and kept
+  // after the post is deleted or the event archived, so the event can still be found by it.
+  discordPostId             String?            @unique @map("discord_post_id")
   createdByDiscordId        String             @map("created_by_discord_id")
   createdByName             String             @map("created_by_name")
   lockMode                  SignupLockMode     @default(AUTO) @map("lock_mode")

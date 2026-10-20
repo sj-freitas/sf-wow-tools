@@ -60,6 +60,7 @@ function makeEvent(over: Partial<EventRow> = {}): EventRow {
     serverId: 'server-1',
     channelId: 'channel-1',
     messageId: 'message-1',
+    discordPostId: 'message-1',
     createdByDiscordId: 'owner',
     createdByName: 'Owner',
     lockMode: 'AUTO',

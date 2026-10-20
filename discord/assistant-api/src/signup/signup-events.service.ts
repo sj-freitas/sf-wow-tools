@@ -306,7 +306,7 @@ export class SignupEventsService {
       );
       return await this.prisma.signupEvent.update({
         where: { id: event.id },
-        data: { messageId },
+        data: { messageId, discordPostId: messageId },
         include: EVENT_INCLUDE,
       });
     } catch (error) {
@@ -384,7 +384,7 @@ export class SignupEventsService {
     }
     await this.prisma.signupEvent.update({
       where: { id: eventId },
-      data: { messageId, publishAt: null, publishError: null },
+      data: { messageId, discordPostId: messageId, publishAt: null, publishError: null },
     });
   }
 
@@ -505,7 +505,10 @@ export class SignupEventsService {
           await this.look(event.guild),
         ),
       );
-      await this.prisma.signupEvent.update({ where: { id: eventId }, data: { messageId } });
+      await this.prisma.signupEvent.update({
+        where: { id: eventId },
+        data: { messageId, discordPostId: messageId },
+      });
     } catch (error) {
       // Not in Discord, so back to the archive.
       await this.prisma.signupEvent.update({
