@@ -2,6 +2,9 @@ import { useEffect, useRef, type ReactNode } from 'react';
 import { showToast } from '../toast';
 import type { AddonExport } from './addonExport';
 
+/** Where to get the addon: CurseForge redirects a project id to the project's page. */
+const RAID_SORT_URL = 'https://www.curseforge.com/projects/1755800';
+
 /** Colours the export's Lua a little: comments, strings and keys. */
 function highlight(text: string): ReactNode[] {
   const parts: ReactNode[] = [];
@@ -62,6 +65,13 @@ export function AddonExportDialog({
         In game, type <code>/raidsort</code>, press <strong>Upload Config</strong>, paste this in
         and save; then <strong>Sort</strong> puts everyone in their group and hands out the leader,
         assists and master looter.
+      </p>
+      <p className="muted">
+        Don’t have the addon? Get{' '}
+        <a href={RAID_SORT_URL} target="_blank" rel="noreferrer">
+          Raid Sort on CurseForge
+        </a>{' '}
+        (or search “Raid Sort” in the CurseForge app).
       </p>
       <pre className="addon-export-code">{highlight(exported.text)}</pre>
       {exported.notes.length > 0 && (

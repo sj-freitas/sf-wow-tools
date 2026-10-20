@@ -259,7 +259,10 @@ export function SetupEditor({
               type="button"
               className="btn btn-sm"
               onClick={exportForAddon}
-              title="The setup as the Raid Sort addon reads it, to paste in game"
+              title={
+                'The setup as the Raid Sort addon reads it, to paste in game.\n' +
+                'Get Raid Sort from CurseForge (search "Raid Sort", or use the CurseForge app).'
+              }
             >
               Export for addon
             </button>
