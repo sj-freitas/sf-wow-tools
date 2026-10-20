@@ -45,3 +45,19 @@ export function fuzzyScore(query: string, candidates: string[]): number | null {
   }
   return best;
 }
+
+/**
+ * Like `fuzzyScore`, word by word: every word of `query` must match one of the candidates
+ * (typo tolerant), and the scores add up. Dashes and underscores count as spaces, so "wed raid"
+ * finds "#wednesday-raid". Null when a word matches nothing.
+ */
+export function fuzzyWordsScore(query: string, candidates: string[]): number | null {
+  const words = query.split(/[\s\-_#]+/).filter(Boolean);
+  let total = 0;
+  for (const word of words) {
+    const score = fuzzyScore(word, candidates);
+    if (score === null) return null;
+    total += score;
+  }
+  return total;
+}

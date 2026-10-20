@@ -714,6 +714,40 @@ tbody tr:last-child td {
 .dropdown-item:hover {
   background: color-mix(in srgb, var(--accent) 14%, var(--surface-menu));
 }
+/* ---- channel picker (ChannelSelect): search box on top, then the channels by server ---- */
+.channel-select-menu {
+  display: flex;
+  flex-direction: column;
+  max-height: min(360px, 60vh);
+  overflow: hidden;
+}
+.channel-select-menu .search-field {
+  padding: 0.25rem 0.25rem 0.4rem;
+  border-bottom: 1px solid var(--border);
+}
+.channel-select-list {
+  overflow-y: auto;
+  padding-top: 0.25rem;
+}
+.dropdown-item-active {
+  background: color-mix(in srgb, var(--accent) 14%, var(--surface-menu));
+}
+.dropdown-item-selected {
+  color: var(--accent);
+  font-weight: 600;
+}
+/* Invisible, but still checked by the form ("required") and anchors the browser's message. */
+.channel-select-required {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
+}
 .dropdown-option {
   flex-wrap: wrap;
   width: 100%;

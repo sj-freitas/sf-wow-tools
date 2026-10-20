@@ -3,7 +3,6 @@ import {
   addGuildServer,
   bannerUrl,
   deleteGuild,
-  fetchChannels,
   fetchHome,
   fetchEligibleServers,
   fetchRoleOptions,
@@ -19,6 +18,7 @@ import {
 } from './api';
 import { channelKey, splitChannelKey } from './channelKey';
 import { ChannelSelect } from './ChannelSelect';
+import { useChannels } from './useChannels';
 import { factionsOf, gameOf, regionsOf, serversFor, useGames } from './game';
 import { RegionSelect } from './RegionSelect';
 import { WelcomeEditor } from './WelcomeEditor';
@@ -31,7 +31,6 @@ import {
   type GuildHome,
   type Region,
   type RoleOption,
-  type ServerChannels,
 } from './types';
 
 interface Props {
@@ -379,23 +378,16 @@ function RoleRow({ title, hint, current, options, editable, onSave }: RoleRowPro
  * tells members to contact an officer.
  */
 function RequestChannelSection({ guild, run }: SectionProps) {
-  const [channels, setChannels] = useState<ServerChannels[] | null>(null);
+  const { channels, channelName } = useChannels(guild.id);
   const current = guild.officerRequestChannel
     ? channelKey(guild.officerRequestChannel.serverId, guild.officerRequestChannel.channelId)
     : '';
   const [selected, setSelected] = useState(current);
 
-  useEffect(() => {
-    fetchChannels(guild.id)
-      .then(setChannels)
-      .catch(() => setChannels([]));
-  }, [guild.id]);
   useEffect(() => setSelected(current), [current]);
 
   const currentName = guild.officerRequestChannel
-    ? channels
-        ?.find((group) => group.serverId === guild.officerRequestChannel?.serverId)
-        ?.channels.find((channel) => channel.id === guild.officerRequestChannel?.channelId)?.name
+    ? channelName(guild.officerRequestChannel.serverId, guild.officerRequestChannel.channelId)
     : undefined;
 
   return (
@@ -414,15 +406,9 @@ function RequestChannelSection({ guild, run }: SectionProps) {
         </strong>
       </p>
       <div className="inline-form">
-        {channels === null ? (
-          <select disabled>
-            <option>Loading channels…</option>
-          </select>
-        ) : (
-          <div className="inline-select">
-            <ChannelSelect groups={channels} value={selected} onChange={setSelected} />
-          </div>
-        )}
+        <div className="inline-select">
+          <ChannelSelect groups={channels} value={selected} onChange={setSelected} />
+        </div>
         <button
           type="button"
           className="btn"
