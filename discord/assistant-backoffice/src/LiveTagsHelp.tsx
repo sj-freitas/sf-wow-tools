@@ -175,6 +175,26 @@ export function LiveTagsHelp() {
             <td>number</td>
             <td>Their level.</td>
           </tr>
+          <tr>
+            <td>
+              <code>classIcon</code>
+            </td>
+            <td>text</td>
+            <td>
+              The class’s icon, ready to put in the post (Discord shows it as the picture), e.g.{' '}
+              <code>{'`${c.classIcon} ${c.name}`'}</code>. Empty when there is none.
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>roleIcons</code>
+            </td>
+            <td>list of text</td>
+            <td>
+              Each role’s icon the same way, in the order of <code>roles</code>, e.g.{' '}
+              <code>{"c.roleIcons.join('')"}</code>.
+            </td>
+          </tr>
         </tbody>
       </table>
       <p>
@@ -264,6 +284,16 @@ export function LiveTagsHelp() {
               </code>
             </td>
             <td>Every character with the Switcher attribute</td>
+          </tr>
+          <tr>
+            <td>
+              <code>
+                {
+                  '{{roster show="roster.filter(c => c.isMain).map(c => `${c.classIcon} ${c.name}`)"}}'
+                }
+              </code>
+            </td>
+            <td>Every main, with its class icon</td>
           </tr>
           <tr>
             <td>

@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, it } from 'node:test';
-import { colorDotPng } from '../signup/color-dot';
+import { colorDotPng } from '../discord/color-dot';
 import { MAX_ICON_BYTES, readClassIcons, readMarkerIcons } from './class-icons';
 import { classIcon, markerIcon, roleIcon } from './games';
 

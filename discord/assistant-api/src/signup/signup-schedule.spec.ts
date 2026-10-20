@@ -4,7 +4,7 @@ import type { ConfigService } from '@nestjs/config';
 import { DiscordAPIError } from '@discordjs/rest';
 import type { PrismaService } from '../database/prisma.service';
 import type { DiscordBotService } from '../discord/discord-bot.service';
-import type { ClassEmojiService } from './class-emojis.service';
+import type { ClassEmojiService } from '../discord/class-emojis.service';
 import { SignupEventsService, type SignupGuild } from './signup-events.service';
 
 const GUILD: SignupGuild = {

@@ -21,6 +21,10 @@ export interface ReactorCharacter {
   race: string;
   roles: string[];
   level: number;
+  /** The class's icon as Discord emoji text (`<:i_druid_…:123>`), to put in a post; '' if none. */
+  classIcon: string;
+  /** Each role's icon the same way, in the order of `roles`; '' for one without an icon. */
+  roleIcons: string[];
 }
 
 export interface Reactor {

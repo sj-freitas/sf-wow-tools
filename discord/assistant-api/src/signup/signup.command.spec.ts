@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { beforeEach, describe, it } from 'node:test';
 import { BadRequestException } from '@nestjs/common';
 import type { DiscordInteraction, ReplyMessage } from '../bot/discord-interaction.types';
-import type { ClassEmojiService } from './class-emojis.service';
+import type { ClassEmojiService } from '../discord/class-emojis.service';
 import type { SignupAccessService } from './signup-access.service';
 import type { CharacterOption, SignupChoice, SignupEntriesService } from './signup-entries.service';
 import type { EventRow, SignupEventsService, SignupGuild } from './signup-events.service';

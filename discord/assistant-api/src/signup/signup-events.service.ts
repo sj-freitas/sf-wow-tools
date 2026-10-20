@@ -5,7 +5,7 @@ import { formatCharacterName } from '../characters/character-name';
 import { PrismaService } from '../database/prisma.service';
 import { DiscordBotService } from '../discord/discord-bot.service';
 import { describeDiscordError, isDiscordError, UNKNOWN_MESSAGE } from '../discord/discord-errors';
-import { ClassEmojiService, emojiText } from './class-emojis.service';
+import { ClassEmojiService, emojiText } from '../discord/class-emojis.service';
 import { EVENT_KINDS } from './event-kinds';
 
 /** Each role's icon file (`role-icons/<name>.png`). */

@@ -4,6 +4,7 @@ import { DiscordAPIError } from '@discordjs/rest';
 import type { PrismaService } from '../database/prisma.service';
 import type { DiscordBotService } from '../discord/discord-bot.service';
 import { hashReactors, parseDynamicTokens } from './dynamic-content';
+import type { ClassEmojiService } from '../discord/class-emojis.service';
 import { TrackingService } from './tracking.service';
 
 const POST = '11111111-2222-3333-4444-555555555555';
@@ -199,7 +200,18 @@ describe('TrackingService', () => {
         if (unreadable) throw new Error('Missing Access');
       },
     } as unknown as DiscordBotService;
-    service = new TrackingService(prisma, bot);
+    // The bot's emojis: a Warrior icon and a Tank icon, nothing else.
+    const emojis = {
+      forGame: () =>
+        Promise.resolve((className: string | null) =>
+          className === 'Warrior' ? { name: 'i_warrior_1', id: '11' } : null,
+        ),
+      rolesFor: () =>
+        Promise.resolve((role: string) =>
+          role === 'Tank' ? { name: 'r_tank_1', id: '12' } : null,
+        ),
+    } as unknown as ClassEmojiService;
+    service = new TrackingService(prisma, bot, emojis);
   });
 
   const trackingRow = (over: Record<string, unknown> = {}) => ({
@@ -484,6 +496,9 @@ describe('TrackingService', () => {
           race: '',
           roles: ['Tank', 'Melee DPS'],
           level: 60,
+          // Icons as emoji text; '' for Melee, which has none here.
+          classIcon: '<:i_warrior_1:11>',
+          roleIcons: ['<:r_tank_1:12>', ''],
         },
       ]);
       assert.deepEqual(second.characters, []);
@@ -704,6 +719,13 @@ describe('TrackingService', () => {
         entry.armoryLink,
         'https://classic-armory.org/character/eu/classic-sod/wild-growth/Merric',
       );
+    });
+
+    it('gives every character its class and role icons, ready to post', async () => {
+      roster = { '10': [character('Merric', 'Stone')] };
+      const [entry] = await service.loadRoster('g1');
+      assert.equal(entry.classIcon, '<:i_warrior_1:11>');
+      assert.deepEqual(entry.roleIcons, ['<:r_tank_1:12>']);
     });
 
     it('gives every character its guild attributes, as names A–Z', async () => {

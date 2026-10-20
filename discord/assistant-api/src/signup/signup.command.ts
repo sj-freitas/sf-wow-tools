@@ -12,7 +12,7 @@ import {
 } from '../bot/discord-interaction.types';
 import { timezoneOfRegion } from '../config/regions';
 import { guildPath } from '../guilds/guild-path';
-import { ClassEmojiService } from './class-emojis.service';
+import { ClassEmojiService } from '../discord/class-emojis.service';
 import { EVENT_KINDS, isEventKind } from './event-kinds';
 import { SignupAccessService } from './signup-access.service';
 import { SignupEntriesService, type CharacterOption, type Person } from './signup-entries.service';

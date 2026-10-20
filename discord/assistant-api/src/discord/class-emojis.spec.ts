@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { inflateSync } from 'node:zlib';
-import type { DiscordBotService } from '../discord/discord-bot.service';
+import type { DiscordBotService } from './discord-bot.service';
 import { ClassEmojiService, emojiName, emojiText, iconEmojiName } from './class-emojis.service';
 import { classIcon, markerIcon } from '../game/games';
 import { colorDotPng } from './color-dot';

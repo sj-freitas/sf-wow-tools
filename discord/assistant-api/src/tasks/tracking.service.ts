@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import type { Prisma, Role, ScheduledTask } from '@prisma/client';
+import { ClassEmojiService, emojiText } from '../discord/class-emojis.service';
 import { armoryLinkFor } from '../game/games';
 import { formatCharacterName } from '../characters/character-name';
 import { ROLE_LABELS } from '../characters/role-labels';
@@ -71,7 +72,28 @@ export class TrackingService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly bot: DiscordBotService,
+    private readonly emojis: ClassEmojiService,
   ) {}
+
+  /**
+   * The guild's class and role icons as the bot's emojis, for `classIcon` / `roleIcons` in tags
+   * (uploaded the first time they are needed). '' for one without an icon or when unavailable.
+   */
+  private async iconsFor(guildId: string): Promise<CharacterIcons> {
+    const guild = await this.prisma.guild.findUnique({
+      where: { id: guildId },
+      select: { gameVersion: true },
+    });
+    if (!guild) return () => ({ classIcon: '', roleIcons: [] });
+    const [classOf, roleOf] = await Promise.all([
+      this.emojis.forGame(guild.gameVersion),
+      this.emojis.rolesFor(guild.gameVersion),
+    ]);
+    return (characterClass, roles) => ({
+      classIcon: emojiText(classOf(characterClass)),
+      roleIcons: roles.map((role) => emojiText(roleOf(ROLE_ICON_FILES[role]))),
+    });
+  }
 
   /**
    * Finds what each token points at: a scheduled post by name (case does not matter), `self`, a
@@ -315,8 +337,12 @@ export class TrackingService {
         },
       },
     });
+    const icons = await this.iconsFor(guildId);
     const byPerson = new Map(
-      players.map((player) => [player.discordUserId, player.characters.map(toCharacter)]),
+      players.map((player) => [
+        player.discordUserId,
+        player.characters.map((character) => toCharacter(character, icons)),
+      ]),
     );
     return reactors.map((reactor) => ({ ...reactor, characters: byPerson.get(reactor.id) ?? [] }));
   }
@@ -356,6 +382,7 @@ export class TrackingService {
       },
     });
     const withCharacters = players.filter((player) => player.characters.length > 0);
+    const icons = await this.iconsFor(guildId);
     const members = await this.memberInfo(
       guildId,
       withCharacters.map((player) => player.discordUserId),
@@ -365,7 +392,7 @@ export class TrackingService {
         const name = player.discordDisplayName ?? player.discordUsername ?? player.discordUserId;
         const member = members.get(player.discordUserId);
         return player.characters.map((character): ShowRosterEntry => ({
-          ...toCharacter(character),
+          ...toCharacter(character, icons),
           attributes: character.attributes
             .map((link) => link.attribute.name)
             .sort((a, b) => a.localeCompare(b)),
@@ -761,16 +788,20 @@ function sourceColumns(source: Source) {
 }
 
 /** A character row as the roster tags and reactions see it. */
-function toCharacter(character: {
-  firstName: string;
-  lastName: string;
-  isMain: boolean;
-  class: string;
-  race: string;
-  roles: Role[];
-  level: number;
-}): ReactorCharacter {
+function toCharacter(
+  character: {
+    firstName: string;
+    lastName: string;
+    isMain: boolean;
+    class: string;
+    race: string;
+    roles: Role[];
+    level: number;
+  },
+  icons: CharacterIcons,
+): ReactorCharacter {
   return {
+    ...icons(character.class, character.roles),
     name: formatCharacterName(character),
     firstName: character.firstName,
     lastName: character.lastName,
@@ -781,6 +812,20 @@ function toCharacter(character: {
     level: character.level,
   };
 }
+
+/** A character's class and role icons, as emoji text for a post. */
+type CharacterIcons = (
+  characterClass: string,
+  roles: readonly Role[],
+) => { classIcon: string; roleIcons: string[] };
+
+/** Each role's icon file (`role-icons/<name>.png`). */
+const ROLE_ICON_FILES: Record<Role, string> = {
+  TANK: 'Tank',
+  HEALER: 'Healer',
+  MELEE_DPS: 'Melee',
+  RANGED_DPS: 'Ranged',
+};
 
 /** The guild's characters, as loaded once per pass, and their hash. */
 type RosterSnapshot = { entries: ShowRosterEntry[]; hash: string };

@@ -15,6 +15,10 @@ export interface ShowCharacter {
   /** Their roles: "Tank", "Healer", "Melee DPS" and/or "Ranged DPS". */
   roles: string[];
   level: number;
+  /** The class's icon as Discord emoji text, ready to put in a post; '' when unavailable. */
+  classIcon: string;
+  /** Each role's icon the same way, in the order of `roles`. */
+  roleIcons: string[];
 }
 
 /** What an expression sees of each person who reacted (`reactions[i]`). */
@@ -129,6 +133,8 @@ const SAMPLE: ShowReactor[] = [
         race: 'Human',
         roles: ['Tank'],
         level: 60,
+        classIcon: '<:i_warrior_92c497bf:100000000000000101>',
+        roleIcons: ['<:r_tank_24531a51:100000000000000102>'],
       },
     ],
   },
@@ -163,6 +169,8 @@ const SAMPLE_ROSTER: ShowRosterEntry[] = [
     race: 'Human',
     roles: ['Healer'],
     level: 58,
+    classIcon: '<:i_priest_6f827548:100000000000000103>',
+    roleIcons: ['<:r_healer_4c342222:100000000000000104>'],
     armoryLink: 'https://armory.example/character/eu/pve/olga',
     attributes: [],
     discordUser: {

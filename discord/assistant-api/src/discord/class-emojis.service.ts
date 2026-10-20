@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { Injectable, Logger } from '@nestjs/common';
-import { DiscordBotService } from '../discord/discord-bot.service';
+import { DiscordBotService } from './discord-bot.service';
 import { MARKER_NAMES, ROLE_ICON_NAMES, type ClassIcon } from '../game/class-icons';
 import { classIcon, getGame, markerIcon, roleIcon } from '../game/games';
 import { colorDotPng } from './color-dot';

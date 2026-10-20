@@ -7,7 +7,7 @@ import { sniffImageType } from '../guilds/banner';
 import { MAX_IMAGE_BYTES } from '../officer-requests/attachments';
 import { RealtimeService } from '../realtime/realtime.service';
 import { parseLines, readLines, remapLines, type AssignmentLine } from './assignment-lines';
-import { ClassEmojiService, emojiText } from './class-emojis.service';
+import { ClassEmojiService, emojiText } from '../discord/class-emojis.service';
 import { SignupEventsService, toEntryView, type EventRow } from './signup-events.service';
 import { renderAssignmentMessage } from './signup-messages';
 

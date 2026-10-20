@@ -2181,3 +2181,36 @@ label.btn.disabled {
     border-top: 1px dashed var(--border);
   }
 }
+
+/* ---- roster search and attribute filter ---- */
+.roster-filters {
+  display: grid;
+  gap: 0.6rem;
+}
+.roster-attribute-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+/* An attribute as a filter toggle: faded until picked. */
+.attribute-toggle {
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: none;
+  cursor: pointer;
+  opacity: 0.55;
+}
+.attribute-toggle:hover {
+  opacity: 0.85;
+}
+.attribute-toggle-on {
+  border-color: var(--text);
+  opacity: 1;
+}
+.roster-filter-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}

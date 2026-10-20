@@ -279,9 +279,11 @@ A post's text can show who reacted to a message:
   `{ id, tag, name, displayName, characters }`. `tag` is `<@id>`; `name` the Discord name (global display
   name, else username; never the id, which is `id`); `displayName` the nickname they have in the
   message's server, else `name`; `characters` their characters in the guild (an empty array if none),
-  main first, each `{ name, firstName, lastName, isMain, class, race, roles, level }` (`name` is
-  "Merric Stone", `race` empty when it is unknown, `roles` a list of "Tank", "Healer", "Melee DPS",
-  "Ranged DPS"). Left out, `show` is
+  main first, each `{ name, firstName, lastName, isMain, class, race, roles, level, classIcon,
+roleIcons }` (`name` is "Merric Stone", `race` empty when it is unknown, `roles` a list of "Tank",
+  "Healer", "Melee DPS", "Ranged DPS"; `classIcon` the class's icon as Discord emoji text, ready to
+  put in the post — `<:i_druid_…:123>`, the bot's own emoji, uploaded the first time it is needed —
+  and `roleIcons` each role's the same way, in the order of `roles`; '' where there is none). Left out, `show` is
   `reactions.map((r) => r.name)`. An array result is joined with ", ". Examples: `reactions.length`,
   `reactions.map(r => r.tag)`, `reactions.map(r => (r.characters.find(c => c.isMain) || r).name)` (the
   main, else the Discord name), `reactions.flatMap(r => r.characters).filter(c => c.roles.includes('Tank')).map(c => c.name)`.
@@ -328,7 +330,9 @@ Its only option is `show` (left out: every character's name); the list is called
   server (else `name`) and `roles` the **names of their Discord roles** in that server (`@everyone` left
   out). Examples: `roster.length`, `roster.filter(c => c.isMain).map(c => c.name)`,
   `roster.filter(c => c.discordUser.roles.includes('Raider')).map(c => c.name)`,
-  `roster.filter(c => c.attributes.includes('Switcher')).map(c => c.name)`. Attributes are part of the
+  `roster.filter(c => c.attributes.includes('Switcher')).map(c => c.name)`,
+  ``roster.filter(c => c.isMain).map(c => `${c.classIcon} ${c.name}`)`` (mains with their class
+  icon). Attributes are part of the
   roster hash, so giving or taking one updates the posts that show it.
 - **Nicknames and roles come from Discord**, so they are read with one member listing and one role listing
   of the main server (the bot's Server Members Intent), or one lookup per player (at most 100) when that

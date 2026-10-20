@@ -3,7 +3,7 @@ import { beforeEach, describe, it } from 'node:test';
 import type { ConfigService } from '@nestjs/config';
 import type { PrismaService } from '../database/prisma.service';
 import type { DiscordBotService } from '../discord/discord-bot.service';
-import type { ClassEmojiService } from './class-emojis.service';
+import type { ClassEmojiService } from '../discord/class-emojis.service';
 import { SignupEventsService } from './signup-events.service';
 
 /** A stored event, as far as archiving is concerned. */
