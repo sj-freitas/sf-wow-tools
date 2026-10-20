@@ -804,7 +804,7 @@ Like Raid-Helper, built in: events people sign up to from Discord or the backoff
 - They and **every EventCreator** organise it: raid setup, assignments, reminders, and reading the
   notes left with Late/Tentative.
 
-**Creating** — `/create-event name date time [description] [timezone] [channel]`, or the website's
+**Creating** — `/create-event name [time] [date] [description] [timezone] [channel]` (no time: the next full or half hour, 15:15 → 15:30; no date: today, in the event's timezone), or the website's
 form (date picker, timezone list). `date` is `YYYY-MM-DD` and `time` `HH:mm` (`8pm` works too), in
 **server time** (`ST`: the region's zone, e.g. Europe/Paris for EU) unless `timezone` says
 otherwise (`UTC`, `+02:00`, `Europe/Lisbon`). Discord shows everyone the time in their own zone.

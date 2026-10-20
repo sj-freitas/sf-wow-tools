@@ -74,6 +74,24 @@ export function parseEventStart(date: string, time: string, zone: string): Date 
   return local.toJSDate();
 }
 
+/** Today's date in `zone`, as `YYYY-MM-DD`: an event's day when none is given. */
+export const todayIn = (zone: string, now: Date = new Date()): string =>
+  DateTime.fromJSDate(now, { zone }).toFormat('yyyy-MM-dd');
+
+/**
+ * The next full or half hour in `zone` (15:15 -> 15:30, 15:31 -> 16:00, 15:30 stays), as
+ * `YYYY-MM-DD` and `HH:mm`: an event's start when no time is given. Late at night it is tomorrow.
+ */
+export function nextHalfHourIn(
+  zone: string,
+  now: Date = new Date(),
+): { date: string; time: string } {
+  const local = DateTime.fromJSDate(now, { zone }).startOf('minute');
+  const minutesUp = (30 - (local.minute % 30)) % 30;
+  const rounded = local.plus({ minutes: minutesUp });
+  return { date: rounded.toFormat('yyyy-MM-dd'), time: rounded.toFormat('HH:mm') };
+}
+
 /** The date and time of a moment in `zone`, for the backoffice's date and time inputs. */
 export function localParts(at: Date, zone: string): { date: string; time: string } {
   const local = DateTime.fromJSDate(at, { zone });

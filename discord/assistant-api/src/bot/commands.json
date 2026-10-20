@@ -244,19 +244,17 @@
         "max_length": 100
       },
       {
-        "name": "date",
-        "description": "The day, as YYYY-MM-DD (e.g. 2026-10-20)",
+        "name": "time",
+        "description": "The start time, as HH:mm (e.g. 20:00), server time unless a timezone is given. Default: next :00/:30",
         "type": 3,
-        "required": true,
-        "min_length": 8,
-        "max_length": 10
+        "max_length": 8
       },
       {
-        "name": "time",
-        "description": "The start time, as HH:mm (e.g. 20:00), in server time unless a timezone is given",
+        "name": "date",
+        "description": "The day, as YYYY-MM-DD (e.g. 2026-10-20). Default: today",
         "type": 3,
-        "required": true,
-        "max_length": 8
+        "min_length": 8,
+        "max_length": 10
       },
       {
         "name": "description",

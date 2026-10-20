@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { beforeEach, describe, it } from 'node:test';
 import { BadRequestException } from '@nestjs/common';
+import { DateTime } from 'luxon';
 import type { DiscordInteraction, ReplyMessage } from '../bot/discord-interaction.types';
 import type { ClassEmojiService } from '../discord/class-emojis.service';
 import type { SignupAccessService } from './signup-access.service';
@@ -9,6 +10,7 @@ import type { EventRow, SignupEventsService, SignupGuild } from './signup-events
 import { PREFIX, compactId, customId, roleCode, statusCode } from './signup-ids';
 import type { SignupViewer } from './signup-rules';
 import { SignupCommand } from './signup.command';
+import { nextHalfHourIn, todayIn } from './signup-time';
 
 const EVENT_ID = '0b6f3c2e-5d4a-4f1b-9c8d-7e6f5a4b3c2d';
 const HEALER_ID = 'f0e1d2c3-b4a5-4697-8879-6a5b4c3d2e1f';
@@ -196,6 +198,25 @@ describe('SignupCommand', () => {
       viewer = { ...viewer, isOfficer: true };
       assert.match(await command.createEvent(elsewhere), /Event created/);
       assert.deepEqual(created?.channel, { serverId: 'server-1', channelId: 'general' });
+    });
+
+    it("is today, in the event's timezone, when no date is given", async () => {
+      viewer = { ...viewer, isEventCreator: true };
+      const withoutDate = { name: OPTIONS.name, time: OPTIONS.time };
+      assert.match(await command.createEvent(commandInteraction(withoutDate)), /Event created/);
+      const local = DateTime.fromJSDate(created!.startsAt, { zone: 'Europe/Paris' });
+      assert.equal(local.toFormat('yyyy-MM-dd HH:mm'), `${todayIn('Europe/Paris')} 20:00`);
+    });
+
+    it('starts at the next full or half hour when no time is given', async () => {
+      viewer = { ...viewer, isEventCreator: true };
+      assert.match(
+        await command.createEvent(commandInteraction({ name: OPTIONS.name })),
+        /Event created/,
+      );
+      const local = DateTime.fromJSDate(created!.startsAt, { zone: 'Europe/Paris' });
+      const soon = nextHalfHourIn('Europe/Paris');
+      assert.equal(local.toFormat('yyyy-MM-dd HH:mm'), `${soon.date} ${soon.time}`);
     });
 
     it('explains a bad date or timezone', async () => {

@@ -1,8 +1,43 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { parseEventStart, parseTimeOfDay, resolveTimezone } from './signup-time';
+import {
+  nextHalfHourIn,
+  parseEventStart,
+  parseTimeOfDay,
+  resolveTimezone,
+  todayIn,
+} from './signup-time';
 
 const PARIS = 'Europe/Paris';
+
+describe('todayIn', () => {
+  it('is the date in the zone, which may not be the UTC one', () => {
+    const lateEvening = new Date('2026-10-20T23:30:00Z');
+    assert.equal(todayIn('UTC', lateEvening), '2026-10-20');
+    assert.equal(todayIn('Europe/Paris', lateEvening), '2026-10-21');
+    assert.equal(todayIn('America/Los_Angeles', lateEvening), '2026-10-20');
+  });
+});
+
+describe('nextHalfHourIn', () => {
+  const at = (iso: string) => nextHalfHourIn('UTC', new Date(iso));
+
+  it('rounds up to the next full or half hour', () => {
+    assert.deepEqual(at('2026-10-20T15:15:00Z'), { date: '2026-10-20', time: '15:30' });
+    assert.deepEqual(at('2026-10-20T15:31:00Z'), { date: '2026-10-20', time: '16:00' });
+    assert.deepEqual(at('2026-10-20T15:00:00Z'), { date: '2026-10-20', time: '15:00' });
+    assert.deepEqual(at('2026-10-20T15:30:45Z'), { date: '2026-10-20', time: '15:30' });
+  });
+
+  it('is tomorrow late at night, in the zone', () => {
+    assert.deepEqual(at('2026-10-20T23:45:00Z'), { date: '2026-10-21', time: '00:00' });
+    // 21:50 UTC is 23:50 in Paris (summer time, UTC+2).
+    assert.deepEqual(nextHalfHourIn('Europe/Paris', new Date('2026-10-20T21:50:00Z')), {
+      date: '2026-10-21',
+      time: '00:00',
+    });
+  });
+});
 
 describe('resolveTimezone', () => {
   it('reads nothing and ST as the server time', () => {

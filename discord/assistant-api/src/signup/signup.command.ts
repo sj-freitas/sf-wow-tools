@@ -38,7 +38,7 @@ import {
   canPostIn,
   isClosed,
 } from './signup-rules';
-import { parseEventStart, resolveTimezone } from './signup-time';
+import { nextHalfHourIn, parseEventStart, resolveTimezone, todayIn } from './signup-time';
 
 const ALL_ROLES: Role[] = ROLE_CATEGORIES.map((category) => category.role);
 const ROLE_NAMES: Record<Role, string> = Object.fromEntries(
@@ -117,9 +117,14 @@ export class SignupCommand {
     if (!zone) {
       return 'Unknown timezone. Use ST (server time), UTC, an offset like +02:00, or a name like Europe/Lisbon.';
     }
+    // No time: the next full or half hour. No date: today, in the event's timezone (or the day
+    // of that next half hour, which late at night is tomorrow).
+    const date = getStringOption(interaction, 'date');
+    const time = getStringOption(interaction, 'time');
+    const soon = nextHalfHourIn(zone);
     const startsAt = parseEventStart(
-      getStringOption(interaction, 'date') ?? '',
-      getStringOption(interaction, 'time') ?? '',
+      date ?? (time ? todayIn(zone) : soon.date),
+      time ?? soon.time,
       zone,
     );
     if (typeof startsAt === 'string') return startsAt;
