@@ -196,12 +196,17 @@
 /* ---- raid setup ---- */
 .setup-groups {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 170px), 1fr));
+  /* At most 2 groups a row (40% each leaves no room for a third), each wide enough for the
+     longest name: 12 characters, a space, 12 more (25ch), plus the role, class, leader or assist,
+     loot and status marks (~9rem). Narrower than that: one group a row. */
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, max(calc(25ch + 9rem), 40%)), 1fr));
   gap: 0.75rem;
 }
 .setup-group,
 .setup-bench {
   display: grid;
+  /* A fixed width: a longer name or another mark (assist, loot) never widens the group. */
+  min-width: 0;
   gap: 0.35rem;
   align-content: start;
   padding: 0.6rem;
@@ -224,6 +229,7 @@
 }
 .setup-slot {
   display: flex;
+  min-width: 0;
   min-height: 2.25rem;
   border: 1px dashed var(--border);
   border-radius: 6px;
@@ -383,6 +389,10 @@
 .setup-chip .class-dot {
   margin-right: 0;
 }
+/* Groups fit the longest name; should one not fit anyway, only the name shrinks (with "…"). */
+.setup-chip > :not(.setup-chip-name) {
+  flex-shrink: 0;
+}
 
 /* The sign-up number, as in the Discord post. */
 .signup-number {
@@ -466,4 +476,23 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
+}
+
+/* A setup name and its raid-roles menu (Make leader, Set assist, Set master looter). */
+.setup-chip-wrap {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.setup-bench-list .setup-chip-wrap {
+  flex: 0 1 auto;
+}
+.setup-chip-menu {
+  right: auto;
+  min-width: 13rem;
+}
+.setup-chip-menu .dropdown-item {
+  gap: 0.55rem;
+  white-space: nowrap;
 }

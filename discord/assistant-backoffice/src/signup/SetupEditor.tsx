@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type DragEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type DragEvent, type ReactNode } from 'react';
 import type { Guild } from '../types';
 import { useConfirm } from '../useConfirm';
 import { InlineSpinner } from '../Loading';
@@ -54,6 +54,23 @@ export function SetupEditor({
   const [places, setPlaces] = useState<Places>(() => placesOf(people));
   const [dirty, setDirty] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
+  // Whose raid-roles menu is open (opened by clicking their name).
+  const [menuFor, setMenuFor] = useState<string | null>(null);
+  const menu = useRef<HTMLDivElement>(null);
+  // The menu closes on a click outside it or Escape; who was selected stays, to move them.
+  useEffect(() => {
+    if (!menuFor) return;
+    const close = (event: MouseEvent) => {
+      if (!menu.current?.parentElement?.contains(event.target as Node)) setMenuFor(null);
+    };
+    const escape = (event: KeyboardEvent) => event.key === 'Escape' && setMenuFor(null);
+    document.addEventListener('mousedown', close);
+    document.addEventListener('keydown', escape);
+    return () => {
+      document.removeEventListener('mousedown', close);
+      document.removeEventListener('keydown', escape);
+    };
+  }, [menuFor]);
   const [mention, setMention] = useState(event.setupMentions);
   // Raid roles, saved with the setup: who leads (its creator unless changed), who is master
   // looter, and who has assist (Officers get it when they sign up).
@@ -105,6 +122,7 @@ export function SetupEditor({
     setPlaces(update);
     setDirty(true);
     setSelected(null);
+    setMenuFor(null);
   };
 
   /** Puts someone in a place; whoever was there takes their old place (or the bench). */
@@ -208,18 +226,95 @@ export function SetupEditor({
     else moveTo(id, target.group, target.slot);
   };
 
+  // A role picked from someone's menu: done, so nobody stays selected.
+  const pickRole = (update: () => void) => {
+    changeRoles(update);
+    setMenuFor(null);
+    setSelected(null);
+  };
+  const roleMenu = (entry: Entry) => {
+    const isLeader = entry.discordUserId === leader;
+    const isAssist = assistIds.includes(entry.id);
+    const isLooter = entry.discordUserId === masterLooter;
+    const item = (label: ReactNode, onPick: () => void) => (
+      <button
+        type="button"
+        role="menuitem"
+        className="dropdown-item dropdown-option"
+        onClick={(e) => {
+          e.stopPropagation();
+          onPick();
+        }}
+      >
+        {label}
+      </button>
+    );
+    return (
+      <div
+        className="dropdown-menu setup-chip-menu"
+        role="menu"
+        ref={menu}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {!isLeader &&
+          item(
+            <>
+              <RoleMark gameVersion={guild.gameVersion} role="LEADER" /> Make leader
+            </>,
+            () => pickRole(() => chooseLeader(entry.discordUserId)),
+          )}
+        {/* The leader already leads: no assist for them. */}
+        {!isLeader &&
+          item(
+            <>
+              <RoleMark gameVersion={guild.gameVersion} role="ASSIST" />{' '}
+              {isAssist ? 'Remove assist' : 'Set assist'}
+            </>,
+            () =>
+              pickRole(() =>
+                setAssists(
+                  isAssist ? assistIds.filter((id) => id !== entry.id) : [...assistIds, entry.id],
+                ),
+              ),
+          )}
+        {item(
+          <>
+            <RoleMark gameVersion={guild.gameVersion} role="MASTER_LOOTER" />{' '}
+            {isLooter ? 'Remove master looter' : 'Set master looter'}
+          </>,
+          () => pickRole(() => setMasterLooter(isLooter ? null : entry.discordUserId)),
+        )}
+        <small className="muted dropdown-hint">Or tap a place to move them.</small>
+      </div>
+    );
+  };
+
   const chip = (entry: Entry) => (
+    <div key={entry.id} className="setup-chip-wrap">
+      {chipButton(entry)}
+      {menuFor === entry.id && roleMenu(entry)}
+    </div>
+  );
+
+  const chipButton = (entry: Entry) => (
     <button
-      key={entry.id}
       type="button"
       draggable
-      onDragStart={(e) => e.dataTransfer.setData('text/plain', entry.id)}
+      onDragStart={(e) => {
+        setMenuFor(null);
+        e.dataTransfer.setData('text/plain', entry.id);
+      }}
       onClick={(e) => {
         e.stopPropagation();
-        setSelected((current) => (current === entry.id ? null : entry.id));
+        const deselect = selected === entry.id;
+        setSelected(deselect ? null : entry.id);
+        // Raid roles from a menu on the name (members events have none).
+        setMenuFor(deselect || !event.layout.hasRaidRoles ? null : entry.id);
       }}
       className={selected === entry.id ? 'setup-chip setup-chip-selected' : 'setup-chip'}
       title={entry.note ?? undefined}
+      aria-haspopup={event.layout.hasRaidRoles ? 'menu' : undefined}
+      aria-expanded={event.layout.hasRaidRoles ? menuFor === entry.id : undefined}
     >
       {entry.role && <RoleMark gameVersion={guild.gameVersion} role={entry.role} />}
       <ClassMark gameVersion={guild.gameVersion} className={entry.characterClass} />
@@ -244,8 +339,9 @@ export function SetupEditor({
       {exported && <AddonExportDialog exported={exported} onClose={() => setExported(null)} />}
       <div className="tasks-head">
         <span className="muted">
-          Drag people in from the bench, or tap someone and then a place. Saving also updates the{' '}
-          {event.layout.setupTitle.toLowerCase()} posted in Discord.
+          Drag people in from the bench, or tap someone and then a place
+          {event.layout.hasRaidRoles && '; tapping someone also lets you set their raid roles'}.
+          Saving also updates the {event.layout.setupTitle.toLowerCase()} posted in Discord.
         </span>
         <div className="settings-actions">
           <button type="button" className="btn btn-sm" onClick={fill} disabled={bench.length === 0}>

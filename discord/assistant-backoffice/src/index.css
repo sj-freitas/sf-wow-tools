@@ -686,6 +686,18 @@ tbody tr:last-child td {
   border: 1px solid var(--border);
   border-radius: 8px;
   box-shadow: 0 8px 24px rgb(0 0 0 / 20%);
+  /* Scroll shadows: a shade at the bottom while there's more below, at the top once scrolled.
+     The covers scroll with the list and hide each shade at its end. */
+  background:
+    linear-gradient(var(--surface) 30%, transparent) top / 100% 2.5rem,
+    linear-gradient(transparent, var(--surface) 70%) bottom / 100% 2.5rem,
+    radial-gradient(farthest-side at 50% 0, rgb(0 0 0 / 28%), transparent) top / 100% 0.9rem,
+    radial-gradient(farthest-side at 50% 100%, rgb(0 0 0 / 28%), transparent) bottom / 100% 0.9rem,
+    var(--surface);
+  background-repeat: no-repeat;
+  background-attachment: local, local, scroll, scroll, scroll;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
 }
 .dropdown-item {
   display: flex;
