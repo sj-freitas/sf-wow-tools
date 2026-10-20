@@ -8,6 +8,8 @@
   --bg: light-dark(#f4f2f7, #15121c);
   --surface: light-dark(#ffffff, #1e1a27);
   --surface-2: light-dark(#f8f6fb, #262131);
+  /* Dropdown menus: a lavender tint, apart from the cards and fields under them. */
+  --surface-menu: light-dark(#efe8fa, #2f2740);
   --border: light-dark(#e2dcea, #372f45);
   --text: light-dark(#1d1828, #ece8f3);
   --muted: light-dark(#625a70, #a59db3);
@@ -688,12 +690,13 @@ tbody tr:last-child td {
   box-shadow: 0 8px 24px rgb(0 0 0 / 20%);
   /* Scroll shadows: a shade at the bottom while there's more below, at the top once scrolled.
      The covers scroll with the list and hide each shade at its end. */
+  --menu-bg: var(--surface-menu);
   background:
-    linear-gradient(var(--surface) 30%, transparent) top / 100% 2.5rem,
-    linear-gradient(transparent, var(--surface) 70%) bottom / 100% 2.5rem,
+    linear-gradient(var(--menu-bg) 30%, transparent) top / 100% 2.5rem,
+    linear-gradient(transparent, var(--menu-bg) 70%) bottom / 100% 2.5rem,
     radial-gradient(farthest-side at 50% 0, rgb(0 0 0 / 28%), transparent) top / 100% 0.9rem,
     radial-gradient(farthest-side at 50% 100%, rgb(0 0 0 / 28%), transparent) bottom / 100% 0.9rem,
-    var(--surface);
+    var(--menu-bg);
   background-repeat: no-repeat;
   background-attachment: local, local, scroll, scroll, scroll;
   scrollbar-width: thin;
@@ -709,7 +712,7 @@ tbody tr:last-child td {
   cursor: pointer;
 }
 .dropdown-item:hover {
-  background: var(--surface-2);
+  background: color-mix(in srgb, var(--accent) 14%, var(--surface-menu));
 }
 .dropdown-option {
   flex-wrap: wrap;
