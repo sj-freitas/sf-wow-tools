@@ -1,0 +1,60 @@
+// Plugins (src/plugins): features an Officer adds to a guild from the backoffice's Plugins tab, each
+// an instance of a plugin kind (Channel Clean Up first). A plugin runs on a schedule, read in the
+// guild's region timezone like scheduled tasks; `config` and `state` are per-kind JSON validated in
+// code (src/plugins/kinds). Kept in its own file and tables (`guild_plugins`, `plugin_runs`); the
+// only reference from schema.prisma is the back-relation Prisma requires on Guild.
+
+enum PluginKind {
+  // Deletes a channel's messages, except pinned ones and the messages of bots.
+  CHANNEL_CLEANUP
+
+  @@map("plugin_kind")
+}
+
+model GuildPlugin {
+  id           String         @id @default(uuid()) @db.Uuid
+  guildId      String         @map("guild_id") @db.Uuid
+  guild        Guild          @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  kind         PluginKind
+  name         String
+  enabled      Boolean        @default(true)
+  // DAILY / WEEKLY / MONTHLY at a wall-clock "HH:mm" in the guild's timezone; WEEKLY on an ISO
+  // weekday (1-7), MONTHLY on a day of the month (1-31, the month's last day when it is shorter).
+  scheduleKind ScheduleKind   @map("schedule_kind")
+  timeOfDay    String         @map("time_of_day")
+  weekday      Int?
+  dayOfMonth   Int?           @map("day_of_month")
+  nextRunAt    DateTime?      @map("next_run_at")
+  // Set while a worker runs the plugin, so no other worker picks it up.
+  leaseUntil   DateTime?      @map("lease_until")
+  lastRunAt    DateTime?      @map("last_run_at")
+  lastStatus   TaskRunStatus? @map("last_status")
+  lastError    String?        @map("last_error")
+  // What the last run did, in plain language ("Deleted 120 messages").
+  lastResult   String?        @map("last_result")
+  config       Json
+  // Between runs: e.g. where an unfinished clean-up carries on.
+  state        Json           @default("{}")
+  createdById  String?        @map("created_by_id") @db.Uuid
+  runs         PluginRun[]
+  createdAt    DateTime       @default(now()) @map("created_at")
+  updatedAt    DateTime       @updatedAt @map("updated_at")
+
+  @@index([guildId])
+  @@index([enabled, nextRunAt])
+  @@map("guild_plugins")
+}
+
+model PluginRun {
+  id         String        @id @default(uuid()) @db.Uuid
+  pluginId   String        @map("plugin_id") @db.Uuid
+  plugin     GuildPlugin   @relation(fields: [pluginId], references: [id], onDelete: Cascade)
+  startedAt  DateTime      @map("started_at")
+  finishedAt DateTime      @map("finished_at")
+  status     TaskRunStatus
+  result     String?
+  error      String?
+
+  @@index([pluginId, startedAt])
+  @@map("plugin_runs")
+}

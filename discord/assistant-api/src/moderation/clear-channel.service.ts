@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { DiscordBotService } from '../discord/discord-bot.service';
 import { describeDiscordError } from '../discord/discord-errors';
+import { cleanChannel } from './channel-cleaner';
 
 export const CLEAR_MESSAGES = {
   serverOnly: 'This command can only be used inside a server.',
@@ -10,13 +11,6 @@ export const CLEAR_MESSAGES = {
   notInServer: 'That channel is not a text channel of this server.',
   busy: 'That channel is already being cleared.',
 } as const;
-
-/** Discord only bulk-deletes messages younger than 14 days; a day of margin. */
-const BULK_MAX_AGE_MS = 13 * 24 * 60 * 60 * 1000;
-const DISCORD_EPOCH = 1_420_070_400_000n;
-
-const ageMs = (messageId: string, now: number): number =>
-  now - Number((BigInt(messageId) >> 22n) + DISCORD_EPOCH);
 
 export interface ClearInput {
   serverId: string | undefined;
@@ -92,36 +86,9 @@ export class ClearChannelService {
     };
   }
 
-  /** Walks the channel from the newest message back, deleting what is not pinned. */
+  /** Deletes every unpinned message, whoever sent it. */
   private async clear(channelId: string): Promise<number> {
-    let deleted = 0;
-    let before: string | undefined;
-    for (;;) {
-      const page = await this.bot.listMessages(channelId, before);
-      if (page.length === 0) return deleted;
-      before = page[page.length - 1].id;
-
-      const now = Date.now();
-      const doomed = page.filter((message) => !message.pinned);
-      const recent = doomed.filter((m) => ageMs(m.id, now) < BULK_MAX_AGE_MS).map((m) => m.id);
-      const old = doomed.filter((m) => ageMs(m.id, now) >= BULK_MAX_AGE_MS).map((m) => m.id);
-
-      if (recent.length >= 2) {
-        await this.bot.bulkDeleteMessages(channelId, recent);
-        deleted += recent.length;
-      } else {
-        old.push(...recent);
-      }
-      for (const id of old) {
-        try {
-          await this.bot.deleteMessage(channelId, id);
-          deleted++;
-        } catch (error) {
-          // Already gone, or a system message Discord does not let anyone delete.
-          this.logger.debug(`Skipped message ${id}: ${describeDiscordError(error)}`);
-        }
-      }
-    }
+    return (await cleanChannel(this.bot, channelId)).deleted;
   }
 
   private async isOfficer(

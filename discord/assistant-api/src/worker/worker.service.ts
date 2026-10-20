@@ -1,12 +1,13 @@
 import { Injectable, Logger, OnApplicationShutdown } from '@nestjs/common';
 import { HoneypotGatewayService } from '../honeypot/honeypot-gateway.service';
+import { PluginRunnerService } from '../plugins/plugin-runner.service';
 import { SignupEventsService } from '../signup/signup-events.service';
 import { SignupSchedulerService } from '../signup/signup-scheduler.service';
 import { SchedulerService } from '../tasks/scheduler.service';
 
 /**
- * The background worker: the scheduler for scheduled tasks and the live Discord connection
- * for honeypots. Runs in its own process (`worker.ts`) or, on a single instance, inside the
+ * The background worker: the scheduler for scheduled tasks, the plugins' runs and the live
+ * Discord connection for honeypots. Runs in its own process (`worker.ts`) or, on a single instance, inside the
  * web process (`WORKER_IN_PROCESS=true`). Officers never see any of this.
  */
 @Injectable()
@@ -18,11 +19,13 @@ export class WorkerService implements OnApplicationShutdown {
     private readonly honeypotGateway: HoneypotGatewayService,
     private readonly signupScheduler: SignupSchedulerService,
     private readonly signupEvents: SignupEventsService,
+    private readonly plugins: PluginRunnerService,
   ) {}
 
   async start(): Promise<void> {
     this.scheduler.start();
     this.signupScheduler.start();
+    this.plugins.start();
     // An event whose sign-up post is deleted in Discord is archived.
     this.honeypotGateway.onMessageDeleted((messageId) => {
       void this.signupEvents.onMessageDeleted(messageId);

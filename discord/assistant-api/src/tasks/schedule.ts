@@ -1,17 +1,19 @@
 import { DateTime } from 'luxon';
 
-export type ScheduleKind = 'ONCE' | 'DAILY' | 'WEEKLY';
+export type ScheduleKind = 'ONCE' | 'DAILY' | 'WEEKLY' | 'MONTHLY';
 
 /**
- * How a task repeats. ONCE runs at an instant; DAILY/WEEKLY run at a wall-clock time
- * (`HH:mm`, and an ISO weekday 1-7 for WEEKLY) in the guild's timezone, so they follow
- * daylight saving time.
+ * How a task repeats. ONCE runs at an instant; DAILY/WEEKLY/MONTHLY run at a wall-clock time
+ * (`HH:mm`, and an ISO weekday 1-7 for WEEKLY, a day of the month 1-31 for MONTHLY) in the
+ * guild's timezone, so they follow daylight saving time. A MONTHLY day past the end of a
+ * shorter month runs on its last day (the 31st runs on 30 April and 28 or 29 February).
  */
 export interface Schedule {
   kind: ScheduleKind;
   runAt?: Date | null;
   timeOfDay?: string | null;
   weekday?: number | null;
+  dayOfMonth?: number | null;
 }
 
 const TIME_OF_DAY = /^([01]\d|2[0-3]):([0-5]\d)$/;
@@ -44,6 +46,12 @@ export function validateSchedule(schedule: Schedule): string[] {
       problems.push('Pick a day of the week.');
     }
   }
+  if (schedule.kind === 'MONTHLY') {
+    const day = schedule.dayOfMonth;
+    if (!day || !Number.isInteger(day) || day < 1 || day > 31) {
+      problems.push('Pick a day of the month (1 to 31).');
+    }
+  }
   return problems;
 }
 
@@ -54,6 +62,20 @@ export function nextOccurrence(schedule: Schedule, timezone: string, after: Date
   }
   const [hour, minute] = (schedule.timeOfDay ?? '00:00').split(':').map(Number);
   const local = DateTime.fromJSDate(after, { zone: timezone });
+  if (schedule.kind === 'MONTHLY') {
+    // This month's day (or its last day), else next month's.
+    const inMonth = (month: DateTime) =>
+      month.set({
+        day: Math.min(schedule.dayOfMonth ?? 1, month.daysInMonth ?? 28),
+        hour,
+        minute,
+        second: 0,
+        millisecond: 0,
+      });
+    const thisMonth = inMonth(local.startOf('month'));
+    if (thisMonth.toMillis() > after.getTime()) return thisMonth.toJSDate();
+    return inMonth(local.startOf('month').plus({ months: 1 })).toJSDate();
+  }
   let candidate = local.set({ hour, minute, second: 0, millisecond: 0 });
   if (schedule.kind === 'WEEKLY') {
     const daysAhead = ((((schedule.weekday ?? 1) - candidate.weekday) % 7) + 7) % 7;
@@ -96,7 +118,17 @@ export function describeSchedule(schedule: Schedule, timezone: string): string {
   if (schedule.kind === 'WEEKLY') {
     return `Every ${WEEKDAY_NAMES[(schedule.weekday ?? 1) - 1]} at ${schedule.timeOfDay}`;
   }
+  if (schedule.kind === 'MONTHLY') {
+    return `Every month on the ${ordinal(schedule.dayOfMonth ?? 1)} at ${schedule.timeOfDay}`;
+  }
   return `Every day at ${schedule.timeOfDay}`;
+}
+
+/** 1 -> "1st", 22 -> "22nd", 13 -> "13th". */
+function ordinal(day: number): string {
+  const tens = day % 100;
+  const suffix = tens >= 11 && tens <= 13 ? 'th' : (['th', 'st', 'nd', 'rd'][day % 10] ?? 'th');
+  return `${day}${suffix}`;
 }
 
 /** Interprets a "yyyy-MM-ddTHH:mm" wall-clock time in the timezone as an instant. */

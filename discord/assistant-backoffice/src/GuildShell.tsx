@@ -9,6 +9,8 @@ import { canConfigure } from './guildAccess';
 import { guildPath } from './guildPath';
 import { HomeEditPage, HomePage } from './HomePage';
 import { HoneypotCreatePage, HoneypotsPage } from './HoneypotsPage';
+import { PluginFormPage } from './plugins/PluginFormPage';
+import { PluginsPage } from './plugins/PluginsPage';
 import { LandingPage } from './LandingPage';
 import { forgetLastGuild, readLastGuildId, rememberLastGuild } from './lastGuild';
 import { ConversationPage, OfficerRequestsPage } from './OfficerRequestsPage';
@@ -57,6 +59,9 @@ interface Props {
  *       /posts/edit/:id       edit a post                  Officers
  *       /honeypots            honeypot channels            Officers
  *       /honeypots/create     new honeypot                 Officers
+ *       /plugins              plugins: add one, see the guild's    Officers
+ *       /plugins/create/:kind new plugin (channel_cleanup)          Officers
+ *       /plugins/edit/:id     edit a plugin                         Officers
  *       /officer-requests     members' messages to officers           Officers
  *       /officer-requests/:conversationId   one conversation          Officers
  *       /signup/...           events people sign up to     everyone in the guild (see
@@ -195,6 +200,18 @@ function GuildRoutes({ guilds, setup, currentUser, onGuildsChanged }: Props) {
         />
         <Route path="honeypot" element={<Navigate to={guildPath(guild, 'honeypots')} replace />} />
         <Route
+          path="plugins"
+          element={officersOnly(<PluginsPage guild={guild} timezone={timezone} />)}
+        />
+        <Route
+          path="plugins/create/:kind"
+          element={officersOnly(<PluginFormPage guild={guild} timezone={timezone} />)}
+        />
+        <Route
+          path="plugins/edit/:id"
+          element={officersOnly(<PluginFormPage guild={guild} timezone={timezone} />)}
+        />
+        <Route
           path="officer-requests"
           element={officersOnly(<OfficerRequestsPage guild={guild} timezone={timezone} />)}
         />
@@ -259,6 +276,7 @@ function GuildFrame({
         <NavLink to={guildPath(guild, 'signup')}>Events</NavLink>
         {guild.isOfficer && <NavLink to={guildPath(guild, 'posts')}>Posts</NavLink>}
         {guild.isOfficer && <NavLink to={guildPath(guild, 'honeypots')}>Honeypots</NavLink>}
+        {guild.isOfficer && <NavLink to={guildPath(guild, 'plugins')}>Plugins</NavLink>}
         {guild.isOfficer && (
           <NavLink to={guildPath(guild, 'officer-requests')}>Officer requests</NavLink>
         )}

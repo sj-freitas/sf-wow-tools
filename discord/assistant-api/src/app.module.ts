@@ -6,6 +6,7 @@ import { AuthModule } from './auth/auth.module';
 import { BotModule } from './bot/bot.module';
 import { DiscordBotModule } from './discord/discord-bot.module';
 import { HoneypotModule } from './honeypot/honeypot.module';
+import { PluginsModule } from './plugins/plugins.module';
 import { TasksModule } from './tasks/tasks.module';
 import { WorkerModule } from './worker/worker.module';
 import { CharactersModule } from './characters/characters.module';
@@ -40,6 +41,7 @@ import { SignupModule } from './signup/signup.module';
     RealtimeModule,
     TasksModule,
     HoneypotModule,
+    PluginsModule,
     OfficerRequestsModule,
     ModerationModule,
     ArmoryModule,

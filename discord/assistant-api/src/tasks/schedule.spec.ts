@@ -119,6 +119,46 @@ describe('nextOccurrence', () => {
   });
 });
 
+describe('nextOccurrence, monthly', () => {
+  const monthly = (dayOfMonth: number) => ({
+    kind: 'MONTHLY' as const,
+    timeOfDay: '02:00',
+    dayOfMonth,
+  });
+
+  it('runs later this month when the day has not passed (Paris winter time is UTC+1)', () => {
+    assert.equal(
+      iso(nextOccurrence(monthly(15), PARIS, at('2026-11-03T10:00:00Z'))),
+      '2026-11-15T01:00:00.000Z',
+    );
+  });
+
+  it("runs next month once this month's has passed, strictly after the moment", () => {
+    assert.equal(
+      iso(nextOccurrence(monthly(15), PARIS, at('2026-11-15T01:00:00Z'))),
+      '2026-12-15T01:00:00.000Z',
+    );
+  });
+
+  it('runs on the last day of a shorter month', () => {
+    assert.equal(
+      iso(nextOccurrence(monthly(31), PARIS, at('2027-02-01T00:00:00Z'))),
+      '2027-02-28T01:00:00.000Z',
+    );
+    assert.equal(
+      iso(nextOccurrence(monthly(31), PARIS, at('2027-02-28T02:00:00Z'))),
+      '2027-03-31T00:00:00.000Z',
+    );
+  });
+
+  it('follows the timezone across the year end', () => {
+    assert.equal(
+      iso(nextOccurrence(monthly(1), LA, at('2026-12-20T00:00:00Z'))),
+      '2027-01-01T10:00:00.000Z',
+    );
+  });
+});
+
 describe('occurrencesBetween', () => {
   const daily = { kind: 'DAILY' as const, timeOfDay: '20:00' };
 
@@ -161,6 +201,7 @@ describe('validateSchedule', () => {
     assert.deepEqual(validateSchedule({ kind: 'DAILY', timeOfDay: '07:05' }), []);
     assert.deepEqual(validateSchedule({ kind: 'WEEKLY', timeOfDay: '23:59', weekday: 7 }), []);
     assert.deepEqual(validateSchedule({ kind: 'ONCE', runAt: new Date() }), []);
+    assert.deepEqual(validateSchedule({ kind: 'MONTHLY', timeOfDay: '02:00', dayOfMonth: 31 }), []);
   });
 
   it('rejects bad times, weekdays and missing dates', () => {
@@ -170,6 +211,15 @@ describe('validateSchedule', () => {
     assert.equal(validateSchedule({ kind: 'WEEKLY', timeOfDay: '20:00', weekday: 0 }).length, 1);
     assert.equal(validateSchedule({ kind: 'WEEKLY', timeOfDay: '20:00', weekday: 8 }).length, 1);
     assert.equal(validateSchedule({ kind: 'ONCE', runAt: null }).length, 1);
+    assert.equal(
+      validateSchedule({ kind: 'MONTHLY', timeOfDay: '02:00', dayOfMonth: 0 }).length,
+      1,
+    );
+    assert.equal(
+      validateSchedule({ kind: 'MONTHLY', timeOfDay: '02:00', dayOfMonth: 32 }).length,
+      1,
+    );
+    assert.equal(validateSchedule({ kind: 'MONTHLY', timeOfDay: '02:00' }).length, 1);
   });
 });
 
@@ -182,6 +232,14 @@ describe('describeSchedule and instantFromLocal', () => {
     assert.equal(
       describeSchedule({ kind: 'WEEKLY', weekday: 2, timeOfDay: '20:00' }, PARIS),
       'Every Tuesday at 20:00',
+    );
+    assert.equal(
+      describeSchedule({ kind: 'MONTHLY', dayOfMonth: 22, timeOfDay: '02:00' }, PARIS),
+      'Every month on the 22nd at 02:00',
+    );
+    assert.equal(
+      describeSchedule({ kind: 'MONTHLY', dayOfMonth: 11, timeOfDay: '02:00' }, PARIS),
+      'Every month on the 11th at 02:00',
     );
     assert.equal(
       describeSchedule({ kind: 'ONCE', runAt: at('2026-10-05T18:00:00Z') }, PARIS),

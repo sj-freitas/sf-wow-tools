@@ -33,6 +33,8 @@ enum ScheduleKind {
   ONCE
   DAILY
   WEEKLY
+  // Plugins only (posts are ONCE).
+  MONTHLY
 }
 
 enum TaskRunStatus {
@@ -80,6 +82,8 @@ model Guild {
   officerConversations    OfficerConversation[]
   scheduledTasks          ScheduledTask[]
   honeypots               Honeypot[]
+  // Plugins (prisma/plugins.prisma).
+  plugins                 GuildPlugin[]
   servers                 DiscordServer[]
   roleMappings            GuildRoleMapping[]
   characterMemberships    CharacterGuildMembership[]

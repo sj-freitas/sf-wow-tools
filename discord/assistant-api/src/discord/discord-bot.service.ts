@@ -328,17 +328,24 @@ export class DiscordBotService {
     await this.rest.delete(Routes.channelMessage(channelId, messageId));
   }
 
-  /** One page (up to 100) of a channel's messages, newest first, older than `before`. */
+  /**
+   * One page (up to 100) of a channel's messages, newest first, older than `before`. `bot`: sent
+   * by a bot or a webhook (integrations such as Raid-Helper post either way).
+   */
   async listMessages(
     channelId: string,
     before?: string,
-  ): Promise<{ id: string; pinned: boolean }[]> {
+  ): Promise<{ id: string; pinned: boolean; bot: boolean }[]> {
     const query = new URLSearchParams({ limit: '100' });
     if (before) query.set('before', before);
     const messages = (await this.rest.get(Routes.channelMessages(channelId), {
       query,
     })) as APIMessage[];
-    return messages.map((message) => ({ id: message.id, pinned: message.pinned }));
+    return messages.map((message) => ({
+      id: message.id,
+      pinned: message.pinned,
+      bot: message.author?.bot === true || message.webhook_id !== undefined,
+    }));
   }
 
   /** Deletes 2-100 messages at once. Discord refuses ones older than 14 days. */

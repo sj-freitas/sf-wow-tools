@@ -110,7 +110,7 @@ mechanism: officers only ever see tasks described in their own terms (what, wher
 - Ideally an integration with the Raid-Helper bot. Do not design or build now; keep it on the TODO.
 - Any "delete messages every day in the raid channel" need is just a task 3 cleanup.
 
-### 3. Channel cleanup (not started)
+### 3. Channel cleanup (done: the Channel Clean Up plugin, see the API README's "Plugins")
 - Deletes all non-pinned messages in a channel on a schedule (e.g. daily at 02:00 guild time),
   optionally keeping the bot's own messages.
 - Bulk delete for messages under 14 days old (batches of up to 100); older ones individually.

@@ -196,6 +196,7 @@ case and punctuation, and renaming a guild moves its address (the settings page 
 | `<guild>/posts?q=&page=`                             | Posts (search and page in the address)                   | Officers                          |
 | `<guild>/posts/create`, `/edit/:id`                  | New / edit post                                          | Officers                          |
 | `<guild>/honeypots`, `/create`                       | Honeypots (`/honeypot` redirects)                        | Officers                          |
+| `<guild>/plugins`, `/create/:kind`, `/edit/:id`      | Plugins: add one (Channel Clean Up), the guild's plugins | Officers                          |
 | `<guild>/officer-requests`, `/:id`                   | Members' messages to officers; officers reply            | Officers                          |
 | `<guild>/settings`                                   | Guild settings, incl. the welcome post                   | Guild-Assistants and Officers     |
 
@@ -359,6 +360,30 @@ Its only option is `show` (left out: every character's name); the list is called
 - The bot needs View Channel, Read Message History and Manage Messages in that channel (the invite
   link's permissions include them). Run `npm run commands:register` after deploying.
 
+### Plugins
+
+Officers add plugins in the backoffice's **Plugins** tab: features that run on their own, on a
+schedule. Each is an instance of a plugin **kind**; the tab lists the kinds to add, then the guild's
+plugins with their next run and last 5 runs, and Run now / Edit / Pause / Remove.
+
+- **Channel Clean Up** (`CHANNEL_CLEANUP`): deletes a channel's messages daily, weekly (a weekday) or
+  monthly (a day 1-31; a shorter month runs on its last day), at a time in the guild's timezone.
+  Pinned messages are always kept, and by default the messages of bots and webhooks too (sign-up
+  posts, Raid-Helper). It deletes the way `/clear-channel` does (`src/moderation/channel-cleaner.ts`).
+  A run stops after 3 minutes (within the worker's 5-minute lease) and the next carries on a minute
+  later from where it stopped, until the channel is done. Creating one asks for confirmation.
+- **Tables:** `guild_plugins` (one row per plugin: kind, name, schedule, `config` and `state` JSON
+  per kind, last run) and `plugin_runs` (history), in `prisma/plugins.prisma`.
+- **Worker:** `PluginRunnerService` checks every minute, claiming due plugins like scheduled tasks
+  (`FOR UPDATE SKIP LOCKED` plus a lease). A failed run is retried after 5 minutes, up to 3 times in
+  30 minutes, then waits for the next occurrence.
+- **API** (Officers): `GET /api/guilds/:guildId/plugin-kinds`, `GET|POST /api/guilds/:guildId/plugins`
+  (`POST` needs `confirm: true`), `PATCH|DELETE /api/plugins/:id`, `POST /api/plugins/:id/run-now`.
+- **A new kind:** add it to the `PluginKind` enum (and a migration), write a `PluginKindDef`
+  (`label`, `description`, `parseConfig`, `run`) under `src/plugins/kinds/`, list it in
+  `PLUGIN_KINDS` (`src/plugins/plugin-kinds.ts`), and give it a form in the backoffice
+  (`src/plugins/`). Scheduling, leases and run history are shared.
+
 ### Contacting the officers (`/contact-officer`)
 
 Members write to the officers privately with the bot; officers answer from Discord and read the
@@ -421,8 +446,8 @@ Times are entered and shown in the guild's region timezone (`src/config/regions.
 Nothing is dropped: whatever is overdue runs, late rather than never. A failed run is retried after
 5 minutes, up to 3 attempts, and the error is shown to the officer. Runs are at-least-once: if the
 worker dies between posting and saving, one post can be repeated after the lease expires. The
-schedule engine (`src/tasks/schedule.ts`, the catch-up of recurring tasks) also supports daily and
-weekly schedules, unused by posts, for the planned channel cleanup.
+schedule engine (`src/tasks/schedule.ts`, the catch-up of recurring tasks) also supports daily,
+weekly and monthly schedules, unused by posts, for plugins (below).
 
 **Posts.** A post is sent **once**, as **one or more messages** ("parts"), and one database row tracks
 it (recurring events will be a separate flow). Markdown text goes to a channel of one of the guild's
