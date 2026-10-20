@@ -20,6 +20,7 @@ import { OfficerRequestsModule } from './officer-requests/officer-requests.modul
 import { PlayersModule } from './players/players.module';
 import { PublicModule } from './public/public.module';
 import { SignupModule } from './signup/signup.module';
+import { McpModule } from './mcp/mcp.module';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { SignupModule } from './signup/signup.module';
     ModerationModule,
     ArmoryModule,
     SignupModule,
+    McpModule,
     WorkerModule,
   ],
 })

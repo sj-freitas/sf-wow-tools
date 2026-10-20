@@ -8,10 +8,10 @@ import type { EventKindConfig } from './event-kinds';
  *     signs themselves up while it is open;
  *   - Officers and holders of the guild's EventCreator role create events — only Officers in a
  *     channel other than the guild's event channel;
- *   - the event's owner (who created it) and Officers edit, lock, unlock and delete it, and add,
- *     change or remove anyone's sign-up, even once it is closed;
- *   - they and every EventCreator also organise it: the raid setup, assignments, reminders to
- *     people who haven't signed up, and reading the notes left with Late and Tentative.
+ *   - the event's owner (who created it) and Officers edit, lock, unlock and delete it, add,
+ *     change or remove anyone's sign-up, even once it is closed, and organise it: the raid
+ *     setup, assignments, reminders to people who haven't signed up, and reading the notes left
+ *     with Late and Tentative. So an EventCreator runs their own events; Officers run them all.
  */
 
 export const MAX_TITLE_LENGTH = 100;
@@ -57,11 +57,11 @@ export const canManageEvent = (
   event: { createdByDiscordId: string },
 ): boolean => viewer.isOfficer || event.createdByDiscordId === viewer.discordId;
 
-/** Raid setup, assignments, reminders and the notes people left. */
+/** Raid setup, assignments, reminders and the notes people left: the owner and Officers. */
 export const canOrganizeEvent = (
   viewer: SignupViewer,
   event: { createdByDiscordId: string },
-): boolean => canManageEvent(viewer, event) || viewer.isEventCreator;
+): boolean => canManageEvent(viewer, event);
 
 /** Officers post anywhere in the guild's servers; EventCreators only in the event channel. */
 export const canPostIn = (

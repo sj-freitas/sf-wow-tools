@@ -9,6 +9,6 @@ import { RanksService } from './ranks.service';
   imports: [AuthModule],
   controllers: [GuildsController],
   providers: [GuildsService, RanksService, GuildRedirectsService],
-  exports: [GuildRedirectsService],
+  exports: [GuildRedirectsService, GuildsService],
 })
 export class GuildsModule {}

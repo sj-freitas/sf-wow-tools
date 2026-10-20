@@ -302,8 +302,8 @@ function SettingsCard({
             ))}
           </select>
           <small>
-            A role in the main server whose members can create and organise events. Officers always
-            can.
+            A role in the main server whose members can create events and run their own (raid setup,
+            assignments, reminders). Officers can do this for every event.
           </small>
         </label>
       </div>

@@ -19,6 +19,11 @@ import { readCookie } from './cookies';
 import { DiscordOAuthService } from './discord-oauth.service';
 
 const STATE_COOKIE = 'oauth_state';
+/** Where to go after logging in (e.g. back to connecting an MCP client); only paths on this site. */
+const NEXT_COOKIE = 'login_next';
+
+const isLocalPath = (value: string | undefined): value is string =>
+  !!value && value.startsWith('/') && !value.startsWith('//') && !value.startsWith('/\\');
 
 @Controller('auth')
 export class AuthController {
@@ -37,9 +42,16 @@ export class AuthController {
   }
 
   @Get('login')
-  login(@Res() res: Response, @Query('prompt') prompt?: string): void {
+  login(
+    @Res() res: Response,
+    @Query('prompt') prompt?: string,
+    @Query('next') next?: string,
+  ): void {
     const state = randomBytes(16).toString('base64url');
     res.cookie(STATE_COOKIE, state, { ...this.cookieOptions, maxAge: 10 * 60 * 1000 });
+    if (isLocalPath(next)) {
+      res.cookie(NEXT_COOKIE, next, { ...this.cookieOptions, maxAge: 10 * 60 * 1000 });
+    }
     res.redirect(this.discord.buildAuthorizeUrl(state, prompt === 'consent' ? 'consent' : 'none'));
   }
 
@@ -62,9 +74,11 @@ export class AuthController {
     }
 
     const token = await this.authService.loginWithCode(code);
+    const next = readCookie(req, NEXT_COOKIE);
     res.clearCookie(STATE_COOKIE, this.cookieOptions);
+    res.clearCookie(NEXT_COOKIE, this.cookieOptions);
     res.cookie(SESSION_COOKIE, token, { ...this.cookieOptions, maxAge: SESSION_TTL_MS });
-    res.redirect('/');
+    res.redirect(isLocalPath(next) ? next : '/');
   }
 
   @Get('me')

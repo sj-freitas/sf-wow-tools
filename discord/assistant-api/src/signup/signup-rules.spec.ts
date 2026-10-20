@@ -59,8 +59,10 @@ describe('permissions', () => {
     assert.equal(canManageEvent(member, othersEvent), false);
   });
 
-  it('lets every EventCreator organise any event, members none', () => {
-    assert.equal(canOrganizeEvent(creator, othersEvent), true);
+  it("lets EventCreators organise only their own events, Officers anyone's", () => {
+    assert.equal(canOrganizeEvent(creator, event), true);
+    assert.equal(canOrganizeEvent(creator, othersEvent), false);
+    assert.equal(canOrganizeEvent(officer, othersEvent), true);
     assert.equal(canOrganizeEvent(member, othersEvent), false);
   });
 

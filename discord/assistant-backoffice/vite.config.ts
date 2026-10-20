@@ -9,6 +9,9 @@ export default defineConfig({
     // same-origin behavior so `fetch('/api/...')` works unchanged.
     proxy: {
       '/api': 'http://localhost:3000',
+      // OAuth for MCP clients, which the API serves at the site's root (see src/mcp in the API).
+      '/.well-known': 'http://localhost:3000',
+      '^/(authorize|token|register|revoke)$': 'http://localhost:3000',
     },
   },
 });

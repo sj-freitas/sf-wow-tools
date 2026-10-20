@@ -287,6 +287,38 @@ export class AuthService {
     return { id, discordId, username, displayName: displayName ?? username, avatar };
   }
 
+  /**
+   * A second session for the user of `sessionToken`, with the same Discord token: what an MCP
+   * client gets when the user connects it. It ends when the Discord token does (we can't renew
+   * that one), or after the usual session lifetime, whichever comes first.
+   */
+  async createLinkedSession(sessionToken: string): Promise<{ token: string; expiresAt: Date }> {
+    const session = await this.prisma.session.findUnique({
+      where: { tokenHash: hashToken(sessionToken) },
+    });
+    if (!session || session.expiresAt < new Date() || !session.discordAccessToken) {
+      throw new UnauthorizedException('Not logged in');
+    }
+    const sessionEnd = Date.now() + SESSION_TTL_MS;
+    const expiresAt = new Date(
+      session.discordTokenExpiresAt
+        ? Math.min(sessionEnd, session.discordTokenExpiresAt.getTime())
+        : sessionEnd,
+    );
+    const token = randomBytes(32).toString('base64url');
+    await this.prisma.session.create({
+      data: {
+        tokenHash: hashToken(token),
+        userId: session.userId,
+        expiresAt,
+        discordAccessToken: session.discordAccessToken,
+        discordTokenExpiresAt: session.discordTokenExpiresAt,
+        discordSyncedAt: session.discordSyncedAt,
+      },
+    });
+    return { token, expiresAt };
+  }
+
   async logout(token: string): Promise<void> {
     await this.prisma.session.deleteMany({ where: { tokenHash: hashToken(token) } });
   }

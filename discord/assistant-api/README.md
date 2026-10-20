@@ -820,8 +820,8 @@ Like Raid-Helper, built in: events people sign up to from Discord or the backoff
   **event channel**. Both are set on the website's Events page (Guild-Assistants and Officers).
 - The event's **owner** and **Officers** edit, lock, unlock and delete it, and add, change or remove
   anyone's sign-up — even after it has closed.
-- They and **every EventCreator** organise it: raid setup, assignments, reminders, and reading the
-  notes left with Late/Tentative.
+- They also organise it: raid setup, assignments, reminders, and reading the notes left with
+  Late/Tentative. So an EventCreator runs their own events; Officers run everyone's.
 
 **Creating** — `/create-event name [time] [date] [description] [timezone] [channel]` (no time: the next full or half hour, 15:15 → 15:30; no date: today, in the event's timezone), or the website's
 form (date picker, timezone list). `date` is `YYYY-MM-DD` and `time` `HH:mm` (`8pm` works too), in
@@ -861,7 +861,7 @@ and tentative), and the leader is no longer shown.
 
 **Scheduling.** On the website's form, **Post: At a date and time** (in the event's timezone,
 before it starts) saves the event without posting it; the worker posts it then. Until then it is
-a draft: only organisers see it (EventCreators and Officers all of them, others their own), it is
+a draft: only organisers see it (Officers all of them, others their own), it is
 closed for sign-ups, and it can be edited and its setup and assignments prepared (not posted).
 **Post now** posts it early. If Discord refuses, it stays scheduled, the reason shows on its page,
 and the worker tries again each minute. `/create-event` always posts at once.
@@ -945,6 +945,39 @@ one transaction). To take the feature out:
    `GuildShell.tsx`.
 
 Deploying the feature again later re-creates the tables, empty.
+
+## MCP server for AI agents (`src/mcp/`)
+
+`/api/mcp` is an [MCP](https://modelcontextprotocol.io) server (Streamable HTTP, stateless), so
+an AI app (Claude, an IDE, …) can work with a guild as the user who connected it. Add
+`https://guildassistant.app/api/mcp` as a remote MCP server in the app; it opens the browser
+to log in with Discord and approve the connection.
+
+- **Tools:** `list_guilds`, `get_roster`, `list_channels`, `list_posts`, `get_post`,
+  `create_post`, `update_post`, `list_plugins`, `set_plugin_enabled`. Each checks access like the
+  matching backoffice endpoint (members read the roster; Officers manage posts and plugins) and
+  calls the same service (`McpToolsService`).
+- **Event sign-ups:** `list_events`, `get_event` and `create_event` ("create a raid sign-up for
+  Naxxramas on Sunday at 20:00"). They come from `src/signup/signup-mcp-tools.ts`, which adds them
+  through `McpToolRegistry` (`src/mcp/mcp-tool-registry.ts`), so the MCP module doesn't import
+  sign-up code and taking sign-ups out takes their tools with them. Same rules as the website
+  (`SignupUserEventsService`, shared with `SignupController`): members read events, Officers and
+  EventCreators create them, only Officers post outside the event channel.
+- **Login (OAuth 2.1 with PKCE):** the SDK's `mcpAuthRouter` (mounted in `main.ts`) serves the
+  metadata under `/.well-known/` and `/authorize`, `/token`, `/register` (dynamic client
+  registration) and `/revoke` at the site's root, where clients look for them. `/authorize`
+  sends the user to `/api/mcp-oauth/consent`, which goes through the Discord login if needed
+  (`/api/auth/login?next=…`) and asks them to allow the app.
+- **Tokens:** approving creates a session of the user's own with the same Discord token
+  (`AuthService.createLinkedSession`), and that session's token is the access token, so roles
+  are re-read from Discord like in the backoffice. It lasts until the Discord token expires (up
+  to a week); there are no refresh tokens, so the app asks to connect again. `/revoke` ends it.
+- **Nothing new is stored:** client registrations, consent requests and authorization codes are
+  sealed values (AES-256-GCM with keys derived from `SESSION_ENCRYPTION_KEY`, `src/mcp/sealed.ts`);
+  a used code is remembered in the cache so it works once.
+- **Addresses:** the issuer and resource are built from `siteOrigin` (`SITE_URL`, else the
+  OAuth redirect's origin). Locally that is the Vite dev server (`http://localhost:5173`), which
+  proxies these root paths to the API.
 
 ## Database
 

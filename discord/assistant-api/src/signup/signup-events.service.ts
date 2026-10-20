@@ -15,7 +15,8 @@ const ROLE_ICON_NAME: Record<Role, string> = {
   MELEE_DPS: 'Melee',
   RANGED_DPS: 'Ranged',
 };
-import { addCharacterUrl, eventPageUrl, siteOrigin } from './signup-links';
+import { siteOrigin } from '../config/site-origin';
+import { addCharacterUrl, eventPageUrl } from './signup-links';
 import {
   renderEventMessage,
   renderSetupMessage,

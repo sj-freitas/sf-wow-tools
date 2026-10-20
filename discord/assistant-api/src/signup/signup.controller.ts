@@ -19,61 +19,44 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import type { Prisma, Role, SignupLockMode, SignupStatus } from '@prisma/client';
+import type { Role, SignupLockMode, SignupStatus } from '@prisma/client';
 import type { Response } from 'express';
-import { DateTime } from 'luxon';
 import { AuthGuard } from '../auth/auth.guard';
 import type { AuthenticatedRequest } from '../auth/auth.types';
 import { GuildAccessService } from '../auth/guild-access.service';
-import { timezoneOfRegion } from '../config/regions';
 import { DiscordBotService } from '../discord/discord-bot.service';
 import { MAX_IMAGE_BYTES } from '../officer-requests/attachments';
 import { PrismaService } from '../database/prisma.service';
 import { RealtimeService } from '../realtime/realtime.service';
 import { parseSnowflake } from '../tasks/post-task';
-import { readLines } from './assignment-lines';
-import { EVENT_KINDS, isEventKind } from './event-kinds';
+import { EVENT_KINDS } from './event-kinds';
 import { SignupAccessService } from './signup-access.service';
 import { SignupAssignmentsService } from './signup-assignments.service';
 import { SignupEntriesService, type Person } from './signup-entries.service';
-import { toEntryDto } from './signup-dto';
 import {
   SignupEventsService,
   type EventInput,
   type EventRow,
   type SignupGuild,
 } from './signup-events.service';
-import { messageUrl } from './signup-messages';
 import { SignupRemindersService, type MissingDto } from './signup-reminders.service';
 import {
   canCreateEvents,
   canManageEvent,
   canOrganizeEvent,
-  canPostIn,
   isClosed,
   isScheduled,
   type SignupViewer,
 } from './signup-rules';
-import { localParts, parseEventStart, resolveTimezone } from './signup-time';
+import { discordPostIdOf, SignupUserEventsService } from './signup-user-events.service';
 
 const ROLES: readonly Role[] = ['TANK', 'HEALER', 'RANGED_DPS', 'MELEE_DPS'];
 const STATUSES: readonly SignupStatus[] = ['AVAILABLE', 'LATE', 'TENTATIVE', 'ABSENT'];
 const LOCK_MODES: readonly SignupLockMode[] = ['AUTO', 'LOCKED', 'UNLOCKED'];
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-/**
- * A Discord post's id, from the id itself or a message link
- * (https://discord.com/channels/<server>/<channel>/<message>); null for anything else.
- */
-export function discordPostIdOf(text: string | undefined): string | null {
-  const value = (text ?? '').trim();
-  if (/^\d{15,25}$/.test(value)) return value;
-  return (
-    /^https:\/\/(?:\w+\.)?discord(?:app)?\.com\/channels\/(?:\d+|@me)\/\d+\/(\d{15,25})\/?$/.exec(
-      value,
-    )?.[1] ?? null
-  );
-}
+/** Kept here for its spec; it lives with the event queries now. */
+export { discordPostIdOf };
 
 type Body = Record<string, unknown>;
 
@@ -110,6 +93,7 @@ export class SignupController {
     private readonly entries: SignupEntriesService,
     private readonly assignments: SignupAssignmentsService,
     private readonly reminders: SignupRemindersService,
+    private readonly userEvents: SignupUserEventsService,
   ) {}
 
   // ---- settings ----
@@ -195,7 +179,7 @@ export class SignupController {
    * `?discordPostId=` (an id or a message link): the event with that Discord post, in any view.
    */
   @Get('events')
-  async list(
+  list(
     @Req() req: AuthenticatedRequest,
     @Param('guildId') guildId: string,
     @Query('view') view?: string,
@@ -204,120 +188,16 @@ export class SignupController {
     @Query('q') q?: string,
     @Query('discordPostId') discordPostId?: string,
   ) {
-    const { guild, viewer } = await this.context(req, guildId);
-    const now = new Date();
-    let where: Prisma.SignupEventWhereInput;
-    let orderBy: Prisma.SignupEventOrderByWithRelationInput;
-    let take: number;
-    const searchedPost = discordPostIdOf(q);
-    if (discordPostId !== undefined) {
-      const postId = discordPostIdOf(discordPostId);
-      if (!postId) throw new BadRequestException('That is not a Discord post id or message link.');
-      where = { guildId, discordPostId: postId };
-      orderBy = { startsAt: 'desc' };
-      take = 1;
-    } else if (view === 'archived') {
-      const zone = timezoneOfRegion(guild.region);
-      const day = (value: string | undefined, end: boolean): Date | undefined => {
-        if (!value) return undefined;
-        const parsed = DateTime.fromISO(value, { zone });
-        if (!parsed.isValid) throw new BadRequestException('Write dates as YYYY-MM-DD.');
-        return (end ? parsed.endOf('day') : parsed.startOf('day')).toJSDate();
-      };
-      const after = day(from, false);
-      const before = day(to, true);
-      where = {
-        guildId,
-        archivedAt: { not: null },
-        ...(after || before ? { startsAt: { gte: after, lte: before } } : {}),
-        ...(searchedPost
-          ? { discordPostId: searchedPost }
-          : q?.trim()
-            ? { title: { contains: q.trim(), mode: 'insensitive' } }
-            : {}),
-      };
-      orderBy = { startsAt: 'desc' };
-      take = 100;
-    } else {
-      const past = view === 'past';
-      where = { guildId, archivedAt: null, startsAt: past ? { lte: now } : { gt: now } };
-      orderBy = { startsAt: past ? 'desc' : 'asc' };
-      take = past ? 30 : 100;
-    }
-    // Scheduled events are drafts: only organisers see them (EventCreators and Officers all of
-    // them, anyone else only their own).
-    if (!viewer.isEventCreator) {
-      where = {
-        AND: [where, { OR: [{ publishAt: null }, { createdByDiscordId: viewer.discordId }] }],
-      };
-    }
-    const events = await this.prisma.signupEvent.findMany({
-      where,
-      orderBy,
-      take,
-      include: { entries: { select: { status: true, discordUserId: true } } },
-    });
-    return events.map((event) => {
-      const counts: Record<SignupStatus, number> = {
-        AVAILABLE: 0,
-        LATE: 0,
-        TENTATIVE: 0,
-        ABSENT: 0,
-      };
-      for (const entry of event.entries) counts[entry.status]++;
-      return {
-        id: event.id,
-        title: event.title,
-        startsAt: event.startsAt.toISOString(),
-        timezone: event.timezone,
-        closed: isClosed(event, now),
-        archivedAt: event.archivedAt?.toISOString() ?? null,
-        publishAt: event.publishAt?.toISOString() ?? null,
-        discordPostId: event.discordPostId,
-        // May delete it (the archived list's Delete button).
-        canManage: canManageEvent(viewer, event),
-        location: event.location,
-        kind: event.kind,
-        createdByName: event.createdByName,
-        counts,
-        myStatus:
-          event.entries.find((entry) => entry.discordUserId === req.user.discordId)?.status ?? null,
-      };
-    });
+    return this.userEvents.list(req.user, guildId, { view, from, to, q, discordPostId });
   }
 
   @Post('events')
-  async create(
+  create(
     @Req() req: AuthenticatedRequest,
     @Param('guildId') guildId: string,
     @Body() body: Body,
   ): Promise<{ id: string }> {
-    const { guild, viewer } = await this.context(req, guildId);
-    if (!canCreateEvents(viewer)) {
-      throw new ForbiddenException('Only Officers and EventCreators can create events.');
-    }
-    const settings = await this.events.getSettings(guildId);
-    const picked = body.channel as Body | undefined;
-    const channel = picked
-      ? {
-          serverId: parseSnowflake(picked.serverId, 'The server'),
-          channelId: parseSnowflake(picked.channelId, 'The channel'),
-        }
-      : settings.channelId && settings.channelServerId
-        ? { serverId: settings.channelServerId, channelId: settings.channelId }
-        : null;
-    if (!channel) throw new BadRequestException('Pick a channel: the guild has no event channel.');
-    if (!canPostIn(viewer, settings.channelId, channel.channelId)) {
-      throw new ForbiddenException('Only Officers can post events outside the event channel.');
-    }
-    const event = await this.events.create(
-      guild,
-      { discordId: req.user.discordId, name: req.user.displayName },
-      { ...this.eventInput(guild, body), kind: isEventKind(body.type) ? body.type : 'CHARACTERS' },
-      channel,
-    );
-    this.realtime.publish(guildId, 'signup');
-    return { id: event.id };
+    return this.userEvents.create(req.user, guildId, body);
   }
 
   /** The event whose sign-up post has this Discord id (kept after it is archived). */
@@ -338,81 +218,12 @@ export class SignupController {
   }
 
   @Get('events/:eventId')
-  async get(
+  get(
     @Req() req: AuthenticatedRequest,
     @Param('guildId') guildId: string,
     @Param('eventId') eventId: string,
   ) {
-    const { guild, viewer, event } = await this.eventContext(req, guildId, eventId);
-    const organizer = canOrganizeEvent(viewer, event);
-    // A scheduled event is a draft only organisers see.
-    if (isScheduled(event) && !organizer) throw new NotFoundException('Event not found');
-    const [myCharacters, assignments] = await Promise.all([
-      this.entries.characterOptions(guild, req.user.discordId),
-      this.assignments.list(event.id),
-    ]);
-    const mine = event.entries.find((entry) => entry.discordUserId === req.user.discordId);
-    const serverTime = timezoneOfRegion(guild.region);
-    return {
-      id: event.id,
-      kind: event.kind,
-      // What this kind of event has: groups, assignments, characters (event-kinds.ts).
-      layout: EVENT_KINDS[event.kind],
-      title: event.title,
-      description: event.description,
-      location: event.location,
-      startsAt: event.startsAt.toISOString(),
-      timezone: event.timezone,
-      serverTimezone: serverTime,
-      local: localParts(event.startsAt, event.timezone),
-      lockMode: event.lockMode,
-      closed: isClosed(event),
-      archivedAt: event.archivedAt?.toISOString() ?? null,
-      // Scheduled: when the post goes out (and in the event's timezone, for the edit form), and
-      // why the last attempt failed, if it did.
-      publishAt: event.publishAt?.toISOString() ?? null,
-      publishLocal: event.publishAt ? localParts(event.publishAt, event.timezone) : null,
-      publishError: event.publishError,
-      createdByName: event.createdByName,
-      isOwner: event.createdByDiscordId === req.user.discordId,
-      channel: { serverId: event.serverId, channelId: event.channelId },
-      // The sign-up post's Discord id, kept after it is gone (null until first posted).
-      discordPostId: event.discordPostId,
-      postUrl: event.messageId
-        ? messageUrl(event.serverId, event.channelId, event.messageId)
-        : null,
-      setupPostUrl: event.setupMessageId
-        ? messageUrl(event.serverId, event.channelId, event.setupMessageId)
-        : null,
-      setupMentions: event.setupMentions,
-      // Raid roles: the leader (its creator unless changed) and the master looter (or null).
-      leaderDiscordUserId: event.leaderDiscordUserId ?? event.createdByDiscordId,
-      masterLooterDiscordUserId: event.masterLooterDiscordUserId,
-      permissions: {
-        canManage: canManageEvent(viewer, event),
-        canOrganize: organizer,
-        isOfficer: viewer.isOfficer,
-      },
-      entries: event.entries.map((entry) =>
-        toEntryDto(entry, organizer || entry.discordUserId === req.user.discordId),
-      ),
-      mine: mine ? toEntryDto(mine, true) : null,
-      myCharacters,
-      assignments: assignments.map((assignment) => ({
-        id: assignment.id,
-        scope: assignment.scope,
-        scopeLabel: assignment.scopeLabel,
-        title: assignment.title,
-        lines: readLines(assignment.lines),
-        mentions: assignment.mentions,
-        imageIds: assignment.images.map((image) => image.id),
-        postUrl: assignment.messageId
-          ? messageUrl(event.serverId, event.channelId, assignment.messageId)
-          : null,
-        pluginKey: assignment.pluginKey,
-        editedManually: assignment.editedManually,
-      })),
-    };
+    return this.userEvents.get(req.user, guildId, eventId);
   }
 
   /** The owner and Officers: name, description and time. The channel stays. */
@@ -833,14 +644,11 @@ export class SignupController {
   // ---- helpers ----
 
   /** The guild and who the user is in it; throws unless they are in it. */
-  private async context(
+  private context(
     req: AuthenticatedRequest,
     guildId: string,
   ): Promise<{ guild: SignupGuild; viewer: SignupViewer }> {
-    if (!UUID.test(guildId)) throw new BadRequestException('Unknown guild.');
-    const guild = await this.events.findGuild(guildId);
-    const viewer = await this.access.forUser(req.user, guild);
-    return { guild, viewer };
+    return this.userEvents.context(req.user, guildId);
   }
 
   /** `context`, plus the event; `need` throws unless the user may manage or organise it. */
@@ -862,45 +670,13 @@ export class SignupController {
       throw new ForbiddenException('Only the event’s owner and Officers can do that.');
     }
     if (need === 'organize' && !canOrganizeEvent(viewer, event)) {
-      throw new ForbiddenException(
-        'Only Officers, EventCreators and the event’s owner can do that.',
-      );
+      throw new ForbiddenException('Only Officers and the event’s owner can do that.');
     }
     return { guild, viewer, event };
   }
 
-  /** Date, time and timezone (`ST` for server time) from the form, plus name and description. */
   private eventInput(guild: SignupGuild, body: Body): EventInput {
-    const zone = resolveTimezone(
-      typeof body.timezone === 'string' ? body.timezone : undefined,
-      timezoneOfRegion(guild.region),
-    );
-    if (!zone) throw new BadRequestException('Unknown timezone.');
-    const startsAt = parseEventStart(
-      typeof body.date === 'string' ? body.date : '',
-      typeof body.time === 'string' ? body.time : '',
-      zone,
-    );
-    if (typeof startsAt === 'string') throw new BadRequestException(startsAt);
-    // Scheduling: `publishDate` and `publishTime`, in the same timezone as the event.
-    let publishAt: Date | undefined;
-    if (typeof body.publishDate === 'string' && body.publishDate !== '') {
-      const parsed = parseEventStart(
-        body.publishDate,
-        typeof body.publishTime === 'string' ? body.publishTime : '',
-        zone,
-      );
-      if (typeof parsed === 'string') throw new BadRequestException(`Posting time: ${parsed}`);
-      publishAt = parsed;
-    }
-    return {
-      publishAt,
-      title: typeof body.title === 'string' ? body.title : '',
-      description: typeof body.description === 'string' ? body.description : '',
-      location: typeof body.location === 'string' ? body.location : '',
-      startsAt,
-      timezone: zone,
-    };
+    return this.userEvents.eventInput(guild, body);
   }
 
   private async saveEntry(

@@ -5,6 +5,9 @@ import { SignupAssignmentsService } from './signup-assignments.service';
 import { SignupCoreModule } from './signup-core.module';
 import { SignupEntriesService } from './signup-entries.service';
 import { SignupRemindersService } from './signup-reminders.service';
+import { McpToolRegistryModule } from '../mcp/mcp-tool-registry';
+import { SignupMcpTools } from './signup-mcp-tools';
+import { SignupUserEventsService } from './signup-user-events.service';
 import { SignupCommand } from './signup.command';
 import { SignupController } from './signup.controller';
 
@@ -15,7 +18,7 @@ import { SignupController } from './signup.controller';
  * out on its own; see "Removing the sign-up feature" in the README.
  */
 @Module({
-  imports: [AuthModule, SignupCoreModule],
+  imports: [AuthModule, SignupCoreModule, McpToolRegistryModule],
   controllers: [SignupController],
   providers: [
     SignupAccessService,
@@ -23,6 +26,8 @@ import { SignupController } from './signup.controller';
     SignupAssignmentsService,
     SignupRemindersService,
     SignupCommand,
+    SignupUserEventsService,
+    SignupMcpTools,
   ],
 })
 export class SignupModule {}
