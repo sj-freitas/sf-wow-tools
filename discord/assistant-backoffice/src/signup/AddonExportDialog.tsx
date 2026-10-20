@@ -2,8 +2,8 @@ import { useEffect, useRef, type ReactNode } from 'react';
 import { showToast } from '../toast';
 import type { AddonExport } from './addonExport';
 
-/** Where to get the addon: CurseForge redirects a project id to the project's page. */
-const RAID_SORT_URL = 'https://www.curseforge.com/projects/1755800';
+/** Where to get the addon: its CurseForge page. */
+const RAID_SORT_URL = 'https://www.curseforge.com/wow/addons/raid-sort/preview';
 
 /** Colours the export's Lua a little: comments, strings and keys. */
 function highlight(text: string): ReactNode[] {
