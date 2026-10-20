@@ -1816,7 +1816,8 @@ label.btn.disabled {
   width: auto;
 }
 
-.copy-name {
+/* A Discord user's name: the tooltip shows their ID, a click copies it. */
+.discord-name {
   padding: 0;
   border: none;
   background: none;
@@ -1825,8 +1826,44 @@ label.btn.disabled {
   text-align: left;
   cursor: copy;
 }
-.copy-name:hover strong {
+.discord-name:hover strong {
   text-decoration: underline dotted;
+}
+
+/* ---- toasts: passing notes at the bottom of the screen, over the page ---- */
+.toasts {
+  position: fixed;
+  z-index: 60;
+  left: 50%;
+  bottom: max(1.25rem, env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  display: grid;
+  gap: 0.4rem;
+  justify-items: center;
+  pointer-events: none;
+}
+.toast {
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.85rem;
+  box-shadow: 0 6px 20px color-mix(in srgb, #000 30%, transparent);
+  user-select: text;
+  pointer-events: auto;
+  animation: toast-in 0.16s ease-out;
+}
+@keyframes toast-in {
+  from {
+    transform: translateY(0.5rem);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .toast {
+    animation: none;
+  }
 }
 
 /* A little room between a character's name and its Main pill. */

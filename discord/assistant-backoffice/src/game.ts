@@ -55,3 +55,33 @@ export function racesOf(
   );
   return Object.entries(entry?.[1].races ?? {}).map(([race, { classes }]) => ({ race, classes }));
 }
+
+const slug = (text: string): string =>
+  text
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, '-')
+    .replace(/^-+|-+$/g, '');
+
+/**
+ * A character's armory page, from the version's `armoryLink` template (the same as the API's
+ * `armoryLinkFor`); null when the version has none, or its armory doesn't exist yet
+ * (`armoryPending`).
+ */
+export function armoryLinkFor(
+  game: GameConfig | undefined,
+  values: { name: string; lastName: string; region: string; server: string },
+): string | null {
+  if (!game?.armoryLink || game.armoryPending) return null;
+  const replacements: Record<string, string> = {
+    name: encodeURIComponent(values.name),
+    lastName: encodeURIComponent(values.lastName),
+    region: slug(values.region),
+    server: slug(values.server),
+  };
+  return game.armoryLink.replace(
+    /\{(name|lastName|region|server)\}/g,
+    (_match, key: string) => replacements[key],
+  );
+}

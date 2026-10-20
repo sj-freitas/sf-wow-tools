@@ -174,6 +174,8 @@ export interface GameConfig {
   requiresLastName?: boolean;
   /** Link template of a character's armory page (`{name}`, `{lastName}`, `{region}`, `{server}`). */
   armoryLink?: string;
+  /** The armory doesn't exist yet (`armoryLink` is a stand-in): "Open in armory" says so. */
+  armoryPending?: boolean;
   /**
    * Servers a guild can be on, per region id, each with the rule set it enforces (several servers
    * can share one, e.g. `'Normal'`); a region that is missing is not available.

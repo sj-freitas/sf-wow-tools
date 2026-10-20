@@ -5,6 +5,7 @@ import { GuildShell } from './GuildShell';
 import { UserMenu } from './UserMenu';
 import { PrivacyPage, PublicHome } from './PublicPages';
 import { Spinner } from './Loading';
+import { Toasts } from './Toasts';
 import { usePageMeta } from './usePageMeta';
 import type { Guild, SetupInfo, User } from './types';
 
@@ -102,6 +103,7 @@ export function App() {
         />
       </header>
       <NoIndex />
+      <Toasts />
       <main className="page">
         {auth.setup && (
           <GuildShell

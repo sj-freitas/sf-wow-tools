@@ -15,6 +15,13 @@
         - 
 
 
+- Armory
+    - "Open in armory" (roster ⋯ menu) is in place but Forever has no armory yet: it says
+      "This feature doesn't exist on Forever yet". When the Forever armory exists, set the real
+      `armoryLink` in discord/assistant-api/src/game/forever/config.ts and remove `armoryPending`
+      there (marked TODO(armory)); the menu then opens the character's page, and the
+      `roster[i].armoryLink` post tag follows the same link.
+
 - Guild setup
     - Realms ("server" in a guild's address) should come from a config instead of free text
         - Per game version and region; a picker in the create guild / settings forms, validated by the API

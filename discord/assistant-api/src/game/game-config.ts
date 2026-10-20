@@ -66,6 +66,12 @@ export interface GameConfig<C extends string = string> {
    */
   armoryLink?: string;
   /**
+   * The version's armory doesn't exist yet: `armoryLink` is only a stand-in. The roster's "Open in
+   * armory" then says the feature isn't there yet instead of opening a wrong page. Remove it once
+   * the real armory is live.
+   */
+  armoryPending?: boolean;
+  /**
    * The servers a guild of this version can be on, per region (the regions of `config/regions.ts`),
    * by name, each with its rule set. A region with no entry is not available for this version.
    */
@@ -97,6 +103,9 @@ export function gameConfigProblems(config: unknown): string[] {
 
   if (typeof game.gameVersion !== 'string' || game.gameVersion.trim() === '') {
     problems.push('gameVersion must be a name');
+  }
+  if (game.armoryPending !== undefined && typeof game.armoryPending !== 'boolean') {
+    problems.push('armoryPending must be true or false (or left out)');
   }
   if (game.requiresLastName !== undefined && typeof game.requiresLastName !== 'boolean') {
     problems.push('requiresLastName must be true or false (or left out)');

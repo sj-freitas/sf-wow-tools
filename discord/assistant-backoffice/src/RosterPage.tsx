@@ -9,7 +9,7 @@ import {
   refreshPlayerNames,
 } from './api';
 import { CharacterForm } from './CharacterForm';
-import { CopyableName } from './CopyableName';
+import { DiscordName } from './DiscordName';
 import { InlineSpinner, SkeletonRows, Spinner } from './Loading';
 import { subscribeEvents } from './events';
 import { characterPath, playerLabel } from './format';
@@ -23,7 +23,9 @@ import {
 } from './types';
 import { useCurrentUrl, useReturnTo } from './useReturnTo';
 import { ClassMark } from './ClassMark';
-import { BinIcon, NoteIcon, PencilIcon, TagIcon } from './Icons';
+import { BinIcon, ExternalIcon, NoteIcon, PencilIcon, TagIcon } from './Icons';
+import { armoryLinkFor, gameOf, useGames } from './game';
+import { showToast } from './toast';
 import { AttributesBadge } from './AttributesBadge';
 import { CharacterAttributesDrawer, ManageAttributesDrawer } from './AttributeDrawers';
 import { RowMenu } from './RowMenu';
@@ -66,6 +68,7 @@ export function RosterPage({ guild, currentUser }: Props) {
   const [attributes, setAttributes] = useState<GuildAttribute[]>([]);
   const [managing, setManaging] = useState(false);
   const { confirm, dialog } = useConfirm();
+  const games = useGames();
   const [params, setParams] = useSearchParams();
   const query = params.get('q') ?? '';
   const setQuery = (value: string) => {
@@ -180,6 +183,28 @@ export function RosterPage({ guild, currentUser }: Props) {
   const filtering = query.trim() !== '' || picked.length > 0;
   const missingNames =
     players?.some((player) => !player.discordUsername && !player.discordDisplayName) ?? false;
+  // "Open in armory": the character's page there, or a passing note while the version's armory
+  // doesn't exist yet (TODO(armory) in src/game/forever/config.ts, and TODO.md).
+  const game = gameOf(games, guild.gameVersion);
+  const armoryItem = (character: Player['characters'][number]) => {
+    const href = armoryLinkFor(game, {
+      name: character.firstName,
+      lastName: character.lastName,
+      region: guild.region,
+      server: guild.realm,
+    });
+    const label = (
+      <>
+        <ExternalIcon /> Open in armory
+      </>
+    );
+    return href
+      ? { label, href }
+      : {
+          label,
+          onSelect: () => showToast(`This feature doesn’t exist on ${guild.gameVersion} yet`),
+        };
+  };
   const canEditRow = (player: Player) =>
     guild.isOfficer || player.discordUserId === currentUser.discordId;
 
@@ -371,7 +396,7 @@ export function RosterPage({ guild, currentUser }: Props) {
                             {character.level}
                           </td>
                           <td data-label="Discord user" className="cell-detail">
-                            <CopyableName label={playerLabel(player)} id={player.discordUserId} />
+                            <DiscordName label={playerLabel(player)} id={player.discordUserId} />
                           </td>
                           <td data-label="Rank" className="cell-detail">
                             {ranks[player.discordUserId]?.join(', ') ?? '—'}
@@ -394,6 +419,9 @@ export function RosterPage({ guild, currentUser }: Props) {
                                       },
                                     ]
                                   : []),
+                                // Everyone: the character's armory page (or, until the version's
+                                // armory exists, a note that it doesn't yet).
+                                armoryItem(character),
                                 ...(guild.isOfficer
                                   ? [
                                       {

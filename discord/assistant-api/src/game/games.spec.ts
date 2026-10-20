@@ -146,6 +146,14 @@ describe('checking a config', () => {
     assert.match(problems, /allowedServers\.EU\.RP\.ruleSet must be a non-empty string/);
   });
 
+  it('checks armoryPending, when given, is true or false', () => {
+    const config = valid();
+    (config as { armoryPending?: unknown }).armoryPending = true;
+    assert.deepEqual(gameConfigProblems(config), []);
+    (config as { armoryPending?: unknown }).armoryPending = 'soon';
+    assert.match(gameConfigProblems(config).join(), /armoryPending must be true or false/);
+  });
+
   it('checks class colours, when given, are #RRGGBB', () => {
     const config = valid();
     (config.classes.Mage as { color?: string }).color = '#3FC7EB';

@@ -7,7 +7,7 @@ import {
 } from './api';
 import { MultiSelect } from './MultiSelect';
 import { fetchArmoryCharacter } from './api';
-import { CopyableName } from './CopyableName';
+import { DiscordName } from './DiscordName';
 import {
   classNamesOf,
   gameOf,
@@ -217,7 +217,7 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
             Discord user
             {editing && !guild.isOfficer ? (
               <div className="picked-player">
-                <CopyableName label={editing.playerLabel} id={editing.playerId} />
+                <DiscordName label={editing.playerLabel} id={editing.playerId} />
               </div>
             ) : (
               <PlayerPicker

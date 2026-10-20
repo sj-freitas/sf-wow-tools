@@ -3,8 +3,9 @@ import { Link } from 'react-router-dom';
 
 export interface RowMenuItem {
   label: ReactNode;
-  /** A link (with router state), or an action. */
+  /** A link (with router state), a page on another site (`href`, new tab), or an action. */
   to?: string;
+  href?: string;
   state?: unknown;
   onSelect?: () => void;
   danger?: boolean;
@@ -68,6 +69,21 @@ export function RowMenu({
             const className = item.danger
               ? 'dropdown-item dropdown-option row-menu-danger'
               : 'dropdown-item dropdown-option';
+            if (item.href) {
+              return (
+                <a
+                  key={index}
+                  role="menuitem"
+                  className={className}
+                  href={item.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={() => setOpen(false)}
+                >
+                  {item.label}
+                </a>
+              );
+            }
             return item.to ? (
               <Link
                 key={index}

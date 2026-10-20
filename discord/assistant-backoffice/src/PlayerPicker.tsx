@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { fetchPeople } from './api';
-import { CopyableName } from './CopyableName';
+import { DiscordName } from './DiscordName';
 import { fuzzyScore } from './fuzzy';
 import type { Person } from './types';
 
@@ -100,7 +100,7 @@ export function PlayerPicker({ guildId, value, onChange, self, initial }: Props)
     return (
       <div className="picked-player">
         <span>
-          <CopyableName label={value === self.discordId ? self.label : pickedLabel} id={value} />
+          <DiscordName label={value === self.discordId ? self.label : pickedLabel} id={value} />
           {value === self.discordId && <span className="muted"> (you)</span>}
         </span>
         <button type="button" className="btn btn-sm" onClick={change}>
