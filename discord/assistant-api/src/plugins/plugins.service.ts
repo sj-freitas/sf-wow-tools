@@ -5,11 +5,12 @@ import { PrismaService } from '../database/prisma.service';
 import { DiscordBotService } from '../discord/discord-bot.service';
 import {
   describeSchedule,
+  instantFromLocal,
   nextOccurrence,
   validateSchedule,
   type Schedule,
 } from '../tasks/schedule';
-import { PLUGIN_KINDS, pluginKind, type PluginContext } from './plugin-kinds';
+import { PluginKindRegistry, type PluginContext, type PluginKindDef } from './plugin-kinds';
 
 /** Plugins repeat; posts are the only things that run once. */
 export type PluginScheduleKind = 'DAILY' | 'WEEKLY' | 'MONTHLY';
@@ -64,6 +65,11 @@ export interface PluginInput {
   config?: unknown;
   /** Must be true to create a plugin: they delete things on their own, on a schedule. */
   confirm?: unknown;
+  /**
+   * Creating only: when it first runs, instead of at its schedule's next occurrence: `now`
+   * (within the minute) or a wall-clock "yyyy-MM-ddTHH:mm" in the guild's timezone.
+   */
+  firstRun?: unknown;
 }
 
 const RECENT_RUNS = 5;
@@ -75,10 +81,18 @@ export class PluginsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly bot: DiscordBotService,
+    private readonly registry: PluginKindRegistry,
   ) {}
 
   kinds(): PluginKindDto[] {
-    return PLUGIN_KINDS.map(({ kind, label, description }) => ({ kind, label, description }));
+    return this.registry
+      .all()
+      .map(({ kind, label, description }) => ({ kind, label, description }));
+  }
+
+  /** The code of a kind of plugin; undefined for one whose feature was taken out. */
+  kind(kind: string): PluginKindDef | undefined {
+    return this.registry.get(kind);
   }
 
   async list(guildId: string): Promise<PluginDto[]> {
@@ -92,13 +106,15 @@ export class PluginsService {
   }
 
   async create(guildId: string, userId: string, input: PluginInput): Promise<PluginDto> {
-    const def = pluginKind(String(input.kind));
+    const def = this.registry.get(String(input.kind));
     if (!def) throw new BadRequestException('Pick a kind of plugin.');
     if (input.confirm !== true) {
-      throw new BadRequestException('Confirm that this plugin may delete messages on its own.');
+      throw new BadRequestException(
+        'Confirm adding this plugin: it acts on its own, on a schedule.',
+      );
     }
     const timezone = await this.timezoneOf(guildId);
-    const schedule = this.parseSchedule(input);
+    const schedule = this.parseSchedule(input, def);
     const config = await def.parseConfig(input.config, await this.context(guildId));
     const plugin = await this.prisma.guildPlugin.create({
       data: {
@@ -110,7 +126,7 @@ export class PluginsService {
         timeOfDay: schedule.timeOfDay!,
         weekday: schedule.weekday ?? null,
         dayOfMonth: schedule.dayOfMonth ?? null,
-        nextRunAt: nextOccurrence(schedule, timezone, new Date()),
+        nextRunAt: this.parseFirstRun(input.firstRun, schedule, timezone),
         config: config as Prisma.InputJsonValue,
         createdById: userId,
       },
@@ -121,7 +137,8 @@ export class PluginsService {
   /** Changes what is given: the name, the schedule, the settings, or pauses/resumes it. */
   async update(pluginId: string, input: PluginInput): Promise<PluginDto> {
     const plugin = await this.find(pluginId);
-    const def = pluginKind(plugin.kind)!;
+    const def = this.registry.get(plugin.kind);
+    if (!def) throw new BadRequestException('This kind of plugin is no longer available.');
     const timezone = await this.timezoneOf(plugin.guildId);
     const data: Prisma.GuildPluginUpdateInput = {};
     if (input.name !== undefined) data.name = this.parseName(input.name, def.label);
@@ -133,12 +150,15 @@ export class PluginsService {
     }
     const scheduleChanged = input.scheduleKind !== undefined || input.timeOfDay !== undefined;
     const schedule = scheduleChanged
-      ? this.parseSchedule({
-          scheduleKind: input.scheduleKind ?? plugin.scheduleKind,
-          timeOfDay: input.timeOfDay ?? plugin.timeOfDay,
-          weekday: input.weekday ?? plugin.weekday,
-          dayOfMonth: input.dayOfMonth ?? plugin.dayOfMonth,
-        })
+      ? this.parseSchedule(
+          {
+            scheduleKind: input.scheduleKind ?? plugin.scheduleKind,
+            timeOfDay: input.timeOfDay ?? plugin.timeOfDay,
+            weekday: input.weekday ?? plugin.weekday,
+            dayOfMonth: input.dayOfMonth ?? plugin.dayOfMonth,
+          },
+          def,
+        )
       : this.scheduleOf(plugin);
     if (scheduleChanged) {
       data.scheduleKind = schedule.kind;
@@ -183,7 +203,7 @@ export class PluginsService {
       where: { guildId },
       select: { discordId: true },
     });
-    return { bot: this.bot, serverIds: servers.map((s) => s.discordId), clock: Date.now };
+    return { bot: this.bot, guildId, serverIds: servers.map((s) => s.discordId), clock: Date.now };
   }
 
   scheduleOf(plugin: GuildPlugin): Schedule {
@@ -204,10 +224,15 @@ export class PluginsService {
     return timezoneOfRegion(guild.region ?? DEFAULT_REGION);
   }
 
-  private parseSchedule(input: PluginInput): Schedule {
+  private parseSchedule(input: PluginInput, def: PluginKindDef): Schedule {
     const kind = input.scheduleKind as PluginScheduleKind;
-    if (!SCHEDULE_KINDS.includes(kind)) {
-      throw new BadRequestException('Pick how often: daily, weekly or monthly.');
+    const allowed = def.scheduleKinds ?? SCHEDULE_KINDS;
+    if (!allowed.includes(kind)) {
+      throw new BadRequestException(
+        allowed.length === 1
+          ? `A ${def.label} runs ${allowed[0].toLowerCase()}.`
+          : 'Pick how often: daily, weekly or monthly.',
+      );
     }
     const schedule: Schedule = {
       kind,
@@ -218,6 +243,19 @@ export class PluginsService {
     const problems = validateSchedule(schedule);
     if (problems.length > 0) throw new BadRequestException(problems.join(' '));
     return schedule;
+  }
+
+  /** A new plugin's first run: now, a time picked in the guild's timezone, or its schedule's. */
+  private parseFirstRun(value: unknown, schedule: Schedule, timezone: string): Date | null {
+    const now = new Date();
+    if (value === undefined || value === null || value === '') {
+      return nextOccurrence(schedule, timezone, now);
+    }
+    if (value === 'now') return now;
+    const at = typeof value === 'string' ? instantFromLocal(value, timezone) : null;
+    if (!at) throw new BadRequestException('Pick the date and time of the first run.');
+    if (at <= now) throw new BadRequestException('Pick a first run in the future.');
+    return at;
   }
 
   private parseName(value: unknown, fallback: string): string {
@@ -239,7 +277,7 @@ export class PluginsService {
     return {
       id: plugin.id,
       kind: plugin.kind,
-      kindLabel: pluginKind(plugin.kind)?.label ?? plugin.kind,
+      kindLabel: this.registry.get(plugin.kind)?.label ?? plugin.kind,
       name: plugin.name,
       enabled: plugin.enabled,
       schedule: {

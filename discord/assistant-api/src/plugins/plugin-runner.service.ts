@@ -3,7 +3,6 @@ import { Prisma, type GuildPlugin } from '@prisma/client';
 import { PrismaService } from '../database/prisma.service';
 import { describeDiscordError } from '../discord/discord-errors';
 import { nextOccurrence } from '../tasks/schedule';
-import { pluginKind } from './plugin-kinds';
 import { PluginsService } from './plugins.service';
 
 const TICK_MS = 60 * 1000;
@@ -65,7 +64,7 @@ export class PluginRunnerService implements OnApplicationShutdown {
 
   /** Runs one plugin, records the run and decides when it runs next. Never throws. */
   async run(plugin: GuildPlugin, now: Date = new Date()): Promise<void> {
-    const def = pluginKind(plugin.kind);
+    const def = this.plugins.kind(plugin.kind);
     let result: string | null = null;
     let error: string | null = null;
     let state = plugin.state as Record<string, unknown>;

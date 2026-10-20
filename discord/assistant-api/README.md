@@ -378,6 +378,15 @@ plugins with their next run and last 5 runs, and Run now / Edit / Pause / Remove
   posts, Raid-Helper). It deletes the way `/clear-channel` does (`src/moderation/channel-cleaner.ts`).
   A run stops after 3 minutes (within the worker's 5-minute lease) and the next carries on a minute
   later from where it stopped, until the channel is done. Creating one asks for confirmation.
+- **Recurring Event** (`RECURRING_EVENT`, event sign-ups' kind: `src/signup/recurring-event.plugin.ts`):
+  weekly (e.g. every Wednesday at 23:00), it archives the events still open in its channel and
+  posts the next one from its saved event form (type, name, location, description, timezone) for
+  the next chosen weekday and time (e.g. next Wednesday at 20:00). The events belong to the Officer
+  who added the plugin. When it is added, its first event is posted right away or at a date and
+  time picked in the form (`firstRun` on create: `now` or `yyyy-MM-ddTHH:mm`, any plugin kind);
+  that first post archives nothing, then the weekly schedule takes over. Editing it changes the
+  events it posts from then on, not the one already posted; **Pause** suspends it (nothing is
+  archived or posted until resumed).
 - **Tables:** `guild_plugins` (one row per plugin: kind, name, schedule, `config` and `state` JSON
   per kind, last run) and `plugin_runs` (history), in `prisma/plugins.prisma`.
 - **Worker:** `PluginRunnerService` checks every minute, claiming due plugins like scheduled tasks
@@ -386,9 +395,11 @@ plugins with their next run and last 5 runs, and Run now / Edit / Pause / Remove
 - **API** (Officers): `GET /api/guilds/:guildId/plugin-kinds`, `GET|POST /api/guilds/:guildId/plugins`
   (`POST` needs `confirm: true`), `PATCH|DELETE /api/plugins/:id`, `POST /api/plugins/:id/run-now`.
 - **A new kind:** add it to the `PluginKind` enum (and a migration), write a `PluginKindDef`
-  (`label`, `description`, `parseConfig`, `run`) under `src/plugins/kinds/`, list it in
-  `PLUGIN_KINDS` (`src/plugins/plugin-kinds.ts`), and give it a form in the backoffice
-  (`src/plugins/`). Scheduling, leases and run history are shared.
+  (`label`, `description`, optional `scheduleKinds`, `parseConfig`, `run`) and give it a form in
+  the backoffice (picked by kind in `src/plugins/PluginFormPage.tsx`). A built-in kind goes under
+  `src/plugins/kinds/` and in `PluginKindRegistry` (`src/plugins/plugin-kinds.ts`); a feature that
+  can be taken out on its own adds its kind with `PluginKindRegistry.add` from its own module, as
+  sign-ups do. Scheduling, leases and run history are shared.
 
 ### Contacting the officers (`/contact-officer`)
 
@@ -934,15 +945,18 @@ one transaction). To take the feature out:
 
 1. Undo the database part (this **deletes every event, sign-up and assignment**):
    `npx prisma db execute --file prisma/rollback/20261015090000_signup.down.sql`. It drops the
-   tables and also forgets the five migrations in `_prisma_migrations`.
+   tables, removes the guilds' Recurring Event plugins, and forgets the five migrations in
+   `_prisma_migrations`. (The `RECURRING_EVENT` plugin kind stays in `plugins.prisma`, unused.)
 2. Delete `prisma/signup.prisma`, `prisma/migrations/20261015090000_signup/`,
    `20261016090000_signup_archive/`, `20261017090000_signup_event_kind/`,
    `20261018090000_signup_schedule/` and `20261019090000_signup_raid_roles/`, the `signupSettings`/`signupEvents`/`signupEntries` lines in
    `schema.prisma` (marked "Event sign-ups"), `src/signup/`, and its imports in `app.module.ts`,
    `worker/worker.module.ts` and `worker/worker.service.ts` (with the `onMessageDeleted` hook
    there); remove `create-event` from `src/bot/commands.json` and run `npm run commands:register`.
+   The MCP event tools and the Recurring Event plugin kind live in `src/signup/` and go with it.
 3. In the backoffice: delete `src/signup/` and the `signup/*` route and Events tab in
-   `GuildShell.tsx`.
+   `GuildShell.tsx`, and the Recurring Event branch in `src/plugins/PluginFormPage.tsx` (its
+   `RecurringEventConfig` in `pluginsApi.ts` and the `describe` case in `PluginsPage.tsx` may stay).
 
 Deploying the feature again later re-creates the tables, empty.
 

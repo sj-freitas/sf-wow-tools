@@ -103,7 +103,7 @@ interface Props {
  *       /honeypots            honeypot channels            Officers
  *       /honeypots/create     new honeypot                 Officers
  *       /plugins              plugins: add one, see the guild's    Officers
- *       /plugins/create/:kind new plugin (channel_cleanup)          Officers
+ *       /plugins/create/:kind new plugin (channel_cleanup, recurring_event) Officers
  *       /plugins/edit/:id     edit a plugin                         Officers
  *       /officer-requests     members' messages to officers           Officers
  *       /officer-requests/:conversationId   one conversation          Officers

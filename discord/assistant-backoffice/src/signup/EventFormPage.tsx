@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { channelKey, splitChannelKey } from '../channelKey';
 import { ChannelSelect } from '../ChannelSelect';
@@ -6,24 +6,15 @@ import { guildPath } from '../guildPath';
 import { InlineSpinner, Spinner } from '../Loading';
 import type { Guild } from '../types';
 import { useChannels } from '../useChannels';
+import { EventTextFields, TimezoneField, type EventText } from './EventFields';
 import { errorText } from './labels';
 import {
   createEvent,
   fetchEvent,
   fetchSignupSettings,
   updateEvent,
-  type EventKind,
   type SignupSettings,
 } from './signupApi';
-
-const MAX_TITLE = 100;
-const MAX_DESCRIPTION = 2000;
-
-/** Every IANA zone the browser knows (most do), for events not in server time. */
-function allTimezones(): string[] {
-  const intl = Intl as unknown as { supportedValuesOf?: (key: string) => string[] };
-  return intl.supportedValuesOf?.('timeZone') ?? ['UTC'];
-}
 
 /** `/signup/create` and `/signup/:eventId/edit`. The channel is only chosen when creating. */
 export function EventFormPage({ guild, serverTimezone }: { guild: Guild; serverTimezone: string }) {
@@ -32,14 +23,16 @@ export function EventFormPage({ guild, serverTimezone }: { guild: Guild; serverT
   const editing = eventId !== undefined;
   const [settings, setSettings] = useState<SignupSettings | null>(null);
   const [loaded, setLoaded] = useState(!editing);
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [location, setLocation] = useState('');
+  const [text, setText] = useState<EventText>({
+    kind: 'CHARACTERS',
+    title: '',
+    location: '',
+    description: '',
+  });
   const [date, setDate] = useState('');
   const [time, setTime] = useState('20:00');
   const [timezone, setTimezone] = useState('ST');
   const [channel, setChannel] = useState('');
-  const [kind, setKind] = useState<EventKind>('CHARACTERS');
   // When the post goes out: now, or later (date and time in the event's timezone). Editing shows
   // it only for an event that is still scheduled.
   const [postLater, setPostLater] = useState(false);
@@ -48,7 +41,6 @@ export function EventFormPage({ guild, serverTimezone }: { guild: Guild; serverT
   const [publishTime, setPublishTime] = useState('18:00');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const zones = useMemo(allTimezones, []);
 
   useEffect(() => {
     fetchSignupSettings(guild.id)
@@ -63,9 +55,12 @@ export function EventFormPage({ guild, serverTimezone }: { guild: Guild; serverT
     if (!eventId) return;
     fetchEvent(guild.id, eventId)
       .then((event) => {
-        setTitle(event.title);
-        setDescription(event.description);
-        setLocation(event.location);
+        setText({
+          kind: event.kind,
+          title: event.title,
+          location: event.location,
+          description: event.description,
+        });
         setDate(event.local.date);
         setTime(event.local.time);
         setTimezone(event.timezone === event.serverTimezone ? 'ST' : event.timezone);
@@ -89,14 +84,14 @@ export function EventFormPage({ guild, serverTimezone }: { guild: Guild; serverT
     setSaving(true);
     setError(null);
     const form = {
-      title,
-      description,
-      location,
+      title: text.title,
+      description: text.description,
+      location: text.location,
       date,
       time,
       timezone,
       ...(!editing && settings?.isOfficer && channel ? { channel: splitChannelKey(channel) } : {}),
-      ...(!editing ? { type: kind } : {}),
+      ...(!editing ? { type: text.kind } : {}),
       ...(canSchedule && postLater ? { publishDate, publishTime } : {}),
     };
     const saved = eventId
@@ -119,52 +114,7 @@ export function EventFormPage({ guild, serverTimezone }: { guild: Guild; serverT
       </Link>
       <h3>{editing ? 'Edit event' : 'New event'}</h3>
       <div className="form-grid">
-        {!editing && (
-          <label className="field field-wide">
-            Type
-            <select value={kind} onChange={(e) => setKind(e.target.value as EventKind)}>
-              <option value="CHARACTERS">
-                Characters: sign up with a character and role (raid groups, assignments)
-              </option>
-              <option value="MEMBERS">
-                Members: sign up as yourself (a list of who is invited)
-              </option>
-            </select>
-            <small>Can’t be changed later.</small>
-          </label>
-        )}
-        <label className="field field-wide">
-          Name
-          <input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            maxLength={MAX_TITLE}
-            placeholder="e.g. Molten Core, Warsong Gulch, Guild Meeting"
-            required
-          />
-        </label>
-        <label className="field field-wide">
-          Location (optional)
-          <input
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            maxLength={100}
-            placeholder="e.g. Naxxramas, or Goldshire inn"
-          />
-        </label>
-        <label className="field field-wide">
-          Description
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            maxLength={MAX_DESCRIPTION}
-            rows={5}
-            placeholder="Shown in the post. Discord formatting works (**bold**, lists, links)."
-          />
-          <small>
-            {description.length} / {MAX_DESCRIPTION}
-          </small>
-        </label>
+        <EventTextFields value={text} onChange={setText} showKind={!editing} />
         <label className="field">
           Date
           <input type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
@@ -173,21 +123,7 @@ export function EventFormPage({ guild, serverTimezone }: { guild: Guild; serverT
           Time
           <input type="time" value={time} onChange={(e) => setTime(e.target.value)} required />
         </label>
-        <label className="field">
-          Timezone
-          <select value={timezone} onChange={(e) => setTimezone(e.target.value)}>
-            <option value="ST">Server time (ST · {serverTimezone})</option>
-            <option value="UTC">UTC</option>
-            {zones
-              .filter((zone) => zone !== 'UTC')
-              .map((zone) => (
-                <option key={zone} value={zone}>
-                  {zone}
-                </option>
-              ))}
-          </select>
-          <small>Discord shows everyone the time in their own timezone.</small>
-        </label>
+        <TimezoneField value={timezone} onChange={setTimezone} serverTimezone={serverTimezone} />
         {canSchedule && (
           <fieldset className="field field-wide signup-post-when">
             <legend>Post</legend>

@@ -36,6 +36,8 @@ a short overview of what is open; details live in the tasks.
 - [GA-3](https://bot-log-six.vercel.app/projects/GA/tasks/GA-3) Recurring events.
 - [GA-18](https://bot-log-six.vercel.app/projects/GA/tasks/GA-18) Sign-up events in the MCP
   integration (list, read and create events from an AI app).
+- [GA-19](https://bot-log-six.vercel.app/projects/GA/tasks/GA-19) Recurring Event plugins in the
+  MCP integration (create and edit them from an AI app).
 - [GA-15](https://bot-log-six.vercel.app/projects/GA/tasks/GA-15) Before saving a post, honeypot or
   plugin, check the bot has the permissions it needs in that channel.
 

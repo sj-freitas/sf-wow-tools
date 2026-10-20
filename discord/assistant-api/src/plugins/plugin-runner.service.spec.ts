@@ -5,6 +5,7 @@ import type { PrismaService } from '../database/prisma.service';
 import type { DiscordBotService } from '../discord/discord-bot.service';
 import { nextOccurrence } from '../tasks/schedule';
 import { PluginRunnerService, RUN_BUDGET_MS } from './plugin-runner.service';
+import { PluginKindRegistry } from './plugin-kinds';
 import { PluginsService } from './plugins.service';
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -71,7 +72,10 @@ describe('PluginRunnerService', () => {
       bulkDeleteMessages: async () => undefined,
       deleteMessage: async () => undefined,
     } as unknown as DiscordBotService;
-    runner = new PluginRunnerService(prisma, new PluginsService(prisma, bot));
+    runner = new PluginRunnerService(
+      prisma,
+      new PluginsService(prisma, bot, new PluginKindRegistry()),
+    );
   });
 
   it('cleans the channel, keeping bot messages, and waits for the next occurrence', async () => {

@@ -15,6 +15,7 @@ import {
   type Plugin,
   type PluginKindInfo,
 } from './pluginsApi';
+import { WEEKDAYS } from './scheduleValue';
 
 interface Props {
   guild: Guild;
@@ -55,6 +56,21 @@ export function PluginsPage({ guild, timezone }: Props) {
 
   const channelOf = (plugin: Plugin) =>
     `#${channelName(plugin.config.serverId, plugin.config.channelId) ?? plugin.config.channelId}`;
+  // What a plugin does, per kind: its summary line, and what Run now and Remove will do.
+  const describe = (plugin: Plugin) =>
+    plugin.kind === 'CHANNEL_CLEANUP'
+      ? {
+          summary: `keeps pinned${plugin.config.keepBotMessages ? ' and bot messages' : ' messages'}`,
+          runNow: `Delete the messages in ${channelOf(plugin)} now, keeping pinned${plugin.config.keepBotMessages ? ' and bot' : ''} messages? This can’t be undone. Its schedule carries on as before.`,
+          runNowDanger: true,
+          remove: 'messages it already deleted stay deleted',
+        }
+      : {
+          summary: `posts “${plugin.config.title}” for ${WEEKDAYS[plugin.config.weekday - 1]} ${plugin.config.time}`,
+          runNow: `Archive the events still open in ${channelOf(plugin)} and post the next “${plugin.config.title}” now? Its schedule carries on as before.`,
+          runNowDanger: false,
+          remove: 'the events it already posted stay',
+        };
 
   return (
     <div className="tasks">
@@ -106,8 +122,7 @@ export function PluginsPage({ guild, timezone }: Props) {
               <strong>{plugin.name}</strong> <span className="badge">{plugin.kindLabel}</span>{' '}
               {!plugin.enabled && <span className="badge">Paused</span>}
               <div className="muted">
-                {channelOf(plugin)} · {plugin.scheduleText} · keeps pinned
-                {plugin.config.keepBotMessages ? ' and bot messages' : ' messages'}
+                {channelOf(plugin)} · {plugin.scheduleText} · {describe(plugin).summary}
               </div>
               <div className="muted">
                 {plugin.enabled
@@ -138,9 +153,9 @@ export function PluginsPage({ guild, timezone }: Props) {
                 onClick={() =>
                   void confirm({
                     title: 'Run now?',
-                    message: `Delete the messages in ${channelOf(plugin)} now, keeping pinned${plugin.config.keepBotMessages ? ' and bot' : ''} messages? This can’t be undone. Its schedule carries on as before.`,
+                    message: describe(plugin).runNow,
                     confirmLabel: 'Run now',
-                    danger: true,
+                    danger: describe(plugin).runNowDanger,
                   }).then((ok) => ok && run(runPluginNow(plugin.id)))
                 }
               >
@@ -162,7 +177,7 @@ export function PluginsPage({ guild, timezone }: Props) {
                 onClick={() =>
                   void confirm({
                     title: 'Remove plugin',
-                    message: `Remove "${plugin.name}"? It stops running; messages it already deleted stay deleted.`,
+                    message: `Remove "${plugin.name}"? It stops running; ${describe(plugin).remove}.`,
                     confirmLabel: 'Remove',
                     danger: true,
                   }).then((ok) => ok && run(deletePlugin(plugin.id)))

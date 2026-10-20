@@ -1,7 +1,5 @@
-import { BadRequestException } from '@nestjs/common';
-import { describeDiscordError } from '../../discord/discord-errors';
 import { cleanChannel } from '../../moderation/channel-cleaner';
-import { parseSnowflake } from '../../tasks/post-task';
+import { parseGuildChannel } from '../plugin-channel';
 import type { PluginKindDef } from '../plugin-kinds';
 
 export interface ChannelCleanupConfig {
@@ -32,22 +30,7 @@ export const CHANNEL_CLEANUP: PluginKindDef<ChannelCleanupConfig> = {
 
   async parseConfig(input, context) {
     const config = (input ?? {}) as Record<string, unknown>;
-    const serverId = parseSnowflake(config.serverId, 'The server');
-    const channelId = parseSnowflake(config.channelId, 'The channel');
-    if (!context.serverIds.includes(serverId)) {
-      throw new BadRequestException('That server is not part of this guild.');
-    }
-    let channels;
-    try {
-      channels = await context.bot.listTextChannels(serverId);
-    } catch (error) {
-      throw new BadRequestException(
-        `Could not read the server's channels: ${describeDiscordError(error)}`,
-      );
-    }
-    if (!channels.some((channel) => channel.id === channelId)) {
-      throw new BadRequestException('That channel is not a text channel of the chosen server.');
-    }
+    const { serverId, channelId } = await parseGuildChannel(config, context);
     return { serverId, channelId, keepBotMessages: config.keepBotMessages !== false };
   },
 

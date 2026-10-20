@@ -1,7 +1,9 @@
 -- Removes the event sign-up feature's data and tables: the reverse of
 -- prisma/migrations/20261015090000_signup, 20261016090000_signup_archive,
 -- 20261017090000_signup_event_kind, 20261018090000_signup_schedule and
--- 20261019090000_signup_raid_roles. Nothing outside the signup_* tables is touched.
+-- 20261019090000_signup_raid_roles. Outside the signup_* tables it only removes the guilds'
+-- Recurring Event plugins (sign-ups' plugin kind); the RECURRING_EVENT value of plugin_kind stays,
+-- unused (Postgres can't drop an enum value), and so does its migration.
 --
 -- Run it (with DATABASE_URL set) from discord/assistant-api:
 --   npx prisma db execute --file prisma/rollback/20261015090000_signup.down.sql
@@ -11,6 +13,8 @@
 --
 -- This deletes every event, sign-up, setup and assignment for good.
 BEGIN;
+
+DELETE FROM "guild_plugins" WHERE "kind" = 'RECURRING_EVENT';
 
 DROP TABLE IF EXISTS "signup_images";
 DROP TABLE IF EXISTS "signup_assignments";
