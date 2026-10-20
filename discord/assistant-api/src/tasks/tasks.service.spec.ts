@@ -270,6 +270,20 @@ describe('TasksService', () => {
       assert.equal(dto.timezone, 'Europe/Paris');
     });
 
+    it('reads the time in another timezone when one is picked', async () => {
+      await service.create('g', 'u', {
+        ...validInput,
+        runAtLocal: '2099-10-01T20:00',
+        timezone: 'America/New_York',
+      });
+      // 20:00 in New York in October (UTC-4) is 00:00 UTC the next day.
+      assert.equal(created.runAt.toISOString(), '2099-10-02T00:00:00.000Z');
+      await assert.rejects(
+        service.create('g', 'u', { ...validInput, timezone: 'Mars/Olympus' }),
+        /Unknown timezone/,
+      );
+    });
+
     it('stores the messages with ids and defaults: link previews on, no wait, no images', async () => {
       await service.create('g', 'u', validInput);
       const [saved] = created.config.parts;

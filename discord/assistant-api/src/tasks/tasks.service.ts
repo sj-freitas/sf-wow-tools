@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma, type ScheduledTask, type TaskRunStatus } from '@prisma/client';
 import { DEFAULT_REGION, timezoneOfRegion } from '../config/regions';
+import { resolveTimezone } from '../config/timezones';
 import { PrismaService } from '../database/prisma.service';
 import { describeDiscordError, isDiscordError, UNKNOWN_MESSAGE } from '../discord/discord-errors';
 import {
@@ -106,8 +107,10 @@ export interface ServerChannelsDto {
 export interface TaskInput {
   name?: unknown;
   enabled?: unknown;
-  /** When to post, as wall-clock "yyyy-MM-ddTHH:mm" in the guild's timezone. */
+  /** When to post, as wall-clock "yyyy-MM-ddTHH:mm" in `timezone` (default: the guild's). */
   runAtLocal?: unknown;
+  /** The timezone `runAtLocal` is written in: `ST` (server time, the default), `UTC`, a zone. */
+  timezone?: unknown;
   /** Post right away instead of at `runAtLocal`. */
   postNow?: unknown;
   /** Keep the post's live tags and reaction counts up to date (default: yes). */
@@ -275,7 +278,9 @@ export class TasksService {
     const timezone = await this.timezoneOf(guildId);
     const now = new Date();
     const postNow = input.postNow === true;
-    const runAt = postNow ? now : this.parseFutureDate(input.runAtLocal, timezone, now);
+    const runAt = postNow
+      ? now
+      : this.parseFutureDate(input.runAtLocal, this.inputZone(input, timezone), now);
     const config = await this.parsePostConfig(guildId, input, undefined);
     const tokens = parseAllTokens(config.parts);
     await checkExpressions(tokens, parseAllRosterTokens(config.parts));
@@ -349,11 +354,11 @@ export class TasksService {
       runAt = now;
       rescheduled = true;
     } else if (typeof input.runAtLocal === 'string') {
-      const requested = instantFromLocal(input.runAtLocal, timezone);
+      const requested = instantFromLocal(input.runAtLocal, this.inputZone(input, timezone));
       // A date that is unchanged may be in the past (it already went out); a new one may not.
       if (requested && requested.getTime() !== task.runAt?.getTime()) {
         if (isLive(state)) throw new BadRequestException(ALREADY_POSTED);
-        runAt = this.parseFutureDate(input.runAtLocal, timezone, now);
+        runAt = this.parseFutureDate(input.runAtLocal, this.inputZone(input, timezone), now);
         rescheduled = true;
       }
     }
@@ -736,7 +741,17 @@ export class TasksService {
     return name;
   }
 
-  /** A date and time in the future, read as wall-clock time in the guild's timezone. */
+  /** The zone the form's date and time are written in: its `timezone`, else the guild's. */
+  private inputZone(input: TaskInput, guildZone: string): string {
+    const zone = resolveTimezone(
+      typeof input.timezone === 'string' ? input.timezone : undefined,
+      guildZone,
+    );
+    if (!zone) throw new BadRequestException('Unknown timezone.');
+    return zone;
+  }
+
+  /** A date and time in the future, read as wall-clock time in the given timezone. */
   private parseFutureDate(value: unknown, timezone: string, now: Date): Date {
     const runAt = typeof value === 'string' ? instantFromLocal(value, timezone) : null;
     if (!runAt) {

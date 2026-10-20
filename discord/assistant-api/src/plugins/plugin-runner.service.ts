@@ -87,7 +87,7 @@ export class PluginRunnerService implements OnApplicationShutdown {
       data: { pluginId: plugin.id, startedAt: now, finishedAt: finished, status, result, error },
     });
 
-    const timezone = await this.plugins.timezoneOf(plugin.guildId);
+    const timezone = await this.plugins.zoneOf(plugin);
     const retry = error !== null && (await this.shouldRetry(plugin.id, now));
     const nextRunAt = more
       ? new Date(finished.getTime() + CARRY_ON_MS)

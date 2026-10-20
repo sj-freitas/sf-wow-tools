@@ -30,10 +30,13 @@ const postFields = {
   serverId: z.string().optional().describe('The Discord server id, from list_channels'),
   channelId: z.string().optional().describe('The channel id, from list_channels'),
   parts: z.array(postPart).optional().describe('The messages, sent in order'),
-  runAtLocal: z
+  runAtLocal: z.string().optional().describe('When to post, as yyyy-MM-ddTHH:mm in `timezone`'),
+  timezone: z
     .string()
     .optional()
-    .describe("When to post, as yyyy-MM-ddTHH:mm in the guild's timezone"),
+    .describe(
+      "runAtLocal's timezone: an IANA zone (Europe/Paris), UTC or an offset; default: the guild's server time",
+    ),
   postNow: z.boolean().optional().describe('Post right away instead of at runAtLocal'),
   enabled: z.boolean().optional().describe('False pauses the post'),
   tracked: z.boolean().optional().describe('Keep reaction counts and live tags up to date'),

@@ -26,6 +26,9 @@ model GuildPlugin {
   timeOfDay    String         @map("time_of_day")
   weekday      Int?
   dayOfMonth   Int?           @map("day_of_month")
+  // The schedule's timezone: an IANA zone or offset (as resolveTimezone gives it); null = the
+  // guild's server time, following its region.
+  timezone     String?
   nextRunAt    DateTime?      @map("next_run_at")
   // Set while a worker runs the plugin, so no other worker picks it up.
   leaseUntil   DateTime?      @map("lease_until")

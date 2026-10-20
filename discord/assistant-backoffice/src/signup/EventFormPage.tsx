@@ -6,7 +6,8 @@ import { guildPath } from '../guildPath';
 import { InlineSpinner, Spinner } from '../Loading';
 import type { Guild } from '../types';
 import { useChannels } from '../useChannels';
-import { EventTextFields, TimezoneField, type EventText } from './EventFields';
+import { TimezoneField } from '../TimezoneField';
+import { EventTextFields, type EventText } from './EventFields';
 import { errorText } from './labels';
 import {
   createEvent,

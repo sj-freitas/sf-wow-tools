@@ -12,7 +12,8 @@ import {
   type ScheduleValue,
 } from '../plugins/scheduleValue';
 import { useChannels } from '../useChannels';
-import { EventTextFields, TimezoneField, type EventText } from './EventFields';
+import { TimezoneField } from '../TimezoneField';
+import { EventTextFields, type EventText } from './EventFields';
 import './signup.css';
 
 /**
@@ -48,6 +49,9 @@ export function RecurringEventForm({
       : { frequency: 'WEEKLY', timeOfDay: '23:00', weekday: 3, dayOfMonth: 1 },
   );
 
+  // The schedule's timezone (also the first post's date and time).
+  const [zone, setZone] = useState(editing?.timezone ?? 'ST');
+  const zoneLabel = zone === 'ST' ? timezone : zone;
   // Adding one: post the first event right away, or at a date and time picked here (guild time).
   const [firstLater, setFirstLater] = useState(false);
   const [firstDate, setFirstDate] = useState('');
@@ -61,12 +65,13 @@ export function RecurringEventForm({
     const where = `#${channelName(serverId, channelId) ?? channelId}`;
     const next = `“${text.title}” for the next ${WEEKDAYS[eventWeekday - 1]} at ${eventTime}`;
     const first = firstLater
-      ? `On ${firstDate} at ${firstTime} (${timezone}) it posts ${next} after that.`
+      ? `On ${firstDate} at ${firstTime} (${zoneLabel}) it posts ${next} after that.`
       : `It posts ${next} within a minute.`;
     save(
       {
         name: name.trim() || text.title.trim(),
         ...scheduleInput(schedule),
+        timezone: zone,
         ...(editing ? {} : { firstRun: firstLater ? `${firstDate}T${firstTime}` : 'now' }),
         config: {
           serverId,
@@ -79,7 +84,7 @@ export function RecurringEventForm({
       },
       {
         title: 'Add Recurring Event?',
-        message: `${first} Then, ${describeSchedule(schedule)} (${timezone}), it archives the events still open in ${where}, deletes every other message there, pinned ones too, and posts the next one. Deleted messages can’t be brought back.`,
+        message: `${first} Then, ${describeSchedule(schedule)} (${zoneLabel}), it archives the events still open in ${where}, deletes every other message there, pinned ones too, and posts the next one. Deleted messages can’t be brought back.`,
         danger: true,
       },
     );
@@ -147,11 +152,11 @@ export function RecurringEventForm({
           <ScheduleFields
             value={schedule}
             onChange={setSchedule}
-            timezone={timezone}
             frequencies={['WEEKLY']}
             dayLabel="Every"
             timeLabel="At"
           />
+          <TimezoneField value={zone} onChange={setZone} serverTimezone={timezone} />
         </div>
         {!editing && (
           <fieldset className="field signup-post-when">
@@ -194,7 +199,7 @@ export function RecurringEventForm({
             )}
             <small>
               {firstLater
-                ? `Then (${timezone}) it posts the event for the next ${WEEKDAYS[eventWeekday - 1]} at ${eventTime}. `
+                ? `Then (${zoneLabel}) it posts the event for the next ${WEEKDAYS[eventWeekday - 1]} at ${eventTime}. `
                 : `Within a minute it posts the event for the next ${WEEKDAYS[eventWeekday - 1]} at ${eventTime}. `}
               The first post archives and deletes nothing; after it, the weekly schedule above takes
               over.

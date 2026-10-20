@@ -7,6 +7,7 @@ import { RecurringEventForm } from '../signup/RecurringEventForm';
 import type { Guild } from '../types';
 import { useChannels } from '../useChannels';
 import { ScheduleFields } from './PluginSchedule';
+import { TimezoneField } from '../TimezoneField';
 import { describeSchedule, scheduleInput, scheduleOf, type ScheduleValue } from './scheduleValue';
 import { PluginFormFrame, type PluginFormProps } from './PluginFormFrame';
 import { usePluginSave } from './usePluginSave';
@@ -77,6 +78,9 @@ function ChannelCleanupForm({ guild, timezone, editing }: PluginFormProps<'CHANN
       : { frequency: 'DAILY', timeOfDay: '04:00', weekday: 1, dayOfMonth: 1 },
   );
 
+  const [zone, setZone] = useState(editing?.timezone ?? 'ST');
+  const zoneLabel = zone === 'ST' ? timezone : zone;
+
   const usable = channels.filter((group) => group.channels.length > 0 || !group.error);
   const channelLabel = () => {
     const { serverId, channelId } = splitChannelKey(channel);
@@ -93,11 +97,12 @@ function ChannelCleanupForm({ guild, timezone, editing }: PluginFormProps<'CHANN
       {
         name: name.trim(),
         ...scheduleInput(schedule),
+        timezone: zone,
         config: { serverId, channelId, keepBotMessages },
       },
       {
         title: 'Add Channel Clean Up?',
-        message: `The bot will delete the messages in ${channelLabel()} ${describeSchedule(schedule)} (${timezone}), keeping pinned${keepBotMessages ? ' and bot' : ''} messages. Deleted messages can’t be brought back.`,
+        message: `The bot will delete the messages in ${channelLabel()} ${describeSchedule(schedule)} (${zoneLabel}), keeping pinned${keepBotMessages ? ' and bot' : ''} messages. Deleted messages can’t be brought back.`,
         danger: true,
       },
     );
@@ -129,7 +134,8 @@ function ChannelCleanupForm({ guild, timezone, editing }: PluginFormProps<'CHANN
             Channel
             <ChannelSelect groups={usable} value={channel} onChange={setChannel} required />
           </div>
-          <ScheduleFields value={schedule} onChange={setSchedule} timezone={timezone} />
+          <ScheduleFields value={schedule} onChange={setSchedule} />
+          <TimezoneField value={zone} onChange={setZone} serverTimezone={timezone} />
         </div>
         <label className="field-toggle">
           <input

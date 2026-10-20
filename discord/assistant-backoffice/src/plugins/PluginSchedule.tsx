@@ -15,7 +15,8 @@ export function ScheduleFields({
 }: {
   value: ScheduleValue;
   onChange: (value: ScheduleValue) => void;
-  timezone: string;
+  /** Shown after the time's label, when the form has no timezone picker of its own. */
+  timezone?: string;
   frequencies?: PluginScheduleKind[];
   dayLabel?: string;
   timeLabel?: string;
@@ -67,7 +68,8 @@ export function ScheduleFields({
         </label>
       )}
       <label className="field">
-        {timeLabel} ({timezone})
+        {timeLabel}
+        {timezone ? ` (${timezone})` : ''}
         <input
           type="time"
           value={value.timeOfDay}

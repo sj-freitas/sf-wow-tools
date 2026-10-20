@@ -390,8 +390,12 @@ plugins with their next run and last 5 runs, and Run now / Edit / Pause / Remove
   that first post archives and deletes nothing, then the weekly schedule takes over. Editing it changes the
   events it posts from then on, not the one already posted; **Pause** suspends it (nothing is
   archived or posted until resumed).
-- **Tables:** `guild_plugins` (one row per plugin: kind, name, schedule, `config` and `state` JSON
-  per kind, last run) and `plugin_runs` (history), in `prisma/plugins.prisma`.
+- **Timezone:** each plugin's schedule is read in its own timezone, picked in its form (`timezone`:
+  null for the guild's server time, following its region; else a zone or offset, see
+  `src/config/timezones.ts`). Posts take a `timezone` for their date the same way (not stored: the
+  post keeps the instant).
+- **Tables:** `guild_plugins` (one row per plugin: kind, name, schedule and its timezone, `config`
+  and `state` JSON per kind, last run) and `plugin_runs` (history), in `prisma/plugins.prisma`.
 - **Worker:** `PluginRunnerService` checks every minute, claiming due plugins like scheduled tasks
   (`FOR UPDATE SKIP LOCKED` plus a lease). A failed run is retried after 5 minutes, up to 3 times in
   30 minutes, then waits for the next occurrence.
@@ -551,7 +555,7 @@ bot, other bots, the server owner and Administrators.
 - Bot permissions used: View Channel, Send Messages, Manage Channels (to create the channel), Ban
   Members. The bot's role must be above the people it bans.
 
-**Not built yet:** the raid task (Raid-Helper integration, see `TODO.md`); channel cleanup is the Channel Clean Up plugin (see Plugins). Live updates between the worker
+**Not built yet:** the raid task (Raid-Helper integration, Botlog GA-14); channel cleanup is the Channel Clean Up plugin (see Plugins). Live updates between the worker
 and the browser use polling until a shared bus (Redis or Postgres `LISTEN/NOTIFY`) exists.
 
 ### Fresh Discord data and live updates

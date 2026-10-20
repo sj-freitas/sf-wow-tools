@@ -36,6 +36,7 @@ describe('PluginRunnerService', () => {
       timeOfDay: '02:00',
       weekday: null,
       dayOfMonth: null,
+      timezone: null,
       nextRunAt: new Date('2026-11-03T01:00:00Z'),
       leaseUntil: new Date(),
       lastRunAt: null,

@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import type { GuildPlugin, PluginRun, Prisma, TaskRunStatus } from '@prisma/client';
 import { DEFAULT_REGION, timezoneOfRegion } from '../config/regions';
+import { resolveTimezone, SERVER_TIME } from '../config/timezones';
 import { PrismaService } from '../database/prisma.service';
 import { DiscordBotService } from '../discord/discord-bot.service';
 import {
@@ -44,6 +45,8 @@ export interface PluginDto {
   };
   /** e.g. "Every day at 02:00". */
   scheduleText: string;
+  /** The schedule's timezone: `ST` (the guild's server time) or a zone. */
+  timezone: string;
   nextRunAt: string | null;
   lastRunAt: string | null;
   lastStatus: TaskRunStatus | null;
@@ -67,9 +70,11 @@ export interface PluginInput {
   confirm?: unknown;
   /**
    * Creating only: when it first runs, instead of at its schedule's next occurrence: `now`
-   * (within the minute) or a wall-clock "yyyy-MM-ddTHH:mm" in the guild's timezone.
+   * (within the minute) or a wall-clock "yyyy-MM-ddTHH:mm" in the plugin's timezone.
    */
   firstRun?: unknown;
+  /** The schedule's timezone: `ST` (server time, the default), `UTC`, an IANA zone or an offset. */
+  timezone?: unknown;
 }
 
 const RECENT_RUNS = 5;
@@ -96,13 +101,13 @@ export class PluginsService {
   }
 
   async list(guildId: string): Promise<PluginDto[]> {
-    const timezone = await this.timezoneOf(guildId);
+    const serverZone = await this.timezoneOf(guildId);
     const plugins = await this.prisma.guildPlugin.findMany({
       where: { guildId },
       orderBy: { createdAt: 'asc' },
       include: { runs: { orderBy: { startedAt: 'desc' }, take: RECENT_RUNS } },
     });
-    return plugins.map((plugin) => this.toDto(plugin, plugin.runs, timezone));
+    return plugins.map((plugin) => this.toDto(plugin, plugin.runs, serverZone));
   }
 
   async create(guildId: string, userId: string, input: PluginInput): Promise<PluginDto> {
@@ -113,7 +118,9 @@ export class PluginsService {
         'Confirm adding this plugin: it acts on its own, on a schedule.',
       );
     }
-    const timezone = await this.timezoneOf(guildId);
+    const serverZone = await this.timezoneOf(guildId);
+    const ownZone = this.parseTimezone(input.timezone);
+    const timezone = this.zone(ownZone, serverZone);
     const schedule = this.parseSchedule(input, def);
     const config = await def.parseConfig(input.config, await this.context(guildId));
     const plugin = await this.prisma.guildPlugin.create({
@@ -126,12 +133,13 @@ export class PluginsService {
         timeOfDay: schedule.timeOfDay!,
         weekday: schedule.weekday ?? null,
         dayOfMonth: schedule.dayOfMonth ?? null,
+        timezone: ownZone,
         nextRunAt: this.parseFirstRun(input.firstRun, schedule, timezone),
         config: config as Prisma.InputJsonValue,
         createdById: userId,
       },
     });
-    return this.toDto(plugin, [], timezone);
+    return this.toDto(plugin, [], serverZone);
   }
 
   /** Changes what is given: the name, the schedule, the settings, or pauses/resumes it. */
@@ -139,8 +147,12 @@ export class PluginsService {
     const plugin = await this.find(pluginId);
     const def = this.registry.get(plugin.kind);
     if (!def) throw new BadRequestException('This kind of plugin is no longer available.');
-    const timezone = await this.timezoneOf(plugin.guildId);
+    const serverZone = await this.timezoneOf(plugin.guildId);
+    const timezoneChanged = input.timezone !== undefined;
+    const ownZone = timezoneChanged ? this.parseTimezone(input.timezone) : plugin.timezone;
+    const timezone = this.zone(ownZone, serverZone);
     const data: Prisma.GuildPluginUpdateInput = {};
+    if (timezoneChanged) data.timezone = ownZone;
     if (input.name !== undefined) data.name = this.parseName(input.name, def.label);
     if (input.config !== undefined) {
       const config = await def.parseConfig(input.config, await this.context(plugin.guildId));
@@ -168,7 +180,7 @@ export class PluginsService {
     }
     if (input.enabled !== undefined) data.enabled = input.enabled === true;
     // Resumed or rescheduled: the next run is the next occurrence from now.
-    if (scheduleChanged || (input.enabled === true && !plugin.enabled)) {
+    if (scheduleChanged || timezoneChanged || (input.enabled === true && !plugin.enabled)) {
       data.nextRunAt = nextOccurrence(schedule, timezone, new Date());
     }
     const updated = await this.prisma.guildPlugin.update({
@@ -176,7 +188,7 @@ export class PluginsService {
       data,
       include: { runs: { orderBy: { startedAt: 'desc' }, take: RECENT_RUNS } },
     });
-    return this.toDto(updated, updated.runs, timezone);
+    return this.toDto(updated, updated.runs, serverZone);
   }
 
   /** Runs it within the minute; its schedule carries on as before. */
@@ -215,6 +227,24 @@ export class PluginsService {
     };
   }
 
+  /** The zone a plugin's schedule is read in: its own, else the guild's server time. */
+  async zoneOf(plugin: Pick<GuildPlugin, 'guildId' | 'timezone'>): Promise<string> {
+    return this.zone(plugin.timezone, await this.timezoneOf(plugin.guildId));
+  }
+
+  private zone(own: string | null, serverZone: string): string {
+    return (own && resolveTimezone(own, serverZone)) || serverZone;
+  }
+
+  /** What is stored: null for server time, else the zone as resolveTimezone spells it. */
+  private parseTimezone(value: unknown): string | null {
+    const text = typeof value === 'string' ? value.trim() : '';
+    if (text === '' || text.toUpperCase() === SERVER_TIME) return null;
+    const zone = resolveTimezone(text, 'UTC');
+    if (!zone) throw new BadRequestException('Unknown timezone.');
+    return zone;
+  }
+
   async timezoneOf(guildId: string): Promise<string> {
     const guild = await this.prisma.guild.findUnique({
       where: { id: guildId },
@@ -245,7 +275,7 @@ export class PluginsService {
     return schedule;
   }
 
-  /** A new plugin's first run: now, a time picked in the guild's timezone, or its schedule's. */
+  /** A new plugin's first run: now, a time picked in its timezone, or its schedule's. */
   private parseFirstRun(value: unknown, schedule: Schedule, timezone: string): Date | null {
     const now = new Date();
     if (value === undefined || value === null || value === '') {
@@ -272,8 +302,9 @@ export class PluginsService {
     return plugin;
   }
 
-  private toDto(plugin: GuildPlugin, runs: PluginRun[], timezone: string): PluginDto {
+  private toDto(plugin: GuildPlugin, runs: PluginRun[], serverZone: string): PluginDto {
     const schedule = this.scheduleOf(plugin);
+    const timezone = this.zone(plugin.timezone, serverZone);
     return {
       id: plugin.id,
       kind: plugin.kind,
@@ -287,6 +318,7 @@ export class PluginsService {
         dayOfMonth: plugin.dayOfMonth,
       },
       scheduleText: describeSchedule(schedule, timezone),
+      timezone: plugin.timezone ?? SERVER_TIME,
       nextRunAt: plugin.enabled ? (plugin.nextRunAt?.toISOString() ?? null) : null,
       lastRunAt: plugin.lastRunAt?.toISOString() ?? null,
       lastStatus: plugin.lastStatus,

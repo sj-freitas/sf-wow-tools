@@ -299,6 +299,8 @@ export interface PostInput {
   enabled?: boolean;
   /** When to post, in the guild's timezone ("yyyy-MM-ddTHH:mm"). */
   runAtLocal?: string;
+  /** `runAtLocal`'s timezone: `ST` (server time, the default), `UTC` or a zone. */
+  timezone?: string;
   /** Post right away instead of at a date. */
   postNow?: boolean;
   /** Keep its live tags and reaction counts up to date (default: yes). */

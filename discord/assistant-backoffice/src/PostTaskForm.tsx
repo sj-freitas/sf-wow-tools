@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { createTask, fetchPeople, fetchRoleOptions, updateTask } from './api';
 import { channelKey, splitChannelKey } from './channelKey';
 import { ChannelSelect } from './ChannelSelect';
+import { TimezoneField } from './TimezoneField';
 import type { MentionNames } from './DiscordMarkdown';
 import { LiveTagsHelp } from './LiveTagsHelp';
 import { MessagePreview, PostPartEditor } from './PostPartEditor';
@@ -38,6 +39,8 @@ export function PostTaskForm({ guild, channels, editing, timezone, onSaved, onCa
     editing ? channelKey(editing.post.serverId, editing.post.channelId) : '',
   );
   const [runAtLocal, setRunAtLocal] = useState(editing?.schedule.runAtLocal ?? '');
+  // The date above is written in this timezone (the post's own date is shown in server time).
+  const [runAtZone, setRunAtZone] = useState('ST');
   const [parts, setParts] = useState<PartDraft[]>(() =>
     editing ? editing.post.parts.map(draftOf) : [newDraft()],
   );
@@ -111,7 +114,7 @@ export function PostTaskForm({ guild, channels, editing, timezone, onSaved, onCa
       parts: parts.map(inputOf),
       tracked,
       // A post that is live keeps its messages: its date and "post now" no longer apply.
-      ...(live ? {} : postNow ? { postNow: true } : { runAtLocal }),
+      ...(live ? {} : postNow ? { postNow: true } : { runAtLocal, timezone: runAtZone }),
     };
     setBusy(true);
     (editing ? updateTask(editing.id, input) : createTask(guild.id, input))
@@ -160,15 +163,18 @@ export function PostTaskForm({ guild, channels, editing, timezone, onSaved, onCa
             />
           </div>
         ) : (
-          <label className="field">
-            Post at ({timezone})
-            <input
-              type="datetime-local"
-              value={runAtLocal}
-              onChange={(e) => setRunAtLocal(e.target.value)}
-              required
-            />
-          </label>
+          <>
+            <label className="field">
+              Post at
+              <input
+                type="datetime-local"
+                value={runAtLocal}
+                onChange={(e) => setRunAtLocal(e.target.value)}
+                required
+              />
+            </label>
+            <TimezoneField value={runAtZone} onChange={setRunAtZone} serverTimezone={timezone} />
+          </>
         )}
       </div>
 

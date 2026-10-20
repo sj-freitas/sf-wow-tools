@@ -60,6 +60,8 @@ interface PluginBase {
   schedule: PluginSchedule;
   /** e.g. "Every day at 02:00". */
   scheduleText: string;
+  /** The schedule's timezone: `ST` (the guild's server time) or a zone. */
+  timezone: string;
   nextRunAt: string | null;
   lastRunAt: string | null;
   lastStatus: PluginRunStatus | null;
@@ -87,6 +89,8 @@ export interface PluginInput {
   confirm?: boolean;
   /** Creating only: first run `now` or at "yyyy-MM-ddTHH:mm" (guild timezone); else its schedule's. */
   firstRun?: string;
+  /** The schedule's (and `firstRun`'s) timezone: `ST` (server time), `UTC` or a zone. */
+  timezone?: string;
 }
 
 export const fetchPluginKinds = (guildId: string): Promise<PluginKindInfo[]> =>
