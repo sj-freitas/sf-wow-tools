@@ -22,7 +22,8 @@
     "test": "node --require ts-node/register --test \"src/**/*.spec.ts\"",
     "start:worker": "node dist/worker.js",
     "start:worker:dev": "ts-node src/worker.ts",
-    "signup:preview": "ts-node src/signup/preview.ts"
+    "signup:preview": "ts-node src/signup/preview.ts",
+    "characters:wipe": "ts-node src/maintenance/wipe-characters.ts"
   },
   "dependencies": {
     "@discordjs/rest": "^2.6.3",
