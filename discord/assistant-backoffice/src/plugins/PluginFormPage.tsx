@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { channelKey, splitChannelKey } from '../channelKey';
 import { ChannelSelect } from '../ChannelSelect';
 import { Spinner } from '../Loading';
+import { ProfessionsPostForm } from '../professions/ProfessionsPostForm';
 import { RecurringEventForm } from '../signup/RecurringEventForm';
 import type { Guild } from '../types';
 import { useChannels } from '../useChannels';
@@ -20,7 +21,8 @@ interface Props {
 
 /**
  * `/plugins/create/:kind` and `/plugins/edit/:id`: the form of the plugin's kind (Channel Clean
- * Up here; Recurring Event, which belongs to event sign-ups, in ../signup).
+ * Up here; Recurring Event, which belongs to event sign-ups, in ../signup; Professions List in
+ * ../professions).
  */
 export function PluginFormPage({ guild, timezone }: Props) {
   const { id, kind } = useParams();
@@ -48,6 +50,15 @@ export function PluginFormPage({ guild, timezone }: Props) {
         guild={guild}
         timezone={timezone}
         editing={editing?.kind === 'RECURRING_EVENT' ? editing : undefined}
+      />
+    );
+  }
+  if (which === 'PROFESSIONS_POST') {
+    return (
+      <ProfessionsPostForm
+        guild={guild}
+        timezone={timezone}
+        editing={editing?.kind === 'PROFESSIONS_POST' ? editing : undefined}
       />
     );
   }

@@ -2,7 +2,7 @@ import { request } from '../api';
 
 /** Plugins (API: /api/guilds/:guildId/plugins, /api/plugins/:id). */
 
-export type PluginKind = 'CHANNEL_CLEANUP' | 'RECURRING_EVENT';
+export type PluginKind = 'CHANNEL_CLEANUP' | 'RECURRING_EVENT' | 'PROFESSIONS_POST';
 export type PluginScheduleKind = 'DAILY' | 'WEEKLY' | 'MONTHLY';
 export type PluginRunStatus = 'SUCCESS' | 'FAILED' | 'MISSED';
 
@@ -44,6 +44,12 @@ export interface RecurringEventConfig {
   timezone: string;
 }
 
+/** Professions List (professions' kind, its form is in ../professions): where it posts. */
+export interface ProfessionsPostConfig {
+  serverId: string;
+  channelId: string;
+}
+
 export interface PluginRun {
   id: string;
   startedAt: string;
@@ -74,6 +80,7 @@ export type Plugin = PluginBase &
   (
     | { kind: 'CHANNEL_CLEANUP'; config: ChannelCleanupConfig }
     | { kind: 'RECURRING_EVENT'; config: RecurringEventConfig }
+    | { kind: 'PROFESSIONS_POST'; config: ProfessionsPostConfig }
   );
 
 export interface PluginInput {
@@ -84,7 +91,7 @@ export interface PluginInput {
   timeOfDay?: string;
   weekday?: number | null;
   dayOfMonth?: number | null;
-  config?: ChannelCleanupConfig | RecurringEventConfig;
+  config?: ChannelCleanupConfig | RecurringEventConfig | ProfessionsPostConfig;
   /** Required to create one: it acts on its own, on a schedule. */
   confirm?: boolean;
   /** Creating only: first run `now` or at "yyyy-MM-ddTHH:mm" (guild timezone); else its schedule's. */

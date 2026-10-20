@@ -1,0 +1,44 @@
+// Professions (src/professions): what each character can craft, imported from the Guild Assistant
+// Professions addon's export (addons/GuildAssistantProfessions), and a cache of the Wowhead names
+// of the recipes. Kept in its own file and tables; the only reference from schema.prisma is the
+// back-relation Prisma requires on Character.
+
+model CharacterProfession {
+  id          String    @id @default(uuid()) @db.Uuid
+  characterId String    @map("character_id") @db.Uuid
+  character   Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  // As the game names it ("Tailoring"); the export's language.
+  name        String
+  skill       Int?
+  maxSkill    Int?      @map("max_skill")
+  // The recipes, as WoW spell ids; `itemIds` when the game only gave the crafted item.
+  spellIds    Int[]     @map("spell_ids")
+  itemIds     Int[]     @map("item_ids")
+  importedAt  DateTime  @default(now()) @map("imported_at")
+
+  @@unique([characterId, name])
+  @@map("character_professions")
+}
+
+enum WowheadKind {
+  SPELL
+  ITEM
+
+  @@map("wowhead_kind")
+}
+
+// What Wowhead says about a spell or item, looked up once and kept (names don't change). The link
+// is built from the guild's game version (`wowheadPath` in its game config), so one row serves all.
+model WowheadEntry {
+  kind        WowheadKind
+  id          Int
+  // English name, for search and display; null until looked up.
+  englishName String?     @map("english_name")
+  icon        String?
+  // Wowhead has no such id: not asked again.
+  missing     Boolean     @default(false)
+  fetchedAt   DateTime?   @map("fetched_at")
+
+  @@id([kind, id])
+  @@map("wowhead_entries")
+}

@@ -1,6 +1,6 @@
 # WoW addons
 
-An npm project for the addons in this folder (only Raidsort for now). `npm install` once, then:
+An npm project for the addons in this folder: Raidsort and GuildAssistantProfessions. `npm install` once, then:
 
 | Command                                   | What it does                                              |
 | ----------------------------------------- | --------------------------------------------------------- |
@@ -17,7 +17,11 @@ is installed as `_classic_beta_` for now; Classic Era (`_classic_era_`, 11509) w
 cp -R "./Raidsort" "$HOME/Applications/World of Warcraft/_classic_beta_/Interface/AddOns"
 ```
 
-Turn on Lua errors while testing: `/console scriptErrors 1`.
+Turn on Lua errors while testing: `/console scriptErrors 1`. The game also writes them to
+`Logs/General.log` in its folder (`[E][Lua]` lines).
+
+WoW Forever's client has the modern API, not Classic Era's: no `GetNumSkillLines`, no
+`TRADE_SKILL_UPDATE` (registering an event the client doesn't have is an error).
 
 ## Tests
 
@@ -46,6 +50,14 @@ list yet is left out with a warning; if none is listed, nothing is uploaded.
 
 Sorts a raid into groups from a pasted setup and hands out the raid roles. How to use it, every
 command and the setup format: [Raidsort/README.md](Raidsort/README.md) (shipped with the addon).
+
+## GuildAssistantProfessions
+
+Remembers every character's professions and recipes (and profession links you open) and keeps them
+as JSON in its saved variables file, which is uploaded on Guild Assistant (Roster, Import
+professions). How to use it: [GuildAssistantProfessions/README.md](GuildAssistantProfessions/README.md).
+`dev/GuildAssistantProfessions/export.fixture.json` is what it exports for the spec's sample
+characters; the API's import test reads the same file, so the two stay in step.
 
 ## Backlog
 

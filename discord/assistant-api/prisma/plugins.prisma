@@ -9,6 +9,8 @@ enum PluginKind {
   CHANNEL_CLEANUP
   // Archives a channel's events and posts the next one (event sign-ups: added by src/signup).
   RECURRING_EVENT
+  // Posts the guild's professions and reposts them when they change (added by src/professions).
+  PROFESSIONS_POST
 
   @@map("plugin_kind")
 }

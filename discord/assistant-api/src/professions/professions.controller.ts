@@ -1,0 +1,56 @@
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
+import { AuthGuard } from '../auth/auth.guard';
+import type { AuthenticatedRequest } from '../auth/auth.types';
+import {
+  ProfessionsService,
+  type GuildProfessionsDto,
+  type ImportResultDto,
+  type ProfessionDto,
+} from './professions.service';
+
+/** Professions from the Guild Assistant Professions addon (see ProfessionsService). */
+@Controller('guilds/:guildId')
+@UseGuards(AuthGuard)
+export class ProfessionsController {
+  constructor(private readonly professions: ProfessionsService) {}
+
+  /** `{ data }`: the addon's export, as pasted. Imports it into the user's own characters. */
+  @Post('professions/import')
+  @HttpCode(HttpStatus.OK)
+  import(
+    @Req() req: AuthenticatedRequest,
+    @Param('guildId', ParseUUIDPipe) guildId: string,
+    @Body() body: { data?: unknown },
+  ): Promise<ImportResultDto> {
+    return this.professions.import(req.user, guildId, body.data);
+  }
+
+  /** Everyone's professions in the guild, by recipe (the guild's Professions page). */
+  @Get('professions')
+  guild(
+    @Req() req: AuthenticatedRequest,
+    @Param('guildId', ParseUUIDPipe) guildId: string,
+  ): Promise<GuildProfessionsDto> {
+    return this.professions.guild(req.user.id, guildId);
+  }
+
+  @Get('characters/:characterId/professions')
+  list(
+    @Req() req: AuthenticatedRequest,
+    @Param('guildId', ParseUUIDPipe) guildId: string,
+    @Param('characterId', ParseUUIDPipe) characterId: string,
+  ): Promise<ProfessionDto[]> {
+    return this.professions.list(req.user.id, guildId, characterId);
+  }
+}

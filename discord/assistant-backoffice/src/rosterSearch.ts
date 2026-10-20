@@ -16,12 +16,14 @@ export interface RosterRow {
 
 /**
  * Everything about a roster row that a search can find: the character's name, class, race,
- * roles, attributes and level, "main", and its player's Discord names, Discord ID and ranks.
+ * roles, professions and what it can craft, attributes and level, "main", and its player's Discord names, Discord ID and
+ * ranks.
  */
 function searchableText(
   { player, character }: RosterRow,
   attributes: readonly GuildAttribute[],
   ranks: readonly string[],
+  professions: readonly string[],
 ): string[] {
   return [
     character.firstName,
@@ -30,6 +32,7 @@ function searchableText(
     character.class,
     character.race,
     ...character.roles.flatMap((role) => [ROLE_LABELS[role], ...(ROLE_WORDS[role] ?? [])]),
+    ...professions,
     ...attributes.map((attribute) => attribute.name),
     String(character.level),
     ...(character.isMain ? ['main'] : ['alt']),
@@ -51,6 +54,7 @@ export function searchRoster(
   query: string,
   attributesOf: (characterId: string) => readonly GuildAttribute[],
   ranksOf: (discordUserId: string) => readonly string[],
+  professionsOf: (characterId: string) => readonly string[] = () => [],
 ): RosterRow[] {
   const words = query.trim().split(/\s+/).filter(Boolean);
   if (words.length === 0) return [...rows];
@@ -60,6 +64,7 @@ export function searchRoster(
       row,
       attributesOf(row.character.id),
       ranksOf(row.player.discordUserId),
+      professionsOf(row.character.id),
     );
     let total = 0;
     for (const word of words) {

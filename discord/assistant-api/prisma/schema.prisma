@@ -216,6 +216,8 @@ model Character {
   attributes    CharacterAttribute[]
   // Event sign-ups (prisma/signup.prisma).
   signupEntries SignupEntry[]
+  // Professions (prisma/professions.prisma).
+  professions   CharacterProfession[]
   createdAt     DateTime                   @default(now()) @map("created_at")
   updatedAt     DateTime                   @updatedAt @map("updated_at")
 

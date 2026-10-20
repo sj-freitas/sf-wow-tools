@@ -60,6 +60,9 @@ const CharacterEditorPage = lazy(() =>
   import('./RosterPage').then((m) => ({ default: m.CharacterEditorPage })),
 );
 const RosterPage = lazy(() => import('./RosterPage').then((m) => ({ default: m.RosterPage })));
+const ProfessionsPage = lazy(() =>
+  import('./professions/ProfessionsPage').then((m) => ({ default: m.ProfessionsPage })),
+);
 const SettingsPage = lazy(() =>
   import('./SettingsPage').then((m) => ({ default: m.SettingsPage })),
 );
@@ -97,6 +100,7 @@ interface Props {
  *       /roster/create        add a character              everyone (members: their own)
  *       /roster/edit/:id      edit a character             Officers, or its owner
  *       /roster/notes/:id     Officers' private note about a character   Officers
+ *       /professions          what the guild can craft (?q=&prof=)        everyone in the guild
  *       /posts                posts (?q=&page=)            Officers
  *       /posts/create         new post                     Officers
  *       /posts/edit/:id       edit a post                  Officers
@@ -234,6 +238,7 @@ function GuildRoutes({ guilds, setup, currentUser, onGuildsChanged }: Props) {
           <Route index element={<HomePage guild={guild} timezone={timezone} />} />
           <Route path="edit" element={officersOnly(<HomeEditPage guild={guild} />)} />
           <Route path="roster" element={<RosterPage guild={guild} currentUser={currentUser} />} />
+          <Route path="professions" element={<ProfessionsPage guild={guild} />} />
           <Route
             path="roster/create"
             element={<CharacterEditorPage guild={guild} currentUser={currentUser} />}
@@ -327,6 +332,7 @@ function GuildFrame({
   const sections: { label: string; to: string; end?: boolean }[] = [
     { label: 'Welcome', to: guildPath(guild), end: true },
     { label: 'Roster', to: guildPath(guild, 'roster') },
+    { label: 'Professions', to: guildPath(guild, 'professions') },
     { label: 'Events', to: guildPath(guild, 'signup') },
     ...(guild.isOfficer
       ? [

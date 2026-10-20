@@ -967,6 +967,49 @@ one transaction). To take the feature out:
 
 Deploying the feature again later re-creates the tables, empty.
 
+## Professions (`src/professions/`)
+
+What characters can craft, from the **Guild Assistant Professions** addon
+(`addons/GuildAssistantProfessions`). It records every character of the account (and others' seen
+through a profession link) with its professions, skill and recipes (WoW spell ids; the crafted
+item's id when the game gives no spell), and keeps the export as JSON in its saved variables file
+(`WTF/Account/<account>/SavedVariables/GuildAssistantProfessions.lua`, written by `/ga-prof log` or
+on logout). Blizzard's Classic Era / SoD API has no professions, hence the addon.
+
+- **Import** (`POST /api/guilds/:guildId/professions/import`, `{ data }` = that file, or the export's
+  JSON): any member, for their own characters in that guild, matched by name (first name, or first
+  and last as Forever writes them; the realm breaks ties). Each matched character's professions are
+  replaced by the export's; characters that aren't the user's in the guild are skipped and listed,
+  and others' seen through a link are listed apart, not imported. In the backoffice: Roster or
+  Professions, **Import professions** (drop the file, choose it, or paste its contents).
+- **The guild's professions** (`GET /api/guilds/:guildId/professions`): anyone in the guild. Every
+  recipe someone can craft and who, and each character's professions (`GuildRecipesService`, which
+  needs no login: the bot and the worker use it too). The backoffice's **Professions** page lists
+  per profession what the guild can make and who, with search (recipe, profession or crafter) and a
+  profession filter; the roster's search also finds characters by profession or recipe, and links
+  to the Professions page when recipes match.
+- **One character's** (`GET /api/guilds/:guildId/characters/:characterId/professions`): Roster, any
+  character's menu, **Professions**.
+- **`/crafter <item>`** (Discord, private reply): who in the server's guild can craft it, by name
+  (the same typo-tolerant matching as the website's search, `fuzzy.ts`), id or Wowhead link; each
+  crafter as character and Discord mention. Says so when nobody can.
+- **Professions List plugin** (`professions-post.plugin.ts`, kind `PROFESSIONS_POST`, added from
+  `ProfessionsCoreModule` like sign-ups add Recurring Event): posts the guild's list in a channel,
+  per profession each recipe (a Wowhead link) and its crafters, over as many messages as it takes
+  (split at line ends; a profession carried on repeats its heading). On its schedule, and two
+  minutes after any import, it hashes the messages: unchanged, nothing happens; changed, it deletes
+  its previous messages (their ids are in its state) and posts the list again. A post that fails
+  half way is taken back, so the retry starts clean. Mentions never ping.
+- **Wowhead cache** (`wowhead_entries`): the English name and icon of each spell or item, looked up
+  once from Wowhead's tooltip data (`WowheadService`, not an official API) in the guild's game
+  version's data (`wowheadPath` in its game config: Forever's own spells are only in `forever`), a
+  few at a time, after an import and again when a list still has unnamed ones. An id Wowhead doesn't
+  have is marked missing; any other failure is retried after an hour. Links use the same path:
+  `https://www.wowhead.com/forever/spell=20034/enchant-weapon-crusader`.
+- **Tables:** `character_professions` and `wowhead_entries`, in `prisma/professions.prisma`.
+- The export's format is tested from both sides: the addon's spec writes
+  `addons/dev/GuildAssistantProfessions/export.fixture.json` and `profession-export.spec.ts` reads it.
+
 ## MCP server for AI agents (`src/mcp/`)
 
 `/api/mcp` is an [MCP](https://modelcontextprotocol.io) server (Streamable HTTP, stateless), so

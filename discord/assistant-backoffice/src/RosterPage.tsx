@@ -23,13 +23,17 @@ import {
 } from './types';
 import { useCurrentUrl, useReturnTo } from './useReturnTo';
 import { ClassMark } from './ClassMark';
-import { BinIcon, ExternalIcon, NoteIcon, PencilIcon, TagIcon } from './Icons';
+import { BinIcon, ExternalIcon, HammerIcon, NoteIcon, PencilIcon, TagIcon } from './Icons';
+import { ImportProfessionsDrawer } from './professions/ImportProfessionsDrawer';
+import { fetchGuildProfessions } from './professions/professionsApi';
+import { ProfessionsDrawer } from './professions/ProfessionsDrawer';
 import { armoryLinkFor, gameOf, useGames } from './game';
 import { showToast } from './toast';
 import { AttributesBadge } from './AttributesBadge';
 import { CharacterAttributesDrawer, ManageAttributesDrawer } from './AttributeDrawers';
 import { RowMenu } from './RowMenu';
 import { AttributeChip } from './AttributeChip';
+import { fuzzyWordsScore } from './fuzzy';
 import { searchRoster } from './rosterSearch';
 import { useConfirm } from './useConfirm';
 import { characterPagePath, guildPath } from './guildPath';
@@ -95,6 +99,11 @@ export function RosterPage({ guild, currentUser }: Props) {
     setParams(next, { replace: true });
   };
   const [tagging, setTagging] = useState<{ id: string; name: string } | null>(null);
+  // Professions (addon export): one character's, or the import panel.
+  const [viewingProfessions, setViewingProfessions] = useState<{ id: string; name: string } | null>(
+    null,
+  );
+  const [importingProfessions, setImportingProfessions] = useState(false);
   const loadAttributes = useCallback(() => {
     fetchAttributes(guild.id)
       .then(setAttributes)
@@ -104,6 +113,28 @@ export function RosterPage({ guild, currentUser }: Props) {
   useEffect(() => subscribeEvents('characters', loadAttributes), [loadAttributes]);
   const attributesOf = (characterId: string) =>
     attributes.filter((attribute) => attribute.characterIds.includes(characterId));
+
+  // Each character's professions and what it can craft (the addon's imports), for the search:
+  // "blacksmith" or "copper rod" finds them. The recipe names also say how many recipes match.
+  const [professionNames, setProfessionNames] = useState<Map<string, string[]>>(new Map());
+  const [recipeNames, setRecipeNames] = useState<string[]>([]);
+  const loadProfessions = useCallback(() => {
+    fetchGuildProfessions(guild.id)
+      .then(({ characters, recipes }) => {
+        const names = new Map(characters.map((c) => [c.id, c.professions.map((p) => p.name)]));
+        for (const recipe of recipes) {
+          if (!recipe.name) continue;
+          for (const id of recipe.crafterIds) names.get(id)?.push(recipe.name);
+        }
+        setProfessionNames(names);
+        setRecipeNames([...new Set(recipes.flatMap((r) => (r.name ? [r.name] : [])))]);
+      })
+      .catch(() => {
+        setProfessionNames(new Map());
+        setRecipeNames([]);
+      });
+  }, [guild.id]);
+  useEffect(loadProfessions, [loadProfessions]);
 
   // Officers: which characters have an Officer note, to mark their note button.
   const [notedIds, setNotedIds] = useState<Set<string>>(new Set());
@@ -179,8 +210,12 @@ export function RosterPage({ guild, currentUser }: Props) {
     query,
     attributesOf,
     (discordUserId) => ranks[discordUserId] ?? [],
+    (characterId) => professionNames.get(characterId) ?? [],
   );
   const filtering = query.trim() !== '' || picked.length > 0;
+  const matchingRecipes = query.trim()
+    ? recipeNames.filter((name) => fuzzyWordsScore(query, [name]) !== null).length
+    : 0;
   const missingNames =
     players?.some((player) => !player.discordUsername && !player.discordDisplayName) ?? false;
   // "Open in armory": the character's page there, or a passing note while the version's armory
@@ -228,6 +263,14 @@ export function RosterPage({ guild, currentUser }: Props) {
         // Everyone: the character's armory page (or, until the version's armory exists, a note
         // that it doesn't yet).
         armoryItem(character),
+        {
+          label: (
+            <>
+              <HammerIcon /> Professions
+            </>
+          ),
+          onSelect: () => setViewingProfessions({ id: character.id, name }),
+        },
         ...(guild.isOfficer
           ? [
               {
@@ -305,6 +348,22 @@ export function RosterPage({ guild, currentUser }: Props) {
           onChanged={loadAttributes}
         />
       )}
+      {viewingProfessions && (
+        <ProfessionsDrawer
+          guildId={guild.id}
+          character={viewingProfessions}
+          onClose={() => setViewingProfessions(null)}
+        />
+      )}
+      {importingProfessions && (
+        <ImportProfessionsDrawer
+          guildId={guild.id}
+          onClose={() => {
+            setImportingProfessions(false);
+            loadProfessions();
+          }}
+        />
+      )}
       {tagging && (
         <CharacterAttributesDrawer
           guild={guild}
@@ -323,6 +382,10 @@ export function RosterPage({ guild, currentUser }: Props) {
           <h3>Roster</h3>
         </div>
         <div className="settings-actions">
+          {/* The professions addon's file: all of the user's characters in the guild at once. */}
+          <button type="button" className="btn" onClick={() => setImportingProfessions(true)}>
+            <HammerIcon /> Import professions
+          </button>
           {guild.isOfficer && (
             <button type="button" className="btn" onClick={() => setManaging(true)}>
               Attributes
@@ -387,7 +450,7 @@ export function RosterPage({ guild, currentUser }: Props) {
                 type="search"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search name, class, role, attribute, Discord name or ID…"
+                placeholder="Search name, class, role, profession, attribute, Discord name or ID…"
                 aria-label="Search the roster"
               />
             </div>
@@ -419,6 +482,12 @@ export function RosterPage({ guild, currentUser }: Props) {
                 <span className="muted">
                   {shown.length} of {rows.length} characters
                 </span>
+                {matchingRecipes > 0 && (
+                  <Link to={`${guildPath(guild, 'professions')}?q=${encodeURIComponent(query)}`}>
+                    {matchingRecipes} recipe{matchingRecipes === 1 ? '' : 's'} match: see who can
+                    craft {matchingRecipes === 1 ? 'it' : 'them'} →
+                  </Link>
+                )}
                 <button type="button" className="btn btn-sm" onClick={clearFilters}>
                   Clear
                 </button>

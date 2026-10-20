@@ -15,6 +15,8 @@ export default defineGame({
   // The Forever armory doesn't exist yet, so the roster's "Open in armory" says so instead of
   // opening the stand-in above (Botlog GA-4 says what changes when it does).
   armoryPending: true,
+  // Recipe and item links (professions): https://www.wowhead.com/forever/spell=20034/…
+  wowheadPath: 'forever',
   // Each server's name and the gameplay rules it enforces (several could share one; features
   // gate on the rule set, not the name, e.g. bios need 'RP').
   allowedServers: {

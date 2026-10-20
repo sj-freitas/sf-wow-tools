@@ -301,5 +301,18 @@
         ]
       }
     ]
+  },
+  {
+    "name": "crafter",
+    "description": "Who in the guild can craft an item (from the professions addon)",
+    "options": [
+      {
+        "name": "item",
+        "description": "The item or recipe: its name, its id, or its Wowhead link",
+        "type": 3,
+        "required": true,
+        "max_length": 100
+      }
+    ]
   }
 ]

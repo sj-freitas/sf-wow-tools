@@ -17,6 +17,9 @@ async function bootstrap(): Promise<void> {
   const configService = app.get(ConfigService);
 
   app.setGlobalPrefix('api');
+  // A professions export (every character of an account, src/professions) can pass the default
+  // 100 kB.
+  app.useBodyParser('json', { limit: '1mb' });
   // Old guild addresses (before a rename) redirect to the current one; registered before the
   // backoffice's static files, which are only set up when the app starts listening.
   app.use(app.get(GuildRedirectsService).middleware);

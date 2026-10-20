@@ -1,0 +1,14 @@
+## Interface: 16001, 11509
+## Title: Guild Assistant Professions
+## Notes: Records your characters' professions and recipes (and profession links you open) for Guild Assistant. /ga-prof status
+## Version: 0.1.0
+## Author: Sérgio Freitas
+## X-License: MIT
+## X-Curse-Project-ID: 1756540
+## SavedVariables: GuildAssistantProfessionsDB
+## IconTexture: Interface\Icons\inv_misc_note_01
+# 16001 is WoW Forever (client 1.60.1), 11509 Classic Era. Saved per account: every character.
+
+Core.lua
+Scan.lua
+Main.lua

@@ -65,12 +65,19 @@ export function PluginsPage({ guild, timezone }: Props) {
           runNowDanger: true,
           remove: 'messages it already deleted stay deleted',
         }
-      : {
-          summary: `posts “${plugin.config.title}” for ${WEEKDAYS[plugin.config.weekday - 1]} ${plugin.config.time}`,
-          runNow: `Archive the events still open in ${channelOf(plugin)}, delete all its other messages (pinned ones too) and post the next “${plugin.config.title}” now? Deleted messages can’t be brought back. Its schedule carries on as before.`,
-          runNowDanger: true,
-          remove: 'the events it already posted stay',
-        };
+      : plugin.kind === 'PROFESSIONS_POST'
+        ? {
+            summary: 'posts what the guild can craft, again when it changes',
+            runNow: `Check the guild’s professions now and, if they changed, replace the list in ${channelOf(plugin)}? Its schedule carries on as before.`,
+            runNowDanger: false,
+            remove: 'the list it posted stays',
+          }
+        : {
+            summary: `posts “${plugin.config.title}” for ${WEEKDAYS[plugin.config.weekday - 1]} ${plugin.config.time}`,
+            runNow: `Archive the events still open in ${channelOf(plugin)}, delete all its other messages (pinned ones too) and post the next “${plugin.config.title}” now? Deleted messages can’t be brought back. Its schedule carries on as before.`,
+            runNowDanger: true,
+            remove: 'the events it already posted stay',
+          };
 
   return (
     <div className="tasks">

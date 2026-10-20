@@ -72,6 +72,11 @@ export interface GameConfig<C extends string = string> {
    */
   armoryPending?: boolean;
   /**
+   * The version's path on Wowhead, for links to recipes and items (`forever` makes
+   * https://www.wowhead.com/forever/spell=20034). Left out: links to Wowhead's Classic pages.
+   */
+  wowheadPath?: string;
+  /**
    * The servers a guild of this version can be on, per region (the regions of `config/regions.ts`),
    * by name, each with its rule set. A region with no entry is not available for this version.
    */
