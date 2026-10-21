@@ -1003,7 +1003,7 @@ on logout). Blizzard's Classic Era / SoD API has no professions, hence the addon
   `ProfessionsCoreModule` like sign-ups add Recurring Event): posts the guild's list in a channel,
   under an intro (what it is, a link to the guild's Professions page, `/crafter`), per profession
   each recipe (a Wowhead link) and "Crafters:" each character linking to its Guild Assistant
-  page (not a Discord profile: Discord shows a card for those even with embeds suppressed), as
+  page's Professions tab (not a Discord profile: Discord shows a card for those even with embeds suppressed), as
   `Crafters: [A, B]`, over as many messages as it takes (split at line ends; a
   profession carried on into the next message just goes on with its list). A recipe with too many crafters for one message ends
   in "12 more", linking to it on the website: `…/professions/<spell id>/crafters` opens the

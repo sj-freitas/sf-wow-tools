@@ -224,7 +224,7 @@ describe('ProfessionsPostPlugin', () => {
     // Crafters link to their Guild Assistant page, never a Discord profile (Discord shows a card).
     assert.match(
       posted[0].content,
-      /\(<https:\/\/guildassistant\.app\/forever\/eu\/firemaw\/characters\/Shivan-Nightpath>\)/,
+      /\(<https:\/\/guildassistant\.app\/forever\/eu\/firemaw\/characters\/Shivan-Nightpath\/professions>\)/,
     );
     assert.doesNotMatch(posted[0].content, /discord\.com\/users/);
     // The intro links to the guild's Professions page.

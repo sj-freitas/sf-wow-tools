@@ -38,8 +38,8 @@ export interface Crafter {
 }
 
 /**
- * "[Shivan Nightpath](<…/forever/eu/rp/characters/Shivan-Nightpath>)": the character, opening its
- * Guild Assistant page. Not its player's Discord profile: Discord shows a profile card under any
+ * "[Shivan Nightpath](<…/forever/eu/rp/characters/Shivan-Nightpath/professions>)": the character,
+ * opening its Guild Assistant page (its Professions tab, as the list passes it). Not its player's Discord profile: Discord shows a profile card under any
  * message with one of those links, even with embeds suppressed.
  */
 const crafterLink = (crafter: Crafter) =>
@@ -194,7 +194,10 @@ export class ProfessionsPostPlugin implements OnModuleInit {
           const character = byId.get(id);
           return {
             name: character?.name ?? '?',
-            url: character ? characterPageUrl(this.origin, guild, character) : null,
+            // Its Professions tab: what it can craft, the list's subject.
+            url: character
+              ? `${characterPageUrl(this.origin, guild, character)}/professions`
+              : null,
           };
         },
         listIntro(professionsUrl),
