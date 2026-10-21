@@ -35,7 +35,13 @@ export interface GuildProfessions {
   characters: {
     id: string;
     name: string;
+    /** For the character's page address. */
+    firstName: string;
+    lastName: string;
     class: string;
+    /** Its player on Discord (null until known). */
+    discordUserId: string | null;
+    discordName: string | null;
     professions: {
       name: string;
       skill: number | null;

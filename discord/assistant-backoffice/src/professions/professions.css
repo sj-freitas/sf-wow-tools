@@ -89,59 +89,80 @@
   opacity: 1;
 }
 .guild-profession {
-  display: grid;
-  gap: 0.4rem;
-  margin-top: 1.25rem;
+  border-bottom: 1px solid var(--border);
 }
-.guild-profession h4 {
-  margin: 0;
+/* A profession's heading: the whole line opens and closes it. */
+.guild-profession-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.7rem 0.25rem;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
 }
-.crafter {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  white-space: nowrap;
+.guild-profession-head:hover strong {
+  color: var(--accent);
 }
-.crafter img {
-  width: 16px;
-  height: 16px;
+.guild-profession-chevron {
+  width: 0.8rem;
+  color: var(--muted);
 }
 .guild-recipes {
   display: grid;
-  margin: 0;
+  margin: 0 0 0.75rem;
   padding: 0;
   list-style: none;
+}
+.guild-recipes > li {
+  padding: 0.3rem 0 0.3rem 1.35rem;
   border-top: 1px solid var(--border);
 }
-/* A recipe and who can craft it: side by side, the crafters below it on a phone. */
-.guild-recipes li {
+/* A recipe and its "View characters" button: side by side, wrapping on a phone. */
+.guild-recipe {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 0.25rem 1rem;
-  padding: 0.35rem 0;
-  border-bottom: 1px solid var(--border);
 }
-.guild-recipes a {
+.guild-recipe a {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
   color: inherit;
   text-decoration: none;
 }
-.guild-recipes a:hover {
+.guild-recipe a:hover {
   color: var(--accent);
   text-decoration: underline;
 }
-.guild-recipes a img {
+.guild-recipe a img {
   width: 18px;
   height: 18px;
   border-radius: 3px;
 }
+/* Who can craft it: character, Discord name, message button. */
 .guild-recipe-crafters {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0.4rem 0 0.2rem;
+  padding: 0.5rem 0.75rem;
+  list-style: none;
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--text) 4%, transparent);
+  font-size: 0.9rem;
+}
+.guild-recipe-crafters li {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 0.25rem 0.75rem;
-  font-size: 0.85rem;
+}
+.guild-recipe-crafters li .btn {
+  margin-left: auto;
 }

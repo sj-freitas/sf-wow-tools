@@ -26,7 +26,13 @@ export interface GuildProfessionsDto {
   characters: {
     id: string;
     name: string;
+    /** For the character's page address. */
+    firstName: string;
+    lastName: string;
     class: string;
+    /** Its player on Discord: id, and display name or username (null until known). */
+    discordUserId: string | null;
+    discordName: string | null;
     professions: {
       name: string;
       skill: number | null;
@@ -73,7 +79,9 @@ export class GuildRecipesService {
             firstName: true,
             lastName: true,
             class: true,
-            player: { select: { discordUserId: true } },
+            player: {
+              select: { discordUserId: true, discordDisplayName: true, discordUsername: true },
+            },
           },
         },
       },
@@ -94,7 +102,12 @@ export class GuildRecipesService {
         entry = {
           id: character.id,
           name: [character.firstName, character.lastName].filter(Boolean).join(' '),
+          firstName: character.firstName,
+          lastName: character.lastName,
           class: character.class,
+          discordUserId: character.player?.discordUserId ?? null,
+          discordName:
+            character.player?.discordDisplayName ?? character.player?.discordUsername ?? null,
           professions: [],
         };
         characters.set(character.id, entry);

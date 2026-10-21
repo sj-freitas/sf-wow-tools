@@ -2194,10 +2194,12 @@ label.btn.disabled {
   line-height: 1;
   letter-spacing: 0.05em;
 }
-/* Opens towards the left, under the button, wide enough for its labels. */
+/* Opens towards the left, under the button (placed by RowMenu, fixed in the window so a
+   scrolling table can't cut it off), wide enough for its labels, above the page's other layers. */
 .row-menu-list {
   left: auto;
   right: 0;
+  z-index: 50;
   min-width: 13rem;
   text-align: left;
 }

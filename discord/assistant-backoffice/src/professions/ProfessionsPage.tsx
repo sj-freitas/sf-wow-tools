@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import type { Guild } from '../types';
-import { ClassMark } from '../ClassMark';
+import { Link, useSearchParams } from 'react-router-dom';
+import { characterPath } from '../format';
 import { fuzzyWordsScore } from '../fuzzy';
+import { characterPagePath } from '../guildPath';
+import type { Guild } from '../types';
 import { HammerIcon } from '../Icons';
 import { SkeletonLines } from '../Loading';
 import { ADDON_URL, ImportProfessionsDrawer } from './ImportProfessionsDrawer';
@@ -92,6 +93,11 @@ export function ProfessionsPage({ guild }: { guild: Guild }) {
   const shownCount = shown.reduce((sum, [, recipes]) => sum + recipes.length, 0);
   const filtering = query.trim() !== '' || picked.length > 0;
   const unnamed = (data?.recipes ?? []).some((recipe) => !recipe.name);
+  // Professions start collapsed and open while searching or filtering; a click flips one from
+  // that (`toggled`), until the search starts or ends.
+  const expanded = filtering;
+  const [toggled, setToggled] = useState<Set<string>>(new Set());
+  useEffect(() => setToggled(new Set()), [expanded]);
   return (
     <div className="tasks">
       {importing && (
@@ -182,43 +188,137 @@ export function ProfessionsPage({ guild }: { guild: Guild }) {
             <p className="empty">No recipes match.</p>
           ) : (
             shown.map(([profession, recipes]) => (
-              <section key={profession} className="guild-profession">
-                <h4>
-                  {profession}{' '}
-                  <span className="muted">
-                    {recipes.length} recipe{recipes.length === 1 ? '' : 's'}
-                  </span>
-                </h4>
-                <ul className="guild-recipes">
-                  {recipes.map((recipe) => (
-                    <li key={`${recipe.kind}:${recipe.id}`}>
-                      <a href={recipe.url} target="_blank" rel="noreferrer">
-                        {recipe.icon && <img src={iconUrl(recipe.icon)} alt="" loading="lazy" />}
-                        {recipe.name ??
-                          `${recipe.kind === 'spell' ? 'Spell' : 'Item'} ${recipe.id}`}
-                      </a>
-                      <span className="guild-recipe-crafters">
-                        {recipe.crafterIds
-                          .map((id) => characters.get(id))
-                          .filter((c) => c !== undefined)
-                          .map((character) => (
-                            <span key={character.id} className="crafter">
-                              <ClassMark
-                                gameVersion={guild.gameVersion}
-                                className={character.class}
-                              />
-                              {character.name}
-                            </span>
-                          ))}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </section>
+              <ProfessionSection
+                key={profession}
+                guild={guild}
+                profession={profession}
+                recipes={recipes}
+                characters={characters}
+                open={expanded !== toggled.has(profession)}
+                onToggle={() =>
+                  setToggled((current) => {
+                    const next = new Set(current);
+                    if (!next.delete(profession)) next.add(profession);
+                    return next;
+                  })
+                }
+              />
             ))
           )}
         </>
       )}
     </div>
+  );
+}
+
+type Character = GuildProfessions['characters'][number];
+type Recipe = GuildProfessions['recipes'][number];
+
+/** One profession: its name and recipe count, and when open, its recipes. */
+function ProfessionSection({
+  guild,
+  profession,
+  recipes,
+  characters,
+  open,
+  onToggle,
+}: {
+  guild: Guild;
+  profession: string;
+  recipes: Recipe[];
+  characters: Map<string, Character>;
+  open: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <section className="guild-profession">
+      <button
+        type="button"
+        className="guild-profession-head"
+        aria-expanded={open}
+        onClick={onToggle}
+      >
+        <span className="guild-profession-chevron" aria-hidden="true">
+          {open ? '▾' : '▸'}
+        </span>
+        <strong>{profession}</strong>
+        <span className="muted">
+          {recipes.length} recipe{recipes.length === 1 ? '' : 's'}
+        </span>
+      </button>
+      {open && (
+        <ul className="guild-recipes">
+          {recipes.map((recipe) => (
+            <RecipeRow
+              key={`${recipe.kind}:${recipe.id}`}
+              guild={guild}
+              recipe={recipe}
+              crafters={recipe.crafterIds
+                .map((id) => characters.get(id))
+                .filter((c) => c !== undefined)
+                .sort((a, b) => a.name.localeCompare(b.name))}
+            />
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+/**
+ * A recipe (a Wowhead link) and how many can craft it; "View characters" lists them: each
+ * character (its page), its player's Discord name, and a link to message them on Discord.
+ */
+function RecipeRow({
+  guild,
+  recipe,
+  crafters,
+}: {
+  guild: Guild;
+  recipe: Recipe;
+  crafters: Character[];
+}) {
+  const [showing, setShowing] = useState(false);
+  return (
+    <li>
+      <div className="guild-recipe">
+        <a href={recipe.url} target="_blank" rel="noreferrer">
+          {recipe.icon && <img src={iconUrl(recipe.icon)} alt="" loading="lazy" />}
+          {recipe.name ?? `${recipe.kind === 'spell' ? 'Spell' : 'Item'} ${recipe.id}`}
+        </a>
+        <button
+          type="button"
+          className="btn btn-sm"
+          aria-expanded={showing}
+          onClick={() => setShowing((current) => !current)}
+        >
+          {showing ? 'Hide' : 'View'}{' '}
+          {crafters.length === 1 ? 'character' : `${crafters.length} characters`}
+        </button>
+      </div>
+      {showing && (
+        <ul className="guild-recipe-crafters">
+          {crafters.map((character) => (
+            <li key={character.id}>
+              <Link to={characterPagePath(guild, characterPath(character))}>{character.name}</Link>
+              {character.discordUserId && (
+                <>
+                  <span className="muted">@{character.discordName ?? character.discordUserId}</span>
+                  {/* Discord's profile page, where "Message" opens a direct message. */}
+                  <a
+                    className="btn btn-sm"
+                    href={`https://discord.com/users/${character.discordUserId}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Message on Discord
+                  </a>
+                </>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+    </li>
   );
 }

@@ -1,4 +1,11 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from 'react';
 import { Link } from 'react-router-dom';
 
 export interface RowMenuItem {
@@ -12,9 +19,13 @@ export interface RowMenuItem {
   disabled?: boolean;
 }
 
+/** Room the menu needs below its button before it opens upwards instead. */
+const MENU_ROOM = 280;
+
 /**
  * A row's actions behind one "⋯" button, so a table row stays calm on desktop and on a phone.
- * Closes on a pick, a click outside, or Esc.
+ * Closes on a pick, a click outside, Esc, or scrolling. Placed against the window (fixed), not
+ * the row: a table that scrolls sideways (`.table-wrap`) would otherwise cut it off at its bottom.
  */
 export function RowMenu({
   label,
@@ -28,7 +39,21 @@ export function RowMenu({
   busy?: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
+  const [place, setPlace] = useState<CSSProperties>({});
   const root = useRef<HTMLDivElement>(null);
+  const button = useRef<HTMLButtonElement>(null);
+
+  // Under the button, right edges lined up; above it when the window has no room below.
+  useLayoutEffect(() => {
+    if (!open || !button.current) return;
+    const rect = button.current.getBoundingClientRect();
+    const right = window.innerWidth - rect.right;
+    setPlace(
+      window.innerHeight - rect.bottom < MENU_ROOM && rect.top > MENU_ROOM
+        ? { position: 'fixed', top: 'auto', bottom: window.innerHeight - rect.top + 4, right }
+        : { position: 'fixed', top: rect.bottom + 4, right },
+    );
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -36,11 +61,21 @@ export function RowMenu({
       if (root.current && !root.current.contains(event.target as Node)) setOpen(false);
     };
     const onKey = (event: KeyboardEvent) => event.key === 'Escape' && setOpen(false);
+    // Fixed in the window, it would stay put while the page moves: close instead.
+    const onMove = (event: Event) => {
+      if (root.current && event.target instanceof Node && root.current.contains(event.target))
+        return;
+      setOpen(false);
+    };
     document.addEventListener('mousedown', close);
     document.addEventListener('keydown', onKey);
+    window.addEventListener('scroll', onMove, true);
+    window.addEventListener('resize', onMove);
     return () => {
       document.removeEventListener('mousedown', close);
       document.removeEventListener('keydown', onKey);
+      window.removeEventListener('scroll', onMove, true);
+      window.removeEventListener('resize', onMove);
     };
   }, [open]);
 
@@ -48,6 +83,7 @@ export function RowMenu({
   return (
     <div className="row-menu" ref={root}>
       <button
+        ref={button}
         type="button"
         className="btn btn-sm btn-icon row-menu-button"
         aria-haspopup="menu"
@@ -64,7 +100,7 @@ export function RowMenu({
         )}
       </button>
       {open && (
-        <div className="dropdown-menu row-menu-list" role="menu">
+        <div className="dropdown-menu row-menu-list" role="menu" style={place}>
           {items.map((item, index) => {
             const className = item.danger
               ? 'dropdown-item dropdown-option row-menu-danger'
