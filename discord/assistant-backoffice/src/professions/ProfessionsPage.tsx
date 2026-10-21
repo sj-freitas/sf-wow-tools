@@ -332,10 +332,16 @@ function RecipeRow({
         </button>
       </div>
       {showing && (
-        <ul className="guild-recipe-crafters">
+        // Clicking anywhere in the list but its links folds it away again, like its row opens it.
+        <ul className="guild-recipe-crafters" onClick={() => setShowing(false)}>
           {crafters.map((character) => (
             <li key={character.id}>
-              <Link to={characterPagePath(guild, characterPath(character))}>{character.name}</Link>
+              <Link
+                to={characterPagePath(guild, characterPath(character))}
+                onClick={(event) => event.stopPropagation()}
+              >
+                {character.name}
+              </Link>
               {character.discordUserId && (
                 <>
                   <span className="muted">@{character.discordName ?? character.discordUserId}</span>
@@ -345,6 +351,7 @@ function RecipeRow({
                     href={`https://discord.com/users/${character.discordUserId}`}
                     target="_blank"
                     rel="noreferrer"
+                    onClick={(event) => event.stopPropagation()}
                   >
                     Message on Discord
                   </a>

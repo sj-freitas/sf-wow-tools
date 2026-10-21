@@ -161,6 +161,7 @@
 }
 /* Who can craft it: character, Discord name, message button. */
 .guild-recipe-crafters {
+  cursor: pointer;
   display: grid;
   gap: 0.35rem;
   margin: 0.4rem 0 0.2rem;
