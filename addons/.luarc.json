@@ -29,6 +29,7 @@
     "GetRaidRosterInfo",
     "GetRaidTargetIndex",
     "GetRealmName",
+    "GetServerTime",
     "GetSkillLineInfo",
     "GetTradeSkillInfo",
     "GetTradeSkillItemLink",

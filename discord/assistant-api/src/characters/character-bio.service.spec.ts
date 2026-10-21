@@ -147,6 +147,7 @@ describe('CharacterBioService', () => {
       delete rest.player;
       delete rest.otherCharacters;
       delete rest.guilds;
+      delete rest.verified;
       return rest;
     };
     const base = {

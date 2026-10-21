@@ -30,6 +30,9 @@ const CharacterPage = lazy(() =>
 const CharactersPage = lazy(() =>
   import('./CharactersPage').then((m) => ({ default: m.CharactersPage })),
 );
+const BattleNetResultPage = lazy(() =>
+  import('./BattleNetResultPage').then((m) => ({ default: m.BattleNetResultPage })),
+);
 const CreateGuildPage = lazy(() =>
   import('./CreateGuildPage').then((m) => ({ default: m.CreateGuildPage })),
 );
@@ -89,6 +92,7 @@ interface Props {
  *   /overview                                       your guilds: pick one or add one
  *   /privacy                                        the privacy policy (also before logging in)
  *   /guilds/create                                  set up a new guild
+ *   /battlenet/:id                                  what "Verify with Battle.net" found (a preview)
  *   /<version>/<region>/<server>/characters         your characters on that server
  *   /<version>/<region>/<server>/characters/<name>  a character's own page (guild-agnostic: the
  *                                                    same one regardless of which guild it is in,
@@ -146,6 +150,7 @@ export function GuildShell({ guilds, setup, currentUser, onGuildsChanged }: Prop
               path="guilds/create"
               element={<CreateGuildPage setup={setup} onCreated={onGuildsChanged} />}
             />
+            <Route path="battlenet/:id" element={<BattleNetResultPage />} />
             <Route path=":version/:region/:realm/characters" element={<CharactersPage />} />
             <Route
               path=":version/:region/:realm/characters/:namePath"

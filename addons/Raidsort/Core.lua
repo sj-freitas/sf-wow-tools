@@ -71,6 +71,8 @@ end
 --- ("skull", "cross", … or 1-8). The same can be said for the whole setup instead:
 ---   leader = "Name", masterLooter = "Name", assists = { … }, mainTanks = { … }, mainAssists = { … }
 --- and `event = "Name"` names it (Guild Assistant's "Export for addon" writes exactly this format).
+--- `startsAt` and `invitesAt` (Unix seconds, from the same export) are when the raid starts and
+--- when invites start: Auto-Invite invites from one until the other.
 function Core.read(text)
     for from, to in pairs(QUOTES) do text = text:gsub(from, to) end
     if not text:find("%S") then return nil, "Paste a raid setup first." end
@@ -83,6 +85,19 @@ function Core.read(text)
 
     -- `event`: the event's name, from Guild Assistant's export (shown, nothing else).
     local setup = { groups = {}, members = {}, event = type(value.event) == "string" and value.event or nil }
+    -- `startsAt`, `invitesAt`: Unix seconds (Auto-Invite).
+    for _, key in ipairs({ "startsAt", "invitesAt" }) do
+        local at = value[key]
+        if at ~= nil then
+            if type(at) ~= "number" or at ~= math.floor(at) or at < 0 then
+                return nil, key .. " must be a time (Unix seconds)."
+            end
+            setup[key] = at
+        end
+    end
+    if setup.startsAt and setup.invitesAt and setup.invitesAt >= setup.startsAt then
+        return nil, "invitesAt must be before startsAt."
+    end
     local byKey = {}
 
     local function add(group, raw)
@@ -133,6 +148,8 @@ function Core.read(text)
             groups = math.max(groups, k)
         elseif k == "event" then
             if type(value.event) ~= "string" then return nil, "event must be the event's name." end
+        elseif k == "startsAt" or k == "invitesAt" then
+            -- Checked above.
         elseif not SINGLE_KEYS[k] and not LIST_KEYS[k] then
             return nil, ("Unknown setting %q."):format(tostring(k))
         end
@@ -193,6 +210,16 @@ function Core.read(text)
         if count > 1 then return nil, ("Only one player can be %s."):format(flag) end
     end
     return setup
+end
+
+--- Auto-Invite's next step at `now` (Unix seconds), with `missing` people of the setup not in the
+--- group: "started" (the raid started: stop), "everyone" (all in: stop), "wait" (invites haven't
+--- started yet) or "invite".
+function Core.autoInviteStep(setup, now, missing)
+    if setup.startsAt and now >= setup.startsAt then return "started" end
+    if missing == 0 then return "everyone" end
+    if setup.invitesAt and now < setup.invitesAt then return "wait" end
+    return "invite"
 end
 
 --- How many groups and players a setup has, for showing it.

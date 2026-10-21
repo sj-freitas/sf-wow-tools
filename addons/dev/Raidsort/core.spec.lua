@@ -104,10 +104,30 @@ it("reads Guild Assistant's export (export.fixture.lua, written by the backoffic
     eq(setup.groups[1][1].leader, true, "leader")
     eq(setup.groups[1][2].assist, true, "assist")
     eq(setup.groups[3][1].masterLooter, true, "master looter")
+    eq(setup.startsAt, 1792519200, "start")
+    eq(setup.invitesAt, 1792518300, "invites")
 end)
 
 it("refuses an event that isn't a name", function()
     fails("{ {'A'}, event = 5 }", "event must be")
+end)
+
+it("reads when the raid and its invites start, and refuses times that make no sense", function()
+    local setup = assert(Core.read("{ {'A'}, startsAt = 2000, invitesAt = 1100 }"))
+    eq(setup.startsAt, 2000)
+    eq(setup.invitesAt, 1100)
+    eq(assert(Core.read("{ {'A'} }")).invitesAt, nil, "both optional")
+    fails("{ {'A'}, startsAt = 'tonight' }", "startsAt must be a time")
+    fails("{ {'A'}, startsAt = 1000, invitesAt = 1000 }", "invitesAt must be before startsAt")
+end)
+
+it("works out Auto-Invite's step: wait, invite, or stop when all in or started", function()
+    local setup = { startsAt = 2000, invitesAt = 1100 }
+    eq(Core.autoInviteStep(setup, 1000, 3), "wait", "before invites")
+    eq(Core.autoInviteStep(setup, 1100, 3), "invite", "from the invite time")
+    eq(Core.autoInviteStep(setup, 1500, 0), "everyone", "everyone in")
+    eq(Core.autoInviteStep(setup, 2000, 3), "started", "the raid started")
+    eq(Core.autoInviteStep({ invitesAt = 1100 }, 9999, 1), "invite", "no start: until all in")
 end)
 
 -- Matching --------------------------------------------------------------------------------------

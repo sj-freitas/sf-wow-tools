@@ -54,6 +54,8 @@ export interface CharacterProfile {
   level: number;
   roles: string[];
   isOwner: boolean;
+  /** Verified by its player on Battle.net (then only they edit or move it); else just claimed. */
+  verified: boolean;
   bioSupported: boolean;
   bioVisible: boolean;
   bio: string | null;

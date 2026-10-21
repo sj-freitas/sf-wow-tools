@@ -49,6 +49,11 @@ for _, name in ipairs({ "PromoteToAssistant", "PromoteToLeader", "SetPartyAssign
     _G[name] = function(...) calls[#calls + 1] = name .. ":" .. table.concat({ ... }, ",") end
 end
 function SetLootMethod(method, name) calls[#calls + 1] = "SetLootMethod:" .. method .. "," .. name end
+-- The realm's clock, which a test sets (Auto-Invite).
+local clock = 0
+function GetServerTime() return clock end
+function date(format, at) return ("%s@%d"):format(format, at) end
+function UnitName() return raid[1] and raid[1].name end
 
 local ns = {}
 assert(loadfile("Raidsort/Core.lua"))("Raidsort", ns)
@@ -151,6 +156,43 @@ it("Invite & Sort stops waiting after a while, with a last full sort", function(
     runGame()
     has(printed, "Stopped waiting for invites")
     has(printed, "Not in the raid: Late")
+end)
+
+it("Auto-Invite waits for the invite time, invites each minute, and stops at the start", function()
+    reset({ { "Me", 1, 2 } })
+    local setup = assert(Core.read('{ { "Me", "Tank", "Healer" }, startsAt = 2000, invitesAt = 1100 }'))
+    clock = 1000
+    Raid.setAutoInvite(setup, true)
+    has(printed, "Auto-Invite is on")
+    assert(#calls == 0, "nothing before the invite time")
+    assert(#later == 1, "checks again in a minute")
+
+    clock = 1100
+    local tick = table.remove(later, 1)
+    tick()
+    has(calls, "InviteUnit:Tank")
+    has(calls, "InviteUnit:Healer")
+    assert(#later == 1, "and again in a minute")
+
+    clock = 2000
+    tick = table.remove(later, 1)
+    tick()
+    has(printed, "The raid has started: Auto-Invite is off.")
+    assert(#later == 0, "stopped")
+    assert(not Raid.autoInviting())
+end)
+
+it("Auto-Invite stops once everyone is in, and needs an invite time", function()
+    reset({ { "Me", 1, 2 }, { "Tank", 1 } })
+    clock = 1500
+    Raid.setAutoInvite(assert(Core.read('{ { "Me", "Tank" }, startsAt = 2000, invitesAt = 1100 }')), true)
+    has(printed, "Everyone in the setup is in the group: Auto-Invite is off.")
+    assert(#later == 0)
+
+    reset({ { "Me", 1, 2 } })
+    Raid.setAutoInvite(assert(Core.read('{ { "Me", "Tank" } }')), true)
+    has(printed, "has no invite time")
+    assert(not Raid.autoInviting())
 end)
 
 io.write(("%d passed, %d failed\n"):format(passed, failed))

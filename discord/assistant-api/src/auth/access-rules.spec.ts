@@ -79,6 +79,12 @@ describe('permission matrix', () => {
     assert.equal(canEditCharacter(officer, 'someone-else', 'me'), true);
   });
 
+  it('a character verified on Battle.net is its player’s alone, not even Officers’', () => {
+    assert.equal(canEditCharacter(officer, 'someone-else', 'me', true), false);
+    assert.equal(canEditCharacter(officer, 'me', 'me', true), true);
+    assert.equal(canEditCharacter(none, 'me', 'me', true), true);
+  });
+
   it('people outside the guild edit nothing, not even their own', () => {
     assert.equal(canEditCharacter(null, 'me', 'me'), false);
   });

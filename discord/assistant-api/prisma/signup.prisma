@@ -68,6 +68,8 @@ model SignupEvent {
   // Where it happens: a dungeon or raid, or any place (free text); empty when not given.
   location                  String             @default("")
   startsAt                  DateTime           @map("starts_at")
+  // When raid invites start (Raid Sort's Auto-Invite reads it from the export); before startsAt.
+  invitesAt                 DateTime?          @map("invites_at")
   // The IANA timezone the time was entered in (shown with it); Discord shows everyone their own.
   timezone                  String
   // Where the sign-up post is; `messageId` null while it isn't in Discord (deleted, or failed).

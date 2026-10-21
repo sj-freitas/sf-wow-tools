@@ -16,6 +16,8 @@ local ROUND_TIMEOUT = 2
 local SETTLE = 0.3
 -- Invite & Sort keeps sorting as people join for this long (invites expire after a while too).
 local FOLLOW_TIME = 120
+-- Auto-Invite invites everyone missing this often, from invitesAt until startsAt.
+local AUTO_EVERY = 60
 
 -- Classic and newer clients name these differently; use whichever this one has.
 local InviteUnit = (C_PartyInfo and C_PartyInfo.InviteUnit) or InviteUnit
@@ -228,6 +230,59 @@ function Raid.invite(setup)
         say("Invited %d: %s.", #sent, list(sent))
     end
     return true
+end
+
+-- Auto-Invite ---------------------------------------------------------------------------------
+
+local auto -- { setup, token } while on
+
+-- The realm's clock (Unix seconds), else this computer's.
+local function now() return (GetServerTime and GetServerTime()) or time() end
+
+local function missingCount(setup)
+    local matched = Core.match(setup, groupNames())
+    local inGroup = 0
+    for _ in pairs(matched) do inGroup = inGroup + 1 end
+    return #setup.members - inGroup
+end
+
+local function autoTick(token)
+    if not auto or auto.token ~= token then return end
+    local setup = auto.setup
+    local step = Core.autoInviteStep(setup, now(), missingCount(setup))
+    if step == "started" then
+        auto = nil
+        say("The raid has started: Auto-Invite is off.")
+    elseif step == "everyone" then
+        auto = nil
+        say("Everyone in the setup is in the group: Auto-Invite is off.")
+    else
+        if step == "invite" and not InCombatLockdown() then Raid.invite(setup) end
+        C_Timer.After(AUTO_EVERY, function() autoTick(token) end)
+    end
+    if ns.UI and ns.UI.refresh then ns.UI.refresh() end
+end
+
+--- Whether Auto-Invite is on.
+function Raid.autoInviting() return auto ~= nil end
+
+--- Turns Auto-Invite on or off for the setup: every minute from its invitesAt until its startsAt
+--- (or until everyone is in), it invites everyone missing.
+function Raid.setAutoInvite(setup, on)
+    if not on then
+        if auto then say("Auto-Invite is off.") end
+        auto = nil
+        return
+    end
+    if not (setup and setup.invitesAt) then
+        say("This setup has no invite time: export it again from an event with one.")
+        return
+    end
+    local token = (auto and auto.token or 0) + 1
+    auto = { setup = setup, token = token }
+    local until_ = setup.startsAt and (" until %s"):format(date("%H:%M", setup.startsAt)) or ""
+    say("Auto-Invite is on: invites every minute from %s%s.", date("%H:%M", setup.invitesAt), until_)
+    autoTick(token)
 end
 
 --- Invites everyone missing, makes the group a raid, and sorts it: now if it's a raid already,

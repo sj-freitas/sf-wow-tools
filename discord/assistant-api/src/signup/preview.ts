@@ -97,6 +97,8 @@ function main(): void {
     description: members ? 'Drinks, music and bad dancing.' : '3SR. Bring flasks and pots.',
     location: members ? 'The Slaughtered Lamb, Stormwind' : 'Black Temple',
     startsAt: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
+    // Raids invite 15 minutes before; a members event has no invites.
+    invitesAt: members ? null : new Date(Date.now() + 4 * 24 * 60 * 60 * 1000 - 15 * 60 * 1000),
     closed: false,
     createdByName: 'Blitzrn',
     // Blitzrn leads, Clayr is master looter.

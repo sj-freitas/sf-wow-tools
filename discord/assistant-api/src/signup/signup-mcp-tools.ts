@@ -135,6 +135,12 @@ export class SignupMcpTools implements OnModuleInit {
           title: z.string().describe('e.g. "Naxxramas"'),
           date: z.string().describe('YYYY-MM-DD'),
           time: z.string().describe('HH:mm, 24-hour'),
+          inviteTime: z
+            .string()
+            .optional()
+            .describe(
+              'HH:mm: when raid invites start, before the event (the day before if later than its time). Shown on the post; Raid Sort can invite from then',
+            ),
           description: z
             .string()
             .optional()

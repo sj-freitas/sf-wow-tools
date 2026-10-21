@@ -16,6 +16,7 @@ const EVENT: EventView = {
   description: 'Bring flasks.',
   location: '',
   startsAt: new Date('2026-10-20T18:00:00Z'),
+  invitesAt: null,
   closed: false,
   createdByName: 'Shivan',
   leaderDiscordUserId: 'u-lead',
@@ -111,6 +112,15 @@ describe('renderEventMessage', () => {
     // The leader isn't in the post (the setup shows them).
     assert.doesNotMatch(description, /Shivan/);
     assert.equal(message.embeds?.[0].footer, undefined);
+  });
+
+  it('shows when invites start under the date, when the event has an invite time', () => {
+    const invitesAt = new Date('2026-10-20T17:45:00Z');
+    const description = renderEventMessage({ ...EVENT, invitesAt }, []).embeds?.[0].description;
+    assert.match(
+      description ?? '',
+      new RegExp(`^🗓️ <t:\\d+:F>\n📨 Invites from <t:${invitesAt.getTime() / 1000}:t>\n\n`),
+    );
   });
 
   it('disables the answer buttons once closed, but not the links', () => {

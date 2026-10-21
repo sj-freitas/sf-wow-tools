@@ -8,6 +8,8 @@ import { entryName } from './labels';
  *   -- Molten Core, Tue 20 Oct 2026, 20:00 (Guild Assistant)
  *   {
  *     event = "Molten Core",
+ *     startsAt = 1792519200,  -- the event's start (Unix time)
+ *     invitesAt = 1792518300, -- when invites start (only when the event has an invite time)
  *     { "Dark Shivan", "Wwolf Test" }, -- Group 1
  *     { "Some Name" },                 -- Group 2
  *     leader = "Dark Shivan",
@@ -15,7 +17,9 @@ import { entryName } from './labels';
  *     assists = { "Wwolf Test" },
  *   }
  *
- * Only people in a group are in it (not the bench). The addon also takes `mainTanks`,
+ * The times are Unix seconds, the same moment in any timezone: Raid Sort's Auto-Invite invites
+ * from `invitesAt` until `startsAt`. Only people in a group are in it (not the bench). The addon
+ * also takes `mainTanks`,
  * `mainAssists` and per-player marks, which the setup doesn't have.
  */
 export interface AddonExport {
@@ -28,6 +32,9 @@ export interface AddonExportInput {
   title: string;
   /** "Tue 20 Oct 2026, 20:00", for the comment at the top. */
   when: string;
+  /** The event's start, and when invites start (null for none), as ISO times. */
+  startsAt: string;
+  invitesAt: string | null;
   entries: readonly Entry[];
   /** entry id -> its place (group from 1, slot from 0). */
   places: Readonly<Record<string, { group: number; slot: number }>>;
@@ -53,6 +60,11 @@ export function toAddonSetup(input: AddonExportInput): AddonExport {
 
   const lines = [`-- ${input.title}, ${input.when} (Guild Assistant)`, '{'];
   lines.push(`  event = ${luaString(input.title)},`);
+  const unix = (iso: string) => Math.floor(new Date(iso).getTime() / 1000);
+  lines.push(`  startsAt = ${unix(input.startsAt)}, -- the event's start (Unix time)`);
+  if (input.invitesAt) {
+    lines.push(`  invitesAt = ${unix(input.invitesAt)}, -- when invites start`);
+  }
   const rows = groups
     .slice(0, last)
     .map((group) =>

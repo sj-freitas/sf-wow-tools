@@ -201,7 +201,8 @@ export class CharactersAdminController {
     @Param('guildId') guildId: string,
     @Param('id') id: string,
   ): Promise<void> {
-    await this.assertCanEdit(req.user, guildId, id);
+    // Taking it off the roster is the guild's business: Officers can, even for a verified one.
+    await this.assertCanEdit(req.user, guildId, id, { evenIfVerified: true });
     const result = await this.charactersService.removeFromGuild(guildId, id);
     if (result === 'not-found') throw new NotFoundException('Character not found');
   }
@@ -269,19 +270,28 @@ export class CharactersAdminController {
     return { discordUserId: body.discordUserId, names };
   }
 
-  /** Officers can edit any character of their guild; members only their own. */
+  /**
+   * Officers can edit any character of their guild; members only their own. A character verified
+   * on Battle.net only its player (unless `evenIfVerified`: taking it off the guild's roster).
+   */
   private async assertCanEdit(
     user: SessionUser,
     guildId: string,
     characterId: string,
+    { evenIfVerified = false }: { evenIfVerified?: boolean } = {},
   ): Promise<void> {
     const access = await this.guildAccess.find(user.id, guildId);
-    const ownerDiscordId = await this.charactersService.findOwnerDiscordId(characterId);
-    if (ownerDiscordId === null) {
+    const ownership = await this.charactersService.findOwnership(characterId);
+    if (!ownership) {
       throw new NotFoundException('Character not found');
     }
-    if (!canEditCharacter(access, ownerDiscordId, user.discordId)) {
-      throw new ForbiddenException('You can only change your own characters');
+    const verified = ownership.verified && !evenIfVerified;
+    if (!canEditCharacter(access, ownership.discordUserId, user.discordId, verified)) {
+      throw new ForbiddenException(
+        verified && access?.isOfficer
+          ? 'Its player verified this character on Battle.net: only they can change it.'
+          : 'You can only change your own characters',
+      );
     }
   }
 }

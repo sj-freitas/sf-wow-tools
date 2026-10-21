@@ -54,6 +54,7 @@ function makeEvent(over: Partial<EventRow> = {}): EventRow {
     description: '',
     location: '',
     startsAt: new Date(Date.now() + 86_400_000),
+    invitesAt: null,
     timezone: 'Europe/Paris',
     serverId: 'server-1',
     channelId: 'channel-1',

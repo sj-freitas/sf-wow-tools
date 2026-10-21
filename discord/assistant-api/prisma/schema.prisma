@@ -212,6 +212,11 @@ model Character {
   // Guild-agnostic like the character itself: the same bio shows in every guild it is in.
   bio           String                     @default("")
   bioVisible    Boolean                    @default(false) @map("bio_visible")
+  // Ownership: every character is claimed by its player (who added it, or for whom an Officer
+  // did). Set when the player proved on Battle.net that it is theirs: from then on only they edit
+  // or move it, not Officers (who can still add it to their guild or take it off). Set by hand
+  // for now: the Battle.net check is a preview (src/battlenet).
+  verifiedAt    DateTime?                  @map("verified_at")
   images        CharacterImage[]
   guilds        CharacterGuildMembership[]
   officerNotes  CharacterOfficerNote[]

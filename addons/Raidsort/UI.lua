@@ -66,7 +66,7 @@ end
 
 -- The main window ------------------------------------------------------------------------------
 
-local main, mainButtons, summary
+local main, mainButtons, summary, autoInvite
 local uploadButton, reuploadButton, sortButton, closeButton
 
 local function buildMain()
@@ -74,6 +74,19 @@ local function buildMain()
 
     summary = main:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     summary:SetPoint("TOP", main, "TOP", 0, -38)
+
+    -- Auto-Invite: only for a setup with an invite time (Guild Assistant's export of an event
+    -- that has one). Invites every minute from then until the raid starts.
+    autoInvite = CreateFrame("CheckButton", nil, main, "UICheckButtonTemplate")
+    autoInvite:SetSize(24, 24)
+    autoInvite.label = autoInvite.text or autoInvite.Text
+        or autoInvite:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    autoInvite.label:ClearAllPoints()
+    autoInvite.label:SetPoint("LEFT", autoInvite, "RIGHT", 2, 0)
+    autoInvite:SetScript("OnClick", function(self)
+        ns.Raid.setAutoInvite(ns.setup, self:GetChecked() and true or false)
+        UI.refresh()
+    end)
 
     uploadButton = newButton(main, "Upload Config", function() UI.showUpload() end)
     reuploadButton = newButton(main, "Re-upload Config", function() UI.showUpload() end)
@@ -89,9 +102,23 @@ function UI.refresh()
         main.title:SetText("Raid Sort (Config Loaded)")
         summary:SetText(Core.describe(ns.setup))
         layoutButtons(main, mainButtons, { reuploadButton, sortButton, closeButton })
+        if ns.setup.invitesAt then
+            autoInvite.label:SetText(("Auto-Invite (from %s)"):format(date("%H:%M", ns.setup.invitesAt)))
+            autoInvite:SetChecked(ns.Raid.autoInviting())
+            local width = autoInvite:GetWidth() + 2 + autoInvite.label:GetStringWidth()
+            autoInvite:ClearAllPoints()
+            autoInvite:SetPoint("TOPLEFT", main, "TOP", -width / 2, -56)
+            autoInvite:Show()
+            main:SetHeight(132)
+        else
+            autoInvite:Hide()
+            main:SetHeight(104)
+        end
     else
         main.title:SetText("Raid Sort")
         summary:SetText("No raid setup loaded yet.")
+        autoInvite:Hide()
+        main:SetHeight(104)
         layoutButtons(main, mainButtons, { uploadButton, closeButton })
     end
 end
@@ -204,6 +231,8 @@ function UI.save()
         problem:SetText(err)
         return
     end
+    -- A new setup: Auto-Invite was for the last one.
+    ns.Raid.setAutoInvite(nil, false)
     ns.setup, ns.setupText = setup, text
     ns.Raid.say("Raid setup loaded: %s.", Core.describe(setup))
     upload:Hide()

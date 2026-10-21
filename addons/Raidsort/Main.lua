@@ -22,12 +22,16 @@ SlashCmdList.RAIDSORT = function(message)
         if not needsSetup() then Raid.sort(ns.setup) end
     elseif command == "invite" then
         if not needsSetup() then Raid.invite(ns.setup) end
+    elseif command == "auto" then
+        if not needsSetup() then Raid.setAutoInvite(ns.setup, not Raid.autoInviting()) end
+        UI.refresh()
     else
         Raid.say("Commands:")
         print("  /raidsort - open the Raid Sort window")
         print("  /raidsort upload - paste a raid setup")
         print("  /raidsort sort - sort the raid by the setup")
         print("  /raidsort invite - invite everyone in the setup")
+        print("  /raidsort auto - Auto-Invite on or off: every minute from the invite time to the start")
     end
 end
 

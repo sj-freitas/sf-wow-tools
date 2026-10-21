@@ -360,6 +360,19 @@ export class CharactersService {
   }
 
   /** The Discord id of the character's own player, or null if the character does not exist. */
+  /** Who plays the character, and whether they verified it on Battle.net; null when none. */
+  async findOwnership(
+    characterId: string,
+  ): Promise<{ discordUserId: string; verified: boolean } | null> {
+    const character = await this.prisma.character.findUnique({
+      where: { id: characterId },
+      select: { verifiedAt: true, player: { select: { discordUserId: true } } },
+    });
+    return character
+      ? { discordUserId: character.player.discordUserId, verified: character.verifiedAt !== null }
+      : null;
+  }
+
   async findOwnerDiscordId(characterId: string): Promise<string | null> {
     const character = await this.prisma.character.findUnique({
       where: { id: characterId },

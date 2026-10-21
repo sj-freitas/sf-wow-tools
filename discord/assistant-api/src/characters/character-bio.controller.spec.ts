@@ -32,6 +32,7 @@ describe('CharacterBioController', () => {
       bio: 'Text',
       images: [],
       guilds: [],
+      verified: false,
       player: { discordUserId: 'owner-1', name: 'Merric' },
       otherCharacters: [],
     };

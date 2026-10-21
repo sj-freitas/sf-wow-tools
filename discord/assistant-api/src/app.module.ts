@@ -16,6 +16,7 @@ import { GuildsModule } from './guilds/guilds.module';
 import { RealtimeModule } from './realtime/realtime.module';
 import { ModerationModule } from './moderation/moderation.module';
 import { ArmoryModule } from './armory/armory.module';
+import { BattleNetModule } from './battlenet/battlenet.module';
 import { OfficerRequestsModule } from './officer-requests/officer-requests.module';
 import { PlayersModule } from './players/players.module';
 import { PublicModule } from './public/public.module';
@@ -49,6 +50,7 @@ import { ProfessionsModule } from './professions/professions.module';
     OfficerRequestsModule,
     ModerationModule,
     ArmoryModule,
+    BattleNetModule,
     SignupModule,
     McpModule,
     ProfessionsModule,

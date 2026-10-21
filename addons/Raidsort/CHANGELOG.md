@@ -1,5 +1,12 @@
 # Raid Sort
 
+## 2.1.0
+
+- Auto-Invite: for a setup from a Guild Assistant event with an invite time, a checkbox (or
+  `/raidsort auto`) invites everyone missing every minute from the invite time until the raid
+  starts or everyone is in.
+- Reads `startsAt` and `invitesAt` from Guild Assistant's export.
+
 ## 2.0.0
 
 - Rewritten for WoW Forever (and Classic Era).

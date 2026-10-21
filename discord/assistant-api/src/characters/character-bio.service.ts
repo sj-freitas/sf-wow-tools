@@ -34,6 +34,11 @@ export interface CharacterProfile {
   roles: string[];
   /** Whether the viewer is the character's own player: only they may edit the bio. */
   isOwner: boolean;
+  /**
+   * Ownership: claimed by its player (every character), or also verified by them on Battle.net
+   * (then only they edit or move it, not Officers).
+   */
+  verified: boolean;
   /** Whether this server offers bios at all (its rule set is 'RP'); hide the section if not. */
   bioSupported: boolean;
   bioVisible: boolean;
@@ -144,6 +149,7 @@ export class CharacterBioService {
         roles: true,
         bio: true,
         bioVisible: true,
+        verifiedAt: true,
         images: { select: { id: true, contentType: true }, orderBy: { createdAt: 'asc' } },
         guilds: {
           select: {
@@ -196,6 +202,7 @@ export class CharacterBioService {
       level: character.level,
       roles: character.roles.map((role) => ROLE_LABELS[role]),
       isOwner,
+      verified: Boolean(character.verifiedAt),
       bioSupported: bioOffered,
       bioVisible: bioOffered && character.bioVisible,
       bio: bioOffered && visible ? character.bio : null,

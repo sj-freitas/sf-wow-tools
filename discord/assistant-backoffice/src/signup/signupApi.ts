@@ -128,6 +128,10 @@ export interface SignupEvent {
   serverTimezone: string;
   /** The date and time in `timezone`, for the edit form. */
   local: { date: string; time: string };
+  /** When raid invites start (Raid Sort's Auto-Invite); null for none. */
+  invitesAt: string | null;
+  /** The same as HH:mm in `timezone`, for the edit form. */
+  inviteTime: string | null;
   lockMode: LockMode;
   closed: boolean;
   /** Archived (read-only, not in Discord) since then; null for an event that isn't. */
@@ -171,6 +175,8 @@ export interface EventForm {
   date: string;
   time: string;
   timezone: string;
+  /** HH:mm when raid invites start, on the event's day (the day before if later); '' for none. */
+  inviteTime?: string;
   /** Officers only, when creating; left out = the guild's event channel. */
   channel?: { serverId: string; channelId: string };
   /** Only when creating (it can't change later); left out = characters. */

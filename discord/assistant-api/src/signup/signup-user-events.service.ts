@@ -32,7 +32,7 @@ import {
   isScheduled,
   type SignupViewer,
 } from './signup-rules';
-import { localParts, parseEventStart, resolveTimezone } from './signup-time';
+import { localParts, parseEventStart, parseInviteTime, resolveTimezone } from './signup-time';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -242,6 +242,9 @@ export class SignupUserEventsService {
       timezone: event.timezone,
       serverTimezone: serverTime,
       local: localParts(event.startsAt, event.timezone),
+      // When raid invites start (and the time in the event's timezone, for the edit form).
+      invitesAt: event.invitesAt?.toISOString() ?? null,
+      inviteTime: event.invitesAt ? localParts(event.invitesAt, event.timezone).time : null,
       lockMode: event.lockMode,
       closed: isClosed(event),
       archivedAt: event.archivedAt?.toISOString() ?? null,
@@ -316,8 +319,19 @@ export class SignupUserEventsService {
       if (typeof parsed === 'string') throw new BadRequestException(`Posting time: ${parsed}`);
       publishAt = parsed;
     }
+    // `inviteTime` (HH:mm, the event's day): when raid invites start; '' for none.
+    let invitesAt: Date | null | undefined;
+    if (typeof body.inviteTime === 'string') {
+      if (body.inviteTime.trim() === '') invitesAt = null;
+      else {
+        const parsed = parseInviteTime(startsAt, body.inviteTime, zone);
+        if (typeof parsed === 'string') throw new BadRequestException(parsed);
+        invitesAt = parsed;
+      }
+    }
     return {
       publishAt,
+      invitesAt,
       title: typeof body.title === 'string' ? body.title : '',
       description: typeof body.description === 'string' ? body.description : '',
       location: typeof body.location === 'string' ? body.location : '',

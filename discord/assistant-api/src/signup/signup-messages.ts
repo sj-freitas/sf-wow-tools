@@ -27,6 +27,8 @@ export interface EventView {
   /** Where (a dungeon, raid or any place); empty when not given. */
   location: string;
   startsAt: Date;
+  /** When raid invites start; null for none. */
+  invitesAt: Date | null;
   closed: boolean;
   createdByName: string;
   /** Who leads it (its creator unless changed) and who is master looter, by Discord account. */
@@ -201,6 +203,7 @@ export function renderEventMessage(
     ...(event.location.trim() ? [`📍 ${event.location.trim()}`] : []),
     // Just the date: Discord shows it in each reader's own timezone, and the full date on hover.
     `🗓️ ${discordTimestamp(event.startsAt, 'F')}`,
+    ...(event.invitesAt ? [`📨 Invites from ${discordTimestamp(event.invitesAt, 't')}`] : []),
   ].join('\n');
   // How many are coming goes in the title (the link): "First Guild Meeting - 👥 8 (+2)".
   const count = ` - 👥 ${coming}${maybe > 0 ? ` (+${maybe})` : ''}`;

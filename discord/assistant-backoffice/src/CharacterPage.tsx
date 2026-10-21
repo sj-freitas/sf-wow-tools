@@ -118,7 +118,20 @@ function CharacterView({
     <>
       <div className="tasks-head">
         <div>
-          <h2>{profile.name}</h2>
+          <h2>
+            {profile.name}{' '}
+            {/* Ownership: claimed by its player, or verified by them on Battle.net. */}
+            <span
+              className={profile.verified ? 'badge badge-main' : 'badge'}
+              title={
+                profile.verified
+                  ? 'Its player proved on Battle.net that it is theirs: only they can change it.'
+                  : 'Claimed by its player; Officers can change it too.'
+              }
+            >
+              {profile.verified ? 'Battle.net verified' : 'Claimed'}
+            </span>
+          </h2>
           <div className="card-meta">
             <ClassMark gameVersion={gameVersion} className={profile.class} />
             {profile.class} · {profile.race} · Level {profile.level} · {profile.roles.join(', ')}
@@ -136,6 +149,17 @@ function CharacterView({
           <Link className="btn btn-sm" to={charactersUrl}>
             All your characters
           </Link>
+        )}
+        {/* A Battle.net login, then a page with what it found (a preview: nothing changes yet).
+            A full page load: the API sends the browser to Battle.net. */}
+        {!profile.verified && (
+          <a
+            className="btn btn-sm"
+            href={`/api/battlenet/login?characterId=${encodeURIComponent(profile.characterId)}`}
+            title="Log in on Battle.net to show this is your character"
+          >
+            Verify with Battle.net
+          </a>
         )}
         <span className="btn btn-sm disabled" title="Coming soon">
           Armory

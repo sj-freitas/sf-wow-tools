@@ -20,6 +20,7 @@ describe('CharactersAdminController permissions', () => {
   let owners: unknown[];
   let removed: string[];
   let ownerOfCharacter: string;
+  let verified: boolean;
   let isServerMember: boolean;
   let controller: CharactersAdminController;
 
@@ -30,6 +31,7 @@ describe('CharactersAdminController permissions', () => {
     owners = [];
     removed = [];
     ownerOfCharacter = ME;
+    verified = false;
     isServerMember = true;
     const characters = {
       addToGuild: async (_guild: string, discordUserId: string, _c: unknown, names: unknown) => {
@@ -38,7 +40,7 @@ describe('CharactersAdminController permissions', () => {
       },
       findGuildMemberNames: async () =>
         isServerMember ? { username: 'them', displayName: null } : null,
-      findOwnerDiscordId: async () => ownerOfCharacter,
+      findOwnership: async () => ({ discordUserId: ownerOfCharacter, verified }),
       update: async (id: string, _patch: unknown, owner: unknown) => {
         updated.push(id);
         owners.push(owner);
@@ -134,6 +136,26 @@ describe('CharactersAdminController permissions', () => {
       await controller.update(req, 'g', 'c1', { level: 60 });
       await controller.remove(req, 'g', 'c1');
       assert.deepEqual([updated, removed], [['c1'], ['c1']]);
+    });
+
+    it('keeps Officers off a character its player verified on Battle.net, but not off the roster', async () => {
+      ownerOfCharacter = OTHER;
+      verified = true;
+      access = { isAdmin: false, isOfficer: true };
+      await assert.rejects(controller.update(req, 'g', 'c1', { level: 60 }), /verified/);
+      await assert.rejects(
+        controller.update(req, 'g', 'c1', { discordUserId: ME }),
+        ForbiddenException,
+        'nor move it',
+      );
+      await controller.remove(req, 'g', 'c1');
+      assert.deepEqual([updated, removed], [[], ['c1']]);
+    });
+
+    it('lets the player change their own verified character', async () => {
+      verified = true;
+      await controller.update(req, 'g', 'c1', { level: 60 });
+      assert.deepEqual(updated, ['c1']);
     });
 
     it('lets an Officer move a character to another Discord user of the guild', async () => {

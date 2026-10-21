@@ -205,6 +205,8 @@ export function SetupEditor({
       toAddonSetup({
         title: event.title,
         when: formatEventTime(event.startsAt, event.timezone),
+        startsAt: event.startsAt,
+        invitesAt: event.invitesAt,
         entries: people,
         places,
         groupCount,

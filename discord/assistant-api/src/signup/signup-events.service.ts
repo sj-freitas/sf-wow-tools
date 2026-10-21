@@ -68,6 +68,8 @@ export interface EventInput {
   location?: string;
   startsAt: Date;
   timezone: string;
+  /** When raid invites start (before `startsAt`); null for none. Left out: unchanged. */
+  invitesAt?: Date | null;
 }
 
 export interface EventChannel {
@@ -194,6 +196,7 @@ export class SignupEventsService {
       | 'description'
       | 'location'
       | 'startsAt'
+      | 'invitesAt'
       | 'lockMode'
       | 'archivedAt'
       | 'publishAt'
@@ -210,6 +213,7 @@ export class SignupEventsService {
       description: event.description,
       location: event.location,
       startsAt: event.startsAt,
+      invitesAt: event.invitesAt,
       closed: isClosed(event),
       createdByName: event.createdByName,
       leaderDiscordUserId: event.leaderDiscordUserId ?? event.createdByDiscordId,
@@ -257,6 +261,9 @@ export class SignupEventsService {
         `The description can be at most ${MAX_DESCRIPTION_LENGTH} characters.`,
       );
     }
+    if (input.invitesAt && input.invitesAt >= input.startsAt) {
+      throw new BadRequestException('Invites start before the event does.');
+    }
     return { ...input, title, description, location };
   }
 
@@ -290,6 +297,7 @@ export class SignupEventsService {
         description: valid.description,
         location: valid.location ?? '',
         startsAt: valid.startsAt,
+        invitesAt: valid.invitesAt ?? null,
         timezone: valid.timezone,
         serverId: channel.serverId,
         channelId: channel.channelId,
@@ -337,6 +345,7 @@ export class SignupEventsService {
         description: valid.description,
         location: valid.location ?? '',
         startsAt: valid.startsAt,
+        ...(valid.invitesAt !== undefined ? { invitesAt: valid.invitesAt } : {}),
         timezone: valid.timezone,
         // Moved to later: the post opens again (AUTO) and the worker closes it at the new time.
         ...(valid.startsAt > new Date() ? { closedShown: false } : {}),

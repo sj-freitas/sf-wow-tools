@@ -32,6 +32,8 @@ export function EventFormPage({ guild, serverTimezone }: { guild: Guild; serverT
   });
   const [date, setDate] = useState('');
   const [time, setTime] = useState('20:00');
+  // When raid invites start (optional): shown on the post, and Raid Sort's Auto-Invite uses it.
+  const [inviteTime, setInviteTime] = useState('');
   const [timezone, setTimezone] = useState('ST');
   const [channel, setChannel] = useState('');
   // When the post goes out: now, or later (date and time in the event's timezone). Editing shows
@@ -64,6 +66,7 @@ export function EventFormPage({ guild, serverTimezone }: { guild: Guild; serverT
         });
         setDate(event.local.date);
         setTime(event.local.time);
+        setInviteTime(event.inviteTime ?? '');
         setTimezone(event.timezone === event.serverTimezone ? 'ST' : event.timezone);
         if (event.publishLocal) {
           setCanSchedule(true);
@@ -91,6 +94,7 @@ export function EventFormPage({ guild, serverTimezone }: { guild: Guild; serverT
       date,
       time,
       timezone,
+      inviteTime,
       ...(!editing && settings?.isOfficer && channel ? { channel: splitChannelKey(channel) } : {}),
       ...(!editing ? { type: text.kind } : {}),
       ...(canSchedule && postLater ? { publishDate, publishTime } : {}),
@@ -125,6 +129,13 @@ export function EventFormPage({ guild, serverTimezone }: { guild: Guild; serverT
           <input type="time" value={time} onChange={(e) => setTime(e.target.value)} required />
         </label>
         <TimezoneField value={timezone} onChange={setTimezone} serverTimezone={serverTimezone} />
+        <label className="field">
+          Invites start <span className="muted">(optional)</span>
+          <input type="time" value={inviteTime} onChange={(e) => setInviteTime(e.target.value)} />
+          <small className="muted">
+            Before the event, e.g. 15 minutes. Shown on the post; Raid Sort can invite from then.
+          </small>
+        </label>
         {canSchedule && (
           <fieldset className="field field-wide signup-post-when">
             <legend>Post</legend>

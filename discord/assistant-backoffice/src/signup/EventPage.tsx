@@ -130,6 +130,7 @@ export function EventPage({ guild }: { guild: Guild }) {
             <span className="muted"> · {formatEventTime(event.startsAt, localZone)} your time</span>
           )}
         </p>
+        {event.inviteTime && <p className="signup-when">📨 Invites from {event.inviteTime}</p>}
         <p className="muted">
           By {event.createdByName} · {lockLabel}
           {event.postUrl ? (

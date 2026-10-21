@@ -3,6 +3,7 @@ import { describe, it } from 'node:test';
 import {
   nextHalfHourIn,
   parseEventStart,
+  parseInviteTime,
   parseTimeOfDay,
   resolveTimezone,
   todayIn,
@@ -74,6 +75,36 @@ describe('parseTimeOfDay', () => {
     assert.equal(parseTimeOfDay('24:00'), null);
     assert.equal(parseTimeOfDay('13pm'), null);
     assert.equal(parseTimeOfDay('soon'), null);
+  });
+});
+
+describe('parseInviteTime', () => {
+  // 20:00 in Paris (summer time, UTC+2).
+  const start = new Date('2026-10-20T18:00:00Z');
+
+  it("is that time on the event's day", () => {
+    assert.equal(
+      (parseInviteTime(start, '19:45', PARIS) as Date).toISOString(),
+      '2026-10-20T17:45:00.000Z',
+    );
+  });
+
+  it('is the day before when that time would be after the start', () => {
+    // A raid at 00:30 inviting at 23:45 the evening before.
+    const late = new Date('2026-10-20T22:30:00Z');
+    assert.equal(
+      (parseInviteTime(late, '23:45', PARIS) as Date).toISOString(),
+      '2026-10-20T21:45:00.000Z',
+    );
+    assert.equal(
+      (parseInviteTime(start, '20:00', PARIS) as Date).toISOString(),
+      '2026-10-19T18:00:00.000Z',
+      'the start time itself is the day before',
+    );
+  });
+
+  it('says what is wrong with a time it cannot read', () => {
+    assert.match(parseInviteTime(start, 'soon', PARIS) as string, /HH:mm/);
   });
 });
 

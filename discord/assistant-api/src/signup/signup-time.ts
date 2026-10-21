@@ -49,6 +49,25 @@ export function parseEventStart(date: string, time: string, zone: string): Date 
   return local.toJSDate();
 }
 
+/**
+ * When invites start: `time` (HH:mm) on the event's day in `zone`, or the day before when that
+ * would be after the start (invites at 23:45 for a raid at 00:30). An error message if it can't be.
+ */
+export function parseInviteTime(startsAt: Date, time: string, zone: string): Date | string {
+  const clock = parseTimeOfDay(time);
+  if (!clock) return 'Write the invite time as HH:mm, for example 19:45.';
+  let invites = DateTime.fromJSDate(startsAt, { zone }).set({
+    ...clock,
+    second: 0,
+    millisecond: 0,
+  });
+  if (invites.toMillis() >= startsAt.getTime()) invites = invites.minus({ days: 1 });
+  if (invites.hour !== clock.hour || invites.minute !== clock.minute) {
+    return `${time} does not exist that day in ${zone} (the clocks change that night).`;
+  }
+  return invites.toJSDate();
+}
+
 /** Today's date in `zone`, as `YYYY-MM-DD`: an event's day when none is given. */
 export const todayIn = (zone: string, now: Date = new Date()): string =>
   DateTime.fromJSDate(now, { zone }).toFormat('yyyy-MM-dd');

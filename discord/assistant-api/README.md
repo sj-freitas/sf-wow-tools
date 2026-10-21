@@ -615,6 +615,18 @@ ephemeral (only you see them).
   minimum lengths (CHECK constraints on `characters.first_name`/`last_name`), since a CHECK can't
   read the guild's game version from another table.
 
+**Ownership.** Every character is **claimed** by its player: whoever added it, or the member an
+Officer added it for. A player can also have it **verified on Battle.net** (`characters.verified_at`):
+from then on only they can edit or move it, not Officers, who can still add it to their guild or
+take it off the roster (`canEditCharacter` in `src/auth/access-rules.ts`). The character's page
+shows which. **Verify with Battle.net** on that page (`src/battlenet`) logs the player in on
+Battle.net (OAuth, `wow.profile`; the same Blizzard client as the armory, with
+`BATTLENET_REDIRECT_URI` or `<site>/api/battlenet/callback` registered as its redirect URL) and
+shows their account's characters on Wild Growth EU (Season of Discovery) and whether the character
+is one of them: a preview that changes nothing. At WoW Forever's launch it reads Forever's
+characters and sets `verified_at` (and moves the character to that player); until then
+`verified_at` is set by hand.
+
 Which characters are mains is up to each guild: an Officer gives them a guild attribute (e.g.
 "Main") on the roster. An **Officer** can also move a character to another Discord
 user (the Discord user field of the edit form, or `discordUserId` in `PATCH /api/characters/:id`): the

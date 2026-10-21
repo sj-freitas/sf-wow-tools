@@ -24,9 +24,10 @@ sessions.
 | `/raidsort upload` | Opens the window to paste a setup                                    |
 | `/raidsort sort`   | Sorts the raid by the loaded setup                                   |
 | `/raidsort invite` | Invites everyone in the setup who isn't in your group yet            |
+| `/raidsort auto`   | Turns [Auto-Invite](#auto-invite) on or off                          |
 | `/raidsort help`   | Lists the commands                                                   |
 
-`sort` and `invite` open the upload window when no setup is loaded.
+`sort`, `invite` and `auto` open the upload window when no setup is loaded.
 
 ## The windows
 
@@ -100,6 +101,14 @@ so it invites 4 first. When someone joins, it turns the party into a raid (if yo
 leader) and invites the rest. You need to be the leader or an assistant if you're already in a
 group.
 
+## Auto-Invite
+
+When the setup comes from a Guild Assistant event with an **invite time**, the window shows an
+**Auto-Invite (from 19:45)** checkbox (or use `/raidsort auto`). While it's on, from the invite
+time it invites everyone in the setup who isn't in your group, once a minute, until the raid
+starts or everyone is in; then it turns itself off and says why. Before the invite time it just
+waits. Loading another setup turns it off. Times are the realm's clock.
+
 ## The setup
 
 A setup is up to 8 groups of up to 5 players. Each player is written as their name:
@@ -156,7 +165,8 @@ it, along with a comment line at the top (`-- …`), which is fine to keep.
 ### What Guild Assistant exports
 
 The event's groups (not the bench), the leader, the master looter and the assists, as long as they're in
-a group. The export window says if anything was left out.
+a group, and when the event and its invites start (`startsAt`, `invitesAt`, Unix time, for
+Auto-Invite). The export window says if anything was left out.
 
 ## When Save says something is wrong
 
