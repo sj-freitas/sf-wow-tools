@@ -24,3 +24,5 @@ Each part's README explains it; tasks are on the Botlog board (project GA), not 
   the publish task for Sérgio).
 - Working the board ("check the board", "do GA-<n>"): follow the **board-task** skill (refined To do
   tasks only, one at a time).
+- A UI change Sérgio asked for in chat (not from a board task): when it's done, follow the
+  **ui-test-ticket** skill: a "Test: …" ticket assigned to him, one per feature.
