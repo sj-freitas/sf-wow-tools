@@ -68,7 +68,7 @@ export function PluginsPage({ guild, timezone }: Props) {
       : plugin.kind === 'PROFESSIONS_POST'
         ? {
             summary: 'posts what the guild can craft, again when it changes',
-            runNow: `Check the guild’s professions now and, if they changed, replace the list in ${channelOf(plugin)}? Its schedule carries on as before.`,
+            runNow: `Delete the list in ${channelOf(plugin)} and post it again now, even if nothing changed? Its schedule carries on as before.`,
             runNowDanger: false,
             remove: 'the list it posted stays',
           }

@@ -1004,7 +1004,9 @@ on logout). Blizzard's Classic Era / SoD API has no professions, hence the addon
   them). Posted with embeds suppressed (a Discord profile link would show a card). On its schedule (every 5 minutes, every hour or daily) and two minutes after any
   import, it hashes the messages: unchanged, nothing happens, and the run stays out of the plugin's
   history (`quiet`); changed, it deletes its previous messages (their ids are in its state) and
-  posts the list again. A post that fails half way is taken back, so the retry starts clean.
+  posts the list again. **Run now** always posts it again, changed or not (the kind's
+  `onRunNow` marks its next run `force`). A post that fails half way is taken back, so the retry
+  starts clean.
   Mentions never ping.
 - **Wowhead cache** (`wowhead_entries`): the English name and icon of each spell or item, looked up
   once from Wowhead's tooltip data (`WowheadService`, not an official API) in the guild's game

@@ -42,6 +42,11 @@ export interface PluginKindDef<Config = Record<string, unknown>> {
    * kinds whose runs are cheap and mostly do nothing (they can say so with `quiet`).
    */
   scheduleKinds?: readonly ('DAILY' | 'WEEKLY' | 'MONTHLY' | 'HOURLY' | 'EVERY_5_MINUTES')[];
+  /**
+   * "Run now": what its next run should know (saved in its state). Left out: the run is like any
+   * other. The Professions List uses it to post again even when nothing changed.
+   */
+  onRunNow?: (state: Record<string, unknown>) => Record<string, unknown>;
   /** Checks what the backoffice sent; throws a BadRequestException that says what is wrong. */
   parseConfig(input: unknown, context: PluginContext): Promise<Config>;
   run(

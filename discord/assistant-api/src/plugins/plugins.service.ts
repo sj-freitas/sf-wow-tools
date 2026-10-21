@@ -204,9 +204,15 @@ export class PluginsService {
   async runNow(pluginId: string): Promise<void> {
     const plugin = await this.find(pluginId);
     if (!plugin.enabled) throw new BadRequestException('Resume the plugin first.');
+    const onRunNow = this.registry.get(plugin.kind)?.onRunNow;
     await this.prisma.guildPlugin.update({
       where: { id: pluginId },
-      data: { nextRunAt: new Date() },
+      data: {
+        nextRunAt: new Date(),
+        ...(onRunNow
+          ? { state: onRunNow(plugin.state as Record<string, unknown>) as Prisma.InputJsonValue }
+          : {}),
+      },
     });
   }
 

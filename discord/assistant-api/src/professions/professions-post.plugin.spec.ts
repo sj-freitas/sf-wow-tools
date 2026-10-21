@@ -166,7 +166,7 @@ describe('ProfessionsPostPlugin', () => {
         context,
         Date.now() + 60_000,
       );
-    return { run, posted, deleted };
+    return { run, plugin, posted, deleted };
   }
 
   const rod = recipe('Blacksmithing', 1245287, 'Copper Rod', ['a']);
@@ -185,6 +185,16 @@ describe('ProfessionsPostPlugin', () => {
     assert.equal(second.result, 'No changes.');
     assert.equal(posted.length, 1);
     assert.deepEqual(deleted, []);
+  });
+
+  it('"Run now" posts the list again even when nothing changed', async () => {
+    const { run, plugin, posted, deleted } = setup([rod]);
+    const first = await run({});
+    const forced = await run(plugin.def.onRunNow!(first.state));
+    assert.deepEqual(deleted, ['m1'], 'the previous list is deleted');
+    assert.equal(posted.length, 2, 'and posted again');
+    assert.equal(forced.state.force, undefined, 'only that once');
+    assert.equal((await run(forced.state)).result, 'No changes.');
   });
 
   it('deletes its previous messages and posts again when the list changed', async () => {

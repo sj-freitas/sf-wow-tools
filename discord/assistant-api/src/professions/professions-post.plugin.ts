@@ -23,6 +23,8 @@ export interface ProfessionsPostConfig {
 type ProfessionsPostState = {
   hash?: string;
   messageIds?: string[];
+  /** "Run now": post the list again even if it didn't change. */
+  force?: boolean;
 };
 
 /** "Copper Rod", or "Spell 1245287" while Wowhead hasn't named it. */
@@ -147,6 +149,9 @@ export class ProfessionsPostPlugin implements OnModuleInit {
     label: 'Professions List',
     description:
       'Posts what the guild can craft and who, from the professions addon, and posts it again when it changes.',
+    // "Run now" always posts the list again: its messages deleted and posted anew.
+    onRunNow: (state) => ({ ...state, force: true }),
+
     // Checking is cheap and only posts on a change, so it may check often.
     scheduleKinds: ['EVERY_5_MINUTES', 'HOURLY', 'DAILY'],
 
@@ -178,7 +183,7 @@ export class ProfessionsPostPlugin implements OnModuleInit {
         (recipe) => `${professionsUrl}/${recipe.id}/crafters`,
       );
       const hash = hashMessages(messages);
-      if (hash === state.hash && (state.messageIds?.length ?? 0) > 0) {
+      if (!state.force && hash === state.hash && (state.messageIds?.length ?? 0) > 0) {
         return { result: 'No changes.', state, quiet: true };
       }
       const channelId = plugin.config.channelId;
