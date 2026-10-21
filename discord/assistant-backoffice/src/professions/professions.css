@@ -185,9 +185,43 @@
   background: color-mix(in srgb, var(--accent) 10%, transparent);
   border-radius: var(--radius);
 }
-/* A character's main profession, open: "Drop this profession" above its recipes. */
-.profession-actions {
+/* A character's profession heading, with "Drop this profession" as a link on its line. */
+.guild-profession-line {
   display: flex;
-  justify-content: flex-end;
-  padding: 0 0 0.4rem;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+.guild-profession-line .guild-profession-head {
+  flex: 1;
+  min-width: 0;
+}
+.profession-drop {
+  flex-shrink: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--danger);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.profession-drop:hover {
+  text-decoration: underline;
+}
+/* "View Characters ▸" on a recipe: text, not a button (the whole row opens the list). */
+.recipe-crafters-toggle {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.guild-recipe:hover .recipe-crafters-toggle,
+.recipe-crafters-toggle[aria-expanded='true'] {
+  color: var(--text);
 }

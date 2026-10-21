@@ -134,40 +134,42 @@ export function CharacterProfessions({
             const open = searching !== toggled.has(profession.name);
             return (
               <section key={profession.name} className="guild-profession">
-                <button
-                  type="button"
-                  className="guild-profession-head"
-                  aria-expanded={open}
-                  onClick={() =>
-                    setToggled((current) => {
-                      const next = new Set(current);
-                      if (!next.delete(profession.name)) next.add(profession.name);
-                      return next;
-                    })
-                  }
-                >
-                  <span className="guild-profession-chevron" aria-hidden="true">
-                    {open ? '▾' : '▸'}
-                  </span>
-                  <strong>{profession.name}</strong>
-                  <span className="muted">
-                    {profession.skill !== null &&
-                      `${profession.skill}${profession.maxSkill ? `/${profession.maxSkill}` : ''} · `}
-                    {profession.recipes.length} recipe{profession.recipes.length === 1 ? '' : 's'} ·
-                    imported {timeAgo(profession.importedAt)}
-                  </span>
-                </button>
-                {open && canDrop && !SECONDARY_PROFESSIONS.includes(profession.name) && (
-                  <div className="profession-actions">
+                {/* The heading opens and closes it; "Drop this profession" sits on its line,
+                    open or not (a button can't hold another, so they are side by side). */}
+                <div className="guild-profession-line">
+                  <button
+                    type="button"
+                    className="guild-profession-head"
+                    aria-expanded={open}
+                    onClick={() =>
+                      setToggled((current) => {
+                        const next = new Set(current);
+                        if (!next.delete(profession.name)) next.add(profession.name);
+                        return next;
+                      })
+                    }
+                  >
+                    <span className="guild-profession-chevron" aria-hidden="true">
+                      {open ? '▾' : '▸'}
+                    </span>
+                    <strong>{profession.name}</strong>
+                    <span className="muted">
+                      {profession.skill !== null &&
+                        `${profession.skill}${profession.maxSkill ? `/${profession.maxSkill}` : ''} · `}
+                      {profession.recipes.length} recipe{profession.recipes.length === 1 ? '' : 's'}{' '}
+                      · imported {timeAgo(profession.importedAt)}
+                    </span>
+                  </button>
+                  {canDrop && !SECONDARY_PROFESSIONS.includes(profession.name) && (
                     <button
                       type="button"
-                      className="btn btn-sm btn-danger"
+                      className="profession-drop"
                       onClick={() => drop(profession.name, profession.recipes.length)}
                     >
                       Drop this profession
                     </button>
-                  </div>
-                )}
+                  )}
+                </div>
                 {open && (
                   <ul className="guild-recipes">
                     {profession.recipes.map((recipe) => (

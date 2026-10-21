@@ -327,8 +327,12 @@ function RecipeRow({
           {recipe.icon && <img src={iconUrl(recipe.icon)} alt="" loading="lazy" />}
           {recipe.name ?? `${recipe.kind === 'spell' ? 'Spell' : 'Item'} ${recipe.id}`}
         </a>
-        <button type="button" className="btn btn-sm" aria-expanded={showing}>
+        {/* Text with a chevron, like the profession headings; the row's click toggles it. */}
+        <button type="button" className="recipe-crafters-toggle" aria-expanded={showing}>
           View Characters
+          <span className="guild-profession-chevron" aria-hidden="true">
+            {showing ? '▾' : '▸'}
+          </span>
         </button>
       </div>
       {showing && (
