@@ -100,6 +100,18 @@
 .guild-profession {
   border-bottom: 1px solid var(--border);
 }
+/* "Professions" / "Secondary professions": the main ones first, the secondary ones below. */
+.profession-section + .profession-section {
+  margin-top: 1.5rem;
+}
+.profession-section-title {
+  margin: 0 0 0.25rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
 /* A profession's heading: the whole line opens and closes it. */
 .guild-profession-head {
   display: flex;
@@ -128,7 +140,7 @@
   list-style: none;
 }
 .guild-recipes > li {
-  padding: 0.3rem 0 0.3rem 1.35rem;
+  padding: 0.5rem 0 0.5rem 1.35rem;
   border-top: 1px solid var(--border);
 }
 /* A recipe and its "View characters" button: side by side, wrapping on a phone. */

@@ -70,6 +70,21 @@ export const dropProfession = (characterId: string, name: string): Promise<void>
 /** Everyone can have these, so they can't be dropped (the API's SECONDARY_PROFESSIONS). */
 export const SECONDARY_PROFESSIONS: readonly string[] = ['Cooking', 'First Aid', 'Fishing'];
 
+/**
+ * Professions shown in two sections, main ones first and secondary ones (Cooking, First Aid,
+ * Fishing) last, each keeping its order; a section with none is left out.
+ */
+export function professionSections<T>(
+  items: readonly T[],
+  name: (item: T) => string,
+): { title: string; items: T[] }[] {
+  const secondary = (item: T) => SECONDARY_PROFESSIONS.includes(name(item));
+  return [
+    { title: 'Professions', items: items.filter((item) => !secondary(item)) },
+    { title: 'Secondary professions', items: items.filter(secondary) },
+  ].filter((section) => section.items.length > 0);
+}
+
 export const fetchProfessions = (guildId: string, characterId: string): Promise<Profession[]> =>
   request('GET', `/api/guilds/${guildId}/characters/${characterId}/professions`);
 

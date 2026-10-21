@@ -8,6 +8,7 @@ import { useConfirm } from '../useConfirm';
 import {
   dropProfession,
   fetchCharacterProfessions,
+  professionSections,
   SECONDARY_PROFESSIONS,
   type Profession,
 } from './professionsApi';
@@ -129,68 +130,72 @@ export function CharacterProfessions({
       {shown.length === 0 ? (
         <p className="empty">No recipes match.</p>
       ) : (
-        <div>
-          {shown.map((profession) => {
-            const open = searching !== toggled.has(profession.name);
-            return (
-              <section key={profession.name} className="guild-profession">
-                {/* The heading opens and closes it; "Drop this profession" sits on its line,
+        professionSections(shown, (profession) => profession.name).map((section) => (
+          <div key={section.title} className="profession-section">
+            <h4 className="profession-section-title">{section.title}</h4>
+            {section.items.map((profession) => {
+              const open = searching !== toggled.has(profession.name);
+              return (
+                <section key={profession.name} className="guild-profession">
+                  {/* The heading opens and closes it; "Drop this profession" sits on its line,
                     open or not (a button can't hold another, so they are side by side). */}
-                <div className="guild-profession-line">
-                  <button
-                    type="button"
-                    className="guild-profession-head"
-                    aria-expanded={open}
-                    onClick={() =>
-                      setToggled((current) => {
-                        const next = new Set(current);
-                        if (!next.delete(profession.name)) next.add(profession.name);
-                        return next;
-                      })
-                    }
-                  >
-                    <span className="guild-profession-chevron" aria-hidden="true">
-                      {open ? '▾' : '▸'}
-                    </span>
-                    <strong>{profession.name}</strong>
-                    <span className="muted">
-                      {profession.skill !== null &&
-                        `${profession.skill}${profession.maxSkill ? `/${profession.maxSkill}` : ''} · `}
-                      {profession.recipes.length} recipe{profession.recipes.length === 1 ? '' : 's'}{' '}
-                      · imported {timeAgo(profession.importedAt)}
-                    </span>
-                  </button>
-                  {canDrop && !SECONDARY_PROFESSIONS.includes(profession.name) && (
+                  <div className="guild-profession-line">
                     <button
                       type="button"
-                      className="profession-drop"
-                      onClick={() => drop(profession.name, profession.recipes.length)}
+                      className="guild-profession-head"
+                      aria-expanded={open}
+                      onClick={() =>
+                        setToggled((current) => {
+                          const next = new Set(current);
+                          if (!next.delete(profession.name)) next.add(profession.name);
+                          return next;
+                        })
+                      }
                     >
-                      Drop this profession
+                      <span className="guild-profession-chevron" aria-hidden="true">
+                        {open ? '▾' : '▸'}
+                      </span>
+                      <strong>{profession.name}</strong>
+                      <span className="muted">
+                        {profession.skill !== null &&
+                          `${profession.skill}${profession.maxSkill ? `/${profession.maxSkill}` : ''} · `}
+                        {profession.recipes.length} recipe
+                        {profession.recipes.length === 1 ? '' : 's'} · imported{' '}
+                        {timeAgo(profession.importedAt)}
+                      </span>
                     </button>
+                    {canDrop && !SECONDARY_PROFESSIONS.includes(profession.name) && (
+                      <button
+                        type="button"
+                        className="profession-drop"
+                        onClick={() => drop(profession.name, profession.recipes.length)}
+                      >
+                        Drop this profession
+                      </button>
+                    )}
+                  </div>
+                  {open && (
+                    <ul className="guild-recipes">
+                      {profession.recipes.map((recipe) => (
+                        <li key={`${recipe.kind}:${recipe.id}`}>
+                          <div className="guild-recipe">
+                            <a href={recipe.url} target="_blank" rel="noreferrer">
+                              {recipe.icon && (
+                                <img src={iconUrl(recipe.icon)} alt="" loading="lazy" />
+                              )}
+                              {recipe.name ??
+                                `${recipe.kind === 'spell' ? 'Spell' : 'Item'} ${recipe.id}`}
+                            </a>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
                   )}
-                </div>
-                {open && (
-                  <ul className="guild-recipes">
-                    {profession.recipes.map((recipe) => (
-                      <li key={`${recipe.kind}:${recipe.id}`}>
-                        <div className="guild-recipe">
-                          <a href={recipe.url} target="_blank" rel="noreferrer">
-                            {recipe.icon && (
-                              <img src={iconUrl(recipe.icon)} alt="" loading="lazy" />
-                            )}
-                            {recipe.name ??
-                              `${recipe.kind === 'spell' ? 'Spell' : 'Item'} ${recipe.id}`}
-                          </a>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </section>
-            );
-          })}
-        </div>
+                </section>
+              );
+            })}
+          </div>
+        ))
       )}
     </div>
   );

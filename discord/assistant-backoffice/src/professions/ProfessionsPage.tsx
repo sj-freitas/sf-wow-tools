@@ -7,7 +7,7 @@ import type { Guild } from '../types';
 import { HammerIcon } from '../Icons';
 import { SkeletonLines } from '../Loading';
 import { ADDON_URL, ImportProfessionsDrawer } from './ImportProfessionsDrawer';
-import { fetchGuildProfessions, type GuildProfessions } from './professionsApi';
+import { fetchGuildProfessions, professionSections, type GuildProfessions } from './professionsApi';
 import './professions.css';
 
 /** Wowhead's small icon for a spell or item. */
@@ -75,7 +75,9 @@ export function ProfessionsPage({ guild }: { guild: Guild }) {
     for (const recipe of data?.recipes ?? []) {
       counts.set(recipe.profession, (counts.get(recipe.profession) ?? 0) + 1);
     }
-    return [...counts].sort(([a], [b]) => a.localeCompare(b));
+    // Main professions first, the secondary ones last (as the sections below).
+    const sorted = [...counts].sort(([a], [b]) => a.localeCompare(b));
+    return professionSections(sorted, ([name]) => name).flatMap((section) => section.items);
   }, [data]);
 
   // The recipes shown, by profession: every word of the search must match the recipe's name, its
@@ -202,24 +204,31 @@ export function ProfessionsPage({ guild }: { guild: Guild }) {
           {shown.length === 0 ? (
             <p className="empty">No recipes match.</p>
           ) : (
-            shown.map(([profession, recipes]) => (
-              <ProfessionSection
-                key={profession}
-                guild={guild}
-                profession={profession}
-                recipes={recipes}
-                characters={characters}
-                target={target}
-                showCrafters={showCrafters}
-                open={(expanded || targetProfessions.has(profession)) !== toggled.has(profession)}
-                onToggle={() =>
-                  setToggled((current) => {
-                    const next = new Set(current);
-                    if (!next.delete(profession)) next.add(profession);
-                    return next;
-                  })
-                }
-              />
+            professionSections(shown, ([profession]) => profession).map((section) => (
+              <div key={section.title} className="profession-section">
+                <h4 className="profession-section-title">{section.title}</h4>
+                {section.items.map(([profession, recipes]) => (
+                  <ProfessionSection
+                    key={profession}
+                    guild={guild}
+                    profession={profession}
+                    recipes={recipes}
+                    characters={characters}
+                    target={target}
+                    showCrafters={showCrafters}
+                    open={
+                      (expanded || targetProfessions.has(profession)) !== toggled.has(profession)
+                    }
+                    onToggle={() =>
+                      setToggled((current) => {
+                        const next = new Set(current);
+                        if (!next.delete(profession)) next.add(profession);
+                        return next;
+                      })
+                    }
+                  />
+                ))}
+              </div>
             ))
           )}
         </>
