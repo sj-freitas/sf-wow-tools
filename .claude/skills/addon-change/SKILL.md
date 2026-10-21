@@ -8,13 +8,16 @@ description: Use whenever a change touches a WoW addon in addons/ (Raidsort, Gui
 The addons live in `addons/<Name>/` (Lua, `.toc`, `README.md`, `CHANGELOG.md`); their tests in
 `addons/dev/<Name>/*.spec.lua`. `addons/README.md` explains the tooling.
 
-| Addon                     | CurseForge page                                                 |
-| ------------------------- | --------------------------------------------------------------- |
-| Raidsort                  | https://www.curseforge.com/wow/addons/raid-sort                 |
+| Addon                     | CurseForge page                                                   |
+| ------------------------- | ----------------------------------------------------------------- |
+| Raidsort                  | https://www.curseforge.com/wow/addons/raid-sort                   |
 | GuildAssistantProfessions | https://www.curseforge.com/wow/addons/guild-assistant-professions |
 
-A new addon: add its row here once it has a CurseForge project (its id goes in the `.toc` as
-`## X-Curse-Project-ID`).
+Each addon's CurseForge project id is in its `.toc` (`## X-Curse-Project-ID`). Its description is
+edited at `https://authors.curseforge.com/#/projects/<project id>/description` (e.g.
+https://authors.curseforge.com/#/projects/1756540/description for GuildAssistantProfessions):
+read the id from the `.toc`, don't guess it. A new addon: add its row here once it has a
+CurseForge project and its id is in the `.toc`.
 
 ## Every change to an addon
 
@@ -48,7 +51,8 @@ A new addon: add its row here once it has a CurseForge project (its id goes in t
    (`assignee: "user:a9f2ac22-c8eb-4216-880d-74e8fc6df1fc"`), status **todo**, type
    **improvement**, epic **Addon Development**, titled
    `Publish <Name> <version> and update its CurseForge description`, with:
-   - the CurseForge page link (table above);
+   - the CurseForge page link (table above) and the link to edit its description,
+     `https://authors.curseforge.com/#/projects/<X-Curse-Project-ID from the .toc>/description`;
    - the upload command, for this addon only, run from `addons/`:
      `npm run publish:curseforge -- <Name>` (`--beta`/`--alpha` if it isn't a release);
    - the **full new project description** to paste on CurseForge (Markdown: what it does, how to
