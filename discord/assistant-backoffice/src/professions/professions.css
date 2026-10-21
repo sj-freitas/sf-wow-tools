@@ -133,6 +133,7 @@
 }
 /* A recipe and its "View characters" button: side by side, wrapping on a phone. */
 .guild-recipe {
+  cursor: pointer;
   display: flex;
   flex-wrap: wrap;
   align-items: center;

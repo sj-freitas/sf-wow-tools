@@ -312,17 +312,19 @@ function RecipeRow({
   }, [linked]);
   return (
     <li ref={row} className={linked ? 'guild-recipe-linked' : undefined}>
-      <div className="guild-recipe">
-        <a href={recipe.url} target="_blank" rel="noreferrer">
+      {/* The whole row shows or hides the characters, except the Wowhead link. The button is
+          there for the keyboard: its click bubbles up to the row. */}
+      <div className="guild-recipe" onClick={() => setShowing((current) => !current)}>
+        <a
+          href={recipe.url}
+          target="_blank"
+          rel="noreferrer"
+          onClick={(event) => event.stopPropagation()}
+        >
           {recipe.icon && <img src={iconUrl(recipe.icon)} alt="" loading="lazy" />}
           {recipe.name ?? `${recipe.kind === 'spell' ? 'Spell' : 'Item'} ${recipe.id}`}
         </a>
-        <button
-          type="button"
-          className="btn btn-sm"
-          aria-expanded={showing}
-          onClick={() => setShowing((current) => !current)}
-        >
+        <button type="button" className="btn btn-sm" aria-expanded={showing}>
           View Characters
         </button>
       </div>
