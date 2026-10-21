@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -65,5 +66,16 @@ export class CharacterProfessionsController {
   @Get(':characterId/professions')
   list(@Param('characterId', ParseUUIDPipe) characterId: string): Promise<ProfessionDto[]> {
     return this.professions.forCharacter(characterId);
+  }
+
+  /** "Drop this profession": its player, or an Officer of a guild it is in. Main ones only. */
+  @Delete(':characterId/professions/:name')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  drop(
+    @Req() req: AuthenticatedRequest,
+    @Param('characterId', ParseUUIDPipe) characterId: string,
+    @Param('name') name: string,
+  ): Promise<void> {
+    return this.professions.drop(req.user, characterId, name);
   }
 }

@@ -140,6 +140,26 @@ it("answers commands even if ADDON_LOADED never arrived", function()
     eq(said("0 characters, 0 professions, 0 recipes saved."), true, "status")
 end)
 
+it("drops an unlearned profession from the export, and says so", function()
+    loadAddon()
+    local skills = { { "Professions", true }, { "Tailoring", false, 280, 300 }, { "Mining", false, 200, 300 } }
+    _G.GetNumSkillLines = function() return #skills end
+    _G.GetSkillLineInfo = function(i)
+        local s = skills[i]
+        if s[2] then return s[1], true end
+        return s[1], false, nil, s[3], nil, nil, s[4]
+    end
+    fire("ADDON_LOADED", "GuildAssistantProfessions")
+    fire("PLAYER_LOGIN")
+    local db = GuildAssistantProfessionsDB
+    assert(db.export:find('"name":"Mining"', 1, true), "Mining recorded")
+    table.remove(skills, 3) -- Mining unlearned
+    fire("SKILL_LINES_CHANGED")
+    eq(said("Mining was unlearned: dropped from what is saved."), true, "says so")
+    assert(not db.export:find('"name":"Mining"', 1, true), "gone from the export: " .. db.export)
+    assert(db.export:find('"name":"Tailoring"', 1, true), "the rest kept")
+end)
+
 it("/ga-prof log writes the file: the export, then a reload", function()
     loadAddon()
     fire("ADDON_LOADED", "GuildAssistantProfessions")

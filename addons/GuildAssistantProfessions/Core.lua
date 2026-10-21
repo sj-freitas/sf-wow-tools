@@ -29,10 +29,10 @@ function Core.character(db, name, realm, class, source)
 end
 
 --- Keeps the character's professions as the game lists them: { { name, rank, max } }. One it no
---- longer has (unlearned) goes, with its recipes. `now` (time()) marks the character updated
---- when anything changed; returns whether it did.
+--- longer has (unlearned, "dropped") goes, with its recipes. `now` (time()) marks the character
+--- updated when anything changed; returns whether it did, and the names of the dropped ones.
 function Core.setProfessions(character, skills, now)
-    local known, changed = {}, false
+    local known, changed, dropped = {}, false, {}
     for _, skill in ipairs(skills) do
         known[skill.name] = true
         local profession = character.professions[skill.name]
@@ -43,11 +43,19 @@ function Core.setProfessions(character, skills, now)
         if profession.rank ~= skill.rank or profession.max ~= skill.max then changed = true end
         profession.rank, profession.max = skill.rank, skill.max
     end
-    for name in pairs(character.professions) do
-        if not known[name] then character.professions[name], changed = nil, true end
+    -- An empty list is the game not having them ready yet (at login), not every profession
+    -- unlearned at once: nothing is dropped then.
+    if #skills > 0 then
+        for name in pairs(character.professions) do
+            if not known[name] then
+                character.professions[name], changed = nil, true
+                dropped[#dropped + 1] = name
+            end
+        end
     end
+    table.sort(dropped)
     if changed then character.updated = now end
-    return changed
+    return changed, dropped
 end
 
 --- Adds the recipes seen in the profession's window. Recipes are only ever added: the window can

@@ -91,7 +91,11 @@ function Scan.skills()
     else
         return false
     end
-    return Core.setProfessions(Scan.current(), skills, time())
+    local changed, dropped = Core.setProfessions(Scan.current(), skills, time())
+    for _, name in ipairs(dropped) do
+        Scan.say("%s was unlearned: dropped from what is saved. Type /ga-prof log to write it to the file.", name)
+    end
+    return changed
 end
 
 local announced = {}

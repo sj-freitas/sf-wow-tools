@@ -52,7 +52,9 @@ A new addon: add its row here once it has a CurseForge project (its id goes in t
    - the upload command, for this addon only, run from `addons/`:
      `npm run publish:curseforge -- <Name>` (`--beta`/`--alpha` if it isn't a release);
    - the **full new project description** to paste on CurseForge (Markdown: what it does, how to
-     use it, commands), written from the addon's README;
+     use it, commands), written from the addon's README. Put it **inside a fenced code block**
+     (```` ```markdown ```` … ```` ``` ````; use a four-backtick fence if the description itself has
+     a ``` fence) so Botlog shows the raw Markdown, ready to copy and paste, not rendered;
    - what changed in this version (the CHANGELOG section).
    Mention the task's id in the summary comment of the task you worked on.
 

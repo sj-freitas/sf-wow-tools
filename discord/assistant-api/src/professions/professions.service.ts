@@ -1,4 +1,9 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { GuildAccessService } from '../auth/guild-access.service';
 import { PrismaService } from '../database/prisma.service';
 import { getGame } from '../game/games';
@@ -14,6 +19,9 @@ import { ProfessionsPostPlugin } from './professions-post.plugin';
 import { WowheadService, type WowheadRef } from './wowhead.service';
 
 export type { GuildProfessionsDto, ProfessionDto, RecipeDto } from './guild-recipes.service';
+
+/** Secondary professions: everyone can have them all, so they aren't dropped (main ones are). */
+export const SECONDARY_PROFESSIONS: readonly string[] = ['Cooking', 'First Aid', 'Fishing'];
 
 export interface ImportResultDto {
   imported: {
@@ -131,6 +139,45 @@ export class ProfessionsService {
     });
     if (!character) throw new NotFoundException('Character not found');
     return this.professionsOf(characterId, character.gameVersion);
+  }
+
+  /**
+   * "Drop this profession" on a character's page: deletes it and its recipes. Its own player, or
+   * an Officer of a guild it is in (even when the character is verified on Battle.net). Only main
+   * professions: the secondary ones (SECONDARY_PROFESSIONS) can't be dropped. The guilds'
+   * Professions Lists post the change soon after.
+   */
+  async drop(
+    user: { id: string; discordId: string },
+    characterId: string,
+    name: string,
+  ): Promise<void> {
+    const character = await this.prisma.character.findUnique({
+      where: { id: characterId },
+      select: {
+        player: { select: { discordUserId: true } },
+        guilds: { select: { guildId: true } },
+      },
+    });
+    if (!character) throw new NotFoundException('Character not found');
+    if (SECONDARY_PROFESSIONS.includes(name)) {
+      throw new BadRequestException(`${name} is a secondary profession: it can't be dropped.`);
+    }
+    if (character.player.discordUserId !== user.discordId) {
+      const accesses = await Promise.all(
+        character.guilds.map(({ guildId }) => this.guildAccess.find(user.id, guildId)),
+      );
+      if (!accesses.some((access) => access?.isOfficer)) {
+        throw new ForbiddenException(
+          'Only its player, or an Officer of a guild it is in, can drop its professions.',
+        );
+      }
+    }
+    const { count } = await this.prisma.characterProfession.deleteMany({
+      where: { characterId, name },
+    });
+    if (count === 0) throw new NotFoundException(`It has no ${name} to drop.`);
+    for (const { guildId } of character.guilds) await this.professionsPost.soon(guildId);
   }
 
   /** The character's professions and recipes, linked to Wowhead in its game version's data. */

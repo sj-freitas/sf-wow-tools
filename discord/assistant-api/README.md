@@ -1008,6 +1008,11 @@ on logout). Blizzard's Classic Era / SoD API has no professions, hence the addon
   character's menu, **Professions**. On the character's own page (guild-agnostic,
   `GET /api/characters/:characterId/professions`, any logged-in user): its **Professions** tab
   (`…/characters/<name>/professions`), collapsed professions with a search over the recipes.
+- **Dropping one** (`DELETE /api/characters/:characterId/professions/:name`): its player, or an
+  Officer of a guild it is in (even for a character verified on Battle.net); main professions only
+  (`SECONDARY_PROFESSIONS`: Cooking, First Aid, Fishing can't be). Deletes it and its recipes, and
+  the guilds' Professions Lists post the change. On the character's Professions tab: **Drop this
+  profession**, after a confirmation. The addon drops a profession unlearned in game too.
 - **`/crafter <item>`** (Discord, private reply): who in the server's guild can craft it, by name
   (the same typo-tolerant matching as the website's search, `fuzzy.ts`), id or Wowhead link; each
   crafter as character and Discord mention. Says so when nobody can.

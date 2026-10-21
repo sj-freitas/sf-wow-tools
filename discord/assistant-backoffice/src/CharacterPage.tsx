@@ -80,6 +80,9 @@ export function CharacterPage({ editMode, tab = 'bio', guilds }: Props) {
           profile={profile}
           tab={tab}
           viewerGuildPaths={new Set(guilds.map((guild) => guild.path))}
+          viewerOfficerGuildPaths={guilds
+            .filter((guild) => guild.isOfficer)
+            .map((guild) => guild.path)}
           viewUrl={viewUrl}
           editUrl={editUrl}
           charactersUrl={`/${[version, region, realm].map((s) => s.toLowerCase()).join('/')}/characters`}
@@ -95,6 +98,7 @@ function CharacterView({
   profile,
   tab,
   viewerGuildPaths,
+  viewerOfficerGuildPaths,
   viewUrl,
   editUrl,
   charactersUrl,
@@ -105,6 +109,8 @@ function CharacterView({
   tab: 'bio' | 'professions';
   /** The guilds the viewer is in (their addresses): only those link to their roster. */
   viewerGuildPaths: Set<string>;
+  /** Those where the viewer is an Officer: they can drop its professions. */
+  viewerOfficerGuildPaths: string[];
   /** The page's address (its Bio tab); `/professions` is appended for the other. */
   viewUrl: string;
   editUrl: string;
@@ -245,6 +251,11 @@ function CharacterView({
         <CharacterProfessions
           characterId={profile.characterId}
           importGuilds={profile.isOwner ? profile.guilds : undefined}
+          // Its player, or an Officer of one of its guilds (the API checks it again).
+          canDrop={
+            profile.isOwner ||
+            viewerOfficerGuildPaths.some((path) => profile.guilds.some((g) => g.path === path))
+          }
         />
       )}
 

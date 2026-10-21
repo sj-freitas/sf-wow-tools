@@ -1,5 +1,11 @@
 # Guild Assistant Professions
 
+## 0.9.1
+
+- Unlearning a profession drops it (and its recipes) from what is saved, and the chat says so:
+  `/ga-prof log` writes it to the file for Guild Assistant.
+- Logging in no longer risks dropping every profession when the game hasn't listed them yet.
+
 ## 0.9.0
 
 - First version (experimental): remembers every character's professions and recipes, and those of

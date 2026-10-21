@@ -60,6 +60,16 @@ export const fetchGuildProfessions = (guildId: string): Promise<GuildProfessions
 export const fetchCharacterProfessions = (characterId: string): Promise<Profession[]> =>
   request('GET', `/api/characters/${characterId}/professions`);
 
+/**
+ * Drops a main profession (its recipes too): the character's player, or an Officer of a guild it
+ * is in. Not Cooking, First Aid or Fishing.
+ */
+export const dropProfession = (characterId: string, name: string): Promise<void> =>
+  request('DELETE', `/api/characters/${characterId}/professions/${encodeURIComponent(name)}`);
+
+/** Everyone can have these, so they can't be dropped (the API's SECONDARY_PROFESSIONS). */
+export const SECONDARY_PROFESSIONS: readonly string[] = ['Cooking', 'First Aid', 'Fishing'];
+
 export const fetchProfessions = (guildId: string, characterId: string): Promise<Profession[]> =>
   request('GET', `/api/guilds/${guildId}/characters/${characterId}/professions`);
 

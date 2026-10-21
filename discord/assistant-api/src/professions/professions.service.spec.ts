@@ -15,7 +15,7 @@ const FIXTURE = readFileSync(
 );
 
 /** An in-memory database, with Wowhead answering from `names` (and 404 for anything else). */
-function setup(member = true) {
+function setup(member = true, officer = false) {
   const professions: Record<string, unknown>[] = [];
   const wowhead = new Map<string, Record<string, unknown>>();
   // Guilds whose Professions Lists were asked to post soon (after an import).
@@ -25,8 +25,15 @@ function setup(member = true) {
       findMany: async () => [
         { id: 'luna-id', firstName: 'Luna', lastName: 'Starfall', realm: 'Wild Growth' },
       ],
+      // Luna: played by d1, in guild g1.
       findUnique: async ({ where }: { where: { id: string } }) =>
-        where.id === 'luna-id' ? { gameVersion: 'Forever' } : null,
+        where.id === 'luna-id'
+          ? {
+              gameVersion: 'Forever',
+              player: { discordUserId: 'd1' },
+              guilds: [{ guildId: 'g1' }],
+            }
+          : null,
     },
     characterGuildMembership: {
       findUnique: async () => ({ guild: { gameVersion: 'Forever' } }),
@@ -37,11 +44,16 @@ function setup(member = true) {
         where.servers.some.discordId === 'server-1' ? { id: 'g1' } : null,
     },
     characterProfession: {
-      deleteMany: ({ where }: { where: { characterId: string } }) => {
+      deleteMany: ({ where }: { where: { characterId: string; name?: string } }) => {
+        let count = 0;
         for (let i = professions.length - 1; i >= 0; i--) {
-          if (professions[i].characterId === where.characterId) professions.splice(i, 1);
+          const row = professions[i];
+          if (row.characterId !== where.characterId) continue;
+          if (where.name !== undefined && row.name !== where.name) continue;
+          professions.splice(i, 1);
+          count++;
         }
-        return Promise.resolve();
+        return Promise.resolve({ count });
       },
       createMany: ({ data }: { data: Record<string, unknown>[] }) => {
         professions.push(...data.map((row) => ({ ...row, importedAt: new Date() })));
@@ -67,7 +79,7 @@ function setup(member = true) {
     },
     $transaction: async (operations: Promise<unknown>[]) => Promise.all(operations),
   } as unknown as PrismaService;
-  const access = { find: async () => (member ? { isAdmin: false, isOfficer: false } : null) };
+  const access = { find: async () => (member ? { isAdmin: false, isOfficer: officer } : null) };
   const names: Record<string, string> = { 'spell/20034': 'Enchant Weapon - Crusader' };
   const wowheadService = new WowheadService(prisma);
   const asked: string[] = [];
@@ -220,6 +232,42 @@ describe('ProfessionsService', () => {
     );
     assert.match(professions[0].recipes[0].url, /^https:\/\/www\.wowhead\.com\/forever\//);
     await assert.rejects(service.forCharacter('nobody'), /Character not found/);
+  });
+
+  describe('dropping a profession', () => {
+    const other = { id: 'u2', discordId: 'd2' };
+
+    it('lets its player drop a main profession, with its recipes', async () => {
+      const { service, professions, postedSoon } = setup();
+      await service.import(user, 'g1', FIXTURE);
+      postedSoon.length = 0;
+      await service.drop(user, 'luna-id', 'Tailoring');
+      assert.deepEqual(
+        professions.map((p) => p.name),
+        ['Enchanting'],
+      );
+      assert.deepEqual(postedSoon, ['g1'], "the guild's Professions List posts the change");
+    });
+
+    it('lets an Officer of its guild drop one, but nobody else', async () => {
+      const outsider = setup(true, false);
+      await outsider.service.import(user, 'g1', FIXTURE);
+      await assert.rejects(outsider.service.drop(other, 'luna-id', 'Tailoring'), /Only its player/);
+      assert.equal(outsider.professions.length, 2);
+
+      const officer = setup(true, true);
+      await officer.service.import(user, 'g1', FIXTURE);
+      await officer.service.drop(other, 'luna-id', 'Tailoring');
+      assert.equal(officer.professions.length, 1);
+    });
+
+    it('refuses secondary professions, and ones it does not have', async () => {
+      const { service } = setup();
+      await service.import(user, 'g1', FIXTURE);
+      await assert.rejects(service.drop(user, 'luna-id', 'Cooking'), /secondary profession/);
+      await assert.rejects(service.drop(user, 'luna-id', 'Alchemy'), /no Alchemy/);
+      await assert.rejects(service.drop(user, 'nobody', 'Tailoring'), /Character not found/);
+    });
   });
 
   it('keeps people outside the guild out', async () => {

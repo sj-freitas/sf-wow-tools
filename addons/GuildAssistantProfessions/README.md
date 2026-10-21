@@ -39,8 +39,14 @@ Per account (`GuildAssistantProfessionsDB`): each character you log in with, its
 skill (read at login), and the recipes seen in its profession windows, as WoW spell ids (the
 crafted item's id when the game gives no spell). On WoW Forever a profession's window lists all its
 recipes, so what it shows replaces what was saved. On Classic Era a window with a filter on shows
-fewer, so recipes are only added there, and only unlearning the profession removes them.
-Each character keeps when something new was last recorded for it.
+fewer, so recipes are only added there. Each character keeps when something new was last recorded
+for it.
+
+**Dropping a profession:** unlearn it in game and the addon drops it, with its recipes, from what
+is saved (the chat says so); `/ga-prof log` writes that to the file, and importing it on Guild
+Assistant updates the character. On Guild Assistant, the character's page (Professions tab) also
+has **Drop this profession** for its player or an Officer: Cooking, First Aid and Fishing can't be
+dropped.
 
 Opening someone else's profession link (WoW Forever) records their recipes too, under their name,
 marked as seen through a link. Guild Assistant doesn't import other players' characters yet.

@@ -1,10 +1,16 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { fuzzyWordsScore } from '../fuzzy';
 import { SkeletonLines } from '../Loading';
 import { timeAgo } from '../time';
 import { ADDON_URL } from './ImportProfessionsDrawer';
-import { fetchCharacterProfessions, type Profession } from './professionsApi';
+import { useConfirm } from '../useConfirm';
+import {
+  dropProfession,
+  fetchCharacterProfessions,
+  SECONDARY_PROFESSIONS,
+  type Profession,
+} from './professionsApi';
 import './professions.css';
 
 /** Wowhead's small icon for a spell or item. */
@@ -17,11 +23,16 @@ const iconUrl = (icon: string) => `https://wow.zamimg.com/images/wow/icons/small
 export function CharacterProfessions({
   characterId,
   importGuilds,
+  canDrop = false,
 }: {
   characterId: string;
   /** Its own player: the guilds to import professions in (a link to each one's import panel). */
   importGuilds?: { name: string; path: string }[];
+  /** Its player, or an Officer of a guild it is in: "Drop this profession" on main professions. */
+  canDrop?: boolean;
 }) {
+  const { confirm, dialog } = useConfirm();
+  const [dropError, setDropError] = useState<string | null>(null);
   const [professions, setProfessions] = useState<Profession[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState('');
@@ -30,12 +41,28 @@ export function CharacterProfessions({
   const [toggled, setToggled] = useState<Set<string>>(new Set());
   useEffect(() => setToggled(new Set()), [searching]);
 
-  useEffect(() => {
+  const load = useCallback(() => {
     setProfessions(null);
     fetchCharacterProfessions(characterId)
       .then(setProfessions)
       .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)));
   }, [characterId]);
+  useEffect(load, [load]);
+
+  // Unlearned in game: dropped here too, after asking. Its recipes go with it.
+  const drop = (name: string, recipes: number) =>
+    void confirm({
+      title: `Drop ${name}?`,
+      message: `This character's ${name} and its ${recipes} recipe${recipes === 1 ? '' : 's'} are removed from Guild Assistant. Importing them again from the addon brings them back.`,
+      confirmLabel: 'Drop it',
+      danger: true,
+    }).then((ok) => {
+      if (!ok) return;
+      setDropError(null);
+      dropProfession(characterId, name)
+        .then(load)
+        .catch((err: unknown) => setDropError(err instanceof Error ? err.message : String(err)));
+    });
 
   const shown = useMemo(
     () =>
@@ -86,7 +113,9 @@ export function CharacterProfessions({
   }
   return (
     <div className="professions">
+      {dialog}
       {importLinks}
+      {dropError && <p className="status-error">{dropError}</p>}
       <div className="search-field">
         <input
           className="post-search"
@@ -128,6 +157,17 @@ export function CharacterProfessions({
                     imported {timeAgo(profession.importedAt)}
                   </span>
                 </button>
+                {open && canDrop && !SECONDARY_PROFESSIONS.includes(profession.name) && (
+                  <div className="profession-actions">
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-danger"
+                      onClick={() => drop(profession.name, profession.recipes.length)}
+                    >
+                      Drop this profession
+                    </button>
+                  </div>
+                )}
                 {open && (
                   <ul className="guild-recipes">
                     {profession.recipes.map((recipe) => (

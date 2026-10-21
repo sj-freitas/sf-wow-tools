@@ -89,6 +89,30 @@ it("replaces a profession's recipes with a full list, saying whether it changed"
     }, 400), true, "one more")
 end)
 
+it("drops an unlearned profession with its recipes and says which, but not on an empty list", function()
+    local luna = Core.character(Core.newDB(), "Luna", "Wild Growth", "MAGE")
+    Core.setProfessions(luna, {
+        { name = "Tailoring", rank = 280, max = 300 },
+        { name = "Enchanting", rank = 300, max = 300 },
+        { name = "Cooking", rank = 150, max = 225 },
+    }, 100)
+    Core.addRecipes(luna, "Tailoring", nil, nil, { { kind = "spell", id = 3915 } }, 100)
+    -- The game lists nothing yet (at login): nothing is dropped.
+    local changed, dropped = Core.setProfessions(luna, {}, 200)
+    eq(changed, false, "empty list")
+    eq(#dropped, 0)
+    eq(luna.professions.Tailoring.recipes["spell:3915"], true, "kept")
+    -- Tailoring unlearned.
+    changed, dropped = Core.setProfessions(luna, {
+        { name = "Enchanting", rank = 300, max = 300 },
+        { name = "Cooking", rank = 150, max = 225 },
+    }, 300)
+    eq(changed, true)
+    eq(table.concat(dropped, ","), "Tailoring")
+    eq(luna.professions.Tailoring, nil, "gone, recipes and all")
+    eq(luna.updated, 300)
+end)
+
 it("marks a character updated when something new is recorded, not otherwise", function()
     local luna = Core.character(Core.newDB(), "Luna", "Wild Growth", "MAGE")
     eq(Core.setProfessions(luna, { { name = "Tailoring", rank = 280, max = 300 } }, 100), true)

@@ -185,3 +185,9 @@
   background: color-mix(in srgb, var(--accent) 10%, transparent);
   border-radius: var(--radius);
 }
+/* A character's main profession, open: "Drop this profession" above its recipes. */
+.profession-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 0 0.4rem;
+}
