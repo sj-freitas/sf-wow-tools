@@ -16,6 +16,7 @@ import {
   formatEventTime,
   zoneLabel,
 } from './labels';
+import { EventFormPage } from './EventFormPage';
 import { MissingTab } from './MissingTab';
 import { SetupEditor } from './SetupEditor';
 import {
@@ -34,9 +35,20 @@ type Tab = 'signups' | 'setup' | 'assignments' | 'missing';
 
 const NO_NAMES = { users: new Map(), roles: new Map(), channels: new Map() };
 
-/** `/signup/:eventId`: one event, with its tabs. Updates live as people sign up in Discord. */
-export function EventPage({ guild }: { guild: Guild }) {
+/**
+ * `/signup/:eventId`: one event, with its tabs. Updates live as people sign up in Discord. Its
+ * organisers edit its details right there (Edit swaps them for the form); `/signup/:eventId/edit`
+ * opens it that way.
+ */
+export function EventPage({
+  guild,
+  startEditing = false,
+}: {
+  guild: Guild;
+  startEditing?: boolean;
+}) {
   const { eventId = '' } = useParams();
+  const [editing, setEditing] = useState(startEditing);
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const [event, setEvent] = useState<SignupEvent | null>(null);
@@ -44,6 +56,11 @@ export function EventPage({ guild }: { guild: Guild }) {
   const [busy, setBusy] = useState(false);
   const { confirm, dialog } = useConfirm();
   const [drawer, setDrawer] = useState<DrawerTarget | null>(null);
+  // Done editing: the details again, at the event's own address (not `/edit`).
+  const stopEditing = () => {
+    setEditing(false);
+    if (startEditing) navigate(guildPath(guild, `signup/${eventId}`), { replace: true });
+  };
 
   const load = useCallback(
     () =>
@@ -116,54 +133,72 @@ export function EventPage({ guild }: { guild: Guild }) {
         <Link className="back-link" to={guildPath(guild, 'signup')}>
           ← Events
         </Link>
-        <div className="signup-event-title">
-          <h3>{event.title}</h3>
-          <span className={event.closed ? 'badge' : 'badge badge-main'}>
-            {event.publishAt ? '🕒 Scheduled' : event.closed ? '🔒 Closed' : 'Open'}
-          </span>
-        </div>
-        {event.location && <p className="signup-when">📍 {event.location}</p>}
-        <p className="signup-when">
-          🗓️ {formatEventTime(event.startsAt, event.timezone)}{' '}
-          <span className="muted">{zoneLabel(event.timezone, event.serverTimezone)}</span>
-          {localZone !== event.timezone && (
-            <span className="muted"> · {formatEventTime(event.startsAt, localZone)} your time</span>
-          )}
-        </p>
-        {event.inviteTime && <p className="signup-when">📨 Invites from {event.inviteTime}</p>}
-        <p className="muted">
-          By {event.createdByName} · {lockLabel}
-          {event.postUrl ? (
-            <>
-              {' · '}
-              <a href={event.postUrl} target="_blank" rel="noreferrer">
-                Open in Discord
-              </a>
-            </>
-          ) : null}
-          {event.discordPostId && (
-            <>
-              {' · '}
-              <button
-                type="button"
-                className="link-button"
-                title="The Discord post's id: find the event by it, even once archived"
-                onClick={() =>
-                  void navigator.clipboard
-                    .writeText(event.discordPostId!)
-                    .then(() => showToast('Discord post id copied'))
-                    .catch(() => showToast('Couldn’t copy the id'))
-                }
-              >
-                Post id {event.discordPostId}
-              </button>
-            </>
-          )}
-        </p>
-        {event.description && (
-          <div className="signup-description">
-            <DiscordMarkdown text={event.description} names={NO_NAMES} />
-          </div>
+        {editing && event.permissions.canManage && !archived ? (
+          <EventFormPage
+            guild={guild}
+            serverTimezone={event.serverTimezone}
+            eventId={event.id}
+            onSaved={() => {
+              stopEditing();
+              void load();
+            }}
+            onCancel={stopEditing}
+          />
+        ) : (
+          <>
+            <div className="signup-event-title">
+              <h3>{event.title}</h3>
+              <span className={event.closed ? 'badge' : 'badge badge-main'}>
+                {event.publishAt ? '🕒 Scheduled' : event.closed ? '🔒 Closed' : 'Open'}
+              </span>
+            </div>
+            {event.location && <p className="signup-when">📍 {event.location}</p>}
+            <p className="signup-when">
+              🗓️ {formatEventTime(event.startsAt, event.timezone)}{' '}
+              <span className="muted">{zoneLabel(event.timezone, event.serverTimezone)}</span>
+              {localZone !== event.timezone && (
+                <span className="muted">
+                  {' '}
+                  · {formatEventTime(event.startsAt, localZone)} your time
+                </span>
+              )}
+            </p>
+            {event.inviteTime && <p className="signup-when">📨 Invites from {event.inviteTime}</p>}
+            <p className="muted">
+              By {event.createdByName} · {lockLabel}
+              {event.postUrl ? (
+                <>
+                  {' · '}
+                  <a href={event.postUrl} target="_blank" rel="noreferrer">
+                    Open in Discord
+                  </a>
+                </>
+              ) : null}
+              {event.discordPostId && (
+                <>
+                  {' · '}
+                  <button
+                    type="button"
+                    className="link-button"
+                    title="The Discord post's id: find the event by it, even once archived"
+                    onClick={() =>
+                      void navigator.clipboard
+                        .writeText(event.discordPostId!)
+                        .then(() => showToast('Discord post id copied'))
+                        .catch(() => showToast('Couldn’t copy the id'))
+                    }
+                  >
+                    Post id {event.discordPostId}
+                  </button>
+                </>
+              )}
+            </p>
+            {event.description && (
+              <div className="signup-description">
+                <DiscordMarkdown text={event.description} names={NO_NAMES} />
+              </div>
+            )}
+          </>
         )}
 
         {event.publishAt && (
@@ -237,9 +272,11 @@ export function EventPage({ guild }: { guild: Guild }) {
             </div>
           ) : (
             <div className="settings-actions">
-              <Link className="btn btn-sm" to={guildPath(guild, `signup/${event.id}/edit`)}>
-                Edit
-              </Link>
+              {!editing && (
+                <button type="button" className="btn btn-sm" onClick={() => setEditing(true)}>
+                  Edit
+                </button>
+              )}
               {event.lockMode !== 'LOCKED' && (
                 <button
                   type="button"

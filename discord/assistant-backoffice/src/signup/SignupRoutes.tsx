@@ -21,10 +21,8 @@ export function SignupRoutes({ guild, timezone }: { guild: Guild; timezone: stri
       <Route index element={<EventsPage guild={guild} timezone={timezone} />} />
       <Route path="create" element={<EventFormPage guild={guild} serverTimezone={timezone} />} />
       <Route path=":eventId" element={<EventPage guild={guild} />} />
-      <Route
-        path=":eventId/edit"
-        element={<EventFormPage guild={guild} serverTimezone={timezone} />}
-      />
+      {/* Editing happens on the event's page; this address opens it with the form open. */}
+      <Route path=":eventId/edit" element={<EventPage guild={guild} startEditing />} />
       <Route path="*" element={<Navigate to={guildPath(guild, 'signup')} replace />} />
     </Routes>
   );

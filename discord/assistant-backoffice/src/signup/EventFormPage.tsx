@@ -17,9 +17,27 @@ import {
   type SignupSettings,
 } from './signupApi';
 
-/** `/signup/create` and `/signup/:eventId/edit`. The channel is only chosen when creating. */
-export function EventFormPage({ guild, serverTimezone }: { guild: Guild; serverTimezone: string }) {
-  const { eventId } = useParams();
+/**
+ * `/signup/create`, and editing an event inside its page (`EventPage`, with `eventId`, `onSaved`
+ * and `onCancel`). The channel is only chosen when creating.
+ */
+export function EventFormPage({
+  guild,
+  serverTimezone,
+  eventId: editedId,
+  onSaved,
+  onCancel,
+}: {
+  guild: Guild;
+  serverTimezone: string;
+  /** Editing this event, inside its page: saving and cancelling go back to its details. */
+  eventId?: string;
+  onSaved?: () => void;
+  onCancel?: () => void;
+}) {
+  const params = useParams();
+  const eventId = editedId ?? params.eventId;
+  const embedded = editedId !== undefined;
   const navigate = useNavigate();
   const editing = eventId !== undefined;
   const [settings, setSettings] = useState<SignupSettings | null>(null);
@@ -103,7 +121,7 @@ export function EventFormPage({ guild, serverTimezone }: { guild: Guild; serverT
       ? updateEvent(guild.id, eventId, form).then(() => eventId)
       : createEvent(guild.id, form).then((created) => created.id);
     saved
-      .then((id) => navigate(guildPath(guild, `signup/${id}`)))
+      .then((id) => (onSaved ? onSaved() : navigate(guildPath(guild, `signup/${id}`))))
       .catch((err: unknown) => {
         setError(errorText(err));
         setSaving(false);
@@ -113,10 +131,12 @@ export function EventFormPage({ guild, serverTimezone }: { guild: Guild; serverT
   if (!loaded || !settings) return error ? <p className="status-error">{error}</p> : <Spinner />;
 
   return (
-    <form className="card-body signup-form" onSubmit={submit}>
-      <Link className="back-link" to={back}>
-        ← {editing ? 'Back to the event' : 'Events'}
-      </Link>
+    <form className={embedded ? 'signup-form' : 'card-body signup-form'} onSubmit={submit}>
+      {!embedded && (
+        <Link className="back-link" to={back}>
+          ← {editing ? 'Back to the event' : 'Events'}
+        </Link>
+      )}
       <h3>{editing ? 'Edit event' : 'New event'}</h3>
       <div className="form-grid">
         <EventTextFields value={text} onChange={setText} showKind={!editing} />
@@ -130,10 +150,11 @@ export function EventFormPage({ guild, serverTimezone }: { guild: Guild; serverT
         </label>
         <TimezoneField value={timezone} onChange={setTimezone} serverTimezone={serverTimezone} />
         <label className="field">
-          Invites start <span className="muted">(optional)</span>
+          Invites start
           <input type="time" value={inviteTime} onChange={(e) => setInviteTime(e.target.value)} />
           <small className="muted">
-            Before the event, e.g. 15 minutes. Shown on the post; Raid Sort can invite from then.
+            Optional. Before the event, e.g. 15 minutes; shown on the post, and Raid Sort can invite
+            from then.
           </small>
         </label>
         {canSchedule && (
@@ -201,9 +222,15 @@ export function EventFormPage({ guild, serverTimezone }: { guild: Guild; serverT
             'Create and post'
           )}
         </button>
-        <Link className="btn" to={back}>
-          Cancel
-        </Link>
+        {onCancel ? (
+          <button type="button" className="btn" onClick={onCancel}>
+            Cancel
+          </button>
+        ) : (
+          <Link className="btn" to={back}>
+            Cancel
+          </Link>
+        )}
       </div>
     </form>
   );
