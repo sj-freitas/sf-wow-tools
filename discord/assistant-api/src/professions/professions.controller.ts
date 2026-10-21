@@ -54,3 +54,16 @@ export class ProfessionsController {
     return this.professions.list(req.user.id, guildId, characterId);
   }
 }
+
+/** A character's professions on its own page, which belongs to no guild. */
+@Controller('characters')
+@UseGuards(AuthGuard)
+export class CharacterProfessionsController {
+  constructor(private readonly professions: ProfessionsService) {}
+
+  /** Any logged-in user, like the character's page. */
+  @Get(':characterId/professions')
+  list(@Param('characterId', ParseUUIDPipe) characterId: string): Promise<ProfessionDto[]> {
+    return this.professions.forCharacter(characterId);
+  }
+}

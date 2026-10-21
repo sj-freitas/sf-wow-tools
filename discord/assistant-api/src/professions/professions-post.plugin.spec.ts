@@ -66,7 +66,7 @@ describe('professionsMessages', () => {
     ]);
   });
 
-  it('splits a long list between messages at line ends, repeating the heading carried on', () => {
+  it('splits a long list between messages at line ends, carrying on the list without a heading', () => {
     const recipes = [
       ...Array.from({ length: 60 }, (_, i) =>
         recipe('Blacksmithing', 1000 + i, `Blacksmithing recipe ${i}`, ['a', 'b']),
@@ -80,11 +80,12 @@ describe('professionsMessages', () => {
     for (const message of messages) {
       assert.ok(message.length <= MAX_MESSAGE, `${message.length} characters`);
       const lines = message.split('\n');
-      assert.ok(lines[0].startsWith('## '), 'each message starts with a heading');
       assert.ok(!lines[lines.length - 1].startsWith('## '), 'never a heading alone at the end');
       for (const line of lines) assert.match(line, /^(## |- \[)/, 'whole lines only');
     }
-    assert.ok(messages.some((m) => m.startsWith('## Blacksmithing (continued)')));
+    // A profession carried on into the next message just goes on with its recipes.
+    assert.ok(messages.slice(1).some((m) => m.startsWith('- [Blacksmithing recipe')));
+    assert.ok(!messages.join('\n').includes('(continued)'));
     // Every recipe once, in order.
     const listed = messages.join('\n').match(/recipe \d+/g) ?? [];
     assert.equal(listed.length, 120);
@@ -135,7 +136,10 @@ describe('characterPageUrl', () => {
 describe('ProfessionsPostPlugin', () => {
   function setup(recipes: GuildRecipe[], failAfter = Infinity) {
     const posted: { id: string; content: string }[] = [];
+    const edited: { id: string; content: string }[] = [];
     const deleted: string[] = [];
+    // Messages someone deleted by hand: editing them fails.
+    const gone = new Set<string>();
     let next = 0;
     const bot = {
       postQuietMessage: async (
@@ -149,6 +153,17 @@ describe('ProfessionsPostPlugin', () => {
         const id = `m${++next}`;
         posted.push({ id, content });
         return id;
+      },
+      editMessage: async (
+        _channel: string,
+        id: string,
+        content: string,
+        options: { suppressEmbeds?: boolean; quiet?: boolean },
+      ) => {
+        if (gone.has(id)) throw new Error('Unknown Message');
+        assert.equal(options.suppressEmbeds, true);
+        assert.equal(options.quiet, true);
+        edited.push({ id, content });
       },
       deleteMessage: async (_channel: string, id: string) => {
         deleted.push(id);
@@ -196,7 +211,7 @@ describe('ProfessionsPostPlugin', () => {
         context,
         Date.now() + 60_000,
       );
-    return { run, plugin, posted, deleted };
+    return { run, plugin, posted, edited, deleted, gone };
   }
 
   const rod = recipe('Blacksmithing', 1245287, 'Copper Rod', ['a']);
@@ -233,12 +248,38 @@ describe('ProfessionsPostPlugin', () => {
     assert.equal((await run(forced.state)).result, 'No changes.');
   });
 
-  it('deletes its previous messages and posts again when the list changed', async () => {
-    const { run, posted, deleted } = setup([rod, recipe('Cooking', 2538, 'Bread', ['b'])]);
+  it('edits its messages in place when the list changed and still fits, dropping spare ones', async () => {
+    const { run, posted, edited, deleted } = setup([rod, recipe('Cooking', 2538, 'Bread', ['b'])]);
     const outcome = await run({ hash: 'old', messageIds: ['old1', 'old2'] });
-    assert.deepEqual(deleted, ['old1', 'old2']);
-    assert.equal(posted.length, 1);
-    assert.deepEqual(outcome.state.messageIds, ['m1']);
+    // Nothing new in the channel: the first message now holds the list, the second goes.
+    assert.deepEqual(
+      edited.map((e) => e.id),
+      ['old1'],
+    );
+    assert.match(edited[0].content, /Bread/);
+    assert.deepEqual(deleted, ['old2']);
+    assert.equal(posted.length, 0);
+    assert.deepEqual(outcome.state.messageIds, ['old1']);
+    assert.equal(outcome.result, 'Updated the list: 2 recipes in 1 message.');
+  });
+
+  it('posts it all again when the list needs more messages than it has', async () => {
+    const many = Array.from({ length: 120 }, (_, i) =>
+      recipe('Blacksmithing', 1000 + i, `Blacksmithing recipe ${i}`, ['a', 'b']),
+    );
+    const { run, posted, edited, deleted } = setup(many);
+    await run({ hash: 'old', messageIds: ['old1'] });
+    assert.deepEqual(edited, []);
+    assert.deepEqual(deleted, ['old1']);
+    assert.ok(posted.length > 1);
+  });
+
+  it('posts it all again when one of its messages was deleted by hand', async () => {
+    const { run, posted, deleted, gone } = setup([rod]);
+    gone.add('old1');
+    const outcome = await run({ hash: 'old', messageIds: ['old1'] });
+    assert.deepEqual(deleted, ['old1']);
+    assert.deepEqual(outcome.state.messageIds, [posted[0].id]);
   });
 
   it('takes back a half-posted list when Discord fails, so the retry starts clean', async () => {

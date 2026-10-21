@@ -69,7 +69,7 @@ export const listIntro = (professionsUrl: string): string =>
  * The guild's professions as Discord messages, after `intro`: per profession, each recipe (a
  * Wowhead link) with who can craft it, each crafter linking to its Guild Assistant page.
  * Split between messages at line ends, never inside a recipe's line; a profession carried on into
- * the next message repeats its heading. A line too long for one message (a recipe half the guild
+ * the next message just goes on with its list (no heading again). A line too long for one message (a recipe half the guild
  * can craft) shortens its list of crafters to "…, 12 more", linking to the recipe's crafters on the
  * website (`craftersUrl`) when given.
  */
@@ -100,8 +100,8 @@ export function professionsMessages(
       .map(crafterOf)
       .sort((a, b) => a.name.localeCompare(b.name))
       .map(crafterLink);
-    // Room for the heading repeated above it in a new message.
-    const room = MAX_MESSAGE - heading.length - ' (continued)\n'.length;
+    // Room for its profession's heading above it (a profession's first recipe goes with it).
+    const room = MAX_MESSAGE - heading.length - 1;
     let line = `${start}${names.join(', ')}\\]`;
     for (let shown = names.length - 1; line.length > room && shown > 0; shown--) {
       const more = `${names.length - shown} more`;
@@ -112,7 +112,8 @@ export function professionsMessages(
     const block = first ? `${heading}\n${line}` : line;
     if (current && current.length + 1 + block.length > MAX_MESSAGE) {
       messages.push(current);
-      current = first ? block : `${heading} (continued)\n${line}`;
+      // A profession carried on into the next message just goes on with its list.
+      current = block;
     } else {
       current = current ? `${current}\n${block}` : block;
     }
@@ -129,7 +130,8 @@ export const hashMessages = (messages: readonly string[]): string =>
  * Professions List, a plugin kind of professions: posts the guild's professions (what it can
  * craft, and who) in a channel, over as many messages as it takes. On its schedule, and soon after
  * someone imports professions, it checks whether the list changed (a hash of the messages); if it
- * did, it deletes its previous messages and posts the list again. Registered from here, not in
+ * did, it edits its messages in place (or, when it needs more of them, deletes them and posts
+ * the list again). Registered from here, not in
  * `src/plugins`, so professions stay removable on their own.
  */
 @Injectable()
@@ -204,14 +206,39 @@ export class ProfessionsPostPlugin implements OnModuleInit {
         return { result: 'No changes.', state, quiet: true };
       }
       const channelId = plugin.config.channelId;
+      const count = `${recipes.length} recipe${recipes.length === 1 ? '' : 's'}`;
+      const previous = state.messageIds ?? [];
+      // Changed, and it still fits in the messages already there: edit them in place, so the list
+      // keeps its place in the channel and nothing shows as new; the ones it no longer needs go.
+      // Growing past them (an extra message could land after someone else's), "Run now", or an
+      // edit that fails (a message deleted by hand) posts it all again instead.
+      if (!state.force && previous.length > 0 && messages.length <= previous.length) {
+        try {
+          for (const [index, content] of messages.entries()) {
+            await context.bot.editMessage(channelId, previous[index], content, {
+              suppressEmbeds: true,
+              quiet: true,
+            });
+          }
+          for (const messageId of previous.slice(messages.length)) {
+            await context.bot.deleteMessage(channelId, messageId).catch(() => undefined);
+          }
+          return {
+            result: `Updated the list: ${count} in ${messages.length} message${messages.length === 1 ? '' : 's'}.`,
+            state: { hash, messageIds: previous.slice(0, messages.length) },
+          };
+        } catch {
+          // Posted again below.
+        }
+      }
       // The previous list goes first; one already deleted by hand is fine.
-      for (const messageId of state.messageIds ?? []) {
+      for (const messageId of previous) {
         await context.bot.deleteMessage(channelId, messageId).catch(() => undefined);
       }
       const messageIds: string[] = [];
       try {
         for (const content of messages) {
-          // No previews: each crafter's Discord link would show a profile card.
+          // No previews under the list.
           messageIds.push(
             await context.bot.postQuietMessage(channelId, content, { suppressEmbeds: true }),
           );
@@ -223,7 +250,6 @@ export class ProfessionsPostPlugin implements OnModuleInit {
         }
         throw error;
       }
-      const count = `${recipes.length} recipe${recipes.length === 1 ? '' : 's'}`;
       return {
         result: `Posted the list: ${count} in ${messageIds.length} message${messageIds.length === 1 ? '' : 's'}.`,
         state: { hash, messageIds },

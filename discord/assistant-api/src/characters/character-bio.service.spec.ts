@@ -70,6 +70,7 @@ describe('CharacterBioService', () => {
             bio: character.bio,
             bioVisible: character.bioVisible,
             images: [],
+            guilds: [{ guild: { name: 'Relic Hunters', gameVersion, region, realm } }],
             player: {
               discordUserId: character.discordUserId,
               discordUsername: 'merric_s',
@@ -135,6 +136,7 @@ describe('CharacterBioService', () => {
       const rest: Partial<typeof result> = { ...result };
       delete rest.player;
       delete rest.otherCharacters;
+      delete rest.guilds;
       return rest;
     };
     const base = {
@@ -219,11 +221,14 @@ describe('CharacterBioService', () => {
     });
   });
 
-  it('shows who plays it on Discord, and their other characters', async () => {
+  it('shows its guilds, who plays it on Discord, and their other characters', async () => {
     const profile = await service.findProfile('forever', 'eu', 'rp', 'Merric-Stone', OTHER);
     assert.notEqual(profile, 'not-found');
     if (profile === 'not-found') return;
     assert.deepEqual(profile.player, { discordUserId: OWNER, name: 'Merric' });
+    assert.deepEqual(profile.guilds, [
+      { name: 'Relic Hunters', path: 'forever/eu/rp/guilds/relic-hunters' },
+    ]);
     assert.deepEqual(profile.otherCharacters, [
       {
         name: 'Tilda Stone',

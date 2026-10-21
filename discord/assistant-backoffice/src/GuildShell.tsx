@@ -95,6 +95,7 @@ interface Props {
  *                                                    or none); basic info to everyone, its bio too
  *                                                    once its player shares it (RP servers only)
  *   /<version>/<region>/<server>/characters/<name>/bio   writing that bio; its own player only
+ *   /<version>/<region>/<server>/characters/<name>/professions   its Professions tab
  *   /<version>/<region>/<server>/guilds/<guild>      a guild, e.g. /forever/eu/firemaw/guilds/relic-hunters
  *                                                    (the literal "guilds" keeps this from
  *                                                    colliding with a character's address above),
@@ -106,6 +107,7 @@ interface Props {
  *       /roster/edit/:id      edit a character             Officers, or its owner
  *       /roster/notes/:id     Officers' private note about a character   Officers
  *       /professions          what the guild can craft (?q=&prof=)        everyone in the guild
+ *       /professions/import   the same, its Import professions panel open
  *       /professions/:craftId[/crafters]  the same, at one recipe (its Wowhead spell id), its
  *                             characters open with /crafters (the Professions List's links)
  *       /posts                posts (?q=&page=)            Officers
@@ -148,6 +150,10 @@ export function GuildShell({ guilds, setup, currentUser, onGuildsChanged }: Prop
             <Route
               path=":version/:region/:realm/characters/:namePath"
               element={<CharacterPage editMode={false} />}
+            />
+            <Route
+              path=":version/:region/:realm/characters/:namePath/professions"
+              element={<CharacterPage editMode={false} tab="professions" />}
             />
             <Route
               path=":version/:region/:realm/characters/:namePath/bio"
@@ -247,6 +253,7 @@ function GuildRoutes({ guilds, setup, currentUser, onGuildsChanged }: Props) {
           <Route path="edit" element={officersOnly(<HomeEditPage guild={guild} />)} />
           <Route path="roster" element={<RosterPage guild={guild} currentUser={currentUser} />} />
           <Route path="professions" element={<ProfessionsPage guild={guild} />} />
+          <Route path="professions/import" element={<ProfessionsPage guild={guild} />} />
           <Route path="professions/:craftId" element={<ProfessionsPage guild={guild} />} />
           <Route path="professions/:craftId/crafters" element={<ProfessionsPage guild={guild} />} />
           <Route

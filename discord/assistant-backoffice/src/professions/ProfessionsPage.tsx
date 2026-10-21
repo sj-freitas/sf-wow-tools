@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useLocation, useParams, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { characterPath } from '../format';
 import { fuzzyWordsScore } from '../fuzzy';
-import { characterPagePath } from '../guildPath';
+import { characterPagePath, guildPath } from '../guildPath';
 import type { Guild } from '../types';
 import { HammerIcon } from '../Icons';
 import { SkeletonLines } from '../Loading';
@@ -22,12 +22,15 @@ const iconUrl = (icon: string) => `https://wow.zamimg.com/images/wow/icons/small
 export function ProfessionsPage({ guild }: { guild: Guild }) {
   const [data, setData] = useState<GuildProfessions | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [importing, setImporting] = useState(false);
   const [params, setParams] = useSearchParams();
   // `/professions/<spell id>[/crafters]`: one recipe to show (its characters too with /crafters).
   const { craftId } = useParams();
   const target = craftId && /^\d+$/.test(craftId) ? Number(craftId) : null;
-  const showCrafters = useLocation().pathname.endsWith('/crafters');
+  const { pathname } = useLocation();
+  const showCrafters = pathname.endsWith('/crafters');
+  // `/professions/import`: the import panel open, so it can be linked to (a character's page does).
+  const importing = pathname.endsWith('/professions/import');
+  const navigate = useNavigate();
   const query = params.get('q') ?? '';
   const picked = params.getAll('prof');
 
@@ -113,7 +116,7 @@ export function ProfessionsPage({ guild }: { guild: Guild }) {
         <ImportProfessionsDrawer
           guildId={guild.id}
           onClose={() => {
-            setImporting(false);
+            navigate(guildPath(guild, 'professions'));
             load();
           }}
         />
@@ -126,9 +129,9 @@ export function ProfessionsPage({ guild }: { guild: Guild }) {
           </p>
         </div>
         <div className="settings-actions">
-          <button type="button" className="btn" onClick={() => setImporting(true)}>
+          <Link className="btn" to={guildPath(guild, 'professions/import')}>
             <HammerIcon /> Import professions
-          </button>
+          </Link>
         </div>
       </div>
 

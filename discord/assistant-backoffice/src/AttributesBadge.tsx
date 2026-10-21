@@ -1,11 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { AttributeChip } from './AttributeChip';
-import { TagIcon } from './Icons';
-import type { GuildAttribute } from './types';
+import { ATTRIBUTE_COLORS, type GuildAttribute } from './types';
+
+/** How many colour dots before the rest is shown as "…". */
+const MAX_DOTS = 4;
 
 /**
- * A character's guild attributes as a small tag icon with their count; clicking it shows them.
- * Keeps the roster calm when characters have many. Nothing when it has none.
+ * A character's guild attributes as small dots in their colours (up to four, then "…"); clicking
+ * them shows their names (and, for Officers, Edit). Keeps the roster calm when characters have
+ * many. Nothing when it has none.
  */
 export function AttributesBadge({
   attributes,
@@ -44,8 +47,14 @@ export function AttributesBadge({
         title={names}
         onClick={() => setOpen((current) => !current)}
       >
-        <TagIcon />
-        {attributes.length}
+        {attributes.slice(0, MAX_DOTS).map((attribute) => (
+          <span
+            key={attribute.id}
+            className="attribute-dot"
+            style={{ background: ATTRIBUTE_COLORS[attribute.color] }}
+          />
+        ))}
+        {attributes.length > MAX_DOTS && <span className="attribute-dots-more">…</span>}
       </button>
       {open && (
         <span className="attributes-popover" role="dialog" aria-label="Attributes">

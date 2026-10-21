@@ -58,6 +58,8 @@ export interface CharacterProfile {
   bioVisible: boolean;
   bio: string | null;
   images: BioImage[];
+  /** The guilds it is in; `path` is the guild's address (`forever/eu/rp/guilds/relic-hunters`). */
+  guilds: { name: string; path: string }[];
   /** Who plays it: their Discord account (name null until the bot has seen them). */
   player: { discordUserId: string; name: string | null };
   /** That player's other characters, on any server, by name. */

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type DragEvent, type FormEvent } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, NavLink, useNavigate, useParams } from 'react-router-dom';
 import { ClassMark } from './ClassMark';
 import {
   bioImageUrl,
@@ -11,6 +11,7 @@ import {
 import { characterPagePath } from './guildPath';
 import { InlineSpinner, Spinner } from './Loading';
 import { MarkdownView } from './MarkdownView';
+import { CharacterProfessions } from './professions/CharacterProfessions';
 import type { CharacterProfile } from './types';
 import { useReturnTo } from './useReturnTo';
 
@@ -20,13 +21,16 @@ const MAX_BIO_IMAGES = 4;
 interface Props {
   /** `/bio`: the editor, for the character's own player only. Otherwise the read-only page. */
   editMode: boolean;
+  /** The page's tab: its bio (the page's own address) or `/professions`. */
+  tab?: 'bio' | 'professions';
 }
 
 /**
  * A character's own page, guild-agnostic: `/<version>/<region>/<server>/characters/<name>`, the
- * same address regardless of which guild it is in (or none), with `/bio` appended for its editor.
+ * same address regardless of which guild it is in (or none), with `/bio` appended for its editor
+ * and `/professions` for its Professions tab (Bio is the page's own address).
  */
-export function CharacterPage({ editMode }: Props) {
+export function CharacterPage({ editMode, tab = 'bio' }: Props) {
   const { version = '', region = '', realm = '', namePath = '' } = useParams();
   const navigate = useNavigate();
   const back = useReturnTo('/overview');
@@ -71,6 +75,8 @@ export function CharacterPage({ editMode }: Props) {
       ) : (
         <CharacterView
           profile={profile}
+          tab={tab}
+          viewUrl={viewUrl}
           editUrl={editUrl}
           charactersUrl={`/${[version, region, realm].map((s) => s.toLowerCase()).join('/')}/characters`}
           gameVersion={version}
@@ -83,12 +89,17 @@ export function CharacterPage({ editMode }: Props) {
 
 function CharacterView({
   profile,
+  tab,
+  viewUrl,
   editUrl,
   charactersUrl,
   gameVersion,
   realm,
 }: {
   profile: CharacterProfile;
+  tab: 'bio' | 'professions';
+  /** The page's address (its Bio tab); `/professions` is appended for the other. */
+  viewUrl: string;
   editUrl: string;
   /** Your characters on this server. */
   charactersUrl: string;
@@ -162,7 +173,25 @@ function CharacterView({
         )}
       </div>
 
+      {/* Tabs with their own addresses, so either can be linked to. Off an RP server there is no
+          bio, so the page is its professions. */}
       {profile.bioSupported && (
+        <nav className="view-tabs character-tabs" aria-label="Character sections">
+          <NavLink to={viewUrl} end>
+            Bio
+          </NavLink>
+          <NavLink to={`${viewUrl}/professions`}>Professions</NavLink>
+        </nav>
+      )}
+
+      {(!profile.bioSupported || tab === 'professions') && (
+        <CharacterProfessions
+          characterId={profile.characterId}
+          importGuilds={profile.isOwner ? profile.guilds : undefined}
+        />
+      )}
+
+      {profile.bioSupported && tab === 'bio' && (
         <div className="bio-page-card">
           {profile.images.length > 0 && (
             <div className="bio-gallery">

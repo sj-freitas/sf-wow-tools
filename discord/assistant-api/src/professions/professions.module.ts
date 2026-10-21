@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
 import { ProfessionsCommand } from './professions.command';
-import { ProfessionsController } from './professions.controller';
+import { CharacterProfessionsController, ProfessionsController } from './professions.controller';
 import { ProfessionsCoreModule } from './professions-core.module';
 import { ProfessionsService } from './professions.service';
 
@@ -11,7 +11,7 @@ import { ProfessionsService } from './professions.service';
  */
 @Module({
   imports: [AuthModule, ProfessionsCoreModule],
-  controllers: [ProfessionsController],
+  controllers: [ProfessionsController, CharacterProfessionsController],
   providers: [ProfessionsService, ProfessionsCommand],
 })
 export class ProfessionsModule {}

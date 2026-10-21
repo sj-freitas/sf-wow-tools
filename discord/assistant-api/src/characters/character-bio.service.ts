@@ -41,6 +41,8 @@ export interface CharacterProfile {
   bio: string | null;
   /** Images, same visibility rule as the text; always empty (not null) when hidden. */
   images: BioImage[];
+  /** The guilds it is in, with their address in the backoffice (e.g. to import professions). */
+  guilds: { name: string; path: string }[];
   /** Who plays it: their Discord account (name null until the bot has seen them). */
   player: { discordUserId: string; name: string | null };
   /** That player's other characters, on any server: by name. */
@@ -136,6 +138,11 @@ export class CharacterBioService {
         bio: true,
         bioVisible: true,
         images: { select: { id: true, contentType: true }, orderBy: { createdAt: 'asc' } },
+        guilds: {
+          select: {
+            guild: { select: { name: true, gameVersion: true, region: true, realm: true } },
+          },
+        },
         player: {
           select: {
             discordUserId: true,
@@ -175,6 +182,9 @@ export class CharacterBioService {
       bioVisible: bioOffered && character.bioVisible,
       bio: bioOffered && visible ? character.bio : null,
       images: bioOffered && visible ? character.images : [],
+      guilds: (character.guilds ?? [])
+        .map(({ guild }) => ({ name: guild.name, path: guildPath(guild) }))
+        .sort((a, b) => a.name.localeCompare(b.name)),
       player: {
         discordUserId: character.player.discordUserId,
         name: character.player.discordDisplayName ?? character.player.discordUsername ?? null,

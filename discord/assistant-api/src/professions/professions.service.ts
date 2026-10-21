@@ -117,7 +117,25 @@ export class ProfessionsService {
       select: { guild: { select: { gameVersion: true } } },
     });
     if (!membership) throw new NotFoundException('That character is not in this guild.');
-    const path = getGame(membership.guild.gameVersion)?.wowheadPath ?? 'classic';
+    return this.professionsOf(characterId, membership.guild.gameVersion);
+  }
+
+  /**
+   * A character's professions on its own page (guild-agnostic): any logged-in user may see them,
+   * like the rest of the page.
+   */
+  async forCharacter(characterId: string): Promise<ProfessionDto[]> {
+    const character = await this.prisma.character.findUnique({
+      where: { id: characterId },
+      select: { gameVersion: true },
+    });
+    if (!character) throw new NotFoundException('Character not found');
+    return this.professionsOf(characterId, character.gameVersion);
+  }
+
+  /** The character's professions and recipes, linked to Wowhead in its game version's data. */
+  private async professionsOf(characterId: string, gameVersion: string): Promise<ProfessionDto[]> {
+    const path = getGame(gameVersion)?.wowheadPath ?? 'classic';
     const professions = await this.prisma.characterProfession.findMany({
       where: { characterId },
       orderBy: { name: 'asc' },

@@ -25,6 +25,8 @@ function setup(member = true) {
       findMany: async () => [
         { id: 'luna-id', firstName: 'Luna', lastName: 'Starfall', realm: 'Wild Growth' },
       ],
+      findUnique: async ({ where }: { where: { id: string } }) =>
+        where.id === 'luna-id' ? { gameVersion: 'Forever' } : null,
     },
     characterGuildMembership: {
       findUnique: async () => ({ guild: { gameVersion: 'Forever' } }),
@@ -203,6 +205,21 @@ describe('ProfessionsService', () => {
     );
     assert.deepEqual(await service.findCrafters('server-1', 'thorium'), { matches: [], more: 0 });
     assert.equal(await service.findCrafters('other-server', 'crusader'), null);
+  });
+
+  it("lists a character's professions for its own page, without a guild", async () => {
+    const { service } = setup();
+    await service.import(user, 'g1', FIXTURE);
+    const professions = await service.forCharacter('luna-id');
+    assert.deepEqual(
+      professions.map((p) => [p.name, p.recipes.length]),
+      [
+        ['Enchanting', 2],
+        ['Tailoring', 2],
+      ],
+    );
+    assert.match(professions[0].recipes[0].url, /^https:\/\/www\.wowhead\.com\/forever\//);
+    await assert.rejects(service.forCharacter('nobody'), /Character not found/);
   });
 
   it('keeps people outside the guild out', async () => {

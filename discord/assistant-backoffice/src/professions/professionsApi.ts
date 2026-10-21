@@ -56,6 +56,10 @@ export interface GuildProfessions {
 export const fetchGuildProfessions = (guildId: string): Promise<GuildProfessions> =>
   request('GET', `/api/guilds/${guildId}/professions`);
 
+/** A character's professions for its own page (no guild needed). */
+export const fetchCharacterProfessions = (characterId: string): Promise<Profession[]> =>
+  request('GET', `/api/characters/${characterId}/professions`);
+
 export const fetchProfessions = (guildId: string, characterId: string): Promise<Profession[]> =>
   request('GET', `/api/guilds/${guildId}/characters/${characterId}/professions`);
 

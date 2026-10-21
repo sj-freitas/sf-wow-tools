@@ -983,7 +983,9 @@ on logout). Blizzard's Classic Era / SoD API has no professions, hence the addon
   and last as Forever writes them; the realm breaks ties). Each matched character's professions are
   replaced by the export's; characters that aren't the user's in the guild are skipped and listed,
   and others' seen through a link are listed apart, not imported. In the backoffice: Roster or
-  Professions, **Import professions** (drop the file, choose it, or paste its contents).
+  Professions, **Import professions** (drop the file, choose it, or paste its contents); the
+  Professions page's panel has its own address, `…/guilds/<guild>/professions/import`, which a
+  character's Professions tab links its own player to (one link per guild it is in).
 - **The guild's professions** (`GET /api/guilds/:guildId/professions`): anyone in the guild. Every
   recipe someone can craft and who, and each character's professions (`GuildRecipesService`, which
   needs no login: the bot and the worker use it too). The backoffice's **Professions** page lists
@@ -991,7 +993,9 @@ on logout). Blizzard's Classic Era / SoD API has no professions, hence the addon
   profession filter; the roster's search also finds characters by profession or recipe, and links
   to the Professions page when recipes match.
 - **One character's** (`GET /api/guilds/:guildId/characters/:characterId/professions`): Roster, any
-  character's menu, **Professions**.
+  character's menu, **Professions**. On the character's own page (guild-agnostic,
+  `GET /api/characters/:characterId/professions`, any logged-in user): its **Professions** tab
+  (`…/characters/<name>/professions`), collapsed professions with a search over the recipes.
 - **`/crafter <item>`** (Discord, private reply): who in the server's guild can craft it, by name
   (the same typo-tolerant matching as the website's search, `fuzzy.ts`), id or Wowhead link; each
   crafter as character and Discord mention. Says so when nobody can.
@@ -1001,13 +1005,14 @@ on logout). Blizzard's Classic Era / SoD API has no professions, hence the addon
   each recipe (a Wowhead link) and "Crafters:" each character linking to its Guild Assistant
   page (not a Discord profile: Discord shows a card for those even with embeds suppressed), as
   `Crafters: [A, B]`, over as many messages as it takes (split at line ends; a
-  profession carried on repeats its heading). A recipe with too many crafters for one message ends
+  profession carried on into the next message just goes on with its list). A recipe with too many crafters for one message ends
   in "12 more", linking to it on the website: `…/professions/<spell id>/crafters` opens the
   Professions page at that recipe with its characters shown (`/professions/<spell id>` without
   them). Posted with embeds suppressed. On its schedule (every 5 minutes, every hour or daily) and two minutes after any
   import, it hashes the messages: unchanged, nothing happens, and the run stays out of the plugin's
-  history (`quiet`); changed, it deletes its previous messages (their ids are in its state) and
-  posts the list again. **Run now** always posts it again, changed or not (the kind's
+  history (`quiet`); changed, it edits its messages in place (their ids are in its state; spare
+  ones are deleted), so the list keeps its place and nothing shows as new, or, when it needs more
+  messages than it has (or one was deleted by hand), deletes them and posts the list again. **Run now** always posts it again, changed or not (the kind's
   `onRunNow` marks its next run `force`). A post that fails half way is taken back, so the retry
   starts clean.
   Mentions never ping.

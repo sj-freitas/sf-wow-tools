@@ -132,8 +132,11 @@
   border-top: 1px solid var(--border);
 }
 /* A recipe and its "View characters" button: side by side, wrapping on a phone. */
-.guild-recipe {
+/* The guild page's recipe rows open their characters; a character page's don't. */
+.guild-recipe:has(> button) {
   cursor: pointer;
+}
+.guild-recipe {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
