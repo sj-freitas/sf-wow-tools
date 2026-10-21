@@ -1,6 +1,8 @@
 /* ---- professions (ProfessionsDrawer, ImportProfessionsDrawer) ---- */
 .professions {
   display: grid;
+  /* Never wider than the drawer, whatever a long word inside wants. */
+  grid-template-columns: minmax(0, 1fr);
   gap: 0.75rem;
 }
 .profession h4 {
@@ -40,12 +42,17 @@
   gap: 0.3rem;
   font-size: 0.9rem;
 }
+/* The saved variables file's path is one long word: it wraps anywhere. */
+.import-steps code {
+  overflow-wrap: anywhere;
+}
 .import-result {
   margin: 0;
   padding-left: 1.2rem;
 }
 .import-drop {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 0.5rem;
   padding: 0.75rem;
   border: 1px dashed var(--border);
@@ -58,6 +65,7 @@
 }
 .import-drop-head {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
@@ -65,6 +73,7 @@
 }
 .import-drop textarea {
   width: 100%;
+  min-width: 0;
   font-family: ui-monospace, monospace;
   font-size: 0.8rem;
 }
