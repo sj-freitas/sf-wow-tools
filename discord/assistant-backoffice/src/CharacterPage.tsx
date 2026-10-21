@@ -33,14 +33,18 @@ export function CharacterPage({ editMode }: Props) {
   const [profile, setProfile] = useState<CharacterProfile | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Loaded again each time the page switches between the bio editor and the page: both addresses
+  // show this same component, which React keeps, so without it the page would show the bio and
+  // images from before an edit (and the editor would count images that are already gone).
   const load = useCallback(() => {
     setError(null);
+    setProfile(null);
     fetchCharacterProfile(version, region, realm, namePath)
       .then(setProfile)
       .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)));
   }, [version, region, realm, namePath]);
 
-  useEffect(load, [load]);
+  useEffect(load, [load, editMode]);
 
   const server = { gameVersion: version, region, realm };
   const viewUrl = characterPagePath(server, namePath);
@@ -65,7 +69,13 @@ export function CharacterPage({ editMode }: Props) {
           </p>
         )
       ) : (
-        <CharacterView profile={profile} editUrl={editUrl} gameVersion={version} />
+        <CharacterView
+          profile={profile}
+          editUrl={editUrl}
+          charactersUrl={`/${[version, region, realm].map((s) => s.toLowerCase()).join('/')}/characters`}
+          gameVersion={version}
+          realm={realm}
+        />
       )}
     </div>
   );
@@ -74,12 +84,17 @@ export function CharacterPage({ editMode }: Props) {
 function CharacterView({
   profile,
   editUrl,
+  charactersUrl,
   gameVersion,
+  realm,
 }: {
   profile: CharacterProfile;
   editUrl: string;
-  /** As in the address (`forever`); only used for the class icon. */
+  /** Your characters on this server. */
+  charactersUrl: string;
+  /** As in the address (`forever`): for the class icon, and to tell other servers' characters. */
   gameVersion: string;
+  realm: string;
 }) {
   return (
     <>
@@ -89,7 +104,6 @@ function CharacterView({
           <div className="card-meta">
             <ClassMark gameVersion={gameVersion} className={profile.class} />
             {profile.class} · {profile.race} · Level {profile.level} · {profile.roles.join(', ')}
-            {profile.isMain && <span className="badge badge-main main-pill">Main</span>}
           </div>
         </div>
         {profile.isOwner && profile.bioSupported && (
@@ -100,12 +114,52 @@ function CharacterView({
       </div>
 
       <div className="character-links">
+        {profile.isOwner && (
+          <Link className="btn btn-sm" to={charactersUrl}>
+            All your characters
+          </Link>
+        )}
         <span className="btn btn-sm disabled" title="Coming soon">
           Armory
         </span>
         <span className="btn btn-sm disabled" title="Coming soon">
           Logs
         </span>
+      </div>
+
+      <div className="character-player">
+        <div>
+          <span className="muted">Played by </span>
+          {/* Their Discord profile (fine here: only messages the bot posts showed a card). */}
+          <a
+            href={`https://discord.com/users/${profile.player.discordUserId}`}
+            target="_blank"
+            rel="noreferrer"
+          >
+            @{profile.player.name ?? profile.player.discordUserId}
+          </a>
+        </div>
+        {profile.otherCharacters.length > 0 && (
+          <ul className="character-player-list">
+            {profile.otherCharacters.map((other) => {
+              const elsewhere =
+                other.gameVersion.toLowerCase() !== gameVersion.toLowerCase() ||
+                other.realm.toLowerCase() !== realm.toLowerCase();
+              return (
+                <li key={`${other.gameVersion}/${other.region}/${other.realm}/${other.namePath}`}>
+                  <Link to={characterPagePath(other, other.namePath)}>
+                    <ClassMark gameVersion={other.gameVersion} className={other.class} />
+                    {other.name}
+                  </Link>
+                  <span className="muted">
+                    Level {other.level} {other.class}
+                    {elsewhere && ` · ${other.realm} (${other.gameVersion})`}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </div>
 
       {profile.bioSupported && (
@@ -172,10 +226,12 @@ function BioEditor({ profile, onSaved }: { profile: CharacterProfile; onSaved: (
 
   const removeImage = (imageId: string) => {
     setImageError(null);
+    // Kept to put back if the removal fails (it may have been added since the page loaded).
+    const removed = images.find((image) => image.id === imageId);
     setImages((current) => current.filter((image) => image.id !== imageId));
     deleteBioImage(profile.characterId, imageId).catch((err: unknown) => {
       setImageError(err instanceof Error ? err.message : String(err));
-      setImages((current) => [...current, ...profile.images.filter((i) => i.id === imageId)]);
+      if (removed) setImages((current) => [...current, removed]);
     });
   };
 

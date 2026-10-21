@@ -8,7 +8,6 @@ export class CharacterDto {
   roles!: Role[];
   firstName!: string;
   lastName!: string;
-  isMain!: boolean;
   level!: number;
 }
 

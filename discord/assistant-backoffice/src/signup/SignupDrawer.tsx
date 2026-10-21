@@ -164,7 +164,8 @@ function PersonPicker({
   const needle = query.trim().toLowerCase();
   const shown = (people ?? []).filter(
     (person) =>
-      needle === '' || `${person.name} ${person.mains.join(' ')}`.toLowerCase().includes(needle),
+      needle === '' ||
+      `${person.name} ${person.characters.join(' ')}`.toLowerCase().includes(needle),
   );
   return (
     <div className="signup-editor">
@@ -195,7 +196,7 @@ function PersonPicker({
                   <strong>{person.name}</strong>
                   <span className="muted">
                     {' · '}
-                    {person.mains.length > 0 ? `Main: ${person.mains.join(', ')}` : 'No main'}
+                    {person.characters.length > 0 ? person.characters.join(', ') : 'No characters'}
                   </span>
                 </span>
               </button>

@@ -12,8 +12,8 @@ const CANNOT_DM = 50007;
 export interface MissingPersonDto {
   discordUserId: string;
   name: string;
-  /** Their main character(s) in the guild, if any. */
-  mains: string[];
+  /** Their characters in the guild, if any. */
+  characters: string[];
   /** Holds the guild's Raider role in its main server. */
   isRaider: boolean;
   reminders: number;
@@ -56,7 +56,7 @@ export class SignupRemindersService {
           discordDisplayName: true,
           discordUsername: true,
           characters: {
-            where: { isMain: true, guilds: { some: { guildId: guild.id } } },
+            where: { guilds: { some: { guildId: guild.id } } },
             select: { firstName: true, lastName: true },
           },
         },
@@ -98,7 +98,7 @@ export class SignupRemindersService {
     }
 
     const answered = new Set(event.entries.map((entry) => entry.discordUserId));
-    const mains = new Map(
+    const characters = new Map(
       players.map((player) => [player.discordUserId, player.characters.map(formatCharacterName)]),
     );
     const result: MissingPersonDto[] = [];
@@ -108,14 +108,18 @@ export class SignupRemindersService {
       result.push({
         discordUserId,
         name: person.name,
-        mains: mains.get(discordUserId) ?? [],
+        characters: characters.get(discordUserId) ?? [],
         isRaider: raider !== null && (person.roles ?? []).includes(raider.discordRoleId),
         reminders: theirs.length,
         lastReminderAt: theirs[0]?.sentAt.toISOString() ?? null,
         lastDelivered: theirs[0]?.delivered ?? null,
       });
     }
-    result.sort((a, b) => b.mains.length - a.mains.length || a.name.localeCompare(b.name));
+    result.sort(
+      (a, b) =>
+        Number(b.characters.length > 0) - Number(a.characters.length > 0) ||
+        a.name.localeCompare(b.name),
+    );
     return { source: listed ? 'servers' : 'known', hasRaiderRole: raider !== null, people: result };
   }
 

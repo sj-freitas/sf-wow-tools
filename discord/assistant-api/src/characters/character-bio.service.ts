@@ -3,6 +3,7 @@ import { PrismaService } from '../database/prisma.service';
 import { sniffImageType } from '../guilds/banner';
 import { MAX_IMAGE_BYTES } from '../officer-requests/attachments';
 import { resolveServer, supportsBios } from '../game/games';
+import { guildPath } from '../guilds/guild-path';
 import { formatCharacterName } from './character-name';
 import { ROLE_LABELS } from './role-labels';
 
@@ -31,7 +32,6 @@ export interface CharacterProfile {
   race: string;
   level: number;
   roles: string[];
-  isMain: boolean;
   /** Whether the viewer is the character's own player: only they may edit the bio. */
   isOwner: boolean;
   /** Whether this server offers bios at all (its rule set is 'RP'); hide the section if not. */
@@ -41,9 +41,45 @@ export interface CharacterProfile {
   bio: string | null;
   /** Images, same visibility rule as the text; always empty (not null) when hidden. */
   images: BioImage[];
+  /** Who plays it: their Discord account (name null until the bot has seen them). */
+  player: { discordUserId: string; name: string | null };
+  /** That player's other characters, on any server: by name. */
+  otherCharacters: {
+    name: string;
+    /** Its page's address part: `Name` or `Name-Lastname`. */
+    namePath: string;
+    class: string;
+    level: number;
+    gameVersion: string;
+    region: string;
+    realm: string;
+  }[];
 }
 
 export type FindProfileResult = CharacterProfile | 'not-found';
+
+/** One of the viewer's own characters on a server, for their characters page. */
+export interface OwnCharacter {
+  characterId: string;
+  name: string;
+  /** Its page's address part: `Name` or `Name-Lastname`. */
+  namePath: string;
+  class: string;
+  race: string;
+  level: number;
+  roles: string[];
+  /** The guilds it is in, with their address in the backoffice. */
+  guilds: { name: string; path: string }[];
+  /** Whether it has a bio written, and shares it (RP servers). */
+  hasBio: boolean;
+  bioVisible: boolean;
+}
+
+/** The viewer's characters on a server, and whether the server offers bios. */
+export interface OwnCharacters {
+  bioSupported: boolean;
+  characters: OwnCharacter[];
+}
 export type UpdateBioResult = 'updated' | 'not-found' | 'forbidden' | 'not-supported';
 export type AddImageResult = BioImage | 'not-found' | 'forbidden' | 'not-supported' | 'too-many';
 export type RemoveImageResult = 'removed' | 'not-found' | 'forbidden';
@@ -97,11 +133,29 @@ export class CharacterBioService {
         race: true,
         level: true,
         roles: true,
-        isMain: true,
         bio: true,
         bioVisible: true,
         images: { select: { id: true, contentType: true }, orderBy: { createdAt: 'asc' } },
-        player: { select: { discordUserId: true } },
+        player: {
+          select: {
+            discordUserId: true,
+            discordUsername: true,
+            discordDisplayName: true,
+            characters: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                class: true,
+                level: true,
+                gameVersion: true,
+                region: true,
+                realm: true,
+              },
+              orderBy: [{ firstName: 'asc' }, { lastName: 'asc' }],
+            },
+          },
+        },
       },
     });
     if (!character) return 'not-found';
@@ -116,12 +170,85 @@ export class CharacterBioService {
       race: character.race,
       level: character.level,
       roles: character.roles.map((role) => ROLE_LABELS[role]),
-      isMain: character.isMain,
       isOwner,
       bioSupported: bioOffered,
       bioVisible: bioOffered && character.bioVisible,
       bio: bioOffered && visible ? character.bio : null,
       images: bioOffered && visible ? character.images : [],
+      player: {
+        discordUserId: character.player.discordUserId,
+        name: character.player.discordDisplayName ?? character.player.discordUsername ?? null,
+      },
+      otherCharacters: (character.player.characters ?? [])
+        .filter((other) => other.id !== character.id)
+        .map((other) => ({
+          name: formatCharacterName(other),
+          namePath: other.lastName ? `${other.firstName}-${other.lastName}` : other.firstName,
+          class: other.class,
+          level: other.level,
+          gameVersion: other.gameVersion,
+          region: other.region,
+          realm: other.realm,
+        })),
+    };
+  }
+
+  /**
+   * The viewer's own characters on a server (`/<version>/<region>/<server>/characters`), by
+   * name. 'not-found' for an address that isn't a server.
+   */
+  async listOwn(
+    urlVersion: string,
+    urlRegion: string,
+    urlRealm: string,
+    discordUserId: string,
+  ): Promise<OwnCharacters | 'not-found'> {
+    const server = resolveServer(urlVersion, urlRegion, urlRealm);
+    if (!server) return 'not-found';
+    const characters = await this.prisma.character.findMany({
+      where: {
+        gameVersion: server.gameVersion,
+        region: server.region,
+        realm: server.realm,
+        player: { discordUserId },
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        class: true,
+        race: true,
+        level: true,
+        roles: true,
+        bio: true,
+        bioVisible: true,
+        guilds: {
+          select: {
+            guild: { select: { name: true, gameVersion: true, region: true, realm: true } },
+          },
+        },
+      },
+      orderBy: [{ firstName: 'asc' }, { lastName: 'asc' }],
+    });
+    const bioSupported = supportsBios(server.gameVersion, server.region, server.realm);
+    return {
+      bioSupported,
+      characters: characters.map((character) => ({
+        characterId: character.id,
+        name: formatCharacterName(character),
+        namePath: character.lastName
+          ? `${character.firstName}-${character.lastName}`
+          : character.firstName,
+        class: character.class,
+        race: character.race,
+        level: character.level,
+        roles: character.roles.map((role) => ROLE_LABELS[role]),
+        guilds: character.guilds
+          .map(({ guild }) => ({ name: guild.name, path: guildPath(guild) }))
+          .sort((a, b) => a.name.localeCompare(b.name)),
+        hasBio: bioSupported && (character.bio ?? '').trim() !== '',
+        bioVisible: bioSupported && character.bioVisible,
+      })),
     };
   }
 

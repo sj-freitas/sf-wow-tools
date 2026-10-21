@@ -319,7 +319,7 @@ export class SignupCommand {
   }
 
   /**
-   * One menu: each of the person's characters in each role it plays (mains first), shown with
+   * One menu: each of the person's characters in each role it plays (those in the guild first), shown with
    * its class colour. Picking one is the whole sign-up. (Or how to add a character.)
    */
   private async characterMenu(
@@ -352,7 +352,7 @@ export class SignupCommand {
       content:
         `**${event.title}** · sign up${statusSuffix(status)} as:` +
         (choices.length > shown.length
-          ? `\n-# Showing ${shown.length} of ${choices.length}: mains first.`
+          ? `\n-# Showing ${shown.length} of ${choices.length}: those in the guild first.`
           : ''),
       components: [
         {
@@ -446,12 +446,7 @@ function done(event: EventRow, status: SignupStatus, characterName: string, role
 }
 
 const describeCharacter = (option: CharacterOption, current: boolean): string =>
-  [
-    current ? 'Signed up now' : '',
-    option.class,
-    option.isMain ? 'Main' : '',
-    option.inGuild ? '' : 'not in the guild yet',
-  ]
+  [current ? 'Signed up now' : '', option.class, option.inGuild ? '' : 'not in the guild yet']
     .filter((part) => part !== '')
     .join(' · ')
     .slice(0, 100);

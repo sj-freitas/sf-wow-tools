@@ -9,7 +9,6 @@ export interface Character {
   roles: Role[];
   firstName: string;
   lastName: string;
-  isMain: boolean;
   level: number;
 }
 
@@ -25,6 +24,28 @@ export interface BioImage {
  * `bioSupported` is false when its server's rule set isn't 'RP' — the bio section (and
  * `bioVisible`/`bio`/`images`) don't apply at all then, rather than being merely hidden.
  */
+/** One of your characters on a server (the API's OwnCharacter), for your characters page. */
+export interface OwnCharacter {
+  characterId: string;
+  name: string;
+  /** Its page's address part: `Name` or `Name-Lastname`. */
+  namePath: string;
+  class: string;
+  race: string;
+  level: number;
+  roles: string[];
+  /** The guilds it is in; `path` is the guild's address (`forever/eu/rp/guilds/relic-hunters`). */
+  guilds: { name: string; path: string }[];
+  hasBio: boolean;
+  bioVisible: boolean;
+}
+
+export interface OwnCharacters {
+  /** Whether the server offers bios (RP servers). */
+  bioSupported: boolean;
+  characters: OwnCharacter[];
+}
+
 export interface CharacterProfile {
   characterId: string;
   name: string;
@@ -32,12 +53,23 @@ export interface CharacterProfile {
   race: string;
   level: number;
   roles: string[];
-  isMain: boolean;
   isOwner: boolean;
   bioSupported: boolean;
   bioVisible: boolean;
   bio: string | null;
   images: BioImage[];
+  /** Who plays it: their Discord account (name null until the bot has seen them). */
+  player: { discordUserId: string; name: string | null };
+  /** That player's other characters, on any server, by name. */
+  otherCharacters: {
+    name: string;
+    namePath: string;
+    class: string;
+    level: number;
+    gameVersion: string;
+    region: string;
+    realm: string;
+  }[];
 }
 
 export interface Player {
@@ -212,7 +244,6 @@ export interface CharacterPatch {
   /** Empty means unknown. */
   race?: string;
   roles?: Role[];
-  isMain?: boolean;
   level?: number;
   /** Officers only: move the character to another Discord user of the guild. */
   discordUserId?: string;
@@ -227,7 +258,6 @@ export interface NewCharacterInput {
   /** Empty means unknown. */
   race: string;
   roles: Role[];
-  isMain: boolean;
   level?: number;
 }
 

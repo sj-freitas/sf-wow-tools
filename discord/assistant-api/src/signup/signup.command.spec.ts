@@ -34,7 +34,6 @@ const CHARACTERS: CharacterOption[] = [
     name: 'Tearyn',
     class: 'Priest',
     roles: ['HEALER'],
-    isMain: false,
     inGuild: true,
   },
   {
@@ -42,7 +41,6 @@ const CHARACTERS: CharacterOption[] = [
     name: 'Darkshivan',
     class: 'Druid',
     roles: ['TANK', 'HEALER'],
-    isMain: true,
     inGuild: false,
   },
 ];
@@ -262,7 +260,7 @@ describe('SignupCommand', () => {
       );
       // Nothing preselected (Discord ignores re-picking it); the current choice says so.
       assert.ok(menu.options.every((option) => !option.default));
-      assert.match(menu.options[2].description, /^Signed up now · Druid · Main/);
+      assert.equal(menu.options[2].description, 'Signed up now · Druid · not in the guild yet');
       // The class colour dot, where the class has one.
       assert.deepEqual(menu.options[1].emoji, { id: '42', name: 'c_druid_ff7c0a' });
       assert.equal(menu.options[0].emoji, undefined);

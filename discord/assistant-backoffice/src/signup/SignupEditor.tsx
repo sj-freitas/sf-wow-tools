@@ -61,7 +61,7 @@ export function SignupEditor({
     (entry?.characterId && characters.some((c) => c.id === entry.characterId)
       ? entry.characterId
       : null) ??
-    characters.find((c) => c.isMain)?.id ??
+    characters.find((c) => c.inGuild)?.id ??
     characters[0]?.id ??
     '';
   const [status, setStatus] = useState<SignupStatus>(entry?.status ?? 'AVAILABLE');
@@ -140,7 +140,6 @@ export function SignupEditor({
                 {characters.map((option) => (
                   <option key={option.id} value={option.id}>
                     {option.name} · {option.class}
-                    {option.isMain ? ' · Main' : ''}
                     {option.inGuild ? '' : ' · not in the guild yet'}
                   </option>
                 ))}

@@ -31,17 +31,31 @@ type ProfessionsPostState = {
 const recipeName = (recipe: GuildRecipe) =>
   recipe.name ?? `${recipe.kind === 'spell' ? 'Spell' : 'Item'} ${recipe.id}`;
 
-/** A crafter as the list shows them: the character, a link to its player on Discord when known. */
+/** A crafter as the list shows them: the character, and its page on Guild Assistant when known. */
 export interface Crafter {
   name: string;
-  discordUserId: string | null;
+  url: string | null;
 }
 
-/** "[Shivan Nightpath](<https://discord.com/users/123>)": the character, opening its player's profile. */
+/**
+ * "[Shivan Nightpath](<…/forever/eu/rp/characters/Shivan-Nightpath>)": the character, opening its
+ * Guild Assistant page. Not its player's Discord profile: Discord shows a profile card under any
+ * message with one of those links, even with embeds suppressed.
+ */
 const crafterLink = (crafter: Crafter) =>
-  crafter.discordUserId
-    ? `[${crafter.name}](<https://discord.com/users/${crafter.discordUserId}>)`
-    : crafter.name;
+  crafter.url ? `[${crafter.name}](<${crafter.url}>)` : crafter.name;
+
+/** A character's page on Guild Assistant: `/<version>/<region>/<server>/characters/<Name-Lastname>`. */
+export const characterPageUrl = (
+  origin: string,
+  server: { gameVersion: string; region: string; realm: string },
+  character: { firstName: string; lastName: string },
+): string =>
+  `${origin}/${[server.gameVersion, server.region, server.realm]
+    .map((part) => encodeURIComponent(part.toLowerCase()))
+    .join('/')}/characters/${encodeURIComponent(
+    character.lastName ? `${character.firstName}-${character.lastName}` : character.firstName,
+  )}`;
 
 /** What the list starts with: what it is, where to add to it, and /crafter. */
 export const listIntro = (professionsUrl: string): string =>
@@ -53,7 +67,7 @@ export const listIntro = (professionsUrl: string): string =>
 
 /**
  * The guild's professions as Discord messages, after `intro`: per profession, each recipe (a
- * Wowhead link) with who can craft it, each crafter linking to their player's Discord profile.
+ * Wowhead link) with who can craft it, each crafter linking to its Guild Assistant page.
  * Split between messages at line ends, never inside a recipe's line; a profession carried on into
  * the next message repeats its heading. A line too long for one message (a recipe half the guild
  * can craft) shortens its list of crafters to "…, 12 more", linking to the recipe's crafters on the
@@ -174,10 +188,13 @@ export class ProfessionsPostPlugin implements OnModuleInit {
       const professionsUrl = `${this.origin}/${guildPath(guild)}/professions`;
       const messages = professionsMessages(
         recipes,
-        (id) => ({
-          name: byId.get(id)?.name ?? '?',
-          discordUserId: byId.get(id)?.discordUserId ?? null,
-        }),
+        (id) => {
+          const character = byId.get(id);
+          return {
+            name: character?.name ?? '?',
+            url: character ? characterPageUrl(this.origin, guild, character) : null,
+          };
+        },
         listIntro(professionsUrl),
         // A recipe's crafters on the website: /professions/<spell id>/crafters.
         (recipe) => `${professionsUrl}/${recipe.id}/crafters`,

@@ -26,12 +26,13 @@ describe('CharacterBioController', () => {
       race: 'Human',
       level: 60,
       roles: ['Tank'],
-      isMain: true,
       isOwner: true,
       bioSupported: true,
       bioVisible: false,
       bio: 'Text',
       images: [],
+      player: { discordUserId: 'owner-1', name: 'Merric' },
+      otherCharacters: [],
     };
     updateResult = 'updated';
     updates = [];

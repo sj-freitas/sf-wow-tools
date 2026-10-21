@@ -5,6 +5,7 @@ import type {
   OfficerNote,
   Character,
   CharacterProfile,
+  OwnCharacters,
   PublicInfo,
   CharacterPatch,
   Conversation,
@@ -200,6 +201,17 @@ export const updateCharacter = (
 
 export const deleteCharacter = (guildId: string, id: string): Promise<void> =>
   request('DELETE', `/api/guilds/${guildId}/characters/${id}`);
+
+/** Your characters on a server (`/<version>/<region>/<server>/characters`). */
+export const fetchOwnCharacters = (
+  gameVersion: string,
+  region: string,
+  realm: string,
+): Promise<OwnCharacters> =>
+  request(
+    'GET',
+    `/api/game/${encodeURIComponent(gameVersion)}/${encodeURIComponent(region)}/${encodeURIComponent(realm)}/characters`,
+  );
 
 /** A character's own page (guild-agnostic: by its server, not any one guild). */
 export const fetchCharacterProfile = (

@@ -16,8 +16,8 @@ export interface RosterRow {
 
 /**
  * Everything about a roster row that a search can find: the character's name, class, race,
- * roles, professions and what it can craft, attributes and level, "main", and its player's Discord names, Discord ID and
- * ranks.
+ * roles, professions and what it can craft, attributes (a guild's "Main" among them) and level,
+ * and its player's Discord names, Discord ID and ranks.
  */
 function searchableText(
   { player, character }: RosterRow,
@@ -35,7 +35,6 @@ function searchableText(
     ...professions,
     ...attributes.map((attribute) => attribute.name),
     String(character.level),
-    ...(character.isMain ? ['main'] : ['alt']),
     player.discordUsername ?? '',
     player.discordDisplayName ?? '',
     player.discordUserId,

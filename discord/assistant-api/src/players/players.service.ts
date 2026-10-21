@@ -71,7 +71,7 @@ export class PlayersService {
         discordDisplayName: true,
         characters: {
           where: { guilds: { some: { guildId } } },
-          orderBy: [{ isMain: 'desc' }, { firstName: 'asc' }],
+          orderBy: [{ firstName: 'asc' }, { lastName: 'asc' }],
           select: {
             id: true,
             class: true,
@@ -79,7 +79,6 @@ export class PlayersService {
             roles: true,
             firstName: true,
             lastName: true,
-            isMain: true,
             level: true,
           },
         },

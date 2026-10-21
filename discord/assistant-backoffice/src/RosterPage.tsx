@@ -514,7 +514,6 @@ export function RosterPage({ guild, currentUser }: Props) {
                         <ClassMark gameVersion={guild.gameVersion} className={character.class} />
                         <span className="roster-item-name">
                           {characterLink(character, name)}
-                          {character.isMain && <span className="badge badge-main">Main</span>}
                           {attributesBadge(character.id, name)}
                         </span>
                         {rowMenu(player, character, name)}
@@ -554,9 +553,6 @@ export function RosterPage({ guild, currentUser }: Props) {
                           <tr className={deleting ? 'row-pending' : undefined}>
                             <td data-label="Character" className="cell-name">
                               {characterLink(character, name)}
-                              {character.isMain && (
-                                <span className="badge badge-main main-pill">Main</span>
-                              )}
                               {attributesBadge(character.id, name)}
                             </td>
                             <td data-label="Class" className="cell-compact">

@@ -133,12 +133,6 @@
         "required": false,
         "min_value": 1,
         "max_value": 100
-      },
-      {
-        "name": "main",
-        "description": "Is this one of your main characters? (default: no)",
-        "type": 5,
-        "required": false
       }
     ]
   },

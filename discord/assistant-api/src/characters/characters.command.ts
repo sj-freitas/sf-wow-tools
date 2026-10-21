@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Command } from '../bot/decorators/command.decorator';
 import {
-  getBooleanOption,
   getNumberOption,
   getInvokerId,
   getStringOption,
@@ -51,7 +50,6 @@ export class CharactersCommand {
       class: characterClass,
       race,
       roles: [role],
-      isMain: getBooleanOption(interaction, 'main'),
       level: getNumberOption(interaction, 'level'),
     });
     const label = formatCharacterName(name);
@@ -84,8 +82,7 @@ export class CharactersCommand {
     return characters
       .map((character) => {
         const roles = character.roles.map((role) => ROLE_LABELS[role]).join('/');
-        const main = character.isMain ? ' [main]' : '';
-        return `${formatCharacterName(character)} - ${character.class} (${roles}), level ${character.level}${main}`;
+        return `${formatCharacterName(character)} - ${character.class} (${roles}), level ${character.level}`;
       })
       .join('\n');
   }

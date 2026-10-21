@@ -88,7 +88,6 @@ export interface CharacterOption {
   name: string;
   class: string;
   roles: Role[];
-  isMain: boolean;
   inGuild: boolean;
 }
 
@@ -195,7 +194,8 @@ export interface SignupInput {
 export interface MissingPerson {
   discordUserId: string;
   name: string;
-  mains: string[];
+  /** Their characters in the guild, if any. */
+  characters: string[];
   isRaider: boolean;
   reminders: number;
   lastReminderAt: string | null;

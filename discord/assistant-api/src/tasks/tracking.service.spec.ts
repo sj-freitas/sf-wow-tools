@@ -14,7 +14,6 @@ const character = (
   firstName: string,
   lastName = '',
   over: Partial<{
-    isMain: boolean;
     class: string;
     race: string;
     roles: string[];
@@ -23,7 +22,6 @@ const character = (
 ) => ({
   firstName,
   lastName,
-  isMain: true,
   class: 'Warrior',
   race: '',
   roles: ['TANK'],
@@ -491,7 +489,7 @@ describe('TrackingService', () => {
           name: 'Merric Stone',
           firstName: 'Merric',
           lastName: 'Stone',
-          isMain: true,
+          attributes: [],
           class: 'Warrior',
           race: '',
           roles: ['Tank', 'Melee DPS'],
@@ -504,19 +502,23 @@ describe('TrackingService', () => {
       assert.deepEqual(second.characters, []);
     });
 
-    it('lists the main first and every character, with its own class and roles', async () => {
+    it('lists every character, with its own attributes, class and roles', async () => {
       roster = {
         [ana.id]: [
-          character('Merric', '', { isMain: true }),
-          character('Olga', '', { isMain: false, class: 'Priest', roles: ['HEALER'] }),
+          {
+            ...character('Merric'),
+            attributes: [{ attribute: { name: 'Switcher' } }, { attribute: { name: 'Main' } }],
+          },
+          character('Olga', '', { class: 'Priest', roles: ['HEALER'] }),
         ],
       };
       const [first] = await fetch();
       assert.deepEqual(
-        first.characters?.map((c) => [c.name, c.isMain, c.class, c.roles]),
+        first.characters?.map((c) => [c.name, c.attributes, c.class, c.roles]),
         [
-          ['Merric', true, 'Warrior', ['Tank']],
-          ['Olga', false, 'Priest', ['Healer']],
+          // A guild's "Main" is just one of its attributes now, sorted with the rest.
+          ['Merric', ['Main', 'Switcher'], 'Warrior', ['Tank']],
+          ['Olga', [], 'Priest', ['Healer']],
         ],
       );
     });
@@ -761,10 +763,10 @@ describe('TrackingService', () => {
 
     it('lists every character of the guild with who plays it, sorted by name', async () => {
       roster = {
-        '20': [character('Zed', '', { isMain: false, class: 'Rogue', roles: ['MELEE_DPS'] })],
+        '20': [character('Zed', '', { class: 'Rogue', roles: ['MELEE_DPS'] })],
         '10': [
           character('Merric', 'Stone'),
-          character('Olga', '', { isMain: false, class: 'Priest', roles: ['HEALER'] }),
+          character('Olga', '', { class: 'Priest', roles: ['HEALER'] }),
         ],
       };
       playerNames = { '10': { username: 'ana', display: 'Ana' }, '20': { username: 'zoe' } };
@@ -774,14 +776,14 @@ describe('TrackingService', () => {
           e.name,
           e.class,
           e.roles,
-          e.isMain,
+          e.attributes,
           e.discordUser.id,
           e.discordUser.name,
         ]),
         [
-          ['Merric Stone', 'Warrior', ['Tank'], true, '10', 'Ana'],
-          ['Olga', 'Priest', ['Healer'], false, '10', 'Ana'],
-          ['Zed', 'Rogue', ['Melee DPS'], false, '20', 'zoe'],
+          ['Merric Stone', 'Warrior', ['Tank'], [], '10', 'Ana'],
+          ['Olga', 'Priest', ['Healer'], [], '10', 'Ana'],
+          ['Zed', 'Rogue', ['Melee DPS'], [], '20', 'zoe'],
         ],
       );
     });
@@ -889,15 +891,12 @@ describe('TrackingService', () => {
       roster = { '10': [character('Merric')] };
       await service.refreshDue();
       tasks[POST].state = taskUpdates.at(-1).state;
-      roster = { '10': [character('Merric'), character('Bolt', '', { isMain: false })] };
+      roster = { '10': [character('Merric'), character('Bolt')] };
       assert.equal(await service.refreshDue(), 1);
       assert.equal(edits.at(-1)?.[2], 'Tanks: Bolt, Merric');
       tasks[POST].state = taskUpdates.at(-1).state;
       roster = {
-        '10': [
-          character('Merric', '', { roles: ['HEALER'] }),
-          character('Bolt', '', { isMain: false }),
-        ],
+        '10': [character('Merric', '', { roles: ['HEALER'] }), character('Bolt')],
       };
       await service.refreshDue();
       assert.equal(edits.at(-1)?.[2], 'Tanks: Bolt');
@@ -920,7 +919,7 @@ describe('TrackingService', () => {
     it('fills in reactions and the roster in the same message', async () => {
       tasks[POST].config.parts[0].content =
         'Going {{reactions emoji=👍 show="reactions.length"}} of {{roster show="roster.length"}}';
-      roster = { '10': [character('Merric'), character('Olga', '', { isMain: false })] };
+      roster = { '10': [character('Merric'), character('Olga')] };
       rows = [trackingRow({ postRef: 'self#1', sourceTaskId: POST })];
       await service.refreshDue();
       assert.equal(edits[0][2], 'Going 2 of 2');

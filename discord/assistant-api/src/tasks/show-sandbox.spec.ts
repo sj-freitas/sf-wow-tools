@@ -22,7 +22,7 @@ const people = [
         name: 'Merric Stone',
         firstName: 'Merric',
         lastName: 'Stone',
-        isMain: true,
+        attributes: ['Main'],
         class: 'Warrior',
         race: '',
         roles: ['Tank'],
@@ -34,7 +34,7 @@ const people = [
         name: 'Olga',
         firstName: 'Olga',
         lastName: '',
-        isMain: false,
+        attributes: [],
         class: 'Priest',
         race: '',
         roles: ['Healer'],
@@ -56,7 +56,7 @@ describe('runShowExpression', () => {
     assert.equal(text, '2: <@1> is Ana,<@2> is Bruno');
   });
 
-  it('gives the characters, with class, roles and whether they are the main', async () => {
+  it('gives the characters, with class, roles and the guild attributes they have', async () => {
     const text = await runShowExpression(
       "reactions.flatMap(r => r.characters.filter(c => c.roles.includes('Tank')).map(c => `${c.name} (${c.class})`))",
       people,
@@ -64,7 +64,7 @@ describe('runShowExpression', () => {
     assert.equal(text, 'Merric Stone (Warrior)');
     assert.equal(
       await runShowExpression(
-        'reactions.map(r => (r.characters.find(c => c.isMain) || {}).name || r.name)',
+        "reactions.map(r => (r.characters.find(c => c.attributes.includes('Main')) || {}).name || r.name)",
         people,
       ),
       'Merric Stone, Bruno',
@@ -165,7 +165,6 @@ describe('the roster variable', () => {
       name: 'Merric Stone',
       firstName: 'Merric',
       lastName: 'Stone',
-      isMain: true,
       class: 'Warrior',
       race: '',
       roles: ['Tank'],
@@ -180,7 +179,6 @@ describe('the roster variable', () => {
       name: 'Olga',
       firstName: 'Olga',
       lastName: '',
-      isMain: false,
       class: 'Priest',
       race: '',
       roles: ['Healer'],

@@ -286,14 +286,15 @@ A post's text can show who reacted to a message:
   `{ id, tag, name, displayName, characters }`. `tag` is `<@id>`; `name` the Discord name (global display
   name, else username; never the id, which is `id`); `displayName` the nickname they have in the
   message's server, else `name`; `characters` their characters in the guild (an empty array if none),
-  main first, each `{ name, firstName, lastName, isMain, class, race, roles, level, classIcon,
-roleIcons }` (`name` is "Merric Stone", `race` empty when it is unknown, `roles` a list of "Tank",
+  oldest first, each `{ name, firstName, lastName, attributes, class, race, roles, level, classIcon,
+roleIcons }` (`name` is "Merric Stone", `attributes` the names of the guild attributes it has, A–Z
+(a guild says what a main is with one, e.g. "Main"), `race` empty when it is unknown, `roles` a list of "Tank",
   "Healer", "Melee DPS", "Ranged DPS"; `classIcon` the class's icon as Discord emoji text, ready to
   put in the post — `<:i_druid_…:123>`, the bot's own emoji, uploaded the first time it is needed —
   and `roleIcons` each role's the same way, in the order of `roles`; '' where there is none). Left out, `show` is
   `reactions.map((r) => r.name)`. An array result is joined with ", ". Examples: `reactions.length`,
-  `reactions.map(r => r.tag)`, `reactions.map(r => (r.characters.find(c => c.isMain) || r).name)` (the
-  main, else the Discord name), `reactions.flatMap(r => r.characters).filter(c => c.roles.includes('Tank')).map(c => c.name)`.
+  `reactions.map(r => r.tag)`, `reactions.map(r => (r.characters.find(c => c.attributes.includes('Main')) || r).name)`
+  (the character with the guild's "Main" attribute, else the Discord name), `reactions.flatMap(r => r.characters).filter(c => c.roles.includes('Tank')).map(c => c.name)`.
   Options may come in any order; a value with spaces goes in quotes, inside which `}}` and `${…}` are
   just text (use `\"` for a double quote, or single quotes). Up to 5 tags per post; a wrong tag, an
   unknown source or an ambiguous name is refused on save.
@@ -328,18 +329,18 @@ syntax, same QuickJS sandbox, checked on save with sample data, `⚠️ (…)` i
 Its only option is `show` (left out: every character's name); the list is called `roster`.
 
 - **`roster`** is an array with one entry per character of the guild, sorted by name:
-  `{ name, firstName, lastName, isMain, class, race, roles, level, armoryLink, attributes, discordUser }`
+  `{ name, firstName, lastName, attributes, class, race, roles, level, armoryLink, discordUser }`
   (the same character fields as `characters` in a reactions tag, plus `armoryLink`: the character's armory
-  page from the game version's `armoryLink` template, or `null` when the version has none; and
-  `attributes`: the names of the guild attributes it has, A–Z, e.g. `['Switcher']`, empty when none). A character belongs to a player (`players.discord_user_id`), so
+  page from the game version's `armoryLink` template, or `null` when the version has none). A character belongs to a player (`players.discord_user_id`), so
   `discordUser` is the Discord user who plays it: `{ id, tag, name, displayName, roles }` where `tag` is
   `<@id>`, `name` the Discord name we know (else the id), `displayName` their nickname in the guild's main
   server (else `name`) and `roles` the **names of their Discord roles** in that server (`@everyone` left
-  out). Examples: `roster.length`, `roster.filter(c => c.isMain).map(c => c.name)`,
+  out). Examples: `roster.length`, `roster.filter(c => c.attributes.includes('Main')).map(c => c.name)`,
   `roster.filter(c => c.discordUser.roles.includes('Raider')).map(c => c.name)`,
   `roster.filter(c => c.attributes.includes('Switcher')).map(c => c.name)`,
-  ``roster.filter(c => c.isMain).map(c => `${c.classIcon} ${c.name}`)`` (mains with their class
-  icon). Attributes are part of the
+  ``roster.filter(c => c.attributes.includes('Main')).map(c => `${c.classIcon} ${c.name}`)`` (the
+  guild's mains with their class icon). There is no built-in "main": each guild uses its own
+  attribute for it. Attributes are part of the
   roster hash, so giving or taking one updates the posts that show it.
 - **Nicknames and roles come from Discord**, so they are read with one member listing and one role listing
   of the main server (the bot's Server Members Intent), or one lookup per player (at most 100) when that
@@ -596,7 +597,7 @@ ephemeral (only you see them).
 
 | Command             | Options                                                                      | Purpose                          |
 | ------------------- | ---------------------------------------------------------------------------- | -------------------------------- |
-| `/character-add`    | `name`, `class`, `role`, optional `level` (1-100), optional `main` (boolean) | Registers one of your characters |
+| `/character-add`    | `name`, `class`, `role`, optional `level` (1-100)                            | Registers one of your characters |
 | `/character-list`   | —                                                                            | Lists your characters            |
 | `/character-remove` | `name`                                                                       | Removes one of your characters   |
 
@@ -614,7 +615,8 @@ ephemeral (only you see them).
   minimum lengths (CHECK constraints on `characters.first_name`/`last_name`), since a CHECK can't
   read the guild's game version from another table.
 
-You can mark several characters as `main`. An **Officer** can also move a character to another Discord
+Which characters are mains is up to each guild: an Officer gives them a guild attribute (e.g.
+"Main") on the roster. An **Officer** can also move a character to another Discord
 user (the Discord user field of the edit form, or `discordUserId` in `PATCH /api/characters/:id`): the
 user must be in one of the guild's servers, the other player having a character with the same name is
 refused, and the previous player is removed once it has no characters left. Members cannot move
@@ -911,7 +913,7 @@ Officer can lock or unlock it by hand, or put it back on automatic.
 own form, everyone's list), **Raid setup**, **Assignments**, and **Not signed up**.
 
 - **Not signed up** lists everyone in the guild's Discord servers (people, not bots; characters or
-  not) who hasn't answered, filterable to the Raider role or people with a main. **Remind** DMs one
+  not) who hasn't answered, filterable to the Raider role, each with their characters in the guild. **Remind** DMs one
   person a link to the post; **Remind all** goes through the list one by one. Each reminder is
   recorded (`signup_contacts`: when, by whom, whether Discord delivered it), as many as you like.
   The owner and Officers can also sign someone up from here.
@@ -996,12 +998,13 @@ on logout). Blizzard's Classic Era / SoD API has no professions, hence the addon
 - **Professions List plugin** (`professions-post.plugin.ts`, kind `PROFESSIONS_POST`, added from
   `ProfessionsCoreModule` like sign-ups add Recurring Event): posts the guild's list in a channel,
   under an intro (what it is, a link to the guild's Professions page, `/crafter`), per profession
-  each recipe (a Wowhead link) and "Crafters:" each character linking to its player's Discord
-  profile, as `Crafters: [A, B]`, over as many messages as it takes (split at line ends; a
+  each recipe (a Wowhead link) and "Crafters:" each character linking to its Guild Assistant
+  page (not a Discord profile: Discord shows a card for those even with embeds suppressed), as
+  `Crafters: [A, B]`, over as many messages as it takes (split at line ends; a
   profession carried on repeats its heading). A recipe with too many crafters for one message ends
   in "12 more", linking to it on the website: `…/professions/<spell id>/crafters` opens the
   Professions page at that recipe with its characters shown (`/professions/<spell id>` without
-  them). Posted with embeds suppressed (a Discord profile link would show a card). On its schedule (every 5 minutes, every hour or daily) and two minutes after any
+  them). Posted with embeds suppressed. On its schedule (every 5 minutes, every hour or daily) and two minutes after any
   import, it hashes the messages: unchanged, nothing happens, and the run stays out of the plugin's
   history (`quiet`); changed, it deletes its previous messages (their ids are in its state) and
   posts the list again. **Run now** always posts it again, changed or not (the kind's

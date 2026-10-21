@@ -206,7 +206,6 @@ model Character {
   // name is empty when there is none, and required for game versions that say so.
   firstName     String                     @map("first_name")
   lastName      String                     @default("") @map("last_name")
-  isMain        Boolean                    @default(false) @map("is_main")
   level         Int                        @default(1)
   // Free text written by the character's own player (never an Officer), on guilds whose server's
   // rule set is 'RP'. Shown to others only when bioVisible is set; always visible to its owner.

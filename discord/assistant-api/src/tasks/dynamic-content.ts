@@ -15,7 +15,8 @@ export interface ReactorCharacter {
   name: string;
   firstName: string;
   lastName: string;
-  isMain: boolean;
+  /** The guild's attributes it has ("Main", "Switcher", …): each guild decides what they mean. */
+  attributes: string[];
   class: string;
   /** Empty when unknown (added before this was collected, or from Discord). */
   race: string;
@@ -33,7 +34,7 @@ export interface Reactor {
   name: string;
   /** How they are shown in the message's server: their nickname there, else `name`. */
   displayName?: string;
-  /** Their characters in the guild, main first (empty when they have none). */
+  /** Their characters in the guild, oldest first (empty when they have none). */
   characters?: ReactorCharacter[];
 }
 

@@ -28,12 +28,11 @@ export interface NewCharacter extends CharacterName {
   class: string;
   race: string;
   roles: Role[];
-  isMain: boolean;
   level?: number;
 }
 
 export type CharacterUpdate = Partial<
-  Pick<NewCharacter, 'class' | 'race' | 'roles' | 'isMain' | 'level' | 'firstName' | 'lastName'>
+  Pick<NewCharacter, 'class' | 'race' | 'roles' | 'level' | 'firstName' | 'lastName'>
 > & {
   /** A deliberate faction change; the race (new or existing) must fit it, same as on creation. */
   faction?: Faction;
@@ -89,7 +88,6 @@ export interface CharacterSummary extends CharacterName {
   race: string;
   faction: Faction;
   roles: Role[];
-  isMain: boolean;
   level: number;
 }
 
@@ -101,7 +99,6 @@ const CHARACTER_SELECT = {
   race: true,
   faction: true,
   roles: true,
-  isMain: true,
   level: true,
 } as const;
 
@@ -164,7 +161,7 @@ export class CharactersService {
         faction: guild.faction,
         guilds: { none: { guildId } },
       },
-      orderBy: [{ isMain: 'desc' }, { firstName: 'asc' }],
+      orderBy: [{ firstName: 'asc' }, { lastName: 'asc' }],
       select: CHARACTER_SELECT,
     });
   }
@@ -408,7 +405,6 @@ export class CharactersService {
           roles: character.roles,
           firstName: character.firstName,
           lastName: character.lastName,
-          isMain: character.isMain,
           level: character.level,
         },
       });
@@ -437,7 +433,7 @@ export class CharactersService {
     if (!player) return [];
     return this.prisma.character.findMany({
       where: { playerId: player.id, guilds: { some: { guildId: guild.id } } },
-      orderBy: [{ isMain: 'desc' }, { firstName: 'asc' }],
+      orderBy: [{ firstName: 'asc' }, { lastName: 'asc' }],
       select: CHARACTER_SELECT,
     });
   }

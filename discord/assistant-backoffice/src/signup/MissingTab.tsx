@@ -59,7 +59,7 @@ export function MissingTab({
       // Without a Raider role set for the guild there is nothing to filter on.
       (!raidersOnly || !missing?.hasRaiderRole || person.isRaider) &&
       (query.trim() === '' ||
-        `${person.name} ${person.mains.join(' ')}`
+        `${person.name} ${person.characters.join(' ')}`
           .toLowerCase()
           .includes(query.trim().toLowerCase())),
   );
@@ -204,7 +204,7 @@ export function MissingTab({
                 {person.isRaider && <span className="badge">Raider</span>}
                 <span className="muted">
                   {' · '}
-                  {person.mains.length > 0 ? `Main: ${person.mains.join(', ')}` : 'No main'}
+                  {person.characters.length > 0 ? person.characters.join(', ') : 'No characters'}
                 </span>
                 {person.lastReminderAt && (
                   <span

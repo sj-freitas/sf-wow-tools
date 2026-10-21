@@ -13,7 +13,6 @@ export interface CharacterOption {
   name: string;
   class: string;
   roles: Role[];
-  isMain: boolean;
   /** Already on the guild's roster; picking one that isn't adds it. */
   inGuild: boolean;
 }
@@ -75,7 +74,6 @@ export class SignupEntriesService {
         lastName: true,
         class: true,
         roles: true,
-        isMain: true,
         guilds: { where: { guildId: guild.id }, select: { id: true } },
       },
     });
@@ -85,10 +83,9 @@ export class SignupEntriesService {
         name: formatCharacterName(character),
         class: character.class,
         roles: character.roles,
-        isMain: character.isMain,
         inGuild: character.guilds.length > 0,
       }))
-      .sort((a, b) => Number(b.isMain) - Number(a.isMain) || a.name.localeCompare(b.name));
+      .sort((a, b) => Number(b.inGuild) - Number(a.inGuild) || a.name.localeCompare(b.name));
   }
 
   /** Signs the person up with a character and role, in a status; replaces their earlier answer. */

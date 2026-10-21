@@ -18,7 +18,6 @@ describe('CharacterBioService', () => {
     race: string;
     level: number;
     roles: ('TANK' | 'HEALER')[];
-    isMain: boolean;
     bio: string;
     bioVisible: boolean;
     discordUserId: string;
@@ -41,7 +40,6 @@ describe('CharacterBioService', () => {
       race: 'Human',
       level: 60,
       roles: ['TANK'],
-      isMain: true,
       bio: 'A quiet blacksmith.',
       bioVisible: false,
       discordUserId: OWNER,
@@ -69,11 +67,27 @@ describe('CharacterBioService', () => {
             race: character.race,
             level: character.level,
             roles: character.roles,
-            isMain: character.isMain,
             bio: character.bio,
             bioVisible: character.bioVisible,
             images: [],
-            player: { discordUserId: character.discordUserId },
+            player: {
+              discordUserId: character.discordUserId,
+              discordUsername: 'merric_s',
+              discordDisplayName: 'Merric',
+              characters: [
+                character,
+                {
+                  id: 'c2',
+                  firstName: 'Tilda',
+                  lastName: 'Stone',
+                  class: 'Priest',
+                  level: 42,
+                  gameVersion: 'Forever',
+                  region: 'EU',
+                  realm: 'RP',
+                },
+              ],
+            },
           };
         },
         findUnique: async (args: any) => {
@@ -84,6 +98,25 @@ describe('CharacterBioService', () => {
             realm: character.realm,
             player: { discordUserId: character.discordUserId },
           };
+        },
+        findMany: async (args: any) => {
+          if (!character) return [];
+          const matches =
+            character.gameVersion === args.where.gameVersion &&
+            character.region === args.where.region &&
+            character.realm === args.where.realm &&
+            character.discordUserId === args.where.player.discordUserId;
+          if (!matches) return [];
+          return [
+            {
+              ...character,
+              guilds: [
+                {
+                  guild: { name: 'Relic Hunters', gameVersion, region, realm },
+                },
+              ],
+            },
+          ];
         },
         update: async (args: any) => {
           updates.push(args.data);
@@ -96,6 +129,14 @@ describe('CharacterBioService', () => {
   });
 
   describe('finding a character’s page', () => {
+    // The page's character; who plays it and their other characters have their own test.
+    const page = (result: Awaited<ReturnType<CharacterBioService['findProfile']>>) => {
+      if (result === 'not-found') return result;
+      const rest: Partial<typeof result> = { ...result };
+      delete rest.player;
+      delete rest.otherCharacters;
+      return rest;
+    };
     const base = {
       characterId: 'c1',
       name: 'Merric Stone',
@@ -103,13 +144,12 @@ describe('CharacterBioService', () => {
       race: 'Human',
       level: 60,
       roles: ['Tank'],
-      isMain: true,
       bioSupported: true,
     };
 
     it('finds a character by server and Name-Lastname, splitting on the first dash', async () => {
       const result = await service.findProfile('forever', 'eu', 'rp', 'Merric-Stone', OTHER);
-      assert.deepEqual(result, {
+      assert.deepEqual(page(result), {
         ...base,
         isOwner: false,
         bioVisible: false,
@@ -125,7 +165,7 @@ describe('CharacterBioService', () => {
 
     it('shows the bio to its own player even when not visible', async () => {
       const result = await service.findProfile('forever', 'eu', 'rp', 'Merric-Stone', OWNER);
-      assert.deepEqual(result, {
+      assert.deepEqual(page(result), {
         ...base,
         isOwner: true,
         bioVisible: false,
@@ -137,7 +177,7 @@ describe('CharacterBioService', () => {
     it('shows the bio to anyone once it is visible', async () => {
       character!.bioVisible = true;
       const result = await service.findProfile('forever', 'eu', 'rp', 'Merric-Stone', OTHER);
-      assert.deepEqual(result, {
+      assert.deepEqual(page(result), {
         ...base,
         isOwner: false,
         bioVisible: true,
@@ -162,7 +202,7 @@ describe('CharacterBioService', () => {
       character!.realm = 'PVE';
       character!.bioVisible = true;
       const result = await service.findProfile('forever', 'eu', 'pve', 'Merric-Stone', OWNER);
-      assert.deepEqual(result, {
+      assert.deepEqual(page(result), {
         ...base,
         bioSupported: false,
         isOwner: true,
@@ -177,6 +217,24 @@ describe('CharacterBioService', () => {
       const result = await service.findProfile('forever', 'eu', 'rp', 'Merric-Von-Stone', OWNER);
       assert.notEqual(result, 'not-found');
     });
+  });
+
+  it('shows who plays it on Discord, and their other characters', async () => {
+    const profile = await service.findProfile('forever', 'eu', 'rp', 'Merric-Stone', OTHER);
+    assert.notEqual(profile, 'not-found');
+    if (profile === 'not-found') return;
+    assert.deepEqual(profile.player, { discordUserId: OWNER, name: 'Merric' });
+    assert.deepEqual(profile.otherCharacters, [
+      {
+        name: 'Tilda Stone',
+        namePath: 'Tilda-Stone',
+        class: 'Priest',
+        level: 42,
+        gameVersion: 'Forever',
+        region: 'EU',
+        realm: 'RP',
+      },
+    ]);
   });
 
   describe('writing a bio', () => {
@@ -212,6 +270,38 @@ describe('CharacterBioService', () => {
     it('allows setting only the visibility, leaving the text untouched', async () => {
       await service.updateBio('c1', OWNER, { bioVisible: true });
       assert.deepEqual(updates[0], { bioVisible: true });
+    });
+  });
+
+  describe('listing the viewer’s own characters on a server', () => {
+    it('lists them with their guilds and whether they have a bio', async () => {
+      const result = await service.listOwn('forever', 'eu', 'rp', OWNER);
+      assert.notEqual(result, 'not-found');
+      if (result === 'not-found') return;
+      assert.equal(result.bioSupported, true);
+      assert.deepEqual(result.characters, [
+        {
+          characterId: 'c1',
+          name: 'Merric Stone',
+          namePath: 'Merric-Stone',
+          class: 'Warrior',
+          race: 'Human',
+          level: 60,
+          roles: ['Tank'],
+          guilds: [{ name: 'Relic Hunters', path: 'forever/eu/rp/guilds/relic-hunters' }],
+          hasBio: true,
+          bioVisible: false,
+        },
+      ]);
+    });
+
+    it('lists nobody else’s', async () => {
+      const result = await service.listOwn('forever', 'eu', 'rp', OTHER);
+      assert.deepEqual(result, { bioSupported: true, characters: [] });
+    });
+
+    it('is "not-found" for a server that does not exist', async () => {
+      assert.equal(await service.listOwn('forever', 'eu', 'nowhere', OWNER), 'not-found');
     });
   });
 });

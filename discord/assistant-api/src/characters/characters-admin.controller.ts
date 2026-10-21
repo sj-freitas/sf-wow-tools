@@ -77,7 +77,6 @@ export class CharactersAdminController {
         class: fields.class as string,
         race: fields.race as string,
         roles: fields.roles as Role[],
-        isMain: fields.isMain ?? false,
         level: fields.level,
       },
       discordUserId.names,
@@ -332,10 +331,6 @@ function parseFields(
     fields.roles = [...new Set(roles)];
   } else missing('roles');
 
-  if (body.isMain !== undefined) {
-    if (typeof body.isMain !== 'boolean') throw new BadRequestException('isMain must be boolean');
-    fields.isMain = body.isMain;
-  }
   if (body.level !== undefined) {
     if (
       !Number.isInteger(body.level) ||

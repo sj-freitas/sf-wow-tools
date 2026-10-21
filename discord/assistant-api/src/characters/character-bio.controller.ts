@@ -27,6 +27,7 @@ import {
   MAX_BIO_IMAGES,
   type BioImage,
   type CharacterProfile,
+  type OwnCharacters,
 } from './character-bio.service';
 
 /**
@@ -38,6 +39,19 @@ import {
 @UseGuards(AuthGuard)
 export class CharacterBioController {
   constructor(private readonly bioService: CharacterBioService) {}
+
+  /** The logged-in user's own characters on a server (their characters page). */
+  @Get('game/:gameVersion/:region/:realm/characters')
+  async listOwn(
+    @Req() req: AuthenticatedRequest,
+    @Param('gameVersion') gameVersion: string,
+    @Param('region') region: string,
+    @Param('realm') realm: string,
+  ): Promise<OwnCharacters> {
+    const result = await this.bioService.listOwn(gameVersion, region, realm, req.user.discordId);
+    if (result === 'not-found') throw new NotFoundException('No such server');
+    return result;
+  }
 
   /** Any logged-in user; the bio text and images only if the viewer may see them. */
   @Get('game/:gameVersion/:region/:realm/characters/:namePath')

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { GuildIcon } from './GuildIcon';
 import { accessSummary } from './guildAccess';
 import { guildPath } from './guildPath';
 import { SetupInstructions } from './SetupInstructions';
@@ -34,14 +35,17 @@ export function LandingPage({ guilds, setup }: { guilds: Guild[]; setup: SetupIn
         <div className="guild-grid">
           {guilds.map((guild) => (
             <Link key={guild.id} className="guild-card" to={guildPath(guild)}>
-              <strong>{guild.name}</strong>
-              <span className="muted">
-                {guild.faction === 'ALLIANCE' ? 'Alliance' : 'Horde'} · {guild.realm} ·{' '}
-                {guild.gameVersion} ·{' '}
-                {setup.regions.find((r) => r.id === guild.region)?.label ?? guild.region}
-              </span>
-              <span className="muted">
-                Your access: {accessSummary(guild, setup.adminRoleName)}
+              <GuildIcon guild={guild} />
+              <span className="guild-card-text">
+                <strong>{guild.name}</strong>
+                <span className="muted">
+                  {guild.faction === 'ALLIANCE' ? 'Alliance' : 'Horde'} · {guild.realm} ·{' '}
+                  {guild.gameVersion} ·{' '}
+                  {setup.regions.find((r) => r.id === guild.region)?.label ?? guild.region}
+                </span>
+                <span className="muted">
+                  Your access: {accessSummary(guild, setup.adminRoleName)}
+                </span>
               </span>
             </Link>
           ))}

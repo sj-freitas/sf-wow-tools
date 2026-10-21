@@ -324,11 +324,15 @@ export class TrackingService {
         discordUserId: true,
         characters: {
           where: { guilds: { some: { guildId } } },
-          orderBy: [{ isMain: 'desc' }, { createdAt: 'asc' }],
+          orderBy: [{ createdAt: 'asc' }],
           select: {
+            // The guild's attributes it has, as the roster tags have them.
+            attributes: {
+              where: { attribute: { guildId } },
+              select: { attribute: { select: { name: true } } },
+            },
             firstName: true,
             lastName: true,
-            isMain: true,
             class: true,
             race: true,
             roles: true,
@@ -372,7 +376,6 @@ export class TrackingService {
             },
             firstName: true,
             lastName: true,
-            isMain: true,
             class: true,
             race: true,
             roles: true,
@@ -393,9 +396,6 @@ export class TrackingService {
         const member = members.get(player.discordUserId);
         return player.characters.map((character): ShowRosterEntry => ({
           ...toCharacter(character, icons),
-          attributes: character.attributes
-            .map((link) => link.attribute.name)
-            .sort((a, b) => a.localeCompare(b)),
           armoryLink: guild
             ? armoryLinkFor(guild.gameVersion, {
                 name: character.firstName,
@@ -797,7 +797,7 @@ function toCharacter(
   character: {
     firstName: string;
     lastName: string;
-    isMain: boolean;
+    attributes: { attribute: { name: string } }[];
     class: string;
     race: string;
     roles: Role[];
@@ -810,7 +810,9 @@ function toCharacter(
     name: formatCharacterName(character),
     firstName: character.firstName,
     lastName: character.lastName,
-    isMain: character.isMain,
+    attributes: character.attributes
+      .map(({ attribute }) => attribute.name)
+      .sort((a, b) => a.localeCompare(b)),
     class: character.class,
     race: character.race,
     roles: character.roles.map((role) => ROLE_LABELS[role]),

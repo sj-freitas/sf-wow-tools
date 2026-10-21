@@ -1622,9 +1622,11 @@ a.btn {
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 1rem;
 }
+/* The guild's logo beside its name and details. */
 .guild-card {
-  display: grid;
-  gap: 0.3rem;
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
   padding: 1rem 1.25rem;
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -1634,6 +1636,11 @@ a.btn {
 }
 .guild-card:hover {
   border-color: var(--accent);
+}
+.guild-card-text {
+  display: grid;
+  gap: 0.3rem;
+  min-width: 0;
 }
 
 .reply-form {
@@ -1663,6 +1670,15 @@ a.btn {
 }
 .guild-identity h2 {
   margin: 0;
+}
+/* The header's logo and name: links to the Welcome page, looking like plain text. */
+.guild-identity-link {
+  display: inline-flex;
+  color: inherit;
+  text-decoration: none;
+}
+.guild-identity-link:hover {
+  text-decoration: underline;
 }
 .guild-icon {
   width: 56px;
@@ -2375,4 +2391,65 @@ label.btn.disabled {
 }
 .plugin-list-title {
   margin: 0.5rem 0 0;
+}
+
+/* ---- your characters on a server (CharactersPage) ---- */
+.own-characters {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.own-character {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.own-character-main {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+}
+.own-character-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--text);
+  font-weight: 600;
+  text-decoration: none;
+}
+.own-character-name:hover {
+  color: var(--accent);
+}
+
+/* ---- a character page's player and their other characters (CharacterPage) ---- */
+.character-player {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0.75rem 0 1rem;
+}
+.character-player-list {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.character-player-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.6rem;
+}
+.character-player-list a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
 }

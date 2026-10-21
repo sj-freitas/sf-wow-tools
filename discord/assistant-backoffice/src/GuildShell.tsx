@@ -14,6 +14,7 @@ import { ArmoryContext, GamesContext } from './game';
 import { subscribeEvents } from './events';
 import { canConfigure } from './guildAccess';
 import { guildPath } from './guildPath';
+import { GuildIcon } from './GuildIcon';
 import { LandingPage } from './LandingPage';
 import { forgetLastGuild, readLastGuildId, rememberLastGuild } from './lastGuild';
 import { PrivacyPage } from './PublicPages';
@@ -25,6 +26,9 @@ import { Spinner } from './Loading';
 // loads none of this) downloads less.
 const CharacterPage = lazy(() =>
   import('./CharacterPage').then((m) => ({ default: m.CharacterPage })),
+);
+const CharactersPage = lazy(() =>
+  import('./CharactersPage').then((m) => ({ default: m.CharactersPage })),
 );
 const CreateGuildPage = lazy(() =>
   import('./CreateGuildPage').then((m) => ({ default: m.CreateGuildPage })),
@@ -85,6 +89,7 @@ interface Props {
  *   /overview                                       your guilds: pick one or add one
  *   /privacy                                        the privacy policy (also before logging in)
  *   /guilds/create                                  set up a new guild
+ *   /<version>/<region>/<server>/characters         your characters on that server
  *   /<version>/<region>/<server>/characters/<name>  a character's own page (guild-agnostic: the
  *                                                    same one regardless of which guild it is in,
  *                                                    or none); basic info to everyone, its bio too
@@ -139,6 +144,7 @@ export function GuildShell({ guilds, setup, currentUser, onGuildsChanged }: Prop
               path="guilds/create"
               element={<CreateGuildPage setup={setup} onCreated={onGuildsChanged} />}
             />
+            <Route path=":version/:region/:realm/characters" element={<CharactersPage />} />
             <Route
               path=":version/:region/:realm/characters/:namePath"
               element={<CharacterPage editMode={false} />}
@@ -363,9 +369,16 @@ function GuildFrame({
       )}
       <div className="card-header">
         <div className="guild-identity">
-          <ServerIcon guild={guild} />
+          {/* The logo and the name lead back to the guild's Welcome page. */}
+          <Link className="guild-identity-link" to={guildPath(guild)}>
+            <GuildIcon guild={guild} />
+          </Link>
           <div>
-            <h2>{guild.name}</h2>
+            <h2>
+              <Link className="guild-identity-link" to={guildPath(guild)}>
+                {guild.name}
+              </Link>
+            </h2>
             <div className="card-meta">
               {guild.realm} · {guild.faction === 'ALLIANCE' ? 'Alliance' : 'Horde'} ·{' '}
               {guild.gameVersion} · {regionLabel}
@@ -399,22 +412,5 @@ function GuildFrame({
 
       {children}
     </section>
-  );
-}
-
-/** The picture of the guild's main Discord server, or its first letter when the server has none. */
-function ServerIcon({ guild }: { guild: Guild }) {
-  const main = guild.servers.find((server) => server.isMain);
-  if (main?.icon) {
-    return (
-      <img
-        className="guild-icon"
-        src={`https://cdn.discordapp.com/icons/${main.discordId}/${main.icon}.png?size=128`}
-        alt=""
-      />
-    );
-  }
-  return (
-    <span className="guild-icon guild-icon-fallback">{guild.name.charAt(0).toUpperCase()}</span>
   );
 }

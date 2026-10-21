@@ -7,7 +7,8 @@ export interface ShowCharacter {
   firstName: string;
   /** Empty when the character has no last name. */
   lastName: string;
-  isMain: boolean;
+  /** The names of the guild attributes it has ("Main", "Switcher", …), A–Z; empty when none. */
+  attributes: string[];
   /** The class, like "Warrior". */
   class: string;
   /** The race, like "Human"; empty when unknown (added before this was collected, or from Discord). */
@@ -54,8 +55,6 @@ export interface ShowRosterEntry extends ShowCharacter {
   discordUser: ShowDiscordUser;
   /** The character's page in the armory (the version's `armoryLink`); null when it has none. */
   armoryLink: string | null;
-  /** The names of the guild attributes it has ("Switcher", …), A–Z; empty when none. */
-  attributes: string[];
 }
 
 /** The name an expression uses for its list: `reactions` in a reactions tag, `roster` in a roster tag. */
@@ -128,7 +127,7 @@ const SAMPLE: ShowReactor[] = [
         name: 'Merric Stone',
         firstName: 'Merric',
         lastName: 'Stone',
-        isMain: true,
+        attributes: ['Main', 'Switcher'],
         class: 'Warrior',
         race: 'Human',
         roles: ['Tank'],
@@ -151,7 +150,6 @@ const SAMPLE_ROSTER: ShowRosterEntry[] = [
   {
     ...SAMPLE[0].characters[0],
     armoryLink: 'https://armory.example/character/eu/pve/merric',
-    attributes: ['Switcher'],
     discordUser: {
       id: SAMPLE[0].id,
       tag: SAMPLE[0].tag,
@@ -164,7 +162,7 @@ const SAMPLE_ROSTER: ShowRosterEntry[] = [
     name: 'Olga',
     firstName: 'Olga',
     lastName: '',
-    isMain: false,
+    attributes: [],
     class: 'Priest',
     race: 'Human',
     roles: ['Healer'],
@@ -172,7 +170,6 @@ const SAMPLE_ROSTER: ShowRosterEntry[] = [
     classIcon: '<:i_priest_6f827548:100000000000000103>',
     roleIcons: ['<:r_healer_4c342222:100000000000000104>'],
     armoryLink: 'https://armory.example/character/eu/pve/olga',
-    attributes: [],
     discordUser: {
       id: SAMPLE[1].id,
       tag: SAMPLE[1].tag,

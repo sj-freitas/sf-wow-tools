@@ -8,6 +8,7 @@ import { PluginKindRegistry, type PluginContext } from '../plugins/plugin-kinds'
 import type { GuildRecipe, GuildRecipesService } from './guild-recipes.service';
 import {
   MAX_MESSAGE,
+  characterPageUrl,
   listIntro,
   ProfessionsPostPlugin,
   professionsMessages,
@@ -26,16 +27,20 @@ const recipe = (profession: string, id: number, name: string | null, crafterIds:
     crafterIds,
   }) as GuildRecipe;
 
-// Shivan's player is known on Discord; Bob's isn't (yet).
+// Shivan links to its Guild Assistant page; Bob has none (yet).
 const crafters: Record<string, Crafter> = {
-  a: { name: 'Shivan Nightpath', discordUserId: '123' },
-  b: { name: 'Bob', discordUserId: null },
+  a: {
+    name: 'Shivan Nightpath',
+    url: 'https://guildassistant.app/forever/eu/rp/characters/Shivan-Nightpath',
+  },
+  b: { name: 'Bob', url: null },
 };
-const crafterOf = (id: string): Crafter => crafters[id] ?? { name: id, discordUserId: null };
-const shivan = '[Shivan Nightpath](<https://discord.com/users/123>)';
+const crafterOf = (id: string): Crafter => crafters[id] ?? { name: id, url: null };
+const shivan =
+  '[Shivan Nightpath](<https://guildassistant.app/forever/eu/rp/characters/Shivan-Nightpath>)';
 
 describe('professionsMessages', () => {
-  it('lists each profession with its recipes and their crafters, linked to Discord', () => {
+  it('lists each profession with its recipes and their crafters, linked to their pages', () => {
     const messages = professionsMessages(
       [
         recipe('Blacksmithing', 1245287, 'Copper Rod', ['a', 'b']),
@@ -110,6 +115,23 @@ describe('professionsMessages', () => {
   });
 });
 
+describe('characterPageUrl', () => {
+  it("is the character's page on Guild Assistant, as the website addresses it", () => {
+    const server = { gameVersion: 'Forever', region: 'EU', realm: 'RP' };
+    assert.equal(
+      characterPageUrl('https://guildassistant.app', server, {
+        firstName: 'Shivan',
+        lastName: 'Nightpath',
+      }),
+      'https://guildassistant.app/forever/eu/rp/characters/Shivan-Nightpath',
+    );
+    assert.equal(
+      characterPageUrl('https://guildassistant.app', server, { firstName: 'Bob', lastName: '' }),
+      'https://guildassistant.app/forever/eu/rp/characters/Bob',
+    );
+  });
+});
+
 describe('ProfessionsPostPlugin', () => {
   function setup(recipes: GuildRecipe[], failAfter = Infinity) {
     const posted: { id: string; content: string }[] = [];
@@ -136,8 +158,16 @@ describe('ProfessionsPostPlugin', () => {
       guildRecipes: async () => ({
         recipes,
         characters: [
-          { id: 'a', name: 'Shivan Nightpath', class: 'WARRIOR', professions: [] },
-          { id: 'b', name: 'Bob', class: 'MAGE', professions: [] },
+          {
+            id: 'a',
+            name: 'Shivan Nightpath',
+            firstName: 'Shivan',
+            lastName: 'Nightpath',
+            class: 'WARRIOR',
+            discordUserId: '123',
+            professions: [],
+          },
+          { id: 'b', name: 'Bob', firstName: 'Bob', lastName: '', class: 'MAGE', professions: [] },
         ],
         owners: new Map(),
       }),
@@ -176,6 +206,12 @@ describe('ProfessionsPostPlugin', () => {
     const first = await run({});
     assert.equal(first.result, 'Posted the list: 1 recipe in 1 message.');
     assert.equal(posted.length, 1);
+    // Crafters link to their Guild Assistant page, never a Discord profile (Discord shows a card).
+    assert.match(
+      posted[0].content,
+      /\(<https:\/\/guildassistant\.app\/forever\/eu\/firemaw\/characters\/Shivan-Nightpath>\)/,
+    );
+    assert.doesNotMatch(posted[0].content, /discord\.com\/users/);
     // The intro links to the guild's Professions page.
     assert.match(
       posted[0].content,

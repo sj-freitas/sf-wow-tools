@@ -1,10 +1,13 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import {
   createCharacter,
+  fetchAttributes,
   fetchMigratableCharacters,
   migrateCharacter,
+  setCharacterAttributes,
   updateCharacter,
 } from './api';
+import { AttributeChip } from './AttributeChip';
 import { MultiSelect } from './MultiSelect';
 import { fetchArmoryCharacter } from './api';
 import { DiscordName } from './DiscordName';
@@ -18,7 +21,14 @@ import {
   useGames,
 } from './game';
 import { PlayerPicker } from './PlayerPicker';
-import { ROLE_LABELS, type Character, type Guild, type Role, type User } from './types';
+import {
+  ROLE_LABELS,
+  type Character,
+  type Guild,
+  type GuildAttribute,
+  type Role,
+  type User,
+} from './types';
 
 interface Props {
   guild: Guild;
@@ -100,7 +110,27 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
     applyClass(allowed.includes(characterClass) ? characterClass : '');
   };
   const [level, setLevel] = useState(initial ? String(initial.level) : '');
-  const [isMain, setIsMain] = useState(initial?.isMain ?? false);
+  // Editing: the guild's attributes and which this character has. Officers set them (a guild says
+  // with them what a main, a switcher… is); everyone else sees them.
+  const [attributes, setAttributes] = useState<GuildAttribute[]>([]);
+  const [picked, setPicked] = useState<Set<string> | null>(null);
+  const initialId = initial?.id;
+  useEffect(() => {
+    if (!initialId) return;
+    fetchAttributes(guild.id)
+      .then((all) => {
+        setAttributes(all);
+        setPicked(new Set(all.filter((a) => a.characterIds.includes(initialId)).map((a) => a.id)));
+      })
+      .catch(() => setAttributes([]));
+  }, [guild.id, initialId]);
+  const togglePicked = (id: string) =>
+    setPicked((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
   const [error, setError] = useState<string | null>(null);
 
   // Adding a character: the chosen player's characters already on this server and faction, not in
@@ -192,7 +222,6 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
       class: characterClass,
       race,
       roles,
-      isMain,
       level: level === '' ? undefined : Number(level),
     };
     // Only an Officer who picked someone else moves the character.
@@ -202,7 +231,12 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
       ? updateCharacter(guild.id, initial.id, {
           ...fields,
           ...(moved ? { discordUserId: moved } : {}),
-        })
+        }).then(() =>
+          // Officers: its attributes too.
+          guild.isOfficer && picked
+            ? setCharacterAttributes(guild.id, initial.id, [...picked])
+            : undefined,
+        )
       : createCharacter(guild.id, { ...fields, discordUserId: discordUserId || undefined })
     )
       .then(onSaved)
@@ -242,7 +276,6 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
                 {migratable.map((character) => (
                   <option key={character.id} value={character.id}>
                     {`${character.firstName} ${character.lastName}`.trim()} — {character.class}
-                    {character.isMain ? ' (Main)' : ''}
                   </option>
                 ))}
               </select>
@@ -365,14 +398,41 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
             onChange={(e) => setLevel(e.target.value)}
           />
         </label>
-        <div className="field">
-          Main character
-          <label className="field-toggle">
-            <input type="checkbox" checked={isMain} onChange={(e) => setIsMain(e.target.checked)} />
-            This is a main
-          </label>
-        </div>
       </div>
+      {initial && attributes.length > 0 && picked && (
+        <div className="field">
+          Attributes
+          {guild.isOfficer ? (
+            <div className="roster-attribute-filter" role="group" aria-label="Attributes">
+              {attributes.map((attribute) => (
+                <button
+                  key={attribute.id}
+                  type="button"
+                  aria-pressed={picked.has(attribute.id)}
+                  className={
+                    picked.has(attribute.id)
+                      ? 'attribute-toggle attribute-toggle-on'
+                      : 'attribute-toggle'
+                  }
+                  onClick={() => togglePicked(attribute.id)}
+                >
+                  <AttributeChip name={attribute.name} color={attribute.color} />
+                </button>
+              ))}
+            </div>
+          ) : picked.size > 0 ? (
+            <div className="attribute-chips">
+              {attributes
+                .filter((attribute) => picked.has(attribute.id))
+                .map((attribute) => (
+                  <AttributeChip key={attribute.id} name={attribute.name} color={attribute.color} />
+                ))}
+            </div>
+          ) : (
+            <span className="muted">None. Officers set them.</span>
+          )}
+        </div>
+      )}
       {error && <p className="status-error">{error}</p>}
       <div className="form-actions">
         <button type="submit" className="btn btn-primary" disabled={roles.length === 0}>

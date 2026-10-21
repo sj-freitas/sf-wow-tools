@@ -142,10 +142,13 @@ export function LiveTagsHelp() {
           </tr>
           <tr>
             <td>
-              <code>isMain</code>
+              <code>attributes</code>
             </td>
-            <td>true / false</td>
-            <td>Whether this is one of their mains.</td>
+            <td>list of text</td>
+            <td>
+              The guild attributes it has, A–Z (like <code>['Main', 'Switcher']</code>; empty when
+              none). There is no built-in main: a guild gives its mains an attribute for it.
+            </td>
           </tr>
           <tr>
             <td>
@@ -220,10 +223,14 @@ export function LiveTagsHelp() {
           <tr>
             <td>
               <code>
-                show="reactions.map(r =&gt; (r.characters.find(c =&gt; c.isMain) || r).name)"
+                show="reactions.map(r =&gt; (r.characters.find(c =&gt;
+                c.attributes.includes('Main')) || r).name)"
               </code>
             </td>
-            <td>Each person's main character, or their Discord name if they have none</td>
+            <td>
+              Each person's character with the guild's "Main" attribute, or their Discord name if
+              they have none
+            </td>
           </tr>
           <tr>
             <td>
@@ -248,14 +255,12 @@ export function LiveTagsHelp() {
         of every character in the guild, sorted by name. It has one option, <code>show</code> (left
         out, it lists the names), and is written again by itself when the roster changes. Each entry
         is an object with the character fields above (<code>name</code>, <code>firstName</code>,{' '}
-        <code>lastName</code>, <code>isMain</code>, <code>class</code>, <code>race</code>,{' '}
+        <code>lastName</code>, <code>attributes</code>, <code>class</code>, <code>race</code>,{' '}
         <code>roles</code>, <code>level</code>), <code>armoryLink</code> (the link to its armory
-        page, or <code>null</code>), <code>attributes</code> (the names of the guild attributes it
-        has, like <code>['Switcher']</code>; empty when none) and <code>discordUser</code>: the
-        Discord user who plays it, with <code>id</code>, <code>tag</code> (a mention),{' '}
-        <code>name</code> (their Discord name), <code>displayName</code> (their nickname in the
-        guild's main server, else the Discord name) and <code>roles</code> (the names of their
-        Discord roles there, a list of text).
+        page, or <code>null</code>) and <code>discordUser</code>: the Discord user who plays it,
+        with <code>id</code>, <code>tag</code> (a mention), <code>name</code> (their Discord name),{' '}
+        <code>displayName</code> (their nickname in the guild's main server, else the Discord name)
+        and <code>roles</code> (the names of their Discord roles there, a list of text).
       </p>
       <table className="syntax-table">
         <tbody>
@@ -269,11 +274,11 @@ export function LiveTagsHelp() {
             <td>
               <code>
                 {
-                  '{{roster show="roster.filter(c => c.isMain && c.roles.includes(\'Tank\')).map(c => c.name)"}}'
+                  "{{roster show=\"roster.filter(c => c.attributes.includes('Main') && c.roles.includes('Tank')).map(c => c.name)\"}}"
                 }
               </code>
             </td>
-            <td>Every main tank</td>
+            <td>Every tank with the guild's Main attribute</td>
           </tr>
           <tr>
             <td>
@@ -289,11 +294,11 @@ export function LiveTagsHelp() {
             <td>
               <code>
                 {
-                  '{{roster show="roster.filter(c => c.isMain).map(c => `${c.classIcon} ${c.name}`)"}}'
+                  '{{roster show="roster.filter(c => c.attributes.includes(\'Main\')).map(c => `${c.classIcon} ${c.name}`)"}}'
                 }
               </code>
             </td>
-            <td>Every main, with its class icon</td>
+            <td>Every character with the Main attribute, with its class icon</td>
           </tr>
           <tr>
             <td>

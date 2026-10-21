@@ -78,7 +78,7 @@ export class McpToolsService {
       'get_roster',
       {
         title: 'Get roster',
-        description: "A guild's players and their characters (class, roles, level, main).",
+        description: "A guild's players and their characters (class, roles, level).",
         inputSchema: { guildId },
         annotations: { readOnlyHint: true },
       },
