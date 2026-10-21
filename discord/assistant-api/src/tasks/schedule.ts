@@ -1,12 +1,17 @@
 import { DateTime } from 'luxon';
 
-export type ScheduleKind = 'ONCE' | 'DAILY' | 'WEEKLY' | 'MONTHLY';
+export type ScheduleKind = 'ONCE' | 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'HOURLY' | 'EVERY_5_MINUTES';
+
+/** Kinds that repeat within the day, at no particular time: plugins only. */
+const INTERVAL_MINUTES: Partial<Record<ScheduleKind, number>> = { HOURLY: 60, EVERY_5_MINUTES: 5 };
 
 /**
  * How a task repeats. ONCE runs at an instant; DAILY/WEEKLY/MONTHLY run at a wall-clock time
  * (`HH:mm`, and an ISO weekday 1-7 for WEEKLY, a day of the month 1-31 for MONTHLY) in the
  * guild's timezone, so they follow daylight saving time. A MONTHLY day past the end of a
  * shorter month runs on its last day (the 31st runs on 30 April and 28 or 29 February).
+ * HOURLY runs on the hour and EVERY_5_MINUTES on each multiple of five minutes past it, whatever
+ * `timeOfDay` says (plugins only).
  */
 export interface Schedule {
   kind: ScheduleKind;
@@ -37,6 +42,7 @@ export function validateSchedule(schedule: Schedule): string[] {
     }
     return problems;
   }
+  if (INTERVAL_MINUTES[schedule.kind]) return problems;
   if (!schedule.timeOfDay || !TIME_OF_DAY.test(schedule.timeOfDay)) {
     problems.push('The time must look like 20:00.');
   }
@@ -59,6 +65,13 @@ export function validateSchedule(schedule: Schedule): string[] {
 export function nextOccurrence(schedule: Schedule, timezone: string, after: Date): Date | null {
   if (schedule.kind === 'ONCE') {
     return schedule.runAt && schedule.runAt.getTime() > after.getTime() ? schedule.runAt : null;
+  }
+  const every = INTERVAL_MINUTES[schedule.kind];
+  if (every) {
+    // The next whole multiple of the interval in UTC: the local hour too, except in the few zones
+    // half an hour off UTC.
+    const step = every * 60 * 1000;
+    return new Date((Math.floor(after.getTime() / step) + 1) * step);
   }
   const [hour, minute] = (schedule.timeOfDay ?? '00:00').split(':').map(Number);
   const local = DateTime.fromJSDate(after, { zone: timezone });
@@ -118,6 +131,8 @@ export function describeSchedule(schedule: Schedule, timezone: string): string {
   if (schedule.kind === 'WEEKLY') {
     return `Every ${WEEKDAY_NAMES[(schedule.weekday ?? 1) - 1]} at ${schedule.timeOfDay}`;
   }
+  if (schedule.kind === 'HOURLY') return 'Every hour';
+  if (schedule.kind === 'EVERY_5_MINUTES') return 'Every 5 minutes';
   if (schedule.kind === 'MONTHLY') {
     return `Every month on the ${ordinal(schedule.dayOfMonth ?? 1)} at ${schedule.timeOfDay}`;
   }

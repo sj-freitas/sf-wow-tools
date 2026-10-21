@@ -6,17 +6,20 @@
  *
  * Deleted with the characters (all by the database's cascades): every guild's roster
  * (`character_guild_memberships`), bios and their images, Officer notes and their images, which
- * attributes characters have, and sign-ups made with a character.
+ * attributes characters have, sign-ups made with a character, and imported professions
+ * (`character_professions`).
  *
  * Kept: players (Discord accounts), guilds and their settings, the guild attributes themselves,
- * posts, events, and sign-ups without a character (absent without one, and every sign-up to a
- * members event, which is the person, not a character: their character, if any, is just unset).
+ * posts, events, sign-ups without a character (absent without one, and every sign-up to a
+ * members event, which is the person, not a character: their character, if any, is just unset),
+ * and the Wowhead cache of recipe names (`wowhead_entries`: about recipes, not characters).
  *
  * Nothing it leaves behind is new to the app: a sign-up deleted here is the same as someone
  * withdrawing (assignments and the setup already skip people no longer signed up), and an empty
  * roster is a new guild's. The sign-up posts of events that lost sign-ups are edited afterwards
  * so they don't list people who are no longer signed up; roster posts (`{{roster …}}` tags)
- * update by themselves within a minute, as on any roster change. A running API keeps working;
+ * update by themselves within a minute, as on any roster change. Professions List plugins check
+ * for changes at once, so their posted lists empty out. A running API keeps working;
  * open backoffice pages show the old roster until they are reloaded.
  */
 import 'reflect-metadata';
@@ -47,13 +50,14 @@ async function main(): Promise<void> {
   try {
     const prisma = app.get(PrismaService);
 
-    const [characters, memberships, notes, signups] = await Promise.all([
+    const [characters, memberships, notes, signups, professions] = await Promise.all([
       prisma.character.count(),
       prisma.characterGuildMembership.count(),
       prisma.characterOfficerNote.count(),
       prisma.signupEntry.count({
         where: { characterId: { not: null }, event: { kind: 'CHARACTERS' } },
       }),
+      prisma.characterProfession.count(),
     ]);
     console.log(
       [
@@ -61,6 +65,7 @@ async function main(): Promise<void> {
         `Roster entries (all guilds):    ${memberships}`,
         `Officer notes:                  ${notes}`,
         `Sign-ups made with a character: ${signups}`,
+        `Imported professions:           ${professions}`,
       ].join('\n'),
     );
     if (!confirmed) {
@@ -88,6 +93,14 @@ async function main(): Promise<void> {
       return (await tx.character.deleteMany({})).count;
     });
     console.log(`\nDeleted ${deleted} characters.`);
+
+    // Posted professions lists: their next run (the worker's, within a minute) posts them empty.
+    const lists = await prisma.guildPlugin.updateMany({
+      where: { kind: 'PROFESSIONS_POST', enabled: true },
+      data: { nextRunAt: new Date() },
+    });
+    if (lists.count > 0)
+      console.log(`${lists.count} Professions List(s) will update within a minute.`);
 
     if (affected.length > 0) {
       console.log(`Updating the posts of ${affected.length} event(s)…`);

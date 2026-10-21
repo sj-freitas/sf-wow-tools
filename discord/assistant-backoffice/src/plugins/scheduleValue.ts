@@ -11,6 +11,10 @@ export const WEEKDAYS = [
 ];
 export const DAYS_OF_MONTH = Array.from({ length: 31 }, (_, i) => i + 1);
 
+/** Kinds that run at no particular time of day (no time field). */
+export const isInterval = (frequency: PluginScheduleKind): boolean =>
+  frequency === 'HOURLY' || frequency === 'EVERY_5_MINUTES';
+
 /** A plugin's schedule as its form edits it. */
 export interface ScheduleValue {
   frequency: PluginScheduleKind;
@@ -37,8 +41,12 @@ export const scheduleInput = (value: ScheduleValue): PluginInput => ({
 
 /** "every Wednesday at 23:00". */
 export const describeSchedule = (value: ScheduleValue): string =>
-  value.frequency === 'DAILY'
-    ? `every day at ${value.timeOfDay}`
-    : value.frequency === 'WEEKLY'
-      ? `every ${WEEKDAYS[value.weekday - 1]} at ${value.timeOfDay}`
-      : `every month on day ${value.dayOfMonth} at ${value.timeOfDay}`;
+  value.frequency === 'EVERY_5_MINUTES'
+    ? 'every 5 minutes'
+    : value.frequency === 'HOURLY'
+      ? 'every hour'
+      : value.frequency === 'DAILY'
+        ? `every day at ${value.timeOfDay}`
+        : value.frequency === 'WEEKLY'
+          ? `every ${WEEKDAYS[value.weekday - 1]} at ${value.timeOfDay}`
+          : `every month on day ${value.dayOfMonth} at ${value.timeOfDay}`;

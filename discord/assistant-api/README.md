@@ -995,11 +995,14 @@ on logout). Blizzard's Classic Era / SoD API has no professions, hence the addon
   crafter as character and Discord mention. Says so when nobody can.
 - **Professions List plugin** (`professions-post.plugin.ts`, kind `PROFESSIONS_POST`, added from
   `ProfessionsCoreModule` like sign-ups add Recurring Event): posts the guild's list in a channel,
-  per profession each recipe (a Wowhead link) and its crafters, over as many messages as it takes
-  (split at line ends; a profession carried on repeats its heading). On its schedule, and two
-  minutes after any import, it hashes the messages: unchanged, nothing happens; changed, it deletes
-  its previous messages (their ids are in its state) and posts the list again. A post that fails
-  half way is taken back, so the retry starts clean. Mentions never ping.
+  under an intro (what it is, a link to the guild's Professions page, `/crafter`), per profession
+  each recipe (a Wowhead link) and "Crafters:" each character linking to its player's Discord
+  profile, over as many messages as it takes (split at line ends; a profession carried on repeats
+  its heading). On its schedule (every 5 minutes, every hour or daily) and two minutes after any
+  import, it hashes the messages: unchanged, nothing happens, and the run stays out of the plugin's
+  history (`quiet`); changed, it deletes its previous messages (their ids are in its state) and
+  posts the list again. A post that fails half way is taken back, so the retry starts clean.
+  Mentions never ping.
 - **Wowhead cache** (`wowhead_entries`): the English name and icon of each spell or item, looked up
   once from Wowhead's tooltip data (`WowheadService`, not an official API) in the guild's game
   version's data (`wowheadPath` in its game config: Forever's own spells are only in `forever`), a

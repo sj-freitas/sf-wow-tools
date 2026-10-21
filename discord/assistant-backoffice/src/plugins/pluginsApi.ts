@@ -3,7 +3,8 @@ import { request } from '../api';
 /** Plugins (API: /api/guilds/:guildId/plugins, /api/plugins/:id). */
 
 export type PluginKind = 'CHANNEL_CLEANUP' | 'RECURRING_EVENT' | 'PROFESSIONS_POST';
-export type PluginScheduleKind = 'DAILY' | 'WEEKLY' | 'MONTHLY';
+/** HOURLY (on the hour) and EVERY_5_MINUTES: for plugins whose runs are cheap checks. */
+export type PluginScheduleKind = 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'HOURLY' | 'EVERY_5_MINUTES';
 export type PluginRunStatus = 'SUCCESS' | 'FAILED' | 'MISSED';
 
 /** A kind of plugin there is to add (the API's plugin-kinds.ts). */

@@ -35,6 +35,9 @@ enum ScheduleKind {
   WEEKLY
   // Plugins only (posts are ONCE).
   MONTHLY
+  // Plugins only: on the hour, and every five minutes (Professions List: cheap checks for changes).
+  HOURLY
+  EVERY_5_MINUTES
 }
 
 enum TaskRunStatus {

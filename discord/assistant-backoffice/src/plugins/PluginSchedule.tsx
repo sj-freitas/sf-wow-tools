@@ -1,5 +1,13 @@
 import type { PluginScheduleKind } from './pluginsApi';
-import { DAYS_OF_MONTH, WEEKDAYS, type ScheduleValue } from './scheduleValue';
+import { DAYS_OF_MONTH, isInterval, WEEKDAYS, type ScheduleValue } from './scheduleValue';
+
+const FREQUENCY_LABELS: Record<PluginScheduleKind, string> = {
+  EVERY_5_MINUTES: 'Every 5 minutes',
+  HOURLY: 'Every hour',
+  DAILY: 'Daily',
+  WEEKLY: 'Weekly',
+  MONTHLY: 'Monthly',
+};
 
 /**
  * How often and when a plugin runs. `frequencies` limits the choice (a Recurring Event is weekly
@@ -31,9 +39,11 @@ export function ScheduleFields({
             value={value.frequency}
             onChange={(e) => set({ frequency: e.target.value as PluginScheduleKind })}
           >
-            {frequencies.includes('DAILY') && <option value="DAILY">Daily</option>}
-            {frequencies.includes('WEEKLY') && <option value="WEEKLY">Weekly</option>}
-            {frequencies.includes('MONTHLY') && <option value="MONTHLY">Monthly</option>}
+            {frequencies.map((frequency) => (
+              <option key={frequency} value={frequency}>
+                {FREQUENCY_LABELS[frequency]}
+              </option>
+            ))}
           </select>
         </label>
       )}
@@ -67,16 +77,18 @@ export function ScheduleFields({
           )}
         </label>
       )}
-      <label className="field">
-        {timeLabel}
-        {timezone ? ` (${timezone})` : ''}
-        <input
-          type="time"
-          value={value.timeOfDay}
-          onChange={(e) => set({ timeOfDay: e.target.value })}
-          required
-        />
-      </label>
+      {!isInterval(value.frequency) && (
+        <label className="field">
+          {timeLabel}
+          {timezone ? ` (${timezone})` : ''}
+          <input
+            type="time"
+            value={value.timeOfDay}
+            onChange={(e) => set({ timeOfDay: e.target.value })}
+            required
+          />
+        </label>
+      )}
     </>
   );
 }

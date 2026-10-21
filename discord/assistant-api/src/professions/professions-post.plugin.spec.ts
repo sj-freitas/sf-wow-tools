@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
+import type { ConfigService } from '@nestjs/config';
 import type { GuildPlugin } from '@prisma/client';
 import type { PrismaService } from '../database/prisma.service';
 import type { DiscordBotService } from '../discord/discord-bot.service';
@@ -7,8 +8,10 @@ import { PluginKindRegistry, type PluginContext } from '../plugins/plugin-kinds'
 import type { GuildRecipe, GuildRecipesService } from './guild-recipes.service';
 import {
   MAX_MESSAGE,
+  listIntro,
   ProfessionsPostPlugin,
   professionsMessages,
+  type Crafter,
   type ProfessionsPostConfig,
 } from './professions-post.plugin';
 
@@ -23,26 +26,36 @@ const recipe = (profession: string, id: number, name: string | null, crafterIds:
     crafterIds,
   }) as GuildRecipe;
 
-const names: Record<string, string> = { a: 'Shivan Nightpath', b: 'Bob' };
-const nameOf = (id: string) => names[id] ?? id;
+// Shivan's player is known on Discord; Bob's isn't (yet).
+const crafters: Record<string, Crafter> = {
+  a: { name: 'Shivan Nightpath', discordUserId: '123' },
+  b: { name: 'Bob', discordUserId: null },
+};
+const crafterOf = (id: string): Crafter => crafters[id] ?? { name: id, discordUserId: null };
+const shivan = '[Shivan Nightpath](<https://discord.com/users/123>)';
 
 describe('professionsMessages', () => {
-  it('lists each profession with its recipes and their crafters', () => {
+  it('lists each profession with its recipes and their crafters, linked to Discord', () => {
     const messages = professionsMessages(
       [
         recipe('Blacksmithing', 1245287, 'Copper Rod', ['a', 'b']),
         recipe('Blacksmithing', 2660, 'Rough Sharpening Stone', ['a']),
         recipe('Cooking', 2538, null, ['b']),
       ],
-      nameOf,
+      crafterOf,
+      listIntro('https://guildassistant.app/forever/eu/firemaw/guilds/relic-hunters/professions'),
     );
     assert.deepEqual(messages, [
       [
+        '# Profession Data',
+        'This list updates by itself. Add your professions on [Guild Assistant](<https://guildassistant.app/forever/eu/firemaw/guilds/relic-hunters/professions>) (Import professions).',
+        'Find who can craft something with `/crafter <recipe name>` anywhere on Discord, or with Discord’s search.',
+        '',
         '## Blacksmithing',
-        '- [Copper Rod](<https://www.wowhead.com/forever/spell=1245287>): Bob, Shivan Nightpath',
-        '- [Rough Sharpening Stone](<https://www.wowhead.com/forever/spell=2660>): Shivan Nightpath',
+        `- [Copper Rod](<https://www.wowhead.com/forever/spell=1245287>): Crafters: Bob, ${shivan}`,
+        `- [Rough Sharpening Stone](<https://www.wowhead.com/forever/spell=2660>): Crafters: ${shivan}`,
         '## Cooking',
-        '- [Spell 2538](<https://www.wowhead.com/forever/spell=2538>): Bob',
+        '- [Spell 2538](<https://www.wowhead.com/forever/spell=2538>): Crafters: Bob',
       ].join('\n'),
     ]);
   });
@@ -56,7 +69,7 @@ describe('professionsMessages', () => {
         recipe('Tailoring', 2000 + i, `Tailoring recipe ${i}`, ['b']),
       ),
     ];
-    const messages = professionsMessages(recipes, nameOf);
+    const messages = professionsMessages(recipes, crafterOf);
     assert.ok(messages.length > 2, `${messages.length} messages`);
     for (const message of messages) {
       assert.ok(message.length <= MAX_MESSAGE, `${message.length} characters`);
@@ -73,13 +86,13 @@ describe('professionsMessages', () => {
 
   it('shortens the crafters of a line too long for one message', () => {
     const many = Array.from({ length: 200 }, (_, i) => `crafter-with-a-long-name-${i}`);
-    const [message] = professionsMessages([recipe('Cooking', 2538, 'Bread', many)], nameOf);
+    const [message] = professionsMessages([recipe('Cooking', 2538, 'Bread', many)], crafterOf);
     assert.ok(message.length <= MAX_MESSAGE);
     assert.match(message, / and \d+ more$/);
   });
 
   it('says so when nobody imported professions', () => {
-    assert.deepEqual(professionsMessages([], nameOf), [
+    assert.deepEqual(professionsMessages([], crafterOf), [
       'Nobody in the guild has imported their professions yet.',
     ]);
   });
@@ -111,11 +124,19 @@ describe('ProfessionsPostPlugin', () => {
         owners: new Map(),
       }),
     } as unknown as GuildRecipesService;
-    const plugin = new ProfessionsPostPlugin(
-      new PluginKindRegistry(),
-      guildRecipes,
-      {} as PrismaService,
-    );
+    const prisma = {
+      guild: {
+        findUniqueOrThrow: async () => ({
+          gameVersion: 'Forever',
+          region: 'eu',
+          realm: 'Firemaw',
+          name: 'Relic Hunters',
+        }),
+      },
+    } as unknown as PrismaService;
+    const plugin = new ProfessionsPostPlugin(new PluginKindRegistry(), guildRecipes, prisma, {
+      get: () => undefined,
+    } as unknown as ConfigService);
     const context = { bot, guildId: 'g1', serverIds: ['s1'], clock: Date.now } as PluginContext;
     const run = (state: Record<string, unknown>) =>
       plugin.def.run(
@@ -137,6 +158,11 @@ describe('ProfessionsPostPlugin', () => {
     const first = await run({});
     assert.equal(first.result, 'Posted the list: 1 recipe in 1 message.');
     assert.equal(posted.length, 1);
+    // The intro links to the guild's Professions page.
+    assert.match(
+      posted[0].content,
+      /\(<https:\/\/guildassistant\.app\/forever\/eu\/firemaw\/guilds\/relic-hunters\/professions>\)/,
+    );
     const second = await run(first.state);
     assert.equal(second.result, 'No changes.');
     assert.equal(posted.length, 1);

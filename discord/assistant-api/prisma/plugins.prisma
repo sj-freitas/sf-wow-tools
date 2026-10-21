@@ -24,6 +24,7 @@ model GuildPlugin {
   enabled      Boolean        @default(true)
   // DAILY / WEEKLY / MONTHLY at a wall-clock "HH:mm" in the guild's timezone; WEEKLY on an ISO
   // weekday (1-7), MONTHLY on a day of the month (1-31, the month's last day when it is shorter).
+  // HOURLY (on the hour) and EVERY_5_MINUTES ignore the time ("00:00"), for kinds that allow them.
   scheduleKind ScheduleKind   @map("schedule_kind")
   timeOfDay    String         @map("time_of_day")
   weekday      Int?

@@ -69,13 +69,14 @@ export class PluginRunnerService implements OnApplicationShutdown {
     let error: string | null = null;
     let state = plugin.state as Record<string, unknown>;
     let more = false;
+    let quiet = false;
     try {
       if (!def) throw new Error(`Unknown kind of plugin: ${plugin.kind}`);
       const context = await this.plugins.context(plugin.guildId);
       // The config was checked by the kind when saved.
       const configured = { ...plugin, config: plugin.config as Record<string, unknown> };
       const outcome = await def.run(configured, context, now.getTime() + RUN_BUDGET_MS);
-      ({ result, state, more = false } = outcome);
+      ({ result, state, more = false, quiet = false } = outcome);
     } catch (caught) {
       error = describeDiscordError(caught);
       this.logger.warn(`Plugin ${plugin.id} (${plugin.name}) failed: ${String(caught)}`);
@@ -83,9 +84,12 @@ export class PluginRunnerService implements OnApplicationShutdown {
 
     const finished = new Date();
     const status = error ? 'FAILED' : 'SUCCESS';
-    await this.prisma.pluginRun.create({
-      data: { pluginId: plugin.id, startedAt: now, finishedAt: finished, status, result, error },
-    });
+    // A run that did nothing stays out of the history (the plugin's last run still says it ran).
+    if (error || !quiet) {
+      await this.prisma.pluginRun.create({
+        data: { pluginId: plugin.id, startedAt: now, finishedAt: finished, status, result, error },
+      });
+    }
 
     const timezone = await this.plugins.zoneOf(plugin);
     const retry = error !== null && (await this.shouldRetry(plugin.id, now));

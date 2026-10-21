@@ -14,6 +14,37 @@ const iso = (date: Date | null) => date?.toISOString() ?? null;
 const at = (value: string) => new Date(value);
 
 describe('nextOccurrence', () => {
+  describe('every hour and every 5 minutes (plugins)', () => {
+    it('runs on the next hour', () => {
+      assert.equal(
+        iso(nextOccurrence({ kind: 'HOURLY' }, PARIS, at('2026-10-01T10:20:00Z'))),
+        '2026-10-01T11:00:00.000Z',
+      );
+      assert.equal(
+        iso(nextOccurrence({ kind: 'HOURLY' }, PARIS, at('2026-10-01T11:00:00Z'))),
+        '2026-10-01T12:00:00.000Z',
+        'strictly after',
+      );
+    });
+
+    it('runs on the next multiple of five minutes', () => {
+      assert.equal(
+        iso(nextOccurrence({ kind: 'EVERY_5_MINUTES' }, LA, at('2026-10-01T10:22:31Z'))),
+        '2026-10-01T10:25:00.000Z',
+      );
+      assert.equal(
+        iso(nextOccurrence({ kind: 'EVERY_5_MINUTES' }, LA, at('2026-10-01T10:25:00Z'))),
+        '2026-10-01T10:30:00.000Z',
+      );
+    });
+
+    it('needs no time of day, and says how often', () => {
+      assert.deepEqual(validateSchedule({ kind: 'EVERY_5_MINUTES', timeOfDay: null }), []);
+      assert.equal(describeSchedule({ kind: 'HOURLY' }, PARIS), 'Every hour');
+      assert.equal(describeSchedule({ kind: 'EVERY_5_MINUTES' }, PARIS), 'Every 5 minutes');
+    });
+  });
+
   describe('daily', () => {
     const daily = { kind: 'DAILY' as const, timeOfDay: '20:00' };
 

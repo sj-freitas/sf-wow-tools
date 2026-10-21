@@ -24,6 +24,7 @@ describe('PluginRunnerService', () => {
   let pages: { id: string; pinned: boolean; bot: boolean }[][];
   let listFails: boolean;
   let runner: PluginRunnerService;
+  let registry: PluginKindRegistry;
 
   beforeEach(() => {
     plugin = {
@@ -73,10 +74,8 @@ describe('PluginRunnerService', () => {
       bulkDeleteMessages: async () => undefined,
       deleteMessage: async () => undefined,
     } as unknown as DiscordBotService;
-    runner = new PluginRunnerService(
-      prisma,
-      new PluginsService(prisma, bot, new PluginKindRegistry()),
-    );
+    registry = new PluginKindRegistry();
+    runner = new PluginRunnerService(prisma, new PluginsService(prisma, bot, registry));
   });
 
   it('cleans the channel, keeping bot messages, and waits for the next occurrence', async () => {
@@ -125,5 +124,22 @@ describe('PluginRunnerService', () => {
     failures = 3;
     await runner.run(plugin, new Date('2026-11-03T01:00:30Z'));
     assert.equal((updates[1].nextRunAt as Date).toISOString(), next0200());
+  });
+
+  it('keeps a run that did nothing out of the history, every 5 minutes', async () => {
+    registry.add({
+      kind: 'PROFESSIONS_POST',
+      label: 'Professions List',
+      description: '',
+      parseConfig: async () => ({}),
+      run: async () => ({ result: 'No changes.', state: { hash: 'h' }, quiet: true }),
+    });
+    plugin = { ...plugin, kind: 'PROFESSIONS_POST', scheduleKind: 'EVERY_5_MINUTES' };
+    await runner.run(plugin, new Date());
+    assert.deepEqual(runs, [], 'no history row');
+    assert.equal(updates[0].lastResult, 'No changes.');
+    assert.deepEqual(updates[0].state, { hash: 'h' });
+    const wait = (updates[0].nextRunAt as Date).getTime() - Date.now();
+    assert.ok(wait > 0 && wait <= 5 * 60_000, `runs again within 5 minutes, not ${wait}ms`);
   });
 });

@@ -22,6 +22,11 @@ export interface PluginRunOutcome {
   state: Record<string, unknown>;
   /** The work isn't finished: carry on in a minute instead of waiting for the next occurrence. */
   more?: boolean;
+  /**
+   * Nothing happened (a check that found no change): the plugin's last run says so, but no run is
+   * added to its history, which would otherwise fill with them on a frequent schedule.
+   */
+  quiet?: boolean;
 }
 
 /**
@@ -32,8 +37,11 @@ export interface PluginKindDef<Config = Record<string, unknown>> {
   kind: PluginKind;
   label: string;
   description: string;
-  /** How often it may run; left out: daily, weekly or monthly. */
-  scheduleKinds?: readonly ('DAILY' | 'WEEKLY' | 'MONTHLY')[];
+  /**
+   * How often it may run; left out: daily, weekly or monthly. HOURLY and EVERY_5_MINUTES are for
+   * kinds whose runs are cheap and mostly do nothing (they can say so with `quiet`).
+   */
+  scheduleKinds?: readonly ('DAILY' | 'WEEKLY' | 'MONTHLY' | 'HOURLY' | 'EVERY_5_MINUTES')[];
   /** Checks what the backoffice sent; throws a BadRequestException that says what is wrong. */
   parseConfig(input: unknown, context: PluginContext): Promise<Config>;
   run(

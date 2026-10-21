@@ -5,6 +5,7 @@ import { ScheduleFields } from '../plugins/PluginSchedule';
 import { PluginFormFrame, type PluginFormProps } from '../plugins/PluginFormFrame';
 import {
   describeSchedule,
+  isInterval,
   scheduleInput,
   scheduleOf,
   type ScheduleValue,
@@ -31,7 +32,7 @@ export function ProfessionsPostForm({
   const [schedule, setSchedule] = useState<ScheduleValue>(
     editing
       ? scheduleOf(editing)
-      : { frequency: 'DAILY', timeOfDay: '06:00', weekday: 1, dayOfMonth: 1 },
+      : { frequency: 'EVERY_5_MINUTES', timeOfDay: '06:00', weekday: 1, dayOfMonth: 1 },
   );
   const [zone, setZone] = useState(editing?.timezone ?? 'ST');
   const zoneLabel = zone === 'ST' ? timezone : zone;
@@ -58,7 +59,7 @@ export function ProfessionsPostForm({
       },
       {
         title: 'Add Professions List?',
-        message: `The bot will post what the guild can craft in ${channelLabel()} now, check for changes ${describeSchedule(schedule)} (${zoneLabel}) and after each import, and replace its messages when the list changed.`,
+        message: `The bot will post what the guild can craft in ${channelLabel()} now, check for changes ${describeSchedule(schedule)}${isInterval(schedule.frequency) ? '' : ` (${zoneLabel})`} and after each import, and replace its messages when the list changed.`,
       },
     );
   };
@@ -89,8 +90,15 @@ export function ProfessionsPostForm({
             Channel
             <ChannelSelect groups={usable} value={channel} onChange={setChannel} required />
           </div>
-          <ScheduleFields value={schedule} onChange={setSchedule} />
-          <TimezoneField value={zone} onChange={setZone} serverTimezone={timezone} />
+          {/* Checking only posts when the list changed, so checking often costs nothing. */}
+          <ScheduleFields
+            value={schedule}
+            onChange={setSchedule}
+            frequencies={['EVERY_5_MINUTES', 'HOURLY', 'DAILY']}
+          />
+          {!isInterval(schedule.frequency) && (
+            <TimezoneField value={zone} onChange={setZone} serverTimezone={timezone} />
+          )}
         </div>
       </PluginFormFrame>
     </>

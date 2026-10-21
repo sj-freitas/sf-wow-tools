@@ -14,8 +14,17 @@ import {
 import { PluginKindRegistry, type PluginContext, type PluginKindDef } from './plugin-kinds';
 
 /** Plugins repeat; posts are the only things that run once. */
-export type PluginScheduleKind = 'DAILY' | 'WEEKLY' | 'MONTHLY';
+export type PluginScheduleKind = 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'HOURLY' | 'EVERY_5_MINUTES';
 const SCHEDULE_KINDS: readonly PluginScheduleKind[] = ['DAILY', 'WEEKLY', 'MONTHLY'];
+const SCHEDULE_WORDS: Record<PluginScheduleKind, string> = {
+  DAILY: 'daily',
+  WEEKLY: 'weekly',
+  MONTHLY: 'monthly',
+  HOURLY: 'every hour',
+  EVERY_5_MINUTES: 'every 5 minutes',
+};
+/** Kinds that run at no particular time of day: the stored time is a placeholder. */
+const INTERVALS: readonly PluginScheduleKind[] = ['HOURLY', 'EVERY_5_MINUTES'];
 
 export interface PluginKindDto {
   kind: string;
@@ -258,15 +267,20 @@ export class PluginsService {
     const kind = input.scheduleKind as PluginScheduleKind;
     const allowed = def.scheduleKinds ?? SCHEDULE_KINDS;
     if (!allowed.includes(kind)) {
+      const words = allowed.map((k) => SCHEDULE_WORDS[k]);
       throw new BadRequestException(
         allowed.length === 1
-          ? `A ${def.label} runs ${allowed[0].toLowerCase()}.`
-          : 'Pick how often: daily, weekly or monthly.',
+          ? `A ${def.label} runs ${words[0]}.`
+          : `Pick how often: ${words.slice(0, -1).join(', ')} or ${words[words.length - 1]}.`,
       );
     }
     const schedule: Schedule = {
       kind,
-      timeOfDay: typeof input.timeOfDay === 'string' ? input.timeOfDay : null,
+      timeOfDay: INTERVALS.includes(kind)
+        ? '00:00'
+        : typeof input.timeOfDay === 'string'
+          ? input.timeOfDay
+          : null,
       weekday: kind === 'WEEKLY' ? Number(input.weekday) : null,
       dayOfMonth: kind === 'MONTHLY' ? Number(input.dayOfMonth) : null,
     };
