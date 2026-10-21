@@ -149,15 +149,15 @@ export function GuildShell({ guilds, setup, currentUser, onGuildsChanged }: Prop
             <Route path=":version/:region/:realm/characters" element={<CharactersPage />} />
             <Route
               path=":version/:region/:realm/characters/:namePath"
-              element={<CharacterPage editMode={false} />}
+              element={<CharacterPage editMode={false} guilds={guilds} />}
             />
             <Route
               path=":version/:region/:realm/characters/:namePath/professions"
-              element={<CharacterPage editMode={false} tab="professions" />}
+              element={<CharacterPage editMode={false} tab="professions" guilds={guilds} />}
             />
             <Route
               path=":version/:region/:realm/characters/:namePath/bio"
-              element={<CharacterPage editMode={true} />}
+              element={<CharacterPage editMode={true} guilds={guilds} />}
             />
             <Route
               path=":version/:region/:realm/guilds/:guildSlug/*"

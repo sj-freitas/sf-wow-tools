@@ -70,7 +70,17 @@ describe('CharacterBioService', () => {
             bio: character.bio,
             bioVisible: character.bioVisible,
             images: [],
-            guilds: [{ guild: { name: 'Relic Hunters', gameVersion, region, realm } }],
+            guilds: [
+              {
+                guild: {
+                  name: 'Relic Hunters',
+                  gameVersion,
+                  region,
+                  realm,
+                  servers: [{ discordId: 's1', icon: 'abc', isMain: true }],
+                },
+              },
+            ],
             player: {
               discordUserId: character.discordUserId,
               discordUsername: 'merric_s',
@@ -227,7 +237,11 @@ describe('CharacterBioService', () => {
     if (profile === 'not-found') return;
     assert.deepEqual(profile.player, { discordUserId: OWNER, name: 'Merric' });
     assert.deepEqual(profile.guilds, [
-      { name: 'Relic Hunters', path: 'forever/eu/rp/guilds/relic-hunters' },
+      {
+        name: 'Relic Hunters',
+        path: 'forever/eu/rp/guilds/relic-hunters',
+        servers: [{ discordId: 's1', icon: 'abc', isMain: true }],
+      },
     ]);
     assert.deepEqual(profile.otherCharacters, [
       {

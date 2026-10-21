@@ -41,8 +41,15 @@ export interface CharacterProfile {
   bio: string | null;
   /** Images, same visibility rule as the text; always empty (not null) when hidden. */
   images: BioImage[];
-  /** The guilds it is in, with their address in the backoffice (e.g. to import professions). */
-  guilds: { name: string; path: string }[];
+  /**
+   * The guilds it is in, with their address in the backoffice and their main Discord server (its
+   * picture is the guild's logo).
+   */
+  guilds: {
+    name: string;
+    path: string;
+    servers: { discordId: string; icon: string | null; isMain: boolean }[];
+  }[];
   /** Who plays it: their Discord account (name null until the bot has seen them). */
   player: { discordUserId: string; name: string | null };
   /** That player's other characters, on any server: by name. */
@@ -140,7 +147,18 @@ export class CharacterBioService {
         images: { select: { id: true, contentType: true }, orderBy: { createdAt: 'asc' } },
         guilds: {
           select: {
-            guild: { select: { name: true, gameVersion: true, region: true, realm: true } },
+            guild: {
+              select: {
+                name: true,
+                gameVersion: true,
+                region: true,
+                realm: true,
+                servers: {
+                  where: { isMain: true },
+                  select: { discordId: true, icon: true, isMain: true },
+                },
+              },
+            },
           },
         },
         player: {
@@ -183,7 +201,11 @@ export class CharacterBioService {
       bio: bioOffered && visible ? character.bio : null,
       images: bioOffered && visible ? character.images : [],
       guilds: (character.guilds ?? [])
-        .map(({ guild }) => ({ name: guild.name, path: guildPath(guild) }))
+        .map(({ guild }) => ({
+          name: guild.name,
+          path: guildPath(guild),
+          servers: guild.servers ?? [],
+        }))
         .sort((a, b) => a.name.localeCompare(b.name)),
       player: {
         discordUserId: character.player.discordUserId,

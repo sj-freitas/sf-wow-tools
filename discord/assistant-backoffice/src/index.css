@@ -2462,3 +2462,36 @@ label.btn.disabled {
 .character-tabs {
   padding: 0;
 }
+
+/* A character page's guilds: small cards (logo and name) to each guild's roster. */
+.character-guilds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.character-guild {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.75rem 0.35rem 0.35rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 600;
+  text-decoration: none;
+}
+a.character-guild:hover {
+  border-color: var(--accent);
+}
+/* A guild the viewer isn't in: shown, not a link. */
+.character-guild-other {
+  color: var(--muted);
+  cursor: default;
+}
+.character-guild .guild-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+}

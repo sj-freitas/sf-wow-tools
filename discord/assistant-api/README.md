@@ -1034,7 +1034,8 @@ an AI app (Claude, an IDE, …) can work with a guild as the user who connected 
 to log in with Discord and approve the connection.
 
 - **Tools:** `list_guilds`, `get_roster`, `list_channels`, `list_posts`, `get_post`,
-  `create_post`, `update_post`, `list_plugins`, `set_plugin_enabled`. Each checks access like the
+  `create_post`, `update_post`, `list_plugins`, `set_plugin_enabled`, `run_plugin_now` (needs
+  `confirm: true`: it does what the plugin does, now). Each checks access like the
   matching backoffice endpoint (members read the roster; Officers manage posts and plugins) and
   calls the same service (`McpToolsService`).
 - **Event sign-ups:** `list_events`, `get_event` and `create_event` ("create a raid sign-up for
@@ -1043,6 +1044,11 @@ to log in with Discord and approve the connection.
   sign-up code and taking sign-ups out takes their tools with them. Same rules as the website
   (`SignupUserEventsService`, shared with `SignupController`): members read events, Officers and
   EventCreators create them, only Officers post outside the event channel.
+- **Recurring Events:** `create_recurring_event` (needs `confirm: true`: it deletes messages every
+  week) and `update_recurring_event` (any of its fields, only the ones given: its channel, event
+  title, description, location, type, day, time and timezone, its weekly schedule and timezone, its
+  name). Also from `src/signup/signup-mcp-tools.ts`, through `PluginsService`, so the Plugins tab's
+  rules apply (Officers only, weekly, a valid channel).
 - **Login (OAuth 2.1 with PKCE):** the SDK's `mcpAuthRouter` (mounted in `main.ts`) serves the
   metadata under `/.well-known/` and `/authorize`, `/token`, `/register` (dynamic client
   registration) and `/revoke` at the site's root, where clients look for them. `/authorize`

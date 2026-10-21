@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { Drawer } from '../Drawer';
 import { Link } from 'react-router-dom';
 import { guildPath } from '../guildPath';
 import { Spinner } from '../Loading';
@@ -28,6 +29,8 @@ const REFRESH_MS = 15_000;
 export function PluginsPage({ guild, timezone }: Props) {
   const [kinds, setKinds] = useState<PluginKindInfo[]>([]);
   const [plugins, setPlugins] = useState<Plugin[] | null>(null);
+  // The plugin whose run log is open (a drawer), by id.
+  const [logOf, setLogOf] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { channelName } = useChannels(guild.id);
   const { confirm, dialog } = useConfirm();
@@ -82,6 +85,31 @@ export function PluginsPage({ guild, timezone }: Props) {
   return (
     <div className="tasks">
       {dialog}
+      {(() => {
+        const plugin = plugins?.find((p) => p.id === logOf);
+        return plugin ? (
+          <Drawer title={`${plugin.name}: log`} onClose={() => setLogOf(null)}>
+            {plugin.recentRuns.length === 0 ? (
+              <p className="empty">
+                No runs to show yet. Checks that found nothing to do aren’t logged.
+              </p>
+            ) : (
+              <ul className="honeypot-events">
+                {plugin.recentRuns.map((runInfo) => (
+                  <li key={runInfo.id}>
+                    <span className="muted">{formatWhen(runInfo.startedAt, timezone)}</span>{' '}
+                    {runInfo.status === 'FAILED' ? (
+                      <span className="status-error">Failed: {runInfo.error}</span>
+                    ) : (
+                      runInfo.result
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Drawer>
+        ) : null;
+      })()}
       <div className="tasks-head">
         <div>
           <h3>Plugins</h3>
@@ -137,19 +165,9 @@ export function PluginsPage({ guild, timezone }: Props) {
                   : 'Paused: it won’t run until resumed.'}
               </div>
             </div>
-            {plugin.recentRuns.length > 0 && (
-              <ul className="honeypot-events">
-                {plugin.recentRuns.map((runInfo) => (
-                  <li key={runInfo.id}>
-                    <span className="muted">{formatWhen(runInfo.startedAt, timezone)}</span>{' '}
-                    {runInfo.status === 'FAILED' ? (
-                      <span className="status-error">Failed: {runInfo.error}</span>
-                    ) : (
-                      runInfo.result
-                    )}
-                  </li>
-                ))}
-              </ul>
+            {/* Its run log is behind "Log"; only a failure shows here, to be seen. */}
+            {plugin.lastStatus === 'FAILED' && (
+              <p className="status-error">Last run failed: {plugin.lastError}</p>
             )}
             <div className="settings-actions task-actions">
               <button
@@ -167,6 +185,9 @@ export function PluginsPage({ guild, timezone }: Props) {
                 }
               >
                 Run now
+              </button>
+              <button type="button" className="btn btn-sm" onClick={() => setLogOf(plugin.id)}>
+                Log
               </button>
               <Link className="btn btn-sm" to={guildPath(guild, `plugins/edit/${plugin.id}`)}>
                 Edit

@@ -31,7 +31,10 @@ async function connect(access: { isAdmin: boolean; isOfficer: boolean } | null) 
     { findForUser: async () => [{ id: 'g1' }] } as unknown as GuildsService,
     players,
     tasks,
-    {} as PluginsService,
+    {
+      guildIdOf: async () => 'g1',
+      runNow: async (...args: unknown[]) => void calls.push(['runNow', ...args]),
+    } as unknown as PluginsService,
     new McpToolRegistry(),
   );
   const [clientSide, serverSide] = InMemoryTransport.createLinkedPair();
@@ -60,8 +63,25 @@ describe('McpToolsService', () => {
         'update_post',
         'list_plugins',
         'set_plugin_enabled',
+        'run_plugin_now',
       ],
     );
+  });
+
+  it('runs a plugin now for an Officer who confirmed, and nobody else', async () => {
+    const officer = await connect({ isAdmin: false, isOfficer: true });
+    const unconfirmed = await officer.call('run_plugin_now', { pluginId: 'p1', confirm: false });
+    assert.equal(unconfirmed.isError, true);
+    assert.match(officer.text(unconfirmed), /confirm: true/);
+    assert.deepEqual(officer.calls, []);
+    const ran = await officer.call('run_plugin_now', { pluginId: 'p1', confirm: true });
+    assert.equal(ran.isError, undefined);
+    assert.deepEqual(officer.calls, [['runNow', 'p1']]);
+
+    const member = await connect({ isAdmin: false, isOfficer: false });
+    const refused = await member.call('run_plugin_now', { pluginId: 'p1', confirm: true });
+    assert.equal(refused.isError, true);
+    assert.deepEqual(member.calls, []);
   });
 
   it('shows a member the roster, and an outsider an error', async () => {

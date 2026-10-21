@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import type { SessionUser } from '../auth/auth.types';
@@ -201,6 +201,28 @@ export class McpToolsService {
         run(async () => {
           await this.guildAccess.assertOfficer(userId, await this.plugins.guildIdOf(args.pluginId));
           return this.plugins.update(args.pluginId, { enabled: args.enabled });
+        }),
+    );
+
+    server.registerTool(
+      'run_plugin_now',
+      {
+        title: 'Run a plugin now',
+        description:
+          'Runs a plugin (from list_plugins) within the minute; its schedule carries on as before. It does what it does on its schedule: a Channel Clean Up deletes messages, a Recurring Event archives and reposts, a Professions List posts its list again. Officers only. Ask the user first and pass confirm: true once they agreed.',
+        inputSchema: {
+          pluginId: z.string(),
+          confirm: z.boolean().describe('Must be true: the user agreed to run it now'),
+        },
+      },
+      (args) =>
+        run(async () => {
+          await this.guildAccess.assertOfficer(userId, await this.plugins.guildIdOf(args.pluginId));
+          if (args.confirm !== true) {
+            throw new BadRequestException('Confirm running the plugin now: pass confirm: true.');
+          }
+          await this.plugins.runNow(args.pluginId);
+          return { ok: true, message: 'It runs within the minute.' };
         }),
     );
 

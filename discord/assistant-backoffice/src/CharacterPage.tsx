@@ -10,9 +10,10 @@ import {
 } from './api';
 import { characterPagePath } from './guildPath';
 import { InlineSpinner, Spinner } from './Loading';
+import { GuildIcon } from './GuildIcon';
 import { MarkdownView } from './MarkdownView';
 import { CharacterProfessions } from './professions/CharacterProfessions';
-import type { CharacterProfile } from './types';
+import type { CharacterProfile, Guild } from './types';
 import { useReturnTo } from './useReturnTo';
 
 const MAX_BIO_LENGTH = 20_000;
@@ -23,6 +24,8 @@ interface Props {
   editMode: boolean;
   /** The page's tab: its bio (the page's own address) or `/professions`. */
   tab?: 'bio' | 'professions';
+  /** The viewer's guilds: the character's guilds among them link to their roster. */
+  guilds: Guild[];
 }
 
 /**
@@ -30,7 +33,7 @@ interface Props {
  * same address regardless of which guild it is in (or none), with `/bio` appended for its editor
  * and `/professions` for its Professions tab (Bio is the page's own address).
  */
-export function CharacterPage({ editMode, tab = 'bio' }: Props) {
+export function CharacterPage({ editMode, tab = 'bio', guilds }: Props) {
   const { version = '', region = '', realm = '', namePath = '' } = useParams();
   const navigate = useNavigate();
   const back = useReturnTo('/overview');
@@ -76,6 +79,7 @@ export function CharacterPage({ editMode, tab = 'bio' }: Props) {
         <CharacterView
           profile={profile}
           tab={tab}
+          viewerGuildPaths={new Set(guilds.map((guild) => guild.path))}
           viewUrl={viewUrl}
           editUrl={editUrl}
           charactersUrl={`/${[version, region, realm].map((s) => s.toLowerCase()).join('/')}/characters`}
@@ -90,6 +94,7 @@ export function CharacterPage({ editMode, tab = 'bio' }: Props) {
 function CharacterView({
   profile,
   tab,
+  viewerGuildPaths,
   viewUrl,
   editUrl,
   charactersUrl,
@@ -98,6 +103,8 @@ function CharacterView({
 }: {
   profile: CharacterProfile;
   tab: 'bio' | 'professions';
+  /** The guilds the viewer is in (their addresses): only those link to their roster. */
+  viewerGuildPaths: Set<string>;
   /** The page's address (its Bio tab); `/professions` is appended for the other. */
   viewUrl: string;
   editUrl: string;
@@ -137,6 +144,32 @@ function CharacterView({
           Logs
         </span>
       </div>
+
+      {/* The guilds it is in: each a small card with its logo, to the guild's roster when the
+          viewer is in it too. */}
+      {profile.guilds.length > 0 && (
+        <div className="character-guilds" aria-label="Guilds">
+          {profile.guilds.map((guild) =>
+            // A guild the viewer is in links to its roster; another one could only show "You are
+            // not in a guild at this address", so it is just its logo and name.
+            viewerGuildPaths.has(guild.path) ? (
+              <Link key={guild.path} className="character-guild" to={`/${guild.path}/roster`}>
+                <GuildIcon guild={guild} />
+                <span>{guild.name}</span>
+              </Link>
+            ) : (
+              <span
+                key={guild.path}
+                className="character-guild character-guild-other"
+                title="You’re not in this guild"
+              >
+                <GuildIcon guild={guild} />
+                <span>{guild.name}</span>
+              </span>
+            ),
+          )}
+        </div>
+      )}
 
       <div className="character-player">
         <div>

@@ -86,7 +86,8 @@ export interface PluginInput {
   timezone?: unknown;
 }
 
-const RECENT_RUNS = 5;
+/** How many recent runs a plugin comes with: its Log in the Plugins tab. */
+const RECENT_RUNS = 20;
 const MAX_NAME = 80;
 
 /** Plugins of a guild, for the backoffice's Plugins tab (Officers only). */
@@ -117,6 +118,16 @@ export class PluginsService {
       include: { runs: { orderBy: { startedAt: 'desc' }, take: RECENT_RUNS } },
     });
     return plugins.map((plugin) => this.toDto(plugin, plugin.runs, serverZone));
+  }
+
+  /** One plugin, as the Plugins tab shows it. */
+  async get(pluginId: string): Promise<PluginDto> {
+    const plugin = await this.prisma.guildPlugin.findUnique({
+      where: { id: pluginId },
+      include: { runs: { orderBy: { startedAt: 'desc' }, take: RECENT_RUNS } },
+    });
+    if (!plugin) throw new NotFoundException('Plugin not found');
+    return this.toDto(plugin, plugin.runs, await this.timezoneOf(plugin.guildId));
   }
 
   async create(guildId: string, userId: string, input: PluginInput): Promise<PluginDto> {
