@@ -1,6 +1,6 @@
 # Guild Assistant Professions
 
-## 0.1.0
+## 0.9.0
 
 - First version (experimental): remembers every character's professions and recipes, and those of
   profession links you open, for Guild Assistant. The export is kept in the saved variables file,
