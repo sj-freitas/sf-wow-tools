@@ -54,12 +54,14 @@ export const listIntro = (professionsUrl: string): string =>
  * Wowhead link) with who can craft it, each crafter linking to their player's Discord profile.
  * Split between messages at line ends, never inside a recipe's line; a profession carried on into
  * the next message repeats its heading. A line too long for one message (a recipe half the guild
- * can craft) shortens its list of crafters.
+ * can craft) shortens its list of crafters to "…, 12 more", linking to the recipe's crafters on the
+ * website (`craftersUrl`) when given.
  */
 export function professionsMessages(
   recipes: readonly GuildRecipe[],
   crafterOf: (id: string) => Crafter,
   intro = '',
+  craftersUrl?: (recipe: GuildRecipe) => string,
 ): string[] {
   if (recipes.length === 0) {
     return [
@@ -76,16 +78,19 @@ export function professionsMessages(
     const heading = `## ${recipe.profession}`;
     const first = recipe.profession !== profession;
     profession = recipe.profession;
-    const start = `- [${recipeName(recipe)}](<${recipe.url}>): Crafters: `;
+    // "Crafters: [A, B]": the brackets escaped, so Discord shows them instead of reading a link.
+    const start = `- [${recipeName(recipe)}](<${recipe.url}>): Crafters: \\[`;
     const names = recipe.crafterIds
       .map(crafterOf)
       .sort((a, b) => a.name.localeCompare(b.name))
       .map(crafterLink);
     // Room for the heading repeated above it in a new message.
     const room = MAX_MESSAGE - heading.length - ' (continued)\n'.length;
-    let line = start + names.join(', ');
+    let line = `${start}${names.join(', ')}\\]`;
     for (let shown = names.length - 1; line.length > room && shown > 0; shown--) {
-      line = `${start}${names.slice(0, shown).join(', ')} and ${names.length - shown} more`;
+      const more = `${names.length - shown} more`;
+      const rest = craftersUrl ? `[${more}](<${craftersUrl(recipe)}>)` : more;
+      line = `${start}${[...names.slice(0, shown), rest].join(', ')}\\]`;
     }
     // A profession's heading always goes with its first recipe, never alone at a message's end.
     const block = first ? `${heading}\n${line}` : line;
@@ -161,13 +166,16 @@ export class ProfessionsPostPlugin implements OnModuleInit {
         where: { id: plugin.guildId },
         select: { gameVersion: true, region: true, realm: true, name: true },
       });
+      const professionsUrl = `${this.origin}/${guildPath(guild)}/professions`;
       const messages = professionsMessages(
         recipes,
         (id) => ({
           name: byId.get(id)?.name ?? '?',
           discordUserId: byId.get(id)?.discordUserId ?? null,
         }),
-        listIntro(`${this.origin}/${guildPath(guild)}/professions`),
+        listIntro(professionsUrl),
+        // A recipe's crafters on the website: /professions/<spell id>/crafters.
+        (recipe) => `${professionsUrl}/${recipe.id}/crafters`,
       );
       const hash = hashMessages(messages);
       if (hash === state.hash && (state.messageIds?.length ?? 0) > 0) {
@@ -181,7 +189,10 @@ export class ProfessionsPostPlugin implements OnModuleInit {
       const messageIds: string[] = [];
       try {
         for (const content of messages) {
-          messageIds.push(await context.bot.postQuietMessage(channelId, content));
+          // No previews: each crafter's Discord link would show a profile card.
+          messageIds.push(
+            await context.bot.postQuietMessage(channelId, content, { suppressEmbeds: true }),
+          );
         }
       } catch (error) {
         // Half a list helps nobody, and the retry posts it all again: take back what went up.

@@ -166,3 +166,8 @@
 .guild-recipe-crafters li .btn {
   margin-left: auto;
 }
+/* The recipe a link pointed at (/professions/<id>). */
+.guild-recipe-linked {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  border-radius: var(--radius);
+}

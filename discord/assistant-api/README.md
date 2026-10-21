@@ -997,8 +997,11 @@ on logout). Blizzard's Classic Era / SoD API has no professions, hence the addon
   `ProfessionsCoreModule` like sign-ups add Recurring Event): posts the guild's list in a channel,
   under an intro (what it is, a link to the guild's Professions page, `/crafter`), per profession
   each recipe (a Wowhead link) and "Crafters:" each character linking to its player's Discord
-  profile, over as many messages as it takes (split at line ends; a profession carried on repeats
-  its heading). On its schedule (every 5 minutes, every hour or daily) and two minutes after any
+  profile, as `Crafters: [A, B]`, over as many messages as it takes (split at line ends; a
+  profession carried on repeats its heading). A recipe with too many crafters for one message ends
+  in "12 more", linking to it on the website: `…/professions/<spell id>/crafters` opens the
+  Professions page at that recipe with its characters shown (`/professions/<spell id>` without
+  them). Posted with embeds suppressed (a Discord profile link would show a card). On its schedule (every 5 minutes, every hour or daily) and two minutes after any
   import, it hashes the messages: unchanged, nothing happens, and the run stays out of the plugin's
   history (`quiet`); changed, it deletes its previous messages (their ids are in its state) and
   posts the list again. A post that fails half way is taken back, so the retry starts clean.

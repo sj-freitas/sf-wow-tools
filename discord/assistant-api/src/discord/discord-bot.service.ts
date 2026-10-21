@@ -227,10 +227,22 @@ export class DiscordBotService {
     return message.id;
   }
 
-  /** Like postMessage, but mentions never ping anyone (used for log lines). */
-  async postQuietMessage(channelId: string, content: string): Promise<string> {
+  /**
+   * Like postMessage, but mentions never ping anyone (used for log lines). With `suppressEmbeds`
+   * Discord shows no previews or cards under it (a `discord.com/users/…` link shows a profile card
+   * even inside `<…>`).
+   */
+  async postQuietMessage(
+    channelId: string,
+    content: string,
+    options: { suppressEmbeds?: boolean } = {},
+  ): Promise<string> {
     const message = (await this.rest.post(Routes.channelMessages(channelId), {
-      body: { content, allowed_mentions: { parse: [] } },
+      body: {
+        content,
+        allowed_mentions: { parse: [] },
+        ...(options.suppressEmbeds ? { flags: SUPPRESS_EMBEDS } : {}),
+      },
     })) as APIMessage;
     return message.id;
   }

@@ -52,10 +52,11 @@ describe('professionsMessages', () => {
         'Find who can craft something with `/crafter <recipe name>` anywhere on Discord, or with Discord’s search.',
         '',
         '## Blacksmithing',
-        `- [Copper Rod](<https://www.wowhead.com/forever/spell=1245287>): Crafters: Bob, ${shivan}`,
-        `- [Rough Sharpening Stone](<https://www.wowhead.com/forever/spell=2660>): Crafters: ${shivan}`,
+        // Escaped brackets: Discord shows "[Bob, Shivan Nightpath]" around the links.
+        `- [Copper Rod](<https://www.wowhead.com/forever/spell=1245287>): Crafters: \\[Bob, ${shivan}\\]`,
+        `- [Rough Sharpening Stone](<https://www.wowhead.com/forever/spell=2660>): Crafters: \\[${shivan}\\]`,
         '## Cooking',
-        '- [Spell 2538](<https://www.wowhead.com/forever/spell=2538>): Crafters: Bob',
+        '- [Spell 2538](<https://www.wowhead.com/forever/spell=2538>): Crafters: \\[Bob\\]',
       ].join('\n'),
     ]);
   });
@@ -84,11 +85,22 @@ describe('professionsMessages', () => {
     assert.equal(listed.length, 120);
   });
 
-  it('shortens the crafters of a line too long for one message', () => {
+  it('shortens the crafters of a line too long for one message, linking to the rest', () => {
     const many = Array.from({ length: 200 }, (_, i) => `crafter-with-a-long-name-${i}`);
-    const [message] = professionsMessages([recipe('Cooking', 2538, 'Bread', many)], crafterOf);
+    const [message] = professionsMessages(
+      [recipe('Cooking', 2538, 'Bread', many)],
+      crafterOf,
+      '',
+      (r) => `https://guildassistant.app/g/professions/${r.id}/crafters`,
+    );
     assert.ok(message.length <= MAX_MESSAGE);
-    assert.match(message, / and \d+ more$/);
+    assert.match(
+      message,
+      /, \[\d+ more\]\(<https:\/\/guildassistant\.app\/g\/professions\/2538\/crafters>\)\\\]$/,
+    );
+    // Without the website's address: plain text.
+    const [plain] = professionsMessages([recipe('Cooking', 2538, 'Bread', many)], crafterOf);
+    assert.match(plain, /, \d+ more\\\]$/);
   });
 
   it('says so when nobody imported professions', () => {
@@ -104,8 +116,14 @@ describe('ProfessionsPostPlugin', () => {
     const deleted: string[] = [];
     let next = 0;
     const bot = {
-      postQuietMessage: async (_channel: string, content: string) => {
+      postQuietMessage: async (
+        _channel: string,
+        content: string,
+        options: { suppressEmbeds?: boolean },
+      ) => {
         if (posted.length >= failAfter) throw new Error('Discord is down');
+        // No previews: Discord would show a profile card for each crafter's link.
+        assert.equal(options.suppressEmbeds, true);
         const id = `m${++next}`;
         posted.push({ id, content });
         return id;

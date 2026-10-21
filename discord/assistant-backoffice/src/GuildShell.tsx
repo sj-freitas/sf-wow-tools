@@ -101,6 +101,8 @@ interface Props {
  *       /roster/edit/:id      edit a character             Officers, or its owner
  *       /roster/notes/:id     Officers' private note about a character   Officers
  *       /professions          what the guild can craft (?q=&prof=)        everyone in the guild
+ *       /professions/:craftId[/crafters]  the same, at one recipe (its Wowhead spell id), its
+ *                             characters open with /crafters (the Professions List's links)
  *       /posts                posts (?q=&page=)            Officers
  *       /posts/create         new post                     Officers
  *       /posts/edit/:id       edit a post                  Officers
@@ -239,6 +241,8 @@ function GuildRoutes({ guilds, setup, currentUser, onGuildsChanged }: Props) {
           <Route path="edit" element={officersOnly(<HomeEditPage guild={guild} />)} />
           <Route path="roster" element={<RosterPage guild={guild} currentUser={currentUser} />} />
           <Route path="professions" element={<ProfessionsPage guild={guild} />} />
+          <Route path="professions/:craftId" element={<ProfessionsPage guild={guild} />} />
+          <Route path="professions/:craftId/crafters" element={<ProfessionsPage guild={guild} />} />
           <Route
             path="roster/create"
             element={<CharacterEditorPage guild={guild} currentUser={currentUser} />}

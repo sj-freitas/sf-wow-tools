@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useLocation, useParams, useSearchParams } from 'react-router-dom';
 import { characterPath } from '../format';
 import { fuzzyWordsScore } from '../fuzzy';
 import { characterPagePath } from '../guildPath';
@@ -24,6 +24,10 @@ export function ProfessionsPage({ guild }: { guild: Guild }) {
   const [error, setError] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
   const [params, setParams] = useSearchParams();
+  // `/professions/<spell id>[/crafters]`: one recipe to show (its characters too with /crafters).
+  const { craftId } = useParams();
+  const target = craftId && /^\d+$/.test(craftId) ? Number(craftId) : null;
+  const showCrafters = useLocation().pathname.endsWith('/crafters');
   const query = params.get('q') ?? '';
   const picked = params.getAll('prof');
 
@@ -98,6 +102,11 @@ export function ProfessionsPage({ guild }: { guild: Guild }) {
   const expanded = filtering;
   const [toggled, setToggled] = useState<Set<string>>(new Set());
   useEffect(() => setToggled(new Set()), [expanded]);
+  // The linked recipe's profession is open too (the page is about that recipe).
+  const targetProfessions = useMemo(
+    () => new Set((data?.recipes ?? []).filter((r) => r.id === target).map((r) => r.profession)),
+    [data, target],
+  );
   return (
     <div className="tasks">
       {importing && (
@@ -184,6 +193,9 @@ export function ProfessionsPage({ guild }: { guild: Guild }) {
           {unnamed && (
             <p className="muted">Some recipe names are still being looked up on Wowhead.</p>
           )}
+          {target !== null && targetProfessions.size === 0 && (
+            <p className="muted">Nobody in the guild can craft that recipe (any more).</p>
+          )}
           {shown.length === 0 ? (
             <p className="empty">No recipes match.</p>
           ) : (
@@ -194,7 +206,9 @@ export function ProfessionsPage({ guild }: { guild: Guild }) {
                 profession={profession}
                 recipes={recipes}
                 characters={characters}
-                open={expanded !== toggled.has(profession)}
+                target={target}
+                showCrafters={showCrafters}
+                open={(expanded || targetProfessions.has(profession)) !== toggled.has(profession)}
                 onToggle={() =>
                   setToggled((current) => {
                     const next = new Set(current);
@@ -220,6 +234,8 @@ function ProfessionSection({
   profession,
   recipes,
   characters,
+  target,
+  showCrafters,
   open,
   onToggle,
 }: {
@@ -227,6 +243,9 @@ function ProfessionSection({
   profession: string;
   recipes: Recipe[];
   characters: Map<string, Character>;
+  /** The linked recipe's id: scrolled to and marked; `showCrafters` opens its characters. */
+  target: number | null;
+  showCrafters: boolean;
   open: boolean;
   onToggle: () => void;
 }) {
@@ -253,6 +272,8 @@ function ProfessionSection({
               key={`${recipe.kind}:${recipe.id}`}
               guild={guild}
               recipe={recipe}
+              linked={recipe.id === target}
+              showCrafters={recipe.id === target && showCrafters}
               crafters={recipe.crafterIds
                 .map((id) => characters.get(id))
                 .filter((c) => c !== undefined)
@@ -273,14 +294,24 @@ function RecipeRow({
   guild,
   recipe,
   crafters,
+  linked,
+  showCrafters,
 }: {
   guild: Guild;
   recipe: Recipe;
   crafters: Character[];
+  /** The recipe a link pointed at: scrolled into view and marked. */
+  linked: boolean;
+  /** Its characters open from the start. */
+  showCrafters: boolean;
 }) {
-  const [showing, setShowing] = useState(false);
+  const [showing, setShowing] = useState(showCrafters);
+  const row = useRef<HTMLLIElement>(null);
+  useEffect(() => {
+    if (linked) row.current?.scrollIntoView({ block: 'center' });
+  }, [linked]);
   return (
-    <li>
+    <li ref={row} className={linked ? 'guild-recipe-linked' : undefined}>
       <div className="guild-recipe">
         <a href={recipe.url} target="_blank" rel="noreferrer">
           {recipe.icon && <img src={iconUrl(recipe.icon)} alt="" loading="lazy" />}
@@ -292,8 +323,7 @@ function RecipeRow({
           aria-expanded={showing}
           onClick={() => setShowing((current) => !current)}
         >
-          {showing ? 'Hide' : 'View'}{' '}
-          {crafters.length === 1 ? 'character' : `${crafters.length} characters`}
+          View Characters
         </button>
       </div>
       {showing && (
