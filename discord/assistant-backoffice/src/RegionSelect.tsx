@@ -7,15 +7,18 @@ interface Props {
   onChange: (region: string) => void;
 }
 
-/** Region picker; the timezone the guild's schedules run in is part of each option. */
+/**
+ * Region picker: just the region's name. Its timezone (the guild's schedules run in it) comes with
+ * the region and isn't shown here.
+ */
 export function RegionSelect({ regions, value, onChange }: Props) {
   return (
     <label className="field">
-      Region (schedule timezone)
+      Region
       <Select value={value} onChange={(v) => onChange(v)}>
         {regions.map((region) => (
           <option key={region.id} value={region.id}>
-            {region.label} ({region.timezone})
+            {region.label}
           </option>
         ))}
       </Select>
