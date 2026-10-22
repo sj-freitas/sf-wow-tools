@@ -402,6 +402,40 @@ th {
 tbody tr:last-child td {
   border-bottom: none;
 }
+/* A sortable column's header (the roster): looks like the others, a click orders by it. */
+.sort-header {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+}
+.sort-header:hover,
+.sort-header-active {
+  color: var(--text);
+}
+/* Pointing down: A→Z (or Officers first); up: the other way round. Faint unless it's the order. */
+.sort-chevron {
+  display: inline-flex;
+  opacity: 0.35;
+}
+.sort-header-active .sort-chevron {
+  opacity: 1;
+}
+.sort-chevron svg {
+  width: 12px;
+  height: 12px;
+  transform: rotate(90deg);
+}
+.sort-chevron-up svg {
+  transform: rotate(-90deg);
+}
 .cell-actions {
   text-align: right;
 }

@@ -23,7 +23,15 @@ import {
 } from './types';
 import { useCurrentUrl, useReturnTo } from './useReturnTo';
 import { ClassMark } from './ClassMark';
-import { BinIcon, ExternalIcon, HammerIcon, NoteIcon, PencilIcon, TagIcon } from './Icons';
+import {
+  BinIcon,
+  ChevronIcon,
+  ExternalIcon,
+  HammerIcon,
+  NoteIcon,
+  PencilIcon,
+  TagIcon,
+} from './Icons';
 import { ImportProfessionsDrawer } from './professions/ImportProfessionsDrawer';
 import { fetchGuildProfessions } from './professions/professionsApi';
 import { ProfessionsDrawer } from './professions/ProfessionsDrawer';
@@ -38,8 +46,11 @@ import { searchRoster } from './rosterSearch';
 import { useConfirm } from './useConfirm';
 import { characterPagePath, guildPath } from './guildPath';
 
-/** The roster's order: these ranks first, in this order (a player's highest counts). */
+/** The roster's default order: these ranks first, in this order (a player's highest counts). */
 const RANK_ORDER = ['Officer', 'Raider', 'Social'];
+
+/** The columns the roster can be ordered by. */
+type SortColumn = 'name' | 'class' | 'roles' | 'level' | 'discord' | 'rank';
 
 interface Props {
   guild: Guild;
@@ -50,6 +61,8 @@ interface Props {
 export function RosterPage({ guild, currentUser }: Props) {
   const [players, setPlayers] = useState<Player[] | null>(null);
   const [ranks, setRanks] = useState<Ranks>({});
+  // The table's order: a column, A→Z or Z→A (`desc`). Rank (Officers first) unless changed.
+  const [sort, setSort] = useState<{ by: SortColumn; desc: boolean }>({ by: 'rank', desc: false });
   const [loadError, setLoadError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
@@ -206,19 +219,55 @@ export function RosterPage({ guild, currentUser }: Props) {
     const at = RANK_ORDER.findIndex((rank) => held.includes(rank));
     return at === -1 ? RANK_ORDER.length : at;
   };
+  const rolesOf = (character: Player['characters'][number]) =>
+    character.roles.map((role) => ROLE_LABELS[role]).join(', ');
+  // A player's ranks as shown: an Officer is also a Raider, so Raider isn't repeated.
+  const rankLabel = (discordUserId: string) => {
+    const held = ranks[discordUserId] ?? [];
+    const shown = held.includes('Officer') ? held.filter((rank) => rank !== 'Raider') : held;
+    return shown.length > 0 ? shown.join(', ') : undefined;
+  };
+  type Row = { player: Player; character: Player['characters'][number] };
+  const text = (a: string, b: string) => a.localeCompare(b, undefined, { sensitivity: 'base' });
+  const nameOf = ({ character }: Row) => `${character.firstName} ${character.lastName}`.trim();
+  // Each column's order; ties go by the character's name.
+  const byColumn: Record<SortColumn, (a: Row, b: Row) => number> = {
+    name: () => 0,
+    class: (a, b) => text(a.character.class, b.character.class),
+    roles: (a, b) => text(rolesOf(a.character), rolesOf(b.character)),
+    level: (a, b) => a.character.level - b.character.level,
+    discord: (a, b) => text(playerLabel(a.player), playerLabel(b.player)),
+    rank: (a, b) => rankOrder(a.player.discordUserId) - rankOrder(b.player.discordUserId),
+  };
   const rows = players
     ? players
         .flatMap((player) => player.characters.map((character) => ({ player, character })))
-        .sort(
-          (a, b) =>
-            rankOrder(a.player.discordUserId) - rankOrder(b.player.discordUserId) ||
-            `${a.character.firstName} ${a.character.lastName}`.localeCompare(
-              `${b.character.firstName} ${b.character.lastName}`,
-              undefined,
-              { sensitivity: 'base' },
-            ),
-        )
+        .sort((a, b) => {
+          const order = byColumn[sort.by](a, b) || text(nameOf(a), nameOf(b));
+          return sort.desc ? -order : order;
+        })
     : [];
+  // A column's header: its name and a chevron; a click sorts by it, again the other way round.
+  const sortHeader = (by: SortColumn, label: string) => {
+    const active = sort.by === by;
+    return (
+      <th aria-sort={active ? (sort.desc ? 'descending' : 'ascending') : undefined}>
+        <button
+          type="button"
+          className={active ? 'sort-header sort-header-active' : 'sort-header'}
+          onClick={() => setSort({ by, desc: active ? !sort.desc : false })}
+        >
+          {label}
+          <span
+            className={sort.desc && active ? 'sort-chevron sort-chevron-up' : 'sort-chevron'}
+            aria-hidden="true"
+          >
+            <ChevronIcon />
+          </span>
+        </button>
+      </th>
+    );
+  };
   // Search and attribute filter, kept in the address (`?q=warr&attr=Switcher`) so a filtered
   // roster can be linked to.
   const picked = params.getAll('attr').filter((name) => attributes.some((a) => a.name === name));
@@ -354,8 +403,6 @@ export function RosterPage({ guild, currentUser }: Props) {
       onEdit={guild.isOfficer ? () => setTagging({ id: characterId, name }) : undefined}
     />
   );
-  const rolesOf = (character: Player['characters'][number]) =>
-    character.roles.map((role) => ROLE_LABELS[role]).join(', ');
 
   return (
     <div className="tasks">
@@ -522,7 +569,7 @@ export function RosterPage({ guild, currentUser }: Props) {
               <ul className="roster-list">
                 {shown.map(({ player, character }) => {
                   const name = `${character.firstName} ${character.lastName}`.trim();
-                  const rank = ranks[player.discordUserId]?.join(', ');
+                  const rank = rankLabel(player.discordUserId);
                   return (
                     <li
                       key={character.id}
@@ -555,12 +602,12 @@ export function RosterPage({ guild, currentUser }: Props) {
                 <table>
                   <thead>
                     <tr>
-                      <th>Character</th>
-                      <th>Class</th>
-                      <th>Roles</th>
-                      <th>Level</th>
-                      <th>Discord user</th>
-                      <th>Rank</th>
+                      {sortHeader('name', 'Character')}
+                      {sortHeader('class', 'Class')}
+                      {sortHeader('roles', 'Roles')}
+                      {sortHeader('level', 'Level')}
+                      {sortHeader('discord', 'Discord user')}
+                      {sortHeader('rank', 'Rank')}
                       <th />
                     </tr>
                   </thead>
@@ -592,7 +639,7 @@ export function RosterPage({ guild, currentUser }: Props) {
                               <DiscordName label={playerLabel(player)} id={player.discordUserId} />
                             </td>
                             <td data-label="Rank" className="cell-detail">
-                              {ranks[player.discordUserId]?.join(', ') ?? '—'}
+                              {rankLabel(player.discordUserId) ?? '—'}
                             </td>
                             <td className="cell-actions">{rowMenu(player, character, name)}</td>
                           </tr>
