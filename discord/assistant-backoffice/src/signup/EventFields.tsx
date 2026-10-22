@@ -1,4 +1,4 @@
-import type { EventKind } from './signupApi';
+import { EVENT_KIND_LABELS, type EventKind } from './signupApi';
 import { Select } from '../Select';
 
 export const MAX_TITLE = 100;
@@ -29,10 +29,8 @@ export function EventTextFields({
         <label className="field field-wide">
           Type
           <Select value={value.kind} onChange={(v) => set({ kind: v as EventKind })}>
-            <option value="CHARACTERS">
-              Characters: sign up with a character and role (raid groups, assignments)
-            </option>
-            <option value="MEMBERS">Members: sign up as yourself (a list of who is invited)</option>
+            <option value="CHARACTERS">{EVENT_KIND_LABELS.CHARACTERS}</option>
+            <option value="MEMBERS">{EVENT_KIND_LABELS.MEMBERS}</option>
           </Select>
           <small>Can’t be changed later.</small>
         </label>

@@ -30,6 +30,7 @@ import {
 } from './signupApi';
 import { SignupDrawer, type DrawerTarget } from './SignupDrawer';
 import { SignupLists } from './SignupLists';
+import { Select } from '../Select';
 
 type Tab = 'signups' | 'setup' | 'assignments' | 'missing';
 
@@ -86,6 +87,13 @@ export function EventPage({
   const tab: Tab = unavailable ? 'signups' : requested;
   const selectTab = (value: Tab) =>
     setParams(value === 'signups' ? {} : { tab: value }, { replace: true });
+  // The sections this viewer has, in order.
+  const tabs: [Tab, string][] = [
+    ['signups', 'Sign-ups'],
+    ...(organize ? [['setup', event?.layout.setupTitle ?? 'Raid setup'] as [Tab, string]] : []),
+    ...(event?.layout.hasAssignments ? [['assignments', 'Assignments'] as [Tab, string]] : []),
+    ...(organize ? [['missing', 'Not signed up'] as [Tab, string]] : []),
+  ];
 
   const act = (action: () => Promise<unknown>) => {
     setBusy(true);
@@ -329,38 +337,29 @@ export function EventPage({
         {error && <p className="status-error">{error}</p>}
       </div>
 
-      <nav className="view-tabs" role="tablist" aria-label="Event sections">
-        <button
-          type="button"
-          aria-selected={tab === 'signups'}
-          onClick={() => selectTab('signups')}
-        >
-          Sign-ups
-        </button>
-        {organize && (
-          <button type="button" aria-selected={tab === 'setup'} onClick={() => selectTab('setup')}>
-            {event.layout.setupTitle}
-          </button>
-        )}
-        {event.layout.hasAssignments && (
+      {/* The event's sections: tabs, or on a phone (where four tabs wrap) a dropdown, like the
+          guild's own sections. */}
+      <nav className="view-tabs wide-only" role="tablist" aria-label="Event sections">
+        {tabs.map(([value, label]) => (
           <button
+            key={value}
             type="button"
-            aria-selected={tab === 'assignments'}
-            onClick={() => selectTab('assignments')}
+            aria-selected={tab === value}
+            onClick={() => selectTab(value)}
           >
-            Assignments
+            {label}
           </button>
-        )}
-        {organize && (
-          <button
-            type="button"
-            aria-selected={tab === 'missing'}
-            onClick={() => selectTab('missing')}
-          >
-            Not signed up
-          </button>
-        )}
+        ))}
       </nav>
+      <div className="event-tabs-select phone-only">
+        <Select aria-label="Event section" value={tab} onChange={(v) => selectTab(v as Tab)}>
+          {tabs.map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </Select>
+      </div>
 
       {tab === 'signups' && (
         <div className="tasks">

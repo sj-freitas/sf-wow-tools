@@ -119,9 +119,16 @@ export function ImportProfessionsDrawer({
               to a file.
             </li>
             <li>
-              Drop <code>{FILE}</code> below, from the game’s folder (<code>/ga-prof status</code>{' '}
-              says where), or paste its contents. All your characters in this guild are updated at
-              once.
+              {/* A phone can't drop or pick the file from the game's folder: there it is pasted. */}
+              <span className="wide-only">
+                Drop <code>{FILE}</code> below, from the game’s folder (<code>/ga-prof status</code>{' '}
+                says where), or paste its contents.
+              </span>
+              <span className="phone-only">
+                Paste the contents of <code>{FILE}</code> below (<code>/ga-prof status</code> says
+                where it is).
+              </span>{' '}
+              All your characters in this guild are updated at once.
             </li>
           </ol>
           <div
@@ -133,7 +140,7 @@ export function ImportProfessionsDrawer({
             onDragLeave={() => setDragOver(false)}
             onDrop={onDrop}
           >
-            <div className="import-drop-head">
+            <div className="import-drop-head wide-only">
               <span className="muted">
                 {fileName ? (
                   <>
@@ -164,7 +171,7 @@ export function ImportProfessionsDrawer({
                 setFileName(null);
               }}
               rows={8}
-              placeholder="…or paste its contents: GuildAssistantProfessionsDB = { …"
+              placeholder="Paste its contents: GuildAssistantProfessionsDB = { …"
               spellCheck={false}
             />
           </div>

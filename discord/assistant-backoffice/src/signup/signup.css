@@ -164,6 +164,47 @@
   flex-wrap: wrap;
   gap: 0.35rem;
 }
+/* Not signed up: each person a card, its lines stacked (name, characters, reminders, actions). */
+.signup-missing {
+  gap: 0.5rem;
+}
+.signup-missing .signup-person {
+  padding: 0.7rem 0.85rem;
+  border-radius: var(--radius);
+}
+.missing-who {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+}
+.missing-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.5rem;
+}
+.missing-name .badge {
+  margin-left: 0;
+}
+.missing-characters {
+  font-size: 0.9rem;
+}
+@media (max-width: 720px) {
+  /* The buttons share the card's width, under its text. */
+  .signup-missing .signup-person {
+    display: grid;
+    gap: 0.6rem;
+  }
+  .signup-missing .signup-person-actions {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+  }
+  .signup-missing .signup-person-actions .btn {
+    justify-content: center;
+    text-align: center;
+  }
+}
 
 .signup-filters {
   display: flex;
@@ -241,6 +282,15 @@
   border: 1px dashed var(--border);
   border-radius: 6px;
 }
+/* In a group every place is as tall as a two-line name (a chip's padding and border, two lines
+   of its text): a short name, a long one and an empty place all line up. */
+.setup-group .setup-slot {
+  box-sizing: border-box;
+  height: calc(2 * 1.2 * 0.85rem + 0.7rem + 4px);
+}
+.setup-group .setup-slot .setup-chip {
+  height: 100%;
+}
 .setup-slot-target {
   border-color: var(--accent);
   background: color-mix(in srgb, var(--accent) 8%, transparent);
@@ -309,6 +359,45 @@
   margin: 0;
   padding-left: 1.2rem;
   overflow-wrap: anywhere;
+}
+@media (max-width: 720px) {
+  /* A phone: each line a small card, the task and its target on top, the players under them
+     (one per line when there are several), instead of one long wrapping sentence. */
+  .assignment-lines {
+    display: grid;
+    gap: 0.4rem;
+    padding-left: 0;
+    list-style: none;
+  }
+  .assignment-lines > li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.3rem 0.6rem;
+    padding: 0.5rem 0.65rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface-2);
+  }
+  /* The task, its target beside it when there is room (else under it), then the players. */
+  .assignment-line-task {
+    order: 1;
+    flex: 1 1 10rem;
+    min-width: 0;
+  }
+  .assignment-line-target {
+    order: 2;
+    margin-left: auto;
+  }
+  .assignment-line-players {
+    order: 3;
+    flex-basis: 100%;
+    display: grid;
+    gap: 0.2rem;
+  }
+  .assignment-line-sep {
+    display: none;
+  }
 }
 /* A player with their role and class icons; a marker with its name. */
 .player-mark {
@@ -542,4 +631,9 @@
 }
 .link-button:hover {
   color: var(--accent);
+}
+
+/* An event's sections as a dropdown, on a phone (EventPage). */
+.event-tabs-select {
+  padding: 0.75rem 1.25rem 0.25rem;
 }

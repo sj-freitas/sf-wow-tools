@@ -480,6 +480,8 @@ tbody tr:last-child td {
 }
 .field {
   display: grid;
+  /* One column that never grows past the field, whatever a long option or hint wants. */
+  grid-template-columns: minmax(0, 1fr);
   /* Rows packed at the top: when a field sits next to a taller one (one with a hint under it),
      the extra height goes below it instead of being spread between its label and its input. */
   align-content: start;
@@ -491,7 +493,7 @@ tbody tr:last-child td {
 :root {
   --control-height: 2.5rem;
 }
-.field input:not([type='checkbox']):not([type='radio']),
+.field input:not([type='checkbox']):not([type='radio']):not(.channel-select-required),
 .dropdown-button {
   box-sizing: border-box;
   width: 100%;
@@ -503,6 +505,18 @@ tbody tr:last-child td {
   color: var(--text);
   font: inherit;
   font-size: 0.9rem;
+}
+/* iOS Safari gives date and time inputs a minimum width (wider than a phone's field) and centres
+   their value: fit the field and read from the left, like the other inputs. */
+.field input[type='date'],
+.field input[type='time'],
+.field input[type='datetime-local'] {
+  min-width: 0;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.field input::-webkit-date-and-time-value {
+  text-align: left;
 }
 .field input:disabled {
   opacity: 0.7;
@@ -650,8 +664,9 @@ tbody tr:last-child td {
 /* ---- dropdowns ---- */
 .dropdown {
   position: relative;
+  min-width: 0;
 }
-.dropdown > input,
+.dropdown > input:not(.channel-select-required),
 .dropdown-button {
   width: 100%;
 }
@@ -762,7 +777,9 @@ tbody tr:last-child td {
   color: var(--accent);
   font-weight: 600;
 }
-/* Invisible, but still checked by the form ("required") and anchors the browser's message. */
+/* Invisible, but still checked by the form ("required") and anchors the browser's message.
+   (Left out of `.field input` and `.dropdown > input`, which would make it as wide as the field:
+   from the middle, past the screen's edge on a phone.) */
 .channel-select-required {
   position: absolute;
   bottom: 0;
@@ -969,7 +986,8 @@ tbody tr:last-child td {
   align-items: center;
   gap: 0.75rem;
 }
-.field textarea {
+.field textarea,
+.import-drop textarea {
   box-sizing: border-box;
   width: 100%;
   padding: 0.6rem 0.7rem;
@@ -2520,4 +2538,24 @@ a.character-guild:hover {
   height: 28px;
   border-radius: 8px;
   font-size: 0.9rem;
+}
+
+/* Phones: iOS Safari zooms in on a field whose text is under 16px when it is focused, and stays
+   zoomed (the page then scrolls sideways). Every field's text is at least 16px there. */
+@media (max-width: 720px) {
+  input:not([type='checkbox']):not([type='radio']),
+  textarea {
+    font-size: max(16px, 1em) !important;
+  }
+}
+/* Shown only on a phone / only on a larger screen. */
+@media (max-width: 720px) {
+  .wide-only {
+    display: none !important;
+  }
+}
+@media (min-width: 721px) {
+  .phone-only {
+    display: none !important;
+  }
 }

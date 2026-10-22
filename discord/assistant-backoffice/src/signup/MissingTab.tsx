@@ -199,11 +199,13 @@ export function MissingTab({
         <ul className="signup-people signup-missing">
           {shown.map((person) => (
             <li key={person.discordUserId} className="signup-person">
-              <span>
-                <strong>{person.name}</strong>
-                {person.isRaider && <span className="badge">Raider</span>}
-                <span className="muted">
-                  {' · '}
+              {/* A card: who (and Raider), their characters, the reminders, then the actions. */}
+              <span className="missing-who">
+                <span className="missing-name">
+                  <strong>{person.name}</strong>
+                  {person.isRaider && <span className="badge">Raider</span>}
+                </span>
+                <span className="missing-characters muted">
                   {person.characters.length > 0 ? person.characters.join(', ') : 'No characters'}
                 </span>
                 {person.lastReminderAt && (

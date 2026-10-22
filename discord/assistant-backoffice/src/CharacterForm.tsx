@@ -167,8 +167,10 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
       .finally(() => setMigrating(false));
   };
 
-  // TEST: fill race, class and level from the armory (Officers), with the name typed above.
+  // Fill race, class and level from the armory (Officers), with the name typed above (a test
+  // armory for now: see useArmory).
   const armory = useArmory();
+  const nameTyped = firstName.trim().length >= 2 && (!showLastName || lastName.trim().length >= 2);
   const [armoryBusy, setArmoryBusy] = useState(false);
   const [armoryNote, setArmoryNote] = useState<{ ok: boolean; text: string } | null>(null);
   const loadFromArmory = () => {
@@ -291,38 +293,6 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
             </div>
           </div>
         )}
-        {!armory && guild.isOfficer && (
-          <div className="field field-wide armory-load">
-            <small className="muted">
-              “Load from armory” (TEST) is off: the server has no Battle.net client. Set
-              BLIZZARD_CLIENT_ID and BLIZZARD_CLIENT_SECRET, restart it and reload this page.
-            </small>
-          </div>
-        )}
-        {armory && guild.isOfficer && (
-          <div className="field field-wide armory-load">
-            <span>
-              <button
-                type="button"
-                className="btn btn-sm"
-                disabled={armoryBusy || firstName.trim().length < 2}
-                title="Fills race, class and level from the armory, using the name typed below"
-                onClick={loadFromArmory}
-              >
-                {armoryBusy ? 'Loading…' : 'Load from armory'}
-              </button>{' '}
-              <span className="badge badge-live">TEST</span>{' '}
-              <span className="muted">
-                {armory.description}. Type the name first; nothing else is needed.
-              </span>
-            </span>
-            {armoryNote && (
-              <span className={armoryNote.ok ? 'run-ok' : 'status-error'} role="status">
-                {armoryNote.text}
-              </span>
-            )}
-          </div>
-        )}
         <label className="field">
           {showLastName ? 'First name' : 'Name'}
           <input
@@ -348,6 +318,28 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
               required={lastNameRequired}
             />
           </label>
+        )}
+        {armory && guild.isOfficer && (
+          // Under the name it reads: unlocked once the name is typed (both parts when the version
+          // has last names; the lookup itself only uses the first name for now).
+          <div className="field field-wide armory-load">
+            <span>
+              <button
+                type="button"
+                className="btn"
+                disabled={armoryBusy || !nameTyped}
+                title="Fills race, class and level from the armory, using the name above"
+                onClick={loadFromArmory}
+              >
+                {armoryBusy ? 'Loading…' : 'Load from armory'}
+              </button>
+            </span>
+            {armoryNote && (
+              <span className={armoryNote.ok ? 'run-ok' : 'status-error'} role="status">
+                {armoryNote.text}
+              </span>
+            )}
+          </div>
         )}
         {races.length > 0 && (
           <label className="field">

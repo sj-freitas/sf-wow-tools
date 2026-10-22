@@ -21,29 +21,33 @@ export function AssignmentLineView({
   const players = line.entryIds.map(find).filter((e): e is Entry => e !== null);
   const target = line.target;
   const targetPlayer = target?.kind === 'player' ? find(target.entryId) : null;
+  // In a sentence on a wide screen (as in Discord); on a phone signup.css lays the parts out as a
+  // card: the task and its target on top, the players under them.
   return (
     <>
-      {players.map((entry, i) => (
-        <Fragment key={entry.id}>
-          {i > 0 && ', '}
-          <PlayerMark gameVersion={gameVersion} entry={entry} bold />
-        </Fragment>
-      ))}
-      {line.task && ` ${line.task}`}
+      <span className="assignment-line-players">
+        {players.map((entry, i) => (
+          <Fragment key={entry.id}>
+            {i > 0 && <span className="assignment-line-sep">, </span>}
+            <PlayerMark gameVersion={gameVersion} entry={entry} bold />
+          </Fragment>
+        ))}
+      </span>
+      {line.task && <span className="assignment-line-task"> {line.task}</span>}
       {target?.kind === 'marker' && (
-        <>
+        <span className="assignment-line-target">
           {' '}
           <MarkerMark
             gameVersion={gameVersion}
             label={MARKERS.find((m) => m.marker === target.marker)?.label ?? target.marker}
           />
-        </>
+        </span>
       )}
       {targetPlayer && (
-        <>
+        <span className="assignment-line-target">
           {' '}
           <PlayerMark gameVersion={gameVersion} entry={targetPlayer} bold />
-        </>
+        </span>
       )}
     </>
   );
