@@ -112,7 +112,7 @@ interface Props {
  *       /roster/create        add a character              everyone (members: their own)
  *       /roster/edit/:id      edit a character             Officers, or its owner
  *       /roster/notes/:id     Officers' private note about a character   Officers
- *       /professions          what the guild can craft (?q=&prof=)        everyone in the guild
+ *       /professions          what the guild can craft (?q=)              everyone in the guild
  *       /professions/import   the same, its Import professions panel open
  *       /professions/:craftId[/crafters]  the same, at one recipe (its Wowhead spell id), its
  *                             characters open with /crafters (the Professions List's links)
