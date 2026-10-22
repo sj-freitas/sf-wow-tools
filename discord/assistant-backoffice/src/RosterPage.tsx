@@ -38,6 +38,9 @@ import { searchRoster } from './rosterSearch';
 import { useConfirm } from './useConfirm';
 import { characterPagePath, guildPath } from './guildPath';
 
+/** The roster's order: these ranks first, in this order (a player's highest counts). */
+const RANK_ORDER = ['Officer', 'Raider', 'Social'];
+
 interface Props {
   guild: Guild;
   currentUser: User;
@@ -196,8 +199,25 @@ export function RosterPage({ guild, currentUser }: Props) {
       </div>
     );
   }
+  // Officers first, then Raiders, Socials and everyone else; alphabetical within each. A search
+  // keeps this order among equally good matches.
+  const rankOrder = (discordUserId: string) => {
+    const held = ranks[discordUserId] ?? [];
+    const at = RANK_ORDER.findIndex((rank) => held.includes(rank));
+    return at === -1 ? RANK_ORDER.length : at;
+  };
   const rows = players
-    ? players.flatMap((player) => player.characters.map((character) => ({ player, character })))
+    ? players
+        .flatMap((player) => player.characters.map((character) => ({ player, character })))
+        .sort(
+          (a, b) =>
+            rankOrder(a.player.discordUserId) - rankOrder(b.player.discordUserId) ||
+            `${a.character.firstName} ${a.character.lastName}`.localeCompare(
+              `${b.character.firstName} ${b.character.lastName}`,
+              undefined,
+              { sensitivity: 'base' },
+            ),
+        )
     : [];
   // Search and attribute filter, kept in the address (`?q=warr&attr=Switcher`) so a filtered
   // roster can be linked to.

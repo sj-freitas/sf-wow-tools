@@ -90,32 +90,35 @@ export function EventsPage({ guild, timezone }: { guild: Guild; timezone: string
             {timezone}) unless an event says otherwise.
           </span>
         </div>
+      </div>
+
+      {error && <p className="status-error">{error}</p>}
+
+      {/* Which events, and "+ Event", on one line. */}
+      <div className="signup-toolbar">
+        <div className="signup-segments" role="tablist">
+          {(
+            [
+              ['upcoming', 'Upcoming'],
+              ['past', 'Past'],
+              ['archived', 'Archived'],
+            ] as const
+          ).map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              aria-selected={view === value}
+              onClick={() => setView(value)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
         {settings?.canCreate && (
           <Link className="btn btn-primary" to={guildPath(guild, 'signup/create')}>
             + Event
           </Link>
         )}
-      </div>
-
-      {error && <p className="status-error">{error}</p>}
-
-      <div className="signup-segments" role="tablist">
-        {(
-          [
-            ['upcoming', 'Upcoming'],
-            ['past', 'Past'],
-            ['archived', 'Archived'],
-          ] as const
-        ).map(([value, label]) => (
-          <button
-            key={value}
-            type="button"
-            aria-selected={view === value}
-            onClick={() => setView(value)}
-          >
-            {label}
-          </button>
-        ))}
       </div>
 
       {view === 'archived' && (

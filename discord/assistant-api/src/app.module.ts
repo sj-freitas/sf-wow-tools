@@ -1,4 +1,5 @@
 import { join } from 'node:path';
+import type { Response } from 'express';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ServeStaticModule } from '@nestjs/serve-static';
@@ -34,6 +35,16 @@ import { ProblemsModule } from './problems/problems.module';
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'public'),
       exclude: ['/api/{*splat}'],
+      serveStaticOptions: {
+        // The page is checked for a new version every time; the built files under assets/ are
+        // named by their contents (a new version has new names), so they can be kept for good.
+        setHeaders: (res: Response, path: string) => {
+          res.setHeader(
+            'Cache-Control',
+            /[\\/]assets[\\/]/.test(path) ? 'public, max-age=31536000, immutable' : 'no-cache',
+          );
+        },
+      },
     }),
     DatabaseModule,
     CacheModule,
