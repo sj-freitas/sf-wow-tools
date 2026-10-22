@@ -75,7 +75,7 @@ export function CreateGuildForm({ setup, onCreated, onCancel }: Props) {
       <form className="card-body" onSubmit={handleSubmit}>
         <SetupInstructions setup={setup} />
         <div className="form-grid">
-          <label className="field">
+          <label className="field field-wide">
             Guild name
             <input value={name} onChange={(e) => setName(e.target.value)} maxLength={64} required />
           </label>

@@ -142,7 +142,7 @@ function DetailsSection({ guild, regions, run }: SectionProps & { regions: Regio
     <form className="settings-section" onSubmit={handleSubmit}>
       <h4>Details</h4>
       <div className="form-grid">
-        <label className="field">
+        <label className="field field-wide">
           Guild name
           <input value={name} onChange={(e) => setName(e.target.value)} maxLength={64} required />
         </label>

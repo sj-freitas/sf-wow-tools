@@ -24,7 +24,12 @@ export function TimezoneField({
   return (
     <label className="field">
       Timezone
-      <Select value={value} onChange={(v) => onChange(v)}>
+      <Select
+        value={value}
+        onChange={(v) => onChange(v)}
+        searchable
+        searchPlaceholder="Search timezones… (e.g. new york)"
+      >
         <option value="ST">Server time (ST · {serverTimezone})</option>
         <option value="UTC">UTC</option>
         {zones
