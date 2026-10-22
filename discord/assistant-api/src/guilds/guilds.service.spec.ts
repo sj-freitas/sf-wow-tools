@@ -15,7 +15,7 @@ describe('GuildsService', () => {
   let servers: Server[];
   let deleted: string[];
   let transactionOps: unknown[];
-  let adminServers: { discordId: string; name: string }[];
+  let adminServers: { discordId: string; name: string; icon: string | null }[];
   let taken: { discordId: string }[];
   let createdData: any;
   let events: string[];
@@ -31,7 +31,7 @@ describe('GuildsService', () => {
     ];
     deleted = [];
     transactionOps = [];
-    adminServers = [{ discordId: 'free', name: 'Free' }];
+    adminServers = [{ discordId: 'free', name: 'Free', icon: 'free-icon' }];
     taken = [];
     createdData = null;
     events = [];
@@ -149,8 +149,9 @@ describe('GuildsService', () => {
 
     it('creates the guild with the chosen main server and the creator as Guild-Assistant', async () => {
       await service.create('u', { ...input, discordServerIds: ['free'], mainServerId: 'free' });
+      // The server's picture comes along, so the new guild's logo shows at once.
       assert.deepEqual(createdData.servers.create, [
-        { discordId: 'free', name: 'Free', isMain: true },
+        { discordId: 'free', name: 'Free', icon: 'free-icon', isMain: true },
       ]);
       assert.deepEqual(createdData.access.create, { userId: 'u', isAdmin: true });
     });
@@ -213,8 +214,8 @@ describe('GuildsService', () => {
 
     it('rejects a main server that was not selected', async () => {
       adminServers = [
-        { discordId: 'free', name: 'Free' },
-        { discordId: 'free2', name: 'Free 2' },
+        { discordId: 'free', name: 'Free', icon: null },
+        { discordId: 'free2', name: 'Free 2', icon: null },
       ];
       await assert.rejects(
         service.create('u', { ...input, discordServerIds: ['free'], mainServerId: 'free2' }),

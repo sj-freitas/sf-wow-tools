@@ -157,7 +157,7 @@ export function CharacterProfessions({
                         <ChevronIcon />
                       </span>
                       <strong>{profession.name}</strong>
-                      <span className="muted">
+                      <span className="muted guild-profession-meta">
                         {profession.skill !== null &&
                           `${profession.skill}${profession.maxSkill ? `/${profession.maxSkill}` : ''} · `}
                         {profession.recipes.length} recipe
@@ -171,7 +171,9 @@ export function CharacterProfessions({
                         className="profession-drop"
                         onClick={() => drop(profession.name, profession.recipes.length)}
                       >
-                        Drop this profession
+                        {/* "Drop" on a phone, where the line is narrow. */}
+                        <span className="wide-only">Drop this profession</span>
+                        <span className="phone-only">Drop</span>
                       </button>
                     )}
                   </div>

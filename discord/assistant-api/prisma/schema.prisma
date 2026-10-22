@@ -365,9 +365,11 @@ model GuildAccess {
 // rebuilt on every login. Source for "which servers can I attach to a new guild".
 model UserAdminServer {
   userId    String @map("user_id") @db.Uuid
-  discordId String @map("discord_id")
+  discordId String  @map("discord_id")
   name      String
-  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Discord's icon hash, as on DiscordServer; null when the server has none.
+  icon      String?
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([userId, discordId])
   @@map("user_admin_servers")

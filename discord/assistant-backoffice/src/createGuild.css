@@ -1,0 +1,40 @@
+/* ---- create guild: the server picker (CreateGuildForm) ---- */
+/* Each server a card like the overview's guild cards (.guild-card): its picture and name, picked
+   with a click anywhere on it. */
+.server-cards {
+  margin-top: 0.35rem;
+}
+.server-card {
+  display: grid;
+  gap: 0.6rem;
+  color: var(--text);
+}
+.server-card-pick {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  cursor: pointer;
+}
+.server-card-pick .guild-card-text {
+  flex: 1;
+}
+.server-card-pick input {
+  flex-shrink: 0;
+  width: 1.15rem;
+  height: 1.15rem;
+  accent-color: var(--accent);
+}
+.server-card-picked {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+}
+.server-card-main {
+  display: flex;
+  color: var(--muted);
+  font-size: 0.85rem;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+}

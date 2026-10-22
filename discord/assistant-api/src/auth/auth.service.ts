@@ -205,6 +205,7 @@ export class AuthService {
           userId,
           discordId: server.id,
           name: server.name,
+          icon: server.icon ?? null,
         })),
       }),
       ...discordGuilds.map((guild) =>

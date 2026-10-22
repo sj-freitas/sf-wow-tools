@@ -273,3 +273,22 @@
     padding: 0.5rem 0.6rem;
   }
 }
+
+/* A phone: a profession's heading is its name (with the chevron) on one line and its details
+   (skill, recipes, when imported) on a full-width line under it, instead of three squeezed
+   columns. */
+@media (max-width: 720px) {
+  .guild-profession-head {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: baseline;
+    gap: 0.15rem 0.6rem;
+  }
+  .guild-profession-head .guild-profession-chevron {
+    align-self: center;
+  }
+  .guild-profession-meta {
+    grid-column: 2;
+    font-size: 0.85rem;
+  }
+}

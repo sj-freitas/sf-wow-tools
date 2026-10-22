@@ -273,7 +273,7 @@ function ProfessionSection({
           <ChevronIcon />
         </span>
         <strong>{profession}</strong>
-        <span className="muted">
+        <span className="muted guild-profession-meta">
           {recipes.length} recipe{recipes.length === 1 ? '' : 's'}
         </span>
       </button>

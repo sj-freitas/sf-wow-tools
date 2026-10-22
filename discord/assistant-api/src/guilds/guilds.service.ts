@@ -64,7 +64,8 @@ export interface GuildHomeDto {
 export const MAX_HOME_LENGTH = 10_000;
 
 export interface EligibleServersDto {
-  servers: { discordId: string; name: string }[];
+  /** `icon`: Discord's icon hash (the server's picture); null when it has none. */
+  servers: { discordId: string; name: string; icon: string | null }[];
 }
 
 export interface SetupInfoDto {
@@ -197,7 +198,7 @@ export class GuildsService {
     return {
       servers: servers
         .filter((server) => !takenIds.has(server.discordId))
-        .map(({ discordId, name }) => ({ discordId, name })),
+        .map(({ discordId, name, icon }) => ({ discordId, name, icon })),
     };
   }
 
@@ -324,7 +325,13 @@ export class GuildsService {
     }
     try {
       await this.prisma.discordServer.create({
-        data: { guildId, discordId: server.discordId, name: server.name, isMain: false },
+        data: {
+          guildId,
+          discordId: server.discordId,
+          name: server.name,
+          icon: server.icon,
+          isMain: false,
+        },
       });
     } catch (error) {
       if (isUniqueViolation(error)) {

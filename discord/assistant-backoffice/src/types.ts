@@ -171,7 +171,8 @@ export interface Person {
 }
 
 export interface EligibleServers {
-  servers: { discordId: string; name: string }[];
+  /** `icon`: Discord's icon hash (the server's picture); null when it has none. */
+  servers: { discordId: string; name: string; icon: string | null }[];
 }
 
 export interface Region {

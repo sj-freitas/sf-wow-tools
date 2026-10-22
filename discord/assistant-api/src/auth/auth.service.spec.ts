@@ -26,7 +26,7 @@ describe('AuthService.refresh', () => {
   let accessRows: any[];
   let adminServerRows: any[];
   let guilds: GuildRow[];
-  let userServers: { id: string; name: string }[];
+  let userServers: { id: string; name: string; icon?: string | null }[];
   let botServers: Set<string>;
   let memberRoles: Record<string, string[]>;
   let serverRoles: Record<string, { id: string; name: string }[]>;
@@ -128,7 +128,7 @@ describe('AuthService.refresh', () => {
   describe('access computation', () => {
     beforeEach(() => {
       userServers = [
-        { id: 'a', name: 'A' },
+        { id: 'a', name: 'A', icon: 'a-icon' },
         { id: 'b', name: 'B' },
       ];
       botServers = new Set(['a', 'b']);
@@ -256,7 +256,9 @@ describe('AuthService.refresh', () => {
     it('lists servers where the user holds the role as eligible admin servers', async () => {
       memberRoles = { a: ['ra'], b: [] };
       await service.refresh(SESSION_TOKEN, { force: false });
-      assert.deepEqual(adminServerRows, [{ userId: 'u1', discordId: 'a', name: 'A' }]);
+      assert.deepEqual(adminServerRows, [
+        { userId: 'u1', discordId: 'a', name: 'A', icon: 'a-icon' },
+      ]);
     });
   });
 

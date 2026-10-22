@@ -5,6 +5,8 @@ import { RegionSelect } from './RegionSelect';
 import { SetupInstructions } from './SetupInstructions';
 import type { EligibleServers, Faction, Guild, SetupInfo } from './types';
 import { Select } from './Select';
+import { GuildIcon } from './GuildIcon';
+import './createGuild.css';
 
 interface Props {
   setup: SetupInfo;
@@ -117,30 +119,51 @@ export function CreateGuildForm({ setup, onCreated, onCancel }: Props) {
             </span>
           )}
           {eligible && eligible.servers.length > 0 && (
-            <div className="checks checks-column">
-              {eligible.servers.map((server) => (
-                <div key={server.discordId} className="server-row">
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={selected.includes(server.discordId)}
-                      onChange={() => toggle(server.discordId)}
-                    />
-                    {server.name}
-                  </label>
-                  {selected.length > 1 && selected.includes(server.discordId) && (
-                    <label className="main-pick">
-                      <input
-                        type="radio"
-                        name="main-server"
-                        checked={effectiveMain === server.discordId}
-                        onChange={() => setMainId(server.discordId)}
+            // Each server as a card like the overview's guild cards: its picture (the guild's logo
+            // when it is the main server) and name; a click picks it.
+            <div className="guild-grid server-cards">
+              {eligible.servers.map((server) => {
+                const picked = selected.includes(server.discordId);
+                return (
+                  <div
+                    key={server.discordId}
+                    className={
+                      picked
+                        ? 'guild-card server-card server-card-picked'
+                        : 'guild-card server-card'
+                    }
+                  >
+                    <label className="server-card-pick">
+                      <GuildIcon
+                        guild={{ name: server.name, servers: [{ ...server, isMain: true }] }}
                       />
-                      Main server
+                      <span className="guild-card-text">
+                        <strong>{server.name}</strong>
+                        <span className="muted">{picked ? 'In this guild' : 'Not added'}</span>
+                      </span>
+                      <input
+                        type="checkbox"
+                        checked={picked}
+                        onChange={() => toggle(server.discordId)}
+                      />
                     </label>
-                  )}
-                </div>
-              ))}
+                    {selected.length > 1 && picked && (
+                      <label
+                        className="server-card-main"
+                        title="The main server's picture is the guild's logo"
+                      >
+                        <input
+                          type="radio"
+                          name="main-server"
+                          checked={effectiveMain === server.discordId}
+                          onChange={() => setMainId(server.discordId)}
+                        />
+                        Main server
+                      </label>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
