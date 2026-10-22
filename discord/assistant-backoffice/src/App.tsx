@@ -1,7 +1,9 @@
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import { Link, Route, Routes, useNavigate } from 'react-router-dom';
 import { fetchCurrentUser, fetchGuilds, fetchSetupInfo, logout, takeReturnPath } from './api';
+import { accessSummary } from './guildAccess';
 import { UserMenu } from './UserMenu';
+import { useCurrentGuild } from './useCurrentGuild';
 import { PrivacyPage, PublicHome } from './PublicPages';
 import { Spinner } from './Loading';
 import { Toasts } from './Toasts';
@@ -95,12 +97,7 @@ export function App() {
           </span>
           Guild Assistant
         </Link>
-        <UserMenu
-          user={auth.user}
-          guilds={auth.guilds}
-          setup={auth.setup}
-          onLogout={handleLogout}
-        />
+        <UserMenu user={auth.user} guilds={auth.guilds} onLogout={handleLogout} />
       </header>
       <NoIndex />
       <Toasts />
@@ -117,9 +114,34 @@ export function App() {
         )}
       </main>
       <footer className="app-footer">
+        <AccountLine user={auth.user} guilds={auth.guilds} setup={auth.setup} />
         <Link to="/privacy">Privacy policy</Link>
       </footer>
     </>
+  );
+}
+
+/** Who you are logged in as, and your roles in the guild you are viewing (the menu has neither). */
+function AccountLine({
+  user,
+  guilds,
+  setup,
+}: {
+  user: User;
+  guilds: Guild[];
+  setup: SetupInfo | null;
+}) {
+  const current = useCurrentGuild(guilds);
+  return (
+    <p className="app-footer-account">
+      Logged in as {user.displayName}
+      {current && setup && (
+        <>
+          {' · '}
+          {accessSummary(current, setup.adminRoleName)} in {current.name}
+        </>
+      )}
+    </p>
   );
 }
 

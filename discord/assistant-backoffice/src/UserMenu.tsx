@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import { ChevronIcon } from './Icons';
 import { Link, useLocation } from 'react-router-dom';
-import { accessSummary } from './guildAccess';
+import { GuildIcon } from './GuildIcon';
 import { guildPath } from './guildPath';
-import type { Guild, SetupInfo, User } from './types';
+import { useCurrentGuild } from './useCurrentGuild';
+import { ChevronIcon } from './Icons';
+import type { Guild, User } from './types';
 
 function Avatar({ user }: { user: User }) {
   if (user.avatar) {
@@ -18,24 +19,26 @@ function Avatar({ user }: { user: User }) {
   return <span className="avatar">{user.displayName.charAt(0).toUpperCase()}</span>;
 }
 
+/** A phone: the menu covers the whole screen (see `.user-menu-panel`), so the page under it stays. */
+const PHONE = '(max-width: 720px)';
+
 interface Props {
   user: User;
   guilds: Guild[];
-  setup: SetupInfo | null;
   onLogout: () => void;
 }
 
 /**
- * The top-right menu: who you are, the guilds you are in (to switch between them), adding a
- * guild, and logging out.
+ * The top-right menu: who you are logged in as, your guilds to switch between (the one you are
+ * in first), adding a guild, and logging out. Your roles in the guild are in the footer. On a
+ * phone it covers the whole screen.
  */
-export function UserMenu({ user, guilds, setup, onLogout }: Props) {
+export function UserMenu({ user, guilds, onLogout }: Props) {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
   const { pathname } = useLocation();
-  const current = guilds.find(
-    (guild) => pathname === guildPath(guild) || pathname.startsWith(`${guildPath(guild)}/`),
-  );
+  const current = useCurrentGuild(guilds);
+  const ordered = current ? [current, ...guilds.filter((g) => g.id !== current.id)] : guilds;
 
   // Close after navigating, when clicking elsewhere, and on Escape.
   useEffect(() => setOpen(false), [pathname]);
@@ -47,9 +50,13 @@ export function UserMenu({ user, guilds, setup, onLogout }: Props) {
     const escape = (event: KeyboardEvent) => event.key === 'Escape' && setOpen(false);
     document.addEventListener('mousedown', away);
     document.addEventListener('keydown', escape);
+    // Full screen on a phone: the page behind doesn't scroll meanwhile.
+    const phone = window.matchMedia(PHONE).matches;
+    if (phone) document.body.style.overflow = 'hidden';
     return () => {
       document.removeEventListener('mousedown', away);
       document.removeEventListener('keydown', escape);
+      if (phone) document.body.style.overflow = '';
     };
   }, [open]);
 
@@ -69,39 +76,48 @@ export function UserMenu({ user, guilds, setup, onLogout }: Props) {
         </span>
       </button>
       {open && (
-        <div className="user-menu-panel" role="menu">
-          <div className="user-menu-section">
-            <div className="muted">Signed in as</div>
-            <strong>{user.displayName}</strong>
-            {current && setup && (
-              <div className="muted">
-                In {current.name}: {accessSummary(current, setup.adminRoleName)}
-              </div>
-            )}
+        <div className="user-menu-panel" role="menu" aria-label="Your account and guilds">
+          <div className="user-menu-head">
+            <span className="user-menu-who">
+              Logged in as <strong>{user.displayName}</strong>
+            </span>
+            <button
+              type="button"
+              className="user-menu-close"
+              aria-label="Close the menu"
+              onClick={() => setOpen(false)}
+            >
+              ×
+            </button>
           </div>
           <div className="user-menu-section">
-            <Link role="menuitem" className="user-menu-item" to="/overview">
-              Overview
-            </Link>
-            <div className="muted">Your guilds</div>
-            {guilds.length === 0 && <div className="muted">You are not in a guild yet.</div>}
-            {guilds.map((guild) => (
+            {ordered.length === 0 && <div className="muted">You are not in a guild yet.</div>}
+            {ordered.map((guild) => (
               <Link
                 key={guild.id}
                 role="menuitem"
                 className={guild.id === current?.id ? 'user-menu-item current' : 'user-menu-item'}
+                aria-current={guild.id === current?.id ? 'page' : undefined}
                 to={guildPath(guild)}
               >
-                <span>{guild.name}</span>
-                <span className="muted">{guild.realm}</span>
+                <GuildIcon guild={guild} />
+                <span className="user-menu-guild">{guild.name}</span>
               </Link>
             ))}
             <Link role="menuitem" className="user-menu-item" to="/guilds/create">
-              + Add a guild
+              <span className="guild-icon user-menu-add" aria-hidden="true">
+                +
+              </span>
+              <span className="user-menu-guild">Add a guild</span>
             </Link>
           </div>
           <div className="user-menu-section">
-            <button type="button" role="menuitem" className="user-menu-item" onClick={onLogout}>
+            <button
+              type="button"
+              role="menuitem"
+              className="user-menu-item user-menu-logout"
+              onClick={onLogout}
+            >
               Log out
             </button>
           </div>
