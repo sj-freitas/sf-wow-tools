@@ -22,6 +22,7 @@ import { RequireAccess } from './RequireAccess';
 import type { Guild, SetupInfo, User } from './types';
 import { Spinner } from './Loading';
 import { Select } from './Select';
+import { useGuildProblems } from './useGuildProblems';
 
 // Each page is loaded when first opened, so the first visit (and the public landing page, which
 // loads none of this) downloads less.
@@ -351,8 +352,10 @@ function GuildFrame({
   const regionLabel = setup.regions.find((r) => r.id === guild.region)?.label ?? guild.region;
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  // Problems the bot has with the guild: a count on Officer requests, only while there are some.
+  const problems = useGuildProblems(guild).length;
   // The guild's sections this person sees: tabs, or (on a phone) a dropdown.
-  const sections: { label: string; to: string; end?: boolean }[] = [
+  const sections: { label: string; to: string; end?: boolean; count?: number }[] = [
     { label: 'Welcome', to: guildPath(guild), end: true },
     { label: 'Roster', to: guildPath(guild, 'roster') },
     { label: 'Professions', to: guildPath(guild, 'professions') },
@@ -362,7 +365,11 @@ function GuildFrame({
           { label: 'Posts', to: guildPath(guild, 'posts') },
           { label: 'Honeypots', to: guildPath(guild, 'honeypots') },
           { label: 'Plugins', to: guildPath(guild, 'plugins') },
-          { label: 'Officer requests', to: guildPath(guild, 'officer-requests') },
+          {
+            label: 'Officer requests',
+            to: guildPath(guild, 'officer-requests'),
+            count: problems,
+          },
         ]
       : []),
     ...(canConfigure(guild) ? [{ label: 'Settings', to: guildPath(guild, 'settings') }] : []),
@@ -404,6 +411,14 @@ function GuildFrame({
         {sections.map((section) => (
           <NavLink key={section.to} to={section.to} end={section.end}>
             {section.label}
+            {section.count ? (
+              <span
+                className="tab-count"
+                title={`${section.count} problem${section.count === 1 ? '' : 's'}`}
+              >
+                {section.count}
+              </span>
+            ) : null}
           </NavLink>
         ))}
       </nav>
@@ -414,6 +429,7 @@ function GuildFrame({
           {sections.map((section) => (
             <option key={section.to} value={section.to}>
               {section.label}
+              {section.count ? ` (${section.count} problem${section.count === 1 ? '' : 's'})` : ''}
             </option>
           ))}
         </Select>

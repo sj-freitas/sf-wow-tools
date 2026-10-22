@@ -23,6 +23,7 @@ import { PublicModule } from './public/public.module';
 import { SignupModule } from './signup/signup.module';
 import { McpModule } from './mcp/mcp.module';
 import { ProfessionsModule } from './professions/professions.module';
+import { ProblemsModule } from './problems/problems.module';
 
 @Module({
   imports: [
@@ -54,6 +55,7 @@ import { ProfessionsModule } from './professions/professions.module';
     SignupModule,
     McpModule,
     ProfessionsModule,
+    ProblemsModule,
     WorkerModule,
   ],
 })

@@ -133,7 +133,13 @@ export function RecurringEventForm({
           />
           <div className="field field-wide">
             Sign-up channel
-            <ChannelSelect groups={usable} value={channel} onChange={setChannel} required />
+            <ChannelSelect
+              groups={usable}
+              value={channel}
+              onChange={setChannel}
+              required
+              check={{ guildId: guild.id, use: 'recurring' }}
+            />
             <small>
               Emptied each time, pinned messages too: use a channel for this event only.
             </small>

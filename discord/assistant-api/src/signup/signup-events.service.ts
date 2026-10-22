@@ -1,10 +1,17 @@
-import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+  Optional,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { Prisma, Role, SignupEventKind, SignupLockMode } from '@prisma/client';
 import { formatCharacterName } from '../characters/character-name';
 import { PrismaService } from '../database/prisma.service';
 import { DiscordBotService } from '../discord/discord-bot.service';
 import { describeDiscordError, isDiscordError, UNKNOWN_MESSAGE } from '../discord/discord-errors';
+import { ProblemsService } from '../problems/problems.service';
 import { ClassEmojiService, emojiText } from '../discord/class-emojis.service';
 import { EVENT_KINDS } from './event-kinds';
 
@@ -108,8 +115,22 @@ export class SignupEventsService {
     private readonly discord: DiscordBotService,
     private readonly classEmojis: ClassEmojiService,
     config: ConfigService,
+    // Guild problems: a scheduled post the bot can't make is reported to the officers, once.
+    @Optional() private readonly problems?: ProblemsService,
   ) {
     this.origin = siteOrigin(config);
+  }
+
+  /** A scheduled event's post as a guild problem. */
+  private problemOf(event: { id: string; guildId: string; title: string; channelId: string }) {
+    return {
+      guildId: event.guildId,
+      source: 'EVENT' as const,
+      id: event.id,
+      label: event.title,
+      channelId: event.channelId,
+      use: 'post' as const,
+    };
   }
 
   async findGuild(guildId: string): Promise<SignupGuild> {
@@ -390,12 +411,14 @@ export class SignupEventsService {
         where: { id: eventId },
         data: { publishError: reason },
       });
+      await this.problems?.report(this.problemOf(event), error);
       throw new BadRequestException(`Could not post the event: ${reason}`);
     }
     await this.prisma.signupEvent.update({
       where: { id: eventId },
       data: { messageId, discordPostId: messageId, publishAt: null, publishError: null },
     });
+    await this.problems?.clear(this.problemOf(event));
   }
 
   /**

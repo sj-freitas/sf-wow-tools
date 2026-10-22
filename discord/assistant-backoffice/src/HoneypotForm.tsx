@@ -116,13 +116,20 @@ export function HoneypotForm({ guild, channels, onSaved, onCancel }: Props) {
               onlyServer={serverId}
               value={existing}
               onChange={setExisting}
+              check={{ guildId: guild.id, use: 'honeypot' }}
               required
             />
           </div>
         )}
         <div className="field">
           Log channel (where the bot reports)
-          <ChannelSelect groups={usable} value={logChannel} onChange={setLogChannel} required />
+          <ChannelSelect
+            groups={usable}
+            value={logChannel}
+            onChange={setLogChannel}
+            required
+            check={{ guildId: guild.id, use: 'post' }}
+          />
         </div>
       </div>
 

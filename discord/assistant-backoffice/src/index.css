@@ -2629,3 +2629,72 @@ a.character-guild:hover {
     display: none !important;
   }
 }
+
+/* ---- guild problems (useGuildProblems): only while the bot can't do something ---- */
+/* The count on the Settings tab. */
+.tab-count {
+  display: inline-block;
+  min-width: 1.1rem;
+  margin-left: 0.35rem;
+  padding: 0 0.3rem;
+  border-radius: 999px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1.1rem;
+  text-align: center;
+  vertical-align: text-top;
+}
+/* At the top of Officer requests (GuildProblems): folded under a count; one line each, Solved. */
+.guild-problems {
+  border: 1px solid color-mix(in srgb, var(--danger) 55%, var(--border));
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--danger) 8%, transparent);
+  font-size: 0.9rem;
+}
+.guild-problems-head {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  width: 100%;
+  padding: 0.55rem 0.85rem;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+/* Pointing right while folded, down while open. */
+.guild-problems-chevron svg {
+  transform: none;
+}
+.guild-problems-head[aria-expanded='true'] .guild-problems-chevron svg {
+  transform: rotate(90deg);
+}
+.guild-problems ul {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0 0.85rem 0.65rem;
+  list-style: none;
+}
+.guild-problems li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.guild-problems li .btn {
+  flex-shrink: 0;
+}
+.guild-problems a {
+  color: var(--text);
+  font-weight: 600;
+}
+/* Under a channel picker: what the bot lacks in the chosen channel. */
+.channel-check {
+  color: var(--danger);
+}

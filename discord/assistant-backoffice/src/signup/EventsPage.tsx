@@ -280,7 +280,12 @@ function SettingsCard({
       <div className="form-grid">
         <label className="field">
           Event channel
-          <ChannelSelect groups={channels} value={channel} onChange={setChannel} />
+          <ChannelSelect
+            groups={channels}
+            value={channel}
+            onChange={setChannel}
+            check={{ guildId: guild.id, use: 'post' }}
+          />
           <small>
             Where events are posted. Officers can pick another channel per event; EventCreators
             always post here.

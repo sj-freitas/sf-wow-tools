@@ -15,6 +15,7 @@ import type { Conversation, ConversationsPage, Guild } from './types';
 import { useCurrentUrl, useReturnTo } from './useReturnTo';
 import { guildPath } from './guildPath';
 import { Spinner } from './Loading';
+import { GuildProblems } from './GuildProblems';
 
 interface Props {
   guild: Guild;
@@ -126,6 +127,8 @@ export function OfficerRequestsPage({ guild, timezone }: Props) {
           </span>
         </div>
       </div>
+
+      <GuildProblems guild={guild} />
 
       {!guild.officerRequestChannel && (
         <div className="banner banner-error" role="status">

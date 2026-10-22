@@ -1,7 +1,8 @@
-import { Injectable, Logger, OnApplicationShutdown } from '@nestjs/common';
+import { Injectable, Logger, OnApplicationShutdown, Optional } from '@nestjs/common';
 import { Prisma, type GuildPlugin } from '@prisma/client';
 import { PrismaService } from '../database/prisma.service';
 import { describeDiscordError } from '../discord/discord-errors';
+import { ProblemsService, type ProblemTask } from '../problems/problems.service';
 import { nextOccurrence } from '../tasks/schedule';
 import { PluginsService } from './plugins.service';
 
@@ -29,6 +30,8 @@ export class PluginRunnerService implements OnApplicationShutdown {
   constructor(
     private readonly prisma: PrismaService,
     private readonly plugins: PluginsService,
+    // Guild problems: a failure an officer can fix is reported to them, once.
+    @Optional() private readonly problems?: ProblemsService,
   ) {}
 
   start(): void {
@@ -70,6 +73,21 @@ export class PluginRunnerService implements OnApplicationShutdown {
     let state = plugin.state as Record<string, unknown>;
     let more = false;
     let quiet = false;
+    const config = plugin.config as { channelId?: string } | null;
+    const problem: ProblemTask = {
+      guildId: plugin.guildId,
+      source: 'PLUGIN',
+      id: plugin.id,
+      label: plugin.name,
+      channelId: config?.channelId ?? null,
+      // Channel Cleanup deletes messages, Recurring Event empties its channel and posts; others post.
+      use:
+        plugin.kind === 'CHANNEL_CLEANUP'
+          ? 'cleanup'
+          : plugin.kind === 'RECURRING_EVENT'
+            ? 'recurring'
+            : 'post',
+    };
     try {
       if (!def) throw new Error(`Unknown kind of plugin: ${plugin.kind}`);
       const context = await this.plugins.context(plugin.guildId);
@@ -77,9 +95,11 @@ export class PluginRunnerService implements OnApplicationShutdown {
       const configured = { ...plugin, config: plugin.config as Record<string, unknown> };
       const outcome = await def.run(configured, context, now.getTime() + RUN_BUDGET_MS);
       ({ result, state, more = false, quiet = false } = outcome);
+      await this.problems?.clear(problem);
     } catch (caught) {
       error = describeDiscordError(caught);
       this.logger.warn(`Plugin ${plugin.id} (${plugin.name}) failed: ${String(caught)}`);
+      await this.problems?.report(problem, caught);
     }
 
     const finished = new Date();

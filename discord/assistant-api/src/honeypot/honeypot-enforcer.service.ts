@@ -1,7 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { DiscordBotService } from '../discord/discord-bot.service';
 import { describeDiscordError } from '../discord/discord-errors';
+import { ProblemsService } from '../problems/problems.service';
 import { messageUrl } from '../tasks/post-task';
 import { BAN_DELETE_SECONDS, decideHoneypot } from './honeypot-rules';
 
@@ -21,6 +22,7 @@ export interface PostedMessage {
 
 interface ActiveHoneypot {
   id: string;
+  guildId: string;
   name: string;
   testMode: boolean;
   serverId: string;
@@ -48,6 +50,8 @@ export class HoneypotEnforcerService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly bot: DiscordBotService,
+    // Guild problems: a ban the bot isn't allowed is reported to the officers, once.
+    @Optional() private readonly problems?: ProblemsService,
   ) {}
 
   async start(): Promise<void> {
@@ -79,6 +83,7 @@ export class HoneypotEnforcerService {
           honeypot.channelId,
           {
             id: honeypot.id,
+            guildId: honeypot.guildId,
             name: honeypot.name,
             testMode: honeypot.testMode,
             serverId: honeypot.discordServerId,
@@ -176,12 +181,14 @@ export class HoneypotEnforcerService {
         reason: `Guild Assistant honeypot: posted in #${honeypot.name}`,
       });
       await this.record(honeypot, message, 'BANNED', null);
+      await this.problems?.clear(this.problemOf(honeypot));
       await this.log(
         honeypot,
         `🔨 Banned ${who} for posting in <#${message.channelId}>. Their messages from the last hour were deleted.`,
       );
     } catch (error) {
       const reason = describeDiscordError(error);
+      await this.problems?.report(this.problemOf(honeypot), error);
       await this.record(honeypot, message, 'FAILED', reason);
       await this.log(
         honeypot,
@@ -218,5 +225,17 @@ export class HoneypotEnforcerService {
     } catch (error) {
       this.logger.warn(`Could not write to the log channel: ${String(error)}`);
     }
+  }
+
+  /** The honeypot as a guild problem: banning needs Ban Members in its server. */
+  private problemOf(honeypot: ActiveHoneypot) {
+    return {
+      guildId: honeypot.guildId,
+      source: 'HONEYPOT' as const,
+      id: honeypot.id,
+      label: `Honeypot #${honeypot.name}`,
+      channelId: [...this.byChannel].find(([, h]) => h.id === honeypot.id)?.[0] ?? null,
+      use: 'honeypot' as const,
+    };
   }
 }

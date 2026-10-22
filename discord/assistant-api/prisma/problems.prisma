@@ -1,0 +1,30 @@
+// Guild problems (src/problems): what the bot currently can't do for a guild and an officer can fix
+// (a missing permission, a channel it can't see or that is gone). One row per task while it fails;
+// deleted when the task next succeeds. Not a log: the tasks keep their own last error.
+
+enum ProblemSource {
+  POST
+  PLUGIN
+  EVENT
+  HONEYPOT
+
+  @@map("problem_source")
+}
+
+model GuildProblem {
+  id        String        @id @default(uuid()) @db.Uuid
+  guildId   String        @map("guild_id") @db.Uuid
+  guild     Guild         @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  source    ProblemSource
+  // The failing task's id (a post, plugin, event or honeypot).
+  sourceId  String        @map("source_id")
+  // What it is, for people ("Molten Core sign-ups").
+  label     String
+  channelId String?       @map("channel_id")
+  // What went wrong and how to fix it, in plain language.
+  detail    String
+  since     DateTime      @default(now())
+
+  @@unique([guildId, source, sourceId])
+  @@map("guild_problems")
+}

@@ -87,6 +87,7 @@ model Guild {
   honeypots               Honeypot[]
   // Plugins (prisma/plugins.prisma).
   plugins                 GuildPlugin[]
+  problems                GuildProblem[]
   pathAliases             GuildPathAlias[]
   servers                 DiscordServer[]
   roleMappings            GuildRoleMapping[]

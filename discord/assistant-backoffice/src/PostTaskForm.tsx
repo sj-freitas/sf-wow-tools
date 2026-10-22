@@ -149,6 +149,7 @@ export function PostTaskForm({ guild, channels, editing, timezone, onSaved, onCa
             groups={channels}
             value={channel}
             onChange={setChannel}
+            check={{ guildId: guild.id, use: 'post' }}
             required
             disabled={live}
           />

@@ -1,6 +1,7 @@
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { ChevronIcon } from './Icons';
-import { channelKey } from './channelKey';
+import { checkChannel, type ChannelUse } from './api';
+import { channelKey, splitChannelKey } from './channelKey';
 import { fuzzyWordsScore } from './fuzzy';
 import type { ServerChannels } from './types';
 
@@ -13,6 +14,11 @@ interface Props {
   onlyServer?: string;
   required?: boolean;
   disabled?: boolean;
+  /**
+   * Warn (one line under it) when the bot lacks what it needs in the chosen channel for this use;
+   * it never stops a save.
+   */
+  check?: { guildId: string; use: ChannelUse };
 }
 
 interface Option {
@@ -26,7 +32,15 @@ interface Option {
  * guild's channels (already loaded, searched here), grouped by Discord server. The search is
  * typo tolerant and word by word ("wed raid" finds #wednesday-raid); arrows and Enter pick.
  */
-export function ChannelSelect({ groups, value, onChange, onlyServer, required, disabled }: Props) {
+export function ChannelSelect({
+  groups,
+  value,
+  onChange,
+  onlyServer,
+  required,
+  disabled,
+  check,
+}: Props) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [active, setActive] = useState(0);
@@ -220,6 +234,41 @@ export function ChannelSelect({ groups, value, onChange, onlyServer, required, d
             {group.serverName}: {group.error}
           </small>
         ))}
+      {check && value && <ChannelCheck guildId={check.guildId} use={check.use} value={value} />}
     </>
+  );
+}
+
+/** "The bot is missing Send Messages in this channel.": what it lacks there, if anything. */
+function ChannelCheck({
+  guildId,
+  use,
+  value,
+}: {
+  guildId: string;
+  use: ChannelUse;
+  value: string;
+}) {
+  const [missing, setMissing] = useState<string[] | null>(null);
+  useEffect(() => {
+    const { channelId } = splitChannelKey(value);
+    let live = true;
+    setMissing(null);
+    checkChannel(guildId, channelId, use)
+      .then((answer) => live && setMissing(answer.missing))
+      .catch(() => undefined); // can't tell: say nothing
+    return () => {
+      live = false;
+    };
+  }, [guildId, use, value]);
+  if (!missing || missing.length === 0) return null;
+  const names =
+    missing.length === 1
+      ? missing[0]
+      : `${missing.slice(0, -1).join(', ')} and ${missing[missing.length - 1]}`;
+  return (
+    <small className="channel-check" role="status">
+      The bot is missing {names} in this channel.
+    </small>
   );
 }

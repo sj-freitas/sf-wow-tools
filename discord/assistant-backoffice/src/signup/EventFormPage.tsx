@@ -253,7 +253,13 @@ function ChannelField({
     return (
       <label className="field">
         Channel
-        <ChannelSelect groups={channels} value={value} onChange={onChange} required />
+        <ChannelSelect
+          groups={channels}
+          value={value}
+          onChange={onChange}
+          required
+          check={{ guildId: guild.id, use: 'post' }}
+        />
         <small>Defaults to the event channel.</small>
       </label>
     );

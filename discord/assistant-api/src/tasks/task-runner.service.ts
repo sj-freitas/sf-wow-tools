@@ -1,8 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
 import type { Prisma, ScheduledTask } from '@prisma/client';
 import { DEFAULT_REGION, timezoneOfRegion } from '../config/regions';
 import { PrismaService } from '../database/prisma.service';
 import { describeDiscordError } from '../discord/discord-errors';
+import { ProblemsService, type ProblemTask } from '../problems/problems.service';
 import { PostSenderService } from './post-sender.service';
 import { isComplete, type PostConfig, type PostState } from './post-task';
 import { nextOccurrence, occurrencesBetween, type Schedule } from './schedule';
@@ -25,6 +26,8 @@ export class TaskRunnerService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly sender: PostSenderService,
+    // Guild problems: a failure an officer can fix is reported to them, once.
+    @Optional() private readonly problems?: ProblemsService,
   ) {}
 
   /** How the worker waits between the messages of a post (replaced in tests). */
@@ -47,11 +50,21 @@ export class TaskRunnerService {
     // Kept up to date while the messages go out, so a failure halfway keeps what was sent.
     const progress = { state: task.state as PostState };
     let error: string | null = null;
+    const problem: ProblemTask = {
+      guildId: task.guildId,
+      source: 'POST',
+      id: task.id,
+      label: task.name,
+      channelId: (task.config as { channelId?: string } | null)?.channelId ?? null,
+      use: 'post',
+    };
     try {
       progress.state = await this.execute(task, progress);
+      await this.problems?.clear(problem);
     } catch (caught) {
       error = describeDiscordError(caught);
       this.logger.warn(`Task ${task.id} (${task.name}) failed: ${String(caught)}`);
+      await this.problems?.report(problem, caught);
     }
 
     await this.prisma.taskRun.upsert({

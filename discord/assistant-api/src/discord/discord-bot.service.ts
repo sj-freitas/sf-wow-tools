@@ -2,6 +2,7 @@ import { DiscordAPIError, REST } from '@discordjs/rest';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { CacheService } from '../cache/cache.service';
+import type { PermissionInputs } from '../problems/channel-permissions';
 import {
   ChannelType,
   Routes,
@@ -553,6 +554,36 @@ export class DiscordBotService {
     } catch {
       return [];
     }
+  }
+
+  /**
+   * What `channelPermissions` (problems/channel-permissions.ts) needs to work out the bot's
+   * permissions in a channel: its server, overwrites, the server's roles and the bot's roles.
+   */
+  async channelPermissionInputs(channelId: string): Promise<PermissionInputs> {
+    const channel = (await this.rest.get(Routes.channel(channelId))) as APIChannel & {
+      guild_id?: string;
+      permission_overwrites?: { id: string; type: number; allow: string; deny: string }[];
+    };
+    const serverId = channel.guild_id;
+    if (!serverId) throw new Error('That channel is not in a server.');
+    const botId = await this.getBotUserId();
+    const [roles, member] = await Promise.all([
+      this.rest.get(Routes.guildRoles(serverId)) as Promise<{ id: string; permissions: string }[]>,
+      this.rest.get(Routes.guildMember(serverId, botId)) as Promise<APIGuildMember>,
+    ]);
+    return {
+      serverId,
+      memberId: botId,
+      memberRoleIds: member.roles,
+      roles: roles.map((role) => ({ id: role.id, permissions: BigInt(role.permissions) })),
+      overwrites: (channel.permission_overwrites ?? []).map((o) => ({
+        id: o.id,
+        type: o.type,
+        allow: BigInt(o.allow),
+        deny: BigInt(o.deny),
+      })),
+    };
   }
 
   /** Permanently bans the user and deletes their messages from the last `deleteMessageSeconds`. */

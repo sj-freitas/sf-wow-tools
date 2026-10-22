@@ -316,6 +316,38 @@ export const fetchTasks = (
   return request('GET', `/api/guilds/${guildId}/tasks${search ? `?${search}` : ''}`);
 };
 
+/** Something the bot can't do for the guild right now, and how to fix it (Guild-Assistants, Officers). */
+export interface GuildProblem {
+  id: string;
+  source: 'POST' | 'PLUGIN' | 'EVENT' | 'HONEYPOT';
+  sourceId: string;
+  label: string;
+  channelId: string | null;
+  detail: string;
+  since: string;
+}
+
+export const fetchProblems = (guildId: string): Promise<GuildProblem[]> =>
+  request('GET', `/api/guilds/${guildId}/problems`);
+
+/** Officers: marks a problem solved (it comes back, with a new notice, if the task fails again). */
+export const resolveProblem = (guildId: string, problemId: string): Promise<void> =>
+  request('POST', `/api/guilds/${guildId}/problems/${problemId}/resolve`);
+
+/** What a channel is used for: what the bot needs there (the API's channel-permissions.ts). */
+export type ChannelUse = 'post' | 'cleanup' | 'recurring' | 'honeypot';
+
+/** What the bot lacks in a channel for what it'll do there; `null` when it can't be told. */
+export const checkChannel = (
+  guildId: string,
+  channelId: string,
+  use: ChannelUse,
+): Promise<{ missing: string[] | null }> =>
+  request(
+    'GET',
+    `/api/guilds/${guildId}/channel-check?channelId=${encodeURIComponent(channelId)}&use=${use}`,
+  );
+
 export const fetchChannels = (guildId: string): Promise<ServerChannels[]> =>
   request('GET', `/api/guilds/${guildId}/channels`);
 

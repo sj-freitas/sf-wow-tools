@@ -408,7 +408,12 @@ function RequestChannelSection({ guild, run }: SectionProps) {
       </p>
       <div className="inline-form">
         <div className="inline-select">
-          <ChannelSelect groups={channels} value={selected} onChange={setSelected} />
+          <ChannelSelect
+            groups={channels}
+            value={selected}
+            onChange={setSelected}
+            check={{ guildId: guild.id, use: 'post' }}
+          />
         </div>
         <button
           type="button"

@@ -143,7 +143,13 @@ function ChannelCleanupForm({ guild, timezone, editing }: PluginFormProps<'CHANN
           </label>
           <div className="field field-span-2">
             Channel
-            <ChannelSelect groups={usable} value={channel} onChange={setChannel} required />
+            <ChannelSelect
+              groups={usable}
+              value={channel}
+              onChange={setChannel}
+              required
+              check={{ guildId: guild.id, use: 'cleanup' }}
+            />
           </div>
           <ScheduleFields value={schedule} onChange={setSchedule} />
           <TimezoneField value={zone} onChange={setZone} serverTimezone={timezone} />

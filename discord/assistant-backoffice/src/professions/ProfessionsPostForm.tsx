@@ -88,7 +88,13 @@ export function ProfessionsPostForm({
           </label>
           <div className="field field-span-2">
             Channel
-            <ChannelSelect groups={usable} value={channel} onChange={setChannel} required />
+            <ChannelSelect
+              groups={usable}
+              value={channel}
+              onChange={setChannel}
+              required
+              check={{ guildId: guild.id, use: 'post' }}
+            />
           </div>
           {/* Checking only posts when the list changed, so checking often costs nothing. */}
           <ScheduleFields
