@@ -104,11 +104,13 @@ export class SignupController {
     const { viewer } = await this.context(req, guildId);
     const settings = await this.events.getSettings(guildId);
     const access = await this.guildAccess.find(req.user.id, guildId);
+    const channel =
+      settings.channelId && settings.channelServerId
+        ? { serverId: settings.channelServerId, channelId: settings.channelId }
+        : null;
     return {
-      channel:
-        settings.channelId && settings.channelServerId
-          ? { serverId: settings.channelServerId, channelId: settings.channelId }
-          : null,
+      // With its name: EventCreators can't list the guild's channels, but see where they post.
+      channel: channel && { ...channel, name: await this.channelName(channel) },
       eventCreatorRole: settings.eventCreatorRoleId
         ? { id: settings.eventCreatorRoleId, name: settings.eventCreatorRoleName ?? '' }
         : null,
@@ -652,6 +654,16 @@ export class SignupController {
     guildId: string,
   ): Promise<{ guild: SignupGuild; viewer: SignupViewer }> {
     return this.userEvents.context(req.user, guildId);
+  }
+
+  /** A channel's name (null when the bot can't read the server's channels). */
+  private async channelName(channel: { serverId: string; channelId: string }) {
+    try {
+      const channels = await this.discord.listTextChannels(channel.serverId);
+      return channels.find((c) => c.id === channel.channelId)?.name ?? null;
+    } catch {
+      return null;
+    }
   }
 
   /** `context`, plus the event; `need` throws unless the user may manage or organise it. */

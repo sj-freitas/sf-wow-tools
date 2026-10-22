@@ -269,7 +269,10 @@ function ChannelField({
       Channel
       {settings.channel ? (
         <span className="signup-fixed-value">
-          #{channelName(settings.channel.serverId, settings.channel.channelId) ?? 'event channel'}
+          #
+          {settings.channel.name ??
+            channelName(settings.channel.serverId, settings.channel.channelId) ??
+            'event channel'}
         </span>
       ) : (
         <span className="status-error">

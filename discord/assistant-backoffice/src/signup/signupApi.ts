@@ -33,8 +33,8 @@ export type Marker =
   'SKULL' | 'CROSS' | 'SQUARE' | 'MOON' | 'TRIANGLE' | 'DIAMOND' | 'CIRCLE' | 'STAR';
 
 export interface SignupSettings {
-  /** Where events go unless an Officer picks another channel. */
-  channel: { serverId: string; channelId: string } | null;
+  /** Where events go unless an Officer picks another channel; `name` for those who can't list channels. */
+  channel: { serverId: string; channelId: string; name: string | null } | null;
   eventCreatorRole: { id: string; name: string } | null;
   /** Guild-Assistants and Officers change the settings. */
   canConfigure: boolean;
