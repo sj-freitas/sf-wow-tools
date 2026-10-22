@@ -944,6 +944,9 @@ tbody tr:last-child td {
   flex-wrap: wrap;
   gap: 0.4rem;
 }
+.settings-actions > .help {
+  align-self: center;
+}
 .inline-form {
   display: flex;
   flex-wrap: wrap;
@@ -1024,14 +1027,14 @@ tbody tr:last-child td {
   gap: 0.75rem;
 }
 /* A page's heading and the line under it, spaced like a card's name and details. */
-.tasks-head > div:first-child {
+.tasks-head > div:first-child:not([class]) {
   display: grid;
   gap: 0.3rem;
 }
-.tasks-head > div:first-child > :is(h2, h3, p) {
+.tasks-head > div:first-child:not([class]) > :is(h2, h3, p) {
   margin: 0;
 }
-.tasks-head > div:first-child > .muted {
+.tasks-head > div:first-child:not([class]) > .muted {
   font-size: 0.85rem;
 }
 .tasks-section {
@@ -1524,6 +1527,13 @@ a.btn {
 }
 .conversation-card:hover {
   border-color: var(--accent);
+}
+/* On a phone the actions go under the request, so its text keeps the card's width. */
+@media (max-width: 600px) {
+  .conversation-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
 }
 .conversation {
   display: grid;

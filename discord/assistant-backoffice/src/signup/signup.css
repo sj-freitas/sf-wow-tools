@@ -137,6 +137,10 @@
 .signup-event-head > p {
   margin: 0;
 }
+/* The organisers' form: a little apart from the "By … · Open in Discord" line. */
+.signup-event-head > .signup-form {
+  margin-top: 0.5rem;
+}
 /* The description: the Discord-style box of DiscordMarkdown (.md-preview) is the only frame. */
 .signup-description {
   min-width: 0;

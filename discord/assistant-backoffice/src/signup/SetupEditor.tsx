@@ -379,11 +379,6 @@ export function SetupEditor({
       {dialog}
       {exported && <AddonExportDialog exported={exported} onClose={() => setExported(null)} />}
       <div className="tasks-head">
-        <Help>
-          Drag people in from the bench, or tap someone and then a place
-          {event.layout.hasRaidRoles && '; tapping someone also lets you set their raid roles'}.
-          Changes save by themselves and show for everyone with this event open.
-        </Help>
         <div className="settings-actions">
           <button type="button" className="btn btn-sm" onClick={fill} disabled={bench.length === 0}>
             Fill from the bench
@@ -414,6 +409,12 @@ export function SetupEditor({
           <span className="muted setup-save-status" role="status">
             {saving ? <InlineSpinner label="Saving…" /> : dirty ? 'Unsaved…' : 'Saved'}
           </span>
+          {/* How it works, next to the buttons (on its own it would take a row on a phone). */}
+          <Help>
+            Drag people in from the bench, or tap someone and then a place
+            {event.layout.hasRaidRoles && '; tapping someone also lets you set their raid roles'}.
+            Changes save by themselves and show for everyone with this event open.
+          </Help>
         </div>
       </div>
       {error && <p className="status-error">{error}</p>}
