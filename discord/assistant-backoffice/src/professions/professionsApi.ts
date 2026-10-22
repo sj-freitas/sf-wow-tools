@@ -23,11 +23,21 @@ export interface ImportResult {
   imported: {
     characterId: string;
     name: string;
+    /** A guildmate's, shared with the uploader's addon by theirs (guild sharing). */
+    relayed: boolean;
     professions: { name: string; recipes: number }[];
   }[];
   skipped: { name: string; realm: string }[];
   /** Other players' characters, seen through profession links: not imported (yet). */
   linked: { name: string; realm: string }[];
+  /** Characters from an addon before 1.0 (no dates): left out; the addon needs updating. */
+  outdated: { name: string; realm: string }[];
+  /** Professions dropped from a character that the file still has, from before the drop: left out. */
+  dropped: { characterId: string; name: string; profession: string; droppedAt: string }[];
+  /** Dropped before, learned again since (the file says): added back. */
+  relearned: ProfessionChange[];
+  /** Main professions a newer file no longer has (unlearned and replaced in game): dropped. */
+  replaced: ProfessionChange[];
 }
 
 /** Everyone's professions in a guild: the characters, and every recipe with who can craft it. */
@@ -87,6 +97,12 @@ export function professionSections<T>(
 
 export const fetchProfessions = (guildId: string, characterId: string): Promise<Profession[]> =>
   request('GET', `/api/guilds/${guildId}/characters/${characterId}/professions`);
+
+export interface ProfessionChange {
+  characterId: string;
+  name: string;
+  profession: string;
+}
 
 /** `data`: the addon's saved variables file (or its export's JSON). */
 export const importProfessions = (guildId: string, data: string): Promise<ImportResult> =>

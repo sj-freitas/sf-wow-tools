@@ -184,49 +184,51 @@ model Player {
 // guilds it is in is `CharacterGuildMembership`. Its server (gameVersion/region/realm) is fixed at
 // creation — moving a character to another realm is not supported.
 model Character {
-  id            String                     @id @default(uuid()) @db.Uuid
-  playerId      String                     @map("player_id") @db.Uuid
-  player        Player                     @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  id                 String                     @id @default(uuid()) @db.Uuid
+  playerId           String                     @map("player_id") @db.Uuid
+  player             Player                     @relation(fields: [playerId], references: [id], onDelete: Cascade)
   // One of the game versions/regions/servers in src/game/<version>/config.ts; which guilds can
   // list this character (`addToGuild`) and faction compatibility (for migrating) key off these.
-  gameVersion   String                     @map("game_version")
-  region        String
-  realm         String
+  gameVersion        String                     @map("game_version")
+  region             String
+  realm              String
   // Stored, not derived from race: some races (e.g. Forever's Skyborne, like Pandaren) exist in
   // both factions, so race alone can't say which one a given character committed to. Set from the
   // guild's faction when the character is created; changing it (a "faction change") is a deliberate
   // edit, checked the same way creation is (the new race, if any, must fit the new faction).
-  faction       Faction
+  faction            Faction
   // A WoW class name, locked to a known set in code like gameVersion. Race is too (checked
   // against `faction` and the class), always set (never empty; a CHECK enforces it).
-  class         String
-  race          String
-  roles         Role[]
+  class              String
+  race               String
+  roles              Role[]
   // Both parts have at least 2 characters (CHECK constraints in the migrations). The last
   // name is empty when there is none, and required for game versions that say so.
-  firstName     String                     @map("first_name")
-  lastName      String                     @default("") @map("last_name")
-  level         Int                        @default(1)
+  firstName          String                     @map("first_name")
+  lastName           String                     @default("") @map("last_name")
+  level              Int                        @default(1)
   // Free text written by the character's own player (never an Officer), on guilds whose server's
   // rule set is 'RP'. Shown to others only when bioVisible is set; always visible to its owner.
   // Guild-agnostic like the character itself: the same bio shows in every guild it is in.
-  bio           String                     @default("")
-  bioVisible    Boolean                    @default(false) @map("bio_visible")
+  bio                String                     @default("")
+  bioVisible         Boolean                    @default(false) @map("bio_visible")
   // Ownership: every character is claimed by its player (who added it, or for whom an Officer
   // did). Set when the player proved on Battle.net that it is theirs: from then on only they edit
   // or move it, not Officers (who can still add it to their guild or take it off). Set by hand
   // for now: the Battle.net check is a preview (src/battlenet).
-  verifiedAt    DateTime?                  @map("verified_at")
-  images        CharacterImage[]
-  guilds        CharacterGuildMembership[]
-  officerNotes  CharacterOfficerNote[]
-  attributes    CharacterAttribute[]
+  verifiedAt         DateTime?                  @map("verified_at")
+  images             CharacterImage[]
+  guilds             CharacterGuildMembership[]
+  officerNotes       CharacterOfficerNote[]
+  attributes         CharacterAttribute[]
   // Event sign-ups (prisma/signup.prisma).
-  signupEntries SignupEntry[]
+  signupEntries      SignupEntry[]
   // Professions (prisma/professions.prisma).
-  professions   CharacterProfession[]
-  createdAt     DateTime                   @default(now()) @map("created_at")
-  updatedAt     DateTime                   @updatedAt @map("updated_at")
+  professions        CharacterProfession[]
+  droppedProfessions ProfessionDrop[]
+  professionSnapshot ProfessionSnapshot?
+  createdAt          DateTime                   @default(now()) @map("created_at")
+  updatedAt          DateTime                   @updatedAt @map("updated_at")
 
   @@unique([playerId, gameVersion, region, realm, firstName, lastName], map: "characters_unique_per_server")
   @@map("characters")
@@ -364,7 +366,7 @@ model GuildAccess {
 // Discord servers where the user holds the admin role and the bot is present,
 // rebuilt on every login. Source for "which servers can I attach to a new guild".
 model UserAdminServer {
-  userId    String @map("user_id") @db.Uuid
+  userId    String  @map("user_id") @db.Uuid
   discordId String  @map("discord_id")
   name      String
   // Discord's icon hash, as on DiscordServer; null when the server has none.

@@ -15,9 +15,39 @@ model CharacterProfession {
   spellIds    Int[]     @map("spell_ids")
   itemIds     Int[]     @map("item_ids")
   importedAt  DateTime  @default(now()) @map("imported_at")
+  // The addon's history of it (GuildAssistantProfessions 1.0+): when the character learned it (the
+  // first time the addon saw it, again after unlearning it) and last changed it, by the game
+  // server's clock. Null for older exports. `learnedAt` tells a profession learned again after
+  // being dropped here from an old copy of the dropped one (see ProfessionDrop).
+  learnedAt   DateTime? @map("learned_at")
+  recordedAt  DateTime? @map("recorded_at")
 
   @@unique([characterId, name])
   @@map("character_professions")
+}
+
+// A main profession dropped from a character: by "Drop this profession", or because a newer export
+// of the character no longer has it (unlearned and replaced, e.g. Blacksmithing for Engineering).
+// An import doesn't bring it back unless the export says it was learned again after `droppedAt`.
+// A character keeps its last two (it has two main professions).
+model ProfessionDrop {
+  characterId String    @map("character_id") @db.Uuid
+  character   Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  name        String
+  droppedAt   DateTime  @default(now()) @map("dropped_at")
+
+  @@id([characterId, name])
+  @@map("profession_drops")
+}
+
+// The date of the newest export of a character applied (the addon's `updated` for it: its last
+// change in game): an export newer than this decides which main professions it has.
+model ProfessionSnapshot {
+  characterId String    @id @map("character_id") @db.Uuid
+  character   Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  takenAt     DateTime  @map("taken_at")
+
+  @@map("profession_snapshots")
 }
 
 enum WowheadKind {

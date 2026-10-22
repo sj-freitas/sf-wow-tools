@@ -27,13 +27,43 @@ export interface ImportResultDto {
   imported: {
     characterId: string;
     name: string;
+    /** A guildmate's, from the uploader's addon (guild sharing), not one of the uploader's own. */
+    relayed: boolean;
     professions: { name: string; recipes: number }[];
   }[];
-  /** Characters of the export that aren't (unambiguously) one of the user's in this guild. */
+  /**
+   * Characters of the export not imported: one of "own" that isn't (unambiguously) one of the
+   * user's in this guild, or a guildmate's that isn't on the guild's roster.
+   */
   skipped: { name: string; realm: string }[];
   /** Other players' characters, seen through profession links: not imported (yet). */
   linked: { name: string; realm: string }[];
+  /**
+   * Characters from an older addon (before 1.0: no dates by the game server, so which data is
+   * newer can't be told): left out, quietly. Updating the addon and uploading again imports them.
+   */
+  outdated: { name: string; realm: string }[];
+  /**
+   * Professions dropped from a character that the export still has, but from before the drop (an
+   * old copy): left out.
+   */
+  dropped: { characterId: string; name: string; profession: string; droppedAt: string }[];
+  /** Dropped before, but learned again since (the export says): added back. */
+  relearned: { characterId: string; name: string; profession: string }[];
+  /**
+   * Main professions the character had here that this newer export no longer has (unlearned and
+   * replaced in game): dropped.
+   */
+  replaced: { characterId: string; name: string; profession: string }[];
 }
+
+/** Each recipe id once, sorted. */
+const union = (a: readonly number[], b: readonly number[]): number[] =>
+  [...new Set([...a, ...b])].sort((x, y) => x - y);
+const higher = (a: number | null | undefined, b: number | null): number | null =>
+  a == null ? b : b == null ? a : Math.max(a, b);
+const later = (a: Date | null | undefined, b: Date | null): Date | null =>
+  !a ? b : !b ? a : a > b ? a : b;
 
 /** A recipe /crafter found, and who can craft it (their player's Discord id, for a mention). */
 export interface CrafterMatch {
@@ -58,6 +88,22 @@ export class ProfessionsService {
     private readonly professionsPost: ProfessionsPostPlugin,
   ) {}
 
+  /** For tests: the time now (a drop by hand is dated by it). */
+  now: () => Date = () => new Date();
+
+  /**
+   * Imports an export. Whoever uploads it, the most recent data about a character wins (the
+   * export's `updated` for it, its last change in game):
+   * - A newer export than the last one applied decides which main professions the character has:
+   *   one it doesn't list, and nothing about which is newer than the export, was unlearned (say
+   *   Blacksmithing for Engineering): it's dropped, as of the export's date.
+   * - A dropped profession comes back only if the export says it was learned again after the
+   *   drop; an older copy that still has it leaves it out.
+   * - Within a profession, recipes are only ever added (merged), skill and dates keep the higher.
+   * The characters are matched by name: the user's own first, then the guild's roster (a
+   * guildmate's, shared by their addon). Characters from an addon before 1.0 (no dates) are left
+   * out, quietly (`outdated`).
+   */
   async import(
     user: { id: string; discordId: string },
     guildId: string,
@@ -66,48 +112,116 @@ export class ProfessionsService {
     await this.assertMember(user.id, guildId);
     const data = parseProfessionExport(input);
     const path = await this.guildRecipes.wowheadPath(guildId);
-    const own = await this.prisma.character.findMany({
-      where: { player: { discordUserId: user.discordId }, guilds: { some: { guildId } } },
-      select: { id: true, firstName: true, lastName: true, realm: true },
-    });
+    const select = { id: true, firstName: true, lastName: true, realm: true } as const;
+    const [own, roster] = await Promise.all([
+      this.prisma.character.findMany({
+        where: { player: { discordUserId: user.discordId }, guilds: { some: { guildId } } },
+        select,
+      }),
+      this.prisma.character.findMany({ where: { guilds: { some: { guildId } } }, select }),
+    ]);
 
-    const result: ImportResultDto = { imported: [], skipped: [], linked: [] };
+    const result: ImportResultDto = {
+      imported: [],
+      skipped: [],
+      linked: [],
+      outdated: [],
+      dropped: [],
+      relearned: [],
+      replaced: [],
+    };
     const refs: WowheadRef[] = [];
     for (const exported of data.characters) {
       if (exported.source === 'link') {
         result.linked.push({ name: exported.name, realm: exported.realm });
         continue;
       }
-      const character = matchCharacter(exported, own);
+      // Without the dates, newer and older can't be told apart: left out (not an error).
+      if (data.format < 2 || exported.updated === null) {
+        result.outdated.push({ name: exported.name, realm: exported.realm });
+        continue;
+      }
+      const character = matchCharacter(exported, own) ?? matchCharacter(exported, roster);
       if (!character) {
         result.skipped.push({ name: exported.name, realm: exported.realm });
         continue;
       }
-      // The export is the whole truth about the character: professions it no longer has go.
-      await this.prisma.$transaction([
-        this.prisma.characterProfession.deleteMany({ where: { characterId: character.id } }),
-        this.prisma.characterProfession.createMany({
-          data: exported.professions.map((profession) => ({
-            characterId: character.id,
-            name: profession.name,
-            skill: profession.skill,
-            maxSkill: profession.max,
-            spellIds: profession.spells,
-            itemIds: profession.items,
-          })),
-        }),
+      const name = [character.firstName, character.lastName].filter(Boolean).join('-');
+      const [kept, drops, snapshot] = await Promise.all([
+        this.prisma.characterProfession.findMany({ where: { characterId: character.id } }),
+        this.prisma.professionDrop.findMany({ where: { characterId: character.id } }),
+        this.prisma.professionSnapshot.findUnique({ where: { characterId: character.id } }),
       ]);
+      const taken = exported.updated;
+      const newer = !snapshot || taken > snapshot.takenAt;
+
+      if (newer) {
+        for (const before of kept) {
+          if (SECONDARY_PROFESSIONS.includes(before.name)) continue;
+          if (exported.professions.some((p) => p.name === before.name)) continue;
+          // Learned or changed after the export: it isn't what the export is about.
+          const seen = later(before.learnedAt, before.recordedAt);
+          if (seen && seen > taken) continue;
+          await this.prisma.characterProfession.deleteMany({
+            where: { characterId: character.id, name: before.name },
+          });
+          await this.recordDrop(character.id, before.name, taken);
+          result.replaced.push({ characterId: character.id, name, profession: before.name });
+        }
+      }
+
+      const written: { name: string; recipes: number }[] = [];
       for (const profession of exported.professions) {
+        const drop = drops.find((d) => d.name === profession.name);
+        if (drop) {
+          if (profession.learned === null || profession.learned <= drop.droppedAt) {
+            result.dropped.push({
+              characterId: character.id,
+              name,
+              profession: profession.name,
+              droppedAt: drop.droppedAt.toISOString(),
+            });
+            continue;
+          }
+          result.relearned.push({ characterId: character.id, name, profession: profession.name });
+          await this.prisma.professionDrop.delete({
+            where: { characterId_name: { characterId: character.id, name: profession.name } },
+          });
+        }
+        const before = kept.find((k) => k.name === profession.name);
+        const merged = {
+          skill: higher(before?.skill, profession.skill),
+          maxSkill: higher(before?.maxSkill, profession.max),
+          spellIds: union(before?.spellIds ?? [], profession.spells),
+          itemIds: union(before?.itemIds ?? [], profession.items),
+          learnedAt: later(before?.learnedAt, profession.learned),
+          recordedAt: later(before?.recordedAt, profession.updated),
+          importedAt: this.now(),
+        };
+        await this.prisma.characterProfession.upsert({
+          where: { characterId_name: { characterId: character.id, name: profession.name } },
+          create: { characterId: character.id, name: profession.name, ...merged },
+          update: merged,
+        });
         refs.push(...profession.spells.map((id) => ({ kind: 'SPELL' as const, id })));
         refs.push(...profession.items.map((id) => ({ kind: 'ITEM' as const, id })));
+        written.push({
+          name: profession.name,
+          recipes: merged.spellIds.length + merged.itemIds.length,
+        });
+      }
+      if (newer) {
+        await this.prisma.professionSnapshot.upsert({
+          where: { characterId: character.id },
+          create: { characterId: character.id, takenAt: taken },
+          update: { takenAt: taken },
+        });
       }
       result.imported.push({
         characterId: character.id,
-        name: [character.firstName, character.lastName].filter(Boolean).join('-'),
-        professions: exported.professions.map((profession) => ({
-          name: profession.name,
-          recipes: profession.spells.length + profession.items.length,
-        })),
+        name,
+        relayed: exported.source === 'guild',
+        professions: written,
       });
     }
     // Names are looked up in the background: the import doesn't wait for Wowhead.
@@ -115,6 +229,29 @@ export class ProfessionsService {
     // The guild's Professions Lists post the change.
     if (result.imported.length > 0) await this.professionsPost.soon(guildId);
     return result;
+  }
+
+  /**
+   * Remembers a main profession dropped from a character, as of `at`, so an import (which only
+   * adds) doesn't bring it back from an old copy. Its last two (a character has two main ones).
+   */
+  private async recordDrop(characterId: string, name: string, at: Date): Promise<void> {
+    await this.prisma.professionDrop.upsert({
+      where: { characterId_name: { characterId, name } },
+      create: { characterId, name, droppedAt: at },
+      update: { droppedAt: at },
+    });
+    const older = await this.prisma.professionDrop.findMany({
+      where: { characterId },
+      orderBy: { droppedAt: 'desc' },
+      skip: 2,
+      select: { name: true },
+    });
+    if (older.length > 0) {
+      await this.prisma.professionDrop.deleteMany({
+        where: { characterId, name: { in: older.map((d) => d.name) } },
+      });
+    }
   }
 
   /** A character's professions with their recipes, for anyone in the guild. */
@@ -177,6 +314,7 @@ export class ProfessionsService {
       where: { characterId, name },
     });
     if (count === 0) throw new NotFoundException(`It has no ${name} to drop.`);
+    await this.recordDrop(characterId, name, this.now());
     for (const { guildId } of character.guilds) await this.professionsPost.soon(guildId);
   }
 
@@ -257,9 +395,10 @@ export class ProfessionsService {
     };
   }
 
-  private async assertMember(userId: string, guildId: string): Promise<void> {
-    if (!(await this.guildAccess.find(userId, guildId))) {
-      throw new ForbiddenException('You are not a member of this guild');
-    }
+  /** The user's access to the guild (they must be in it). */
+  private async assertMember(userId: string, guildId: string) {
+    const access = await this.guildAccess.find(userId, guildId);
+    if (!access) throw new ForbiddenException('You are not a member of this guild');
+    return access;
   }
 }

@@ -9,6 +9,8 @@ import { BadRequestException } from '@nestjs/common';
  * read by our spec.
  */
 export interface ProfessionExport {
+  /** 1: the addon before 1.0 (no dates by the game server); 2: 1.0 and later. */
+  format: number;
   characters: ExportedCharacter[];
 }
 
@@ -16,8 +18,13 @@ export interface ExportedCharacter {
   name: string;
   realm: string;
   class: string | null;
-  /** "own": one of the account's; "link": someone else's, seen through a profession link. */
-  source: 'own' | 'link';
+  /**
+   * "own": one of the account's; "guild": a guildmate's, received from their addon (guild sharing,
+   * 1.0+); "link": someone else's, seen through a profession link.
+   */
+  source: 'own' | 'guild' | 'link';
+  /** Its last change in game (game server time, 1.0+), else null: the newer export wins. */
+  updated: Date | null;
   professions: ExportedProfession[];
 }
 
@@ -28,6 +35,9 @@ export interface ExportedProfession {
   /** Recipes as WoW spell ids; `items` when the game only gave the crafted item. */
   spells: number[];
   items: number[];
+  /** When the character learned it and last changed it (1.0+; game server time), else null. */
+  learned: Date | null;
+  updated: Date | null;
 }
 
 const MAX_CHARACTERS = 100;
@@ -69,6 +79,12 @@ const optionalInt = (value: unknown): number | null =>
     ? value
     : null;
 
+/** A Unix time in seconds, as the addon writes them (from 2020 to 2100), else null. */
+const time = (value: unknown): Date | null =>
+  typeof value === 'number' && Number.isInteger(value) && value > 1.5e9 && value < 4.1e9
+    ? new Date(value * 1000)
+    : null;
+
 const ids = (value: unknown, what: string): number[] => {
   if (value === undefined) return [];
   if (!Array.isArray(value) || value.length > MAX_RECIPES) fail(`bad ${what}`);
@@ -91,13 +107,14 @@ export function parseProfessionExport(input: unknown): ProfessionExport {
       fail('not JSON');
     }
   }
-  const root = data as { addon?: unknown; characters?: unknown } | null;
+  const root = data as { addon?: unknown; format?: unknown; characters?: unknown } | null;
   if (!root || typeof root !== 'object' || root.addon !== 'GuildAssistantProfessions') {
     fail('not from the addon');
   }
   const characters = root!.characters;
   if (!Array.isArray(characters) || characters.length > MAX_CHARACTERS) fail('no characters');
   return {
+    format: typeof root!.format === 'number' ? root!.format : 1,
     characters: (characters as Record<string, unknown>[]).map((character) => {
       const professions = character.professions;
       if (!Array.isArray(professions) || professions.length > MAX_PROFESSIONS) {
@@ -107,13 +124,17 @@ export function parseProfessionExport(input: unknown): ProfessionExport {
         name: text(character.name, 'character name', 48),
         realm: text(character.realm, 'realm', 64),
         class: typeof character.class === 'string' ? character.class : null,
-        source: character.source === 'link' ? 'link' : 'own',
+        source:
+          character.source === 'link' ? 'link' : character.source === 'guild' ? 'guild' : 'own',
+        updated: time(character.updated),
         professions: (professions as Record<string, unknown>[]).map((profession) => ({
           name: text(profession.name, 'profession name', 64),
           skill: optionalInt(profession.skill),
           max: optionalInt(profession.max),
           spells: ids(profession.spells, 'recipes'),
           items: ids(profession.items, 'recipes'),
+          learned: time(profession.learned),
+          updated: time(profession.updated),
         })),
       };
     }),

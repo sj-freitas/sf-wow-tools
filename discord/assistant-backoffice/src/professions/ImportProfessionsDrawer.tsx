@@ -1,5 +1,6 @@
 import { useState, type DragEvent, type FormEvent } from 'react';
 import { Drawer } from '../Drawer';
+import { useConfirm } from '../useConfirm';
 import { importProfessions, type ImportResult } from './professionsApi';
 import './professions.css';
 
@@ -27,6 +28,7 @@ export function ImportProfessionsDrawer({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ImportResult | null>(null);
+  const { confirm, dialog } = useConfirm();
 
   const readFile = (file: File | undefined) => {
     if (!file) return;
@@ -51,13 +53,32 @@ export function ImportProfessionsDrawer({
     setBusy(true);
     setError(null);
     importProfessions(guildId, data)
-      .then(setResult)
+      .then((next) => {
+        // A file from the addon before 1.0: its characters can't be imported (no dates to tell
+        // newer data by). Say so in a modal, with the way to update.
+        if (next.outdated.length > 0) {
+          void confirm({
+            title: 'Update the addon',
+            message: `This file is from an older Guild Assistant Professions (before 1.0), so ${next.outdated
+              .map((c) => c.name)
+              .join(
+                ', ',
+              )} couldn't be imported. Update the addon, log in, then /ga-prof log and upload the new file.`,
+            confirmLabel: 'Get the addon',
+          }).then((go) => {
+            if (go) window.open(ADDON_URL, '_blank', 'noreferrer');
+          });
+        }
+        // Nothing else in it: stay on the upload, for the new file.
+        if (next.imported.length > 0 || next.outdated.length === 0) setResult(next);
+      })
       .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)))
       .finally(() => setBusy(false));
   };
 
   return (
     <Drawer title="Import professions" onClose={onClose}>
+      {dialog}
       {result ? (
         <div className="professions">
           {result.imported.length === 0 ? (
@@ -70,7 +91,8 @@ export function ImportProfessionsDrawer({
               <ul className="import-result">
                 {result.imported.map((character) => (
                   <li key={character.characterId}>
-                    <strong>{character.name}</strong>:{' '}
+                    <strong>{character.name}</strong>
+                    {character.relayed && <span className="muted"> (from a guildmate)</span>}:{' '}
                     {character.professions.length === 0
                       ? 'no professions'
                       : character.professions
@@ -81,9 +103,27 @@ export function ImportProfessionsDrawer({
               </ul>
             </>
           )}
+          {result.relearned.length > 0 && (
+            <p className="muted">
+              Learned again since they were dropped, so added back:{' '}
+              {result.relearned.map((r) => `${r.profession} (${r.name})`).join(', ')}.
+            </p>
+          )}
+          {result.replaced.length > 0 && (
+            <p className="muted">
+              No longer in this newer file, so replaced:{' '}
+              {result.replaced.map((r) => `${r.profession} (${r.name})`).join(', ')}.
+            </p>
+          )}
+          {result.dropped.length > 0 && (
+            <p className="muted">
+              Dropped before, and this file's copy is older, so left out:{' '}
+              {result.dropped.map((d) => `${d.profession} (${d.name})`).join(', ')}.
+            </p>
+          )}
           {result.skipped.length > 0 && (
             <p className="muted">
-              Not in this guild’s roster as yours, so skipped:{' '}
+              Not on this guild’s roster (as yours, or a guildmate’s), so skipped:{' '}
               {result.skipped.map((c) => `${c.name} (${c.realm})`).join(', ')}. Add them to the
               roster first to import them too.
             </p>

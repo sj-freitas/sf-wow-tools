@@ -17,14 +17,23 @@ local PROFESSION_HEADERS = {
     ["Secondary Skills"] = true,
 }
 
+--- Now, by the server's clock when the client has it: when a character was last updated is
+--- compared between players (guild sharing keeps the newer), so not by each one's own clock.
+function ns.now()
+    return (GetServerTime and GetServerTime()) or time()
+end
+
 function Scan.say(text, ...)
     print("|cff7c5cffGuild Assistant Professions|r: " .. text:format(...))
 end
 
---- This character's saved entry.
+--- This character's saved entry (with its guild: only characters of the same guild are shared).
 function Scan.current()
     local _, class = UnitClass("player")
-    return Core.character(ns.db, UnitName("player"), GetRealmName(), class, "own")
+    local character = Core.character(ns.db, UnitName("player"), GetRealmName(), class, "own")
+    local guild = IsInGuild and IsInGuild() and GetGuildInfo and GetGuildInfo("player") or nil
+    if guild then character.guild = guild end
+    return character
 end
 
 --- The saved entry of someone whose profession link is open ("Name" or "Name-Realm"). A link
@@ -91,7 +100,7 @@ function Scan.skills()
     else
         return false
     end
-    local changed, dropped = Core.setProfessions(Scan.current(), skills, time())
+    local changed, dropped = Core.setProfessions(Scan.current(), skills, ns.now())
     for _, name in ipairs(dropped) do
         Scan.say("%s was unlearned: dropped from what is saved. Type /ga-prof log to write it to the file.", name)
     end
@@ -109,9 +118,9 @@ local function record(character, professionName, rank, max, recipes, replace)
     end
     local changed
     if replace then
-        changed = Core.setRecipes(character, professionName, rank, max, recipes, time())
+        changed = Core.setRecipes(character, professionName, rank, max, recipes, ns.now())
     else
-        changed = Core.addRecipes(character, professionName, rank, max, recipes, time()) > 0
+        changed = Core.addRecipes(character, professionName, rank, max, recipes, ns.now()) > 0
     end
     local key = character.name .. "-" .. character.realm .. ":" .. professionName
     if changed and not announced[key] then

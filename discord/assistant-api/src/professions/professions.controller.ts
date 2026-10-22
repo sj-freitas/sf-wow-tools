@@ -26,7 +26,7 @@ import {
 export class ProfessionsController {
   constructor(private readonly professions: ProfessionsService) {}
 
-  /** `{ data }`: the addon's export, as pasted. Imports it into the user's own characters. */
+  /** `{ data }`: the addon's export, as pasted: the user's characters and the guildmates' it carries. */
   @Post('professions/import')
   @HttpCode(HttpStatus.OK)
   import(

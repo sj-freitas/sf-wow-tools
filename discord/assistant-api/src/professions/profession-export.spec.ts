@@ -51,8 +51,8 @@ describe('exportFromSavedVariables', () => {
 describe('parseProfessionExport', () => {
   it("reads the saved variables file the addon's data is in", () => {
     const data = parseProfessionExport(savedVariables(FIXTURE.trim()));
-    assert.equal(data.characters.length, 3);
-    assert.deepEqual(data.characters[1].professions[0].spells, [13890, 20034]);
+    assert.equal(data.characters.length, 4);
+    assert.deepEqual(data.characters[2].professions[0].spells, [13890, 20034]);
   });
 
   it("reads the addon's export", () => {
@@ -61,11 +61,13 @@ describe('parseProfessionExport', () => {
       data.characters.map((c) => [c.name, c.source]),
       [
         ['Bob', 'own'],
+        // A guildmate's, received through the addon's guild sharing (1.0+).
+        ['Kael', 'guild'],
         ['Luna', 'own'],
         ['Mira', 'link'],
       ],
     );
-    const luna = data.characters[1];
+    const luna = data.characters[2];
     assert.equal(luna.realm, 'Wild Growth');
     assert.deepEqual(luna.professions[0], {
       name: 'Enchanting',
@@ -73,8 +75,14 @@ describe('parseProfessionExport', () => {
       max: 300,
       spells: [13890, 20034],
       items: [],
+      learned: new Date(1791500000 * 1000),
+      updated: new Date(1791600000 * 1000),
     });
     assert.deepEqual(luna.professions[1].items, [14146]);
+    // The profession's history: when it was learned and last changed (server time, seconds).
+    const herbalism = data.characters[1].professions[0];
+    assert.equal(herbalism.learned?.toISOString(), new Date(1791000000 * 1000).toISOString());
+    assert.equal(herbalism.updated?.toISOString(), new Date(1792100000 * 1000).toISOString());
   });
 
   it('refuses anything else, saying how to get an export', () => {

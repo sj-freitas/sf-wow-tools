@@ -54,7 +54,7 @@ local function loadAddon(unknownEvents)
     _G.GetNumSkillLines = function() return 0 end
     _G.GetSkillLineInfo = function() end
     local ns = {}
-    for _, file in ipairs({ "Core", "Scan", "Main" }) do
+    for _, file in ipairs({ "Core", "Scan", "Sync", "Main" }) do
         assert(loadfile("GuildAssistantProfessions/" .. file .. ".lua"))("GuildAssistantProfessions", ns)
     end
     return ns
@@ -94,7 +94,7 @@ it("keeps the export in the saved data up to date, and says when it was updated"
     end
     fire("ADDON_LOADED", "GuildAssistantProfessions")
     local db = GuildAssistantProfessionsDB
-    eq(db.export, '{"addon":"GuildAssistantProfessions","characters":[],"format":1}', "export at load")
+    eq(db.export, '{"addon":"GuildAssistantProfessions","characters":[],"format":2}', "export at load")
     fire("PLAYER_LOGIN")
     assert(db.export:find('"name":"Tailoring"', 1, true), "export after a change: " .. db.export)
     SlashCmdList.GAPROF("status")
