@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { Help } from '../Help';
 import { Link } from 'react-router-dom';
 import { fetchRoleOptions } from '../api';
 import { channelKey, splitChannelKey } from '../channelKey';
@@ -10,7 +11,9 @@ import type { Guild, RoleOption } from '../types';
 import { showToast } from '../toast';
 import { useChannels } from '../useChannels';
 import { useConfirm } from '../useConfirm';
-import { STATUS_EMOJI, STATUS_LABELS, errorText, formatEventTime } from './labels';
+import { CalendarIcon, ClockIcon, LockIcon, PinIcon } from '../Icons';
+import { STATUS_LABELS, errorText, formatEventTime } from './labels';
+import { StatusIcon } from './StatusIcon';
 import {
   deleteEvent,
   fetchEvents,
@@ -23,7 +26,7 @@ import {
 import { Select } from '../Select';
 
 /** `/signup`: the guild's events, newest coming first, and (for those who may) its settings. */
-export function EventsPage({ guild, timezone }: { guild: Guild; timezone: string }) {
+export function EventsPage({ guild }: { guild: Guild }) {
   const [settings, setSettings] = useState<SignupSettings | null>(null);
   const [events, setEvents] = useState<EventSummary[] | null>(null);
   const [view, setView] = useState<EventsView>('upcoming');
@@ -84,11 +87,10 @@ export function EventsPage({ guild, timezone }: { guild: Guild; timezone: string
       {dialog}
       <div className="tasks-head">
         <div>
-          <h3>Events</h3>
-          <span className="muted">
-            Members sign up from the event’s post in Discord, or here. Times are in server time (
-            {timezone}) unless an event says otherwise.
-          </span>
+          <h3 className="field-label">
+            Events
+            <Help>Members sign up from the event’s post in Discord, or here.</Help>
+          </h3>
         </div>
       </div>
 
@@ -186,31 +188,52 @@ export function EventsPage({ guild, timezone }: { guild: Guild; timezone: string
             <div key={event.id} className="signup-event-row">
               <Link className="signup-event-card" to={guildPath(guild, `signup/${event.id}`)}>
                 <div className="signup-event-card-head">
-                  <strong>{event.title}</strong>
+                  <strong className="signup-event-name">{event.title}</strong>
                   {event.kind === 'MEMBERS' && <span className="badge">Members</span>}
                   {event.publishAt ? (
                     <span className="badge">
-                      🕒 Scheduled · posts {formatEventTime(event.publishAt, event.timezone)}
+                      <ClockIcon /> Scheduled · posts{' '}
+                      {formatEventTime(event.publishAt, event.timezone)}
                     </span>
                   ) : event.archivedAt ? (
                     <span className="badge">Archived</span>
                   ) : (
-                    event.closed && <span className="badge">Closed</span>
+                    event.closed && (
+                      <span className="badge">
+                        <LockIcon /> Closed
+                      </span>
+                    )
                   )}
                   {event.myStatus && (
-                    <span className="badge badge-main">
-                      {STATUS_EMOJI[event.myStatus]} {STATUS_LABELS[event.myStatus]}
+                    <span className="badge">
+                      <StatusIcon status={event.myStatus} /> {STATUS_LABELS[event.myStatus]}
                     </span>
                   )}
                 </div>
-                <span className="muted">
-                  {formatEventTime(event.startsAt, event.timezone)}
-                  {event.location && ` · 📍 ${event.location}`} · by {event.createdByName}
+                <span className="signup-event-meta">
+                  <span>
+                    <CalendarIcon /> {formatEventTime(event.startsAt, event.timezone)}
+                  </span>
+                  {event.location && (
+                    <span>
+                      <PinIcon /> {event.location}
+                    </span>
+                  )}
+                  <span>by {event.createdByName}</span>
                 </span>
                 <span className="signup-counts">
                   {(['AVAILABLE', 'LATE', 'TENTATIVE', 'ABSENT'] as const).map((status) => (
-                    <span key={status} title={STATUS_LABELS[status]}>
-                      {STATUS_EMOJI[status]} {event.counts[status]}
+                    <span
+                      key={status}
+                      className={
+                        event.counts[status] === 0
+                          ? 'signup-count signup-count-zero'
+                          : 'signup-count'
+                      }
+                      title={STATUS_LABELS[status]}
+                      aria-label={`${STATUS_LABELS[status]}: ${event.counts[status]}`}
+                    >
+                      <StatusIcon status={status} /> {event.counts[status]}
                     </span>
                   ))}
                 </span>

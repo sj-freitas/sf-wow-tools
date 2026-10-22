@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import { Help } from './Help';
 import { createTask, fetchPeople, fetchRoleOptions, updateTask } from './api';
 import { channelKey, splitChannelKey } from './channelKey';
 import { ChannelSelect } from './ChannelSelect';
@@ -181,15 +182,17 @@ export function PostTaskForm({ guild, channels, editing, timezone, onSaved, onCa
 
       {live && (
         <p className="muted">
-          This post is in Discord: saving edits its messages right away (text, images and link
-          previews). Messages already posted keep their order and no message can be added. To add
-          one, move the post to another channel, or post it again, delete it first.
+          Already in Discord: saving edits its messages at once. Messages can’t be added or
+          reordered.
         </p>
       )}
 
       <div className="parts">
         <div className="parts-head">
-          <h4>{parts.length === 1 ? 'Message' : `Messages (${parts.length})`}</h4>
+          <h4 className="field-label">
+            {parts.length === 1 ? 'Message' : `Messages (${parts.length})`}
+            <Help>A post can be several messages, sent one after the other in this order.</Help>
+          </h4>
           {parts.length > 1 && (
             <button
               type="button"
@@ -203,10 +206,6 @@ export function PostTaskForm({ guild, channels, editing, timezone, onSaved, onCa
             </button>
           )}
         </div>
-        <p className="muted">
-          A post can be several messages, sent one after the other in this order at the scheduled
-          time.
-        </p>
 
         <LiveTagsHelp />
 

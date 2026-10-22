@@ -1,20 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { DiscordMarkdown } from '../DiscordMarkdown';
+import { ArchiveIcon, CalendarIcon, ClockIcon, LockIcon, MailIcon, PinIcon } from '../Icons';
 import { subscribeEvents } from '../events';
 import { guildPath } from '../guildPath';
 import { SkeletonLines } from '../Loading';
 import type { Guild } from '../types';
 import { useConfirm } from '../useConfirm';
 import { AssignmentsTab } from './AssignmentsTab';
-import {
-  ROLE_NAME,
-  STATUS_EMOJI,
-  STATUS_LABELS,
-  errorText,
-  formatEventTime,
-  zoneLabel,
-} from './labels';
+import { ROLE_NAME, STATUS_LABELS, errorText, formatEventTime, zoneLabel } from './labels';
 import { EventFormPage } from './EventFormPage';
 import { MissingTab } from './MissingTab';
 import { SetupEditor } from './SetupEditor';
@@ -29,6 +23,7 @@ import {
 } from './signupApi';
 import { SignupDrawer, type DrawerTarget } from './SignupDrawer';
 import { SignupLists } from './SignupLists';
+import { StatusIcon } from './StatusIcon';
 import { Select } from '../Select';
 
 type Tab = 'signups' | 'setup' | 'assignments' | 'missing';
@@ -174,7 +169,15 @@ export function EventPage({ guild }: { guild: Guild }) {
   );
   const byLine = (
     <>
-      By {event.createdByName} · {lockLabel}
+      By{' '}
+      <a
+        href={`https://discord.com/users/${event.createdByDiscordId}`}
+        target="_blank"
+        rel="noreferrer"
+      >
+        {event.createdByName}
+      </a>{' '}
+      · {lockLabel}
       {event.postUrl ? (
         <>
           {' · '}
@@ -196,7 +199,17 @@ export function EventPage({ guild }: { guild: Guild }) {
         <div className="signup-event-title">
           <h3>{event.title}</h3>
           <span className={event.closed ? 'badge' : 'badge badge-main'}>
-            {event.publishAt ? '🕒 Scheduled' : event.closed ? '🔒 Closed' : 'Open'}
+            {event.publishAt ? (
+              <>
+                <ClockIcon /> Scheduled
+              </>
+            ) : event.closed ? (
+              <>
+                <LockIcon /> Closed
+              </>
+            ) : (
+              'Open'
+            )}
           </span>
         </div>
         {event.permissions.canManage && !archived ? (
@@ -212,9 +225,13 @@ export function EventPage({ guild }: { guild: Guild }) {
           </>
         ) : (
           <>
-            {event.location && <p className="signup-when">📍 {event.location}</p>}
+            {event.location && (
+              <p className="signup-when">
+                <PinIcon /> {event.location}
+              </p>
+            )}
             <p className="signup-when">
-              🗓️ {formatEventTime(event.startsAt, event.timezone)}{' '}
+              <CalendarIcon /> {formatEventTime(event.startsAt, event.timezone)}{' '}
               <span className="muted">{zoneLabel(event.timezone, event.serverTimezone)}</span>
               {localZone !== event.timezone && (
                 <span className="muted">
@@ -223,7 +240,11 @@ export function EventPage({ guild }: { guild: Guild }) {
                 </span>
               )}
             </p>
-            {event.inviteTime && <p className="signup-when">📨 Invites from {event.inviteTime}</p>}
+            {event.inviteTime && (
+              <p className="signup-when">
+                <MailIcon /> Invites from {event.inviteTime}
+              </p>
+            )}
             <p className="muted">{byLine}</p>
             {event.description && (
               <div className="signup-description">
@@ -236,8 +257,9 @@ export function EventPage({ guild }: { guild: Guild }) {
         {event.publishAt && (
           <div className="banner signup-archived">
             <span>
-              🕒 Scheduled: the post goes out {formatEventTime(event.publishAt, event.timezone)}.
-              Until then only organisers see this event, and sign-ups are closed.
+              <ClockIcon /> Scheduled: the post goes out{' '}
+              {formatEventTime(event.publishAt, event.timezone)}. Until then only organisers see
+              this event, and sign-ups are closed.
               {event.publishError && (
                 <span className="status-error">
                   {' '}
@@ -260,8 +282,8 @@ export function EventPage({ guild }: { guild: Guild }) {
         {archived && (
           <div className="banner signup-archived">
             <span>
-              🗄️ Archived {formatEventTime(event.archivedAt!, event.timezone)}: kept as history,
-              read-only, and no longer in Discord.
+              <ArchiveIcon /> Archived {formatEventTime(event.archivedAt!, event.timezone)}: kept as
+              history, read-only, and no longer in Discord.
             </span>
           </div>
         )}
@@ -334,15 +356,17 @@ export function EventPage({ guild }: { guild: Guild }) {
         <div className="tasks">
           <div className="signup-toolbar">
             <span className="muted">
-              {event.mine
-                ? `You: ${STATUS_EMOJI[event.mine.status]} ${STATUS_LABELS[event.mine.status]}${
-                    event.mine.characterName
-                      ? ` as ${event.mine.characterName}${
-                          event.mine.role ? ` (${ROLE_NAME[event.mine.role]})` : ''
-                        }`
-                      : ''
-                  }`
-                : 'You haven’t answered yet.'}
+              {event.mine ? (
+                <>
+                  You: <StatusIcon status={event.mine.status} /> {STATUS_LABELS[event.mine.status]}
+                  {event.mine.characterName &&
+                    ` as ${event.mine.characterName}${
+                      event.mine.role ? ` (${ROLE_NAME[event.mine.role]})` : ''
+                    }`}
+                </>
+              ) : (
+                'You haven’t answered yet.'
+              )}
               {event.closed && ' Sign-ups are closed.'}
             </span>
             <div className="settings-actions">

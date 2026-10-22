@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { Help } from './Help';
 import { Link, useSearchParams } from 'react-router-dom';
 import { deletePostMessage, deleteTask, fetchTasks, runTaskNow, updateTask } from './api';
 import { ReactionsPanel } from './ReactionsPanel';
@@ -171,10 +172,10 @@ export function PostsPage({ guild, timezone }: Props) {
       {dialog}
       <div className="tasks-head">
         <div>
-          <h3>Posts</h3>
-          <span className="muted">
-            Each post is sent once, as one message. Times are in {timezone}.
-          </span>
+          <h3 className="field-label">
+            Posts
+            <Help>Each post is sent once, as one message.</Help>
+          </h3>
         </div>
         <Link
           className="btn btn-primary"

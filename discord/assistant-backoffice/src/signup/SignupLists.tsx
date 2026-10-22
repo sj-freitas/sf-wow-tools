@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import type { Guild } from '../types';
 import { useConfirm } from '../useConfirm';
-import { ROLE_CATEGORIES, STATUS_EMOJI, STATUS_LABELS, entryName, errorText } from './labels';
+import { ROLE_CATEGORIES, STATUS_LABELS, entryName, errorText } from './labels';
+import { StatusIcon } from './StatusIcon';
 import { ClassMark } from '../ClassMark';
 import { RoleMark } from '../RoleMark';
 import type { DrawerTarget } from './SignupDrawer';
@@ -145,7 +146,7 @@ export function SignupLists({
         return (
           <section key={status} className="signup-column">
             <h4>
-              {STATUS_EMOJI[status]} {STATUS_LABELS[status]}{' '}
+              <StatusIcon status={status} /> {STATUS_LABELS[status]}{' '}
               <span className="muted">({inStatus.length})</span>
             </h4>
             <ul className="signup-people">{inStatus.map(row)}</ul>

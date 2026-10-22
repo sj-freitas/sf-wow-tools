@@ -254,6 +254,8 @@ export class SignupUserEventsService {
       publishLocal: event.publishAt ? localParts(event.publishAt, event.timezone) : null,
       publishError: event.publishError,
       createdByName: event.createdByName,
+      // For a link to their Discord profile.
+      createdByDiscordId: event.createdByDiscordId,
       isOwner: event.createdByDiscordId === user.discordId,
       channel: { serverId: event.serverId, channelId: event.channelId },
       // The sign-up post's Discord id, kept after it is gone (null until first posted).

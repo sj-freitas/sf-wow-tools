@@ -18,7 +18,7 @@ import './signup.css';
 export function SignupRoutes({ guild, timezone }: { guild: Guild; timezone: string }) {
   return (
     <Routes>
-      <Route index element={<EventsPage guild={guild} timezone={timezone} />} />
+      <Route index element={<EventsPage guild={guild} />} />
       <Route path="create" element={<EventFormPage guild={guild} serverTimezone={timezone} />} />
       <Route path=":eventId" element={<EventPage guild={guild} />} />
       {/* Editing happens on the event's page, always open for its organisers. */}

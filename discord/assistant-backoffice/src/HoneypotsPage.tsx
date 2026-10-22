@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { Help } from './Help';
 import { Link, useNavigate } from 'react-router-dom';
 import { deleteHoneypot, fetchHoneypots, updateHoneypot } from './api';
 import { HoneypotForm } from './HoneypotForm';
@@ -46,10 +47,10 @@ export function HoneypotsPage({ guild, timezone }: Props) {
       {dialog}
       <div className="tasks-head">
         <div>
-          <h3>Honeypot channels</h3>
-          <span className="muted">
-            Channels where anyone who posts is banned. Times are in {timezone}.
-          </span>
+          <h3 className="field-label">
+            Honeypot channels
+            <Help>Channels where anyone who posts is banned.</Help>
+          </h3>
         </div>
         <Link className="btn btn-primary" to={guildPath(guild, 'honeypots/create')}>
           + Honeypot channel

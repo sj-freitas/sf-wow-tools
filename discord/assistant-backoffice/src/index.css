@@ -352,7 +352,9 @@ h3 {
 }
 
 .badge {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
   padding: 0.1rem 0.55rem;
   border-radius: 999px;
   font-size: 0.75rem;
@@ -2780,4 +2782,10 @@ a.character-guild:hover {
 /* Under a channel picker: what the bot lacks in the chosen channel. */
 .channel-check {
   color: var(--danger);
+}
+
+/* Line icons inside text (Icons.tsx): sit on the text's middle. */
+.icon-inline {
+  flex-shrink: 0;
+  vertical-align: -0.125em;
 }

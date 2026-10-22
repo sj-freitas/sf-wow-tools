@@ -80,3 +80,87 @@ export function ChevronIcon() {
     </svg>
   );
 }
+
+/* For text: 1em, so they match the line they sit in. */
+const inline = { ...base, width: '1em', height: '1em', className: 'icon-inline' };
+
+export function CalendarIcon() {
+  return (
+    <svg {...inline}>
+      <rect x="3" y="4" width="18" height="18" rx="2" />
+      <path d="M16 2v4M8 2v4M3 10h18" />
+    </svg>
+  );
+}
+
+export function PinIcon() {
+  return (
+    <svg {...inline}>
+      <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+      <circle cx="12" cy="10" r="3" />
+    </svg>
+  );
+}
+
+export function ClockIcon() {
+  return (
+    <svg {...inline}>
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 6v6l4 2" />
+    </svg>
+  );
+}
+
+export function MailIcon() {
+  return (
+    <svg {...inline}>
+      <rect x="2" y="4" width="20" height="16" rx="2" />
+      <path d="m22 7-10 6L2 7" />
+    </svg>
+  );
+}
+
+export function LockIcon() {
+  return (
+    <svg {...inline}>
+      <rect x="4" y="11" width="16" height="10" rx="2" />
+      <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+    </svg>
+  );
+}
+
+export function ArchiveIcon() {
+  return (
+    <svg {...inline}>
+      <rect x="2" y="3" width="20" height="5" rx="1" />
+      <path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8M10 12h4" />
+    </svg>
+  );
+}
+
+export function CheckCircleIcon() {
+  return (
+    <svg {...inline}>
+      <circle cx="12" cy="12" r="10" />
+      <path d="m8 12 3 3 5-6" />
+    </svg>
+  );
+}
+
+export function HelpCircleIcon() {
+  return (
+    <svg {...inline}>
+      <circle cx="12" cy="12" r="10" />
+      <path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01" />
+    </svg>
+  );
+}
+
+export function XCircleIcon() {
+  return (
+    <svg {...inline}>
+      <circle cx="12" cy="12" r="10" />
+      <path d="m15 9-6 6M9 9l6 6" />
+    </svg>
+  );
+}

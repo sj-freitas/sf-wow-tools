@@ -44,11 +44,62 @@
   align-items: center;
   gap: 0.5rem;
 }
+.signup-event-name {
+  font-size: 1rem;
+  font-weight: 600;
+}
+/* When, where, who: one small muted line, each part with its icon. */
+.signup-event-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+.signup-event-meta > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+/* The answers so far: small pills, the empty ones faded. */
 .signup-counts {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.9rem;
-  font-size: 0.9rem;
+  gap: 0.4rem;
+  margin-top: 0.15rem;
+}
+.signup-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.1rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.signup-count-zero {
+  opacity: 0.45;
+}
+
+/* A sign-up status as a coloured line icon (StatusIcon). */
+.status-icon {
+  display: inline-flex;
+  vertical-align: -0.125em;
+}
+.status-icon-available {
+  color: var(--success);
+}
+.status-icon-late {
+  color: var(--gold);
+}
+.status-icon-tentative {
+  color: var(--accent);
+}
+.status-icon-absent {
+  color: var(--danger);
 }
 .signup-settings summary {
   cursor: pointer;

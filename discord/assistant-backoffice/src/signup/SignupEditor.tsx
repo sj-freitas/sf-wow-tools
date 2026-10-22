@@ -3,16 +3,10 @@ import { Link } from 'react-router-dom';
 import { guildPath } from '../guildPath';
 import { InlineSpinner } from '../Loading';
 import type { Guild, Role } from '../types';
-import {
-  ROLE_CATEGORIES,
-  ROLE_EMOJI,
-  ROLE_NAME,
-  STATUS_EMOJI,
-  STATUS_LABELS,
-  errorText,
-} from './labels';
+import { ROLE_CATEGORIES, ROLE_EMOJI, ROLE_NAME, STATUS_LABELS, errorText } from './labels';
 import type { CharacterOption, Entry, SignupInput, SignupStatus } from './signupApi';
 import { Select } from '../Select';
+import { StatusIcon } from './StatusIcon';
 
 /** A character with no roles set could play any of them. */
 const plays = (character: CharacterOption, role: Role): boolean =>
@@ -118,7 +112,7 @@ export function SignupEditor({
             className={status === value ? 'signup-status signup-status-active' : 'signup-status'}
             onClick={() => setStatus(value)}
           >
-            {STATUS_EMOJI[value]} {STATUS_LABELS[value]}
+            <StatusIcon status={value} /> {STATUS_LABELS[value]}
           </button>
         ))}
       </div>

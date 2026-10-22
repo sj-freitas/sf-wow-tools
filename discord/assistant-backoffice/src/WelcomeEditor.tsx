@@ -53,9 +53,7 @@ export function WelcomeEditor({ guildId, guildName, initial, onSaved, onCancel }
           <button type="button" className="btn btn-sm" onClick={() => setPreview((p) => !p)}>
             {preview ? 'Hide preview' : 'Preview'}
           </button>
-          <span className="muted">
-            Headings, **bold**, lists, links, tables and more. Everyone in the guild sees it.
-          </span>
+          <span className="muted">Headings, **bold**, lists, links, tables and more.</span>
         </div>
         {preview &&
           (text.trim() === '' ? (

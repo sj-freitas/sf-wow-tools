@@ -145,6 +145,7 @@ export interface SignupEvent {
   /** Why the last attempt to post it failed (it's tried again each minute). */
   publishError: string | null;
   createdByName: string;
+  createdByDiscordId: string;
   isOwner: boolean;
   channel: { serverId: string; channelId: string };
   postUrl: string | null;

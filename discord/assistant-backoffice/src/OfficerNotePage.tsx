@@ -1,4 +1,5 @@
 import { useEffect, useState, type DragEvent, type FormEvent } from 'react';
+import { LockIcon } from './Icons';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   deleteOfficerNoteImage,
@@ -112,7 +113,7 @@ export function OfficerNotePage({ guild }: { guild: Guild }) {
             {note.characterName}
           </h2>
           <span className="muted">
-            🔒 Officer note: only the guild’s Officers can see this, never the player.
+            <LockIcon /> Officer note: only the guild’s Officers can see this, never the player.
             {note.updatedAt &&
               ` Last saved ${timeAgo(note.updatedAt)}${note.updatedByName ? ` by ${note.updatedByName}` : ''}.`}
           </span>

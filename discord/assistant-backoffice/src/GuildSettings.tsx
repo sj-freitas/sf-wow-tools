@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
+import { Help } from './Help';
 import {
   addGuildServer,
   bannerUrl,
@@ -202,11 +203,13 @@ function ServersSection({ guild, run }: SectionProps) {
 
   return (
     <section className="settings-section">
-      <h4>Discord servers</h4>
-      <p className="muted">
-        The guild keeps at least one server. The <strong>main</strong> server is where the Officer
-        role is looked up.
-      </p>
+      <h4 className="field-label">
+        Discord servers
+        <Help>
+          The guild keeps at least one server. The <strong>main</strong> server is where the Officer
+          role is looked up.
+        </Help>
+      </h4>
       <ul className="settings-list">
         {guild.servers.map((server) => (
           <li key={server.discordId}>
@@ -285,11 +288,13 @@ function RolesSection({ guild, run }: SectionProps) {
 
   return (
     <section className="settings-section">
-      <h4>Discord roles</h4>
-      <p className="muted">
-        Roles of the main server ({mainServer?.name ?? 'none'}) that stand for guild roles. Changes
-        to the Officer role reach officers within a few minutes.
-      </p>
+      <h4 className="field-label">
+        Discord roles
+        <Help>
+          Roles of the main server ({mainServer?.name ?? 'none'}) that stand for guild roles.
+          Changes take a few minutes to apply.
+        </Help>
+      </h4>
       {loadError ? (
         <p className="status-error">{loadError}</p>
       ) : (
@@ -342,8 +347,10 @@ function RoleRow({ title, hint, current, options, editable, onSave }: RoleRowPro
   return (
     <div className="role-row">
       <div>
-        <strong>{title}</strong>
-        <div className="muted">{hint}</div>
+        <strong className="field-label">
+          {title}
+          <Help>{hint}</Help>
+        </strong>
       </div>
       {editable ? (
         <div className="inline-form">
@@ -393,13 +400,13 @@ function RequestChannelSection({ guild, run }: SectionProps) {
 
   return (
     <section className="settings-section">
-      <h4>Officer Request Channel</h4>
-      <p className="muted">
-        Members write to the officers with <code>/contact-officer</code>, and their messages are
-        posted here. Pick a channel only officers can see. The bot needs to see it and be allowed to
-        send messages and embeds there; it posts a short note when you save. Until a channel is set,
-        the command tells members to contact an officer.
-      </p>
+      <h4 className="field-label">
+        Officer Request Channel
+        <Help>
+          Where members' <code>/contact-officer</code> messages are posted. Pick a channel only
+          officers can see; the bot needs to send messages and embeds there.
+        </Help>
+      </h4>
       <p>
         Current channel:{' '}
         <strong>
@@ -461,11 +468,13 @@ function BannerSection({ guild, run }: SectionProps) {
 
   return (
     <section className="settings-section">
-      <h4>Banner</h4>
-      <p className="muted">
-        An optional wide image shown at the top of the guild, above its name. PNG, JPEG, GIF or
-        WebP, up to {MAX_BANNER_MB} MB; wide images (about 4:1) look best.
-      </p>
+      <h4 className="field-label">
+        Banner
+        <Help>
+          Optional, shown at the top of the guild. PNG, JPEG, GIF or WebP, up to {MAX_BANNER_MB} MB;
+          about 4:1 looks best.
+        </Help>
+      </h4>
       {guild.bannerVersion !== null && (
         <img className="guild-banner banner-preview" src={bannerUrl(guild)} alt="Current banner" />
       )}
@@ -515,10 +524,10 @@ function WelcomeSection({ guild }: { guild: Guild }) {
 
   return (
     <section className="settings-section">
-      <h4>Welcome post</h4>
-      <p className="muted">
-        Shown on the guild's home page to everyone in the guild. It is optional.
-      </p>
+      <h4 className="field-label">
+        Welcome post
+        <Help>Optional. Shown on the guild's home page to everyone in the guild.</Help>
+      </h4>
       {!guild.isOfficer ? (
         <p className="muted">Only Officers can write the welcome post.</p>
       ) : error ? (

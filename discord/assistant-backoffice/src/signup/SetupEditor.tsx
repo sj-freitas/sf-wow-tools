@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useRef, useState, type DragEvent, type ReactNode } from 'react';
+import { Help } from '../Help';
 import type { Guild } from '../types';
 import { useConfirm } from '../useConfirm';
 import { InlineSpinner } from '../Loading';
 import { ClassMark } from '../ClassMark';
 import { MultiSelect } from '../MultiSelect';
 import { RoleMark } from '../RoleMark';
-import { ROLE_CATEGORIES, STATUS_EMOJI, entryName, errorText, formatEventTime } from './labels';
+import { ROLE_CATEGORIES, entryName, errorText, formatEventTime } from './labels';
+import { StatusIcon } from './StatusIcon';
 import { toAddonSetup, type AddonExport } from './addonExport';
 import { AddonExportDialog } from './AddonExportDialog';
 import {
@@ -365,7 +367,9 @@ export function SetupEditor({
         <RoleMark gameVersion={guild.gameVersion} role="MASTER_LOOTER" />
       )}
       {entry.status !== 'AVAILABLE' && (
-        <span title={entry.status.toLowerCase()}>{STATUS_EMOJI[entry.status]}</span>
+        <span title={entry.status.toLowerCase()}>
+          <StatusIcon status={entry.status} />
+        </span>
       )}
     </button>
   );
@@ -375,11 +379,11 @@ export function SetupEditor({
       {dialog}
       {exported && <AddonExportDialog exported={exported} onClose={() => setExported(null)} />}
       <div className="tasks-head">
-        <span className="muted">
+        <Help>
           Drag people in from the bench, or tap someone and then a place
           {event.layout.hasRaidRoles && '; tapping someone also lets you set their raid roles'}.
           Changes save by themselves and show for everyone with this event open.
-        </span>
+        </Help>
         <div className="settings-actions">
           <button type="button" className="btn btn-sm" onClick={fill} disabled={bench.length === 0}>
             Fill from the bench
@@ -417,7 +421,13 @@ export function SetupEditor({
       {/* Raid roles: not on members events. */}
       {event.layout.hasRaidRoles && (
         <div className="task-card setup-roles">
-          <strong>Lead and loot</strong>
+          <strong className="field-label">
+            Lead and loot
+            <Help>
+              Shown after their names in the setup. Officers get assist when they sign up; the
+              leader never has it, as leading covers it.
+            </Help>
+          </strong>
           <div className="form-grid">
             <label className="field">
               <span>
@@ -464,10 +474,6 @@ export function SetupEditor({
               />
             </div>
           </div>
-          <small className="muted">
-            Shown after their names in the setup. Officers get assist when they sign up; the leader
-            never has it, as leading covers it. They save by themselves, like the groups.
-          </small>
         </div>
       )}
 

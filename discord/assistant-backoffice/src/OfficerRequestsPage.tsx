@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { Help } from './Help';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { subscribeEvents } from './events';
 import {
@@ -120,11 +121,13 @@ export function OfficerRequestsPage({ guild, timezone }: Props) {
       {dialog}
       <div className="tasks-head">
         <div>
-          <h3>Officer requests</h3>
-          <span className="muted">
-            Messages members sent with /contact-officer. Reply here, or in Discord with
-            /contact-officer-reply.
-          </span>
+          <h3 className="field-label">
+            Officer requests
+            <Help>
+              Messages members sent with <code>/contact-officer</code>. Reply here, or in Discord
+              with <code>/contact-officer-reply</code>.
+            </Help>
+          </h3>
         </div>
       </div>
 

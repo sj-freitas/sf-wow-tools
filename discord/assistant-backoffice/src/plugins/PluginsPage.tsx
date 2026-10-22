@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { Help } from '../Help';
 import { Drawer } from '../Drawer';
 import { Link } from 'react-router-dom';
 import { guildPath } from '../guildPath';
@@ -112,10 +113,10 @@ export function PluginsPage({ guild, timezone }: Props) {
       })()}
       <div className="tasks-head">
         <div>
-          <h3>Plugins</h3>
-          <span className="muted">
-            Features that run on their own, on a schedule. Times are in {timezone}.
-          </span>
+          <h3 className="field-label">
+            Plugins
+            <Help>Features that run on their own, on a schedule.</Help>
+          </h3>
         </div>
       </div>
 
