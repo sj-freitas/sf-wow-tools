@@ -4,7 +4,6 @@ import { DiscordMarkdown } from '../DiscordMarkdown';
 import { subscribeEvents } from '../events';
 import { guildPath } from '../guildPath';
 import { SkeletonLines } from '../Loading';
-import { showToast } from '../toast';
 import type { Guild } from '../types';
 import { useConfirm } from '../useConfirm';
 import { AssignmentsTab } from './AssignmentsTab';
@@ -38,18 +37,11 @@ const NO_NAMES = { users: new Map(), roles: new Map(), channels: new Map() };
 
 /**
  * `/signup/:eventId`: one event, with its tabs. Updates live as people sign up in Discord. Its
- * organisers edit its details right there (Edit swaps them for the form); `/signup/:eventId/edit`
- * opens it that way.
+ * organisers see its details as a form they edit right there (saved with Save, enabled once
+ * something changed); everyone else, and an archived event, sees them read-only.
  */
-export function EventPage({
-  guild,
-  startEditing = false,
-}: {
-  guild: Guild;
-  startEditing?: boolean;
-}) {
+export function EventPage({ guild }: { guild: Guild }) {
   const { eventId = '' } = useParams();
-  const [editing, setEditing] = useState(startEditing);
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const [event, setEvent] = useState<SignupEvent | null>(null);
@@ -57,11 +49,6 @@ export function EventPage({
   const [busy, setBusy] = useState(false);
   const { confirm, dialog } = useConfirm();
   const [drawer, setDrawer] = useState<DrawerTarget | null>(null);
-  // Done editing: the details again, at the event's own address (not `/edit`).
-  const stopEditing = () => {
-    setEditing(false);
-    if (startEditing) navigate(guildPath(guild, `signup/${eventId}`), { replace: true });
-  };
 
   const load = useCallback(
     () =>
@@ -133,6 +120,71 @@ export function EventPage({
       : event.lockMode === 'LOCKED'
         ? 'Locked by hand'
         : 'Unlocked by hand';
+  // Lock, unlock and archive: in the form's row, next to Save.
+  const manageButtons = (
+    <>
+      {event.lockMode !== 'LOCKED' && (
+        <button
+          type="button"
+          className="btn btn-sm"
+          disabled={busy}
+          onClick={() => act(() => setEventLock(guild.id, event.id, 'LOCKED'))}
+        >
+          Lock
+        </button>
+      )}
+      {event.closed && (
+        <button
+          type="button"
+          className="btn btn-sm"
+          disabled={busy}
+          onClick={() => act(() => setEventLock(guild.id, event.id, 'UNLOCKED'))}
+        >
+          Unlock
+        </button>
+      )}
+      {event.lockMode !== 'AUTO' && (
+        <button
+          type="button"
+          className="btn btn-sm"
+          disabled={busy}
+          title="Open until the event starts, closed after"
+          onClick={() => act(() => setEventLock(guild.id, event.id, 'AUTO'))}
+        >
+          Lock automatically
+        </button>
+      )}
+      <button
+        type="button"
+        className="btn btn-sm btn-danger"
+        disabled={busy}
+        onClick={() =>
+          void confirm({
+            title: 'Archive this event?',
+            message:
+              'The bot removes its post, raid setup and assignments from Discord. The event, its sign-ups, setup and assignments are kept under Archived, where it can be restored.',
+            confirmLabel: 'Archive event',
+            danger: true,
+          }).then((ok) => ok && act(() => archiveEvent(guild.id, event.id)))
+        }
+      >
+        Archive event
+      </button>
+    </>
+  );
+  const byLine = (
+    <>
+      By {event.createdByName} · {lockLabel}
+      {event.postUrl ? (
+        <>
+          {' · '}
+          <a href={event.postUrl} target="_blank" rel="noreferrer">
+            Open in Discord
+          </a>
+        </>
+      ) : null}
+    </>
+  );
 
   return (
     <div className="signup-event">
@@ -141,25 +193,25 @@ export function EventPage({
         <Link className="back-link" to={guildPath(guild, 'signup')}>
           ← Events
         </Link>
-        {editing && event.permissions.canManage && !archived ? (
-          <EventFormPage
-            guild={guild}
-            serverTimezone={event.serverTimezone}
-            eventId={event.id}
-            onSaved={() => {
-              stopEditing();
-              void load();
-            }}
-            onCancel={stopEditing}
-          />
+        <div className="signup-event-title">
+          <h3>{event.title}</h3>
+          <span className={event.closed ? 'badge' : 'badge badge-main'}>
+            {event.publishAt ? '🕒 Scheduled' : event.closed ? '🔒 Closed' : 'Open'}
+          </span>
+        </div>
+        {event.permissions.canManage && !archived ? (
+          <>
+            <p className="muted">{byLine}</p>
+            <EventFormPage
+              guild={guild}
+              serverTimezone={event.serverTimezone}
+              eventId={event.id}
+              onSaved={() => void load()}
+              actions={manageButtons}
+            />
+          </>
         ) : (
           <>
-            <div className="signup-event-title">
-              <h3>{event.title}</h3>
-              <span className={event.closed ? 'badge' : 'badge badge-main'}>
-                {event.publishAt ? '🕒 Scheduled' : event.closed ? '🔒 Closed' : 'Open'}
-              </span>
-            </div>
             {event.location && <p className="signup-when">📍 {event.location}</p>}
             <p className="signup-when">
               🗓️ {formatEventTime(event.startsAt, event.timezone)}{' '}
@@ -172,35 +224,7 @@ export function EventPage({
               )}
             </p>
             {event.inviteTime && <p className="signup-when">📨 Invites from {event.inviteTime}</p>}
-            <p className="muted">
-              By {event.createdByName} · {lockLabel}
-              {event.postUrl ? (
-                <>
-                  {' · '}
-                  <a href={event.postUrl} target="_blank" rel="noreferrer">
-                    Open in Discord
-                  </a>
-                </>
-              ) : null}
-              {event.discordPostId && (
-                <>
-                  {' · '}
-                  <button
-                    type="button"
-                    className="link-button"
-                    title="The Discord post's id: find the event by it, even once archived"
-                    onClick={() =>
-                      void navigator.clipboard
-                        .writeText(event.discordPostId!)
-                        .then(() => showToast('Discord post id copied'))
-                        .catch(() => showToast('Couldn’t copy the id'))
-                    }
-                  >
-                    Post id {event.discordPostId}
-                  </button>
-                </>
-              )}
-            </p>
+            <p className="muted">{byLine}</p>
             {event.description && (
               <div className="signup-description">
                 <DiscordMarkdown text={event.description} names={NO_NAMES} />
@@ -278,62 +302,7 @@ export function EventPage({
                 Delete for good
               </button>
             </div>
-          ) : (
-            <div className="settings-actions">
-              {!editing && (
-                <button type="button" className="btn btn-sm" onClick={() => setEditing(true)}>
-                  Edit
-                </button>
-              )}
-              {event.lockMode !== 'LOCKED' && (
-                <button
-                  type="button"
-                  className="btn btn-sm"
-                  disabled={busy}
-                  onClick={() => act(() => setEventLock(guild.id, event.id, 'LOCKED'))}
-                >
-                  Lock
-                </button>
-              )}
-              {event.closed && (
-                <button
-                  type="button"
-                  className="btn btn-sm"
-                  disabled={busy}
-                  onClick={() => act(() => setEventLock(guild.id, event.id, 'UNLOCKED'))}
-                >
-                  Unlock
-                </button>
-              )}
-              {event.lockMode !== 'AUTO' && (
-                <button
-                  type="button"
-                  className="btn btn-sm"
-                  disabled={busy}
-                  title="Open until the event starts, closed after"
-                  onClick={() => act(() => setEventLock(guild.id, event.id, 'AUTO'))}
-                >
-                  Lock automatically
-                </button>
-              )}
-              <button
-                type="button"
-                className="btn btn-sm btn-danger"
-                disabled={busy}
-                onClick={() =>
-                  void confirm({
-                    title: 'Archive this event?',
-                    message:
-                      'The bot removes its post, raid setup and assignments from Discord. The event, its sign-ups, setup and assignments are kept under Archived, where it can be restored.',
-                    confirmLabel: 'Archive event',
-                    danger: true,
-                  }).then((ok) => ok && act(() => archiveEvent(guild.id, event.id)))
-                }
-              >
-                Archive event
-              </button>
-            </div>
-          ))}
+          ) : null)}
         {error && <p className="status-error">{error}</p>}
       </div>
 

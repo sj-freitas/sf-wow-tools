@@ -1,4 +1,5 @@
 import { EVENT_KIND_LABELS, type EventKind } from './signupApi';
+import { Help } from '../Help';
 import { Select } from '../Select';
 
 export const MAX_TITLE = 100;
@@ -27,12 +28,13 @@ export function EventTextFields({
     <>
       {showKind && (
         <label className="field field-wide">
-          Type
+          <span className="field-label">
+            Type <Help>Can’t be changed later.</Help>
+          </span>
           <Select value={value.kind} onChange={(v) => set({ kind: v as EventKind })}>
             <option value="CHARACTERS">{EVENT_KIND_LABELS.CHARACTERS}</option>
             <option value="MEMBERS">{EVENT_KIND_LABELS.MEMBERS}</option>
           </Select>
-          <small>Can’t be changed later.</small>
         </label>
       )}
       <label className="field field-wide">

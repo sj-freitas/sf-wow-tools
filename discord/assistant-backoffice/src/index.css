@@ -590,7 +590,56 @@ tbody tr:last-child td {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin-top: 1.25rem;
+  margin-top: 1rem;
+}
+
+/* A field's label with its (?) help next to it (Help.tsx). */
+.field-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.help {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 1rem;
+  height: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1;
+  cursor: help;
+  user-select: none;
+}
+.help:hover,
+.help:focus-visible,
+.help-open {
+  color: var(--text);
+  border-color: var(--muted);
+}
+.help-text {
+  display: none;
+  /* Where: set by Help.tsx, under the (?) and inside the screen. */
+  position: fixed;
+  z-index: 20;
+  box-sizing: border-box;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 0.8rem;
+  font-weight: 400;
+  line-height: 1.4;
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.25);
+  cursor: default;
+}
+.help:hover .help-text,
+.help-open .help-text {
+  display: block;
 }
 
 .status {

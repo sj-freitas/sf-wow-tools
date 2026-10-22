@@ -13,7 +13,7 @@ import './signup.css';
  *   /signup/create           new event                      Officers and EventCreators
  *   /signup/:eventId         the event: sign-ups (?tab=signups), raid setup (?tab=setup),
  *                            assignments (?tab=assignments), who hasn't answered (?tab=missing)
- *   /signup/:eventId/edit    edit it                        its owner and Officers
+ *   /signup/:eventId/edit    the same (older links): the event's page has the form
  */
 export function SignupRoutes({ guild, timezone }: { guild: Guild; timezone: string }) {
   return (
@@ -21,8 +21,8 @@ export function SignupRoutes({ guild, timezone }: { guild: Guild; timezone: stri
       <Route index element={<EventsPage guild={guild} timezone={timezone} />} />
       <Route path="create" element={<EventFormPage guild={guild} serverTimezone={timezone} />} />
       <Route path=":eventId" element={<EventPage guild={guild} />} />
-      {/* Editing happens on the event's page; this address opens it with the form open. */}
-      <Route path=":eventId/edit" element={<EventPage guild={guild} startEditing />} />
+      {/* Editing happens on the event's page, always open for its organisers. */}
+      <Route path=":eventId/edit" element={<EventPage guild={guild} />} />
       <Route path="*" element={<Navigate to={guildPath(guild, 'signup')} replace />} />
     </Routes>
   );

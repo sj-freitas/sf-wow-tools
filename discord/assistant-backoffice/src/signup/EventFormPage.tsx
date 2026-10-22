@@ -1,8 +1,9 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { channelKey, splitChannelKey } from '../channelKey';
 import { ChannelSelect } from '../ChannelSelect';
 import { guildPath } from '../guildPath';
+import { Help } from '../Help';
 import { InlineSpinner, Spinner } from '../Loading';
 import type { Guild } from '../types';
 import { useChannels } from '../useChannels';
@@ -18,22 +19,24 @@ import {
 } from './signupApi';
 
 /**
- * `/signup/create`, and editing an event inside its page (`EventPage`, with `eventId`, `onSaved`
- * and `onCancel`). The channel is only chosen when creating.
+ * `/signup/create`, and editing an event inside its page (`EventPage`, with `eventId` and
+ * `onSaved`): there it is always open, and Save is enabled once something changed. The channel is
+ * only chosen when creating.
  */
 export function EventFormPage({
   guild,
   serverTimezone,
   eventId: editedId,
   onSaved,
-  onCancel,
+  actions,
 }: {
   guild: Guild;
   serverTimezone: string;
-  /** Editing this event, inside its page: saving and cancelling go back to its details. */
+  /** Editing this event, inside its page: `onSaved` after each save. */
   eventId?: string;
   onSaved?: () => void;
-  onCancel?: () => void;
+  /** More buttons for the row of Save (the event's Lock and Archive). */
+  actions?: ReactNode;
 }) {
   const params = useParams();
   const eventId = editedId ?? params.eventId;
@@ -62,6 +65,19 @@ export function EventFormPage({
   const [publishTime, setPublishTime] = useState('18:00');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Editing: the values as last loaded or saved, so Save is only enabled once something changed.
+  const values = JSON.stringify([
+    text,
+    date,
+    time,
+    inviteTime,
+    timezone,
+    postLater,
+    publishDate,
+    publishTime,
+  ]);
+  const [savedValues, setSavedValues] = useState<string | null>(null);
+  const changed = !editing || (savedValues !== null && values !== savedValues);
 
   useEffect(() => {
     fetchSignupSettings(guild.id)
@@ -95,9 +111,18 @@ export function EventFormPage({
           setCanSchedule(false);
         }
         setLoaded(true);
+        setBaseline(true);
       })
       .catch((err: unknown) => setError(errorText(err)));
   }, [guild.id, eventId]);
+
+  // Once the loaded values are in state, they are what "unchanged" means.
+  const [baseline, setBaseline] = useState(false);
+  useEffect(() => {
+    if (!baseline) return;
+    setBaseline(false);
+    setSavedValues(values);
+  }, [baseline, values]);
 
   const back = guildPath(guild, editing ? `signup/${eventId}` : 'signup');
 
@@ -121,7 +146,12 @@ export function EventFormPage({
       ? updateEvent(guild.id, eventId, form).then(() => eventId)
       : createEvent(guild.id, form).then((created) => created.id);
     saved
-      .then((id) => (onSaved ? onSaved() : navigate(guildPath(guild, `signup/${id}`))))
+      .then((id) => {
+        if (!onSaved) return navigate(guildPath(guild, `signup/${id}`));
+        setSaving(false);
+        setSavedValues(values);
+        onSaved();
+      })
       .catch((err: unknown) => {
         setError(errorText(err));
         setSaving(false);
@@ -137,7 +167,7 @@ export function EventFormPage({
           ← {editing ? 'Back to the event' : 'Events'}
         </Link>
       )}
-      <h3>{editing ? 'Edit event' : 'New event'}</h3>
+      {!embedded && <h3>{editing ? 'Edit event' : 'New event'}</h3>}
       <div className="form-grid">
         <EventTextFields value={text} onChange={setText} showKind={!editing} />
         <label className="field">
@@ -150,16 +180,25 @@ export function EventFormPage({
         </label>
         <TimezoneField value={timezone} onChange={setTimezone} serverTimezone={serverTimezone} />
         <label className="field">
-          Invites start
+          <span className="field-label">
+            Invites start (optional)
+            <Help>
+              Before the event, e.g. 15 minutes; shown on the post, and GuildAssistant RaidSort can
+              invite from then.
+            </Help>
+          </span>
           <input type="time" value={inviteTime} onChange={(e) => setInviteTime(e.target.value)} />
-          <small className="muted">
-            Optional. Before the event, e.g. 15 minutes; shown on the post, and GuildAssistant
-            RaidSort can invite from then.
-          </small>
         </label>
         {canSchedule && (
           <fieldset className="field field-wide signup-post-when">
-            <legend>Post</legend>
+            <legend className="field-label">
+              Post
+              <Help>
+                {postLater
+                  ? 'Saved now and posted then, in the same timezone as the event. Until then only organisers see it, and you can keep editing it and prepare its setup and assignments.'
+                  : 'Posted in Discord as soon as you create it.'}
+              </Help>
+            </legend>
             <label className="field-toggle">
               <input
                 type="radio"
@@ -198,11 +237,6 @@ export function EventFormPage({
                 />
               </div>
             )}
-            <small>
-              {postLater
-                ? 'Saved now and posted then, in the same timezone as the event. Until then only organisers see it, and you can keep editing it and prepare its setup and assignments.'
-                : 'Posted in Discord as soon as you create it.'}
-            </small>
           </fieldset>
         )}
         {!editing && (
@@ -211,7 +245,11 @@ export function EventFormPage({
       </div>
       {error && <p className="status-error">{error}</p>}
       <div className="form-actions">
-        <button type="submit" className="btn btn-primary" disabled={saving}>
+        <button
+          type="submit"
+          className={embedded ? 'btn btn-sm btn-primary' : 'btn btn-primary'}
+          disabled={saving || !changed}
+        >
           {saving ? (
             <InlineSpinner label={editing ? 'Saving…' : 'Posting…'} />
           ) : editing ? (
@@ -222,15 +260,12 @@ export function EventFormPage({
             'Create and post'
           )}
         </button>
-        {onCancel ? (
-          <button type="button" className="btn" onClick={onCancel}>
-            Cancel
-          </button>
-        ) : (
+        {!embedded && (
           <Link className="btn" to={back}>
             Cancel
           </Link>
         )}
+        {actions}
       </div>
     </form>
   );
@@ -252,7 +287,9 @@ function ChannelField({
   if (settings.isOfficer) {
     return (
       <label className="field">
-        Channel
+        <span className="field-label">
+          Channel <Help>Defaults to the event channel.</Help>
+        </span>
         <ChannelSelect
           groups={channels}
           value={value}
@@ -260,7 +297,6 @@ function ChannelField({
           required
           check={{ guildId: guild.id, use: 'post' }}
         />
-        <small>Defaults to the event channel.</small>
       </label>
     );
   }
