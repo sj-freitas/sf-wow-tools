@@ -1129,6 +1129,12 @@ tbody tr:last-child td {
   font-size: 0.95em;
   line-height: 1;
 }
+/* The count: a little smaller than the emoji, like Discord's. */
+.reaction-button strong {
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
 .reaction-list .md-emoji {
   width: 1.1em;
   height: 1.1em;
