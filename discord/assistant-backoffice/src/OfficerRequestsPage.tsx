@@ -166,18 +166,20 @@ export function OfficerRequestsPage({ guild, timezone }: Props) {
         data.items.map((item) => (
           <div key={item.publicId} className="task-card conversation-card">
             <Link
-              className="conversation-link"
+              className="conversation-link card-info"
               to={guildPath(guild, `officer-requests/${item.publicId}`)}
               state={{ from: here }}
             >
-              <strong>#{item.publicId}</strong>{' '}
-              <span className="badge">{item.isAnonymous ? 'Anonymous' : item.requesterName}</span>{' '}
-              {item.locked && <span className="badge">Locked</span>}{' '}
-              {item.awaitingReply && !item.locked && (
-                <span className="badge badge-live">Awaiting reply</span>
-              )}
+              <span className="card-head">
+                <strong className="card-name">#{item.publicId}</strong>
+                <span className="badge">{item.isAnonymous ? 'Anonymous' : item.requesterName}</span>
+                {item.locked && <span className="badge">Locked</span>}
+                {item.awaitingReply && !item.locked && (
+                  <span className="badge badge-live">Awaiting reply</span>
+                )}
+              </span>
               <div className="post-snippet">{item.preview}</div>
-              <div className="muted">
+              <div className="muted card-meta">
                 {item.messageCount} message{item.messageCount === 1 ? '' : 's'} · last activity{' '}
                 {formatWhen(item.lastActivityAt, timezone)} ({timeAgo(item.lastActivityAt)})
               </div>

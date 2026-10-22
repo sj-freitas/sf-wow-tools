@@ -73,13 +73,15 @@ export function HoneypotsPage({ guild, timezone }: Props) {
       ) : (
         honeypots.map((honeypot) => (
           <div key={honeypot.id} className="task-card">
-            <div>
-              <strong>{honeypot.name}</strong>{' '}
-              <span className={honeypot.testMode ? 'badge' : 'badge badge-live'}>
-                {honeypot.testMode ? 'Test mode' : 'Live'}
-              </span>{' '}
-              {!honeypot.enabled && <span className="badge">Paused</span>}
-              <div className="muted">
+            <div className="card-info">
+              <div className="card-head">
+                <strong className="card-name">{honeypot.name}</strong>
+                <span className={honeypot.testMode ? 'badge' : 'badge badge-live'}>
+                  {honeypot.testMode ? 'Test mode' : 'Live'}
+                </span>
+                {!honeypot.enabled && <span className="badge">Paused</span>}
+              </div>
+              <div className="muted card-meta">
                 #{channelName(honeypot.serverId, honeypot.channelId) ?? honeypot.channelId}
                 {honeypot.createdChannel ? ' (created by the bot)' : ''} · logs to #
                 {channelName(honeypot.serverId, honeypot.logChannelId) ??

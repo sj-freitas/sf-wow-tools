@@ -154,13 +154,16 @@ export function PluginsPage({ guild, timezone }: Props) {
       ) : (
         plugins.map((plugin) => (
           <div key={plugin.id} className="task-card">
-            <div>
-              <strong>{plugin.name}</strong> <span className="badge">{plugin.kindLabel}</span>{' '}
-              {!plugin.enabled && <span className="badge">Paused</span>}
-              <div className="muted">
+            <div className="card-info">
+              <div className="card-head">
+                <strong className="card-name">{plugin.name}</strong>
+                <span className="badge">{plugin.kindLabel}</span>
+                {!plugin.enabled && <span className="badge">Paused</span>}
+              </div>
+              <div className="muted card-meta">
                 {channelOf(plugin)} · {plugin.scheduleText} · {describe(plugin).summary}
               </div>
-              <div className="muted">
+              <div className="muted card-meta">
                 {plugin.enabled
                   ? `Next run: ${formatWhen(plugin.nextRunAt, timezone)}`
                   : 'Paused: it won’t run until resumed.'}

@@ -213,20 +213,22 @@ export function PostsPage({ guild, timezone }: Props) {
       ) : (
         data.items.map((post) => (
           <div key={post.id} className="task-card">
-            <div>
-              <strong>{post.name}</strong>{' '}
-              <span
-                className={
-                  isLive(post)
-                    ? 'badge badge-main'
-                    : post.lastStatus === 'FAILED' && !post.nextRunAt
-                      ? 'badge badge-live'
-                      : 'badge'
-                }
-              >
-                {statusLabel(post)}
-              </span>
-              <div className="muted">
+            <div className="card-info">
+              <div className="card-head">
+                <strong className="card-name">{post.name}</strong>
+                <span
+                  className={
+                    isLive(post)
+                      ? 'badge badge-main'
+                      : post.lastStatus === 'FAILED' && !post.nextRunAt
+                        ? 'badge badge-live'
+                        : 'badge'
+                  }
+                >
+                  {statusLabel(post)}
+                </span>
+              </div>
+              <div className="muted card-meta">
                 #{channelName(post.post.serverId, post.post.channelId) ?? post.post.channelId} ·{' '}
                 {isLive(post) ? (
                   <>

@@ -1023,6 +1023,17 @@ tbody tr:last-child td {
   justify-content: space-between;
   gap: 0.75rem;
 }
+/* A page's heading and the line under it, spaced like a card's name and details. */
+.tasks-head > div:first-child {
+  display: grid;
+  gap: 0.3rem;
+}
+.tasks-head > div:first-child > :is(h2, h3, p) {
+  margin: 0;
+}
+.tasks-head > div:first-child > .muted {
+  font-size: 0.85rem;
+}
 .tasks-section {
   margin: 0.5rem 0 0;
   color: var(--muted);
@@ -1095,7 +1106,7 @@ tbody tr:last-child td {
 .reaction-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.4rem;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -1104,13 +1115,20 @@ tbody tr:last-child td {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0.25rem 0.6rem;
+  padding: 0.1rem 0.5rem;
   border: 1px solid var(--border);
   border-radius: 999px;
   background: var(--surface);
+  font-size: 0.8rem;
 }
+/* The emoji a touch smaller than the count beside it, Discord-like. */
 .reaction-emoji {
-  font-size: 1.2rem;
+  font-size: 0.95em;
+  line-height: 1;
+}
+.reaction-list .md-emoji {
+  width: 1.1em;
+  height: 1.1em;
 }
 .honeypot-events {
   margin: 0;
@@ -1317,8 +1335,27 @@ tbody tr:last-child td {
   font: inherit;
   font-size: 0.9rem;
 }
+/* A card's text (posts, honeypots, plugins, officer requests; events have their own, alike): the
+   name and its badges on one line, then small lines of details, evenly spaced. */
+.card-info {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+}
+.card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+.card-name {
+  font-size: 1rem;
+  font-weight: 600;
+}
+.card-meta {
+  font-size: 0.85rem;
+}
 .post-snippet {
-  margin-top: 0.15rem;
   color: var(--text);
   font-size: 0.85rem;
   opacity: 0.8;
@@ -1331,6 +1368,7 @@ tbody tr:last-child td {
   justify-content: space-between;
   gap: 0.75rem;
   padding-top: 0.5rem;
+  font-size: 0.85rem;
 }
 .pager .settings-actions {
   align-items: center;
@@ -1840,6 +1878,14 @@ a.btn {
   display: grid;
   gap: 0.3rem;
   min-width: 0;
+}
+/* Like the other cards (.card-info): the name, then small detail lines. */
+.guild-card-text strong {
+  font-size: 1rem;
+  font-weight: 600;
+}
+.guild-card-text .muted {
+  font-size: 0.85rem;
 }
 
 .reply-form {
