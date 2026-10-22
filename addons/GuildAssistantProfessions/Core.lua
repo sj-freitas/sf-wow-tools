@@ -1,4 +1,4 @@
--- Guild Assistant Professions: everything that doesn't touch the game. Keeps what each character
+-- GuildAssistant Professions: everything that doesn't touch the game. Keeps what each character
 -- knows (professions, skill, recipes): the account's own, and others' seen through a profession
 -- link. Turns it into the JSON Guild Assistant imports. Kept apart from the game API so it can be tested outside WoW
 -- (addons/dev/GuildAssistantProfessions).

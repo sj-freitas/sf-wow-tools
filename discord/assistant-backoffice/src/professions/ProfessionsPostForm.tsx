@@ -69,7 +69,7 @@ export function ProfessionsPostForm({
       {dialog}
       <PluginFormFrame
         title={editing ? `Edit ${editing.name}` : 'New Professions List'}
-        intro="Posts what the guild can craft and who, from the Guild Assistant Professions addon, over as many messages as it takes. When the list changes it deletes its messages and posts it again; nothing else in the channel is touched."
+        intro="Posts what the guild can craft and who, from the GuildAssistant Professions addon, over as many messages as it takes. When the list changes it deletes its messages and posts it again; nothing else in the channel is touched."
         back={back}
         busy={busy}
         error={error}

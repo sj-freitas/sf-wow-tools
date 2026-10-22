@@ -139,7 +139,7 @@ export class SignupMcpTools implements OnModuleInit {
             .string()
             .optional()
             .describe(
-              'HH:mm: when raid invites start, before the event (the day before if later than its time). Shown on the post; Raid Sort can invite from then',
+              'HH:mm: when raid invites start, before the event (the day before if later than its time). Shown on the post; GuildAssistant RaidSort can invite from then',
             ),
           description: z
             .string()

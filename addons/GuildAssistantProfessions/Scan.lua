@@ -1,4 +1,4 @@
--- Guild Assistant Professions: reading the game. At login (and when skills change) the character's
+-- GuildAssistant Professions: reading the game. At login (and when skills change) the character's
 -- professions and skill are read; recipes can only be read while a profession's window is open, so
 -- they are recorded each time one opens: the character's own, and someone else's opened from a
 -- profession link (recorded under their name, as "link"). Two APIs: Classic Era's (skill list, trade skill and craft
@@ -24,7 +24,7 @@ function ns.now()
 end
 
 function Scan.say(text, ...)
-    print("|cff7c5cffGuild Assistant Professions|r: " .. text:format(...))
+    print("|cff7c5cffGuildAssistant Professions|r: " .. text:format(...))
 end
 
 --- This character's saved entry (with its guild: only characters of the same guild are shared).
@@ -102,7 +102,7 @@ function Scan.skills()
     end
     local changed, dropped = Core.setProfessions(Scan.current(), skills, ns.now())
     for _, name in ipairs(dropped) do
-        Scan.say("%s was unlearned: dropped from what is saved. Type /ga-prof log to write it to the file.", name)
+        Scan.say("%s was unlearned: dropped from what is saved. Type /ga-prof save to write it to the file (it reloads the screen).", name)
     end
     return changed
 end
@@ -128,7 +128,7 @@ local function record(character, professionName, rank, max, recipes, replace)
         local count = 0
         for _ in pairs(character.professions[professionName].recipes) do count = count + 1 end
         local whose = character.source == "link" and (" of %s (from their link)"):format(character.name) or ""
-        Scan.say("recorded %s%s: %d recipes. Type /ga-prof log to write it to the file.",
+        Scan.say("recorded %s%s: %d recipes. Type /ga-prof save to write it to the file (it reloads the screen).",
             professionName, whose, count)
     end
     return changed

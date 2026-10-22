@@ -54,7 +54,9 @@ CurseForge project and its id is in the `.toc`.
    - the CurseForge page link (table above) and the link to edit its description,
      `https://authors.curseforge.com/#/projects/<X-Curse-Project-ID from the .toc>/description`;
    - the upload command, for this addon only, run from `addons/`:
-     `npm run publish:curseforge -- <Name>` (`--beta`/`--alpha` if it isn't a release);
+     `npm run publish:curseforge -- <Name>` (`--beta`/`--alpha` if it isn't a release). A beta or
+     alpha first gets its own later step too: publishing the same version as a release (the same
+     command without `--beta`), with how to check it on the project's Files tab;
    - the **full new project description** to paste on CurseForge (Markdown: what it does, how to
      use it, commands), written from the addon's README. Put it **inside a fenced code block**
      (```` ```markdown ```` … ```` ``` ````; use a four-backtick fence if the description itself has

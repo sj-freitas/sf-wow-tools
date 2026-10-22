@@ -1,4 +1,14 @@
-# Guild Assistant Professions
+# GuildAssistant Professions
+
+## 1.0.2
+
+- Renamed GuildAssistant Professions (it was Guild Assistant Professions), like Guild Assistant's
+  other addons. Same addon, same commands and saved data.
+
+## 1.0.1
+
+- `/ga-prof save` writes what is recorded to the file (it reloads the screen); it's the new name
+  of `/ga-prof log`, which still works.
 
 ## 1.0.0
 

@@ -1,6 +1,6 @@
--- Guild Assistant Professions: the slash command and the game events. Data is saved per account
+-- GuildAssistant Professions: the slash command and the game events. Data is saved per account
 -- (GuildAssistantProfessionsDB), with the export for Guild Assistant kept up to date in it: the game
--- writes it to the saved variables file on logout or /reload (/ga-prof log), and that file is what
+-- writes it to the saved variables file on logout or /reload (/ga-prof save), and that file is what
 -- gets uploaded. Addons can't write files themselves.
 
 local addonName, ns = ...
@@ -18,7 +18,7 @@ local function safely(fn, ...)
     local ok, err = pcall(fn, ...)
     if not ok and not reported[tostring(err)] then
         reported[tostring(err)] = true
-        print("|cff7c5cffGuild Assistant Professions|r: |cffff5050something went wrong:|r " .. tostring(err))
+        print("|cff7c5cffGuildAssistant Professions|r: |cffff5050something went wrong:|r " .. tostring(err))
     end
 end
 
@@ -65,7 +65,7 @@ local function status()
     end
     print("  Last update: " .. when(last) .. ".")
     print("  " .. Sync.describe(db(), when))
-    print("  File: " .. FILE .. " in the game's folder, written by /ga-prof log (or logging out).")
+    print("  File: " .. FILE .. " in the game's folder, written by /ga-prof save (or logging out).")
     print("  On Guild Assistant: Roster, Import professions, and drop it there.")
 end
 
@@ -73,13 +73,13 @@ local function runCommand(message)
     local command = (message or ""):match("^%s*(%S*)"):lower()
     if command == "status" then
         status()
-    elseif command == "log" then
+    elseif command == "save" or command == "log" then -- "log": its name before 1.0.1, still works
         -- The game only writes saved variables on logout or a reload.
         refreshExport()
         ReloadUI()
     else
         Scan.say("commands:")
-        print("  /ga-prof log - write what is recorded to the file (reloads the interface)")
+        print("  /ga-prof save - write what is recorded to the file (reloads the screen)")
         print("  /ga-prof status - what is saved, when it was last updated, and where the file is")
         print("  Open each profession's window (yours, or a profession link) and it is recorded.")
     end

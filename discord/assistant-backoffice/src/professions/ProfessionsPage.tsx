@@ -127,7 +127,7 @@ export function ProfessionsPage({ guild }: { guild: Guild }) {
         <div>
           <h3>Professions</h3>
           <p className="muted">
-            What the guild can craft, from the Guild Assistant Professions addon.
+            What the guild can craft, from the GuildAssistant Professions addon.
           </p>
         </div>
         <div className="settings-actions">
@@ -150,7 +150,7 @@ export function ProfessionsPage({ guild }: { guild: Guild }) {
         <p className="empty">
           No professions imported yet. Install the{' '}
           <a href={ADDON_URL} target="_blank" rel="noreferrer">
-            Guild Assistant Professions addon
+            GuildAssistant Professions addon
           </a>
           , open your professions’ windows in game, then Import professions here.
         </p>

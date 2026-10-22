@@ -74,7 +74,7 @@ export interface CrafterMatch {
 }
 
 /**
- * Characters' professions, imported from the Guild Assistant Professions addon. A player imports
+ * Characters' professions, imported from the GuildAssistant Professions addon. A player imports
  * for their own characters in a guild (matched by name); everyone in the guild can see them. Recipe
  * names come from Wowhead (WowheadService), looked up after an import and whenever still missing.
  */

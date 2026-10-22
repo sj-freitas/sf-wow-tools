@@ -50,7 +50,7 @@ export function EventFormPage({
   });
   const [date, setDate] = useState('');
   const [time, setTime] = useState('20:00');
-  // When raid invites start (optional): shown on the post, and Raid Sort's Auto-Invite uses it.
+  // When raid invites start (optional): shown on the post, and GuildAssistant RaidSort's Auto-Invite uses it.
   const [inviteTime, setInviteTime] = useState('');
   const [timezone, setTimezone] = useState('ST');
   const [channel, setChannel] = useState('');
@@ -153,8 +153,8 @@ export function EventFormPage({
           Invites start
           <input type="time" value={inviteTime} onChange={(e) => setInviteTime(e.target.value)} />
           <small className="muted">
-            Optional. Before the event, e.g. 15 minutes; shown on the post, and Raid Sort can invite
-            from then.
+            Optional. Before the event, e.g. 15 minutes; shown on the post, and GuildAssistant
+            RaidSort can invite from then.
           </small>
         </label>
         {canSchedule && (

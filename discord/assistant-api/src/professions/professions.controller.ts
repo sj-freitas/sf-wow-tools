@@ -20,7 +20,7 @@ import {
   type ProfessionDto,
 } from './professions.service';
 
-/** Professions from the Guild Assistant Professions addon (see ProfessionsService). */
+/** Professions from the GuildAssistant Professions addon (see ProfessionsService). */
 @Controller('guilds/:guildId')
 @UseGuards(AuthGuard)
 export class ProfessionsController {

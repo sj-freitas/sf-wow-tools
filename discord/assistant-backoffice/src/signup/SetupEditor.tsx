@@ -81,7 +81,7 @@ export function SetupEditor({
     event.entries.filter((entry) => entry.assist).map((entry) => entry.id),
   );
   const [busy, setBusy] = useState(false);
-  // The setup as the Raid Sort addon reads it, shown in a dialog to copy.
+  // The setup as the GuildAssistant RaidSort addon reads it, shown in a dialog to copy.
   const [exported, setExported] = useState<AddonExport | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { confirm, dialog } = useConfirm();
@@ -365,8 +365,8 @@ export function SetupEditor({
               className="btn btn-sm"
               onClick={exportForAddon}
               title={
-                'The setup as the Raid Sort addon reads it, to paste in game.\n' +
-                'Get Raid Sort from CurseForge (search "Raid Sort", or use the CurseForge app).'
+                'The setup as the GuildAssistant RaidSort addon reads it, to paste in game.\n' +
+                'Get GuildAssistant RaidSort from CurseForge (search "GuildAssistant RaidSort", or use the CurseForge app).'
               }
             >
               Export for addon

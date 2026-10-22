@@ -41,7 +41,7 @@ local function setMasterLooter(name)
 end
 
 local function say(message, ...)
-    print("|cff33ff99Raidsort|r: " .. message:format(...))
+    print("|cff33ff99GuildAssistant RaidSort|r: " .. message:format(...))
 end
 Raid.say = say
 

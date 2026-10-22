@@ -106,7 +106,7 @@ export function CharacterProfessions({
       <p className="empty">
         No professions imported yet. Its player imports them with the{' '}
         <a href={ADDON_URL} target="_blank" rel="noreferrer">
-          Guild Assistant Professions addon
+          GuildAssistant Professions addon
         </a>
         .{importLinks && ' '}
         {importLinks}

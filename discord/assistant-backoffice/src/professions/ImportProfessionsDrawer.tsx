@@ -11,7 +11,7 @@ export const ADDON_URL = 'https://www.curseforge.com/wow/addons/guild-assistant-
 const FILE = 'WTF/Account/<account>/SavedVariables/GuildAssistantProfessions.lua';
 
 /**
- * Importing the Guild Assistant Professions addon's saved variables file, which holds its export:
+ * Importing the GuildAssistant Professions addon's saved variables file, which holds its export:
  * every character of the player's account; the API keeps the ones that are theirs in this guild.
  * The file can be dropped, chosen or its contents pasted: all end up as the text that is sent.
  */
@@ -59,11 +59,11 @@ export function ImportProfessionsDrawer({
         if (next.outdated.length > 0) {
           void confirm({
             title: 'Update the addon',
-            message: `This file is from an older Guild Assistant Professions (before 1.0), so ${next.outdated
+            message: `This file is from an older GuildAssistant Professions (before 1.0), so ${next.outdated
               .map((c) => c.name)
               .join(
                 ', ',
-              )} couldn't be imported. Update the addon, log in, then /ga-prof log and upload the new file.`,
+              )} couldn't be imported. Update the addon, log in, type /ga-prof save (it reloads the screen) and upload the new file.`,
             confirmLabel: 'Get the addon',
           }).then((go) => {
             if (go) window.open(ADDON_URL, '_blank', 'noreferrer');
@@ -146,7 +146,7 @@ export function ImportProfessionsDrawer({
             <li>
               Install the{' '}
               <a href={ADDON_URL} target="_blank" rel="noreferrer">
-                Guild Assistant Professions
+                GuildAssistant Professions
               </a>{' '}
               addon (CurseForge).
             </li>
@@ -155,8 +155,8 @@ export function ImportProfessionsDrawer({
               addon sees the recipes.
             </li>
             <li>
-              Type <code>/ga-prof log</code> (or log out): the game writes what the addon recorded
-              to a file.
+              Type <code>/ga-prof save</code> (it reloads the screen; logging out works too): the
+              game writes what the addon recorded to a file.
             </li>
             <li>
               {/* A phone can't drop or pick the file from the game's folder: there it is pasted. */}

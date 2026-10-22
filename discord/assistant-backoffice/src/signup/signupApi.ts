@@ -128,7 +128,7 @@ export interface SignupEvent {
   serverTimezone: string;
   /** The date and time in `timezone`, for the edit form. */
   local: { date: string; time: string };
-  /** When raid invites start (Raid Sort's Auto-Invite); null for none. */
+  /** When raid invites start (GuildAssistant RaidSort's Auto-Invite); null for none. */
   invitesAt: string | null;
   /** The same as HH:mm in `timezone`, for the edit form. */
   inviteTime: string | null;

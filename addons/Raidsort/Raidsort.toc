@@ -1,7 +1,7 @@
 ## Interface: 16001, 11509
-## Title: Raid Sort
+## Title: GuildAssistant RaidSort
 ## Notes: Sorts your raid's groups from a pasted setup, with assists, master looter, main tanks and marks, and auto-invites from the invite time.
-## Version: 2.1.0
+## Version: 2.2.1
 ## Author: Sérgio Freitas
 ## X-License: MIT
 ## X-Curse-Project-ID: 1755800

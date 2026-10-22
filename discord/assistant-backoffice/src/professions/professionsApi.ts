@@ -1,6 +1,6 @@
 import { request } from '../api';
 
-/** Professions from the Guild Assistant Professions addon (API: src/professions). */
+/** Professions from the GuildAssistant Professions addon (API: src/professions). */
 
 export interface Recipe {
   kind: 'spell' | 'item';

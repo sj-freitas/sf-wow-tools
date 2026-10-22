@@ -61,5 +61,5 @@ characters; the API's import test reads the same file, so the two stay in step.
 
 ## Backlog
 
-- Presets: keep several setups by name (`/raidsort upload cthun`, `/raidsort sort cthun`).
+- Presets: keep several setups by name (`/ga-rs upload cthun`, `/ga-rs sort cthun`).
 

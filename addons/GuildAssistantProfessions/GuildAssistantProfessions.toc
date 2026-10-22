@@ -1,7 +1,7 @@
 ## Interface: 16001, 11509
-## Title: Guild Assistant Professions
+## Title: GuildAssistant Professions
 ## Notes: Records your characters' professions and recipes for Guild Assistant, and shares them with your guild's addons. /ga-prof status
-## Version: 1.0.0
+## Version: 1.0.2
 ## Author: Sérgio Freitas
 ## X-License: MIT
 ## X-Curse-Project-ID: 1756540

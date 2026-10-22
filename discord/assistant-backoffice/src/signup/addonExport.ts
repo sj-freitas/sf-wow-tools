@@ -2,7 +2,7 @@ import type { Entry } from './signupApi';
 import { entryName } from './labels';
 
 /**
- * The raid setup as the Raid Sort addon reads it (addons/Raidsort, see its README): a Lua table
+ * The raid setup as the GuildAssistant RaidSort addon reads it (addons/Raidsort, see its README): a Lua table
  * of the groups, each a list of character names, plus the raid roles:
  *
  *   -- Molten Core, Tue 20 Oct 2026, 20:00 (Guild Assistant)
@@ -17,7 +17,7 @@ import { entryName } from './labels';
  *     assists = { "Wwolf Test" },
  *   }
  *
- * The times are Unix seconds, the same moment in any timezone: Raid Sort's Auto-Invite invites
+ * The times are Unix seconds, the same moment in any timezone: GuildAssistant RaidSort's Auto-Invite invites
  * from `invitesAt` until `startsAt`. Only people in a group are in it (not the bench). The addon
  * also takes `mainTanks`,
  * `mainAssists` and per-player marks, which the setup doesn't have.

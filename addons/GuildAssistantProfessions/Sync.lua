@@ -1,4 +1,4 @@
--- Guild Assistant Professions: sharing with the guild. The addons of a guild's players send each
+-- GuildAssistant Professions: sharing with the guild. The addons of a guild's players send each
 -- other what they know over the game's hidden addon channel, so one player's upload to Guild
 -- Assistant carries everyone's professions. Quietly, nothing in the chat: /ga-prof status says what
 -- was shared and received.

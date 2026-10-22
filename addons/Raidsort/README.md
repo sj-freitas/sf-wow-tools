@@ -1,6 +1,6 @@
-# Raid Sort
+# GuildAssistant RaidSort
 
-Paste a raid setup and Raid Sort puts everyone in the raid into their groups, then hands out the
+Paste a raid setup and RaidSort puts everyone in the raid into their groups, then hands out the
 raid roles: leader, assists, master looter, main tanks, main assists and raid marks.
 
 Made for WoW Forever; works on Classic Era too.
@@ -9,7 +9,7 @@ Made for WoW Forever; works on Classic Era too.
 
 1. Plan the raid in Guild Assistant: open the event's **Setup** tab and press **Export for addon**,
    then **Copy**. (Or write a setup by hand, see [The setup](#the-setup).)
-2. In game, type `/raidsort` and press **Upload Config**.
+2. In game, type `/ga-rs` and press **Upload Config**.
 3. Paste the setup and press **Save**.
 4. Press **Invite & Sort**: it invites everyone, makes the group a raid and sorts it as they join.
 
@@ -18,25 +18,27 @@ sessions.
 
 ## Commands
 
-| Command            | What it does                                                         |
-| ------------------ | -------------------------------------------------------------------- |
-| `/raidsort`        | Opens (or closes) the Raid Sort window                               |
-| `/raidsort upload` | Opens the window to paste a setup                                    |
-| `/raidsort sort`   | Sorts the raid by the loaded setup                                   |
-| `/raidsort invite` | Invites everyone in the setup who isn't in your group yet            |
-| `/raidsort auto`   | Turns [Auto-Invite](#auto-invite) on or off                          |
-| `/raidsort help`   | Lists the commands                                                   |
+| Command         | What it does                                              |
+| --------------- | --------------------------------------------------------- |
+| `/ga-rs`        | Opens (or closes) the RaidSort window                     |
+| `/ga-rs upload` | Opens the window to paste a setup                         |
+| `/ga-rs sort`   | Sorts the raid by the loaded setup                        |
+| `/ga-rs invite` | Invites everyone in the setup who isn't in your group yet |
+| `/ga-rs auto`   | Turns [Auto-Invite](#auto-invite) on or off               |
+| `/ga-rs help`   | Lists the commands                                        |
+
+`/garaidsort` and `/ga-raidsort` work too (`/raidsort`, before 2.2.0, no longer does).
 
 `sort`, `invite` and `auto` open the upload window when no setup is loaded.
 
 ## The windows
 
-**Raid Sort**, with no setup loaded:
+**GuildAssistant RaidSort**, with no setup loaded:
 
 - **Upload Config**: opens the upload window.
 - **Close**.
 
-**Raid Sort (Config Loaded)**, once a setup is loaded. It shows the event's name and how many
+**GuildAssistant RaidSort (Config Loaded)**, once a setup is loaded. It shows the event's name and how many
 groups and players the setup has.
 
 - **Re-upload Config**: opens the upload window with the current setup in it, to change or replace.
@@ -62,10 +64,10 @@ sorting one last time; press it again for anyone joining later.
 
 ## Sorting
 
-`/raidsort sort` only sorts, without inviting. You need to be the raid leader or an assistant, out of
+`/ga-rs sort` only sorts, without inviting. You need to be the raid leader or an assistant, out of
 combat.
 
-- Everyone in the setup goes to their group. Moving players takes the game a moment, so Raid Sort
+- Everyone in the setup goes to their group. Moving players takes the game a moment, so RaidSort
   moves them in rounds and checks the raid after each one, until everyone is in place.
 - Full groups are handled: players are swapped.
 - People in the raid who aren't in the setup stay in their group if it has room. Otherwise they
@@ -78,7 +80,7 @@ combat.
 
 ### Raid roles
 
-Roles are only set for people who are in the raid, and only added: Raid Sort never takes assist,
+Roles are only set for people who are in the raid, and only added: RaidSort never takes assist,
 a main tank or a mark away from anyone.
 
 | Role         | Who can set it            | Notes                                                    |
@@ -90,13 +92,13 @@ a main tank or a mark away from anyone.
 | Master loot  | Raid leader               | Only changed when the master looter is in the raid       |
 | Leader       | Raid leader               | Done last, as it hands your leader rights over           |
 
-If you're an assistant, Raid Sort sorts the raid and sets what it can, then lists what only the
-leader can set. WoW Forever may not have master loot. If it doesn't, Raid Sort says
+If you're an assistant, RaidSort sorts the raid and sets what it can, then lists what only the
+leader can set. WoW Forever may not have master loot. If it doesn't, RaidSort says
 "Couldn't set master loot: this game doesn't seem to have it" and carries on.
 
 ## Inviting
 
-`/raidsort invite` invites everyone in the setup who isn't in your group. A party only holds 5,
+`/ga-rs invite` invites everyone in the setup who isn't in your group. A party only holds 5,
 so it invites 4 first. When someone joins, it turns the party into a raid (if you're the
 leader) and invites the rest. You need to be the leader or an assistant if you're already in a
 group.
@@ -104,7 +106,7 @@ group.
 ## Auto-Invite
 
 When the setup comes from a Guild Assistant event with an **invite time**, the window shows an
-**Auto-Invite (from 19:45)** checkbox (or use `/raidsort auto`). While it's on, from the invite
+**Auto-Invite (from 19:45)** checkbox (or use `/ga-rs auto`). While it's on, from the invite
 time it invites everyone in the setup who isn't in your group, once a minute, until the raid
 starts or everyone is in; then it turns itself off and says why. Before the invite time it just
 waits. Loading another setup turns it off. Times are the realm's clock.

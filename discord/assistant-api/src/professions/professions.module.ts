@@ -6,7 +6,7 @@ import { ProfessionsCoreModule } from './professions-core.module';
 import { ProfessionsService } from './professions.service';
 
 /**
- * Characters' professions, imported from the Guild Assistant Professions addon, with recipe names
+ * Characters' professions, imported from the GuildAssistant Professions addon, with recipe names
  * from Wowhead. Its own folder and tables (prisma/professions.prisma).
  */
 @Module({

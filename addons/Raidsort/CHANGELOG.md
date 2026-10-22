@@ -1,4 +1,14 @@
-# Raid Sort
+# GuildAssistant RaidSort
+
+## 2.2.1
+
+- Renamed GuildAssistant RaidSort (it was Raid Sort), like Guild Assistant's other addons. Same
+  addon, same commands (`/ga-rs`).
+
+## 2.2.0
+
+- The command is now `/ga-rs` (also `/garaidsort` and `/ga-raidsort`), alongside Guild Assistant's
+  other addons (`/ga-prof`). `/raidsort` no longer works.
 
 ## 2.1.0
 

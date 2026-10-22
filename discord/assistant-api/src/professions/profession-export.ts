@@ -1,7 +1,7 @@
 import { BadRequestException } from '@nestjs/common';
 
 /**
- * The Guild Assistant Professions addon's export (addons/GuildAssistantProfessions): every character
+ * The GuildAssistant Professions addon's export (addons/GuildAssistantProfessions): every character
  * of the account with its professions and recipe ids, and others' seen through a profession link.
  * The addon keeps it as a JSON string in its saved variables file
  * (WTF/Account/<account>/SavedVariables/GuildAssistantProfessions.lua), which is what gets uploaded.
@@ -46,7 +46,7 @@ const MAX_RECIPES = 3000;
 
 const fail = (message: string): never => {
   throw new BadRequestException(
-    `That isn't the Guild Assistant Professions file (${message}). In game, type /ga-prof status: it says where the file is.`,
+    `That isn't the GuildAssistant Professions file (${message}). In game, type /ga-prof status: it says where the file is.`,
   );
 };
 

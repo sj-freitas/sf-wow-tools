@@ -983,11 +983,11 @@ Deploying the feature again later re-creates the tables, empty.
 
 ## Professions (`src/professions/`)
 
-What characters can craft, from the **Guild Assistant Professions** addon
+What characters can craft, from the **GuildAssistant Professions** addon
 (`addons/GuildAssistantProfessions`). It records every character of the account (and others' seen
 through a profession link) with its professions, skill and recipes (WoW spell ids; the crafted
 item's id when the game gives no spell), and keeps the export as JSON in its saved variables file
-(`WTF/Account/<account>/SavedVariables/GuildAssistantProfessions.lua`, written by `/ga-prof log` or
+(`WTF/Account/<account>/SavedVariables/GuildAssistantProfessions.lua`, written by `/ga-prof save` or
 on logout). Blizzard's Classic Era / SoD API has no professions, hence the addon.
 
 - **Import** (`POST /api/guilds/:guildId/professions/import`, `{ data }` = that file, or the export's

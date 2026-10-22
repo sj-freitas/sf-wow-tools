@@ -1,4 +1,4 @@
-# Guild Assistant Professions
+# GuildAssistant Professions
 
 Remembers what your characters can craft, shares it with your guildmates' addons, and keeps it for
 Guild Assistant, so your guild can see everyone's professions and recipes on the website. One
@@ -9,15 +9,15 @@ Made for WoW Forever; works on Classic Era too.
 ## Quick start
 
 1. Install the addon ([CurseForge](https://www.curseforge.com/wow/addons/guild-assistant-professions))
-   and log in (or `/reload`). The chat says "Guild Assistant Professions:
+   and log in (or `/reload`). The chat says "GuildAssistant Professions:
    Loaded." when it's on.
 2. **Open each profession's window once** (and Enchanting's): the game only shows an addon the
    recipes while that window is open. Do this on every character you want to share. It is recorded
    by itself; there is nothing to export.
-3. Type `/ga-prof log` (the chat suggests it after recording): it writes what the addon recorded
+3. Type `/ga-prof save` (the chat suggests it after recording): it writes what the addon recorded
    to a file in the game's folder, `WTF/Account/<account>/SavedVariables/GuildAssistantProfessions.lua`
-   (e.g. under `_classic_era_`). Addons can't write files themselves: the game writes this one when
-   the interface reloads, which is what `/ga-prof log` does, or when you log out.
+   (e.g. under `_classic_era_`). **It reloads the screen**: addons can't write files themselves, and
+   the game writes this one when the interface reloads (or when you log out).
    `/ga-prof status` says where it is and when it was last updated.
 4. On Guild Assistant: **Roster**, **Import professions**, and drop that file there (or choose it,
    or paste its contents). Every character of yours in that guild is updated at once, and so are
@@ -46,7 +46,7 @@ the chat):
 
 | Command           | What it does                                                               |
 | ----------------- | -------------------------------------------------------------------------- |
-| `/ga-prof log`    | Writes what is recorded to the file (reloads the interface)                |
+| `/ga-prof save`   | Writes what is recorded to the file (**reloads the screen**)               |
 | `/ga-prof status` | What is saved (your characters, and how many of the guild's), when, and where the file is |
 | `/ga-prof`        | Lists the commands                                                         |
 
@@ -80,7 +80,7 @@ writes Lua errors to `Logs/General.log` in its folder.
 ## The export
 
 The saved data holds the export as JSON (`export`), rebuilt whenever something new is recorded, on
-`/ga-prof log` and on logout. For example:
+`/ga-prof save` and on logout. For example:
 
 ```json
 {"addon":"GuildAssistantProfessions","format":2,"characters":[{"name":"Luna","realm":"Wild Growth","class":"MAGE","source":"own","updated":1792000000,"professions":[{"name":"Enchanting","skill":300,"max":300,"learned":1791000000,"updated":1792000000,"spells":[13890,20034],"items":[]}]}]}

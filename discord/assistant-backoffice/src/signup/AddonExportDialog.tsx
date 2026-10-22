@@ -26,7 +26,7 @@ function highlight(text: string): ReactNode[] {
 }
 
 /**
- * The setup exported for the Raid Sort addon: a preview of the Lua to paste into the addon's
+ * The setup exported for the GuildAssistant RaidSort addon: a preview of the Lua to paste into the addon's
  * Upload Config window, with a copy button and what was left out.
  */
 export function AddonExportDialog({
@@ -44,7 +44,7 @@ export function AddonExportDialog({
   const copy = () =>
     navigator.clipboard
       .writeText(exported.text)
-      .then(() => showToast('Copied: paste it into Raid Sort in game'))
+      .then(() => showToast('Copied: paste it into GuildAssistant RaidSort in game'))
       .catch(() => showToast('Couldn’t copy: select the text and copy it instead'));
 
   return (
@@ -60,18 +60,18 @@ export function AddonExportDialog({
         if (event.target === dialog.current) onClose();
       }}
     >
-      <h3 id="addon-export-title">Export for Raid Sort</h3>
+      <h3 id="addon-export-title">Export for GuildAssistant RaidSort</h3>
       <p>
-        In game, type <code>/raidsort</code>, press <strong>Upload Config</strong>, paste this in
-        and save; then <strong>Invite &amp; Sort</strong> invites everyone, makes the group a raid,
-        puts everyone in their group and hands out the leader, assists and master looter.
+        In game, type <code>/ga-rs</code>, press <strong>Upload Config</strong>, paste this in and
+        save; then <strong>Invite &amp; Sort</strong> invites everyone, makes the group a raid, puts
+        everyone in their group and hands out the leader, assists and master looter.
       </p>
       <p className="muted">
         Don’t have the addon? Get{' '}
         <a href={RAID_SORT_URL} target="_blank" rel="noreferrer">
-          Raid Sort on CurseForge
+          GuildAssistant RaidSort on CurseForge
         </a>{' '}
-        (or search “Raid Sort” in the CurseForge app).
+        (or search “GuildAssistant RaidSort” in the CurseForge app).
       </p>
       <pre className="addon-export-code">{highlight(exported.text)}</pre>
       {exported.notes.length > 0 && (

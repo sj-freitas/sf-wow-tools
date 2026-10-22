@@ -11,7 +11,7 @@ import './professions.css';
 const iconUrl = (icon: string) => `https://wow.zamimg.com/images/wow/icons/small/${icon}.jpg`;
 
 /**
- * A character's professions and recipes (imported with the Guild Assistant Professions addon),
+ * A character's professions and recipes (imported with the GuildAssistant Professions addon),
  * each recipe linking to Wowhead. Recipe names may still be loading right after an import.
  */
 export function ProfessionsDrawer({
@@ -58,7 +58,7 @@ export function ProfessionsDrawer({
         <p className="empty">
           No professions imported yet. Its player imports them with the{' '}
           <a href={ADDON_URL} target="_blank" rel="noreferrer">
-            Guild Assistant Professions addon
+            GuildAssistant Professions addon
           </a>{' '}
           (Professions, Import professions).
         </p>

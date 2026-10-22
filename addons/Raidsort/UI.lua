@@ -1,4 +1,4 @@
--- Raidsort: the two windows. The main one ("Raid Sort") uploads a setup and, once one is loaded,
+-- Raidsort: the two windows. The main one ("GuildAssistant RaidSort") uploads a setup and, once one is loaded,
 -- sorts the raid; the upload one takes the pasted setup. Both are standard Blizzard frames and
 -- buttons, move by dragging the title, and close with Escape.
 
@@ -61,7 +61,8 @@ local function layoutButtons(frame, all, buttons)
         button:Show()
         x = x + button:GetWidth() + BUTTON_GAP
     end
-    frame:SetWidth(math.max(300, width + 48))
+    -- Wide enough for the longest title ("GuildAssistant RaidSort (Config Loaded)").
+    frame:SetWidth(math.max(340, width + 48))
 end
 
 -- The main window ------------------------------------------------------------------------------
@@ -99,7 +100,7 @@ end
 function UI.refresh()
     if not main then return end
     if ns.setup then
-        main.title:SetText("Raid Sort (Config Loaded)")
+        main.title:SetText("GuildAssistant RaidSort (Config Loaded)")
         summary:SetText(Core.describe(ns.setup))
         layoutButtons(main, mainButtons, { reuploadButton, sortButton, closeButton })
         if ns.setup.invitesAt then
@@ -115,7 +116,7 @@ function UI.refresh()
             main:SetHeight(104)
         end
     else
-        main.title:SetText("Raid Sort")
+        main.title:SetText("GuildAssistant RaidSort")
         summary:SetText("No raid setup loaded yet.")
         autoInvite:Hide()
         main:SetHeight(104)
@@ -139,7 +140,7 @@ local upload, editBox, placeholder, problem
 
 local function buildUpload()
     upload = newWindow("RaidsortUploadFrame", 480, 400)
-    upload.title:SetText("Raid Sort")
+    upload.title:SetText("GuildAssistant RaidSort")
 
     -- The text area: a dark, bordered box like the chat's, scrolling when the setup is long.
     local area = CreateFrame("Frame", nil, upload, BackdropTemplateMixin and "BackdropTemplate" or nil)

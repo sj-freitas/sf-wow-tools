@@ -67,7 +67,7 @@ it("says it's loaded, and only for its own ADDON_LOADED", function()
     fire("ADDON_LOADED", "Bagnon")
     eq(said("Loaded"), false, "loaded for another addon")
     fire("ADDON_LOADED", "GuildAssistantProfessions")
-    eq(said("Guild Assistant Professions|r: Loaded."), true, "loaded message")
+    eq(said("GuildAssistant Professions|r: Loaded."), true, "loaded message")
     eq(type(GuildAssistantProfessionsDB), "table", "saved data created")
 end)
 
@@ -160,14 +160,24 @@ it("drops an unlearned profession from the export, and says so", function()
     assert(db.export:find('"name":"Tailoring"', 1, true), "the rest kept")
 end)
 
-it("/ga-prof log writes the file: the export, then a reload", function()
+it("/ga-prof save writes the file: the export, then a reload (and log, its old name, too)", function()
+    for _, command in ipairs({ "save", "log", " SAVE " }) do
+        loadAddon()
+        fire("ADDON_LOADED", "GuildAssistantProfessions")
+        local exportAtReload
+        _G.ReloadUI = function() exportAtReload = GuildAssistantProfessionsDB.export end
+        GuildAssistantProfessionsDB.export = nil
+        SlashCmdList.GAPROF(command)
+        assert(exportAtReload, command .. ": export refreshed before reloading")
+    end
+end)
+
+it("tells about save, not log", function()
     loadAddon()
     fire("ADDON_LOADED", "GuildAssistantProfessions")
-    local exportAtReload
-    _G.ReloadUI = function() exportAtReload = GuildAssistantProfessionsDB.export end
-    GuildAssistantProfessionsDB.export = nil
-    SlashCmdList.GAPROF("log")
-    assert(exportAtReload, "export refreshed before reloading")
+    SlashCmdList.GAPROF("")
+    eq(said("/ga-prof save - write what is recorded to the file (reloads the screen)"), true, "save listed")
+    eq(said("/ga-prof log"), false, "log not listed")
 end)
 
 it("reads a profession window once it has settled", function()
