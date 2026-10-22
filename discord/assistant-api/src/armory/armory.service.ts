@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { TEST_ARMORY } from './armory.config';
+import type { TalentBuild } from './spec-roles';
 
 /** What the armory says about a character, reduced to what the character form fills in. */
 export interface ArmoryCharacter {
@@ -10,6 +11,9 @@ export interface ArmoryCharacter {
   level: number;
   faction: string;
   realm: string;
+  /** EXPERIMENTAL: its talent builds (the active one, and a second with dual spec); null when the
+   *  armory gave none (see spec-roles.ts for what they're used for). */
+  talents: TalentBuild[] | null;
 }
 
 /** Why a lookup gave nothing; the backoffice shows a message and everything stays manual. */
@@ -28,6 +32,37 @@ const REQUEST_TIMEOUT_MS = 8000;
 const TOKEN_URL = 'https://oauth.battle.net/token';
 /** A few letters (any alphabet, WoW allows accents), never a path. */
 const CHARACTER_NAME = /^\p{L}{2,24}$/u;
+
+/**
+ * The armory's `/specializations` for a Classic character: talent groups (two with dual spec), each
+ * with its trees and the points spent in them. Read loosely: the shape isn't documented for Classic
+ * Era, so a tree's name is taken from either field, and a single list without groups is one build.
+ */
+interface SpecializationsResponse {
+  specialization_groups?: { is_active?: boolean; specializations?: TreeResponse[] }[];
+  specializations?: TreeResponse[];
+}
+interface TreeResponse {
+  specialization_name?: string;
+  specialization?: { name?: string };
+  spent_points?: number;
+}
+
+function parseTalents(body: SpecializationsResponse): TalentBuild[] | null {
+  const trees = (list: TreeResponse[] | undefined) =>
+    (list ?? []).flatMap((tree) => {
+      const name = tree.specialization_name ?? tree.specialization?.name;
+      return name ? [{ name, points: tree.spent_points ?? 0 }] : [];
+    });
+  const builds = body.specialization_groups?.length
+    ? body.specialization_groups.map((group) => ({
+        active: group.is_active ?? false,
+        trees: trees(group.specializations),
+      }))
+    : [{ active: true, trees: trees(body.specializations) }];
+  const found = builds.filter((build) => build.trees.length > 0);
+  return found.length > 0 ? found : null;
+}
 
 interface ProfileResponse {
   name?: string;
@@ -110,7 +145,24 @@ export class ArmoryService {
       level,
       faction: faction?.name ?? '',
       realm: profile.realm?.name ?? TEST_ARMORY.realmName,
+      talents: await this.talents(url),
     };
+  }
+
+  /**
+   * EXPERIMENTAL: the character's talent builds, from `<character url>/specializations`. Best
+   * effort: without them the lookup still fills race, class and level (and the main spec is
+   * assumed).
+   */
+  private async talents(characterUrl: string): Promise<TalentBuild[] | null> {
+    const [path, query] = characterUrl.split('?');
+    try {
+      const response = await this.get(`${path}/specializations?${query}`, await this.accessToken());
+      if (!response.ok) return null;
+      return parseTalents((await response.json()) as SpecializationsResponse);
+    } catch {
+      return null;
+    }
   }
 
   private async get(url: string, token: string): Promise<Response> {

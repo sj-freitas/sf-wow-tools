@@ -200,6 +200,22 @@ export interface ArmoryCharacter {
   level: number;
   faction: string;
   realm: string;
+  /** EXPERIMENTAL: its specs and roles, worked out from its talents (the API's spec-roles.ts). */
+  specs: {
+    main: ArmorySpec | null;
+    secondary: ArmorySpec | null;
+    /** The roles to fill in: the main spec's, then the secondary's if it differs. */
+    roles: Role[];
+  };
+}
+
+/** A spec worked out from the armory: from a talent tree, or `guessed` (the class's first). */
+export interface ArmorySpec {
+  spec: string;
+  role: Role;
+  talentTree: string | null;
+  points: number | null;
+  guessed: boolean;
 }
 
 /** A specialization of a class (still being defined). */

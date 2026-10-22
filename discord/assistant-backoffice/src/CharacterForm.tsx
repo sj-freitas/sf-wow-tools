@@ -23,6 +23,7 @@ import {
 import { PlayerPicker } from './PlayerPicker';
 import {
   ROLE_LABELS,
+  type ArmorySpec,
   type Character,
   type Guild,
   type GuildAttribute,
@@ -190,7 +191,17 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
         else if (!classFits)
           problems.push(`${found.race} cannot be a ${found.class} in ${guild.gameVersion}`);
         setLevel(String(Math.min(100, Math.max(1, found.level))));
-        const summary = `${found.name}: ${found.race} ${found.class}, level ${found.level}.`;
+        // EXPERIMENTAL: the roles of its specs, worked out from its talents (those the class can
+        // play here; the class's first spec when the talents didn't tell).
+        const playable = classFits ? roleOptionsFor(className).map((option) => option.value) : [];
+        const roles = found.specs.roles.filter((role) => playable.includes(role));
+        if (roles.length > 0) setRoles(roles);
+        const specText = (spec: ArmorySpec) =>
+          `${spec.spec} (${ROLE_LABELS[spec.role]}${spec.guessed ? ', assumed' : `, ${spec.points} points`})`;
+        const specsText = found.specs.main
+          ? ` Specs (experimental): ${specText(found.specs.main)}${found.specs.secondary ? `, then ${specText(found.specs.secondary)}` : ''}.`
+          : '';
+        const summary = `${found.name}: ${found.race} ${found.class}, level ${found.level}.${specsText}`;
         setArmoryNote(
           problems.length === 0
             ? { ok: true, text: `Loaded ${summary}` }

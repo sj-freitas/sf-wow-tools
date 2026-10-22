@@ -9,6 +9,7 @@ import {
 import type { ConfigService } from '@nestjs/config';
 import type { AuthenticatedRequest } from '../auth/auth.types';
 import type { GuildAccessService } from '../auth/guild-access.service';
+import type { PrismaService } from '../database/prisma.service';
 import { ArmoryController } from './armory.controller';
 import { ArmoryError, ArmoryService } from './armory.service';
 
@@ -28,6 +29,7 @@ describe('ArmoryService', () => {
   let env: Record<string, string | undefined>;
   let calls: { url: string; init?: RequestInit }[];
   let profile: () => Response;
+  let specializations: () => Response;
   let token: () => Response;
   let service: ArmoryService;
 
@@ -35,12 +37,14 @@ describe('ArmoryService', () => {
     env = { BLIZZARD_CLIENT_ID: 'id', BLIZZARD_CLIENT_SECRET: 'secret' };
     calls = [];
     profile = () => json(PROFILE);
+    specializations = () => json({}, 404);
     token = () => json({ access_token: 'tok', expires_in: 86399 });
     service = new ArmoryService({ get: (key: string) => env[key] } as unknown as ConfigService);
     service.fetcher = async (input, init) => {
       const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
       calls.push({ url, init });
-      return url.includes('oauth.battle.net') ? token() : profile();
+      if (url.includes('oauth.battle.net')) return token();
+      return url.includes('/specializations?') ? specializations() : profile();
     };
   });
 
@@ -52,6 +56,7 @@ describe('ArmoryService', () => {
       level: 60,
       faction: 'Alliance',
       realm: 'Wild Growth',
+      talents: null,
     });
     const [login, lookup] = calls;
     assert.equal(login.url, 'https://oauth.battle.net/token');
@@ -65,6 +70,52 @@ describe('ArmoryService', () => {
       'https://eu.api.blizzard.com/profile/wow/character/wild-growth/susaru?namespace=profile-classic1x-eu&locale=en_GB',
     );
     assert.equal((lookup.init?.headers as Record<string, string>).Authorization, 'Bearer tok');
+  });
+
+  it('reads the talent builds (EXPERIMENTAL), the active one marked', async () => {
+    specializations = () =>
+      json({
+        specialization_groups: [
+          {
+            is_active: true,
+            specializations: [
+              { specialization_name: 'Balance', spent_points: 0 },
+              { specialization_name: 'Feral Combat', spent_points: 31 },
+              { specialization_name: 'Restoration', spent_points: 20 },
+            ],
+          },
+          {
+            is_active: false,
+            specializations: [{ specialization_name: 'Restoration', spent_points: 41 }],
+          },
+        ],
+      });
+    const found = await service.lookup('Susaru');
+    assert.equal(
+      calls[2].url,
+      'https://eu.api.blizzard.com/profile/wow/character/wild-growth/susaru/specializations?namespace=profile-classic1x-eu&locale=en_GB',
+    );
+    assert.deepEqual(found.talents, [
+      {
+        active: true,
+        trees: [
+          { name: 'Balance', points: 0 },
+          { name: 'Feral Combat', points: 31 },
+          { name: 'Restoration', points: 20 },
+        ],
+      },
+      { active: false, trees: [{ name: 'Restoration', points: 41 }] },
+    ]);
+  });
+
+  it('still finds the character when its talents cannot be read', async () => {
+    specializations = () => json({}, 503);
+    assert.equal((await service.lookup('Susaru')).talents, null);
+    specializations = () =>
+      json({ specializations: [{ specialization_name: 'Fury', spent_points: 5 }] });
+    assert.deepEqual((await service.lookup('Susaru')).talents, [
+      { active: true, trees: [{ name: 'Fury', points: 5 }] },
+    ]);
   });
 
   it('keeps the token, so a second lookup does not log in again', async () => {
@@ -143,7 +194,7 @@ describe('ArmoryController', () => {
 
   beforeEach(() => {
     officer = true;
-    outcome = async () => ({ name: 'Susaru' });
+    outcome = async () => ({ name: 'Susaru', class: 'Druid', talents: null });
     controller = new ArmoryController(
       { lookup: () => outcome() } as unknown as ArmoryService,
       {
@@ -151,11 +202,23 @@ describe('ArmoryController', () => {
           if (!officer) throw new ForbiddenException();
         },
       } as unknown as GuildAccessService,
+      {
+        guild: { findUnique: async () => ({ gameVersion: 'Forever' }) },
+      } as unknown as PrismaService,
     );
   });
 
-  it('is for Officers only', async () => {
-    assert.deepEqual(await controller.character(req, 'g', 'Susaru'), { name: 'Susaru' });
+  it('is for Officers only, and adds the specs worked out for the guild’s game', async () => {
+    const found = await controller.character(req, 'g', 'Susaru');
+    assert.equal(found.name, 'Susaru');
+    // No talents: the class's first spec in Forever's config is assumed.
+    assert.deepEqual(found.specs.main, {
+      spec: 'Balance',
+      role: 'RANGED_DPS',
+      talentTree: null,
+      points: null,
+      guessed: true,
+    });
     officer = false;
     await assert.rejects(controller.character(req, 'g', 'Susaru'), ForbiddenException);
   });
