@@ -23,7 +23,8 @@
     "start:worker": "node dist/worker.js",
     "start:worker:dev": "ts-node src/worker.ts",
     "signup:preview": "ts-node src/signup/preview.ts",
-    "characters:wipe": "ts-node src/maintenance/wipe-characters.ts"
+    "characters:wipe": "ts-node src/maintenance/wipe-characters.ts",
+    "professions:wipe": "ts-node src/maintenance/wipe-professions.ts"
   },
   "dependencies": {
     "@discordjs/rest": "^2.6.3",

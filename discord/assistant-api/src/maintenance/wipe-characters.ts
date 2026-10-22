@@ -1,7 +1,7 @@
 /**
  * Deletes every character, for the game's release: whatever was registered during testing goes,
- * and everyone registers their real characters again. Run once, with `npm run characters:wipe`
- * (a dry run: it only counts) and then `npm run characters:wipe -- --yes`. A one-off CLI script,
+ * and everyone registers their real characters again. Run once, with `npm run characters:wipe` (it
+ * deletes at once; `npm run characters:wipe -- --dry-run` only counts). A one-off CLI script,
  * like `commands:register`; it needs DATABASE_URL and DISCORD_TOKEN.
  *
  * Deleted with the characters (all by the database's cascades): every guild's roster
@@ -43,7 +43,8 @@ import { SignupEventsService } from '../signup/signup-events.service';
 class WipeCharactersModule {}
 
 async function main(): Promise<void> {
-  const confirmed = process.argv.includes('--yes');
+  // Deletes unless asked only to count (npm passes it on after `--`: `npm run … -- --dry-run`).
+  const confirmed = !process.argv.includes('--dry-run');
   const app = await NestFactory.createApplicationContext(WipeCharactersModule, {
     logger: ['error', 'warn'],
   });
@@ -69,7 +70,9 @@ async function main(): Promise<void> {
       ].join('\n'),
     );
     if (!confirmed) {
-      console.log('\nDry run: nothing was deleted. Run again with --yes to delete all of it.');
+      console.log(
+        '\nDry run: nothing was deleted. Run again without --dry-run to delete all of it.',
+      );
       return;
     }
 
