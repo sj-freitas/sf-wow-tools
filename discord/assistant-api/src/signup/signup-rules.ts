@@ -57,7 +57,14 @@ export const canManageEvent = (
   event: { createdByDiscordId: string },
 ): boolean => viewer.isOfficer || event.createdByDiscordId === viewer.discordId;
 
-/** Raid setup, assignments, reminders and the notes people left: the owner and Officers. */
+/**
+ * Acting on other people: signing them up, changing or removing their sign-up, and reminding them
+ * by DM. Officers only: an EventCreator who owns the event organises it (setup, assignments, who
+ * hasn't answered) but doesn't speak or sign up for anyone else.
+ */
+export const canActForOthers = (viewer: SignupViewer): boolean => viewer.isOfficer;
+
+/** Raid setup, assignments, who hasn't answered and the notes people left: the owner and Officers. */
 export const canOrganizeEvent = (
   viewer: SignupViewer,
   event: { createdByDiscordId: string },

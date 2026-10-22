@@ -42,6 +42,7 @@ import {
 import { SignupRemindersService, type MissingDto } from './signup-reminders.service';
 import {
   canCreateEvents,
+  canActForOthers,
   canManageEvent,
   canOrganizeEvent,
   isClosed,
@@ -342,7 +343,7 @@ export class SignupController {
     if (mine) await this.entries.remove(event, mine.id);
   }
 
-  /** The owner and Officers: someone's characters that could go, to sign them up. */
+  /** Officers: someone's characters that could go, to sign them up. */
   @Get('events/:eventId/people/:discordUserId/characters')
   async characterOptions(
     @Req() req: AuthenticatedRequest,
@@ -350,11 +351,11 @@ export class SignupController {
     @Param('eventId') eventId: string,
     @Param('discordUserId') discordUserId: string,
   ) {
-    const { guild } = await this.eventContext(req, guildId, eventId, 'manage');
+    const { guild } = await this.eventContext(req, guildId, eventId, 'others');
     return this.entries.characterOptions(guild, parseSnowflake(discordUserId, 'The person'));
   }
 
-  /** The owner and Officers: adds or changes someone's sign-up, even once the event is closed. */
+  /** Officers: adds or changes someone's sign-up, even once the event is closed. */
   @Put('events/:eventId/people/:discordUserId')
   @HttpCode(HttpStatus.NO_CONTENT)
   async signUpSomeone(
@@ -364,7 +365,7 @@ export class SignupController {
     @Param('discordUserId') discordUserId: string,
     @Body() body: Body,
   ): Promise<void> {
-    const { guild, event } = await this.eventContext(req, guildId, eventId, 'manage');
+    const { guild, event } = await this.eventContext(req, guildId, eventId, 'others');
     const id = parseSnowflake(discordUserId, 'The person');
     const existing = event.entries.find((entry) => entry.discordUserId === id);
     const name =
@@ -383,7 +384,8 @@ export class SignupController {
     @Param('eventId') eventId: string,
     @Param('entryId') entryId: string,
   ): Promise<void> {
-    const { event } = await this.eventContext(req, guildId, eventId, 'manage');
+    // Someone else's sign-up: Officers (their own goes through my-signup).
+    const { event } = await this.eventContext(req, guildId, eventId, 'others');
     if (!UUID.test(entryId)) throw new BadRequestException('Unknown sign-up.');
     await this.entries.remove(event, entryId);
   }
@@ -478,7 +480,8 @@ export class SignupController {
     @Param('eventId') eventId: string,
     @Body() body: Body,
   ): Promise<{ delivered: boolean; sentAt: string }> {
-    const { guild, event } = await this.eventContext(req, guildId, eventId, 'organize');
+    // A DM in the bot's name to someone: Officers only (the owner sees the list, not this).
+    const { guild, event } = await this.eventContext(req, guildId, eventId, 'others');
     assertPosted(event);
     return this.reminders.remind(
       guild,
@@ -656,7 +659,7 @@ export class SignupController {
     req: AuthenticatedRequest,
     guildId: string,
     eventId: string,
-    need?: 'manage' | 'organize',
+    need?: 'manage' | 'organize' | 'others',
     /** Archived events are read-only: anything but reading them is refused, unless this is set. */
     allowArchived = false,
   ): Promise<{ guild: SignupGuild; viewer: SignupViewer; event: EventRow }> {
@@ -671,6 +674,9 @@ export class SignupController {
     }
     if (need === 'organize' && !canOrganizeEvent(viewer, event)) {
       throw new ForbiddenException('Only Officers and the event’s owner can do that.');
+    }
+    if (need === 'others' && !canActForOthers(viewer)) {
+      throw new ForbiddenException('Only Officers can do that for someone else.');
     }
     return { guild, viewer, event };
   }

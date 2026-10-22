@@ -3,6 +3,7 @@ import { describe, it } from 'node:test';
 import { EVENT_KINDS } from './event-kinds';
 import {
   canCreateEvents,
+  canActForOthers,
   canManageEvent,
   canOrganizeEvent,
   canPostIn,
@@ -64,6 +65,12 @@ describe('permissions', () => {
     assert.equal(canOrganizeEvent(creator, othersEvent), false);
     assert.equal(canOrganizeEvent(officer, othersEvent), true);
     assert.equal(canOrganizeEvent(member, othersEvent), false);
+  });
+
+  it('lets only Officers act for others (sign them up, remind them), even on their own event', () => {
+    assert.equal(canActForOthers(officer), true);
+    assert.equal(canActForOthers(creator), false, 'the owner of the event, but not an Officer');
+    assert.equal(canActForOthers(member), false);
   });
 
   it('keeps EventCreators to the event channel', () => {

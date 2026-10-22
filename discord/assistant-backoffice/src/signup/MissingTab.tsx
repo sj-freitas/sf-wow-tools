@@ -12,22 +12,14 @@ import {
   type MissingPerson,
   type SignupEvent,
 } from './signupApi';
-import { SignupDrawer } from './SignupDrawer';
 
 /**
- * Everyone in the guild's Discord servers who hasn't answered the event, characters or not, with
- * a button to remind them by DM (as often as needed; each reminder is recorded). "Remind all"
- * goes through the list one by one.
+ * Everyone in the guild's Discord servers who hasn't answered the event, characters or not. For
+ * Officers, a button to remind them by DM (as often as needed; each reminder is recorded), "Remind
+ * all" (the list one by one); the event's owner (an EventCreator) only sees the list. Signing someone
+ * up is "+ Sign up a player" on the event's page.
  */
-export function MissingTab({
-  guild,
-  event,
-  onChanged,
-}: {
-  guild: Guild;
-  event: SignupEvent;
-  onChanged: () => Promise<unknown>;
-}) {
+export function MissingTab({ guild, event }: { guild: Guild; event: SignupEvent }) {
   const [missing, setMissing] = useState<Missing | null>(null);
   const [error, setError] = useState<string | null>(null);
   // "Raiders only" is on unless the address says `raiders=0`, so the filter can be linked to.
@@ -42,7 +34,6 @@ export function MissingTab({
   const [sending, setSending] = useState<string | null>(null);
   const [bulk, setBulk] = useState<{ done: number; total: number } | null>(null);
   const stopBulk = useRef(false);
-  const [signingUp, setSigningUp] = useState<MissingPerson | null>(null);
   const { confirm, dialog } = useConfirm();
 
   const answered = event.entries.length;
@@ -123,6 +114,7 @@ export function MissingTab({
     );
   }
 
+  const officer = event.permissions.isOfficer;
   return (
     <div className="tasks">
       {dialog}
@@ -135,7 +127,7 @@ export function MissingTab({
               : 'Discord would not list the servers’ members, so this only shows people with characters in the guild.'}
           </div>
         </div>
-        {bulk ? (
+        {!officer ? null : bulk ? (
           <button type="button" className="btn" onClick={() => (stopBulk.current = true)}>
             <InlineSpinner label={`Reminding ${bulk.done}/${bulk.total}… Stop`} />
           </button>
@@ -150,7 +142,7 @@ export function MissingTab({
           </button>
         )}
       </div>
-      {!event.postUrl && (
+      {officer && !event.postUrl && (
         <p className="status-error">
           {event.publishAt
             ? 'The event isn’t posted yet: reminders can be sent once it is.'
@@ -179,20 +171,6 @@ export function MissingTab({
         )}
       </div>
 
-      {signingUp && (
-        <SignupDrawer
-          guild={guild}
-          event={event}
-          target={{
-            kind: 'someone',
-            entry: null,
-            person: { discordUserId: signingUp.discordUserId, name: signingUp.name },
-          }}
-          onClose={() => setSigningUp(null)}
-          onSaved={() => void onChanged()}
-        />
-      )}
-
       {shown.length === 0 ? (
         <p className="empty">Nobody here.</p>
       ) : (
@@ -219,27 +197,25 @@ export function MissingTab({
                   </span>
                 )}
               </span>
-              <span className="signup-person-actions">
-                <button
-                  type="button"
-                  className="btn btn-sm"
-                  disabled={sending !== null || bulk !== null || !event.postUrl}
-                  onClick={() => void remind(person).catch(() => undefined)}
-                >
-                  {sending === person.discordUserId ? (
-                    <InlineSpinner label="Sending…" />
-                  ) : person.reminders > 0 ? (
-                    'Remind again'
-                  ) : (
-                    'Remind'
-                  )}
-                </button>
-                {event.permissions.canManage && (
-                  <button type="button" className="btn btn-sm" onClick={() => setSigningUp(person)}>
-                    Sign up…
+              {/* Reminding and signing up someone else: Officers only. */}
+              {officer && (
+                <span className="signup-person-actions">
+                  <button
+                    type="button"
+                    className="btn btn-sm"
+                    disabled={sending !== null || bulk !== null || !event.postUrl}
+                    onClick={() => void remind(person).catch(() => undefined)}
+                  >
+                    {sending === person.discordUserId ? (
+                      <InlineSpinner label="Sending…" />
+                    ) : person.reminders > 0 ? (
+                      'Remind again'
+                    ) : (
+                      'Remind'
+                    )}
                   </button>
-                )}
-              </span>
+                </span>
+              )}
             </li>
           ))}
         </ul>

@@ -386,7 +386,8 @@ export function EventPage({
                   {event.mine ? 'Change my sign-up' : 'Sign up'}
                 </button>
               )}
-              {shown.permissions.canManage && (
+              {/* Signing up someone else: Officers only (not the event's owner). */}
+              {shown.permissions.isOfficer && (
                 <button
                   type="button"
                   className="btn"
@@ -413,7 +414,7 @@ export function EventPage({
       {tab === 'assignments' && event.layout.hasAssignments && (
         <AssignmentsTab guild={guild} event={shown} onChanged={load} />
       )}
-      {tab === 'missing' && organize && <MissingTab guild={guild} event={shown} onChanged={load} />}
+      {tab === 'missing' && organize && <MissingTab guild={guild} event={shown} />}
     </div>
   );
 }
