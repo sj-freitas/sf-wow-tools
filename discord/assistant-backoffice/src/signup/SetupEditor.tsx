@@ -18,6 +18,9 @@ import {
 } from './signupApi';
 import { Select } from '../Select';
 
+/** How long after the last change the setup is saved (a few quick drags make one save). */
+const SAVE_DELAY_MS = 700;
+
 /** entry id -> its place; people not in it are on the bench. */
 type Places = Record<string, { group: number; slot: number }>;
 
@@ -35,8 +38,10 @@ const benchOrder = (a: Entry, b: Entry) =>
 
 /**
  * The raid setup: drag signed-up characters into groups 1-8 (five places each); whoever isn't in
- * a group is on the bench. On a phone, tap someone and then tap a place. Saving updates the posted
- * setup in Discord too.
+ * a group is on the bench. On a phone, tap someone and then tap a place. Every change saves by
+ * itself a moment later (no Save button), which also updates the posted setup in Discord, and
+ * shows on everyone's open event page: the page reloads on any change to the event (EventPage's
+ * realtime subscription), and the editor takes the saved setup whenever it has nothing unsaved.
  */
 export function SetupEditor({
   guild,
@@ -53,7 +58,12 @@ export function SetupEditor({
     [event.entries],
   );
   const [places, setPlaces] = useState<Places>(() => placesOf(people));
+  // Changes not saved yet. `version` counts them: a save is done for good only if nothing changed
+  // while it was on its way (else the newer state is saved next).
   const [dirty, setDirty] = useState(false);
+  const [version, setVersion] = useState(0);
+  const latest = useRef(0);
+  const [saving, setSaving] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
   // Whose raid-roles menu is open (opened by clicking their name).
   const [menuFor, setMenuFor] = useState<string | null>(null);
@@ -119,9 +129,16 @@ export function SetupEditor({
     Object.entries(places).find(([, p]) => p.group === group && p.slot === slot)?.[0] ?? null;
   const bench = people.filter((entry) => !places[entry.id]).sort(benchOrder);
 
+  const edited = () => {
+    setDirty(true);
+    setVersion((v) => {
+      latest.current = v + 1;
+      return v + 1;
+    });
+  };
   const change = (update: (current: Places) => Places) => {
     setPlaces(update);
-    setDirty(true);
+    edited();
     setSelected(null);
     setMenuFor(null);
   };
@@ -183,8 +200,9 @@ export function SetupEditor({
       slot: places[entry.id]?.slot ?? null,
     }));
   // Members events have no raid roles: only the placements go.
-  const save = () =>
-    saveSetup(
+  const save = () => {
+    const saved = latest.current;
+    return saveSetup(
       guild.id,
       event.id,
       placements(),
@@ -199,7 +217,23 @@ export function SetupEditor({
                 : null,
             assistEntryIds: assistIds,
           },
-    ).then(() => setDirty(false));
+    ).then(() => {
+      if (latest.current === saved) setDirty(false);
+    });
+  };
+  // Saves a moment after the last change: dragging several people is one save, not one each.
+  useEffect(() => {
+    if (version === 0) return;
+    const timer = setTimeout(() => {
+      setSaving(true);
+      setError(null);
+      save()
+        .catch((err: unknown) => setError(errorText(err)))
+        .finally(() => setSaving(false));
+    }, SAVE_DELAY_MS);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `save` reads this render's state
+  }, [version]);
   // What is on screen, saved or not.
   const exportForAddon = () =>
     setExported(
@@ -218,7 +252,7 @@ export function SetupEditor({
     );
   const changeRoles = (update: () => void) => {
     update();
-    setDirty(true);
+    edited();
   };
 
   const onDrop = (e: DragEvent, target: { group: number; slot: number } | 'bench') => {
@@ -344,7 +378,7 @@ export function SetupEditor({
         <span className="muted">
           Drag people in from the bench, or tap someone and then a place
           {event.layout.hasRaidRoles && '; tapping someone also lets you set their raid roles'}.
-          Saving also updates the {event.layout.setupTitle.toLowerCase()} posted in Discord.
+          Changes save by themselves and show for everyone with this event open.
         </span>
         <div className="settings-actions">
           <button type="button" className="btn btn-sm" onClick={fill} disabled={bench.length === 0}>
@@ -372,14 +406,10 @@ export function SetupEditor({
               Export for addon
             </button>
           )}
-          <button
-            type="button"
-            className="btn btn-sm btn-primary"
-            disabled={!dirty || busy}
-            onClick={() => run(save)}
-          >
-            {busy ? <InlineSpinner label="Saving…" /> : dirty ? 'Save setup' : 'Saved'}
-          </button>
+          {/* No Save button: what's on screen saves by itself (see `version`). */}
+          <span className="muted setup-save-status" role="status">
+            {saving ? <InlineSpinner label="Saving…" /> : dirty ? 'Unsaved…' : 'Saved'}
+          </span>
         </div>
       </div>
       {error && <p className="status-error">{error}</p>}
@@ -436,7 +466,7 @@ export function SetupEditor({
           </div>
           <small className="muted">
             Shown after their names in the setup. Officers get assist when they sign up; the leader
-            never has it, as leading covers it. Saving the setup saves these too.
+            never has it, as leading covers it. They save by themselves, like the groups.
           </small>
         </div>
       )}
@@ -537,7 +567,7 @@ export function SetupEditor({
             }
           >
             {event.setupPostUrl
-              ? 'Save and update the post'
+              ? 'Update the post'
               : `Post the ${event.layout.setupTitle.toLowerCase()} list`}
           </button>
           {event.setupPostUrl && (

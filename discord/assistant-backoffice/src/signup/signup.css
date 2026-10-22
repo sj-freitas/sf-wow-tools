@@ -660,3 +660,9 @@
     white-space: nowrap;
   }
 }
+
+/* The raid setup's "Saving… / Saved", where its Save button was. */
+.setup-save-status {
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
