@@ -32,6 +32,7 @@ import {
   type Region,
   type RoleOption,
 } from './types';
+import { Select } from './Select';
 
 interface Props {
   guild: Guild;
@@ -147,20 +148,20 @@ function DetailsSection({ guild, regions, run }: SectionProps & { regions: Regio
         </label>
         <label className="field">
           Game version
-          <select value={gameVersion} onChange={(e) => setGameVersion(e.target.value)}>
+          <Select value={gameVersion} onChange={(v) => setGameVersion(v)}>
             {games.map((g) => (
               <option key={g.gameVersion}>{g.gameVersion}</option>
             ))}
-          </select>
+          </Select>
         </label>
         <RegionSelect regions={shownRegions} value={region} onChange={setRegion} />
         <label className="field">
           Server
-          <select value={realm} onChange={(e) => setRealm(e.target.value)} required>
+          <Select value={realm} onChange={(v) => setRealm(v)} required>
             {servers.map((server) => (
               <option key={server}>{server}</option>
             ))}
-          </select>
+          </Select>
           {!servers.includes(guild.realm) && guild.gameVersion === gameVersion && (
             <small className="muted">
               “{guild.realm}” is not a server of this version: pick one and save.
@@ -169,13 +170,13 @@ function DetailsSection({ guild, regions, run }: SectionProps & { regions: Regio
         </label>
         <label className="field">
           Faction
-          <select value={faction} onChange={(e) => setFaction(e.target.value as Faction)}>
+          <Select value={faction} onChange={(v) => setFaction(v as Faction)}>
             {factions.map((f) => (
               <option key={f.id} value={f.id}>
                 {f.label}
               </option>
             ))}
-          </select>
+          </Select>
         </label>
       </div>
       <div className="form-actions">
@@ -244,7 +245,7 @@ function ServersSection({ guild, run }: SectionProps) {
       </ul>
 
       <div className="inline-form">
-        <select value={toAdd} onChange={(e) => setToAdd(e.target.value)}>
+        <Select value={toAdd} onChange={(v) => setToAdd(v)}>
           <option value="">
             {eligible === null
               ? 'Loading your servers…'
@@ -257,7 +258,7 @@ function ServersSection({ guild, run }: SectionProps) {
               {server.name}
             </option>
           ))}
-        </select>
+        </Select>
         <button
           type="button"
           className="btn"
@@ -346,14 +347,14 @@ function RoleRow({ title, hint, current, options, editable, onSave }: RoleRowPro
       </div>
       {editable ? (
         <div className="inline-form">
-          <select value={roleId} onChange={(e) => setRoleId(e.target.value)}>
+          <Select value={roleId} onChange={(v) => setRoleId(v)}>
             <option value="">{options === null ? 'Loading roles…' : 'Not set'}</option>
             {options?.map((role) => (
               <option key={role.id} value={role.id}>
                 {role.name}
               </option>
             ))}
-          </select>
+          </Select>
           <button
             type="button"
             className="btn"

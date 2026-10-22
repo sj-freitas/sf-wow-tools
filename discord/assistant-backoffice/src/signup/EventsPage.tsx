@@ -20,6 +20,7 @@ import {
   type EventsView,
   type SignupSettings,
 } from './signupApi';
+import { Select } from '../Select';
 
 /** `/signup`: the guild's events, newest coming first, and (for those who may) its settings. */
 export function EventsPage({ guild, timezone }: { guild: Guild; timezone: string }) {
@@ -287,7 +288,7 @@ function SettingsCard({
         </label>
         <label className="field">
           EventCreator role
-          <select value={roleId} onChange={(e) => setRoleId(e.target.value)}>
+          <Select value={roleId} onChange={(v) => setRoleId(v)}>
             <option value="">None (Officers only)</option>
             {settings.eventCreatorRole &&
               !roles?.some((role) => role.id === settings.eventCreatorRole?.id) && (
@@ -300,7 +301,7 @@ function SettingsCard({
                 {role.name}
               </option>
             ))}
-          </select>
+          </Select>
           <small>
             A role in the main server whose members can create events and run their own (raid setup,
             assignments, reminders). Officers can do this for every event.

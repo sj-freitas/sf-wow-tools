@@ -1,4 +1,5 @@
 import type { EventKind } from './signupApi';
+import { Select } from '../Select';
 
 export const MAX_TITLE = 100;
 export const MAX_DESCRIPTION = 2000;
@@ -27,12 +28,12 @@ export function EventTextFields({
       {showKind && (
         <label className="field field-wide">
           Type
-          <select value={value.kind} onChange={(e) => set({ kind: e.target.value as EventKind })}>
+          <Select value={value.kind} onChange={(v) => set({ kind: v as EventKind })}>
             <option value="CHARACTERS">
               Characters: sign up with a character and role (raid groups, assignments)
             </option>
             <option value="MEMBERS">Members: sign up as yourself (a list of who is invited)</option>
-          </select>
+          </Select>
           <small>Can’t be changed later.</small>
         </label>
       )}

@@ -130,8 +130,17 @@
   color: var(--accent);
 }
 .guild-profession-chevron {
-  width: 0.8rem;
+  display: inline-flex;
+  align-self: center;
+  flex-shrink: 0;
   color: var(--muted);
+}
+.guild-profession-chevron svg {
+  transition: transform 0.15s;
+}
+/* Turned down while what it opens is open. */
+[aria-expanded='true'] > .guild-profession-chevron svg {
+  transform: rotate(90deg);
 }
 .guild-recipes {
   display: grid;
@@ -143,22 +152,23 @@
   padding: 0.5rem 0 0.5rem 1.35rem;
   border-top: 1px solid var(--border);
 }
-/* A recipe and its "View characters" button: side by side, wrapping on a phone. */
+/* A recipe and its "View characters" button: side by side, always on one line; a long name wraps
+   beside its icon instead of pushing the button below it. */
 /* The guild page's recipe rows open their characters; a character page's don't. */
 .guild-recipe:has(> button) {
   cursor: pointer;
 }
 .guild-recipe {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 0.25rem 1rem;
+  gap: 0.75rem;
 }
 .guild-recipe a {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
+  min-width: 0;
   color: inherit;
   text-decoration: none;
 }
@@ -167,6 +177,7 @@
   text-decoration: underline;
 }
 .guild-recipe a img {
+  flex-shrink: 0;
   width: 18px;
   height: 18px;
   border-radius: 3px;
@@ -185,11 +196,21 @@
 }
 .guild-recipe-crafters li {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 0.25rem 0.75rem;
+  gap: 0.75rem;
+}
+.guild-recipe-crafters li a:first-child {
+  flex-shrink: 0;
+}
+/* A long Discord name is cut short (…) rather than pushing the button to its own line. */
+.crafter-discord {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .guild-recipe-crafters li .btn {
+  flex-shrink: 0;
   margin-left: auto;
 }
 /* The recipe a link pointed at (/professions/<id>). */
@@ -223,6 +244,8 @@
 /* "View Characters ▸" on a recipe: text, not a button (the whole row opens the list). */
 .recipe-crafters-toggle {
   display: inline-flex;
+  flex-shrink: 0;
+  white-space: nowrap;
   align-items: baseline;
   gap: 0.35rem;
   padding: 0;
@@ -236,4 +259,18 @@
 .guild-recipe:hover .recipe-crafters-toggle,
 .recipe-crafters-toggle[aria-expanded='true'] {
   color: var(--text);
+}
+
+/* A phone: "View Characters" is just its chevron, "Message on Discord" just "Message". */
+@media (max-width: 720px) {
+  .recipe-crafters-label,
+  .crafter-message-more {
+    display: none;
+  }
+  .guild-recipes > li {
+    padding-left: 0.5rem;
+  }
+  .guild-recipe-crafters {
+    padding: 0.5rem 0.6rem;
+  }
 }

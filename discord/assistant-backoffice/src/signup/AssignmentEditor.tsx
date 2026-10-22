@@ -18,6 +18,7 @@ import {
   type AssignmentScope,
   type SignupEvent,
 } from './signupApi';
+import { Select } from '../Select';
 
 const MAX_IMAGES = 4;
 const SCOPES: AssignmentScope[] = ['GLOBAL', 'RAID', 'BOSS'];
@@ -124,13 +125,13 @@ export function AssignmentEditor({
       <div className="form-grid">
         <label className="field">
           For
-          <select value={scope} onChange={(e) => setScope(e.target.value as AssignmentScope)}>
+          <Select value={scope} onChange={(v) => setScope(v as AssignmentScope)}>
             {SCOPES.map((value) => (
               <option key={value} value={value}>
                 {SCOPE_LABELS[value]}
               </option>
             ))}
-          </select>
+          </Select>
         </label>
         {scope !== 'GLOBAL' && (
           <label className="field">

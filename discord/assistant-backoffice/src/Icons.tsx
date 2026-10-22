@@ -71,3 +71,12 @@ export function HammerIcon() {
     </svg>
   );
 }
+
+/** A chevron pointing right; turned down (CSS) when what it opens is open. */
+export function ChevronIcon() {
+  return (
+    <svg {...base} width={14} height={14}>
+      <path d="m9 6 6 6-6 6" />
+    </svg>
+  );
+}

@@ -15,6 +15,7 @@ import { useChannels } from '../useChannels';
 import { TimezoneField } from '../TimezoneField';
 import { EventTextFields, type EventText } from './EventFields';
 import './signup.css';
+import { Select } from '../Select';
 
 /**
  * A Recurring Event plugin (event sign-ups' plugin kind, shown in the Plugins tab): when it runs
@@ -107,13 +108,13 @@ export function RecurringEventForm({
           <EventTextFields value={text} onChange={setText} showKind />
           <label className="field">
             Event day
-            <select value={eventWeekday} onChange={(e) => setEventWeekday(Number(e.target.value))}>
+            <Select value={eventWeekday} onChange={(v) => setEventWeekday(Number(v))}>
               {WEEKDAYS.map((day, index) => (
                 <option key={day} value={index + 1}>
                   {day}
                 </option>
               ))}
-            </select>
+            </Select>
             <small>Each post is for the next one of these days.</small>
           </label>
           <label className="field">

@@ -12,6 +12,7 @@ import {
   errorText,
 } from './labels';
 import type { CharacterOption, Entry, SignupInput, SignupStatus } from './signupApi';
+import { Select } from '../Select';
 
 /** A character with no roles set could play any of them. */
 const plays = (character: CharacterOption, role: Role): boolean =>
@@ -136,24 +137,24 @@ export function SignupEditor({
           <div className="form-grid">
             <label className="field">
               Character
-              <select value={characterId} onChange={(e) => pickCharacter(e.target.value)}>
+              <Select value={characterId} onChange={(v) => pickCharacter(v)}>
                 {characters.map((option) => (
                   <option key={option.id} value={option.id}>
                     {option.name} · {option.class}
                     {option.inGuild ? '' : ' · not in the guild yet'}
                   </option>
                 ))}
-              </select>
+              </Select>
             </label>
             <label className="field">
               Role
-              <select value={role} onChange={(e) => setRole(e.target.value as Role)}>
+              <Select value={role} onChange={(v) => setRole(v as Role)}>
                 {roles.map((value) => (
                   <option key={value} value={value}>
                     {ROLE_EMOJI[value]} {ROLE_NAME[value]}
                   </option>
                 ))}
-              </select>
+              </Select>
             </label>
           </div>
         ))}

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { ChevronIcon } from './Icons';
 import { Link, useLocation } from 'react-router-dom';
 import { accessSummary } from './guildAccess';
 import { guildPath } from './guildPath';
@@ -63,7 +64,9 @@ export function UserMenu({ user, guilds, setup, onLogout }: Props) {
       >
         <Avatar user={user} />
         <span className="username">{user.displayName}</span>
-        <span aria-hidden="true">▾</span>
+        <span className="select-chevron" aria-hidden="true">
+          <ChevronIcon />
+        </span>
       </button>
       {open && (
         <div className="user-menu-panel" role="menu">

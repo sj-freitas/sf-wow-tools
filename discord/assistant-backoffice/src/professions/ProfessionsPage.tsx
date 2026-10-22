@@ -4,7 +4,7 @@ import { characterPath } from '../format';
 import { fuzzyWordsScore } from '../fuzzy';
 import { characterPagePath, guildPath } from '../guildPath';
 import type { Guild } from '../types';
-import { HammerIcon } from '../Icons';
+import { ChevronIcon, HammerIcon } from '../Icons';
 import { SkeletonLines } from '../Loading';
 import { ADDON_URL, ImportProfessionsDrawer } from './ImportProfessionsDrawer';
 import { fetchGuildProfessions, professionSections, type GuildProfessions } from './professionsApi';
@@ -270,7 +270,7 @@ function ProfessionSection({
         onClick={onToggle}
       >
         <span className="guild-profession-chevron" aria-hidden="true">
-          {open ? '▾' : '▸'}
+          <ChevronIcon />
         </span>
         <strong>{profession}</strong>
         <span className="muted">
@@ -334,13 +334,19 @@ function RecipeRow({
           onClick={(event) => event.stopPropagation()}
         >
           {recipe.icon && <img src={iconUrl(recipe.icon)} alt="" loading="lazy" />}
-          {recipe.name ?? `${recipe.kind === 'spell' ? 'Spell' : 'Item'} ${recipe.id}`}
+          <span>{recipe.name ?? `${recipe.kind === 'spell' ? 'Spell' : 'Item'} ${recipe.id}`}</span>
         </a>
         {/* Text with a chevron, like the profession headings; the row's click toggles it. */}
-        <button type="button" className="recipe-crafters-toggle" aria-expanded={showing}>
-          View Characters
+        <button
+          type="button"
+          className="recipe-crafters-toggle"
+          aria-expanded={showing}
+          aria-label="View Characters"
+        >
+          {/* On a phone just the chevron: the row is narrow, and tapping it opens the list. */}
+          <span className="recipe-crafters-label">View Characters</span>
           <span className="guild-profession-chevron" aria-hidden="true">
-            {showing ? '▾' : '▸'}
+            <ChevronIcon />
           </span>
         </button>
       </div>
@@ -357,7 +363,9 @@ function RecipeRow({
               </Link>
               {character.discordUserId && (
                 <>
-                  <span className="muted">@{character.discordName ?? character.discordUserId}</span>
+                  <span className="muted crafter-discord">
+                    @{character.discordName ?? character.discordUserId}
+                  </span>
                   {/* Discord's profile page, where "Message" opens a direct message. */}
                   <a
                     className="btn btn-sm"
@@ -366,7 +374,7 @@ function RecipeRow({
                     rel="noreferrer"
                     onClick={(event) => event.stopPropagation()}
                   >
-                    Message on Discord
+                    Message<span className="crafter-message-more"> on Discord</span>
                   </a>
                 </>
               )}

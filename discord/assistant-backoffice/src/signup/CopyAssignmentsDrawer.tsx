@@ -10,6 +10,7 @@ import {
   type AssignmentSource,
   type SignupEvent,
 } from './signupApi';
+import { Select } from '../Select';
 
 /**
  * Copying assignments from another of the guild's events: pick the event, tick the assignments
@@ -88,7 +89,7 @@ export function CopyAssignmentsDrawer({
           <>
             <label className="field">
               From
-              <select value={sourceId} onChange={(e) => choose(e.target.value)}>
+              <Select value={sourceId} onChange={(v) => choose(v)}>
                 <option value="">Pick an event…</option>
                 {sources.map((s) => (
                   <option key={s.id} value={s.id}>
@@ -96,7 +97,7 @@ export function CopyAssignmentsDrawer({
                     assignment{s.assignments.length === 1 ? '' : 's'}
                   </option>
                 ))}
-              </select>
+              </Select>
             </label>
             {source && (
               <fieldset className="copy-list">

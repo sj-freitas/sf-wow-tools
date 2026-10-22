@@ -16,6 +16,7 @@ import {
   type Placement,
   type SignupEvent,
 } from './signupApi';
+import { Select } from '../Select';
 
 /** entry id -> its place; people not in it are on the bench. */
 type Places = Record<string, { group: number; slot: number }>;
@@ -392,10 +393,7 @@ export function SetupEditor({
               <span>
                 <RoleMark gameVersion={guild.gameVersion} role="LEADER" /> Leader
               </span>
-              <select
-                value={leader}
-                onChange={(e) => changeRoles(() => chooseLeader(e.target.value))}
-              >
+              <Select value={leader} onChange={(v) => changeRoles(() => chooseLeader(v))}>
                 {!people.some((p) => p.discordUserId === leader) && (
                   <option value={leader}>{event.createdByName} (not signed up)</option>
                 )}
@@ -404,15 +402,15 @@ export function SetupEditor({
                     {entryName(entry)}
                   </option>
                 ))}
-              </select>
+              </Select>
             </label>
             <label className="field">
               <span>
                 <RoleMark gameVersion={guild.gameVersion} role="MASTER_LOOTER" /> Master looter
               </span>
-              <select
+              <Select
                 value={masterLooter ?? ''}
-                onChange={(e) => changeRoles(() => setMasterLooter(e.target.value || null))}
+                onChange={(v) => changeRoles(() => setMasterLooter(v || null))}
               >
                 <option value="">None</option>
                 {people.map((entry) => (
@@ -420,7 +418,7 @@ export function SetupEditor({
                     {entryName(entry)}
                   </option>
                 ))}
-              </select>
+              </Select>
             </label>
             <div className="field">
               <span>

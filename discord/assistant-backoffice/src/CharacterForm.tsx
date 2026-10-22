@@ -29,6 +29,7 @@ import {
   type Role,
   type User,
 } from './types';
+import { Select } from './Select';
 
 interface Props {
   guild: Guild;
@@ -272,13 +273,13 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
               Already on this server: migrate an existing character instead of creating a new one
             </span>
             <div className="migrate-row">
-              <select value={toMigrate} onChange={(e) => setToMigrate(e.target.value)}>
+              <Select value={toMigrate} onChange={(v) => setToMigrate(v)}>
                 {migratable.map((character) => (
                   <option key={character.id} value={character.id}>
                     {`${character.firstName} ${character.lastName}`.trim()} — {character.class}
                   </option>
                 ))}
-              </select>
+              </Select>
               <button
                 type="button"
                 className="btn btn-sm"
@@ -351,21 +352,21 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
         {races.length > 0 && (
           <label className="field">
             Race
-            <select value={race} onChange={(e) => changeRace(e.target.value)} required={!initial}>
+            <Select value={race} onChange={(v) => changeRace(v)} required={!initial}>
               <option value="" disabled={!initial}>
                 {initial ? 'Unknown (show every class)' : 'Choose a race…'}
               </option>
               {races.map((r) => (
                 <option key={r.race}>{r.race}</option>
               ))}
-            </select>
+            </Select>
           </label>
         )}
         <label className="field">
           Class
-          <select
+          <Select
             value={characterClass}
-            onChange={(e) => applyClass(e.target.value)}
+            onChange={(v) => applyClass(v)}
             disabled={classLocked}
             required
             title={classLocked ? 'Choose a race first' : undefined}
@@ -376,7 +377,7 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
             {classOptions.map((c) => (
               <option key={c}>{c}</option>
             ))}
-          </select>
+          </Select>
         </label>
         <div className="field">
           Roles

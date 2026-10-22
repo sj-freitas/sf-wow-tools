@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { ChevronIcon } from './Icons';
 
 interface Props<T extends string> {
   /** `icon`: shown before the label in the list (the button shows labels only). */
@@ -53,7 +54,9 @@ export function MultiSelect<T extends string>({
         onClick={() => setOpen((current) => !current)}
       >
         <span className={value.length === 0 ? 'muted' : undefined}>{summary}</span>
-        <span aria-hidden="true">▾</span>
+        <span className="select-chevron" aria-hidden="true">
+          <ChevronIcon />
+        </span>
       </button>
       {open && (
         <div className="dropdown-menu" role="listbox" aria-multiselectable="true">

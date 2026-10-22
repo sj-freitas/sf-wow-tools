@@ -492,9 +492,7 @@ tbody tr:last-child td {
   --control-height: 2.5rem;
 }
 .field input:not([type='checkbox']):not([type='radio']),
-.field select,
-.dropdown-button,
-.inline-form select {
+.dropdown-button {
   box-sizing: border-box;
   width: 100%;
   height: var(--control-height);
@@ -714,6 +712,34 @@ tbody tr:last-child td {
 .dropdown-item:hover {
   background: color-mix(in srgb, var(--accent) 14%, var(--surface-menu));
 }
+/* A dropdown button's chevron: pointing down, up while open. */
+.select-chevron {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: var(--muted);
+}
+.select-chevron svg {
+  transform: rotate(90deg);
+  transition: transform 0.15s;
+}
+[aria-expanded='true'] > .select-chevron svg {
+  transform: rotate(-90deg);
+}
+/* Select (the app's <select>): an option that can't be picked, like a placeholder. */
+.dropdown-item-disabled,
+.dropdown-item-disabled:hover {
+  background: none;
+  color: var(--muted);
+  cursor: default;
+}
+/* Long option texts wrap in the list, and are cut short (…) on the button. */
+.select .dropdown-menu {
+  max-height: min(320px, 60vh);
+}
+.select .dropdown-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
 /* ---- channel picker (ChannelSelect): search box on top, then the channels by server ---- */
 .channel-select-menu {
   display: flex;
@@ -834,7 +860,7 @@ tbody tr:last-child td {
   flex-wrap: wrap;
   gap: 0.5rem;
 }
-.inline-form select {
+.inline-form .dropdown {
   flex: 1 1 220px;
   width: auto;
 }
@@ -1243,7 +1269,7 @@ tbody tr:last-child td {
   display: none;
   padding: 0.75rem 1rem 0;
 }
-.view-tabs-select select {
+.view-tabs-select .dropdown {
   width: 100%;
 }
 @media (max-width: 600px) {
@@ -1929,7 +1955,7 @@ label.btn.disabled {
   align-items: center;
   gap: 0.5rem;
 }
-.migrate-row select {
+.migrate-row .dropdown {
   flex: 1 1 220px;
   width: auto;
 }

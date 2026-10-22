@@ -1,5 +1,6 @@
 import type { PluginScheduleKind } from './pluginsApi';
 import { DAYS_OF_MONTH, isInterval, WEEKDAYS, type ScheduleValue } from './scheduleValue';
+import { Select } from '../Select';
 
 const FREQUENCY_LABELS: Record<PluginScheduleKind, string> = {
   EVERY_5_MINUTES: 'Every 5 minutes',
@@ -35,43 +36,40 @@ export function ScheduleFields({
       {frequencies.length > 1 && (
         <label className="field">
           How often
-          <select
+          <Select
             value={value.frequency}
-            onChange={(e) => set({ frequency: e.target.value as PluginScheduleKind })}
+            onChange={(v) => set({ frequency: v as PluginScheduleKind })}
           >
             {frequencies.map((frequency) => (
               <option key={frequency} value={frequency}>
                 {FREQUENCY_LABELS[frequency]}
               </option>
             ))}
-          </select>
+          </Select>
         </label>
       )}
       {value.frequency === 'WEEKLY' && (
         <label className="field">
           {dayLabel}
-          <select value={value.weekday} onChange={(e) => set({ weekday: Number(e.target.value) })}>
+          <Select value={value.weekday} onChange={(v) => set({ weekday: Number(v) })}>
             {WEEKDAYS.map((day, index) => (
               <option key={day} value={index + 1}>
                 {day}
               </option>
             ))}
-          </select>
+          </Select>
         </label>
       )}
       {value.frequency === 'MONTHLY' && (
         <label className="field">
           Day of the month
-          <select
-            value={value.dayOfMonth}
-            onChange={(e) => set({ dayOfMonth: Number(e.target.value) })}
-          >
+          <Select value={value.dayOfMonth} onChange={(v) => set({ dayOfMonth: Number(v) })}>
             {DAYS_OF_MONTH.map((day) => (
               <option key={day} value={day}>
                 {day}
               </option>
             ))}
-          </select>
+          </Select>
           {value.dayOfMonth > 28 && (
             <small className="muted">Shorter months run on their last day.</small>
           )}

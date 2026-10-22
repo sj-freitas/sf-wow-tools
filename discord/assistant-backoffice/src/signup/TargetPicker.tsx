@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { ChevronIcon } from '../Icons';
 import { MARKERS } from './labels';
 import { MarkerMark } from './MarkerMark';
 import { PlayerMark } from './PlayerMark';
@@ -60,7 +61,9 @@ export function TargetPicker({
         onClick={() => setOpen((current) => !current)}
       >
         <span>{show(value)}</span>
-        <span aria-hidden="true">▾</span>
+        <span className="select-chevron" aria-hidden="true">
+          <ChevronIcon />
+        </span>
       </button>
       {open && (
         <div className="dropdown-menu" role="listbox">

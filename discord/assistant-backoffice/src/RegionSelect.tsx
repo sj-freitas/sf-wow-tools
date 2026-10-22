@@ -1,4 +1,5 @@
 import type { Region } from './types';
+import { Select } from './Select';
 
 interface Props {
   regions: Region[];
@@ -11,13 +12,13 @@ export function RegionSelect({ regions, value, onChange }: Props) {
   return (
     <label className="field">
       Region (schedule timezone)
-      <select value={value} onChange={(e) => onChange(e.target.value)}>
+      <Select value={value} onChange={(v) => onChange(v)}>
         {regions.map((region) => (
           <option key={region.id} value={region.id}>
             {region.label} ({region.timezone})
           </option>
         ))}
-      </select>
+      </Select>
     </label>
   );
 }

@@ -1,4 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from 'react';
+import { ChevronIcon } from './Icons';
 import { channelKey } from './channelKey';
 import { fuzzyWordsScore } from './fuzzy';
 import type { ServerChannels } from './types';
@@ -140,7 +141,9 @@ export function ChannelSelect({ groups, value, onChange, onlyServer, required, d
                 ? 'Loading channels…'
                 : 'Choose a channel…'}
           </span>
-          <span aria-hidden="true">▾</span>
+          <span className="select-chevron" aria-hidden="true">
+            <ChevronIcon />
+          </span>
         </button>
         {/* Lets the form's own "required" check stop a submit with no channel picked. */}
         {required && (

@@ -21,6 +21,7 @@ import { PrivacyPage } from './PublicPages';
 import { RequireAccess } from './RequireAccess';
 import type { Guild, SetupInfo, User } from './types';
 import { Spinner } from './Loading';
+import { Select } from './Select';
 
 // Each page is loaded when first opened, so the first visit (and the public landing page, which
 // loads none of this) downloads less.
@@ -408,18 +409,14 @@ function GuildFrame({
       </nav>
       {/* Phones: the same sections in a dropdown (CSS shows one or the other). */}
       <div className="view-tabs-select">
-        <select
-          aria-label="Guild section"
-          value={current}
-          onChange={(e) => navigate(e.target.value)}
-        >
+        <Select aria-label="Guild section" value={current} onChange={(v) => navigate(v)}>
           {current === '' && <option value="">Choose a section…</option>}
           {sections.map((section) => (
             <option key={section.to} value={section.to}>
               {section.label}
             </option>
           ))}
-        </select>
+        </Select>
       </div>
 
       {children}

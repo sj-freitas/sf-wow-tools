@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { Select } from './Select';
 
 /** Every IANA zone the browser knows (most do), for events not in server time. */
 function allTimezones(): string[] {
@@ -23,7 +24,7 @@ export function TimezoneField({
   return (
     <label className="field">
       Timezone
-      <select value={value} onChange={(e) => onChange(e.target.value)}>
+      <Select value={value} onChange={(v) => onChange(v)}>
         <option value="ST">Server time (ST · {serverTimezone})</option>
         <option value="UTC">UTC</option>
         {zones
@@ -33,7 +34,7 @@ export function TimezoneField({
               {zone}
             </option>
           ))}
-      </select>
+      </Select>
       <small>Discord shows everyone the time in their own timezone.</small>
     </label>
   );

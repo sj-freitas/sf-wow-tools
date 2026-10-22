@@ -4,6 +4,7 @@ import { factionsOf, gameOf, regionsOf, serversFor, useGames } from './game';
 import { RegionSelect } from './RegionSelect';
 import { SetupInstructions } from './SetupInstructions';
 import type { EligibleServers, Faction, Guild, SetupInfo } from './types';
+import { Select } from './Select';
 
 interface Props {
   setup: SetupInfo;
@@ -78,30 +79,30 @@ export function CreateGuildForm({ setup, onCreated, onCancel }: Props) {
           </label>
           <label className="field">
             Game version
-            <select value={gameVersion} onChange={(e) => setGameVersion(e.target.value)}>
+            <Select value={gameVersion} onChange={(v) => setGameVersion(v)}>
               {games.map((g) => (
                 <option key={g.gameVersion}>{g.gameVersion}</option>
               ))}
-            </select>
+            </Select>
           </label>
           <RegionSelect regions={regions} value={region} onChange={setRegion} />
           <label className="field">
             Server
-            <select value={realm} onChange={(e) => setRealm(e.target.value)} required>
+            <Select value={realm} onChange={(v) => setRealm(v)} required>
               {servers.map((server) => (
                 <option key={server}>{server}</option>
               ))}
-            </select>
+            </Select>
           </label>
           <label className="field">
             Faction
-            <select value={faction} onChange={(e) => setFaction(e.target.value as Faction)}>
+            <Select value={faction} onChange={(v) => setFaction(v as Faction)}>
               {factions.map((f) => (
                 <option key={f.id} value={f.id}>
                   {f.label}
                 </option>
               ))}
-            </select>
+            </Select>
           </label>
         </div>
 

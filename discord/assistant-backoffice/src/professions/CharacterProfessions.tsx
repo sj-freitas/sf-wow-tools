@@ -4,6 +4,7 @@ import { fuzzyWordsScore } from '../fuzzy';
 import { SkeletonLines } from '../Loading';
 import { timeAgo } from '../time';
 import { ADDON_URL } from './ImportProfessionsDrawer';
+import { ChevronIcon } from '../Icons';
 import { useConfirm } from '../useConfirm';
 import {
   dropProfession,
@@ -153,7 +154,7 @@ export function CharacterProfessions({
                       }
                     >
                       <span className="guild-profession-chevron" aria-hidden="true">
-                        {open ? '▾' : '▸'}
+                        <ChevronIcon />
                       </span>
                       <strong>{profession.name}</strong>
                       <span className="muted">

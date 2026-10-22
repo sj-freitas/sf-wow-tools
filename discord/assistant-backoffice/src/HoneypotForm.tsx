@@ -3,6 +3,7 @@ import { createHoneypot } from './api';
 import { splitChannelKey } from './channelKey';
 import { ChannelSelect } from './ChannelSelect';
 import type { Guild, ServerChannels } from './types';
+import { Select } from './Select';
 
 interface Props {
   guild: Guild;
@@ -71,20 +72,20 @@ export function HoneypotForm({ guild, channels, onSaved, onCancel }: Props) {
         </label>
         <label className="field">
           Server
-          <select value={serverId} onChange={(e) => setServerId(e.target.value)}>
+          <Select value={serverId} onChange={(v) => setServerId(v)}>
             {guild.servers.map((server) => (
               <option key={server.discordId} value={server.discordId}>
                 {server.name || server.discordId}
               </option>
             ))}
-          </select>
+          </Select>
         </label>
         <label className="field">
           Channel
-          <select value={mode} onChange={(e) => setMode(e.target.value as 'new' | 'existing')}>
+          <Select value={mode} onChange={(v) => setMode(v as 'new' | 'existing')}>
             <option value="new">Create a new channel</option>
             <option value="existing">Use an existing channel</option>
-          </select>
+          </Select>
         </label>
         {mode === 'new' ? (
           <>
