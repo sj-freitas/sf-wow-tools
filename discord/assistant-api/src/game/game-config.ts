@@ -43,7 +43,7 @@ export interface FactionConfig<C extends string = string> {
 /**
  * A server a guild can be on. `ruleSet` is the gameplay rules it enforces, not the server's name:
  * several servers could share one (e.g. two PvE servers both `'Normal'`), and features can gate
- * on it instead of hard-coding server names (bios need `'RP'`, say).
+ * on it instead of hard-coding server names (bios need `'RP'` or `'RP-PVP'`, say).
  */
 export interface ServerConfig {
   ruleSet: string;

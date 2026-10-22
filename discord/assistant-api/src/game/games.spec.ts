@@ -249,8 +249,8 @@ describe('asking about a version', () => {
   });
 
   it('lists the servers of a version per region, none when it is not there', () => {
-    assert.deepEqual(serversOf('Forever', 'EU'), ['RP', 'PVP', 'PVE', 'Hardcore']);
-    assert.deepEqual(serversOf('Forever', 'US'), ['RP', 'PVP', 'PVE', 'Hardcore']);
+    assert.deepEqual(serversOf('Forever', 'EU'), ['RP', 'PVP', 'RP-PVP', 'PVE', 'Hardcore']);
+    assert.deepEqual(serversOf('Forever', 'US'), ['RP', 'PVP', 'RP-PVP', 'PVE', 'Hardcore']);
     assert.deepEqual(serversOf('Retail', 'EU'), []);
   });
 
@@ -264,6 +264,8 @@ describe('asking about a version', () => {
 
   it('supports bios only for a guild on an RP rule-set server', () => {
     assert.equal(supportsBios('Forever', 'EU', 'RP'), true);
+    assert.equal(supportsBios('Forever', 'EU', 'RP-PVP'), true, 'roleplay too');
+    assert.equal(supportsBios('Forever', 'US', 'RP-PVP'), true);
     assert.equal(supportsBios('Forever', 'EU', 'PVP'), false);
     assert.equal(supportsBios('Forever', 'EU', 'PVE'), false);
     assert.equal(supportsBios('Retail', 'EU', 'RP'), false);

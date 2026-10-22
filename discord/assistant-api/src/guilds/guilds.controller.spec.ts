@@ -131,7 +131,7 @@ describe('GuildsController role mappings', () => {
     it('refuses a server the version does not list for that region', async () => {
       await assert.rejects(
         async () => controller.create(req, { ...details, realm: 'Firemaw' }),
-        /must be one of RP, PVP, PVE, Hardcore for Forever in EU/,
+        /must be one of RP, PVP, RP-PVP, PVE, Hardcore for Forever in EU/,
       );
       assert.equal(created.length, 0);
     });
@@ -158,7 +158,7 @@ describe('GuildsController role mappings', () => {
       // Whatever the version's config says (it changes often): the API sends it as it is.
       assert.deepEqual(games[0], getGame('Forever'));
       const eu = games[0].allowedServers.EU;
-      assert.deepEqual(Object.keys(eu ?? {}), ['RP', 'PVP', 'PVE', 'Hardcore']);
+      assert.deepEqual(Object.keys(eu ?? {}), ['RP', 'PVP', 'RP-PVP', 'PVE', 'Hardcore']);
       assert.equal(eu?.RP.ruleSet, 'RP');
     });
   });

@@ -23,12 +23,14 @@ export default defineGame({
     US: {
       RP: { ruleSet: 'RP' },
       PVP: { ruleSet: 'PVP' },
+      'RP-PVP': { ruleSet: 'RP-PVP' },
       PVE: { ruleSet: 'Normal' },
       Hardcore: { ruleSet: 'Hardcore' },
     },
     EU: {
       RP: { ruleSet: 'RP' },
       PVP: { ruleSet: 'PVP' },
+      'RP-PVP': { ruleSet: 'RP-PVP' },
       PVE: { ruleSet: 'Normal' },
       Hardcore: { ruleSet: 'Hardcore' },
     },

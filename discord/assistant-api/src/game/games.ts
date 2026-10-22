@@ -215,9 +215,12 @@ export const ruleSetOf = (
   return byRegion?.[region]?.[server]?.ruleSet;
 };
 
-/** Bios are an RP (roleplay) feature: only guilds on an `'RP'` rule-set server get them. */
+/** The rule sets of roleplay servers: their guilds' characters get bios. */
+export const RP_RULE_SETS: readonly string[] = ['RP', 'RP-PVP'];
+
+/** Bios are an RP (roleplay) feature: only guilds on a roleplay server ('RP', 'RP-PVP') get them. */
 export const supportsBios = (gameVersion: string, region: string, server: string): boolean =>
-  ruleSetOf(gameVersion, region, server) === 'RP';
+  RP_RULE_SETS.includes(ruleSetOf(gameVersion, region, server) ?? '');
 
 /** Characters must have a last name (`Name-Lastname`) in this version. */
 export const requiresLastName = (gameVersion: string): boolean =>

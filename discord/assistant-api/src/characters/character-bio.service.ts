@@ -39,7 +39,7 @@ export interface CharacterProfile {
    * (then only they edit or move it, not Officers).
    */
   verified: boolean;
-  /** Whether this server offers bios at all (its rule set is 'RP'); hide the section if not. */
+  /** Whether this server offers bios at all (roleplay: 'RP' or 'RP-PVP'); hide the section if not. */
   bioSupported: boolean;
   bioVisible: boolean;
   /** The bio text, only when the viewer may see it (the owner, or `bioVisible` is set). */
@@ -102,7 +102,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
  * A character's own page and its bio: free text (and a few images) its own player writes about
- * it, offered on a server whose rule set is 'RP' (src/game/<version>/config.ts). Unlike the rest
+ * it, offered on a roleplay server, rule set 'RP' or 'RP-PVP' (src/game/<version>/config.ts). Unlike the rest
  * of the character, an Officer cannot write the bio for someone else — it is personal, roleplay
  * flavor text, not roster data. Both are guild-agnostic: reached by the character's server and
  * name, not by any one guild it happens to be in (every guild it is in shares that server).

@@ -33,7 +33,7 @@ import {
 /**
  * A character's own page (guild-agnostic: the same one address regardless of which guild it is
  * in, or none) and its bio: free text, personal to its own player, shown to others only when they
- * choose (and only at all on a server whose rule set is 'RP'). See `CharacterBioService`.
+ * choose (and only at all on a roleplay server: rule set 'RP' or 'RP-PVP'). See `CharacterBioService`.
  */
 @Controller()
 @UseGuards(AuthGuard)

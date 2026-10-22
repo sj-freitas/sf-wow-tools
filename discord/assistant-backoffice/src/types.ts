@@ -21,7 +21,7 @@ export interface BioImage {
  * A character's own page, guild-agnostic (the same one regardless of which guild it is in, or
  * none), as fetched for one viewer: only its own player (`isOwner`) can ever write the bio, and
  * `bio`/`images` are only there when they may see it (the owner, or `bioVisible` is set).
- * `bioSupported` is false when its server's rule set isn't 'RP' — the bio section (and
+ * `bioSupported` is false when its server isn't a roleplay one ('RP', 'RP-PVP') — the bio section (and
  * `bioVisible`/`bio`/`images`) don't apply at all then, rather than being merely hidden.
  */
 /** One of your characters on a server (the API's OwnCharacter), for your characters page. */
