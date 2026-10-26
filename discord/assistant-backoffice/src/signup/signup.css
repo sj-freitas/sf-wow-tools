@@ -214,51 +214,105 @@
   font-size: 0.85rem;
   font-style: italic;
 }
+
+/* A sign-up (SignupLists): a card the same size in every list. The name across the top with the
+   icons in its corner, then "#number · Discord name", then the note (its line always kept). */
+.signup-people .signup-card {
+  display: grid;
+  /* The full width (not shrunk to the name by .signup-person's justify-content). */
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: 1.6rem 1.15rem 1.15rem;
+  align-items: center;
+  gap: 0.1rem;
+  padding: 0.45rem 0.5rem 0.5rem 0.7rem;
+  overflow-wrap: normal;
+}
+.signup-card-top {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+.signup-card-top > :not(.signup-card-name) {
+  flex-shrink: 0;
+}
+.signup-card-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: inherit;
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-decoration: none;
+}
+.signup-card-sub,
+.signup-card-note {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.8rem;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.signup-card-sub a {
+  color: inherit;
+  text-decoration: none;
+}
+.signup-card-name:hover,
+.signup-card-sub a:hover {
+  text-decoration: underline;
+}
+.signup-card-number {
+  font-variant-numeric: tabular-nums;
+}
+.signup-card-note {
+  font-style: italic;
+}
+.signup-card-sub.status-error {
+  color: var(--danger);
+}
+.signup-card-top .badge {
+  margin-left: 0;
+}
+.signup-card-actions {
+  display: flex;
+  gap: 0.15rem;
+  margin-left: auto;
+}
+
+/* A small borderless icon button (pencil, bin): a soft background on hover. */
+.icon-button {
+  display: inline-grid;
+  place-items: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+}
+.icon-button:hover,
+.icon-button:focus-visible {
+  background: var(--surface);
+  color: var(--text);
+}
+.icon-button-danger:hover,
+.icon-button-danger:focus-visible {
+  color: var(--danger);
+}
 .signup-person-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem;
 }
-/* Not signed up: each person a card, its lines stacked (name, characters, reminders, actions). */
-.signup-missing {
-  gap: 0.5rem;
-}
-.signup-missing .signup-person {
-  padding: 0.7rem 0.85rem;
-  border-radius: var(--radius);
-}
-.missing-who {
-  display: grid;
-  gap: 0.2rem;
-  min-width: 0;
-}
-.missing-name {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.25rem 0.5rem;
-}
-.missing-name .badge {
-  margin-left: 0;
-}
-.missing-characters {
-  font-size: 0.9rem;
-}
-@media (max-width: 720px) {
-  /* The buttons share the card's width, under its text. */
-  .signup-missing .signup-person {
-    display: grid;
-    gap: 0.6rem;
-  }
-  .signup-missing .signup-person-actions {
-    display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: 1fr;
-  }
-  .signup-missing .signup-person-actions .btn {
-    justify-content: center;
-    text-align: center;
-  }
+/* A text button in a card's corner (Not signed up's Remind): the height of the icon buttons. */
+.signup-card-button {
+  height: 1.6rem;
+  padding-block: 0;
+  white-space: nowrap;
 }
 
 .signup-filters {

@@ -69,6 +69,8 @@ export interface Entry {
   discordName: string;
   characterId: string | null;
   characterName: string | null;
+  /** For the link to the character's page: `Name-Lastname` (or `Name`). */
+  characterPath: string | null;
   characterClass: string | null;
   role: Role | null;
   status: SignupStatus;

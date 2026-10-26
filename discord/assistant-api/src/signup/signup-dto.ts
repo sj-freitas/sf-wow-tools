@@ -8,6 +8,10 @@ export const toEntryDto = (entry: EntryRow, withNote: boolean) => ({
   discordName: entry.discordName,
   characterId: entry.characterId,
   characterName: entry.character ? formatCharacterName(entry.character) : null,
+  // The character page's name segment (`Name-Lastname`, or `Name`), as the backoffice links it.
+  characterPath: entry.character
+    ? [entry.character.firstName, entry.character.lastName].filter(Boolean).join('-')
+    : null,
   characterClass: entry.character?.class ?? null,
   role: entry.role,
   status: entry.status,

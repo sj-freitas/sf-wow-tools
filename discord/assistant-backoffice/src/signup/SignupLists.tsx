@@ -1,4 +1,7 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { characterPagePath } from '../guildPath';
+import { BinIcon, PencilIcon } from '../Icons';
 import type { Guild } from '../types';
 import { useConfirm } from '../useConfirm';
 import { ROLE_CATEGORIES, STATUS_LABELS, entryName, errorText } from './labels';
@@ -69,40 +72,94 @@ export function SignupLists({
         .catch((err: unknown) => setError(errorText(err)));
     });
 
+  const discordUrl = (entry: Entry) => `https://discord.com/users/${entry.discordUserId}`;
+
+  // The Discord name, under a character's when it isn't the same.
+  const discordShown = (entry: Entry) =>
+    entry.characterName !== null && entry.discordName !== entry.characterName;
+
+  /**
+   * One person, as a card the same size in every list: the name across the top (cut short when
+   * long, whole on hover) with Change and Remove as small icons in the corner; then the sign-up
+   * number and the Discord name; then the note, its line kept even when there is none. The name
+   * opens the character's page, or the person's Discord profile when there's no character; the
+   * Discord name opens the profile.
+   */
   const row = (entry: Entry) => (
-    <li key={entry.id} className="signup-person">
-      <span>
+    <li key={entry.id} className="signup-person signup-card">
+      <span className="signup-card-top">
         {entry.status !== 'AVAILABLE' && entry.role && (
+          <RoleMark gameVersion={guild.gameVersion} role={entry.role} />
+        )}
+        <ClassMark gameVersion={guild.gameVersion} className={entry.characterClass} />
+        {entry.characterPath ? (
+          <Link
+            className="signup-card-name"
+            to={characterPagePath(guild, entry.characterPath)}
+            title={entryName(entry)}
+          >
+            {entryName(entry)}
+          </Link>
+        ) : (
+          <a
+            className="signup-card-name"
+            href={discordUrl(entry)}
+            target="_blank"
+            rel="noreferrer"
+            title={entryName(entry)}
+          >
+            {entryName(entry)}
+          </a>
+        )}
+        {(officer || (isMine(entry) && !event.closed)) && (
+          <span className="signup-card-actions">
+            <button
+              type="button"
+              className="icon-button"
+              aria-label={`Change ${entryName(entry)}’s sign-up`}
+              title="Change"
+              onClick={() =>
+                onEdit(isMine(entry) && !officer ? { kind: 'self' } : { kind: 'someone', entry })
+              }
+            >
+              <PencilIcon />
+            </button>
+            <button
+              type="button"
+              className="icon-button icon-button-danger"
+              aria-label={`Remove ${entryName(entry)}’s sign-up`}
+              title="Remove"
+              onClick={() => remove(entry)}
+            >
+              <BinIcon />
+            </button>
+          </span>
+        )}
+      </span>
+      <span className="signup-card-sub">
+        <span className="signup-card-number" title="Sign-up number">
+          #{numbers.get(entry.id)}
+        </span>
+        {discordShown(entry) && (
           <>
-            <RoleMark gameVersion={guild.gameVersion} role={entry.role} />{' '}
+            {' · '}
+            <a
+              href={discordUrl(entry)}
+              target="_blank"
+              rel="noreferrer"
+              title={`${entry.discordName} on Discord`}
+            >
+              {entry.discordName}
+            </a>
           </>
         )}
-        <span className="signup-number">{numbers.get(entry.id)}</span>
-        <ClassMark gameVersion={guild.gameVersion} className={entry.characterClass} />
-        <strong>{entryName(entry)}</strong>
-        {entry.characterName && entry.discordName !== entry.characterName && (
-          <span className="muted"> · {entry.discordName}</span>
-        )}
-        {entry.note && <span className="signup-note">“{entry.note}”</span>}
       </span>
-      {(officer || (isMine(entry) && !event.closed)) && (
-        <span className="signup-person-actions">
-          <button
-            type="button"
-            className="btn btn-sm"
-            onClick={() =>
-              onEdit(isMine(entry) && !officer ? { kind: 'self' } : { kind: 'someone', entry })
-            }
-          >
-            Change
-          </button>
-          <button type="button" className="btn btn-sm btn-danger" onClick={() => remove(entry)}>
-            Remove
-          </button>
-        </span>
-      )}
+      <span className="signup-card-note" title={entry.note ?? undefined}>
+        {entry.note ? `“${entry.note}”` : '\u00a0'}
+      </span>
     </li>
   );
+  const rows = (entries: Entry[]) => entries.map(row);
 
   return (
     <>
@@ -121,7 +178,7 @@ export function SignupLists({
                 {inRole.length === 0 ? (
                   <p className="muted">—</p>
                 ) : (
-                  <ul className="signup-people">{inRole.map(row)}</ul>
+                  <ul className="signup-people">{rows(inRole)}</ul>
                 )}
               </section>
             );
@@ -131,12 +188,13 @@ export function SignupLists({
         // A members event: everyone coming in one list.
         <section className="signup-column">
           <h4>
-            ✅ Signed up <span className="muted">({available.length})</span>
+            <StatusIcon status="AVAILABLE" /> Signed up{' '}
+            <span className="muted">({available.length})</span>
           </h4>
           {available.length === 0 ? (
             <p className="muted">—</p>
           ) : (
-            <ul className="signup-people signup-people-wide">{available.map(row)}</ul>
+            <ul className="signup-people signup-people-wide">{rows(available)}</ul>
           )}
         </section>
       )}
@@ -149,7 +207,8 @@ export function SignupLists({
               <StatusIcon status={status} /> {STATUS_LABELS[status]}{' '}
               <span className="muted">({inStatus.length})</span>
             </h4>
-            <ul className="signup-people">{inStatus.map(row)}</ul>
+            {/* The same grid as the members list, so every answer's rows look alike. */}
+            <ul className="signup-people signup-people-wide">{rows(inStatus)}</ul>
           </section>
         );
       })}

@@ -174,48 +174,56 @@ export function MissingTab({ guild, event }: { guild: Guild; event: SignupEvent 
       {shown.length === 0 ? (
         <p className="empty">Nobody here.</p>
       ) : (
-        <ul className="signup-people signup-missing">
+        <ul className="signup-people signup-people-wide">
           {shown.map((person) => (
-            <li key={person.discordUserId} className="signup-person">
-              {/* A card: who (and Raider), their characters, the reminders, then the actions. */}
-              <span className="missing-who">
-                <span className="missing-name">
-                  <strong>{person.name}</strong>
-                  {person.isRaider && <span className="badge">Raider</span>}
-                </span>
-                <span className="missing-characters muted">
-                  {person.characters.length > 0 ? person.characters.join(', ') : 'No characters'}
-                </span>
-                {person.lastReminderAt && (
-                  <span
-                    className={
-                      person.lastDelivered === false ? 'signup-note status-error' : 'signup-note'
-                    }
-                  >
-                    Reminded {person.reminders}× · last {timeAgo(person.lastReminderAt)}
-                    {person.lastDelivered === false && ' (they don’t accept DMs)'}
+            /* The sign-ups' card: the name (to their Discord) with Remind in its corner, their
+               characters, then the reminders sent (the line kept when there are none). */
+            <li key={person.discordUserId} className="signup-person signup-card">
+              <span className="signup-card-top">
+                <a
+                  className="signup-card-name"
+                  href={`https://discord.com/users/${person.discordUserId}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  title={person.name}
+                >
+                  {person.name}
+                </a>
+                {person.isRaider && <span className="badge">Raider</span>}
+                {/* Reminding: Officers only. */}
+                {officer && (
+                  <span className="signup-card-actions">
+                    <button
+                      type="button"
+                      className="btn btn-sm signup-card-button"
+                      disabled={sending !== null || bulk !== null || !event.postUrl}
+                      onClick={() => void remind(person).catch(() => undefined)}
+                    >
+                      {sending === person.discordUserId ? (
+                        <InlineSpinner label="Sending…" />
+                      ) : person.reminders > 0 ? (
+                        'Remind again'
+                      ) : (
+                        'Remind'
+                      )}
+                    </button>
                   </span>
                 )}
               </span>
-              {/* Reminding and signing up someone else: Officers only. */}
-              {officer && (
-                <span className="signup-person-actions">
-                  <button
-                    type="button"
-                    className="btn btn-sm"
-                    disabled={sending !== null || bulk !== null || !event.postUrl}
-                    onClick={() => void remind(person).catch(() => undefined)}
-                  >
-                    {sending === person.discordUserId ? (
-                      <InlineSpinner label="Sending…" />
-                    ) : person.reminders > 0 ? (
-                      'Remind again'
-                    ) : (
-                      'Remind'
-                    )}
-                  </button>
-                </span>
-              )}
+              <span className="signup-card-sub" title={person.characters.join(', ') || undefined}>
+                {person.characters.length > 0 ? person.characters.join(', ') : 'No characters'}
+              </span>
+              <span
+                className={
+                  person.lastDelivered === false
+                    ? 'signup-card-sub status-error'
+                    : 'signup-card-sub'
+                }
+              >
+                {person.lastReminderAt
+                  ? `Reminded ${person.reminders}× · ${timeAgo(person.lastReminderAt)}${person.lastDelivered === false ? ' · DMs closed' : ''}`
+                  : '\u00a0'}
+              </span>
             </li>
           ))}
         </ul>
