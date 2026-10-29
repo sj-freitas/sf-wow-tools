@@ -40,8 +40,10 @@ export function UserMenu({ user, guilds, onLogout }: Props) {
   const current = useCurrentGuild(guilds);
   const ordered = current ? [current, ...guilds.filter((g) => g.id !== current.id)] : guilds;
 
-  // Close after navigating, when clicking elsewhere, and on Escape.
+  // Close after navigating, when clicking elsewhere, and on Escape. Picking an item closes it
+  // too: the guild you are already on (or Add a guild while on it) doesn't change the address.
   useEffect(() => setOpen(false), [pathname]);
+  const close = () => setOpen(false);
   useEffect(() => {
     if (!open) return;
     const away = (event: MouseEvent) => {
@@ -85,7 +87,7 @@ export function UserMenu({ user, guilds, onLogout }: Props) {
               type="button"
               className="user-menu-close"
               aria-label="Close the menu"
-              onClick={() => setOpen(false)}
+              onClick={close}
             >
               ×
             </button>
@@ -99,12 +101,13 @@ export function UserMenu({ user, guilds, onLogout }: Props) {
                 className={guild.id === current?.id ? 'user-menu-item current' : 'user-menu-item'}
                 aria-current={guild.id === current?.id ? 'page' : undefined}
                 to={guildPath(guild)}
+                onClick={close}
               >
                 <GuildIcon guild={guild} />
                 <span className="user-menu-guild">{guild.name}</span>
               </Link>
             ))}
-            <Link role="menuitem" className="user-menu-item" to="/guilds/create">
+            <Link role="menuitem" className="user-menu-item" to="/guilds/create" onClick={close}>
               <span className="guild-icon user-menu-add" aria-hidden="true">
                 +
               </span>
