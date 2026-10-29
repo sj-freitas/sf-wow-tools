@@ -1106,6 +1106,12 @@ tbody tr:last-child td {
   min-height: 2rem;
   font-size: 0.85rem;
 }
+/* A post's message: its "Message N" label over its reactions. */
+.part-reactions {
+  display: grid;
+  justify-items: start;
+  gap: 0.35rem;
+}
 .reaction-list {
   display: flex;
   flex-wrap: wrap;
