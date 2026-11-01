@@ -182,7 +182,7 @@ describe('OfficerRequestsCommand', () => {
     });
 
     it('sends the submitted message as a follow-up to that conversation', async () => {
-      const answer = await command.sendReplyForm({
+      const answer: any = command.sendReplyForm({
         ...dmInteraction(),
         type: 5,
         data: {
@@ -191,7 +191,9 @@ describe('OfficerRequestsCommand', () => {
           components: [{ components: [{ custom_id: 'message', value: '  thanks!  ' }] }],
         },
       });
-      assert.equal(answer, 'contacted');
+      assert.equal(answer.optimistic, MESSAGES.contactSent);
+      assert.equal(calls.length, 0);
+      assert.equal(await answer.work(), 'contacted');
       assert.deepEqual(calls[0].input, {
         guildId: 'guild-1',
         invoker: { id: 'u1', name: 'Global', roleIds: undefined },
@@ -200,13 +202,13 @@ describe('OfficerRequestsCommand', () => {
       });
     });
 
-    it('refuses an empty submission', async () => {
-      const answer = await command.sendReplyForm({
+    it('refuses an empty submission', () => {
+      const answer = command.sendReplyForm({
         ...dmInteraction(),
         type: 5,
         data: { name: '', custom_id: CUSTOM_ID, components: [] },
       });
-      assert.match(answer, /Write a message/);
+      assert.match(answer as string, /Write a message/);
       assert.deepEqual(calls, []);
     });
   });

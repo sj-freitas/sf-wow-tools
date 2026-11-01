@@ -44,6 +44,7 @@ interface InteractionResponse {
  */
 @Controller('discord')
 export class DiscordInteractionsController {
+  private readonly editRetryDelaysMs = [0, 1000, 3000];
   private readonly logger = new Logger(DiscordInteractionsController.name);
   private readonly publicKey: string;
 
@@ -77,29 +78,7 @@ export class DiscordInteractionsController {
     }
 
     if (interaction.type === InteractionType.APPLICATION_COMMAND) {
-      const commandName = interaction.data?.name;
-      if (!commandName) {
-        throw new BadRequestException('Missing command name');
-      }
-
-      const flags = this.commandRegistry.isEphemeral(commandName)
-        ? { flags: InteractionResponseFlags.EPHEMERAL }
-        : {};
-      if (this.commandRegistry.isDeferred(commandName)) {
-        this.finishLater(interaction, `/${commandName}`, () =>
-          this.runCommand(commandName, interaction),
-        );
-        return { type: InteractionResponseType.DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE, data: flags };
-      }
-      return {
-        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-        data: {
-          content: await this.timed(`/${commandName}`, () =>
-            this.runCommand(commandName, interaction),
-          ),
-          ...flags,
-        },
-      };
+      return this.handleCommand(interaction);
     }
 
     if (
@@ -110,6 +89,43 @@ export class DiscordInteractionsController {
     }
 
     throw new BadRequestException(`Unsupported interaction type: ${interaction.type}`);
+  }
+
+  /** A slash command: answered with its result, or at once with its result filling in later. */
+  private async handleCommand(interaction: DiscordInteraction): Promise<InteractionResponse> {
+    const commandName = interaction.data?.name;
+    if (!commandName) {
+      throw new BadRequestException('Missing command name');
+    }
+
+    const flags = this.commandRegistry.isEphemeral(commandName)
+      ? { flags: InteractionResponseFlags.EPHEMERAL }
+      : {};
+    const finishLater = () =>
+      this.finishLater(interaction, `/${commandName}`, () =>
+        this.runCommand(commandName, interaction),
+      );
+    const optimistic = this.commandRegistry.optimisticReply(commandName);
+    if (optimistic) {
+      finishLater();
+      return {
+        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+        data: { content: optimistic, ...flags },
+      };
+    }
+    if (this.commandRegistry.isDeferred(commandName)) {
+      finishLater();
+      return { type: InteractionResponseType.DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE, data: flags };
+    }
+    return {
+      type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+      data: {
+        content: await this.timed(`/${commandName}`, () =>
+          this.runCommand(commandName, interaction),
+        ),
+        ...flags,
+      },
+    };
   }
 
   /** A button click or a submitted modal. Answers are always private to the user. */
@@ -132,6 +148,13 @@ export class DiscordInteractionsController {
       return {
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
         data: { content: reply, flags: InteractionResponseFlags.EPHEMERAL },
+      };
+    }
+    if ('optimistic' in reply) {
+      this.finishLater(interaction, `${kind} "${interaction.data?.custom_id}"`, reply.work);
+      return {
+        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+        data: { content: reply.optimistic, flags: InteractionResponseFlags.EPHEMERAL },
       };
     }
     if ('defer' in reply) {
@@ -166,8 +189,9 @@ export class DiscordInteractionsController {
   }
 
   /**
-   * After answering "thinking…": runs the work and puts its result in place of that answer.
-   * Failures are logged and shown as a generic message.
+   * After answering at once: runs the work and puts its result in place of that answer. Failures
+   * are logged and shown as a generic message. Quick work can finish before Discord has taken the
+   * first answer, so the edit is retried: an optimistic answer must not stay if the work failed.
    */
   private finishLater(
     interaction: DiscordInteraction,
@@ -185,10 +209,16 @@ export class DiscordInteractionsController {
       }
       if (!applicationId || !token) return;
       const message = typeof result === 'string' ? { content: result } : result;
-      try {
-        await this.bot.editInteractionResponse(applicationId, token, message as never);
-      } catch (error) {
-        this.logger.error(`${label}: could not show the answer: ${String(error)}`);
+      for (const [attempt, delay] of this.editRetryDelaysMs.entries()) {
+        if (delay > 0) await new Promise((resolve) => setTimeout(resolve, delay));
+        try {
+          await this.bot.editInteractionResponse(applicationId, token, message as never);
+          return;
+        } catch (error) {
+          if (attempt === this.editRetryDelaysMs.length - 1) {
+            this.logger.error(`${label}: could not show the answer: ${String(error)}`);
+          }
+        }
       }
     })();
   }

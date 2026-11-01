@@ -71,6 +71,10 @@ export class CommandRegistryService {
     return this.handlers.get(name)?.options.defer ?? false;
   }
 
+  optimisticReply(name: string): string | undefined {
+    return this.handlers.get(name)?.options.optimistic;
+  }
+
   isEphemeral(name: string): boolean {
     return this.handlers.get(name)?.options.ephemeral ?? false;
   }

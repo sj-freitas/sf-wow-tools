@@ -74,6 +74,8 @@ export const MESSAGE_COOLDOWN_MS = 30_000;
 const ID_ATTEMPTS = 8;
 
 export const MESSAGES = {
+  contactSent: 'Your message was sent to the officers.',
+  replySent: 'Your reply was sent.',
   serverOnly: 'This command can only be used inside a server.',
   notLinked: "This server isn't linked to a guild yet.",
   channelNotSet:

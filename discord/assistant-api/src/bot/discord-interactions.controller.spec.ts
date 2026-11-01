@@ -45,6 +45,70 @@ describe('DiscordInteractionsController buttons and modals', () => {
     );
   });
 
+  describe('optimistic commands', () => {
+    const command = { type: 2, data: { name: 'send' }, application_id: 'app', token: 'tok' };
+    let finish: (value: string) => void;
+
+    beforeEach(() => {
+      const instance = { run: () => new Promise<string>((resolve) => (finish = resolve)) };
+      (registry as any).handlers.set('send', {
+        instance,
+        methodName: 'run',
+        options: { ephemeral: true, optimistic: 'Sent!' },
+      });
+    });
+
+    const settle = () => new Promise((resolve) => setTimeout(resolve, 5));
+
+    it('answers at once, then replaces the answer with the result', async () => {
+      assert.deepEqual(await controller.handleCommand(command), {
+        type: 4,
+        data: { content: 'Sent!', flags: EPHEMERAL },
+      });
+      assert.equal(edits.length, 0);
+      finish('Sent, your ID is 1');
+      await settle();
+      assert.deepEqual(edits, [{ token: 'tok', message: { content: 'Sent, your ID is 1' } }]);
+    });
+
+    it('does the same for a submitted form', async () => {
+      registry.registerComponent(
+        'modal',
+        'form',
+        { run: () => ({ optimistic: 'Sent!', work: async () => 'Sent, your ID is 1' }) },
+        'run',
+      );
+      const response = await controller.handleComponent({
+        ...click('form:1', 5),
+        application_id: 'app',
+        token: 'tok',
+      });
+      assert.deepEqual(response, { type: 4, data: { content: 'Sent!', flags: EPHEMERAL } });
+      await settle();
+      assert.deepEqual(edits, [{ token: 'tok', message: { content: 'Sent, your ID is 1' } }]);
+    });
+
+    it('shows a failure in place of the optimistic answer', async () => {
+      (registry as any).handlers.get('send').instance.run = () => Promise.reject(new Error('boom'));
+      await controller.handleCommand(command);
+      await settle();
+      assert.match((edits[0].message as { content: string }).content, /Something went wrong/);
+    });
+
+    it('tries the edit again when Discord has not taken the first answer yet', async () => {
+      controller.editRetryDelaysMs = [0, 0];
+      const edit = controller.bot.editInteractionResponse;
+      let attempts = 0;
+      controller.bot.editInteractionResponse = (...args: unknown[]) =>
+        ++attempts === 1 ? Promise.reject(new Error('Unknown Webhook')) : edit(...args);
+      await controller.handleCommand(command);
+      finish('refused');
+      await settle();
+      assert.equal(attempts, 2);
+      assert.deepEqual(edits, [{ token: 'tok', message: { content: 'refused' } }]);
+    });
+  });
+
   it('answers a button click that opens a modal with the modal (response type 9)', async () => {
     const response = await controller.handleComponent(click('open:abc'));
     assert.equal(response.type, 9);

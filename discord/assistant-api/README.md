@@ -260,8 +260,9 @@ on — used to step through a flow like the event sign-up's character and role m
 - Discord's file links expire, so a copy is also kept in `officer_attachments` (one per message, deleted
   with the message and the conversation). The backoffice shows it from
   `GET /api/guilds/:guildId/officer-requests/:id/messages/:messageId/image` (Officers only).
-- Because the image is downloaded and posted before the command answers, a slow Discord can make the
-  3-second limit tight for big files.
+- `/contact-officer`, `/contact-officer-reply` and the Reply button's form answer "sent" at once and
+  do the work afterwards, so a big image can't go over Discord's 3-second limit; the answer is then
+  replaced with the result, or with what went wrong.
 
 ### Live reactions in a post's text
 

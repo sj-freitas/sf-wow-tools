@@ -24,7 +24,8 @@ import { parseReplyButtonId } from './officer-request-embeds';
 export class OfficerRequestsCommand {
   constructor(private readonly officerRequests: OfficerRequestsService) {}
 
-  @Command('contact-officer', { ephemeral: true })
+  // Answers at once: the work (the image, the channel post) can take longer than Discord waits.
+  @Command('contact-officer', { ephemeral: true, optimistic: MESSAGES.contactSent })
   async contact(interaction: DiscordInteraction): Promise<string> {
     const invoker = invokerOf(interaction);
     if (!interaction.guild_id || !invoker) return MESSAGES.serverOnly;
@@ -82,22 +83,27 @@ export class OfficerRequestsCommand {
   }
 
   @Modal('contact-reply')
-  async sendReplyForm(interaction: DiscordInteraction): Promise<string> {
+  sendReplyForm(interaction: DiscordInteraction): ComponentReply {
     const target = parseReplyButtonId(interaction.data?.custom_id);
     const invoker = invokerOf(interaction);
     if (!target || !invoker) return MESSAGES.conversationNotFound;
     const message = (getModalValue(interaction, 'message') ?? '').trim();
     const tooLong = validateMessage(message);
     if (tooLong) return tooLong;
-    return this.officerRequests.contact({
-      guildId: target.guildId,
-      invoker,
-      message,
-      conversationId: target.publicId,
-    });
+    return {
+      optimistic: MESSAGES.contactSent,
+      work: () =>
+        this.officerRequests.contact({
+          guildId: target.guildId,
+          invoker,
+          message,
+          conversationId: target.publicId,
+        }),
+    };
   }
 
-  @Command('contact-officer-reply', { ephemeral: true })
+  // Answers at once too: it also posts in the channel and sends the member a DM.
+  @Command('contact-officer-reply', { ephemeral: true, optimistic: MESSAGES.replySent })
   async reply(interaction: DiscordInteraction): Promise<string> {
     const invoker = invokerOf(interaction);
     if (!interaction.guild_id || !invoker) return MESSAGES.serverOnly;

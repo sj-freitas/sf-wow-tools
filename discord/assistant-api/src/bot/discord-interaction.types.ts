@@ -64,7 +64,8 @@ export type ComponentReply =
   | { modal: ModalData }
   | { message: ReplyMessage }
   | { update: ReplyMessage }
-  | DeferredReply;
+  | DeferredReply
+  | OptimisticReply;
 
 /**
  * For work that may take longer than the 3 seconds Discord waits for an answer: Discord is told
@@ -74,6 +75,15 @@ export type ComponentReply =
  */
 export interface DeferredReply {
   defer: 'reply' | 'update';
+  work: () => Promise<string | ReplyMessage>;
+}
+
+/**
+ * Like a deferred `reply`, but answers `optimistic` at once instead of "thinking…", assuming the
+ * work will succeed; its result then replaces that, so a failure or a refusal is still shown.
+ */
+export interface OptimisticReply {
+  optimistic: string;
   work: () => Promise<string | ReplyMessage>;
 }
 

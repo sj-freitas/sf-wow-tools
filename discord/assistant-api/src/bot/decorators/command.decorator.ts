@@ -11,6 +11,11 @@ export interface CommandOptions {
    * handler's text when it is done.
    */
   defer?: boolean;
+  /**
+   * Like `defer`, but answers this text at once instead of "thinking…", assuming the handler will
+   * succeed; the handler's text then replaces it, so a failure or a refusal is still shown.
+   */
+  optimistic?: string;
 }
 
 /**
