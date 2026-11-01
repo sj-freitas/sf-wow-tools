@@ -21,7 +21,7 @@ export interface PostPart {
   embedLinks: boolean;
   /** Seconds to wait after the previous part before sending this one (unused for the first). */
   delaySeconds: number;
-  /** Uploaded images (post_images) shown under the text, in order. */
+  /** Uploaded images and files (post_images) shown under the text, in order. */
   imageIds: string[];
 }
 
@@ -174,7 +174,9 @@ export function parseParts(value: unknown, newId: () => string): PostPart[] {
       imageIds.length > MAX_IMAGES_PER_PART ||
       imageIds.some((image) => typeof image !== 'string' || !UUID.test(image))
     ) {
-      throw new BadRequestException(`A message can have at most ${MAX_IMAGES_PER_PART} images.`);
+      throw new BadRequestException(
+        `A message can have at most ${MAX_IMAGES_PER_PART} images or files.`,
+      );
     }
     return {
       id,

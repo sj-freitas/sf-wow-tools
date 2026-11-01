@@ -153,21 +153,34 @@ export class TasksController {
     return this.tasks.reactionUsers(id, emoji, parsePart(part));
   }
 
-  /** Uploads an image for a message of a post (PNG, JPEG, GIF or WebP, up to 5 MB). */
+  /** Uploads an image or file for a message of a post (see PostImagesService, up to 5 MB). */
   @Post('guilds/:guildId/post-images')
   @HttpCode(HttpStatus.CREATED)
   @UseInterceptors(FileInterceptor('image', { limits: { fileSize: MAX_IMAGE_BYTES, files: 1 } }))
   async uploadImage(
     @Req() req: AuthenticatedRequest,
     @Param('guildId') guildId: string,
-    @UploadedFile() file?: { buffer: Buffer },
+    @UploadedFile() file?: { buffer: Buffer; originalname: string },
   ): Promise<PostImageDto> {
     await this.guildAccess.assertOfficer(req.user.id, guildId);
-    if (!file) throw new BadRequestException('No image was sent.');
-    return this.images.upload(guildId, file.buffer);
+    if (!file) throw new BadRequestException('No file was sent.');
+    // The upload parser reads the name as Latin-1; browsers send UTF-8.
+    const name = Buffer.from(file.originalname, 'latin1').toString('utf8');
+    return this.images.upload(guildId, file.buffer, name);
   }
 
-  /** An uploaded image, for the form's preview. */
+  /** What the listed uploads are (`?ids=a,b`), for the form to show them. */
+  @Get('guilds/:guildId/post-images')
+  async describeImages(
+    @Req() req: AuthenticatedRequest,
+    @Param('guildId') guildId: string,
+    @Query('ids') ids?: string,
+  ): Promise<PostImageDto[]> {
+    await this.guildAccess.assertOfficer(req.user.id, guildId);
+    return this.images.describe(guildId, (ids ?? '').split(','));
+  }
+
+  /** An uploaded image, for the form's preview, or a file, always as a download. */
   @Get('guilds/:guildId/post-images/:imageId')
   async image(
     @Req() req: AuthenticatedRequest,
@@ -181,6 +194,7 @@ export class TasksController {
       res.status(HttpStatus.NOT_FOUND).json({ message: 'No image' });
       return;
     }
+    if (image.fileName) res.attachment(image.fileName);
     res
       .set({
         'Content-Type': image.contentType,

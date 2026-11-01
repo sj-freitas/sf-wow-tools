@@ -487,6 +487,8 @@ model PostImage {
   contentType String         @map("content_type")
   size        Int
   data        Bytes
+  // The name a file (a PDF, ...) is sent under; null for images, which get a plain name.
+  fileName    String?        @map("file_name")
   createdAt   DateTime       @default(now()) @map("created_at")
 
   @@index([taskId])

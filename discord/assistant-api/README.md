@@ -523,13 +523,16 @@ is saved after every message. Each part has its own text, reactions, link-previe
   reading its own post, the first message of another post). **Copy ID** (a message's Discord id) is on the message's card in the edit form, and on the Posts
   list only for a post with a single message; **View in Discord** always opens the first message.
 
-**Images.** Each message can have up to 4 images (PNG, JPEG, GIF or WebP, 5 MB each, checked by
-content), shown under its text. They are uploaded from the form
-(`POST /api/guilds/:guildId/post-images`, Officers; preview at `GET …/post-images/:id`) and kept in
-the `post_images` table, because a post goes out later. An image belongs to no post until the post
-that lists it is saved; uploads never used are removed by the worker after a day, and images a post
-stops listing are removed when it is saved. Deleting a post deletes its images. Files are sent as
-`image-1.png`, … (original names are not kept).
+**Images and files.** Each message can have up to 4 images or files, 5 MB each, shown under its
+text: images (PNG, JPEG, GIF or WebP) and PDF, TXT, CSV, ZIP, MP3, OGG, WAV, FLAC or M4A files (see
+`post-files.ts`). An image is recognised by its content; a file's extension must be on that list and
+its content must match, so programs, scripts and web pages are refused. The inside of a ZIP is not
+checked. They are uploaded from the form (`POST /api/guilds/:guildId/post-images`, Officers; what
+they are at `GET …/post-images?ids=`; preview, or download for a file, at `GET …/post-images/:id`)
+and kept in the `post_images` table, because a post goes out later. One belongs to no post until the
+post that lists it is saved; uploads never used are removed by the worker after a day, and those a
+post stops listing are removed when it is saved. Deleting a post deletes them. Images are sent as
+`image-1.png`, … (original names are not kept); files keep their cleaned-up name.
 
 The list (`GET /api/guilds/:id/tasks?query=&page=`) shows ten posts to a page, newest date first.
 The search covers every page: each word must appear in the name or the text of a message (case-insensitive,

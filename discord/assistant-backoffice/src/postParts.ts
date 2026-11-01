@@ -4,6 +4,9 @@ export const MAX_PART_LENGTH = 2000;
 export const MAX_PARTS = 10;
 export const MAX_IMAGES_PER_PART = 4;
 export const MAX_IMAGE_MB = 5;
+/** What a message can carry; the server checks each file's content too (post-files.ts). */
+export const ATTACHMENT_TYPES =
+  'image/png,image/jpeg,image/gif,image/webp,.pdf,.txt,.csv,.zip,.mp3,.ogg,.wav,.flac,.m4a';
 export const MAX_DELAY_SECONDS = 60;
 
 /** A message of the post as it is in the form. */

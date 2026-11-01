@@ -333,10 +333,19 @@ export interface PostPart {
   embedLinks: boolean;
   /** Seconds waited after the previous message before this one is sent. */
   delaySeconds: number;
-  /** Uploaded images shown under the text (see `postImageUrl`). */
+  /** Uploaded images and files shown under the text (see `postImageUrl`). */
   imageIds: string[];
   /** The message in Discord; null when it is not there. */
   posted: { messageId: string; url: string; postedAt: string } | null;
+}
+
+/** An uploaded image or file of a post. */
+export interface PostAttachment {
+  id: string;
+  contentType: string;
+  size: number;
+  /** A file's name; null for an image. */
+  fileName: string | null;
 }
 
 /** What is sent to save one message of a post. */

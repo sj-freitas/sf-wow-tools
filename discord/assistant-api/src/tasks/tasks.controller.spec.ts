@@ -14,6 +14,8 @@ describe('TasksController is for Officers only', () => {
   let checkedGuilds: string[];
   let calls: string[];
   let reactionParts: number[];
+  let uploadedName: string | undefined;
+  let stored: { contentType: string; fileName: string | null; data: Buffer } | null;
   let controller: TasksController;
 
   beforeEach(() => {
@@ -21,6 +23,8 @@ describe('TasksController is for Officers only', () => {
     checkedGuilds = [];
     calls = [];
     reactionParts = [];
+    uploadedName = undefined;
+    stored = null;
     const check = async (_user: string, guildId: string) => {
       checkedGuilds.push(guildId);
       if (!officer) throw new ForbiddenException();
@@ -50,8 +54,11 @@ describe('TasksController is for Officers only', () => {
       },
     } as unknown as TasksService;
     const images = {
-      upload: async () => ({ id: 'i', contentType: 'image/png', size: 1 }),
-      get: async () => null,
+      upload: async (_guild: string, _data: Buffer, name: string) => {
+        uploadedName = name;
+        return { id: 'i', contentType: 'image/png', size: 1 };
+      },
+      get: async () => stored,
     } as unknown as PostImagesService;
     controller = new TasksController(tasks, guildAccess, images);
   });
@@ -94,8 +101,9 @@ describe('TasksController is for Officers only', () => {
       () => controller.runNow(req, 't'),
       () => controller.reactions(req, 't'),
       () => controller.reactionUsers(req, 't', '👍'),
-      () => controller.uploadImage(req, 'g', { buffer: Buffer.alloc(1) }),
+      () => controller.uploadImage(req, 'g', { buffer: Buffer.alloc(1), originalname: 'a.png' }),
       () => controller.image(req, 'g', 'i', {} as never),
+      () => controller.describeImages(req, 'g', 'i'),
     ]) {
       await assert.rejects(attempt(), ForbiddenException);
     }
@@ -111,12 +119,38 @@ describe('TasksController is for Officers only', () => {
   });
 
   it('accepts an uploaded image from Officers, and needs a file', async () => {
-    assert.deepEqual(await controller.uploadImage(req, 'g', { buffer: Buffer.alloc(1) }), {
-      id: 'i',
-      contentType: 'image/png',
-      size: 1,
-    });
+    assert.deepEqual(
+      await controller.uploadImage(req, 'g', { buffer: Buffer.alloc(1), originalname: 'a.png' }),
+      {
+        id: 'i',
+        contentType: 'image/png',
+        size: 1,
+      },
+    );
     await assert.rejects(controller.uploadImage(req, 'g', undefined), BadRequestException);
+  });
+
+  it('reads the name of an upload as UTF-8', async () => {
+    const originalname = Buffer.from('Règles.pdf', 'utf8').toString('latin1');
+    await controller.uploadImage(req, 'g', { buffer: Buffer.alloc(1), originalname });
+    assert.equal(uploadedName, 'Règles.pdf');
+  });
+
+  it('serves a file only as a download, and an image inline', async () => {
+    const serve = async () => {
+      const sent: { attachment?: string } = {};
+      const res: any = {
+        attachment: (name: string) => ((sent.attachment = name), res),
+        set: () => res,
+        send: () => res,
+      };
+      await controller.image(req, 'g', 'i', res);
+      return sent.attachment;
+    };
+    stored = { contentType: 'application/pdf', fileName: 'a.pdf', data: Buffer.alloc(1) };
+    assert.equal(await serve(), 'a.pdf');
+    stored = { contentType: 'image/png', fileName: null, data: Buffer.alloc(1) };
+    assert.equal(await serve(), undefined);
   });
 
   it('answers 404 for an image that is not there', async () => {

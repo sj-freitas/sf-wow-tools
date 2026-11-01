@@ -6,10 +6,12 @@ import { MAX_IMAGE_BYTES } from '../officer-requests/attachments';
 import { ORPHAN_IMAGE_MAX_AGE_MS, PostImagesService } from './post-images.service';
 
 const PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3]);
+const PDF = Buffer.from('%PDF-1.7 rest');
 const JPEG = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0, 1]);
 const A = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const B = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
 const C = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
+const D = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd';
 
 describe('PostImagesService', () => {
   let rows: any[];
@@ -26,15 +28,20 @@ describe('PostImagesService', () => {
         create: async (args: any) => {
           const row = { id: A, ...args.data };
           rows.push(row);
-          return { id: row.id, contentType: row.contentType, size: row.size };
+          return {
+            id: row.id,
+            contentType: row.contentType,
+            size: row.size,
+            fileName: row.fileName,
+          };
         },
         findFirst: async (args: any) =>
           rows.find((r) => r.id === args.where.id && r.guildId === args.where.guildId) ?? null,
         findMany: async (args: any) =>
           rows.filter(
             (r) =>
-              (!args.where.id || args.where.id.in.includes(r.id)) &&
-              (!args.where.guildId || r.guildId === args.where.guildId),
+              (!args.where?.id || args.where.id.in.includes(r.id)) &&
+              (!args.where?.guildId || r.guildId === args.where.guildId),
           ),
         updateMany: async (args: any) => void updates.push(args),
         deleteMany: async (args: any) => {
@@ -52,8 +59,23 @@ describe('PostImagesService', () => {
         id: A,
         contentType: 'image/jpeg',
         size: JPEG.length,
+        fileName: null,
       });
       assert.equal(rows[0].guildId, 'g');
+    });
+
+    it('stores an allowed file with its name, and refuses others', async () => {
+      assert.deepEqual(await service.upload('g', PDF, 'Raid rules.pdf'), {
+        id: A,
+        contentType: 'application/pdf',
+        size: PDF.length,
+        fileName: 'Raid rules.pdf',
+      });
+      await assert.rejects(service.upload('g', PDF, 'setup.exe'), /PDF, TXT, CSV, ZIP/);
+      await assert.rejects(
+        service.upload('g', Buffer.from('MZ'), 'setup.pdf'),
+        /PDF, TXT, CSV, ZIP/,
+      );
     });
 
     it('refuses empty files, files that are not images, and files that are too big', async () => {
@@ -130,6 +152,33 @@ describe('PostImagesService', () => {
         ],
       );
       assert.deepEqual(await service.files([]), []);
+    });
+
+    it('sends a file under its own name', async () => {
+      rows.push({
+        id: D,
+        taskId: null,
+        contentType: 'application/pdf',
+        data: PDF,
+        fileName: 'a.pdf',
+      });
+      const files = await service.files([A, D]);
+      assert.deepEqual(
+        files.map((f) => [f.name, f.contentType]),
+        [
+          ['image-1.png', 'image/png'],
+          ['a.pdf', 'application/pdf'],
+        ],
+      );
+    });
+
+    it('describes only the guild’s uploads, in the order asked, skipping bad ids', async () => {
+      rows[1].guildId = 'other';
+      assert.deepEqual(
+        (await service.describe('g', [C, 'nope', B, A])).map((image) => image.id),
+        [C, A],
+      );
+      assert.deepEqual(await service.describe('g', ['']), []);
     });
   });
 

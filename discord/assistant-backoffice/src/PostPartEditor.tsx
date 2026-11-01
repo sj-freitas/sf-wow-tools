@@ -1,13 +1,15 @@
-import { useState } from 'react';
-import { postImageUrl, uploadPostImage } from './api';
+import { useEffect, useState } from 'react';
+import { fetchPostAttachments, postImageUrl, uploadPostImage } from './api';
 import { DiscordMarkdown, type MentionNames } from './DiscordMarkdown';
 import {
+  ATTACHMENT_TYPES,
   MAX_DELAY_SECONDS,
   MAX_IMAGE_MB,
   MAX_IMAGES_PER_PART,
   MAX_PART_LENGTH,
   type PartDraft,
 } from './postParts';
+import type { PostAttachment } from './types';
 
 interface Props {
   guildId: string;
@@ -23,7 +25,43 @@ interface Props {
   onRemove: () => void;
 }
 
-/** One message of a post: its text, reactions, link previews, wait and images. */
+/** What the listed uploads are (images or files), as they become known. */
+function usePostAttachments(guildId: string, ids: readonly string[]): Map<string, PostAttachment> {
+  const [known, setKnown] = useState(new Map<string, PostAttachment>());
+  const missing = ids.filter((id) => !known.has(id)).join(',');
+  useEffect(() => {
+    if (!missing) return;
+    let current = true;
+    fetchPostAttachments(guildId, missing.split(','))
+      .then((found) => {
+        if (current) {
+          setKnown((old) => new Map([...old, ...found.map((a) => [a.id, a] as const)]));
+        }
+      })
+      .catch(() => undefined);
+    return () => {
+      current = false;
+    };
+  }, [guildId, missing]);
+  return known;
+}
+
+const sizeLabel = (bytes: number): string =>
+  bytes < 1024 * 1024
+    ? `${Math.max(1, Math.round(bytes / 1024))} KB`
+    : `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+
+/** A file of a message: its name and size, which download it. */
+function FileChip({ guildId, file }: { guildId: string; file: PostAttachment }) {
+  return (
+    <a className="part-file" href={postImageUrl(guildId, file.id)} download={file.fileName ?? ''}>
+      <span className="part-file-name">{file.fileName}</span>
+      <span className="muted">{sizeLabel(file.size)}</span>
+    </a>
+  );
+}
+
+/** One message of a post: its text, reactions, link previews, wait, images and files. */
 export function PostPartEditor({
   guildId,
   index,
@@ -39,6 +77,7 @@ export function PostPartEditor({
   const [preview, setPreview] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const attachments = usePostAttachments(guildId, draft.imageIds);
 
   const addImages = (files: FileList | null) => {
     if (!files || files.length === 0) return;
@@ -127,13 +166,20 @@ export function PostPartEditor({
 
       <div className="part-images">
         {draft.imageIds.map((id) => (
-          <span key={id} className="part-image">
-            <img src={postImageUrl(guildId, id)} alt="" />
+          <span
+            key={id}
+            className={attachments.get(id)?.fileName ? 'part-attachment' : 'part-image'}
+          >
+            {attachments.get(id)?.fileName ? (
+              <FileChip guildId={guildId} file={attachments.get(id)!} />
+            ) : (
+              attachments.has(id) && <img src={postImageUrl(guildId, id)} alt="" />
+            )}
             <button
               type="button"
               className="part-image-remove"
-              title="Remove this image"
-              aria-label="Remove image"
+              title="Remove this attachment"
+              aria-label="Remove attachment"
               onClick={() => onChange({ imageIds: draft.imageIds.filter((other) => other !== id) })}
             >
               ✕
@@ -142,12 +188,12 @@ export function PostPartEditor({
         ))}
         {draft.imageIds.length < MAX_IMAGES_PER_PART && (
           <label className={uploading ? 'btn btn-sm disabled' : 'btn btn-sm'}>
-            {uploading ? 'Uploading…' : draft.imageIds.length === 0 ? 'Add images' : 'Add another'}
+            {uploading ? 'Uploading…' : draft.imageIds.length === 0 ? 'Add files' : 'Add another'}
             <input
               type="file"
               hidden
               multiple
-              accept="image/png,image/jpeg,image/gif,image/webp"
+              accept={ATTACHMENT_TYPES}
               disabled={uploading}
               onChange={(e) => {
                 addImages(e.target.files);
@@ -157,7 +203,8 @@ export function PostPartEditor({
           </label>
         )}
         <span className="muted">
-          Up to {MAX_IMAGES_PER_PART} images, {MAX_IMAGE_MB} MB each, shown under the text.
+          Up to {MAX_IMAGES_PER_PART} images or files (PDF, TXT, CSV, ZIP, audio), {MAX_IMAGE_MB} MB
+          each, shown under the text.
         </span>
       </div>
       {uploadError && <p className="status-error">{uploadError}</p>}
@@ -222,7 +269,7 @@ export function PostPartEditor({
   );
 }
 
-/** How a message looks: its text, then its images. */
+/** How a message looks: its text, then its images and files. */
 export function MessagePreview({
   guildId,
   draft,
@@ -232,14 +279,21 @@ export function MessagePreview({
   draft: PartDraft;
   names: MentionNames;
 }) {
+  const attachments = usePostAttachments(guildId, draft.imageIds);
   return (
     <div className="message-preview">
       <DiscordMarkdown text={draft.content} names={names} />
       {draft.imageIds.length > 0 && (
         <div className="message-preview-images">
-          {draft.imageIds.map((id) => (
-            <img key={id} src={postImageUrl(guildId, id)} alt="" />
-          ))}
+          {draft.imageIds.map((id) => {
+            const attachment = attachments.get(id);
+            if (!attachment) return null;
+            return attachment.fileName ? (
+              <FileChip key={id} guildId={guildId} file={attachment} />
+            ) : (
+              <img key={id} src={postImageUrl(guildId, id)} alt="" />
+            );
+          })}
         </div>
       )}
       {/https?:\/\//.test(draft.content) && (

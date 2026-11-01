@@ -1,6 +1,7 @@
 import type {
   AttributeColor,
   BioImage,
+  PostAttachment,
   GuildAttribute,
   OfficerNote,
   Character,
@@ -390,6 +391,13 @@ export function uploadPostImage(guildId: string, file: File): Promise<{ id: stri
   form.append('image', file);
   return request('POST', `/api/guilds/${guildId}/post-images`, form);
 }
+
+/** What the listed uploads are: an image, or a file with its name. */
+export const fetchPostAttachments = (
+  guildId: string,
+  ids: readonly string[],
+): Promise<PostAttachment[]> =>
+  request('GET', `/api/guilds/${guildId}/post-images?ids=${ids.join(',')}`);
 
 export const postImageUrl = (guildId: string, imageId: string): string =>
   `/api/guilds/${guildId}/post-images/${imageId}`;

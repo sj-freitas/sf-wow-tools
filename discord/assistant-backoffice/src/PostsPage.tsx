@@ -253,7 +253,8 @@ export function PostsPage({ guild, timezone }: Props) {
               {post.post.parts.length > 1 && (
                 <div className="muted">
                   {post.post.parts.length} messages, sent in order
-                  {post.post.parts.some((part) => part.imageIds.length > 0) && ' · with images'}
+                  {post.post.parts.some((part) => part.imageIds.length > 0) &&
+                    ' · with attachments'}
                 </div>
               )}
               {post.lastRunAt && !isLive(post) && (

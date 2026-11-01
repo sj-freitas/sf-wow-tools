@@ -2131,6 +2131,28 @@ label.btn.disabled {
   object-fit: cover;
   border: 1px solid var(--border);
 }
+.part-attachment {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+}
+.part-file {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: 100%;
+  padding: 0.45rem 0.9rem 0.45rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.85rem;
+}
+.part-file-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .part-image-remove {
   position: absolute;
   top: -6px;

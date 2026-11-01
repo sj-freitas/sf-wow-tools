@@ -81,7 +81,7 @@ export interface PostPartDto {
   embedLinks: boolean;
   /** Seconds waited after the previous message before this one is sent. */
   delaySeconds: number;
-  /** Uploaded images (see the post-images routes), shown under the text. */
+  /** Uploaded images and files (see the post-images routes), shown under the text. */
   imageIds: string[];
   /** The message in Discord; null when it is not there. */
   posted: { messageId: string; url: string; postedAt: string } | null;
