@@ -117,7 +117,8 @@ export class ArmoryService {
     return this.config.get<string>('BLIZZARD_CLIENT_SECRET') || undefined;
   }
 
-  async lookup(query: ArmoryQuery): Promise<ArmoryCharacter> {
+  /** `talents: false` skips the second request (the background sync doesn't need them). */
+  async lookup(query: ArmoryQuery, options: { talents?: boolean } = {}): Promise<ArmoryCharacter> {
     if (!this.configured) {
       throw new ArmoryError('not-configured', 'The armory is not set up on this server.');
     }
@@ -169,7 +170,7 @@ export class ArmoryService {
       faction: faction?.name ?? '',
       // Forever has no realm: its rule set ("Roleplay") instead.
       realm: profile.realm?.name ?? profile.ruleset?.name ?? '',
-      talents: await this.talents(url),
+      talents: options.talents === false ? null : await this.talents(url),
     };
   }
 

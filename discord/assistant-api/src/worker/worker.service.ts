@@ -1,4 +1,5 @@
 import { Injectable, Logger, OnApplicationShutdown } from '@nestjs/common';
+import { ArmorySyncService } from '../armory/armory-sync.service';
 import { HoneypotGatewayService } from '../honeypot/honeypot-gateway.service';
 import { RetentionService } from '../maintenance/retention.service';
 import { PluginRunnerService } from '../plugins/plugin-runner.service';
@@ -7,7 +8,7 @@ import { SignupSchedulerService } from '../signup/signup-scheduler.service';
 import { SchedulerService } from '../tasks/scheduler.service';
 
 /**
- * The background worker: the scheduler for scheduled tasks, the plugins' runs and the live
+ * The background worker: the scheduler for scheduled tasks, the plugins' runs, the armory sync and the live
  * Discord connection for honeypots. Runs in its own process (`worker.ts`) or, on a single instance, inside the
  * web process (`WORKER_IN_PROCESS=true`). Officers never see any of this.
  */
@@ -22,6 +23,7 @@ export class WorkerService implements OnApplicationShutdown {
     private readonly signupEvents: SignupEventsService,
     private readonly plugins: PluginRunnerService,
     private readonly retention: RetentionService,
+    private readonly armorySync: ArmorySyncService,
   ) {}
 
   async start(): Promise<void> {
@@ -30,6 +32,8 @@ export class WorkerService implements OnApplicationShutdown {
     this.plugins.start();
     // History older than 6 months, once a day.
     this.retention.start();
+    // Characters' race, class and level from the armory, a few at a time (every 10 minutes).
+    this.armorySync.start();
     // An event whose sign-up post is deleted in Discord is archived.
     this.honeypotGateway.onMessageDeleted((messageId) => {
       void this.signupEvents.onMessageDeleted(messageId);

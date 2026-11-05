@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ArmoryCoreModule } from '../armory/armory-core.module';
 import { HoneypotCoreModule } from '../honeypot/honeypot-core.module';
 import { MaintenanceModule } from '../maintenance/maintenance.module';
 import { PluginsCoreModule } from '../plugins/plugins-core.module';
@@ -15,6 +16,7 @@ import { WorkerService } from './worker.service';
     PluginsCoreModule,
     ProfessionsCoreModule,
     MaintenanceModule,
+    ArmoryCoreModule,
   ],
   providers: [WorkerService],
   exports: [WorkerService],

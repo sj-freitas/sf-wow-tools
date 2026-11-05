@@ -1,12 +1,11 @@
 import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
+import { ArmoryCoreModule } from './armory-core.module';
 import { ArmoryController } from './armory.controller';
-import { ArmoryService } from './armory.service';
 
 @Module({
-  imports: [AuthModule],
+  imports: [AuthModule, ArmoryCoreModule],
   controllers: [ArmoryController],
-  providers: [ArmoryService],
-  exports: [ArmoryService],
+  exports: [ArmoryCoreModule],
 })
 export class ArmoryModule {}

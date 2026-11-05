@@ -218,6 +218,9 @@ model Character {
   // or move it, not Officers (who can still add it to their guild or take it off). Set by hand
   // for now: the Battle.net check is a preview (src/battlenet).
   verifiedAt         DateTime?                  @map("verified_at")
+  // When the worker last looked it up in its version's armory, to keep race, class and level
+  // in step (src/armory/armory-sync.service.ts); null: never.
+  armoryCheckedAt    DateTime?                  @map("armory_checked_at")
   images             CharacterImage[]
   guilds             CharacterGuildMembership[]
   officerNotes       CharacterOfficerNote[]
@@ -232,6 +235,7 @@ model Character {
   updatedAt          DateTime                   @updatedAt @map("updated_at")
 
   @@unique([playerId, gameVersion, region, realm, firstName, lastName], map: "characters_unique_per_server")
+  @@index([armoryCheckedAt])
   @@map("characters")
 }
 

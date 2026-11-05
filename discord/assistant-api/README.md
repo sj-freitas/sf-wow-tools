@@ -725,6 +725,14 @@ form shows why and the character is added by hand as before.
   class if that race can be it (the class stays empty otherwise), and the level; anything that does not fit
   is listed ("Orc is not a race of this guild's faction"). The name is left as typed. Blizzard's data can
   lag behind the game (a brand-new character can 404 for a while).
+- **Kept in step in the background:** the worker looks every character up in its version's armory
+  (`src/armory/armory-sync.service.ts`): every 10 minutes, the 50 checked longest ago (never, or over 6
+  hours ago; `characters.armory_checked_at`), one request each. When the armory says otherwise it updates
+  **race, class and level**, each only if it fits the game config (the race in the character's faction,
+  a class that race can be); a class change keeps the roles the new class can play (its first role if
+  none). A character of the other faction is taken for someone else with the same name and left alone, as
+  is one the armory doesn't have (checked again 6 hours later). When Blizzard is down the pass stops and
+  the next carries on. Open rosters reload; roster posts follow within a minute, as on any roster change.
 - **Verify with Battle.net** (TEST, below) still reads a stand-in server, `src/armory/armory.config.ts`
   (Season of Discovery on Wild Growth, EU).
 
