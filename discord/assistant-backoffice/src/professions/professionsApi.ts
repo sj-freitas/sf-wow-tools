@@ -30,7 +30,7 @@ export interface ImportResult {
   skipped: { name: string; realm: string }[];
   /** Other players' characters, seen through profession links: not imported (yet). */
   linked: { name: string; realm: string }[];
-  /** Characters from an addon before 1.0 (no dates): left out; the addon needs updating. */
+  /** Characters from an addon before 1.0 (no dates): left out, the others imported; the addon needs updating. */
   outdated: { name: string; realm: string }[];
   /** Professions dropped from a character that the file still has, from before the drop: left out. */
   dropped: { characterId: string; name: string; profession: string; droppedAt: string }[];

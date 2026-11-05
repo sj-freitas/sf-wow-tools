@@ -1,6 +1,6 @@
 import { useState, type DragEvent, type FormEvent } from 'react';
 import { Drawer } from '../Drawer';
-import { useConfirm } from '../useConfirm';
+import { showToast } from '../toast';
 import { importProfessions, type ImportResult } from './professionsApi';
 import './professions.css';
 
@@ -28,7 +28,6 @@ export function ImportProfessionsDrawer({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ImportResult | null>(null);
-  const { confirm, dialog } = useConfirm();
 
   const readFile = (file: File | undefined) => {
     if (!file) return;
@@ -54,23 +53,19 @@ export function ImportProfessionsDrawer({
     setError(null);
     importProfessions(guildId, data)
       .then((next) => {
-        // A file from the addon before 1.0: its characters can't be imported (no dates to tell
-        // newer data by). Say so in a modal, with the way to update.
+        // Characters from the addon before 1.0 can't be imported (no dates to tell newer data
+        // by): a passing note says so; the others are imported anyway.
         if (next.outdated.length > 0) {
-          void confirm({
-            title: 'Update the addon',
-            message: `This file is from an older GuildAssistant Professions (before 1.0), so ${next.outdated
+          showToast(
+            `This file is from an older GuildAssistant Professions (before 1.0), so ${next.outdated
               .map((c) => c.name)
               .join(
                 ', ',
               )} couldn't be imported. Update the addon, log in, type /ga-prof save (it reloads the screen) and upload the new file.`,
-            confirmLabel: 'Get the addon',
-          }).then((go) => {
-            if (go) window.open(ADDON_URL, '_blank', 'noreferrer');
-          });
+            8000,
+          );
         }
-        // Nothing else in it: stay on the upload, for the new file.
-        if (next.imported.length > 0 || next.outdated.length === 0) setResult(next);
+        setResult(next);
       })
       .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)))
       .finally(() => setBusy(false));
@@ -78,7 +73,6 @@ export function ImportProfessionsDrawer({
 
   return (
     <Drawer title="Import professions" onClose={onClose}>
-      {dialog}
       {result ? (
         <div className="professions">
           {result.imported.length === 0 ? (

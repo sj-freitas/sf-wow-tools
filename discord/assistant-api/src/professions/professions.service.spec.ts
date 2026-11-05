@@ -307,6 +307,22 @@ describe('ProfessionsService', () => {
     assert.equal(professions.length, 0, 'nothing imported, and no error');
   });
 
+  it('ignores a character with nothing recorded yet, and imports the others', async () => {
+    const { service, professions } = setup();
+    const file = JSON.parse(
+      exportOf('Luna', 'own', day(5), [{ name: 'Tailoring', spells: [2387] }]),
+    ) as { characters: unknown[] };
+    file.characters.push({ name: 'Dark', realm: 'PvP', source: 'own', professions: [] });
+    const result = await service.import(user, 'g1', JSON.stringify(file));
+    assert.deepEqual(
+      result.imported.map((c) => c.characterId),
+      ['luna-id'],
+    );
+    assert.deepEqual(result.outdated, [], 'not taken for an old addon');
+    assert.deepEqual(result.skipped, []);
+    assert.ok(professions.some((p) => p.characterId === 'luna-id'));
+  });
+
   it("lists recipes with Wowhead's names and links in the guild's game version", async () => {
     const { service, wowheadService } = setup();
     await service.import(user, 'g1', FIXTURE);

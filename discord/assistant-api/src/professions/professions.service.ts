@@ -137,10 +137,12 @@ export class ProfessionsService {
         continue;
       }
       // Without the dates, newer and older can't be told apart: left out (not an error).
-      if (data.format < 2 || exported.updated === null) {
+      if (data.format < 2) {
         result.outdated.push({ name: exported.name, realm: exported.realm });
         continue;
       }
+      // A character the addon (1.0 or later) knows but recorded nothing for yet: nothing to import.
+      if (exported.updated === null) continue;
       const character = matchCharacter(exported, own) ?? matchCharacter(exported, roster);
       if (!character) {
         result.skipped.push({ name: exported.name, realm: exported.realm });

@@ -2262,10 +2262,13 @@ label.btn.disabled {
   justify-items: center;
   pointer-events: none;
 }
+/* A pill on one line; a longer note wraps within the width, its corners still round. */
 .toast {
+  max-width: min(36rem, calc(100vw - 2rem));
   padding: 0.5rem 0.9rem;
   border: 1px solid var(--border);
-  border-radius: 999px;
+  border-radius: 1.1rem;
+  text-align: center;
   background: var(--surface);
   color: var(--text);
   font-size: 0.85rem;
