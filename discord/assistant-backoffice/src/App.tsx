@@ -134,7 +134,10 @@ function AccountLine({
   const current = useCurrentGuild(guilds);
   return (
     <p className="app-footer-account">
-      Logged in as {user.displayName}
+      Logged in as{' '}
+      <span className="name-truncate" title={user.displayName}>
+        {user.displayName}
+      </span>
       {current && setup && (
         <>
           {' · '}

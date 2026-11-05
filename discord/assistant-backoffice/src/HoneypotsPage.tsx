@@ -99,7 +99,9 @@ export function HoneypotsPage({ guild, timezone }: Props) {
                     {event.action === 'WOULD_BAN' && 'Would ban'}
                     {event.action === 'BANNED' && 'Banned'}
                     {event.action === 'FAILED' && 'Could not ban'}{' '}
-                    <strong>{event.username ?? event.discordUserId}</strong>
+                    <strong className="name-truncate" title={event.username ?? undefined}>
+                      {event.username ?? event.discordUserId}
+                    </strong>
                     {event.error && <span className="status-error"> · {event.error}</span>}
                   </li>
                 ))}

@@ -2233,6 +2233,19 @@ label.btn.disabled {
   text-align: left;
   cursor: copy;
 }
+/* A Discord name: a long one is cut short (with …) so it can't widen a table or a line; the whole
+   name is in its tooltip. */
+.name-truncate {
+  display: inline-block;
+  max-width: 12em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: bottom;
+}
+.discord-name {
+  max-width: 100%;
+}
 .discord-name:hover strong {
   text-decoration: underline dotted;
 }

@@ -374,7 +374,7 @@ export function ConversationPage({ guild, timezone }: Props) {
                   className={fromOfficer ? 'bubble bubble-officer' : 'bubble bubble-member'}
                 >
                   <div className="bubble-head">
-                    <strong>
+                    <strong className="name-truncate" title={message.authorName ?? undefined}>
                       {fromOfficer
                         ? `Officer ${message.authorName ?? ''}`.trim()
                         : (message.authorName ?? 'Anonymous member')}
