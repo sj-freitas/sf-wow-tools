@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useState, type ClipboardEvent, type FormEvent } from 'react';
 import {
   createCharacter,
   fetchAttributes,
@@ -217,6 +217,20 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
       .finally(() => setArmoryBusy(false));
   };
 
+  // A full name pasted into either name field ("Shivan Darkwhisp", or "Shivan-Darkwhisp") fills
+  // both: the first name in one, the last name in the other.
+  const pasteFullName = (event: ClipboardEvent<HTMLInputElement>) => {
+    if (!showLastName) return;
+    const parts = event.clipboardData
+      .getData('text')
+      .trim()
+      .split(/[\s-]+/);
+    if (parts.length !== 2) return;
+    event.preventDefault();
+    setFirstName(parts[0]);
+    setLastName(parts[1]);
+  };
+
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
     setError(null);
@@ -309,6 +323,7 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
           <input
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
+            onPaste={pasteFullName}
             pattern={NAME_PATTERN}
             minLength={2}
             maxLength={12}
@@ -322,6 +337,7 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
             <input
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
+              onPaste={pasteFullName}
               pattern={NAME_PATTERN}
               minLength={2}
               maxLength={12}
