@@ -10,6 +10,7 @@ import {
 } from './api';
 import { CharacterForm } from './CharacterForm';
 import { DiscordName } from './DiscordName';
+import { RoleMark } from './RoleMark';
 import { InlineSpinner, SkeletonRows, Spinner } from './Loading';
 import { subscribeEvents } from './events';
 import { characterPath, playerLabel } from './format';
@@ -600,6 +601,16 @@ export function RosterPage({ guild, currentUser }: Props) {
               </ul>
               <div className="table-wrap roster-table">
                 <table>
+                  {/* Fixed widths (see .roster-table): what is in a row never resizes a column. */}
+                  <colgroup>
+                    <col className="col-name" />
+                    <col className="col-class" />
+                    <col className="col-roles" />
+                    <col className="col-level" />
+                    <col className="col-discord" />
+                    <col className="col-rank" />
+                    <col className="col-actions" />
+                  </colgroup>
                   <thead>
                     <tr>
                       {sortHeader('name', 'Character')}
@@ -629,8 +640,18 @@ export function RosterPage({ guild, currentUser }: Props) {
                               />
                               {character.class}
                             </td>
+                            {/* Icons, the role on hover: several roles as words widened the table. */}
                             <td data-label="Roles" className="cell-compact">
-                              {rolesOf(character)}
+                              <span className="role-marks">
+                                {character.roles.map((role) => (
+                                  <RoleMark
+                                    key={role}
+                                    gameVersion={guild.gameVersion}
+                                    role={role}
+                                    label={ROLE_LABELS[role]}
+                                  />
+                                ))}
+                              </span>
                             </td>
                             <td data-label="Level" className="cell-compact cell-level">
                               {character.level}

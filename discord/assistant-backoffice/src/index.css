@@ -2299,6 +2299,17 @@ label.btn.disabled {
   height: 1.15rem;
   vertical-align: -0.2rem;
 }
+/* A character's roles in the roster table: their icons in a row. */
+.role-marks {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  vertical-align: middle;
+}
+.role-marks .role-icon {
+  width: 1.35rem;
+  height: 1.35rem;
+}
 
 /* A class's icon, or a dot in its colour when it has none (both from the game config). */
 .class-icon {
@@ -2629,6 +2640,50 @@ label.btn.disabled {
 .roster-item-meta {
   color: var(--muted);
   font-size: 0.85rem;
+}
+/* The roster table's columns keep their widths whatever is in them: the small ones fixed, the
+   character and Discord user sharing what is left. What doesn't fit is cut short (…); a Discord
+   name shows whole on hover. Below the minimum width the table scrolls (the phone list takes over
+   at 720px). */
+.roster-table table {
+  table-layout: fixed;
+  min-width: 52rem;
+}
+.roster-table th,
+.roster-table td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.roster-table .col-class {
+  width: 10rem;
+}
+.roster-table .col-roles {
+  width: 9.5rem;
+}
+.roster-table .col-level {
+  width: 6rem;
+}
+.roster-table .col-rank {
+  width: 8rem;
+}
+.roster-table .col-actions {
+  width: 5rem;
+}
+.roster-table .discord-name,
+.roster-table .discord-name .name-truncate {
+  max-width: 100%;
+}
+/* The name cell lets the attributes popover out: only the name itself is cut short, leaving room
+   for the attributes badge beside it. */
+.roster-table td.cell-name {
+  overflow: visible;
+}
+.roster-table .cell-name .character-link {
+  display: inline-block;
+  max-width: calc(100% - 4.5rem);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
 }
 @media (max-width: 720px) {
   .roster-list {

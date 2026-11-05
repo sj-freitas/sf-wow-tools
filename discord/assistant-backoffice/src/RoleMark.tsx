@@ -16,15 +16,25 @@ const iconUrl = (gameVersion: string, file: string): string =>
 
 /**
  * A raid role (or `LEADER`, `ASSIST`, `MASTER_LOOTER`) as its icon from the game config, or its emoji (🛡️ 💚 ⚔️ 🏹 👑) when
- * the version has none — the same as in Discord.
+ * the version has none — the same as in Discord. `label` replaces its short name ("Melee") in the
+ * tooltip.
  */
-export function RoleMark({ gameVersion, role }: { gameVersion: string; role: string }) {
+export function RoleMark({
+  gameVersion,
+  role,
+  label,
+}: {
+  gameVersion: string;
+  role: string;
+  label?: string;
+}) {
   const [noIcon, setNoIcon] = useState(false);
   const icon = ROLE_ICONS[role];
   if (!icon) return null;
+  const name = label ?? icon.label;
   if (noIcon) {
     return (
-      <span title={icon.label} aria-label={icon.label} role="img">
+      <span title={name} aria-label={name} role="img">
         {icon.emoji}
       </span>
     );
@@ -33,8 +43,8 @@ export function RoleMark({ gameVersion, role }: { gameVersion: string; role: str
     <img
       className="role-icon"
       src={iconUrl(gameVersion, icon.file)}
-      alt={icon.label}
-      title={icon.label}
+      alt={name}
+      title={name}
       onError={() => setNoIcon(true)}
     />
   );
