@@ -20,6 +20,7 @@ import {
   type GuildAttribute,
   type Player,
   type Ranks,
+  type Role,
   type User,
 } from './types';
 import { useCurrentUrl, useReturnTo } from './useReturnTo';
@@ -109,10 +110,23 @@ export function RosterPage({ guild, currentUser }: Props) {
     }
     setParams(next, { replace: true });
   };
+  // The role pills: `?role=TANK&role=HEALER`, characters with any of them.
+  const toggleRole = (role: Role) => {
+    const current = params.getAll('role');
+    const next = new URLSearchParams(params);
+    next.delete('role');
+    for (const value of current.includes(role)
+      ? current.filter((r) => r !== role)
+      : [...current, role]) {
+      next.append('role', value);
+    }
+    setParams(next, { replace: true });
+  };
   const clearFilters = () => {
     const next = new URLSearchParams(params);
     next.delete('q');
     next.delete('attr');
+    next.delete('role');
     setParams(next, { replace: true });
   };
   const [tagging, setTagging] = useState<{ id: string; name: string } | null>(null);
@@ -275,14 +289,23 @@ export function RosterPage({ guild, currentUser }: Props) {
   const withPicked = rows.filter(({ character }) =>
     picked.every((name) => attributesOf(character.id).some((a) => a.name === name)),
   );
+  const pickedRoles = params
+    .getAll('role')
+    .filter((role): role is Role => Object.hasOwn(ROLE_LABELS, role));
+  const withRoles =
+    pickedRoles.length === 0
+      ? withPicked
+      : withPicked.filter(({ character }) =>
+          character.roles.some((role) => pickedRoles.includes(role)),
+        );
   const shown = searchRoster(
-    withPicked,
+    withRoles,
     query,
     attributesOf,
     (discordUserId) => ranks[discordUserId] ?? [],
     (characterId) => professionNames.get(characterId) ?? [],
   );
-  const filtering = query.trim() !== '' || picked.length > 0;
+  const filtering = query.trim() !== '' || picked.length > 0 || pickedRoles.length > 0;
   const matchingRecipes = query.trim()
     ? recipeNames.filter((name) => fuzzyWordsScore(query, [name]) !== null).length
     : 0;
@@ -522,29 +545,47 @@ export function RosterPage({ guild, currentUser }: Props) {
                 aria-label="Search the roster"
               />
             </div>
-            {attributes.length > 0 && (
-              <div
-                className="roster-attribute-filter"
-                role="group"
-                aria-label="Filter by attribute"
-              >
-                {attributes.map((attribute) => (
+            <div className="roster-attribute-filter">
+              <span className="roster-pill-group" role="group" aria-label="Filter by role">
+                {(Object.keys(ROLE_LABELS) as Role[]).map((role) => (
                   <button
-                    key={attribute.id}
+                    key={role}
                     type="button"
-                    aria-pressed={picked.includes(attribute.name)}
+                    aria-pressed={pickedRoles.includes(role)}
                     className={
-                      picked.includes(attribute.name)
+                      pickedRoles.includes(role)
                         ? 'attribute-toggle attribute-toggle-on'
                         : 'attribute-toggle'
                     }
-                    onClick={() => toggleAttribute(attribute.name)}
+                    onClick={() => toggleRole(role)}
                   >
-                    <AttributeChip name={attribute.name} color={attribute.color} />
+                    <span className="role-chip">
+                      <RoleMark gameVersion={guild.gameVersion} role={role} label="" />
+                      {ROLE_LABELS[role]}
+                    </span>
                   </button>
                 ))}
-              </div>
-            )}
+              </span>
+              {attributes.length > 0 && (
+                <span className="roster-pill-group" role="group" aria-label="Filter by attribute">
+                  {attributes.map((attribute) => (
+                    <button
+                      key={attribute.id}
+                      type="button"
+                      aria-pressed={picked.includes(attribute.name)}
+                      className={
+                        picked.includes(attribute.name)
+                          ? 'attribute-toggle attribute-toggle-on'
+                          : 'attribute-toggle'
+                      }
+                      onClick={() => toggleAttribute(attribute.name)}
+                    >
+                      <AttributeChip name={attribute.name} color={attribute.color} />
+                    </button>
+                  ))}
+                </span>
+              )}
+            </div>
             {filtering && (
               <div className="roster-filter-summary">
                 <span className="muted">
@@ -641,7 +682,7 @@ export function RosterPage({ guild, currentUser }: Props) {
                               {character.class}
                             </td>
                             {/* Icons, the role on hover: several roles as words widened the table. */}
-                            <td data-label="Roles" className="cell-compact">
+                            <td data-label="Roles" className="cell-compact cell-roles">
                               <span className="role-marks">
                                 {character.roles.map((role) => (
                                   <RoleMark
@@ -649,6 +690,7 @@ export function RosterPage({ guild, currentUser }: Props) {
                                     gameVersion={guild.gameVersion}
                                     role={role}
                                     label={ROLE_LABELS[role]}
+                                    tip
                                   />
                                 ))}
                               </span>

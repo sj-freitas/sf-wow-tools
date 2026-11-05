@@ -2299,6 +2299,35 @@ label.btn.disabled {
   height: 1.15rem;
   vertical-align: -0.2rem;
 }
+/* The page's own tooltip (`data-tip`), shown at once on hover or keyboard focus, above. */
+.tip {
+  position: relative;
+  display: inline-flex;
+}
+.tip::after {
+  content: attr(data-tip);
+  position: absolute;
+  z-index: 5;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.2rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  box-shadow: 0 4px 12px color-mix(in srgb, #000 25%, transparent);
+  color: var(--text);
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.1s;
+}
+.tip:hover::after,
+.tip:focus-within::after {
+  opacity: 1;
+}
 /* A character's roles in the roster table: their icons in a row. */
 .role-marks {
   display: inline-flex;
@@ -2673,6 +2702,10 @@ label.btn.disabled {
 .roster-table .discord-name .name-truncate {
   max-width: 100%;
 }
+/* The roles cell lets its icons' tooltips out. */
+.roster-table td.cell-roles {
+  overflow: visible;
+}
 /* The name cell lets the attributes popover out: only the name itself is cut short, leaving room
    for the attributes badge beside it. */
 .roster-table td.cell-name {
@@ -2722,6 +2755,29 @@ label.btn.disabled {
 .attribute-toggle-on {
   border-color: var(--text);
   opacity: 1;
+}
+/* The role pills, then the attribute pills, in one row that wraps. */
+.roster-pill-group {
+  display: contents;
+}
+/* A role as a filter pill: its icon and name. */
+.role-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.05rem 0.55rem 0.05rem 0.35rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+.role-chip .role-icon {
+  width: 1rem;
+  height: 1rem;
 }
 .roster-filter-summary {
   display: flex;
