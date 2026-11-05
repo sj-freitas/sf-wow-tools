@@ -5,14 +5,17 @@ Each part's README explains it; tasks are on the Botlog board (project GA), not 
 
 ## Always
 
-- **Never commit or push.** Sérgio commits: one task = one commit, so keep each change to its task.
+- **Commit, push and deploy** once a change's checks pass: one task (or one chat request) = one
+  commit on `main`, so keep each change to its task, and end the message with the co-author line.
+  Pushing to `main` deploys: Render (workspace "My Workspace", service "Website, API and Bot",
+  `srv-dalbqjn40ujc73df0vv0`) builds it and runs the migrations (Pre-Deploy). Check the deploy
+  goes **live** (about two minutes) and say so; if it fails, read its logs and say what broke.
 - **Botlog:** never move a task past **Development Completed**; Deployed / Testing and Done are
   Sérgio's. Never archive.
 - **Manual steps** (anything beyond running a migration or a command: a URL to register, a page to
   edit, a setting to change) become a **To do** task on Botlog assigned to Sérgio
   (`user:a9f2ac22-c8eb-4216-880d-74e8fc6df1fc`), saying exactly what to do and where.
-  Migrations (`npm run prisma:deploy`) and commands (`npm run commands:register`) just go in the
-  summary.
+  Migrations run on deploy; commands (`npm run commands:register`) just go in the summary.
 - **Don't upload** an addon to CurseForge (`--dry-run` only) and don't write into the WoW install
   (`~/Applications/World of Warcraft/…`) unless asked: give the command instead.
 - Run the checks of what changed before calling it done (tests, lint, build), and say what wasn't

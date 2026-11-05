@@ -22,8 +22,8 @@ To do, In progress, **Development Completed**, Deployed / Testing, Done.
 ## While working
 
 - Move it to **In progress** when starting (`move_task` with `status: "in_progress"`).
-- **One task = one commit, made by Sérgio**: keep the change to that task only, so it can be
-  committed on its own. Don't commit or push. Unrelated things noticed on the way become new
+- **One task = one commit**: keep the change to that task only. When its checks pass, commit it,
+  push and check the deploy goes live (see CLAUDE.md). Unrelated things noticed on the way become new
   tasks (Backlog, assigned to me, labelled Unrefined), not part of this one.
 - Run the checks of what changed (API: `npm test`, `npm run lint`, `npm run build`; backoffice:
   `npx tsc -b`, `npm run lint`, `npm run build`; addons: see the `addon-change` skill).

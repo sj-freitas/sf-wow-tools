@@ -66,6 +66,7 @@ CurseForge project and its id is in the `.toc`.
 
 ## Don't
 
-- Don't upload to CurseForge, and don't commit (Sérgio does both).
+- Don't upload to CurseForge (Sérgio does). Commit and push as any change (see CLAUDE.md): an
+  addon isn't deployed by the push, only by the upload.
 - Don't copy the addon into the game folder (`~/Applications/World of Warcraft/…`) unless asked;
   give the `cp -R` command instead.

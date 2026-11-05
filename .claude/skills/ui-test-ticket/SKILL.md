@@ -27,7 +27,8 @@ one Botlog task (project GA, `create_task`):
   - **Try**: numbered steps, each with what should happen.
   - **Also check**: the edge cases that matter (a phone-width window, light/dark, nothing to show,
     a long name, someone without the right).
-  - **Needs first**, when it does: a deploy, `npm run prisma:deploy`, `npm run commands:register`.
+  - **Needs first**, when it does: what the deploy doesn't do (`npm run commands:register`, an
+    addon upload). Changes are pushed and deployed before the ticket is created (see CLAUDE.md).
 
 ## One ticket per feature
 
