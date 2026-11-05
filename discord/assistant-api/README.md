@@ -1118,8 +1118,10 @@ against a fresh Supabase database is what "creates the database" schema-wise.
 - `npm run prisma:migrate` — for local development. Diffs `schema.prisma` against the migrations
   history, writes a new migration if the schema changed, and applies any pending migrations
   (including the initial one, on a fresh database).
-- `npm run prisma:deploy` — applies pending migrations only, no diffing/shadow database. Use this
-  in CI/production, or if you'd rather not grant the Supabase user shadow-database permissions.
+- `npm run prisma:deploy` — applies pending migrations only, no diffing/shadow database. Production
+  runs it on every deploy (the Docker image does it as it starts), so it is only needed by hand
+  against another database, or if you'd rather not grant the Supabase user shadow-database
+  permissions.
 
 The schema is split over the `.prisma` files in `prisma/` (`prisma.config.ts` points at the
 folder): `schema.prisma`, and `signup.prisma` for event sign-ups.

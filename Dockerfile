@@ -46,4 +46,7 @@ COPY --from=backoffice-build /app/dist ./public
 ENV NODE_ENV=production
 EXPOSE 3000
 
-CMD ["node", "dist/main.js"]
+# Every deploy first brings the database up to date (prisma/migrations; already applied ones are
+# skipped), then starts the app. A migration that fails stops the new version before it serves
+# anything, so the one before keeps running.
+CMD ["sh", "-c", "node_modules/.bin/prisma migrate deploy && exec node dist/main.js"]

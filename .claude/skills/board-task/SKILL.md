@@ -31,8 +31,8 @@ To do, In progress, **Development Completed**, Deployed / Testing, Done.
 ## Finishing
 
 - Comment a short summary on the task (`add_comment`): what changed, what was verified (tests,
-  lint, build), what wasn't (not tried in a browser / in game / in Discord), migrations or
-  commands needed (e.g. `npm run prisma:deploy`, `npm run commands:register`).
+  lint, build), what wasn't (not tried in a browser / in game / in Discord), and commands needed
+  (e.g. `npm run commands:register`; migrations apply on deploy).
 - Move it to **Development Completed** (`move_task` with `column: "Development Completed"`).
   **Never** further: Deployed / Testing and Done are Sérgio's to move. Never archive.
 - **Manual steps** that aren't running a migration or a command (registering a URL with Blizzard,

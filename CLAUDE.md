@@ -8,7 +8,8 @@ Each part's README explains it; tasks are on the Botlog board (project GA), not 
 - **Commit, push and deploy** once a change's checks pass: one task (or one chat request) = one
   commit on `main`, so keep each change to its task, and end the message with the co-author line.
   Pushing to `main` deploys: Render (workspace "My Workspace", service "Website, API and Bot",
-  `srv-dalbqjn40ujc73df0vv0`) builds it and runs the migrations (Pre-Deploy). Check the deploy
+  `srv-dalbqjn40ujc73df0vv0`) builds it, and the container runs the migrations as it starts
+  (`prisma migrate deploy` in the Dockerfile's `CMD`). Check the deploy
   goes **live** (about two minutes) and say so; if it fails, read its logs and say what broke.
 - **Botlog:** never move a task past **Development Completed**; Deployed / Testing and Done are
   Sérgio's. Never archive.

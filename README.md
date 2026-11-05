@@ -60,14 +60,11 @@ single Node process, meant to run as **one** Render Web Service:
 
 Do **not** set `PORT` — Render injects it, and the app already reads whatever value Render gives it.
 
-**4. Add the Pre-Deploy Command** (Web Service → **Settings → Build & Deploy → Pre-Deploy Command**)
-
-```
-npx prisma migrate deploy
-```
-
-This runs pending migrations against Supabase before each new version starts serving traffic —
-including creating the tables for the very first time on this first deploy.
+**4. Migrations: nothing to set up.** The image runs `prisma migrate deploy` itself each time it
+starts, before the app (the `CMD` in the `Dockerfile`), so pending migrations are applied against
+Supabase before a new version serves traffic — including creating the tables on the very first
+deploy. A migration that fails stops the new version, and the previous one keeps running. (Leave
+Render's Pre-Deploy Command empty.)
 
 **5. Deploy**
 
@@ -101,7 +98,7 @@ DISCORD_TOKEN=... DISCORD_APPLICATION_ID=... npm run commands:register
 - In a server your bot is in, run `/list-players` — should reply with the same data as a string.
 
 From here, every `git push` to the connected branch triggers a new deploy automatically (rerunning
-the Pre-Deploy migration command each time); re-run step 6 only when `commands.json` changes.
+the migrations each time); re-run step 6 only when `commands.json` changes.
 
 ### Things that trip people up here
 
