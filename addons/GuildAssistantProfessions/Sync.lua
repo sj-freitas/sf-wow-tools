@@ -133,6 +133,13 @@ local function onCharacter(sender, payload)
     local g = guild()
     local received = g and Core.decodeCharacter(payload)
     if not received then return end
+    received.realm = Core.realmName(received.realm) -- from a guildmate's 1.0.2 or earlier
+    -- This character as a guildmate still holds it from 1.0.2 and earlier (the first name alone):
+    -- it is saved under the full name now, and the old name shouldn't come back.
+    if received.realm == Core.realmName(GetRealmName()) and received.name ~= Core.playerName(UnitName("player"))
+        and Core.isOwnName(received.name, UnitName("player")) then
+        return
+    end
     local key = received.name .. "-" .. received.realm
     -- Someone sent it: unless ours is newer, our answer needn't go.
     local answer = answering[key]
@@ -148,7 +155,7 @@ end
 function Sync.onMessage(prefix, message, channel, sender)
     if prefix ~= PREFIX or channel ~= "GUILD" or not ns.db then return end
     local name = sender and sender:match("^([^-]+)") or sender
-    if name == UnitName("player") then return end
+    if Core.isOwnName(name, UnitName("player")) then return end
     local kind, payload = assembler.add(sender or "?", message)
     if kind == "H" then
         onDigest(sender, payload)

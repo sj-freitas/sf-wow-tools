@@ -27,24 +27,38 @@ function Scan.say(text, ...)
     print("|cff7c5cffGuildAssistant Professions|r: " .. text:format(...))
 end
 
---- This character's saved entry (with its guild: only characters of the same guild are shared).
+--- This character's saved entry (with its guild: only characters of the same guild are shared),
+--- under the full name. One saved under the first name alone (1.0.2 and earlier) is renamed.
 function Scan.current()
     local _, class = UnitClass("player")
-    local character = Core.character(ns.db, UnitName("player"), GetRealmName(), class, "own")
+    local first, last = UnitName("player")
+    local name, realm = Core.playerName(first, last), Core.realmName(GetRealmName())
+    local old = ns.db.characters[first .. "-" .. realm]
+    if name ~= first and old then
+        ns.db.characters[first .. "-" .. realm] = nil
+        if not ns.db.characters[name .. "-" .. realm] then
+            old.name = name
+            ns.db.characters[name .. "-" .. realm] = old
+        end
+    end
+    local character = Core.character(ns.db, name, realm, class, "own")
     local guild = IsInGuild and IsInGuild() and GetGuildInfo and GetGuildInfo("player") or nil
     if guild then character.guild = guild end
     return character
 end
 
 --- The saved entry of someone whose profession link is open ("Name" or "Name-Realm"). A link
---- carries the full name ("Shivan Nightpath" in WoW Forever) where UnitName gives the first one, so
---- a link to one's own profession is this character, not someone else.
+--- carries the full name ("Shivan Nightpath" in WoW Forever), so a link to one's own profession
+--- (full name, or the first name followed by any last name) is this character, not someone else.
 local function linked(fullName)
     local name, realm = fullName:match("^([^-]+)-(.+)$")
-    name, realm = name or fullName, realm or GetRealmName()
-    local own = UnitName("player")
-    if realm == GetRealmName() and (name == own or name:sub(1, #own + 1) == own .. " ") then
-        ns.db.characters[name .. "-" .. realm] = nil -- recorded as someone else's before
+    name, realm = name or fullName, Core.realmName(realm or GetRealmName())
+    local first, last = UnitName("player")
+    local own = Core.isOwnName(name, first, last) or name:sub(1, #first + 1) == first .. " "
+    if realm == Core.realmName(GetRealmName()) and own then
+        if name ~= Core.playerName(first, last) then
+            ns.db.characters[name .. "-" .. realm] = nil -- recorded as someone else's before
+        end
         return Scan.current()
     end
     return Core.character(ns.db, name, realm, nil, "link")

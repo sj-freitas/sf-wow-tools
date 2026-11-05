@@ -106,6 +106,7 @@ end
 local function onEvent(self, event, arg, ...)
     if event == "ADDON_LOADED" and arg == addonName then
         self:UnregisterEvent("ADDON_LOADED")
+        Core.migrate(db())
         -- What this client offers (not exported): to tell why a client records nothing.
         db().client = {
             build = GetBuildInfo and select(4, GetBuildInfo()),

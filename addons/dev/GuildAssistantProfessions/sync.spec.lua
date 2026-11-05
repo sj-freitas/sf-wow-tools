@@ -38,8 +38,8 @@ local function run(seconds)
     clock = stop
 end
 
---- A player logged in with the addon: `guild` nil for none.
-local function player(name, guild)
+--- A player logged in with the addon: `guild` nil for none; `last` a last name (WoW Forever's).
+local function player(name, guild, last)
     local env = setmetatable({}, { __index = _G })
     local me = { name = name, guild = guild, env = env, chat = {} }
     env.print = function(text) me.chat[#me.chat + 1] = tostring(text) end
@@ -53,7 +53,7 @@ local function player(name, guild)
     end
     env.SlashCmdList = {}
     env.UnitClass = function() return "Mage", "MAGE" end
-    env.UnitName = function() return name end
+    env.UnitName = function() return name, last end
     env.GetRealmName = function() return "Wild Growth" end
     env.IsInGuild = function() return me.guild ~= nil end
     env.GetGuildInfo = function() return me.guild end
@@ -185,6 +185,21 @@ it("spreads a profession being replaced: the newer copy wins in every addon", fu
     run(30)
     eq(knows(kael, "Luna", "Blacksmithing"), false, "Blacksmithing gone from Kael's copy too")
     eq(knows(kael, "Luna", "Engineering"), true, "Engineering instead")
+end)
+
+it("doesn't bring back a character's first-name entry from a guildmate's old copy", function()
+    reset()
+    local kael = player("Kael", "Relic Hunters")
+    -- What Kael got from Luna's 1.0.2, which saved her under her first name alone.
+    kael.ns.db.characters["Luna-Wild Growth"] = { name = "Luna", realm = "Wild Growth", class = "MAGE",
+        source = "guild", guild = "Relic Hunters", updated = clock,
+        professions = { Tailoring = { rank = 1, max = 75, recipes = { ["spell:2387"] = true } } } }
+    local luna = player("Luna", "Relic Hunters", "Moonbrook")
+    run(120)
+    eq(luna.ns.db.characters["Luna-Wild Growth"], nil, "not kept by Luna")
+    learn(luna, "Tailoring", 2387)
+    run(30)
+    eq(knows(kael, "Luna Moonbrook", "Tailoring", 2387), true, "Luna shared under her full name")
 end)
 
 it("says what was shared and received in /ga-prof status", function()

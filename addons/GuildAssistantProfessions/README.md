@@ -68,6 +68,11 @@ is saved (the chat says so), and the next upload of that newer data drops it on 
 has **Drop this profession** for its player or an Officer. An older copy then doesn't bring it
 back; one that says it was learned again after the drop does.
 
+On WoW Forever a character is saved under its full name ("Shivan Darkwhisp") and the realm's rule
+set ("RP", "PvP"; the game's realm name also says which of its servers you're on, "CAMWOW EU4 Realm
+10 RP", and that part is left out). Data from 1.0.2 and earlier, saved under the first name and the
+whole realm name, is renamed at login.
+
 Guild Assistant needs 1.0's dates (format 2): a file from an older version isn't imported, and the
 website asks you to update the addon.
 

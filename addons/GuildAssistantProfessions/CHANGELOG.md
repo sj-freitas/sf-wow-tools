@@ -1,5 +1,13 @@
 # GuildAssistant Professions
 
+## 1.0.3
+
+- WoW Forever: your characters are saved under their full name ("Shivan Darkwhisp"), not just the
+  first name, and under the realm's rule set ("RP") instead of the server's full name ("CAMWOW EU4
+  Realm 10 RP"), which could change. What was already saved is renamed when you log in.
+- Copies of your characters that guildmates on older versions still have under the old name
+  aren't taken back.
+
 ## 1.0.2
 
 - Renamed GuildAssistant Professions (it was Guild Assistant Professions), like Guild Assistant's

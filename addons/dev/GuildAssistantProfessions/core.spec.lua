@@ -479,5 +479,59 @@ it("keeps each profession's history: learned once, updated on each change", func
     eq(luna.professions.Tailoring.learned, 500, "learned again")
 end)
 
+-- WoW Forever's names and realms -------------------------------------------------------------
+
+it("saves WoW Forever's realm as its rule set, and any other realm as it is", function()
+    eq(Core.realmName("CAMWOW EU4 Realm 10 RP"), "RP")
+    eq(Core.realmName("CAMWOW EU5 Realm 2 PvP"), "PvP")
+    eq(Core.realmName("CAMWOW EU1 Realm 3 RP-PvP"), "RP-PvP")
+    eq(Core.realmName("Wild Growth"), "Wild Growth")
+    eq(Core.realmName(nil), nil)
+    eq(Core.parseDigest("Mira-CAMWOW EU4 Realm 10 RP=a;Kai-RP=b")["Mira-RP"], 10, "an old digest")
+end)
+
+it("joins WoW Forever's first and last name, and knows either as this player's", function()
+    eq(Core.playerName("Shivan", "Darkwhisp"), "Shivan Darkwhisp")
+    eq(Core.playerName("Luna", nil), "Luna", "Classic Era")
+    eq(Core.playerName("Luna", ""), "Luna")
+    eq(Core.isOwnName("Shivan", "Shivan", "Darkwhisp"), true, "the first name, as 1.0.2 saved it")
+    eq(Core.isOwnName("Shivan Darkwhisp", "Shivan", "Darkwhisp"), true)
+    eq(Core.isOwnName("Shivan Nightpath", "Shivan", "Darkwhisp"), false)
+end)
+
+it("renames 1.0.2's entries: the realm to its rule set, keeping the newer of two", function()
+    local db = Core.newDB()
+    db.characters["Sol-CAMWOW EU4 Realm 10 RP"] = { name = "Sol", realm = "CAMWOW EU4 Realm 10 RP", updated = 5, professions = {} }
+    db.characters["Mira-CAMWOW EU4 Realm 10 RP"] = { name = "Mira", realm = "CAMWOW EU4 Realm 10 RP", updated = 1, professions = {} }
+    db.characters["Mira-CAMWOW EU4 Realm 3 RP"] = { name = "Mira", realm = "CAMWOW EU4 Realm 3 RP", updated = 9, professions = {} }
+    db.characters["Kai-Wild Growth"] = { name = "Kai", realm = "Wild Growth", professions = {} }
+    Core.migrate(db)
+    local keys = {}
+    for key in pairs(db.characters) do keys[#keys + 1] = key end
+    table.sort(keys)
+    eq(table.concat(keys, ","), "Kai-Wild Growth,Mira-RP,Sol-RP")
+    eq(db.characters["Sol-RP"].realm, "RP")
+    eq(db.characters["Mira-RP"].updated, 9, "the newer Mira")
+end)
+
+it("saves this character under its full name on WoW Forever, renaming 1.0.2's entry", function()
+    _G.UnitClass = function() return "Warrior", "WARRIOR" end
+    _G.UnitName = function() return "Shivan", "Darkwhisp" end
+    _G.GetRealmName = function() return "CAMWOW EU4 Realm 10 RP" end
+    _G.IsTradeSkillLinked = nil
+    local game = { Core = Core, db = Core.newDB() }
+    game.db.characters["Shivan-CAMWOW EU4 Realm 10 RP"] = { name = "Shivan", realm = "CAMWOW EU4 Realm 10 RP",
+        source = "own", updated = 7, professions = { Mining = { rank = 32, max = 75, recipes = {} } } }
+    assert(loadfile("GuildAssistantProfessions/Scan.lua"))("GuildAssistantProfessions", game)
+    Core.migrate(game.db)
+    local shivan = game.Scan.current()
+    eq(shivan.name, "Shivan Darkwhisp")
+    eq(shivan.realm, "RP")
+    eq(game.db.characters["Shivan Darkwhisp-RP"], shivan)
+    eq(game.db.characters["Shivan-RP"], nil, "the first-name entry is gone")
+    eq(shivan.professions.Mining.rank, 32, "with what it had")
+    eq(game.Scan.current(), shivan, "the same entry next time")
+end)
+
 print(("%d passed, %d failed"):format(passed, failed))
 if failed > 0 then error(failed .. " failed") end

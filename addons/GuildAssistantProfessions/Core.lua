@@ -13,6 +13,46 @@ function Core.newDB()
     return { characters = {} }
 end
 
+--- The realm as saved: on WoW Forever the game's name also says which server of it the character
+--- is on ("CAMWOW EU4 Realm 10 RP"), which can change; only its rule set ("RP") is kept, the realm
+--- as Guild Assistant knows it. Any other name is kept as it is.
+function Core.realmName(realm)
+    return realm and realm:match("Realm %d+ (.+)$") or realm
+end
+
+--- Saved data from 1.0.2 and earlier: realms as the game named them, renamed (Core.realmName).
+--- Two entries that become one keep the more recently updated.
+function Core.migrate(db)
+    local renamed = {}
+    for key, character in pairs(db.characters) do
+        if Core.realmName(character.realm) ~= character.realm then renamed[#renamed + 1] = key end
+    end
+    table.sort(renamed)
+    for _, key in ipairs(renamed) do
+        local character = db.characters[key]
+        db.characters[key] = nil
+        character.realm = Core.realmName(character.realm)
+        local newKey = character.name .. "-" .. character.realm
+        local other = db.characters[newKey]
+        if not other or (character.updated or 0) > (other.updated or 0) then
+            db.characters[newKey] = character
+        end
+    end
+end
+
+--- This player's name from UnitName("player"): WoW Forever gives the last name as its second value
+--- ("Shivan", "Darkwhisp"), joined here as the game shows it; Classic Era gives none.
+function Core.playerName(first, last)
+    if last and last ~= "" then return first .. " " .. last end
+    return first
+end
+
+--- Whether `name` is this player's: the full name, or the first name alone (as 1.0.2 and earlier
+--- saved it on WoW Forever).
+function Core.isOwnName(name, first, last)
+    return name == first or name == Core.playerName(first, last)
+end
+
 --- The character's entry (created on first use): name, realm, class, its professions, `source`
 --- ("own": one of the account's, "link": someone else's, seen through a profession link) and
 --- `updated` (the last time anything new was recorded). Once seen as "own" it stays "own".
@@ -268,6 +308,9 @@ end
 function Core.parseDigest(text)
     local known = {}
     for key, updated in (text or ""):gmatch("([^;=]+)=([0-9a-z]+)") do
+        -- A guildmate's 1.0.2 or earlier says the realm as the game names it.
+        local name, realm = key:match("^([^-]+)-(.+)$")
+        if name then key = name .. "-" .. Core.realmName(realm) end
         known[key] = Core.fromBase36(updated)
     end
     return known
