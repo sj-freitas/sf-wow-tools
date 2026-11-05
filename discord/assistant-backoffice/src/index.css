@@ -2673,10 +2673,10 @@ label.btn.disabled {
   color: var(--muted);
   font-size: 0.85rem;
 }
-/* The roster table's columns keep their widths whatever is in them: the small ones fixed, the
-   character and Discord user sharing what is left. What doesn't fit is cut short (…); a Discord
-   name shows whole on hover. Below the minimum width the table scrolls (the phone list takes over
-   at 720px). */
+/* The roster table's columns keep their widths whatever is in them: all but the character fixed
+   and narrow, the character taking what is left so its name shows whole. What doesn't fit
+   elsewhere is cut short (…); a Discord name shows whole on hover. Below the minimum width the
+   table scrolls (the phone list takes over at 720px). */
 .roster-table table {
   table-layout: fixed;
   min-width: 52rem;
@@ -2686,20 +2686,29 @@ label.btn.disabled {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+/* The small columns need less padding than the table's default. */
+.roster-table th:not(:first-child),
+.roster-table td:not(:first-child) {
+  padding-left: 0.6rem;
+  padding-right: 0.6rem;
+}
 .roster-table .col-class {
-  width: 10rem;
+  width: 8.5rem;
 }
 .roster-table .col-roles {
-  width: 9.5rem;
-}
-.roster-table .col-level {
   width: 6rem;
 }
+.roster-table .col-level {
+  width: 5.25rem;
+}
+.roster-table .col-discord {
+  width: 11rem;
+}
 .roster-table .col-rank {
-  width: 8rem;
+  width: 7rem;
 }
 .roster-table .col-actions {
-  width: 5rem;
+  width: 3.75rem;
 }
 .roster-table .discord-name,
 .roster-table .discord-name .name-truncate {
@@ -2709,16 +2718,16 @@ label.btn.disabled {
 .roster-table td.cell-roles {
   overflow: visible;
 }
-/* The name cell lets the attributes popover out: only the name itself is cut short, leaving room
-   for the attributes badge beside it. */
+/* The name cell lets the attributes popover out. The name is never cut short: in the rare case it
+   doesn't fit beside the attributes badge (a narrow window), it wraps instead. */
 .roster-table td.cell-name {
   overflow: visible;
 }
 .roster-table .cell-name .character-link {
   display: inline-block;
   max-width: calc(100% - 4.5rem);
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow-wrap: anywhere;
   vertical-align: middle;
 }
 @media (max-width: 720px) {
