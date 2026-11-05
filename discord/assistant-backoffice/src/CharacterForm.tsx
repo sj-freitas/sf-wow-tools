@@ -1,4 +1,4 @@
-import { useEffect, useState, type ClipboardEvent, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type ClipboardEvent, type FormEvent } from 'react';
 import {
   createCharacter,
   fetchAttributes,
@@ -169,16 +169,33 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
   };
 
   // Fill race, class and level from the armory of the guild's version, with the name typed above
-  // (anyone adding or editing a character; only when the version has an armory to ask).
+  // (anyone adding or editing a character; only when the version has an armory to ask). Adding
+  // one, it is also looked up by itself once the name has been typed (a pause in typing).
   const armory = Boolean(useArmory() && game?.armoryNamespace);
   const nameTyped = firstName.trim().length >= 2 && (!showLastName || lastName.trim().length >= 2);
   const [armoryBusy, setArmoryBusy] = useState(false);
-  const [armoryNote, setArmoryNote] = useState<{ ok: boolean; text: string } | null>(null);
-  const loadFromArmory = () => {
+  const [armoryNote, setArmoryNote] = useState<{
+    kind: 'ok' | 'error' | 'muted';
+    text: string;
+  } | null>(null);
+  // Race, class, roles or level chosen by hand: a lookup made by itself then doesn't overwrite them.
+  const [handPicked, setHandPicked] = useState(false);
+  // Only the answer for the name as it is now counts (typing on makes earlier ones stale).
+  const lookupId = useRef(0);
+  const loadFromArmory = (auto = false) => {
+    const id = ++lookupId.current;
     setArmoryBusy(true);
     setArmoryNote(null);
     fetchArmoryCharacter(guild.id, firstName.trim(), showLastName ? lastName.trim() : '')
       .then((found) => {
+        if (id !== lookupId.current) return;
+        if (auto && handPicked) {
+          setArmoryNote({
+            kind: 'muted',
+            text: `In the armory: ${found.name}, ${found.race} ${found.class}, level ${found.level}. Load from armory fills it in.`,
+          });
+          return;
+        }
         const raceEntry = races.find((r) => r.race.toLowerCase() === found.race.toLowerCase());
         const className = allClasses.find((c) => c.toLowerCase() === found.class.toLowerCase());
         const problems: string[] = [];
@@ -204,18 +221,36 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
         const summary = `${found.name}: ${found.race} ${found.class}, level ${found.level}.${specsText}`;
         setArmoryNote(
           problems.length === 0
-            ? { ok: true, text: `Loaded ${summary}` }
-            : { ok: false, text: `Loaded ${summary} Not filled in: ${problems.join('; ')}.` },
+            ? { kind: 'ok', text: `Loaded ${summary}` }
+            : { kind: 'error', text: `Loaded ${summary} Not filled in: ${problems.join('; ')}.` },
         );
       })
-      .catch((err: unknown) =>
+      .catch((err: unknown) => {
+        if (id !== lookupId.current) return;
+        const message = err instanceof Error ? err.message : String(err);
+        // Looked up by itself: a name not (yet) in the armory is no error, just a note.
         setArmoryNote({
-          ok: false,
-          text: `${err instanceof Error ? err.message : String(err)} Fill the character in by hand.`,
-        }),
-      )
-      .finally(() => setArmoryBusy(false));
+          kind: auto ? 'muted' : 'error',
+          text: `${message} Fill the character in by hand.`,
+        });
+      })
+      .finally(() => id === lookupId.current && setArmoryBusy(false));
   };
+  const autoLoad = useRef(loadFromArmory);
+  useEffect(() => {
+    autoLoad.current = loadFromArmory;
+  });
+  const nameLooksUp =
+    armory &&
+    !initial &&
+    /^\p{L}{2,12}$/u.test(firstName.trim()) &&
+    (!showLastName || /^\p{L}{2,12}$/u.test(lastName.trim()));
+  useEffect(() => {
+    if (!nameLooksUp) return;
+    // After a pause in typing, not on every key.
+    const timer = setTimeout(() => autoLoad.current(true), 700);
+    return () => clearTimeout(timer);
+  }, [nameLooksUp, firstName, lastName]);
 
   // A full name pasted into either name field ("Shivan Darkwhisp", or "Shivan-Darkwhisp") fills
   // both: the first name in one, the last name in the other.
@@ -356,13 +391,22 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
                 className="btn"
                 disabled={armoryBusy || !nameTyped}
                 title="Fills race, class and level from the armory, using the name above"
-                onClick={loadFromArmory}
+                onClick={() => loadFromArmory()}
               >
                 {armoryBusy ? 'Loading…' : 'Load from armory'}
               </button>
             </span>
             {armoryNote && (
-              <span className={armoryNote.ok ? 'run-ok' : 'status-error'} role="status">
+              <span
+                className={
+                  armoryNote.kind === 'ok'
+                    ? 'run-ok'
+                    : armoryNote.kind === 'error'
+                      ? 'status-error'
+                      : 'muted'
+                }
+                role="status"
+              >
                 {armoryNote.text}
               </span>
             )}
@@ -371,7 +415,14 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
         {races.length > 0 && (
           <label className="field">
             Race
-            <Select value={race} onChange={(v) => changeRace(v)} required={!initial}>
+            <Select
+              value={race}
+              onChange={(v) => {
+                setHandPicked(true);
+                changeRace(v);
+              }}
+              required={!initial}
+            >
               <option value="" disabled={!initial}>
                 {initial ? 'Unknown (show every class)' : 'Choose a race…'}
               </option>
@@ -385,7 +436,10 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
           Class
           <Select
             value={characterClass}
-            onChange={(v) => applyClass(v)}
+            onChange={(v) => {
+              setHandPicked(true);
+              applyClass(v);
+            }}
             disabled={classLocked}
             required
             title={classLocked ? 'Choose a race first' : undefined}
@@ -403,7 +457,10 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
           <MultiSelect
             options={roleOptions}
             value={roles}
-            onChange={setRoles}
+            onChange={(next) => {
+              setHandPicked(true);
+              setRoles(next);
+            }}
             placeholder={roleLocked ? 'Choose a class first' : 'Select roles'}
             disabled={roleLocked}
           />
@@ -415,7 +472,10 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
             min={1}
             max={100}
             value={level}
-            onChange={(e) => setLevel(e.target.value)}
+            onChange={(e) => {
+              setHandPicked(true);
+              setLevel(e.target.value);
+            }}
           />
         </label>
       </div>
