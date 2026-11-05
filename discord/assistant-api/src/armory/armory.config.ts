@@ -1,8 +1,8 @@
 /**
- * The one armory the "Load from armory" test feature reads: Season of Discovery on Wild Growth
- * (EU), through Blizzard's Classic Era API (`classic1x`; Season of Discovery shares it). The
- * Forever armory does not exist yet, so this is a stand-in. Later it should be picked from the
- * guild's region and game version, which is why it is all in one place.
+ * The one server "Verify with Battle.net" (TEST) reads a player's characters from: Season of
+ * Discovery on Wild Growth (EU), through Blizzard's Classic Era API (`classic1x`). A stand-in from
+ * before Forever had an armory. "Load from armory" no longer uses it: it asks the guild's version's
+ * armory (`armoryNamespace` in the game config).
  */
 export const TEST_ARMORY = {
   region: 'eu',

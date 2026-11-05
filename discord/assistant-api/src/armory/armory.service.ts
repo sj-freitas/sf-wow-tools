@@ -1,6 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { TEST_ARMORY } from './armory.config';
 import type { TalentBuild } from './spec-roles';
 
 /** What the armory says about a character, reduced to what the character form fills in. */
@@ -70,14 +69,31 @@ interface ProfileResponse {
   race?: { name?: string };
   character_class?: { name?: string };
   realm?: { name?: string };
+  /** Forever: the last name, and the rule set the character plays under (it has no realm). */
+  surname?: string;
+  ruleset?: { name?: string };
   level?: number;
 }
+
+/** Where to look a character up: the guild's version's namespace and region, and its name. */
+export interface ArmoryQuery {
+  /** The game version's namespace for the region (`profile-forever-eu`, see `armoryNamespaceFor`). */
+  namespace: string;
+  /** The guild's region (`EU`, `US`). */
+  region: string;
+  name: string;
+  /** Empty for a version without last names. */
+  lastName: string;
+}
+
+const REGIONS = ['eu', 'us', 'kr', 'tw'];
 
 /**
  * Reads a public character from Blizzard's armory API. It needs a Battle.net developer client
  * (`BLIZZARD_CLIENT_ID` and `BLIZZARD_CLIENT_SECRET`) and no player login: the server gets its own
- * token (client credentials) and asks for the character. TEST: only one server is supported (see
- * `armory.config.ts`), and Blizzard's data for it can be slow or missing, so a failure is normal.
+ * token (client credentials) and asks for the character, in the guild's region and its game
+ * version's namespace (`armoryNamespace` in the game config). Blizzard's data can lag behind the
+ * game (a new character can be missing for a while), so a failure is normal.
  */
 @Injectable()
 export class ArmoryService {
@@ -101,18 +117,25 @@ export class ArmoryService {
     return this.config.get<string>('BLIZZARD_CLIENT_SECRET') || undefined;
   }
 
-  async lookup(name: string): Promise<ArmoryCharacter> {
+  async lookup(query: ArmoryQuery): Promise<ArmoryCharacter> {
     if (!this.configured) {
       throw new ArmoryError('not-configured', 'The armory is not set up on this server.');
     }
-    const trimmed = name.trim();
-    if (!CHARACTER_NAME.test(trimmed)) {
+    const region = query.region.toLowerCase();
+    if (!REGIONS.includes(region) || !/^[a-z0-9-]+$/.test(query.namespace)) {
+      throw new ArmoryError('not-configured', 'This guild’s region has no armory.');
+    }
+    // The first name always; the last name when the version has them.
+    const parts = [query.name.trim(), query.lastName.trim()].filter((part, i) => i === 0 || part);
+    if (!parts.every((part) => CHARACTER_NAME.test(part))) {
       throw new ArmoryError('not-found', 'Type the character’s name first (letters only).');
     }
+    const trimmed = parts.join(' ');
+    // Forever's characters have no realm: they are addressed by `name-lastname`.
+    const slug = parts.map((part) => encodeURIComponent(part.toLowerCase())).join('-');
     const url =
-      `https://${TEST_ARMORY.region}.api.blizzard.com/profile/wow/character/` +
-      `${TEST_ARMORY.realmSlug}/${encodeURIComponent(trimmed.toLowerCase())}` +
-      `?namespace=${TEST_ARMORY.namespace}&locale=${TEST_ARMORY.locale}`;
+      `https://${region}.api.blizzard.com/profile/wow/character/${slug}` +
+      `?namespace=${query.namespace}&locale=${region === 'us' ? 'en_US' : 'en_GB'}`;
 
     let response = await this.get(url, await this.accessToken());
     if (response.status === 401) {
@@ -123,7 +146,7 @@ export class ArmoryService {
     if (response.status === 404) {
       throw new ArmoryError(
         'not-found',
-        `No character called ${trimmed} was found on ${TEST_ARMORY.realmName} (${TEST_ARMORY.region.toUpperCase()}). It may be new, or its data may not have reached the armory yet.`,
+        `No character called ${trimmed} was found in the ${region.toUpperCase()} armory. It may be new, or its data may not have reached the armory yet.`,
       );
     }
     if (!response.ok) {
@@ -139,12 +162,13 @@ export class ArmoryService {
       );
     }
     return {
-      name: profile.name ?? trimmed,
+      name: profile.name ? [profile.name, profile.surname].filter(Boolean).join(' ') : trimmed,
       class: characterClass.name,
       race: race.name,
       level,
       faction: faction?.name ?? '',
-      realm: profile.realm?.name ?? TEST_ARMORY.realmName,
+      // Forever has no realm: its rule set ("Roleplay") instead.
+      realm: profile.realm?.name ?? profile.ruleset?.name ?? '',
       talents: await this.talents(url),
     };
   }

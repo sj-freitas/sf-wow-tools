@@ -381,9 +381,16 @@ export const fetchReactionUsers = (
 export const fetchTaskReactions = (id: string, part = 1): Promise<Reaction[]> =>
   request('GET', `/api/tasks/${id}/reactions?part=${part}`);
 
-/** TEST: a character from the armory (Officers). Fails with a readable message. */
-export const fetchArmoryCharacter = (guildId: string, name: string): Promise<ArmoryCharacter> =>
-  request('GET', `/api/guilds/${guildId}/armory/character?name=${encodeURIComponent(name)}`);
+/** A character from the guild's version's armory, by name and last name. Fails with a readable message. */
+export const fetchArmoryCharacter = (
+  guildId: string,
+  name: string,
+  lastName: string,
+): Promise<ArmoryCharacter> =>
+  request(
+    'GET',
+    `/api/guilds/${guildId}/armory/character?name=${encodeURIComponent(name)}&lastName=${encodeURIComponent(lastName)}`,
+  );
 
 /** Uploads an image for a message of a post; returns its id. */
 export function uploadPostImage(guildId: string, file: File): Promise<{ id: string }> {

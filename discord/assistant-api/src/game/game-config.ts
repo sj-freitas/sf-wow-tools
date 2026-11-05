@@ -72,6 +72,13 @@ export interface GameConfig<C extends string = string> {
    */
   armoryPending?: boolean;
   /**
+   * The Battle.net API namespace of the version's characters, `{region}` standing for the guild's
+   * region in lower case (`profile-forever-{region}` is `profile-forever-eu`). "Load from armory"
+   * looks a character up there by its name and last name (`/profile/wow/character/shivan-darkwhisp`:
+   * no realm). Left out, the version has no armory lookup.
+   */
+  armoryNamespace?: string;
+  /**
    * The version's path on Wowhead, for links to recipes and items (`forever` makes
    * https://www.wowhead.com/forever/spell=20034). Left out: links to Wowhead's Classic pages.
    */
@@ -111,6 +118,13 @@ export function gameConfigProblems(config: unknown): string[] {
   }
   if (game.armoryPending !== undefined && typeof game.armoryPending !== 'boolean') {
     problems.push('armoryPending must be true or false (or left out)');
+  }
+  if (
+    game.armoryNamespace !== undefined &&
+    (typeof game.armoryNamespace !== 'string' ||
+      !/^[a-z0-9-]*(\{region\}[a-z0-9-]*)?$/.test(game.armoryNamespace))
+  ) {
+    problems.push('armoryNamespace must be lower case letters, digits and hyphens, with {region}');
   }
   if (game.requiresLastName !== undefined && typeof game.requiresLastName !== 'boolean') {
     problems.push('requiresLastName must be true or false (or left out)');

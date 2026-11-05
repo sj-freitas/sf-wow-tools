@@ -6,6 +6,7 @@ import { describe, it } from 'node:test';
 import { defineGame, gameConfigProblems } from './game-config';
 import {
   armoryLinkFor,
+  armoryNamespaceFor,
   classesOf,
   gameVersions,
   games,
@@ -154,6 +155,16 @@ describe('checking a config', () => {
     assert.match(gameConfigProblems(config).join(), /armoryPending must be true or false/);
   });
 
+  it('checks armoryNamespace, when given, is a namespace with {region}', () => {
+    const config = valid();
+    (config as { armoryNamespace?: unknown }).armoryNamespace = 'profile-forever-{region}';
+    assert.deepEqual(gameConfigProblems(config), []);
+    for (const bad of ['profile/forever', 'Profile-{region}', 42]) {
+      (config as { armoryNamespace?: unknown }).armoryNamespace = bad;
+      assert.match(gameConfigProblems(config).join(), /armoryNamespace must be/, String(bad));
+    }
+  });
+
   it('checks class colours, when given, are #RRGGBB', () => {
     const config = valid();
     (config.classes.Mage as { color?: string }).color = '#3FC7EB';
@@ -197,15 +208,21 @@ describe('checking a config', () => {
 describe('the armory link of a character', () => {
   it('fills the placeholders of the version’s template', () => {
     const link = armoryLinkFor('Forever', {
-      name: 'Zoë Ann',
-      lastName: '',
+      name: 'Zoë',
+      lastName: 'Darkwhisp',
       region: 'EU',
-      server: 'PVE',
+      server: 'RP',
     });
     assert.equal(
       link,
-      'https://classic-armory.org/character/eu/classic-sod/wild-growth/Zo%C3%AB%20Ann',
+      'https://worldofwarcraft.blizzard.com/en-gb/forever/eu/armory/character/Zo%C3%AB-Darkwhisp',
     );
+  });
+
+  it('gives the armory namespace of a version for a region, null without one', () => {
+    assert.equal(armoryNamespaceFor('Forever', 'EU'), 'profile-forever-eu');
+    assert.equal(armoryNamespaceFor('Forever', 'US'), 'profile-forever-us');
+    assert.equal(armoryNamespaceFor('Retail', 'EU'), null);
   });
 
   it('is null for a version with no template or that we do not know', () => {

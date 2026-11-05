@@ -719,7 +719,7 @@ describe('TrackingService', () => {
       const [entry] = await service.loadRoster('g1');
       assert.equal(
         entry.armoryLink,
-        'https://classic-armory.org/character/eu/classic-sod/wild-growth/Merric',
+        'https://worldofwarcraft.blizzard.com/en-gb/forever/eu/armory/character/Merric-Stone',
       );
     });
 

@@ -188,11 +188,11 @@ export interface SetupInfo {
   regions: Region[];
   /** The versions of the game the API knows (src/game/<version>/config.ts). */
   games: GameConfig[];
-  /** TEST: the armory the character form can load from; null when it is not set up. */
+  /** Blizzard's armory, for "Load from armory" in the character form; null when it is not set up. */
   armoryTest: { description: string } | null;
 }
 
-/** A character as the armory describes it (TEST). */
+/** A character as the armory describes it. */
 export interface ArmoryCharacter {
   name: string;
   class: string;
@@ -234,6 +234,8 @@ export interface GameConfig {
   armoryLink?: string;
   /** The armory doesn't exist yet (`armoryLink` is a stand-in): "Open in armory" says so. */
   armoryPending?: boolean;
+  /** Battle.net namespace of its characters: set when "Load from armory" works for the version. */
+  armoryNamespace?: string;
   /**
    * Servers a guild can be on, per region id, each with the rule set it enforces (several servers
    * can share one, e.g. `'Normal'`); a region that is missing is not available.

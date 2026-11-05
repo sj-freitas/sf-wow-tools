@@ -244,6 +244,12 @@ const slug = (text: string): string =>
     .replace(/[^\p{L}\p{N}]+/gu, '-')
     .replace(/^-+|-+$/g, '');
 
+/** The version's armory namespace for a region (`EU` makes `profile-forever-eu`); null without one. */
+export function armoryNamespaceFor(gameVersion: string, region: string): string | null {
+  const template = getGame(gameVersion)?.armoryNamespace;
+  return template ? template.replace('{region}', region.toLowerCase()) : null;
+}
+
 /**
  * The armory page of a character in a version, from its `armoryLink` template; null when the
  * version has none. Each value is made safe for an address (`{name}` keeps its accents, encoded).

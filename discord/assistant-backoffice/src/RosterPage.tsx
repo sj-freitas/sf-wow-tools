@@ -311,8 +311,8 @@ export function RosterPage({ guild, currentUser }: Props) {
     : 0;
   const missingNames =
     players?.some((player) => !player.discordUsername && !player.discordDisplayName) ?? false;
-  // "Open in armory": the character's page there, or a passing note while the version's armory
-  // doesn't exist yet (`armoryPending` in the API's src/game/forever/config.ts; Botlog GA-4).
+  // "Open in armory": the character's page there, or a passing note when the version's armory
+  // doesn't exist yet (`armoryPending` in the API's game config).
   const game = gameOf(games, guild.gameVersion);
   const armoryItem = (character: Player['characters'][number]) => {
     const href = armoryLinkFor(game, {

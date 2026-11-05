@@ -3,7 +3,7 @@ import { ROLE_LABELS, type Faction, type GameConfig, type Role } from './types';
 
 /** The game versions the API knows, provided once for every form that needs them. */
 export const GamesContext = createContext<GameConfig[]>([]);
-/** TEST: the armory the character form can load from (null when it is not set up). */
+/** Blizzard's armory, for "Load from armory" (null when it is not set up on the server). */
 export const ArmoryContext = createContext<{ description: string } | null>(null);
 export const useArmory = (): { description: string } | null => useContext(ArmoryContext);
 

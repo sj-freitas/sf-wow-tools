@@ -168,16 +168,16 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
       .finally(() => setMigrating(false));
   };
 
-  // Fill race, class and level from the armory (Officers), with the name typed above (a test
-  // armory for now: see useArmory).
-  const armory = useArmory();
+  // Fill race, class and level from the armory of the guild's version, with the name typed above
+  // (anyone adding or editing a character; only when the version has an armory to ask).
+  const armory = Boolean(useArmory() && game?.armoryNamespace);
   const nameTyped = firstName.trim().length >= 2 && (!showLastName || lastName.trim().length >= 2);
   const [armoryBusy, setArmoryBusy] = useState(false);
   const [armoryNote, setArmoryNote] = useState<{ ok: boolean; text: string } | null>(null);
   const loadFromArmory = () => {
     setArmoryBusy(true);
     setArmoryNote(null);
-    fetchArmoryCharacter(guild.id, firstName.trim())
+    fetchArmoryCharacter(guild.id, firstName.trim(), showLastName ? lastName.trim() : '')
       .then((found) => {
         const raceEntry = races.find((r) => r.race.toLowerCase() === found.race.toLowerCase());
         const className = allClasses.find((c) => c.toLowerCase() === found.class.toLowerCase());
@@ -346,9 +346,9 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
             />
           </label>
         )}
-        {armory && guild.isOfficer && (
+        {armory && (
           // Under the name it reads: unlocked once the name is typed (both parts when the version
-          // has last names; the lookup itself only uses the first name for now).
+          // has last names).
           <div className="field field-wide armory-load">
             <span>
               <button

@@ -8,13 +8,11 @@ export default defineGame({
   gameVersion: 'Forever',
   // Characters are written `Name-Lastname`.
   requiresLastName: true,
-  // A stand-in: Season of Discovery on Wild Growth (EU), because the Forever armory does not exist
-  // yet. When it does, this becomes something like
-  // 'https://<armory>/character/{region}/{server}/{name}' and follows the guild.
-  armoryLink: 'https://classic-armory.org/character/eu/classic-sod/wild-growth/{name}',
-  // The Forever armory doesn't exist yet, so the roster's "Open in armory" says so instead of
-  // opening the stand-in above (Botlog GA-4 says what changes when it does).
-  armoryPending: true,
+  // The official armory: a character's page is by region and full name, Forever has no realms.
+  armoryLink:
+    'https://worldofwarcraft.blizzard.com/en-gb/forever/{region}/armory/character/{name}-{lastName}',
+  // Blizzard's API for "Load from armory": /profile/wow/character/<name>-<lastname>, per region.
+  armoryNamespace: 'profile-forever-{region}',
   // Recipe and item links (professions): https://www.wowhead.com/forever/spell=20034/…
   wowheadPath: 'forever',
   // Each server's name and the gameplay rules it enforces (several could share one; features

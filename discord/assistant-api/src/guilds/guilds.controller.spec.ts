@@ -147,8 +147,8 @@ describe('GuildsController role mappings', () => {
       );
     });
 
-    it('offers the armory test only when the Battle.net client is set up', () => {
-      assert.match(controller.setupInfo().armoryTest?.description ?? '', /Wild Growth/);
+    it('offers the armory only when the Battle.net client is set up', () => {
+      assert.match(controller.setupInfo().armoryTest?.description ?? '', /Blizzard/);
     });
 
     it('sends the game configs to the backoffice with the setup info', () => {

@@ -656,6 +656,8 @@ wrong. The shape (volatile: expect it to grow):
 - `armoryLink` (optional): an https link template for a character's armory page, with the placeholders
   `{name}`, `{lastName}`, `{region}` and `{server}` (filled from the character and the guild). It feeds
   `roster[i].armoryLink`.
+- `armoryNamespace` (optional): the Battle.net namespace of the version's characters, `{region}` for the
+  guild's region (`profile-forever-{region}`). "Load from armory" asks it; left out, the version has none.
 - `allowedServers`: the servers a guild can be on, **per region** (`EU`, `US`, the regions of
   `config/regions.ts`); a region that is missing is not available for that version. Each server is an
   object with a `ruleSet` (e.g. `'RP'`, `'PVP'`, `'Normal'`, `'Hardcore'`): the gameplay rules it
@@ -700,29 +702,31 @@ and a CHECK on the table refuses an empty one. (An old guard in the service stil
 nothing of — harmless since nothing can write one any more, but it means editing a character from before
 this was required still offers every class, unlocked, instead of forcing a race on it retroactively.)
 
-## Load from armory (TEST)
+## Load from armory
 
-Officers get a **Load from armory** button, tagged TEST, in the character form: type the character's
-name, press it, and race, class and level are filled in from Blizzard's armory. Everything stays
-editable, and if the lookup fails (not found, Blizzard down, not set up) the form shows why and the
-character is added by hand as before.
+The character form has a **Load from armory** button for anyone adding or editing a character: type
+the character's name (and last name), press it, and race, class and level are filled in from Blizzard's
+armory. Everything stays editable, and if the lookup fails (not found, Blizzard down, not set up) the
+form shows why and the character is added by hand as before.
 
-- **Where from:** one fixed server, **EU · Classic Season of Discovery · Wild Growth**
-  (`src/armory/armory.config.ts`: region `eu`, realm `wild-growth`, namespace `profile-classic1x-eu`;
-  Season of Discovery shares Blizzard's Classic Era API). The Forever armory does not exist yet. Later the
-  region, version and server should come from the guild, so it is all in that one file.
-- **How:** `GET /api/guilds/:guildId/armory/character?name=` (Officers only) asks
-  `https://eu.api.blizzard.com/profile/wow/character/wild-growth/<name>` with a token the server gets for
-  itself (OAuth **client credentials**), so no player logs in and nothing is stored. The token is kept in
-  memory until a minute before it expires, and renewed once if Blizzard refuses it. Requests time out after
-  8 seconds. Only public data is read: name, class, race, level and faction.
+- **Where from:** the armory of the guild's game version, in the guild's region. The version's config
+  says which (`armoryNamespace`: Forever's is `profile-forever-{region}`, so an EU guild asks
+  `profile-forever-eu`). A version without one has no button.
+- **How:** `GET /api/guilds/:guildId/armory/character?name=&lastName=` (anyone in the guild) asks
+  `https://<region>.api.blizzard.com/profile/wow/character/<name>-<lastname>?namespace=…` (Forever has no
+  realms: a character is its region and full name) with a token the server gets for itself (OAuth
+  **client credentials**), so no player logs in and nothing is stored. The token is kept in memory until
+  a minute before it expires, and renewed once if Blizzard refuses it. Requests time out after 8 seconds.
+  Only public data is read: name, class, race, level, faction, rule set, and (EXPERIMENTAL) talents.
 - **Set up:** create a client at [develop.battle.net/access/clients](https://develop.battle.net/access/clients)
   and set `BLIZZARD_CLIENT_ID` and `BLIZZARD_CLIENT_SECRET` (on Render too). Without both the button is
   hidden (`setup-info` has `armoryTest: null`).
 - **What the form does with the answer:** it picks the race if it is one of the guild's faction, then the
   class if that race can be it (the class stays empty otherwise), and the level; anything that does not fit
-  is listed ("Orc is not a race of this guild's faction"). Roles are not on the armory, and the name is
-  left as typed. Blizzard's data for Classic can be slow or missing (new characters often 404).
+  is listed ("Orc is not a race of this guild's faction"). The name is left as typed. Blizzard's data can
+  lag behind the game (a brand-new character can 404 for a while).
+- **Verify with Battle.net** (TEST, below) still reads a stand-in server, `src/armory/armory.config.ts`
+  (Season of Discovery on Wild Growth, EU).
 
 ## Characters, players and guilds (guild-agnostic characters)
 

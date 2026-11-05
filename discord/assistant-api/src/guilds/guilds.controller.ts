@@ -25,7 +25,6 @@ import { GuildAccessService } from '../auth/guild-access.service';
 import { APP_CONFIG } from '../config/app.config';
 import { botInviteUrl } from '../config/bot-invite';
 import { isRegion, REGIONS, regionOptions } from '../config/regions';
-import { TEST_ARMORY } from '../armory/armory.config';
 import { games, getGame, isGameVersion, serversOf } from '../game/games';
 import { MAX_BANNER_BYTES, readBody } from './banner';
 import { GuildRedirectsService } from './guild-redirects.service';
@@ -65,7 +64,7 @@ export class GuildsController {
     this.armoryDescription =
       configService.get<string>('BLIZZARD_CLIENT_ID') &&
       configService.get<string>('BLIZZARD_CLIENT_SECRET')
-        ? TEST_ARMORY.description
+        ? 'Blizzard’s armory'
         : null;
   }
 
@@ -94,7 +93,7 @@ export class GuildsController {
       regions: regionOptions(),
       // What the forms are built from: versions, their servers per region, factions, races and classes.
       games: games(),
-      // TEST: "Load from armory" in the character form (Officers), null when it is not set up.
+      // "Load from armory" in the character form, null when Battle.net is not set up.
       armoryTest: this.armoryDescription ? { description: this.armoryDescription } : null,
     };
   }
