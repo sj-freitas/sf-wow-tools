@@ -1072,6 +1072,24 @@ to log in with Discord and approve the connection.
   `confirm: true`: it does what the plugin does, now). Each checks access like the
   matching backoffice endpoint (members read the roster; Officers manage posts and plugins) and
   calls the same service (`McpToolsService`).
+- **Roster:** `find_characters` (every character with race, class, level, roles, faction,
+  attributes, whether it is verified, and who plays it: Discord id, name and rank; filters by
+  name, class, race, role, level, player and attribute), `get_character_options` (the races of the
+  guild's faction and their classes, every class's specs and roles, the name format),
+  `find_people` (Officers: members of the guild's Discord servers by name, for their Discord id),
+  `add_character` (yours, or an Officer's for another member by `discordUserId`: "add a character
+  for xyz"), `update_character` (any of its fields; `discordUserId` moves it to another member),
+  `list_migratable_characters` and `add_existing_character` (a character already on the server, from
+  another guild), `remove_character` (off this roster only; needs `confirm: true`),
+  `list_attributes` and `set_character_attributes` (Officers). From
+  `src/characters/characters-mcp-tools.ts`, through `McpToolRegistry`. Every change goes through
+  `CharacterActionsService`, which `CharactersAdminController` uses too, so the rules are the
+  backoffice's: members manage their own characters, Officers everyone's, and a character verified
+  on Battle.net only its player changes.
+- **Armory:** `look_up_armory`, a character's race, class, level, faction and talents live from
+  Blizzard, with specs and roles worked out from the talents (experimental; the roster stores no
+  specs). From `src/armory/armory-mcp-tools.ts`, through `ArmoryLookupService` like "Load from
+  armory".
 - **Event sign-ups:** `list_events`, `get_event` and `create_event` ("create a raid sign-up for
   Naxxramas on Sunday at 20:00"). They come from `src/signup/signup-mcp-tools.ts`, which adds them
   through `McpToolRegistry` (`src/mcp/mcp-tool-registry.ts`), so the MCP module doesn't import

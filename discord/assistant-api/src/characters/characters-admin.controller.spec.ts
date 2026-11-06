@@ -3,6 +3,7 @@ import { beforeEach, describe, it } from 'node:test';
 import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import type { AuthenticatedRequest } from '../auth/auth.types';
 import type { GuildAccessService } from '../auth/guild-access.service';
+import { CharacterActionsService } from './character-actions.service';
 import { CharactersAdminController } from './characters-admin.controller';
 import type { CharactersService } from './characters.service';
 
@@ -51,7 +52,9 @@ describe('CharactersAdminController permissions', () => {
       },
     } as unknown as CharactersService;
     const guildAccess = { find: async () => access } as unknown as GuildAccessService;
-    controller = new CharactersAdminController(characters, guildAccess);
+    controller = new CharactersAdminController(
+      new CharacterActionsService(characters, guildAccess),
+    );
   });
 
   describe('adding', () => {

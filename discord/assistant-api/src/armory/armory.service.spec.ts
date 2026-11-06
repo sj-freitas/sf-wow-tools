@@ -10,6 +10,7 @@ import type { ConfigService } from '@nestjs/config';
 import type { AuthenticatedRequest } from '../auth/auth.types';
 import type { GuildAccessService } from '../auth/guild-access.service';
 import type { PrismaService } from '../database/prisma.service';
+import { ArmoryLookupService } from './armory-lookup.service';
 import { ArmoryController } from './armory.controller';
 import { ArmoryError, ArmoryService } from './armory.service';
 
@@ -240,7 +241,7 @@ describe('ArmoryController', () => {
     guild = { gameVersion: 'Forever', region: 'EU' };
     asked = [];
     outcome = async () => ({ name: 'Susaru', class: 'Druid', talents: null });
-    controller = new ArmoryController(
+    const lookup = new ArmoryLookupService(
       {
         lookup: (query: unknown) => {
           asked.push(query);
@@ -252,6 +253,7 @@ describe('ArmoryController', () => {
       } as unknown as GuildAccessService,
       { guild: { findUnique: async () => guild } } as unknown as PrismaService,
     );
+    controller = new ArmoryController(lookup);
   });
 
   it('asks the armory of the guild’s version and region, and adds the specs worked out for it', async () => {

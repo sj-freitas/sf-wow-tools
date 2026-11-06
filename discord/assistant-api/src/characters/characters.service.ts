@@ -91,6 +91,17 @@ export interface CharacterSummary extends CharacterName {
   level: number;
 }
 
+/** One character of a guild's roster (`findRoster`). */
+export interface RosterCharacter extends CharacterSummary {
+  /** `First Last`, as the backoffice shows it. */
+  name: string;
+  /** Its player proved on Battle.net that it is theirs: only they can change it. */
+  verified: boolean;
+  /** The names of the guild's attributes it has (main, alt, …). */
+  attributes: string[];
+  player: { discordUserId: string; username: string | null; displayName: string | null };
+}
+
 const CHARACTER_SELECT = {
   id: true,
   firstName: true,
@@ -359,7 +370,39 @@ export class CharactersService {
     return 'removed';
   }
 
-  /** The Discord id of the character's own player, or null if the character does not exist. */
+  /**
+   * A guild's roster, one row per character: its fields, its guild attributes and who plays it
+   * (the MCP server's `find_characters`, which filters and adds Discord ranks).
+   */
+  async findRoster(guildId: string): Promise<RosterCharacter[]> {
+    const characters = await this.prisma.character.findMany({
+      where: { guilds: { some: { guildId } } },
+      orderBy: [{ firstName: 'asc' }, { lastName: 'asc' }],
+      select: {
+        ...CHARACTER_SELECT,
+        verifiedAt: true,
+        attributes: {
+          where: { attribute: { guildId } },
+          select: { attribute: { select: { name: true } } },
+        },
+        player: {
+          select: { discordUserId: true, discordUsername: true, discordDisplayName: true },
+        },
+      },
+    });
+    return characters.map(({ verifiedAt, attributes, player, ...character }) => ({
+      ...character,
+      name: `${character.firstName} ${character.lastName}`.trim(),
+      verified: verifiedAt !== null,
+      attributes: attributes.map(({ attribute }) => attribute.name).sort(),
+      player: {
+        discordUserId: player.discordUserId,
+        username: player.discordUsername,
+        displayName: player.discordDisplayName,
+      },
+    }));
+  }
+
   /** Who plays the character, and whether they verified it on Battle.net; null when none. */
   async findOwnership(
     characterId: string,
@@ -373,6 +416,7 @@ export class CharactersService {
       : null;
   }
 
+  /** The Discord id of the character's own player, or null if the character does not exist. */
   async findOwnerDiscordId(characterId: string): Promise<string | null> {
     const character = await this.prisma.character.findUnique({
       where: { id: characterId },

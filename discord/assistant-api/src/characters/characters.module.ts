@@ -1,5 +1,8 @@
 import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
+import { GuildsModule } from '../guilds/guilds.module';
+import { McpToolRegistryModule } from '../mcp/mcp-tool-registry';
+import { CharacterActionsService } from './character-actions.service';
 import { CharacterBioController } from './character-bio.controller';
 import { CharacterBioService } from './character-bio.service';
 import { CharacterNotesController } from './character-notes.controller';
@@ -8,10 +11,11 @@ import { GuildAttributesController } from './guild-attributes.controller';
 import { GuildAttributesService } from './guild-attributes.service';
 import { CharactersAdminController } from './characters-admin.controller';
 import { CharactersCommand } from './characters.command';
+import { CharactersMcpTools } from './characters-mcp-tools';
 import { CharactersService } from './characters.service';
 
 @Module({
-  imports: [AuthModule],
+  imports: [AuthModule, GuildsModule, McpToolRegistryModule],
   controllers: [
     CharactersAdminController,
     CharacterBioController,
@@ -20,6 +24,8 @@ import { CharactersService } from './characters.service';
   ],
   providers: [
     CharactersService,
+    CharacterActionsService,
+    CharactersMcpTools,
     CharactersCommand,
     CharacterBioService,
     CharacterNotesService,
