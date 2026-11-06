@@ -73,6 +73,10 @@
             "value": "Gnome"
           },
           {
+            "name": "High Order Skyborne",
+            "value": "High Order Skyborne"
+          },
+          {
             "name": "Human",
             "value": "Human"
           },
@@ -85,10 +89,6 @@
             "value": "Orc"
           },
           {
-            "name": "Skyborne",
-            "value": "Skyborne"
-          },
-          {
             "name": "Tauren",
             "value": "Tauren"
           },
@@ -99,6 +99,10 @@
           {
             "name": "Undead",
             "value": "Undead"
+          },
+          {
+            "name": "Windshaper Skyborne",
+            "value": "Windshaper Skyborne"
           }
         ]
       },

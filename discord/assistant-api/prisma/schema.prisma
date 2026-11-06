@@ -193,8 +193,8 @@ model Character {
   gameVersion        String                     @map("game_version")
   region             String
   realm              String
-  // Stored, not derived from race: some races (e.g. Forever's Skyborne, like Pandaren) exist in
-  // both factions, so race alone can't say which one a given character committed to. Set from the
+  // Stored, not derived from race: a game version may have a race in both factions (like WoW's
+  // Pandaren), so race alone can't say which one a given character committed to. Set from the
   // guild's faction when the character is created; changing it (a "faction change") is a deliberate
   // edit, checked the same way creation is (the new race, if any, must fit the new faction).
   faction            Faction

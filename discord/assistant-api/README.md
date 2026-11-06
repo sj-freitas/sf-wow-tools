@@ -751,9 +751,9 @@ and because the same character might raid with more than one guild.
 - **`Character`** carries its own `game_version`/`region`/`realm` (copied from the guild it was first
   created in, fixed from then on — moving a character to another realm is not supported), its `player_id`,
   and its own **`faction`** — stored explicitly, **not derived from race**. A race can't reliably say the
-  faction: Forever's Skyborne (like WoW's Pandaren) is a race of both factions, with a different class list
-  on each side, so the same race string exists in both `factions.Alliance.races` and `factions.Horde.races`
-  in the config. `faction` is set from the guild's when a character is created, and changes only on a
+  faction: a race of both factions (like WoW's Pandaren) would have the same race string in both
+  `factions.Alliance.races` and `factions.Horde.races` in the config. (Forever's Skyborne are two races,
+  High Order Skyborne for the Alliance and Windshaper Skyborne for the Horde.) `faction` is set from the guild's when a character is created, and changes only on a
   deliberate edit (a "faction change": `CharacterUpdate.faction`). Its name is unique **per player and
   server** (`characters_unique_per_server`), not per guild.
 - **`CharacterGuildMembership`** (`character_id`, `guild_id`) is the roster entry. **Removing a character
@@ -770,8 +770,9 @@ and because the same character might raid with more than one guild.
   `race`, `roles` and `faction` are checked against each other and the game version
   (`raceInFaction`/`classesOfRace`, same functions creation uses) — against the character's **own** stored
   faction, not any one guild's, since it may be in several (or none). Changing `race` alone must still fit
-  the current faction; changing `faction` alone must find the current race on the other side too (Skyborne
-  can; Human, Alliance-only, can't without also changing race). The permission check for _who_ may edit a
+  the current faction; changing `faction` alone must find the current race on the other side too (Human,
+  Alliance-only, can't without also changing race, and neither can High Order Skyborne: on the Horde
+  it's Windshaper Skyborne). The permission check for _who_ may edit a
   character is done by the controller from the guild in the URL
   (`PATCH /api/guilds/:guildId/characters/:id`), separately.
 

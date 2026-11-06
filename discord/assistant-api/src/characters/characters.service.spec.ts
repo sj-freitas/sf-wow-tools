@@ -221,11 +221,15 @@ describe('CharactersService last name rule', () => {
       assert.deepEqual(updated.at(-1), { race: 'Orc', faction: 'HORDE', class: 'Warrior' });
     });
 
-    it('lets a faction change through when the current race fits both (Skyborne, like Pandaren)', async () => {
-      characterRace = 'Skyborne';
-      characterClass = 'Warrior'; // the one role Skyborne can play on both sides.
-      await service.update('c', { faction: 'HORDE' });
-      assert.deepEqual(updated.at(-1), { faction: 'HORDE' });
+    it('takes Skyborne to the other side only with the race of that side', async () => {
+      characterRace = 'High Order Skyborne'; // Alliance's Skyborne; Horde's are Windshaper.
+      characterClass = 'Warrior';
+      await assert.rejects(
+        service.update('c', { faction: 'HORDE' }),
+        /Forever has no High Order Skyborne race for that faction/,
+      );
+      await service.update('c', { faction: 'HORDE', race: 'Windshaper Skyborne' });
+      assert.deepEqual(updated.at(-1), { faction: 'HORDE', race: 'Windshaper Skyborne' });
     });
 
     it('rejects a faction change when the current race does not exist on the other side', async () => {
@@ -410,9 +414,9 @@ describe('CharactersService, a character in more than one guild', () => {
       assert.equal(await service.migrate('g2', 'c1', 'u1', false), 'wrong-faction');
     });
 
-    it('does not derive the faction from the race: Skyborne exists on both sides, so only the stored faction decides', async () => {
-      characters.c1.race = 'Skyborne';
-      characters.c1.faction = 'HORDE'; // this guild is Alliance: refused despite the shared race.
+    it('does not derive the faction from the race: only the stored faction decides', async () => {
+      characters.c1.race = 'Human';
+      characters.c1.faction = 'HORDE'; // this guild is Alliance: refused despite an Alliance race.
       assert.equal(await service.migrate('g2', 'c1', 'u1', false), 'wrong-faction');
       characters.c1.faction = 'ALLIANCE';
       assert.equal(await service.migrate('g2', 'c1', 'u1', false), 'migrated');

@@ -40,7 +40,7 @@ export default defineGame({
         Gnome: { classes: ['Mage', 'Rogue', 'Warlock', 'Warrior', 'Priest'] },
         Human: { classes: ['Paladin', 'Hunter', 'Priest', 'Rogue', 'Warrior', 'Warlock', 'Mage'] },
         'Night Elf': { classes: ['Druid', 'Hunter', 'Priest', 'Warrior', 'Rogue'] },
-        Skyborne: { classes: ['Druid', 'Hunter', 'Mage', 'Rogue', 'Warrior'] },
+        'High Order Skyborne': { classes: ['Druid', 'Hunter', 'Mage', 'Rogue', 'Warrior'] },
       },
     },
     Horde: {
@@ -49,7 +49,7 @@ export default defineGame({
         Orc: { classes: ['Hunter', 'Rogue', 'Warlock', 'Shaman', 'Warrior'] },
         Tauren: { classes: ['Druid', 'Hunter', 'Priest', 'Shaman'] },
         Undead: { classes: ['Paladin', 'Warrior', 'Mage', 'Priest', 'Rogue', 'Warlock'] },
-        Skyborne: { classes: ['Druid', 'Hunter', 'Rogue', 'Shaman', 'Warrior'] },
+        'Windshaper Skyborne': { classes: ['Druid', 'Hunter', 'Rogue', 'Shaman', 'Warrior'] },
       },
     },
   },
