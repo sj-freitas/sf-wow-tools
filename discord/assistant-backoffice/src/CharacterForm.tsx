@@ -62,9 +62,8 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
   const races = racesOf(game, guild.faction);
   const [race, setRace] = useState(initial?.race ?? '');
   const allClasses = classNamesOf(game);
-  // New characters must have a race before a class; editing one whose race is unknown (added
-  // before this was collected, or from Discord) still offers every class, unlocked.
-  const classLocked = !initial && races.length > 0 && race === '';
+  // A character must have a race before a class.
+  const classLocked = races.length > 0 && race === '';
   const classOptions = classLocked
     ? []
     : race
@@ -108,7 +107,7 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
   /** Changing the race keeps the class only if the new race can be it; otherwise it is cleared. */
   const changeRace = (next: string) => {
     setRace(next);
-    const allowed = next === '' ? allClasses : (races.find((r) => r.race === next)?.classes ?? []);
+    const allowed = races.find((r) => r.race === next)?.classes ?? [];
     applyClass(allowed.includes(characterClass) ? characterClass : '');
   };
   const [level, setLevel] = useState(initial ? String(initial.level) : '');
@@ -421,10 +420,10 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
                 setHandPicked(true);
                 changeRace(v);
               }}
-              required={!initial}
+              required
             >
-              <option value="" disabled={!initial}>
-                {initial ? 'Unknown (show every class)' : 'Choose a race…'}
+              <option value="" disabled>
+                Choose a race…
               </option>
               {races.map((r) => (
                 <option key={r.race}>{r.race}</option>
