@@ -33,6 +33,16 @@ export function rolesOfClass(game: GameConfig | undefined, className: string): R
   return (Object.keys(ROLE_LABELS) as Role[]).filter((role) => names.has(ROLE_LABELS[role]));
 }
 
+/**
+ * A class's first role: its first specialization's first, in the version's config order (what the
+ * API assumes when the armory gives no talents). Null when the version lists none for the class.
+ */
+export function firstRoleOfClass(game: GameConfig | undefined, className: string): Role | null {
+  const [first] = Object.values(game?.classes[className]?.specializations ?? {});
+  const label = first?.roles[0];
+  return (Object.keys(ROLE_LABELS) as Role[]).find((role) => ROLE_LABELS[role] === label) ?? null;
+}
+
 /** Every class of a version, by name. */
 export const classNamesOf = (game: GameConfig | undefined): string[] =>
   Object.keys(game?.classes ?? {});

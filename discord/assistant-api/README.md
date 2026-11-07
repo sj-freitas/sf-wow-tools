@@ -756,9 +756,12 @@ user who plays each, without typing them in one by one.
   member we don't have, an Officer picks the Discord user (a guess is filled in when exactly one member of
   the guild's servers has the character's name, last name or full name as their Discord name); the page
   looks the character up (`armory/character`, for its specs) and adds it (`POST characters` with `discordUserId`):
-  race, class and level from the armory, roles from its talents (the class's first spec without any). A
-  known character is added as it is, for its own player (`POST characters/:id/migrate`). One at a time or
-  all those with a player at once, each row saying what went wrong, if anything.
+  race, class and level from the armory, roles from its talents (the class's first spec without any). When
+  that lookup fails (the armory's character pages lag behind its guild roster, or never have some), the
+  character is added anyway from the guild roster's race, class and level, with its class's first role,
+  and the note after adding says to check it. A known character is added as it is, for its own player
+  (`POST characters/:id/migrate`). One at a time or all those with a player at once, each row saying what
+  went wrong, if anything.
 
 ## Characters, players and guilds (guild-agnostic characters)
 

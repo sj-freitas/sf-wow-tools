@@ -9,12 +9,20 @@ import {
 } from './api';
 import { ClassMark } from './ClassMark';
 import { DiscordName } from './DiscordName';
-import { armoryLinkFor, gameOf, useGames } from './game';
+import { armoryLinkFor, firstRoleOfClass, gameOf, useGames } from './game';
 import { guildPath } from './guildPath';
 import { InlineSpinner, Spinner } from './Loading';
 import { PlayerPicker } from './PlayerPicker';
 import { showToast } from './toast';
-import type { ArmoryGuildMember, ArmoryGuildRoster, Guild, People, Person, User } from './types';
+import type {
+  ArmoryGuildMember,
+  ArmoryGuildRoster,
+  Guild,
+  People,
+  Person,
+  Role,
+  User,
+} from './types';
 import { useCurrentUrl, useReturnTo } from './useReturnTo';
 
 interface Props {
@@ -142,39 +150,58 @@ export function ArmoryImportPage({ guild, currentUser }: Props) {
       return next;
     });
 
-  /** Adds one member to the roster; throws with a readable message. */
-  const addToRoster = async (member: ArmoryGuildMember): Promise<void> => {
+  /**
+   * Adds one member to the roster; throws with a readable message. Says whether its role was
+   * assumed: when the armory can't look the character up (its character pages lag behind the guild
+   * roster, or never have some), it is added anyway from the guild roster's race, class and level,
+   * with its class's first role.
+   */
+  const addToRoster = async (member: ArmoryGuildMember): Promise<{ assumedRole: boolean }> => {
     if (member.character) {
       await migrateCharacter(guild.id, member.character.id);
-      return;
+      return { assumedRole: false };
     }
-    // A lookup of its own: the roster has no talents, and this one works out its specs.
-    const found = await fetchArmoryCharacter(guild.id, member.name, member.lastName);
-    const { roles } = found.specs;
-    if (roles.length === 0) {
-      throw new Error(`No roles are known for ${found.class}: add it with “Add character”.`);
+    let character: { class: string; race: string; level: number; roles: Role[] };
+    let assumedRole = false;
+    try {
+      // A lookup of its own: the roster has no talents, and this one works out its specs.
+      const found = await fetchArmoryCharacter(guild.id, member.name, member.lastName);
+      character = { ...found, roles: found.specs.roles };
+    } catch {
+      const role = firstRoleOfClass(game, member.class);
+      character = { ...member, roles: role ? [role] : [] };
+      assumedRole = true;
+    }
+    if (!character.class || !character.race) {
+      throw new Error('The armory doesn’t say its class and race: add it with “Add character”.');
+    }
+    if (character.roles.length === 0) {
+      throw new Error(`No roles are known for ${character.class}: add it with “Add character”.`);
     }
     await createCharacter(guild.id, {
       discordUserId: pickOf(member),
       name: member.lastName ? `${member.name}-${member.lastName}` : member.name,
-      class: found.class,
-      race: found.race,
-      roles,
-      level: found.level,
+      class: character.class,
+      race: character.race,
+      roles: character.roles,
+      level: character.level,
     });
+    return { assumedRole };
   };
 
   /** Adds each in turn (each row says how it went), then reads the armory again. */
   const run = async (batch: ArmoryGuildMember[]) => {
     let added = 0;
+    let assumed = 0;
     setProgress({ done: 0, total: batch.length });
     for (const [i, member] of batch.entries()) {
       const key = keyOf(member);
       setState(key, { status: 'busy' });
       try {
-        await addToRoster(member);
+        const { assumedRole } = await addToRoster(member);
         setState(key, null);
         added++;
+        if (assumedRole) assumed++;
       } catch (err) {
         setState(key, {
           status: 'error',
@@ -185,11 +212,17 @@ export function ArmoryImportPage({ guild, currentUser }: Props) {
     }
     setProgress(null);
     if (added > 0) {
+      const assumedNote =
+        assumed === 0
+          ? ''
+          : batch.length === 1
+            ? '. The armory couldn’t look it up, so its role is its class’s first: check it.'
+            : `. ${assumed} couldn’t be looked up in the armory, so their role is their class’s first: check them.`;
       showToast(
-        batch.length === 1
+        (batch.length === 1
           ? `${fullName(batch[0])} is on the roster`
-          : `${added} characters added to the roster`,
-        3000,
+          : `${added} characters added to the roster`) + assumedNote,
+        assumed > 0 ? 7000 : 3000,
       );
       await load(guildName);
     }
