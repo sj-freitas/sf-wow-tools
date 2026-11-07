@@ -39,29 +39,52 @@ local function sendRaw(message)
     if send then send(PREFIX, message, "GUILD") end
 end
 
--- The queue of pieces to send, paced (INTERVAL, BURST). A message's pieces go together: whether it
--- still goes is decided once, at its first piece (`skip`: someone sent it meanwhile).
-local queue, pumping, burst = {}, false, BURST
-local function pump()
-    if #queue == 0 then
-        pumping, burst = false, BURST
-        return
-    end
-    pumping = true
-    local item = table.remove(queue, 1)
-    if item.group.go == nil then item.group.go = not (item.group.skip and item.group.skip()) end
-    if item.group.go then sendRaw(item.message) end
-    if burst > 0 then
-        burst = burst - 1
-        pump()
-    else
-        after(INTERVAL, pump)
+-- The queue of messages to send, paced. Each is made when its turn comes (`build`
+-- returns its pieces, or nil when it shouldn't go any more), so a character goes as it is then, and
+-- whether it still goes is decided then too (`skip`: someone sent it meanwhile). One with a `key`
+-- (a character) is queued once: asked for again while it waits, it isn't queued twice.
+-- The pacing: BURST messages can go at once, and the allowance comes back one every INTERVAL
+-- (whether or not the queue emptied meanwhile: answers arriving one by one are paced too).
+local queue, queued, tokens, refilling = {}, {}, BURST, false
+local pump
+local function refill()
+    tokens = math.min(BURST, tokens + 1)
+    if tokens < BURST then after(INTERVAL, refill) else refilling = false end
+    pump()
+end
+function pump()
+    while tokens > 0 and queue[1] do
+        local group = queue[1]
+        if not group.pieces then
+            if group.key then queued[group.key] = nil end
+            group.pieces = not (group.skip and group.skip()) and group.build() or {}
+            group.next = 1
+        end
+        local message = group.pieces[group.next]
+        group.next = group.next + 1
+        if group.next > #group.pieces then table.remove(queue, 1) end
+        -- Nothing sent when it didn't go: on to the next one, the allowance untouched.
+        if message then
+            sendRaw(message)
+            tokens = tokens - 1
+            if not refilling then
+                refilling = true
+                after(INTERVAL, refill)
+            end
+        end
     end
 end
-local function enqueue(messages, skip)
-    local group = { skip = skip }
-    for _, message in ipairs(messages) do queue[#queue + 1] = { message = message, group = group } end
-    if not pumping then pump() end
+local function enqueue(key, build, skip)
+    local waiting = key and queued[key]
+    if waiting then
+        -- Asked for unconditionally now: it goes even if the earlier answer is cancelled.
+        if not skip then waiting.skip = nil end
+        return
+    end
+    local group = { key = key, build = build, skip = skip }
+    if key then queued[key] = group end
+    queue[#queue + 1] = group
+    pump()
 end
 
 local counter = 0
@@ -74,16 +97,26 @@ end
 -- sends that character, as new as ours, first.
 local answering = {}
 
+-- What was last sent of each character (key -> { updated, at }): an answer to someone who asked
+-- before that copy reached them needn't go again.
+local lastSent = {}
+local CROSSED = 5 -- seconds: a copy sent this shortly before someone asked was on its way to them
+
 local function sendCharacter(key, answer)
-    local db, g = ns.db, guild()
-    local character = db and db.characters[key]
-    if not character or not Core.shareable(character, g) then return end
     if answer and answer.cancelled then return end
-    enqueue(Core.pieces("C", nextId(), Core.encodeCharacter(character)), function()
-        return answer ~= nil and answer.cancelled
+    enqueue("C" .. key, function()
+        local db, g = ns.db, guild()
+        local character = db and db.characters[key]
+        if not character or not Core.shareable(character, g) then return nil end
+        Sync.stats.sent = Sync.stats.sent + 1
+        Sync.stats.lastSent = now()
+        lastSent[key] = { updated = character.updated or 0, at = now() }
+        return Core.pieces("C", nextId(), Core.encodeCharacter(character))
+    end, answer and function()
+        local copy = lastSent[key]
+        return answer.cancelled
+            or (copy ~= nil and copy.updated >= answer.updated and copy.at >= answer.asked - CROSSED)
     end)
-    Sync.stats.sent = Sync.stats.sent + 1
-    Sync.stats.lastSent = now()
 end
 
 --- This character's professions changed: send them to the guild (once things settle).
@@ -102,22 +135,29 @@ end
 function Sync.hello()
     local g = guild()
     if not g or not ns.db then return false end
-    enqueue(Core.pieces("H", nextId(), Core.digest(ns.db, g)))
-    -- This character's own professions too: the others may not have them yet.
+    enqueue("H", function()
+        local current = guild()
+        return current and Core.pieces("H", nextId(), Core.digest(ns.db, current)) or nil
+    end)
+    -- This character's own professions too: the others may not have them yet. Restamped when old,
+    -- so guildmates don't forget a character still played (Core.heartbeat).
     local character = ns.Scan and ns.Scan.current()
-    if character then sendCharacter(character.name .. "-" .. character.realm) end
+    if character then
+        if Core.heartbeat(character, now()) and Sync.onOwnRestamped then Sync.onOwnRestamped() end
+        sendCharacter(character.name .. "-" .. character.realm)
+    end
     Sync.stats.helloAt = now()
     return true
 end
 
-local assembler = Core.newAssembler()
+local assembler = Core.newAssembler(now)
 
 local function onDigest(sender, payload)
     local g = guild()
     if not g then return end
     for _, key in ipairs(Core.newerThan(ns.db, g, Core.parseDigest(payload))) do
         if not answering[key] then
-            local answer = { updated = ns.db.characters[key].updated or 0 }
+            local answer = { updated = ns.db.characters[key].updated or 0, asked = now() }
             answering[key] = answer
             -- A random wait: whoever answers first, the others hear it and don't send.
             after(2 + math.random() * 8, function()

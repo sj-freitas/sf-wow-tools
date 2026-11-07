@@ -1,5 +1,19 @@
 # GuildAssistant Professions
 
+## 1.1.0
+
+- What is saved no longer grows forever. A guildmate's character not heard of for 90 days is
+  forgotten, and so is a profession link not changed for 60 days. At most the 1,000 most recent
+  characters of each guild are kept. Your own characters are always kept, and Guild Assistant
+  keeps what it already imported.
+- Your character is restamped at login once a month, so guildmates keep it while you play it.
+- Logging in to a big guild is smoother: the export is rebuilt once for a batch of characters
+  received, not once for each.
+- Guild messages are paced properly (a few at once, then one a second), and a character is sent
+  once, not again for each guildmate who asks while it waits.
+- A guildmate's message that stops halfway (they logged out, a piece was lost) is given up after a
+  minute, instead of being held until the next reload.
+
 ## 1.0.3
 
 - WoW Forever: your characters are saved under their full name ("Shivan Darkwhisp"), not just the

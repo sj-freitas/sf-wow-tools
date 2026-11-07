@@ -340,6 +340,8 @@ function Core.receive(db, guild, received, now)
     local key = received.name .. "-" .. received.realm
     local current = db.characters[key]
     if not current then
+        -- Not heard of for long enough to be forgotten (Core.prune): not taken back either.
+        if now and now - received.updated > Core.GUILD_TTL then return false end
         db.characters[key] = { name = received.name, realm = received.realm, class = received.class,
             source = "guild", guild = guild, updated = received.updated, professions = received.professions }
         return true
@@ -394,6 +396,61 @@ function Core.receive(db, guild, received, now)
     return changed
 end
 
+-- Forgetting -------------------------------------------------------------------------------------
+-- What is kept would otherwise only grow: every guildmate ever received (gone from the guild since,
+-- or their character deleted) and every link ever opened. A character's `updated` says how recent
+-- it is: each player's addon restamps its own character at login when it is older than
+-- Core.HEARTBEAT (Core.heartbeat), and that travels like any change, so a character still played
+-- stays recent everywhere. One not heard of for Core.GUILD_TTL goes, and so do links after
+-- Core.LINK_TTL; the account's own are always kept. Guild Assistant keeps what it imported.
+
+local DAY = 24 * 60 * 60
+Core.HEARTBEAT, Core.GUILD_TTL, Core.LINK_TTL = 30 * DAY, 90 * DAY, 60 * DAY
+--- At most this many characters kept per guild (the most recent): the guild summary of that many
+--- still fits in one message (Core.newAssembler takes 200 pieces).
+Core.MAX_GUILD = 1000
+
+--- This player's own character, at login: restamped `now` when it is older than Core.HEARTBEAT,
+--- so guildmates keep it. Returns whether it was. One with nothing recorded yet isn't shared.
+function Core.heartbeat(character, now)
+    if character.updated and now - character.updated > Core.HEARTBEAT then
+        character.updated = now
+        return true
+    end
+    return false
+end
+
+--- Forgets the guild's characters not heard of for Core.GUILD_TTL, links not changed for
+--- Core.LINK_TTL, and a guild's oldest beyond Core.MAX_GUILD. Returns how many went.
+function Core.prune(db, now)
+    local removed, byGuild = 0, {}
+    for _, key in ipairs(sortedKeys(db.characters)) do
+        local character = db.characters[key]
+        local age = now - (character.updated or 0)
+        if character.source == "guild" and age > Core.GUILD_TTL
+            or character.source == "link" and age > Core.LINK_TTL then
+            db.characters[key], removed = nil, removed + 1
+        elseif character.source == "guild" then
+            local list = byGuild[character.guild or ""] or {}
+            byGuild[character.guild or ""] = list
+            list[#list + 1] = key
+        end
+    end
+    for _, keys in pairs(byGuild) do
+        if #keys > Core.MAX_GUILD then
+            table.sort(keys, function(a, b)
+                local ua, ub = db.characters[a].updated or 0, db.characters[b].updated or 0
+                if ua ~= ub then return ua > ub end
+                return a < b
+            end)
+            for i = Core.MAX_GUILD + 1, #keys do
+                db.characters[keys[i]], removed = nil, removed + 1
+            end
+        end
+    end
+    return removed
+end
+
 --- A payload in numbered pieces that each fit in one addon message: "<kind><id>\t<i>\t<n>\t<part>".
 function Core.pieces(kind, id, payload, size)
     size = size or 230
@@ -404,23 +461,54 @@ function Core.pieces(kind, id, payload, size)
     return list
 end
 
+--- A message whose next piece hasn't come for this long (seconds) is given up: a piece was lost,
+--- or its sender logged out. A sender sends one message at a time (Sync.lua's queue), so only this
+--- many of theirs are kept unfinished; a new one forgets their oldest.
+Core.PIECE_TIMEOUT, Core.OPEN_PER_SENDER = 60, 2
+
 --- Puts pieces back together, per sender: `add` returns the kind and the whole payload once the
---- last piece of one arrives, nil until then (or for a message that isn't one of these).
-function Core.newAssembler()
+--- last piece of one arrives, nil until then (or for a message that isn't one of these). `clock`
+--- (seconds) times out unfinished ones (Core.PIECE_TIMEOUT, Core.OPEN_PER_SENDER).
+function Core.newAssembler(clock)
+    clock = clock or time or os.time
     local partial = {}
     local assembler = {}
+    local function forget(key)
+        local entry = partial[key]
+        partial[key] = nil
+        local open = assembler.open[entry.sender] - 1
+        assembler.open[entry.sender] = open > 0 and open or nil
+    end
+    --- How many unfinished messages each sender has (for the tests).
+    assembler.open = {}
     function assembler.add(sender, message)
         local kind, id, i, n, part = message:match("^(%a)([^\t]+)\t(%d+)\t(%d+)\t(.*)$")
         i, n = tonumber(i), tonumber(n)
         if not kind or not i or not n or n < 1 or n > 200 or i < 1 or i > n then return nil end
+        local at = clock()
+        for key, entry in pairs(partial) do
+            if at - entry.at > Core.PIECE_TIMEOUT then forget(key) end
+        end
         local key = sender .. "/" .. kind .. id
-        local entry = partial[key] or { n = n, parts = {}, have = 0 }
-        partial[key] = entry
+        local entry = partial[key]
+        if not entry then
+            if (assembler.open[sender] or 0) >= Core.OPEN_PER_SENDER then
+                local oldest
+                for other, e in pairs(partial) do
+                    if e.sender == sender and (not oldest or e.at < partial[oldest].at) then oldest = other end
+                end
+                if oldest then forget(oldest) end
+            end
+            entry = { n = n, parts = {}, have = 0, sender = sender }
+            partial[key] = entry
+            assembler.open[sender] = (assembler.open[sender] or 0) + 1
+        end
+        entry.at = at
         if entry.n ~= n then return nil end
         if not entry.parts[i] then entry.have = entry.have + 1 end
         entry.parts[i] = part
         if entry.have < n then return nil end
-        partial[key] = nil
+        forget(key)
         return kind, table.concat(entry.parts)
     end
     return assembler

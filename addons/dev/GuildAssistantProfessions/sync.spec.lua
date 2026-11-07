@@ -38,9 +38,11 @@ local function run(seconds)
     clock = stop
 end
 
---- A player logged in with the addon: `guild` nil for none; `last` a last name (WoW Forever's).
-local function player(name, guild, last)
+--- A player logged in with the addon: `guild` nil for none; `last` a last name (WoW Forever's);
+--- `saved` the saved data it logs in with.
+local function player(name, guild, last, saved)
     local env = setmetatable({}, { __index = _G })
+    env.GuildAssistantProfessionsDB = saved
     local me = { name = name, guild = guild, env = env, chat = {} }
     env.print = function(text) me.chat[#me.chat + 1] = tostring(text) end
     env.CreateFrame = function()
@@ -213,6 +215,68 @@ it("says what was shared and received in /ga-prof status", function()
     local text = table.concat(kael.chat, "\n")
     assert(text:find("Guild sharing (Relic Hunters): 1 guild character received so far", 1, true), text)
     assert(not text:find("Luna-Wild Growth:", 1, true), "guild characters aren't listed one by one")
+end)
+
+local DAY = 24 * 60 * 60
+
+-- A guild character `name` as kept by a guildmate's addon, updated `updated`.
+local function guildCharacter(name, updated)
+    return { name = name, realm = "Wild Growth", class = "MAGE", source = "guild", guild = "Relic Hunters",
+        updated = updated, professions = { Tailoring = { rank = 1, max = 75, recipes = { ["spell:2387"] = true } } } }
+end
+
+it("sends a backlog's characters once, even when asked again while they wait", function()
+    reset()
+    local saved = { characters = {} }
+    for i = 1, 120 do saved.characters["P" .. i .. "-Wild Growth"] = guildCharacter("P" .. i, clock) end
+    player("Kael", "Relic Hunters", nil, saved)
+    run(60)
+    sent = {}
+    local mira = player("Mira", "Relic Hunters")
+    run(35) -- Kael's answers are being sent, one a second
+    assert(#sent < 100, "still sending when Mira asks again")
+    mira.ns.Sync.hello()
+    run(600)
+    for i = 1, 120 do eq(sentBy("Kael", "P" .. i), 1, "P" .. i .. " sent once") end
+    eq(knows(mira, "P120", "Tailoring", 2387), true, "Mira has them all")
+end)
+
+it("rebuilds the export once for a burst of characters received, not once each", function()
+    reset()
+    local saved = { characters = {} }
+    for i = 1, 30 do saved.characters["P" .. i .. "-Wild Growth"] = guildCharacter("P" .. i, clock) end
+    player("Kael", "Relic Hunters", nil, saved)
+    run(60)
+    local mira = player("Mira", "Relic Hunters")
+    local rebuilds, refresh = 0, mira.ns.Core.refreshExport
+    mira.ns.Core.refreshExport = function(...)
+        rebuilds = rebuilds + 1
+        return refresh(...)
+    end
+    run(300)
+    assert(rebuilds <= 6, "rebuilt " .. rebuilds .. " times for 30 characters")
+    assert(mira.ns.db.export:find('"name":"P30"', 1, true), "all of them in the export")
+end)
+
+it("restamps a character still played, so guildmates don't forget it", function()
+    reset()
+    local old = clock - 40 * DAY
+    local mine = guildCharacter("Luna", old)
+    mine.source = "own"
+    player("Kael", "Relic Hunters", nil, { characters = { ["Luna-Wild Growth"] = guildCharacter("Luna", old) } })
+    local luna = player("Luna", "Relic Hunters", nil, { characters = { ["Luna-Wild Growth"] = mine } })
+    run(120)
+    eq(luna.ns.db.characters["Luna-Wild Growth"].updated > old, true, "Luna's restamped")
+    local kael = players[1]
+    eq(kael.ns.db.characters["Luna-Wild Growth"].updated, luna.ns.db.characters["Luna-Wild Growth"].updated,
+        "and Kael has the new stamp")
+end)
+
+it("forgets at login a guildmate not heard of for 90 days", function()
+    reset()
+    local kael = player("Kael", "Relic Hunters", nil,
+        { characters = { ["Gone-Wild Growth"] = guildCharacter("Gone", clock - 91 * DAY) } })
+    eq(kael.ns.db.characters["Gone-Wild Growth"], nil, "forgotten")
 end)
 
 realPrint(("%d passed, %d failed"):format(passed, failed))

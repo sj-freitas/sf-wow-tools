@@ -39,6 +39,13 @@ the chat):
   everywhere), and an older copy can't bring one back. Within a profession, recipes are only ever
   added. Only characters of the same guild are shared (not your alts in other guilds, nor
   profession links).
+- Messages are paced (a few at once, then one a second), so the game doesn't drop them, and a
+  character waiting to be sent is sent once, however many guildmates ask for it meanwhile.
+- What is kept doesn't grow forever. Your addon restamps your character at login once a month, so
+  guildmates keep it while you play it. A guildmate's character not heard of for 90 days (they
+  left the guild, or stopped playing it) is forgotten, and so is a profession link not changed for
+  60 days. At most the 1,000 most recent characters of each guild are kept. Your own characters
+  are always kept, and Guild Assistant keeps what it already imported.
 
 `/ga-prof status` says how many guild characters your addon has and what was sent and received.
 
@@ -84,8 +91,9 @@ writes Lua errors to `Logs/General.log` in its folder.
 
 ## The export
 
-The saved data holds the export as JSON (`export`), rebuilt whenever something new is recorded, on
-`/ga-prof save` and on logout. For example:
+The saved data holds the export as JSON (`export`), rebuilt whenever something new is recorded (a
+few seconds later for what arrives from the guild, once for a whole batch), on `/ga-prof save` and
+on logout. For example:
 
 ```json
 {"addon":"GuildAssistantProfessions","format":2,"characters":[{"name":"Luna","realm":"Wild Growth","class":"MAGE","source":"own","updated":1792000000,"professions":[{"name":"Enchanting","skill":300,"max":300,"learned":1791000000,"updated":1792000000,"spells":[13890,20034],"items":[]}]}]}

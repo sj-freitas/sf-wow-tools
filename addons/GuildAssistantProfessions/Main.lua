@@ -38,8 +38,28 @@ local function ownChanged()
     refreshExport()
     Sync.ownChanged()
 end
--- A guildmate's character arrived: it goes in the export too.
-Sync.onReceived = function() refreshExport() end
+-- A guildmate's character arrived: it goes in the export too, and anything too old to keep goes
+-- (Core.prune). At most once every EXPORT_DELAY seconds: rebuilding the export goes through every
+-- character, and a login can bring in hundreds of them, one after the other.
+local EXPORT_DELAY = 10
+local exportSoon = false
+local function refreshExportSoon()
+    if not (C_Timer and C_Timer.After) then
+        Core.prune(db(), ns.now())
+        return refreshExport()
+    end
+    if exportSoon then return end
+    exportSoon = true
+    C_Timer.After(EXPORT_DELAY, function()
+        exportSoon = false
+        safely(function()
+            Core.prune(db(), ns.now())
+            refreshExport()
+        end)
+    end)
+end
+Sync.onReceived = refreshExportSoon
+Sync.onOwnRestamped = refreshExportSoon
 
 local function when(seconds)
     return seconds and date("%Y-%m-%d %H:%M", seconds) or "never"
@@ -107,6 +127,7 @@ local function onEvent(self, event, arg, ...)
     if event == "ADDON_LOADED" and arg == addonName then
         self:UnregisterEvent("ADDON_LOADED")
         Core.migrate(db())
+        Core.prune(db(), ns.now())
         -- What this client offers (not exported): to tell why a client records nothing.
         db().client = {
             build = GetBuildInfo and select(4, GetBuildInfo()),

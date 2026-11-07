@@ -533,5 +533,73 @@ it("saves this character under its full name on WoW Forever, renaming 1.0.2's en
     eq(game.Scan.current(), shivan, "the same entry next time")
 end)
 
+-- Forgetting -----------------------------------------------------------------------------------
+
+local DAY = 24 * 60 * 60
+
+it("forgets guildmates not heard of for 90 days and links unchanged for 60, never the account's own", function()
+    local db, now = Core.newDB(), 1000 * DAY
+    Core.receive(db, G, guildmate("Kael", now - 89 * DAY, {}))
+    Core.receive(db, G, guildmate("Mira", now - 10 * DAY, {}))
+    db.characters["Mira-Wild Growth"].updated = now - 91 * DAY -- not heard of since
+    Core.character(db, "Sol", "Wild Growth", nil, "link").updated = now - 61 * DAY
+    Core.character(db, "Ash", "Wild Growth", nil, "link").updated = now - 59 * DAY
+    Core.character(db, "Nyx", "Wild Growth", nil, "link") -- opened, nothing recorded
+    Core.character(db, "Luna", "Wild Growth", "MAGE").updated = now - 900 * DAY
+    eq(Core.prune(db, now), 3, "removed")
+    eq(db.characters["Kael-Wild Growth"] ~= nil, true, "Kael heard of 89 days ago")
+    eq(db.characters["Mira-Wild Growth"], nil, "Mira gone")
+    eq(db.characters["Sol-Wild Growth"], nil, "an old link gone")
+    eq(db.characters["Ash-Wild Growth"] ~= nil, true, "a recent link kept")
+    eq(db.characters["Nyx-Wild Growth"], nil, "a link with nothing recorded gone")
+    eq(db.characters["Luna-Wild Growth"] ~= nil, true, "the account's own, however old")
+end)
+
+it("doesn't take back a character too old to keep, from a guildmate who still has it", function()
+    local db, now = Core.newDB(), 1000 * DAY
+    eq(Core.receive(db, G, guildmate("Kael", now - 91 * DAY, {}), now), false, "refused")
+    eq(db.characters["Kael-Wild Growth"], nil, "not kept")
+    eq(Core.receive(db, G, guildmate("Kael", now - 89 * DAY, {}), now), true, "recent enough")
+end)
+
+it("keeps a guild's most recent 1000 characters", function()
+    local db, now = Core.newDB(), 1000 * DAY
+    for i = 1, Core.MAX_GUILD + 5 do Core.receive(db, G, guildmate("P" .. i, now - i, {})) end
+    Core.receive(db, "Other Guild", guildmate("Q", now - 50 * DAY, {}))
+    eq(Core.prune(db, now), 5, "the oldest five")
+    eq(db.characters["P" .. Core.MAX_GUILD .. "-Wild Growth"] ~= nil, true, "the 1000th kept")
+    eq(db.characters["P" .. (Core.MAX_GUILD + 1) .. "-Wild Growth"], nil, "the 1001st gone")
+    eq(db.characters["Q-Wild Growth"] ~= nil, true, "another guild counted apart")
+end)
+
+it("restamps this player's character at login when it's older than 30 days", function()
+    local luna, now = { updated = 1000 * DAY - 29 * DAY }, 1000 * DAY
+    eq(Core.heartbeat(luna, now), false, "recent enough")
+    luna.updated = now - 31 * DAY
+    eq(Core.heartbeat(luna, now), true, "restamped")
+    eq(luna.updated, now)
+    eq(Core.heartbeat({}, now), false, "nothing recorded yet: nothing to share")
+end)
+
+it("gives up a message whose pieces stopped coming, and keeps two unfinished per sender", function()
+    local clock = 0
+    local assembler = Core.newAssembler(function() return clock end)
+    local function first(id) return Core.pieces("C", id, ("x"):rep(500))[1] end
+    assembler.add("Kael", first("a"))
+    clock = 30
+    local slow = Core.pieces("C", "s", ("y"):rep(500))
+    assembler.add("Mira", slow[1])
+    clock = 61
+    assembler.add("Mira", slow[2]) -- Mira's next piece; Kael's stopped 61 seconds ago
+    eq(assembler.open.Kael, nil, "Kael's given up")
+    clock = 100
+    eq((assembler.add("Mira", slow[3])), "C", "Mira's finished: a piece every 30 seconds is still coming")
+    for i = 1, 50 do assembler.add("Spam", first("z" .. i)) end
+    eq(assembler.open.Spam, 2, "a sender's unfinished ones are capped")
+    local pieces = Core.pieces("C", "z50", ("x"):rep(500))
+    assembler.add("Spam", pieces[2])
+    eq((assembler.add("Spam", pieces[3])), "C", "the newest still completes")
+end)
+
 print(("%d passed, %d failed"):format(passed, failed))
 if failed > 0 then error(failed .. " failed") end
