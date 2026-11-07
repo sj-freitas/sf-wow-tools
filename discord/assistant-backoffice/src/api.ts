@@ -15,6 +15,7 @@ import type {
   HoneypotInput,
   PostInput,
   ArmoryCharacter,
+  ArmoryGuildRoster,
   Reaction,
   ScheduledPost,
   ServerChannels,
@@ -391,6 +392,13 @@ export const fetchArmoryCharacter = (
     'GET',
     `/api/guilds/${guildId}/armory/character?name=${encodeURIComponent(name)}&lastName=${encodeURIComponent(lastName)}`,
   );
+
+/**
+ * The guild's members in its version's armory, each with the character we have by that name
+ * (Officers). `name`: the guild's name in the game, when it differs from its name here.
+ */
+export const fetchArmoryGuild = (guildId: string, name: string): Promise<ArmoryGuildRoster> =>
+  request('GET', `/api/guilds/${guildId}/armory/guild?name=${encodeURIComponent(name)}`);
 
 /** Uploads an image for a message of a post; returns its id. */
 export function uploadPostImage(guildId: string, file: File): Promise<{ id: string }> {

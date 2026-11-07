@@ -86,7 +86,62 @@ export interface ArmoryQuery {
   lastName: string;
 }
 
+/** A guild in the armory: its name as in the game, in the guild's version and region. */
+export interface ArmoryGuildQuery {
+  /** The game version's namespace for the region (`profile-forever-eu`). */
+  namespace: string;
+  /** The guild's region (`EU`, `US`). */
+  region: string;
+  /** As in the game, "Relic Hunters": the armory addresses it as `relic-hunters`. */
+  guildName: string;
+}
+
+/** A member of a guild in the armory. */
+export interface ArmoryGuildMember {
+  name: string;
+  /** Empty for a version without last names. */
+  lastName: string;
+  level: number;
+  /** As the version's game data names them ("Night Elf"); empty if the armory gave an id it doesn't list. */
+  class: string;
+  race: string;
+  faction: string;
+  /** Its rank in the guild: 0 is the Guild Master, then 1, 2… (the armory has no rank names). */
+  rank: number;
+}
+
+export interface ArmoryGuild {
+  name: string;
+  faction: string;
+  members: ArmoryGuildMember[];
+}
+
+interface GuildRosterResponse {
+  guild?: { name?: string; faction?: { name?: string; type?: string } };
+  members?: {
+    rank?: number;
+    character?: {
+      name?: string;
+      surname?: string;
+      level?: number;
+      playable_class?: { id?: number };
+      playable_race?: { id?: number };
+      faction?: { type?: string };
+    };
+  }[];
+}
+
+/** What the version's game data calls each class or race id, kept a while (it changes with patches). */
+const STATIC_NAMES_MS = 6 * 60 * 60 * 1000;
+/** A guild's name in the game: letters, spaces and apostrophes. */
+const GUILD_NAME = /^[\p{L}' ’]{2,24}$/u;
+
+/** `ALLIANCE` → `Alliance`. */
+const factionName = (type: string | undefined): string =>
+  type ? type.charAt(0) + type.slice(1).toLowerCase() : '';
+
 const REGIONS = ['eu', 'us', 'kr', 'tw'];
+const localeOf = (region: string): string => (region === 'us' ? 'en_US' : 'en_GB');
 
 /**
  * Reads a public character from Blizzard's armory API. It needs a Battle.net developer client
@@ -99,6 +154,10 @@ const REGIONS = ['eu', 'us', 'kr', 'tw'];
 export class ArmoryService {
   private readonly logger = new Logger(ArmoryService.name);
   private token: { value: string; expiresAt: number } | null = null;
+  private readonly staticNames = new Map<
+    string,
+    { names: Map<number, string>; expiresAt: number }
+  >();
 
   constructor(private readonly config: ConfigService) {}
 
@@ -122,10 +181,7 @@ export class ArmoryService {
     if (!this.configured) {
       throw new ArmoryError('not-configured', 'The armory is not set up on this server.');
     }
-    const region = query.region.toLowerCase();
-    if (!REGIONS.includes(region) || !/^[a-z0-9-]+$/.test(query.namespace)) {
-      throw new ArmoryError('not-configured', 'This guild’s region has no armory.');
-    }
+    const region = this.regionOf(query);
     // The first name always; the last name when the version has them.
     const parts = [query.name.trim(), query.lastName.trim()].filter((part, i) => i === 0 || part);
     if (!parts.every((part) => CHARACTER_NAME.test(part))) {
@@ -136,14 +192,9 @@ export class ArmoryService {
     const slug = parts.map((part) => encodeURIComponent(part.toLowerCase())).join('-');
     const url =
       `https://${region}.api.blizzard.com/profile/wow/character/${slug}` +
-      `?namespace=${query.namespace}&locale=${region === 'us' ? 'en_US' : 'en_GB'}`;
+      `?namespace=${query.namespace}&locale=${localeOf(region)}`;
 
-    let response = await this.get(url, await this.accessToken());
-    if (response.status === 401) {
-      // The token was refused (revoked, or clocks): get a new one once.
-      this.token = null;
-      response = await this.get(url, await this.accessToken());
-    }
+    const response = await this.authorizedGet(url);
     if (response.status === 404) {
       throw new ArmoryError(
         'not-found',
@@ -172,6 +223,114 @@ export class ArmoryService {
       realm: profile.realm?.name ?? profile.ruleset?.name ?? '',
       talents: options.talents === false ? null : await this.talents(url),
     };
+  }
+
+  /**
+   * A guild's members, from `/data/wow/guild/<guild>/roster` (Forever's guilds, like its characters,
+   * have no realm). Class and race come as ids: their names are read from the version's game data
+   * (`static-…` instead of `profile-…`), kept for a few hours.
+   */
+  async guildRoster(query: ArmoryGuildQuery): Promise<ArmoryGuild> {
+    if (!this.configured) {
+      throw new ArmoryError('not-configured', 'The armory is not set up on this server.');
+    }
+    const region = this.regionOf(query);
+    const guildName = query.guildName.trim().replace(/\s+/g, ' ');
+    if (!GUILD_NAME.test(guildName)) {
+      throw new ArmoryError(
+        'not-found',
+        'Type the guild’s name as it is in the game (letters and spaces).',
+      );
+    }
+    const slug = encodeURIComponent(
+      guildName.toLowerCase().replace(/['’]/g, '').replace(/ /g, '-'),
+    );
+    const response = await this.authorizedGet(
+      `https://${region}.api.blizzard.com/data/wow/guild/${slug}/roster` +
+        `?namespace=${query.namespace}&locale=${localeOf(region)}`,
+    );
+    if (response.status === 404) {
+      throw new ArmoryError(
+        'not-found',
+        `No guild called ${guildName} was found in the ${region.toUpperCase()} armory. Check its name is as in the game; a new guild can take a while to reach the armory.`,
+      );
+    }
+    if (!response.ok) {
+      this.logger.warn(`The armory answered ${response.status} for a guild roster`);
+      throw new ArmoryError('unavailable', `The armory answered ${response.status}.`);
+    }
+    const body = (await response.json()) as GuildRosterResponse;
+    const [classes, races] = await Promise.all([
+      this.namesOf(region, query.namespace, 'playable-class'),
+      this.namesOf(region, query.namespace, 'playable-race'),
+    ]);
+    const members = (body.members ?? []).flatMap(({ rank, character }) => {
+      if (!character?.name || typeof character.level !== 'number') return [];
+      return [
+        {
+          name: character.name,
+          lastName: character.surname ?? '',
+          level: character.level,
+          class: classes.get(character.playable_class?.id ?? -1) ?? '',
+          race: races.get(character.playable_race?.id ?? -1) ?? '',
+          faction: factionName(character.faction?.type),
+          rank: rank ?? 0,
+        },
+      ];
+    });
+    return {
+      name: body.guild?.name ?? guildName,
+      faction: body.guild?.faction?.name ?? factionName(body.guild?.faction?.type),
+      members,
+    };
+  }
+
+  /** The names of the version's classes or races by id, from its game data's index. */
+  private async namesOf(
+    region: string,
+    namespace: string,
+    kind: 'playable-class' | 'playable-race',
+  ): Promise<Map<number, string>> {
+    const staticNamespace = namespace.replace(/^profile-/, 'static-');
+    const key = `${region}/${staticNamespace}/${kind}`;
+    const cached = this.staticNames.get(key);
+    if (cached && Date.now() < cached.expiresAt) return cached.names;
+    const response = await this.authorizedGet(
+      `https://${region}.api.blizzard.com/data/wow/${kind}/index` +
+        `?namespace=${staticNamespace}&locale=${localeOf(region)}`,
+    );
+    if (!response.ok) {
+      this.logger.warn(`The armory answered ${response.status} for the ${kind} index`);
+      throw new ArmoryError('unavailable', `The armory answered ${response.status}.`);
+    }
+    const body = (await response.json()) as {
+      classes?: { id?: number; name?: string }[];
+      races?: { id?: number; name?: string }[];
+    };
+    const names = new Map(
+      (body.classes ?? body.races ?? []).flatMap(({ id, name }) =>
+        typeof id === 'number' && name ? [[id, name] as const] : [],
+      ),
+    );
+    this.staticNames.set(key, { names, expiresAt: Date.now() + STATIC_NAMES_MS });
+    return names;
+  }
+
+  /** The query's region, lower case, once it and the namespace are ones the armory can be asked. */
+  private regionOf(query: { region: string; namespace: string }): string {
+    const region = query.region.toLowerCase();
+    if (!REGIONS.includes(region) || !/^[a-z0-9-]+$/.test(query.namespace)) {
+      throw new ArmoryError('not-configured', 'This guild’s region has no armory.');
+    }
+    return region;
+  }
+
+  /** A GET with the server's token; when the token is refused (revoked, or clocks), a new one once. */
+  private async authorizedGet(url: string): Promise<Response> {
+    const response = await this.get(url, await this.accessToken());
+    if (response.status !== 401) return response;
+    this.token = null;
+    return this.get(url, await this.accessToken());
   }
 
   /**

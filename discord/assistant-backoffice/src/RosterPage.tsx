@@ -37,7 +37,7 @@ import {
 import { ImportProfessionsDrawer } from './professions/ImportProfessionsDrawer';
 import { fetchGuildProfessions } from './professions/professionsApi';
 import { ProfessionsDrawer } from './professions/ProfessionsDrawer';
-import { armoryLinkFor, gameOf, useGames } from './game';
+import { armoryLinkFor, gameOf, useArmory, useGames } from './game';
 import { showToast } from './toast';
 import { AttributesBadge } from './AttributesBadge';
 import { CharacterAttributesDrawer, ManageAttributesDrawer } from './AttributeDrawers';
@@ -91,6 +91,8 @@ export function RosterPage({ guild, currentUser }: Props) {
   const [managing, setManaging] = useState(false);
   const { confirm, dialog } = useConfirm();
   const games = useGames();
+  // Officers: "Import from armory", when the guild's version has an armory and it is set up.
+  const armory = Boolean(useArmory() && gameOf(games, guild.gameVersion)?.armoryNamespace);
   const [params, setParams] = useSearchParams();
   const query = params.get('q') ?? '';
   const setQuery = (value: string) => {
@@ -481,6 +483,16 @@ export function RosterPage({ guild, currentUser }: Props) {
             <button type="button" className="btn" onClick={() => setManaging(true)}>
               Attributes
             </button>
+          )}
+          {guild.isOfficer && armory && (
+            <Link
+              className="btn"
+              to={guildPath(guild, 'roster/armory')}
+              state={{ from: here }}
+              title="The guild's members in Blizzard's armory: add the ones not on the roster"
+            >
+              Import from armory
+            </Link>
           )}
           {guild.isOfficer && missingNames && (
             <button

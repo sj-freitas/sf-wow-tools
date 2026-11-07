@@ -736,6 +736,30 @@ form shows why and the character is added by hand as before.
 - **Verify with Battle.net** (TEST, below) still reads a stand-in server, `src/armory/armory.config.ts`
   (Season of Discovery on Wild Growth, EU).
 
+## Import from armory
+
+Officers have **Import from armory** on the Roster (`/roster/armory`): the guild's members in its
+version's armory, next to the roster, so the ones missing from it can be added and mapped to the Discord
+user who plays each, without typing them in one by one.
+
+- **How:** `GET /api/guilds/:guildId/armory/guild?name=` (Officers only) asks
+  `https://<region>.api.blizzard.com/data/wow/guild/<guild>/roster?namespace=…` (Forever's guilds, like its
+  characters, have no realm; `<guild>` is the name in lower case with hyphens, `relic-hunters`). `name` is
+  the guild's name in the game when it isn't the one it has here (the page has a box for it). The roster
+  gives each member's name, last name, level, rank (0 is the Guild Master; the armory has no rank names)
+  and class and race as ids, named from the version's game data (`static-forever-eu`'s playable class and
+  race indexes, kept in memory for 6 hours). Same client credentials as Load from armory.
+- **Matched to the roster:** each member comes with the character we have by that name (whatever the
+  case) on the guild's server, if any: on this roster, or known (another guild's) and not on it. Members
+  are sorted by rank, then name.
+- **Adding:** the page does it with the endpoints the character form uses, so the same rules apply. For a
+  member we don't have, an Officer picks the Discord user (a guess is filled in when exactly one member of
+  the guild's servers has the character's name, or full name, as their Discord name); the page looks the
+  character up (`armory/character`, for its specs) and adds it (`POST characters` with `discordUserId`):
+  race, class and level from the armory, roles from its talents (the class's first spec without any). A
+  known character is added as it is, for its own player (`POST characters/:id/migrate`). One at a time or
+  all those with a player at once, each row saying what went wrong, if anything.
+
 ## Characters, players and guilds (guild-agnostic characters)
 
 A character belongs to a **player** (a Discord account) and a **server** (`gameVersion`/`region`/`realm`),

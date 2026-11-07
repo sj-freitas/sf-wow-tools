@@ -209,6 +209,35 @@ export interface ArmoryCharacter {
   };
 }
 
+/** A member of the guild in its version's armory ("Import from armory", Officers). */
+export interface ArmoryGuildMember {
+  name: string;
+  /** Empty for a version without last names. */
+  lastName: string;
+  level: number;
+  /** Empty when the armory gave one its game data doesn't name. */
+  class: string;
+  race: string;
+  faction: string;
+  /** Its rank in the guild in the game: 0 is the Guild Master (the armory has no rank names). */
+  rank: number;
+  /** The character we have by that name on the guild's server: on the roster, or known (another
+   *  guild's, or none) and addable to it; null when there is none. */
+  character: {
+    id: string;
+    inGuild: boolean;
+    player: { discordUserId: string; username: string | null; displayName: string | null };
+  } | null;
+}
+
+export interface ArmoryGuildRoster {
+  /** The guild's name and faction as the armory has them. */
+  name: string;
+  faction: string;
+  /** By rank (the Guild Master first), then name. */
+  members: ArmoryGuildMember[];
+}
+
 /** A spec worked out from the armory: from a talent tree, or `guessed` (the class's first). */
 export interface ArmorySpec {
   spec: string;

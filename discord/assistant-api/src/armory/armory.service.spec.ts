@@ -11,6 +11,7 @@ import type { AuthenticatedRequest } from '../auth/auth.types';
 import type { GuildAccessService } from '../auth/guild-access.service';
 import type { PrismaService } from '../database/prisma.service';
 import { ArmoryLookupService } from './armory-lookup.service';
+import type { ArmoryRosterService } from './armory-roster.service';
 import { ArmoryController } from './armory.controller';
 import { ArmoryError, ArmoryService } from './armory.service';
 
@@ -228,6 +229,139 @@ describe('ArmoryService', () => {
   });
 });
 
+describe('ArmoryService guild roster', () => {
+  let calls: string[];
+  let roster: () => Response;
+  let classes: () => Response;
+  let service: ArmoryService;
+
+  beforeEach(() => {
+    calls = [];
+    // As Forever's armory answers: class and race by id, a last name, the rank as a number.
+    roster = () =>
+      json({
+        guild: { name: 'Relic Hunters', faction: { type: 'ALLIANCE', name: 'Alliance' } },
+        members: [
+          {
+            rank: 4,
+            character: {
+              name: 'Jo',
+              surname: 'Mckenna',
+              level: 16,
+              playable_class: { id: 5 },
+              playable_race: { id: 3 },
+              faction: { type: 'ALLIANCE' },
+            },
+          },
+          { rank: 0, character: { name: 'Lost', level: 3, playable_class: { id: 99 } } },
+          { rank: 1, character: { surname: 'Nameless', level: 10 } },
+        ],
+      });
+    classes = () => json({ classes: [{ id: 5, name: 'Priest' }] });
+    service = new ArmoryService({
+      get: (key: string) => ({ BLIZZARD_CLIENT_ID: 'id', BLIZZARD_CLIENT_SECRET: 's' })[key],
+    } as unknown as ConfigService);
+    service.fetcher = async (input) => {
+      const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+      calls.push(url);
+      if (url.includes('oauth.battle.net')) return json({ access_token: 'tok', expires_in: 86399 });
+      if (url.includes('/playable-class/')) return classes();
+      if (url.includes('/playable-race/')) return json({ races: [{ id: 3, name: 'Dwarf' }] });
+      return roster();
+    };
+  });
+
+  const query = (guildName = 'Relic Hunters') => ({
+    namespace: 'profile-forever-eu',
+    region: 'EU',
+    guildName,
+  });
+
+  it('reads the guild by its name, naming classes and races from the version’s game data', async () => {
+    assert.deepEqual(await service.guildRoster(query()), {
+      name: 'Relic Hunters',
+      faction: 'Alliance',
+      members: [
+        {
+          name: 'Jo',
+          lastName: 'Mckenna',
+          level: 16,
+          class: 'Priest',
+          race: 'Dwarf',
+          faction: 'Alliance',
+          rank: 4,
+        },
+        // An id the game data doesn't list leaves it empty; a member without a name is left out.
+        { name: 'Lost', lastName: '', level: 3, class: '', race: '', faction: '', rank: 0 },
+      ],
+    });
+    assert.ok(
+      calls.includes(
+        'https://eu.api.blizzard.com/data/wow/guild/relic-hunters/roster?namespace=profile-forever-eu&locale=en_GB',
+      ),
+    );
+    assert.ok(
+      calls.includes(
+        'https://eu.api.blizzard.com/data/wow/playable-class/index?namespace=static-forever-eu&locale=en_GB',
+      ),
+    );
+  });
+
+  it('keeps the class and race names, so a second look asks only for the roster', async () => {
+    await service.guildRoster(query());
+    calls = [];
+    await service.guildRoster(query());
+    assert.deepEqual(
+      calls.map((url) => url.split('?')[0]),
+      ['https://eu.api.blizzard.com/data/wow/guild/relic-hunters/roster'],
+    );
+  });
+
+  it('writes the name as the armory addresses it, and refuses one that is no guild name', async () => {
+    await service.guildRoster(query("  Bob's   Ünion "));
+    assert.ok(calls.some((url) => url.includes('/guild/bobs-%C3%BCnion/roster?')));
+    calls = [];
+    for (const bad of ['x', '../roster', 'Guild 42']) {
+      await assert.rejects(
+        service.guildRoster(query(bad)),
+        (e: ArmoryError) => e.failure === 'not-found',
+        bad,
+      );
+    }
+    assert.deepEqual(calls, []);
+  });
+
+  it('says not found for a guild the armory does not have, unavailable when it fails', async () => {
+    roster = () => json({ code: 404 }, 404);
+    await assert.rejects(
+      service.guildRoster(query('Nobody Here')),
+      (e: ArmoryError) =>
+        e.failure === 'not-found' && /No guild called Nobody Here/.test(e.message),
+    );
+    roster = () => json({}, 503);
+    await assert.rejects(
+      service.guildRoster(query()),
+      (e: ArmoryError) => e.failure === 'unavailable',
+    );
+    classes = () => json({}, 500);
+    roster = () => json({ members: [] });
+    await assert.rejects(
+      service.guildRoster(query()),
+      (e: ArmoryError) => e.failure === 'unavailable',
+    );
+  });
+
+  it('says when the armory is not set up, without asking anyone', async () => {
+    const bare = new ArmoryService({ get: () => undefined } as unknown as ConfigService);
+    bare.fetcher = service.fetcher;
+    await assert.rejects(
+      bare.guildRoster(query()),
+      (e: ArmoryError) => e.failure === 'not-configured',
+    );
+    assert.deepEqual(calls, []);
+  });
+});
+
 describe('ArmoryController', () => {
   const req = { user: { id: 'u1' } } as AuthenticatedRequest;
   let member: boolean;
@@ -253,7 +387,7 @@ describe('ArmoryController', () => {
       } as unknown as GuildAccessService,
       { guild: { findUnique: async () => guild } } as unknown as PrismaService,
     );
-    controller = new ArmoryController(lookup);
+    controller = new ArmoryController(lookup, {} as ArmoryRosterService);
   });
 
   it('asks the armory of the guild’s version and region, and adds the specs worked out for it', async () => {

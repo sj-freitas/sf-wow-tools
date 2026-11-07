@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { fetchPeople } from './api';
 import { DiscordName } from './DiscordName';
 import { fuzzyScore } from './fuzzy';
-import type { Person } from './types';
+import type { People, Person } from './types';
 
 interface Props {
   guildId: string;
@@ -13,7 +13,13 @@ interface Props {
   self: { discordId: string; label: string };
   /** Who is selected at first when it is not the logged-in user (an existing character's owner). */
   initial?: { discordId: string; label: string };
+  /** The guild's people, when the page already has them (one picker per row): not fetched again. */
+  people?: People;
+  /** In a table row: no notes under the search box (the page explains once). */
+  compact?: boolean;
 }
+
+const NO_PEOPLE: People = { source: 'servers', people: [] };
 
 const personLabel = (person: Person) =>
   person.displayName ?? person.username ?? person.discordUserId;
@@ -26,9 +32,17 @@ const looksLikeId = (text: string) => /^\d{15,25}$/.test(text.trim());
  * Someone not listed can still be added by pasting their Discord user id, as long as
  * they are in one of the guild's servers (the API checks).
  */
-export function PlayerPicker({ guildId, value, onChange, self, initial }: Props) {
-  const [people, setPeople] = useState<Person[]>([]);
-  const [source, setSource] = useState<'servers' | 'known'>('servers');
+export function PlayerPicker({
+  guildId,
+  value,
+  onChange,
+  self,
+  initial,
+  people: given,
+  compact = false,
+}: Props) {
+  const [loaded, setLoaded] = useState<People | null>(null);
+  const { people, source } = given ?? loaded ?? NO_PEOPLE;
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
   // Who is selected, by name: the user themselves at first, later whoever was picked.
@@ -37,13 +51,11 @@ export function PlayerPicker({ guildId, value, onChange, self, initial }: Props)
   const searchBox = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    if (given) return;
     fetchPeople(guildId)
-      .then((result) => {
-        setPeople(result.people);
-        setSource(result.source);
-      })
-      .catch(() => setPeople([]));
-  }, [guildId]);
+      .then(setLoaded)
+      .catch(() => setLoaded(NO_PEOPLE));
+  }, [guildId, given]);
 
   useEffect(() => {
     const close = (event: MouseEvent) => {
@@ -120,7 +132,9 @@ export function PlayerPicker({ guildId, value, onChange, self, initial }: Props)
           ref={searchBox}
           type="search"
           value={query}
-          placeholder="Search a player by Discord name, character or ID…"
+          placeholder={
+            compact ? 'Search a Discord user…' : 'Search a player by Discord name, character or ID…'
+          }
           onFocus={() => setOpen(true)}
           onChange={(event) => {
             setQuery(event.target.value);
@@ -138,7 +152,7 @@ export function PlayerPicker({ guildId, value, onChange, self, initial }: Props)
           aria-invalid={query !== ''}
         />
       </div>
-      {!searching && (
+      {!searching && !compact && (
         <small className="muted">
           Nobody is selected. Type to search the guild's players, then pick one from the results.
         </small>
@@ -146,7 +160,7 @@ export function PlayerPicker({ guildId, value, onChange, self, initial }: Props)
       {searching && matches.length === 0 && !idOption && (
         <small className="muted">No player matches “{query.trim()}”.</small>
       )}
-      {source === 'known' && (
+      {source === 'known' && !compact && (
         <small className="muted">
           Showing only players we already know: Discord did not allow listing the servers' members.
           Enable the bot's <strong>Server Members Intent</strong> in the Discord Developer Portal

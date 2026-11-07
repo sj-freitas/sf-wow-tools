@@ -65,6 +65,9 @@ const PostEditorPage = lazy(() =>
   import('./PostEditorPage').then((m) => ({ default: m.PostEditorPage })),
 );
 const PostsPage = lazy(() => import('./PostsPage').then((m) => ({ default: m.PostsPage })));
+const ArmoryImportPage = lazy(() =>
+  import('./ArmoryImportPage').then((m) => ({ default: m.ArmoryImportPage })),
+);
 const CharacterEditorPage = lazy(() =>
   import('./RosterPage').then((m) => ({ default: m.CharacterEditorPage })),
 );
@@ -112,6 +115,8 @@ interface Props {
  *       /roster/create        add a character              everyone (members: their own)
  *       /roster/edit/:id      edit a character             Officers, or its owner
  *       /roster/notes/:id     Officers' private note about a character   Officers
+ *       /roster/armory        import from armory: the guild's members there, added for
+ *                             the Discord user picked       Officers
  *       /professions          what the guild can craft (?q=)              everyone in the guild
  *       /professions/import   the same, its Import professions panel open
  *       /professions/:craftId[/crafters]  the same, at one recipe (its Wowhead spell id), its
@@ -274,6 +279,10 @@ function GuildRoutes({ guilds, setup, currentUser, onGuildsChanged }: Props) {
           <Route
             path="roster/notes/:characterId"
             element={officersOnly(<OfficerNotePage guild={guild} />)}
+          />
+          <Route
+            path="roster/armory"
+            element={officersOnly(<ArmoryImportPage guild={guild} currentUser={currentUser} />)}
           />
           <Route
             path="posts"

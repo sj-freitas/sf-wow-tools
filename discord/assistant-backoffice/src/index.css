@@ -3015,3 +3015,55 @@ a.character-guild:hover {
   flex-shrink: 0;
   vertical-align: -0.125em;
 }
+
+/* ---- import from armory (/roster/armory, Officers) ---- */
+.armory-import-lookup {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.5rem 0.75rem;
+}
+.armory-import-lookup .field {
+  flex: 1 1 16rem;
+  max-width: 24rem;
+}
+.armory-import-lookup small {
+  flex-basis: 100%;
+}
+.armory-import-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+}
+.armory-import-tabs {
+  padding: 0;
+  border-bottom: none;
+}
+/* Never scrolls sideways (cells wrap instead), so a Discord user's search results can open past
+   the table's bottom edge rather than being cut off inside it. */
+.table-wrap.armory-import-table {
+  overflow: visible;
+}
+.armory-import-table th,
+.armory-import-table td {
+  padding: 0.6rem 0.75rem;
+  white-space: normal;
+}
+/* The Discord user column holds a search box: room for it, and its notes wrap. */
+.armory-import-player {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 15rem;
+  white-space: normal;
+}
+.armory-import-table td.cell-name small {
+  display: block;
+  white-space: normal;
+}
+@media (max-width: 720px) {
+  .armory-import-player {
+    min-width: 0;
+  }
+}
