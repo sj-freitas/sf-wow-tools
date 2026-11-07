@@ -16,8 +16,8 @@ interface Props {
   /** The guild's people, when the page already has them (one picker per row): not fetched again. */
   people?: People;
   /**
-   * In a table row: nothing under the search box, so the row never changes height ("no player
-   * matches" shows in the results overlay instead; the page explains the rest once).
+   * In a table row: a shorter placeholder, and no hints in the overlay (the page explains them
+   * once). Either way nothing shows under the search box: it never changes height.
    */
   compact?: boolean;
   /** A word after the selected name, its explanation on hover (a guessed player: "guess"). */
@@ -113,6 +113,15 @@ export function PlayerPicker({
     ...(idOption ? [{ id: idOption, label: idOption }] : []),
   ];
   const onlyResult = query.trim() !== '' && results.length === 1 ? results[0] : null;
+  // Only the players we know can be found (the page says so once when there is one picker per row).
+  const knownOnly =
+    source === 'known' && !compact ? (
+      <div className="dropdown-hint muted">
+        Showing only players we already know: Discord did not allow listing the servers' members.
+        Enable the bot's <strong>Server Members Intent</strong> in the Discord Developer Portal (Bot
+        → Privileged Gateway Intents) to search everyone.
+      </div>
+    ) : null;
 
   if (value !== '') {
     return (
@@ -164,20 +173,15 @@ export function PlayerPicker({
           aria-invalid={query !== ''}
         />
       </div>
-      {!searching && !compact && (
-        <small className="muted">
-          Nobody is selected. Type to search the guild's players, then pick one from the results.
-        </small>
-      )}
-      {searching && matches.length === 0 && !idOption && !compact && (
-        <small className="muted">No player matches “{query.trim()}”.</small>
-      )}
-      {source === 'known' && !compact && (
-        <small className="muted">
-          Showing only players we already know: Discord did not allow listing the servers' members.
-          Enable the bot's <strong>Server Members Intent</strong> in the Discord Developer Portal
-          (Bot → Privileged Gateway Intents) to search everyone.
-        </small>
+      {/* Nothing under the box: what it has to say opens over the page, with the results, so the
+          box and the picked player are the same height and typing moves nothing. */}
+      {open && !searching && !compact && (
+        <div className="dropdown-menu" role="status">
+          <div className="dropdown-hint muted">
+            Nobody is selected. Type to search the guild's players, then pick one from the results.
+          </div>
+          {knownOnly}
+        </div>
       )}
       {open && (matches.length > 0 || idOption) && (
         <div className="dropdown-menu" role="listbox">
@@ -202,12 +206,14 @@ export function PlayerPicker({
             </button>
           )}
           {onlyResult && <div className="dropdown-hint muted">Press Tab to select</div>}
+          {knownOnly}
         </div>
       )}
-      {/* Compact: over the row, like the results, rather than under the box. */}
-      {compact && open && searching && matches.length === 0 && !idOption && (
+      {/* Over the rows below, like the results, rather than under the box. */}
+      {open && searching && matches.length === 0 && !idOption && (
         <div className="dropdown-menu" role="status">
           <div className="dropdown-hint muted">No player matches “{query.trim()}”.</div>
+          {knownOnly}
         </div>
       )}
     </div>

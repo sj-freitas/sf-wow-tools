@@ -1,15 +1,18 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { fetchReactionUsers, fetchTaskReactions } from './api';
 import type { Reaction } from './types';
 import { InlineSpinner } from './Loading';
+import { OneLine } from './OneLine';
+import { useKeepInView } from './useKeepInView';
 
 const REFRESH_MS = 10_000;
 
 /**
  * Live reaction counts of a post (poll results), shown right on the post. Clicking a reaction shows
  * who reacted. Refreshes every 10 seconds while the page is visible and the post is tracked (the
- * API keeps the counts on the post and asks Discord again at most every 15 seconds). A spinner until the first
- * counts arrive, then nothing until somebody has reacted.
+ * API keeps the counts on the post and asks Discord again at most every 15 seconds). One row of the
+ * same height whatever it shows (a spinner, "No reactions yet", the counts, a one-line error), and
+ * who reacted opens over the page: nothing in the post's card moves.
  */
 export function ReactionsPanel({
   taskId,
@@ -24,6 +27,22 @@ export function ReactionsPanel({
   const [reactions, setReactions] = useState<Reaction[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState<string | null>(null);
+  const root = useRef<HTMLDivElement>(null);
+
+  // Who reacted closes on a click outside it, or Escape.
+  useEffect(() => {
+    if (!open) return;
+    const away = (event: MouseEvent) => {
+      if (root.current && !root.current.contains(event.target as Node)) setOpen(null);
+    };
+    const onKey = (event: KeyboardEvent) => event.key === 'Escape' && setOpen(null);
+    document.addEventListener('mousedown', away);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', away);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
 
   useEffect(() => {
     // Another post or message: its counts aren't known yet.
@@ -44,13 +63,28 @@ export function ReactionsPanel({
     return () => clearInterval(timer);
   }, [taskId, part, live]);
 
-  if (error) return <p className="status-error">{error}</p>;
-  if (!reactions)
-    return <InlineSpinner className="muted reactions-loading" label="Loading reactions…" />;
-  if (reactions.length === 0) return null;
+  // A refresh that fails keeps the counts it had.
+  if (!reactions) {
+    return (
+      <div className="reactions">
+        {error ? (
+          <OneLine text={error} className="status-error" />
+        ) : (
+          <InlineSpinner className="muted" label="Loading reactions…" />
+        )}
+      </div>
+    );
+  }
+  if (reactions.length === 0) {
+    return (
+      <div className="reactions">
+        <span className="muted">No reactions yet</span>
+      </div>
+    );
+  }
   const opened = reactions.find((reaction) => reaction.emoji === open);
   return (
-    <>
+    <div className="reactions" ref={root}>
       <ul className="reaction-list">
         {reactions.map((reaction) => (
           <li key={reaction.emoji}>
@@ -74,7 +108,7 @@ export function ReactionsPanel({
         ))}
       </ul>
       {opened && <Reactors taskId={taskId} part={part} reaction={opened} />}
-    </>
+    </div>
   );
 }
 
@@ -90,6 +124,8 @@ function Reactors({
 }) {
   const [people, setPeople] = useState<{ id: string; name: string }[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const popover = useRef<HTMLDivElement>(null);
+  useKeepInView(popover, reaction.emoji);
 
   useEffect(() => {
     setError(null);
@@ -99,7 +135,7 @@ function Reactors({
   }, [taskId, part, reaction.emoji, reaction.count]);
 
   return (
-    <div className="reactors">
+    <div className="reactors reactors-popover" role="dialog" aria-label="Who reacted" ref={popover}>
       {error ? (
         <span className="status-error">{error}</span>
       ) : !people ? (

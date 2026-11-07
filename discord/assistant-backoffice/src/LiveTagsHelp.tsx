@@ -1,11 +1,34 @@
-/** The collapsible help about `{{reactions …}}` tags in a message's text. */
-export function LiveTagsHelp() {
-  return (
-    <details className="syntax-help">
-      <summary title="Show who reacted to a message inside this post">
-        ⓘ Show who reacted (live tags)
-      </summary>
+import { useState } from 'react';
+import { Drawer } from './Drawer';
 
+/**
+ * The help about `{{reactions …}}` tags in a message's text: a link that opens it in a drawer, over
+ * the form (opening it in the form would push the messages down).
+ */
+export function LiveTagsHelp() {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button
+        type="button"
+        className="syntax-help-button"
+        title="Show who reacted to a message inside this post"
+        onClick={() => setOpen(true)}
+      >
+        ⓘ Show who reacted (live tags)
+      </button>
+      {open && (
+        <Drawer title="Show who reacted (live tags)" onClose={() => setOpen(false)}>
+          <LiveTagsText />
+        </Drawer>
+      )}
+    </>
+  );
+}
+
+function LiveTagsText() {
+  return (
+    <div className="syntax-help">
       <h5>What it does</h5>
       <p>
         Put a tag in a message's text and the bot replaces it with the people who reacted to a
@@ -316,6 +339,6 @@ export function LiveTagsHelp() {
         The expression runs in a safe sandbox (no files or network) and is checked when you save. If
         you need a double quote inside it, write <code>\"</code>, or use single quotes.
       </p>
-    </details>
+    </div>
   );
 }

@@ -12,6 +12,7 @@ import { DiscordName } from './DiscordName';
 import { armoryLinkFor, firstRoleOfClass, gameOf, useGames } from './game';
 import { guildPath } from './guildPath';
 import { InlineSpinner, Spinner } from './Loading';
+import { OneLine } from './OneLine';
 import { PlayerPicker } from './PlayerPicker';
 import { showToast } from './toast';
 import type {
@@ -318,16 +319,7 @@ export function ArmoryImportPage({ guild, currentUser }: Props) {
     const state = states.get(keyOf(member));
     if (state?.status === 'error') {
       // One line, like every row's status: the whole message on hover, or as a note on a click.
-      return (
-        <button
-          type="button"
-          className="armory-import-error status-error"
-          title={state.message}
-          onClick={() => showToast(state.message, 8000)}
-        >
-          {state.message}
-        </button>
-      );
+      return <OneLine text={state.message} className="status-error" />;
     }
     if (member.character?.inGuild) return <span className="muted">On the roster</span>;
     if (member.character) return <span className="muted">Known, in another guild</span>;

@@ -70,9 +70,8 @@ export function ScheduleFields({
               </option>
             ))}
           </Select>
-          {value.dayOfMonth > 28 && (
-            <small className="muted">Shorter months run on their last day.</small>
-          )}
+          {/* Always there: picking a day after the 28th doesn't add a line. */}
+          <small className="muted">29 to 31: shorter months run on their last day.</small>
         </label>
       )}
       {!isInterval(value.frequency) && (

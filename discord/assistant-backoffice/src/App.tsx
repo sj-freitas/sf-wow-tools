@@ -6,6 +6,7 @@ import { UserMenu } from './UserMenu';
 import { useCurrentGuild } from './useCurrentGuild';
 import { PrivacyPage, PublicHome } from './PublicPages';
 import { Spinner } from './Loading';
+import { OneLine } from './OneLine';
 import { Toasts } from './Toasts';
 import { usePageMeta } from './usePageMeta';
 import type { Guild, SetupInfo, User } from './types';
@@ -134,10 +135,8 @@ function AccountLine({
   const current = useCurrentGuild(guilds);
   return (
     <p className="app-footer-account">
-      Logged in as{' '}
-      <span className="name-truncate" title={user.displayName}>
-        {user.displayName}
-      </span>
+      Logged in as {/* Cut short when long: a tap shows the whole name. */}
+      <OneLine inline className="name-truncate" text={user.displayName} ms={3000} />
       {current && setup && (
         <>
           {' · '}

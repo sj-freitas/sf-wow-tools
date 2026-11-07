@@ -6,6 +6,7 @@ import { characterPagePath, guildPath } from '../guildPath';
 import type { Guild } from '../types';
 import { ChevronIcon, HammerIcon } from '../Icons';
 import { SkeletonLines } from '../Loading';
+import { OneLine } from '../OneLine';
 import { ADDON_URL, ImportProfessionsDrawer } from './ImportProfessionsDrawer';
 import { fetchGuildProfessions, professionSections, type GuildProfessions } from './professionsApi';
 import './professions.css';
@@ -138,16 +139,19 @@ export function ProfessionsPage({ guild }: { guild: Guild }) {
                 aria-label="Search the guild's recipes"
               />
             </div>
-            {filtering && (
-              <div className="roster-filter-summary">
-                <span className="muted">
-                  {shownCount} of {data.recipes.length} recipes
-                </span>
+            {/* Always there, one line: typing a search never moves the list. */}
+            <div className="roster-filter-summary">
+              <span className="muted">
+                {filtering
+                  ? `${shownCount} of ${data.recipes.length} recipes`
+                  : `${data.recipes.length} recipe${data.recipes.length === 1 ? '' : 's'}`}
+              </span>
+              {filtering && (
                 <button type="button" className="btn btn-sm" onClick={clearSearch}>
                   Clear
                 </button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
           {unnamed && (
             <p className="muted">Some recipe names are still being looked up on Wowhead.</p>
@@ -317,9 +321,11 @@ function RecipeRow({
               </Link>
               {character.discordUserId && (
                 <>
-                  <span className="muted crafter-discord">
-                    @{character.discordName ?? character.discordUserId}
-                  </span>
+                  <OneLine
+                    inline
+                    className="muted crafter-discord"
+                    text={`@${character.discordName ?? character.discordUserId}`}
+                  />
                   {/* Discord's profile page, where "Message" opens a direct message. */}
                   <a
                     className="btn btn-sm"

@@ -25,6 +25,7 @@ import { RegionSelect } from './RegionSelect';
 import { WelcomeEditor } from './WelcomeEditor';
 import { useConfirm } from './useConfirm';
 import { InlineSpinner } from './Loading';
+import { showToast } from './toast';
 import {
   type EligibleServers,
   type Faction,
@@ -46,15 +47,14 @@ interface Props {
 }
 
 export function GuildSettings({ guild, regions, onChanged, onClose, onDeleted }: Props) {
-  const [error, setError] = useState<string | null>(null);
   const { confirm, dialog } = useConfirm();
 
-  const run = (action: Promise<unknown>) => {
-    setError(null);
-    return action
+  // A failed change is a note over the page: at the top it would be out of sight from the section
+  // it came from, and push every section down.
+  const run = (action: Promise<unknown>) =>
+    action
       .then(onChanged)
-      .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)));
-  };
+      .catch((err: unknown) => showToast(err instanceof Error ? err.message : String(err), 8000));
 
   return (
     <div className="settings">
@@ -65,8 +65,6 @@ export function GuildSettings({ guild, regions, onChanged, onClose, onDeleted }:
           Close
         </button>
       </div>
-      {error && <p className="status-error">{error}</p>}
-
       <DetailsSection guild={guild} regions={regions} run={run} />
       <ServersSection guild={guild} run={run} />
       <BannerSection guild={guild} run={run} />
@@ -163,7 +161,9 @@ function DetailsSection({ guild, regions, run }: SectionProps & { regions: Regio
               <option key={server}>{server}</option>
             ))}
           </Select>
-          {!servers.includes(guild.realm) && guild.gameVersion === gameVersion && (
+          {/* From what is saved, not from what is picked: it doesn't come and go with the
+              version dropdown. */}
+          {!serversFor(gameOf(games, guild.gameVersion), guild.region).includes(guild.realm) && (
             <small className="muted">
               “{guild.realm}” is not a server of this version: pick one and save.
             </small>
@@ -449,21 +449,15 @@ const MAX_BANNER_MB = 2;
 /** The optional banner shown at the top of the guild's pages, above its name. */
 function BannerSection({ guild, run }: SectionProps) {
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const choose = (file: File | undefined) => {
     if (!file) return;
-    setError(null);
     if (file.size > MAX_BANNER_MB * 1024 * 1024) {
-      setError(`The banner can be at most ${MAX_BANNER_MB} MB.`);
+      showToast(`The banner can be at most ${MAX_BANNER_MB} MB.`, 6000);
       return;
     }
     setBusy(true);
-    void run(
-      uploadBanner(guild.id, file).catch((err: unknown) => {
-        setError(err instanceof Error ? err.message : String(err));
-      }),
-    ).finally(() => setBusy(false));
+    void run(uploadBanner(guild.id, file)).finally(() => setBusy(false));
   };
 
   return (
@@ -480,7 +474,13 @@ function BannerSection({ guild, run }: SectionProps) {
       )}
       <div className="settings-actions">
         <label className={busy ? 'btn btn-primary disabled' : 'btn btn-primary'}>
-          {guild.bannerVersion === null ? 'Upload banner' : 'Replace banner'}
+          {busy ? (
+            <InlineSpinner label="Uploading…" />
+          ) : guild.bannerVersion === null ? (
+            'Upload banner'
+          ) : (
+            'Replace banner'
+          )}
           <input
             type="file"
             accept="image/png,image/jpeg,image/gif,image/webp"
@@ -502,9 +502,7 @@ function BannerSection({ guild, run }: SectionProps) {
             Remove banner
           </button>
         )}
-        {busy && <span className="muted">Uploading…</span>}
       </div>
-      {error && <p className="status-error">{error}</p>}
     </section>
   );
 }
@@ -513,7 +511,6 @@ function BannerSection({ guild, run }: SectionProps) {
 function WelcomeSection({ guild }: { guild: Guild }) {
   const [home, setHome] = useState<GuildHome | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     if (!guild.isOfficer) return;
@@ -535,19 +532,16 @@ function WelcomeSection({ guild }: { guild: Guild }) {
       ) : !home ? (
         <InlineSpinner className="muted" />
       ) : (
-        <>
-          <WelcomeEditor
-            key={home.updatedAt ?? 'none'}
-            guildId={guild.id}
-            guildName={guild.name}
-            initial={home.markdown ?? ''}
-            onSaved={(updated) => {
-              setHome(updated);
-              setSaved(true);
-            }}
-          />
-          {saved && <p className="run-ok">✓ Saved</p>}
-        </>
+        <WelcomeEditor
+          key={home.updatedAt ?? 'none'}
+          guildId={guild.id}
+          guildName={guild.name}
+          initial={home.markdown ?? ''}
+          onSaved={(updated) => {
+            setHome(updated);
+            showToast('✓ Welcome post saved', 3000);
+          }}
+        />
       )}
     </section>
   );

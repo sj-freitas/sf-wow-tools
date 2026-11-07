@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { showToast } from './toast';
 
 /** Each role's icon file (`src/game/<version>/role-icons/<name>.png`) and its emoji fallback. */
 const ROLE_ICONS: Record<string, { file: string; emoji: string; label: string }> = {
@@ -49,8 +50,9 @@ export function RoleMark({
       onError={() => setNoIcon(true)}
     />
   );
+  // The tooltip on hover or keyboard focus; a tap (a phone has no hover) shows the role as a note.
   return tip ? (
-    <span className="tip" data-tip={name}>
+    <span className="tip" data-tip={name} tabIndex={0} onClick={() => showToast(name)}>
       {mark}
     </span>
   ) : (

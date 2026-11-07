@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { guildPath } from '../guildPath';
 import { InlineSpinner } from '../Loading';
+import { FormStatus } from '../OneLine';
 import type { Guild, Role } from '../types';
 import { ROLE_CATEGORIES, ROLE_EMOJI, ROLE_NAME, STATUS_LABELS, errorText } from './labels';
 import type { CharacterOption, Entry, SignupInput, SignupStatus } from './signupApi';
@@ -79,6 +80,7 @@ export function SignupEditor({
   };
 
   const needsCharacter = usesCharacters && status !== 'ABSENT';
+  const noteAllowed = status === 'LATE' || status === 'TENTATIVE';
   const run = (action: () => Promise<void>) => {
     setBusy(true);
     setError(null);
@@ -117,16 +119,15 @@ export function SignupEditor({
         ))}
       </div>
 
+      {/* Whatever the status (it doesn't come and go with Absent, so nothing moves). */}
       {usesCharacters &&
         (characters.length === 0 ? (
-          needsCharacter && (
-            <p className="muted">
-              {forSomeone
-                ? `${forSomeone} has no characters on ${guild.realm} for this faction.`
-                : `You have no characters on ${guild.realm} for this faction yet.`}{' '}
-              {!forSomeone && <Link to={guildPath(guild, 'roster/create')}>Add a character</Link>}
-            </p>
-          )
+          <p className="muted">
+            {forSomeone
+              ? `${forSomeone} has no characters on ${guild.realm} for this faction.`
+              : `You have no characters on ${guild.realm} for this faction yet.`}{' '}
+            {!forSomeone && <Link to={guildPath(guild, 'roster/create')}>Add a character</Link>}
+          </p>
         ) : (
           <div className="form-grid">
             <label className="field">
@@ -152,24 +153,32 @@ export function SignupEditor({
             </label>
           </div>
         ))}
-      {(status === 'LATE' || status === 'TENTATIVE') && (
-        <label className="field">
-          Note for the organisers (optional)
-          <input
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            maxLength={MAX_NOTE}
-            placeholder={
-              status === 'LATE' ? 'e.g. I’ll be 30 minutes late' : 'e.g. Depends on work'
-            }
-          />
-        </label>
-      )}
+      {/* Always there, usable for Late and Tentative: picking a status moves nothing. */}
+      <label className="field">
+        Note for the organisers (optional)
+        <input
+          value={noteAllowed ? note : ''}
+          onChange={(e) => setNote(e.target.value)}
+          maxLength={MAX_NOTE}
+          disabled={!noteAllowed}
+          placeholder={
+            status === 'LATE'
+              ? 'e.g. I’ll be 30 minutes late'
+              : status === 'TENTATIVE'
+                ? 'e.g. Depends on work'
+                : 'For Late or Tentative'
+          }
+        />
+      </label>
 
-      {character && !character.inGuild && needsCharacter && (
-        <p className="muted">Signing up with {character.name} adds it to the guild’s roster.</p>
+      {/* Its lines kept whenever one of the characters isn't on the roster yet. */}
+      {usesCharacters && characters.some((option) => !option.inGuild) && (
+        <p className="muted signup-roster-note">
+          {character && !character.inGuild && needsCharacter
+            ? `Signing up with ${character.name} adds it to the guild’s roster.`
+            : '\u00a0'}
+        </p>
       )}
-      {error && <p className="status-error">{error}</p>}
       <div className="form-actions">
         <button
           type="submit"
@@ -194,6 +203,7 @@ export function SignupEditor({
           </button>
         )}
       </div>
+      <FormStatus error={error} />
     </form>
   );
 }

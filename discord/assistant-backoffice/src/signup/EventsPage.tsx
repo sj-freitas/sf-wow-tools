@@ -7,6 +7,7 @@ import { ChannelSelect } from '../ChannelSelect';
 import { subscribeEvents } from '../events';
 import { guildPath } from '../guildPath';
 import { InlineSpinner, SkeletonLines } from '../Loading';
+import { FormStatus } from '../OneLine';
 import type { Guild, RoleOption } from '../types';
 import { showToast } from '../toast';
 import { useChannels } from '../useChannels';
@@ -78,7 +79,7 @@ export function EventsPage({ guild }: { guild: Guild }) {
           setEvents((current) => current?.filter((e) => e.id !== event.id) ?? null);
           showToast('Event deleted');
         })
-        .catch((err: unknown) => setError(errorText(err)))
+        .catch((err: unknown) => showToast(errorText(err), 8000))
         .finally(() => setDeleting(null));
     });
 
@@ -152,19 +153,19 @@ export function EventsPage({ guild }: { guild: Guild }) {
               placeholder="e.g. Naxxramas, or a post id or link"
             />
           </label>
-          {(from || to || query) && (
-            <button
-              type="button"
-              className="btn btn-sm"
-              onClick={() => {
-                setFrom('');
-                setTo('');
-                setQuery('');
-              }}
-            >
-              Clear
-            </button>
-          )}
+          {/* Always there (usable once there is something to clear), so typing moves nothing. */}
+          <button
+            type="button"
+            className="btn btn-sm"
+            disabled={!(from || to || query)}
+            onClick={() => {
+              setFrom('');
+              setTo('');
+              setQuery('');
+            }}
+          >
+            Clear
+          </button>
         </div>
       )}
 
@@ -275,7 +276,8 @@ function SettingsCard({
   );
   const [roleId, setRoleId] = useState(settings.eventCreatorRole?.id ?? '');
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState<{ error: boolean; text: string } | null>(null);
+  // A failed save: one line kept under the button. A saved one is a note.
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchRoleOptions(guild.id)
@@ -285,16 +287,16 @@ function SettingsCard({
 
   const save = () => {
     setSaving(true);
-    setMessage(null);
+    setError(null);
     saveSignupSettings(guild.id, {
       channel: channel ? splitChannelKey(channel) : null,
       eventCreatorRoleId: roleId || null,
     })
       .then(() => {
-        setMessage({ error: false, text: 'Saved.' });
+        showToast('✓ Sign-up settings saved', 3000);
         onSaved();
       })
-      .catch((err: unknown) => setMessage({ error: true, text: errorText(err) }))
+      .catch((err: unknown) => setError(errorText(err)))
       .finally(() => setSaving(false));
   };
 
@@ -343,10 +345,8 @@ function SettingsCard({
         <button type="button" className="btn btn-primary" disabled={saving} onClick={save}>
           {saving ? <InlineSpinner label="Saving…" /> : 'Save settings'}
         </button>
-        {message && (
-          <span className={message.error ? 'status-error' : 'muted'}>{message.text}</span>
-        )}
       </div>
+      <FormStatus error={error} />
     </details>
   );
 }

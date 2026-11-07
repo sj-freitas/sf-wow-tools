@@ -9,7 +9,8 @@ import { useChannels } from './useChannels';
 import { useConfirm } from './useConfirm';
 import { useCurrentUrl } from './useReturnTo';
 import { guildPath } from './guildPath';
-import { Spinner } from './Loading';
+import { InlineSpinner, Spinner } from './Loading';
+import { showToast } from './toast';
 
 interface Props {
   guild: Guild;
@@ -20,7 +21,6 @@ interface Props {
 const REFRESH_MS = 15_000;
 /** While a post is waiting for the worker, check back often so the result shows up quickly. */
 const QUEUED_REFRESH_MS = 3_000;
-const FLASH_MS = 8_000;
 const SEARCH_DELAY_MS = 300;
 
 /** A post whose time has come but that the worker has not sent yet. */
@@ -64,8 +64,8 @@ export function PostsPage({ guild, timezone }: Props) {
   const [error, setError] = useState<string | null>(null);
   // Posts the user just asked to send, until the server shows them as queued.
   const [starting, setStarting] = useState<Set<string>>(new Set());
-  // Result of a run that just finished, shown for a few seconds.
-  const [flash, setFlash] = useState<Record<string, { ok: boolean; text: string }>>({});
+  // Whether the posts were loaded once: a refresh that fails then is a note, not a page error.
+  const loaded = useRef(false);
   const lastRuns = useRef<Map<string, string | null>>(new Map());
   const latestRequest = useRef(0);
   const { channelName } = useChannels(guild.id);
@@ -74,36 +74,27 @@ export function PostsPage({ guild, timezone }: Props) {
   const load = useCallback(() => {
     const request = ++latestRequest.current;
     fetchTasks(guild.id, { query, page })
-      .then((loaded) => {
+      .then((result) => {
         if (request !== latestRequest.current) return; // a newer search or page replaced this one
-        for (const post of loaded.items) {
+        for (const post of result.items) {
           const before = lastRuns.current.get(post.id);
+          // A run that just finished: a note over the page (in the card it would make it taller).
           if (before !== undefined && post.lastRunAt && post.lastRunAt !== before) {
-            const ok = post.lastStatus !== 'FAILED';
-            setFlash((current) => ({
-              ...current,
-              [post.id]: {
-                ok,
-                text: ok ? 'Posted just now' : (post.lastError ?? 'The run failed'),
-              },
-            }));
-            setTimeout(
-              () =>
-                setFlash((current) => {
-                  const rest = { ...current };
-                  delete rest[post.id];
-                  return rest;
-                }),
-              FLASH_MS,
-            );
+            if (post.lastStatus !== 'FAILED') showToast(`✓ “${post.name}” posted just now`, 4000);
+            else showToast(`“${post.name}” failed: ${post.lastError ?? 'the run failed'}`, 8000);
           }
           lastRuns.current.set(post.id, post.lastRunAt);
         }
-        setData(loaded);
+        setData(result);
         setStarting(new Set());
         setError(null);
+        loaded.current = true;
       })
-      .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)));
+      .catch((err: unknown) => {
+        const message = err instanceof Error ? err.message : String(err);
+        if (loaded.current) showToast(message, 8000);
+        else setError(message);
+      });
   }, [guild.id, query, page]);
 
   const goTo = useCallback(
@@ -142,25 +133,27 @@ export function PostsPage({ guild, timezone }: Props) {
       goTo({ page: lastPage }, true);
   }, [data, page, lastPage, goTo]);
 
+  // A failed action is a note over the page: a banner would push every card down.
   const run = (action: Promise<unknown>) => {
-    setError(null);
     action
       .then(load)
-      .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)));
+      .catch((err: unknown) => showToast(err instanceof Error ? err.message : String(err), 8000));
   };
 
   const postNow = (postId: string) => {
-    setError(null);
     setStarting((current) => new Set(current).add(postId));
     runTaskNow(postId)
-      .then(load)
+      .then(() => {
+        showToast('Queued: it will be posted within a minute', 4000);
+        load();
+      })
       .catch((err: unknown) => {
         setStarting((current) => {
           const next = new Set(current);
           next.delete(postId);
           return next;
         });
-        setError(err instanceof Error ? err.message : String(err));
+        showToast(err instanceof Error ? err.message : String(err), 8000);
       });
   };
 
@@ -195,17 +188,12 @@ export function PostsPage({ guild, timezone }: Props) {
         aria-label="Search posts"
       />
 
-      {error && (
-        <div className="banner banner-error" role="alert">
-          <span>{error}</span>
-          <button type="button" className="btn btn-sm" onClick={() => setError(null)}>
-            Dismiss
-          </button>
-        </div>
-      )}
-
       {!data ? (
-        <Spinner />
+        error ? (
+          <p className="status-error">{error}</p>
+        ) : (
+          <Spinner />
+        )
       ) : data.items.length === 0 ? (
         <p className="empty">
           {query ? `No posts match "${query}".` : 'No posts yet. Create one with "+ New post".'}
@@ -270,21 +258,6 @@ export function PostsPage({ guild, timezone }: Props) {
               {post.lastStatus === 'FAILED' && post.lastError && !isLive(post) && (
                 <div className="status-error">{post.lastError}</div>
               )}
-              {(starting.has(post.id) || isQueued(post)) && (
-                <div className="run-status" role="status">
-                  <span className="spinner" aria-hidden="true" /> Queued: it will be posted within a
-                  minute.
-                </div>
-              )}
-              {flash[post.id] && (
-                <div
-                  className={flash[post.id].ok ? 'run-status run-ok' : 'run-status status-error'}
-                  role="status"
-                >
-                  {flash[post.id].ok ? '✓ ' : ''}
-                  {flash[post.id].text}
-                </div>
-              )}
             </div>
             {post.post.parts.map(
               (part, i) =>
@@ -317,7 +290,12 @@ export function PostsPage({ guild, timezone }: Props) {
                   disabled={starting.has(post.id) || isQueued(post)}
                   onClick={() => postNow(post.id)}
                 >
-                  {starting.has(post.id) || isQueued(post) ? 'Queued…' : 'Post now'}
+                  {/* Queued: the spinner is in the button, not a line added to the card. */}
+                  {starting.has(post.id) || isQueued(post) ? (
+                    <InlineSpinner label="Queued…" />
+                  ) : (
+                    'Post now'
+                  )}
                 </button>
               )}
               {!isLive(post) && !wasDeleted(post) && (

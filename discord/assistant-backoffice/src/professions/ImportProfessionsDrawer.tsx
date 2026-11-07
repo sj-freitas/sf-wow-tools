@@ -1,5 +1,6 @@
 import { useState, type DragEvent, type FormEvent } from 'react';
 import { Drawer } from '../Drawer';
+import { FormStatus } from '../OneLine';
 import { showToast } from '../toast';
 import { importProfessions, type ImportResult } from './professionsApi';
 import './professions.css';
@@ -209,7 +210,6 @@ export function ImportProfessionsDrawer({
               spellCheck={false}
             />
           </div>
-          {error && <p className="status-error">{error}</p>}
           <div className="form-actions">
             <button type="submit" className="btn btn-primary" disabled={busy || !data.trim()}>
               {busy ? 'Importing…' : 'Import'}
@@ -218,6 +218,7 @@ export function ImportProfessionsDrawer({
               Cancel
             </button>
           </div>
+          <FormStatus error={error} />
         </form>
       )}
     </Drawer>

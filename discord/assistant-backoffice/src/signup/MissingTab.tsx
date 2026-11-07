@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { InlineSpinner, SkeletonLines } from '../Loading';
+import { OneLine } from '../OneLine';
+import { showToast } from '../toast';
 import { timeAgo } from '../time';
 import type { Guild } from '../types';
 import { useConfirm } from '../useConfirm';
@@ -76,7 +78,8 @@ export function MissingTab({ guild, event }: { guild: Guild; event: SignupEvent 
           },
       );
     } catch (err) {
-      setError(errorText(err));
+      // A note over the page: a line above the list would push it down.
+      showToast(errorText(err), 8000);
       throw err;
     } finally {
       setSending(null);
@@ -149,7 +152,6 @@ export function MissingTab({ guild, event }: { guild: Guild; event: SignupEvent 
             : 'The event is not in Discord; post it again to send reminders.'}
         </p>
       )}
-      {error && <p className="status-error">{error}</p>}
 
       <div className="signup-filters">
         <input
@@ -210,9 +212,12 @@ export function MissingTab({ guild, event }: { guild: Guild; event: SignupEvent 
                   </span>
                 )}
               </span>
-              <span className="signup-card-sub" title={person.characters.join(', ') || undefined}>
-                {person.characters.length > 0 ? person.characters.join(', ') : 'No characters'}
-              </span>
+              {/* Cut short when long: a tap shows them all. */}
+              {person.characters.length > 0 ? (
+                <OneLine className="signup-card-sub" text={person.characters.join(', ')} />
+              ) : (
+                <span className="signup-card-sub">No characters</span>
+              )}
               <span
                 className={
                   person.lastDelivered === false

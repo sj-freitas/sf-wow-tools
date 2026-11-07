@@ -16,6 +16,8 @@ import type { Conversation, ConversationsPage, Guild } from './types';
 import { useCurrentUrl, useReturnTo } from './useReturnTo';
 import { guildPath } from './guildPath';
 import { Spinner } from './Loading';
+import { FormStatus, OneLine } from './OneLine';
+import { showToast } from './toast';
 import { GuildProblems } from './GuildProblems';
 
 interface Props {
@@ -24,6 +26,9 @@ interface Props {
 }
 
 const REFRESH_MS = 60_000;
+/** What a locked conversation means. */
+const LOCKED_TEXT =
+  'nobody can write to this conversation. Members who try are told to start a new one.';
 const SEARCH_DELAY_MS = 300;
 
 const deleteConfirmation = (publicId: number) => ({
@@ -59,13 +64,14 @@ export function OfficerRequestsPage({ guild, timezone }: Props) {
       .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)));
   }, [guild.id, query, page]);
 
+  // What an action says (a failure, a partly done delete) is a note over the page: a line under
+  // the search would push every conversation down.
   const act = (publicId: number, action: () => Promise<unknown>) => {
     if (busyId !== null) return;
     setBusyId(publicId);
-    setError(null);
     action()
       .then(load)
-      .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)))
+      .catch((err: unknown) => showToast(err instanceof Error ? err.message : String(err), 8000))
       .finally(() => setBusyId(null));
   };
 
@@ -74,8 +80,9 @@ export function OfficerRequestsPage({ guild, timezone }: Props) {
       act(publicId, async () => {
         const { notDeleted } = await deleteOfficerRequest(guild.id, publicId);
         if (notDeleted > 0) {
-          setError(
+          showToast(
             `Conversation #${publicId} was deleted, but ${notDeleted} message${notDeleted === 1 ? '' : 's'} could not be removed from the Officer Request Channel (probably already deleted).`,
+            8000,
           );
         }
       });
@@ -154,10 +161,12 @@ export function OfficerRequestsPage({ guild, timezone }: Props) {
         aria-label="Search officer requests"
       />
 
-      {error && <p className="status-error">{error}</p>}
-
       {!data ? (
-        <Spinner />
+        error ? (
+          <p className="status-error">{error}</p>
+        ) : (
+          <Spinner />
+        )
       ) : data.items.length === 0 ? (
         <p className="empty">
           {query ? `No conversations match "${query}".` : 'No one has written to the officers yet.'}
@@ -278,13 +287,22 @@ export function ConversationPage({ guild, timezone }: Props) {
     };
   }, [load]);
 
+  // What an action says is a note over the page: above the conversation it would push it down.
+  const failed = (err: unknown) =>
+    showToast(err instanceof Error ? err.message : String(err), 8000);
   const toggleLock = () => {
     if (!conversation || busy) return;
+    const locking = !conversation.locked;
     setBusy(true);
-    setError(null);
-    setOfficerRequestLocked(guild.id, conversation.publicId, !conversation.locked)
-      .then(load)
-      .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)))
+    setOfficerRequestLocked(guild.id, conversation.publicId, locking)
+      .then(() => {
+        showToast(
+          locking ? `Locked: ${LOCKED_TEXT}` : 'Unlocked: the member can write again',
+          6000,
+        );
+        load();
+      })
+      .catch(failed)
       .finally(() => setBusy(false));
   };
 
@@ -293,15 +311,18 @@ export function ConversationPage({ guild, timezone }: Props) {
     const ok = await confirm(deleteConfirmation(conversation.publicId));
     if (!ok) return;
     setBusy(true);
-    setError(null);
     deleteOfficerRequest(guild.id, conversation.publicId)
       .then((result) => {
         if (result.notDeleted === 0) navigate(back, { replace: true });
         else setRemoved(result);
       })
-      .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)))
+      .catch(failed)
       .finally(() => setBusy(false));
   };
+
+  const lockText = conversation?.locked
+    ? `Locked: ${LOCKED_TEXT}`
+    : 'Open: the member and the officers can write to it.';
 
   if (removed) {
     return (
@@ -324,7 +345,6 @@ export function ConversationPage({ guild, timezone }: Props) {
       <Link className="back-link" to={back}>
         ← Officer requests
       </Link>
-      {error && conversation && <p className="status-error">{error}</p>}
       {error && !conversation ? (
         <p className="status-error">{error}</p>
       ) : !conversation ? (
@@ -345,7 +365,15 @@ export function ConversationPage({ guild, timezone }: Props) {
               <span className={conversation.isAnonymous ? 'badge' : 'badge badge-main'}>
                 {conversation.isAnonymous ? 'Anonymous' : 'Named'}
               </span>
-              {conversation.locked && <span className="badge">Locked</span>}
+              {/* Always there (Open or Locked), so locking moves nothing; a tap says what it means. */}
+              <button
+                type="button"
+                className="badge badge-button"
+                title={lockText}
+                onClick={() => showToast(lockText, 6000)}
+              >
+                {conversation.locked ? 'Locked' : 'Open'}
+              </button>
               <button type="button" className="btn btn-sm" disabled={busy} onClick={toggleLock}>
                 {conversation.locked ? 'Unlock' : 'Lock'}
               </button>
@@ -359,12 +387,6 @@ export function ConversationPage({ guild, timezone }: Props) {
               </button>
             </div>
           </div>
-          {conversation.locked && (
-            <p className="muted">
-              Locked: nobody can write to this conversation. Members who try are told to start a new
-              one.
-            </p>
-          )}
           <ol className="conversation">
             {conversation.messages.map((message) => {
               const fromOfficer = message.author === 'OFFICER';
@@ -374,11 +396,15 @@ export function ConversationPage({ guild, timezone }: Props) {
                   className={fromOfficer ? 'bubble bubble-officer' : 'bubble bubble-member'}
                 >
                   <div className="bubble-head">
-                    <strong className="name-truncate" title={message.authorName ?? undefined}>
-                      {fromOfficer
-                        ? `Officer ${message.authorName ?? ''}`.trim()
-                        : (message.authorName ?? 'Anonymous member')}
-                    </strong>
+                    <OneLine
+                      inline
+                      className="bubble-author"
+                      text={
+                        fromOfficer
+                          ? `Officer ${message.authorName ?? ''}`.trim()
+                          : (message.authorName ?? 'Anonymous member')
+                      }
+                    />
                     <span className="badge">{fromOfficer ? 'Officer' : 'Member'}</span>
                     <span className="muted">{formatWhen(message.createdAt, timezone)}</span>
                   </div>
@@ -406,7 +432,10 @@ export function ConversationPage({ guild, timezone }: Props) {
               );
             })}
           </ol>
-          {!conversation.locked && (
+          {/* Locked, the reply box gives way to why: at the bottom, it pushes nothing. */}
+          {conversation.locked ? (
+            <p className="muted">Locked: {LOCKED_TEXT}</p>
+          ) : (
             <ReplyForm guildId={guild.id} publicId={conversation.publicId} onSent={load} />
           )}
         </>
@@ -431,38 +460,40 @@ function ReplyForm({
   const [text, setText] = useState('');
   const [image, setImage] = useState<File | null>(null);
   const [sending, setSending] = useState(false);
-  const [feedback, setFeedback] = useState<{ ok: boolean; text: string } | null>(null);
+  // A failed send (or an image too big): one line kept under the buttons. A sent reply is a note.
+  const [problem, setProblem] = useState<string | null>(null);
 
   const send = (event: React.FormEvent) => {
     event.preventDefault();
     const message = text.trim();
     if (!message || sending) return;
     setSending(true);
-    setFeedback(null);
+    setProblem(null);
     replyToOfficerRequest(guildId, publicId, message, image ?? undefined)
       .then(({ dmDelivered }) => {
         setText('');
         setImage(null);
-        setFeedback(
+        showToast(
           dmDelivered
-            ? { ok: true, text: 'Reply sent: the member got it by DM.' }
-            : {
-                ok: false,
-                text: 'Reply saved and posted, but the member could not be reached by DM (they may have DMs closed).',
-              },
+            ? '✓ Reply sent: the member got it by DM.'
+            : 'Reply saved and posted, but the member could not be reached by DM (they may have DMs closed).',
+          dmDelivered ? 4000 : 8000,
         );
         onSent();
       })
-      .catch((err: unknown) =>
-        setFeedback({ ok: false, text: err instanceof Error ? err.message : String(err) }),
-      )
+      .catch((err: unknown) => setProblem(err instanceof Error ? err.message : String(err)))
       .finally(() => setSending(false));
   };
 
   return (
     <form className="reply-form" onSubmit={send}>
       <label className="field">
-        <span>Reply as an officer</span>
+        <span className="task-text-head">
+          Reply as an officer
+          <span className="muted">
+            {text.length}/{MAX_REPLY_LENGTH}
+          </span>
+        </span>
         <textarea
           rows={4}
           maxLength={MAX_REPLY_LENGTH}
@@ -471,9 +502,11 @@ function ReplyForm({
           placeholder="Your name is shown to the member. The reply goes to them by DM."
         />
       </label>
+      {/* The image button keeps its width whatever the file is called, and its ✕ keeps its place
+          while there is none: picking an image moves nothing. */}
       <div className="settings-actions">
-        <label className="btn">
-          {image ? 'Change image' : 'Attach image'}
+        <label className="btn reply-attach" title={image ? image.name : undefined}>
+          <span className="reply-attach-label">{image ? image.name : 'Attach image'}</span>
           <input
             type="file"
             accept="image/png,image/jpeg,image/gif,image/webp"
@@ -482,34 +515,29 @@ function ReplyForm({
               const file = e.target.files?.[0] ?? null;
               e.target.value = '';
               if (file && file.size > MAX_IMAGE_MB * 1024 * 1024) {
-                setFeedback({ ok: false, text: `The image can be at most ${MAX_IMAGE_MB} MB.` });
+                setProblem(`The image can be at most ${MAX_IMAGE_MB} MB.`);
                 return;
               }
-              setFeedback(null);
+              setProblem(null);
               setImage(file);
             }}
           />
         </label>
-        {image && (
-          <span className="muted">
-            {image.name}{' '}
-            <button type="button" className="btn btn-sm" onClick={() => setImage(null)}>
-              Remove
-            </button>
-          </span>
-        )}
+        <button
+          type="button"
+          className="btn btn-icon reply-attach-remove"
+          aria-label="Remove the image"
+          title="Remove the image"
+          disabled={!image}
+          onClick={() => setImage(null)}
+        >
+          ✕
+        </button>
         <button type="submit" className="btn btn-primary" disabled={sending || !text.trim()}>
           {sending ? 'Sending…' : 'Send reply'}
         </button>
-        <span className="muted">
-          {text.length}/{MAX_REPLY_LENGTH}
-        </span>
       </div>
-      {feedback && (
-        <p className={feedback.ok ? 'muted' : 'status-error'} role="status">
-          {feedback.text}
-        </p>
-      )}
+      <FormStatus error={problem} />
     </form>
   );
 }

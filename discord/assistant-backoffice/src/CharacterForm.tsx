@@ -20,6 +20,8 @@ import {
   useArmory,
   useGames,
 } from './game';
+import { InlineSpinner, Spinner } from './Loading';
+import { FormStatus, OneLine } from './OneLine';
 import { PlayerPicker } from './PlayerPicker';
 import {
   ROLE_LABELS,
@@ -115,6 +117,8 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
   // with them what a main, a switcher… is); everyone else sees them.
   const [attributes, setAttributes] = useState<GuildAttribute[]>([]);
   const [picked, setPicked] = useState<Set<string> | null>(null);
+  // Editing, the form waits for them: arriving later, they would push the buttons down.
+  const [attributesLoaded, setAttributesLoaded] = useState(false);
   const initialId = initial?.id;
   useEffect(() => {
     if (!initialId) return;
@@ -123,7 +127,8 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
         setAttributes(all);
         setPicked(new Set(all.filter((a) => a.characterIds.includes(initialId)).map((a) => a.id)));
       })
-      .catch(() => setAttributes([]));
+      .catch(() => setAttributes([]))
+      .finally(() => setAttributesLoaded(true));
   }, [guild.id, initialId]);
   const togglePicked = (id: string) =>
     setPicked((current) => {
@@ -305,6 +310,23 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
       .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)));
   };
 
+  if (initial && !attributesLoaded) return <Spinner />;
+
+  // Under "Load from armory", always one line: what the armory said (cut short; a tap shows all
+  // of it), or what the button does, so a lookup never pushes the fields below it.
+  const armoryLine = armoryBusy ? (
+    <InlineSpinner className="muted" label="Looking it up in the armory…" />
+  ) : armoryNote ? (
+    <OneLine
+      text={armoryNote.text}
+      className={
+        armoryNote.kind === 'ok' ? 'run-ok' : armoryNote.kind === 'error' ? 'status-error' : 'muted'
+      }
+    />
+  ) : (
+    <span className="muted">Fills race, class and level from the armory, with the name above.</span>
+  );
+
   return (
     <form className="card-body" onSubmit={handleSubmit}>
       <div className="form-grid form-grid-3">
@@ -326,30 +348,6 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
                 }
               />
             )}
-          </div>
-        )}
-        {!initial && migratable.length > 0 && (
-          <div className="field field-wide migrate-list">
-            <span>
-              Already on this server: migrate an existing character instead of creating a new one
-            </span>
-            <div className="migrate-row">
-              <Select value={toMigrate} onChange={(v) => setToMigrate(v)}>
-                {migratable.map((character) => (
-                  <option key={character.id} value={character.id}>
-                    {`${character.firstName} ${character.lastName}`.trim()} — {character.class}
-                  </option>
-                ))}
-              </Select>
-              <button
-                type="button"
-                className="btn btn-sm"
-                disabled={migrating || toMigrate === ''}
-                onClick={runMigrate}
-              >
-                {migrating ? 'Migrating…' : 'Migrate'}
-              </button>
-            </div>
           </div>
         )}
         <label className="field">
@@ -395,20 +393,9 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
                 {armoryBusy ? 'Loading…' : 'Load from armory'}
               </button>
             </span>
-            {armoryNote && (
-              <span
-                className={
-                  armoryNote.kind === 'ok'
-                    ? 'run-ok'
-                    : armoryNote.kind === 'error'
-                      ? 'status-error'
-                      : 'muted'
-                }
-                role="status"
-              >
-                {armoryNote.text}
-              </span>
-            )}
+            <span className="armory-load-status" role="status">
+              {armoryLine}
+            </span>
           </div>
         )}
         {races.length > 0 && (
@@ -512,7 +499,6 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
           )}
         </div>
       )}
-      {error && <p className="status-error">{error}</p>}
       <div className="form-actions">
         <button type="submit" className="btn btn-primary" disabled={roles.length === 0}>
           {initial ? 'Save changes' : 'Add character'}
@@ -521,6 +507,32 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
           Cancel
         </button>
       </div>
+      <FormStatus error={error} />
+      {/* Found once a player is picked: under the buttons, where it pushes none of the fields. */}
+      {!initial && migratable.length > 0 && (
+        <div className="field migrate-list">
+          <span>
+            Already on this server: migrate an existing character instead of creating a new one
+          </span>
+          <div className="migrate-row">
+            <Select value={toMigrate} onChange={(v) => setToMigrate(v)}>
+              {migratable.map((character) => (
+                <option key={character.id} value={character.id}>
+                  {`${character.firstName} ${character.lastName}`.trim()} — {character.class}
+                </option>
+              ))}
+            </Select>
+            <button
+              type="button"
+              className="btn btn-sm"
+              disabled={migrating || toMigrate === ''}
+              onClick={runMigrate}
+            >
+              {migrating ? 'Migrating…' : 'Migrate'}
+            </button>
+          </div>
+        </div>
+      )}
     </form>
   );
 }

@@ -3,6 +3,8 @@ import { Help } from '../Help';
 import type { Guild } from '../types';
 import { useConfirm } from '../useConfirm';
 import { InlineSpinner } from '../Loading';
+import { showToast } from '../toast';
+import { useKeepInView } from '../useKeepInView';
 import { ClassMark } from '../ClassMark';
 import { MultiSelect } from '../MultiSelect';
 import { RoleMark } from '../RoleMark';
@@ -95,8 +97,12 @@ export function SetupEditor({
   const [busy, setBusy] = useState(false);
   // The setup as the GuildAssistant RaidSort addon reads it, shown in a dialog to copy.
   const [exported, setExported] = useState<AddonExport | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const { confirm, dialog } = useConfirm();
+  // A failed save or action is a note over the page: a line above the groups would push them down.
+  const failed = (err: unknown) => showToast(errorText(err), 8000);
+  // Near the screen's right edge (a phone), the raid-roles menu opens further left instead of being
+  // cut off.
+  useKeepInView(menu, menuFor);
   // How many groups and places, from the event's kind: 8 groups of 5 for a raid, one unlimited
   // "Invited" list for a members event.
   const { groupCount, groupSize, groupName } = event.layout;
@@ -188,10 +194,9 @@ export function SetupEditor({
 
   const run = (action: () => Promise<unknown>) => {
     setBusy(true);
-    setError(null);
     action()
       .then(onChanged)
-      .catch((err: unknown) => setError(errorText(err)))
+      .catch(failed)
       .finally(() => setBusy(false));
   };
 
@@ -228,9 +233,8 @@ export function SetupEditor({
     if (version === 0) return;
     const timer = setTimeout(() => {
       setSaving(true);
-      setError(null);
       save()
-        .catch((err: unknown) => setError(errorText(err)))
+        .catch(failed)
         .finally(() => setSaving(false));
     }, SAVE_DELAY_MS);
     return () => clearTimeout(timer);
@@ -417,7 +421,6 @@ export function SetupEditor({
           </Help>
         </div>
       </div>
-      {error && <p className="status-error">{error}</p>}
 
       {/* Raid roles: not on members events. */}
       {event.layout.hasRaidRoles && (
@@ -595,10 +598,11 @@ export function SetupEditor({
             </button>
           )}
         </div>
-        {event.setupPostUrl && event.setupMentions !== mention && (
+        {/* Always there once posted: ticking the box doesn't add a line. */}
+        {event.setupPostUrl && (
           <p className="muted">
-            Mentions only ping when a message is first posted; to ping now, remove the setup and
-            post it again.
+            Mentions only ping when a message is first posted: to ping after changing this, remove
+            the setup and post it again.
           </p>
         )}
       </div>

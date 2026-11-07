@@ -1,3 +1,4 @@
+import { FormStatus } from './OneLine';
 import { useEffect, useState, type FormEvent } from 'react';
 import { createGuild, fetchEligibleServers, syncDiscord } from './api';
 import { factionsOf, gameOf, regionsOf, serversFor, useGames } from './game';
@@ -147,20 +148,21 @@ export function CreateGuildForm({ setup, onCreated, onCancel }: Props) {
                         onChange={() => toggle(server.discordId)}
                       />
                     </label>
-                    {selected.length > 1 && picked && (
-                      <label
-                        className="server-card-main"
-                        title="The main server's picture is the guild's logo"
-                      >
-                        <input
-                          type="radio"
-                          name="main-server"
-                          checked={effectiveMain === server.discordId}
-                          onChange={() => setMainId(server.discordId)}
-                        />
-                        Main server
-                      </label>
-                    )}
+                    {/* On every card (usable once two or more are picked), so picking a server
+                        never makes the cards taller. */}
+                    <label
+                      className="server-card-main"
+                      title="The main server's picture is the guild's logo"
+                    >
+                      <input
+                        type="radio"
+                        name="main-server"
+                        checked={picked && effectiveMain === server.discordId}
+                        disabled={!picked || selected.length < 2}
+                        onChange={() => setMainId(server.discordId)}
+                      />
+                      Main server
+                    </label>
                   </div>
                 );
               })}
@@ -168,7 +170,6 @@ export function CreateGuildForm({ setup, onCreated, onCancel }: Props) {
           )}
         </div>
 
-        {error && <p className="status-error">{error}</p>}
         <div className="form-actions">
           <button
             type="submit"
@@ -181,6 +182,7 @@ export function CreateGuildForm({ setup, onCreated, onCancel }: Props) {
             Cancel
           </button>
         </div>
+        <FormStatus error={error} />
       </form>
     </section>
   );

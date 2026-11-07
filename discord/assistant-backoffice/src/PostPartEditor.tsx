@@ -9,6 +9,7 @@ import {
   MAX_PART_LENGTH,
   type PartDraft,
 } from './postParts';
+import { showToast } from './toast';
 import type { PostAttachment } from './types';
 
 interface Props {
@@ -74,25 +75,28 @@ export function PostPartEditor({
   canMove,
   onRemove,
 }: Props) {
-  const [preview, setPreview] = useState(false);
+  // Text and Preview take turns in the same place: a preview opening under the message would push
+  // the rest of the form down.
+  const [tab, setTab] = useState<'write' | 'preview'>('write');
   const [uploading, setUploading] = useState(false);
-  const [uploadError, setUploadError] = useState<string | null>(null);
+  // A file that couldn't be added: a note over the page, not a line pushing the form down.
+  const uploadFailed = (message: string) => showToast(message, 8000);
+  const rows = index === 0 ? 6 : 4;
   const attachments = usePostAttachments(guildId, draft.imageIds);
 
   const addImages = (files: FileList | null) => {
     if (!files || files.length === 0) return;
-    setUploadError(null);
     const room = MAX_IMAGES_PER_PART - draft.imageIds.length;
     const chosen = Array.from(files).slice(0, Math.max(0, room));
     const tooBig = chosen.find((file) => file.size > MAX_IMAGE_MB * 1024 * 1024);
     if (tooBig) {
-      setUploadError(`${tooBig.name} is bigger than ${MAX_IMAGE_MB} MB.`);
+      uploadFailed(`${tooBig.name} is bigger than ${MAX_IMAGE_MB} MB.`);
       return;
     }
     setUploading(true);
     void Promise.all(chosen.map((file) => uploadPostImage(guildId, file)))
       .then((uploaded) => onChange({ imageIds: [...draft.imageIds, ...uploaded.map((u) => u.id)] }))
-      .catch((err: unknown) => setUploadError(err instanceof Error ? err.message : String(err)))
+      .catch((err: unknown) => uploadFailed(err instanceof Error ? err.message : String(err)))
       .finally(() => setUploading(false));
   };
 
@@ -148,20 +152,49 @@ export function PostPartEditor({
       </div>
 
       <div className="field task-text">
-        <span className="task-text-head">
-          Text (Discord markdown)
-          <span className={draft.content.length > MAX_PART_LENGTH ? 'status-error' : 'muted'}>
+        <div className="write-tabs" role="tablist">
+          {(['write', 'preview'] as const).map((value) => (
+            <button
+              key={value}
+              type="button"
+              role="tab"
+              aria-selected={tab === value}
+              className={tab === value ? 'write-tab write-tab-active' : 'write-tab'}
+              onClick={() => {
+                if (value === 'preview') onPreview();
+                setTab(value);
+              }}
+            >
+              {value === 'write' ? 'Text (Discord markdown)' : 'Preview'}
+            </button>
+          ))}
+          <span
+            className={
+              draft.content.length > MAX_PART_LENGTH
+                ? 'status-error write-tabs-count'
+                : 'muted write-tabs-count'
+            }
+          >
             {draft.content.length}/{MAX_PART_LENGTH}
           </span>
-        </span>
+        </div>
+        {/* The textarea stays in the form (hidden) while previewing, so "required" still checks it. */}
         <textarea
           value={draft.content}
           onChange={(e) => onChange({ content: e.target.value })}
-          rows={index === 0 ? 6 : 4}
+          rows={rows}
           required
+          hidden={tab !== 'write'}
+          // Saved while previewing an empty message: back to the text, to see why.
+          onInvalid={() => setTab('write')}
           maxLength={MAX_PART_LENGTH + 500}
           aria-label={`Text of message ${index + 1}`}
         />
+        {tab === 'preview' && (
+          <div className="part-preview" style={{ minHeight: `${rows * 1.1 + 1.4}rem` }}>
+            <MessagePreview guildId={guildId} draft={draft} names={names} />
+          </div>
+        )}
       </div>
 
       <div className="part-images">
@@ -207,7 +240,6 @@ export function PostPartEditor({
           each, shown under the text.
         </span>
       </div>
-      {uploadError && <p className="status-error">{uploadError}</p>}
 
       <div className="form-grid part-options">
         <label className="field field-span-2">
@@ -251,20 +283,6 @@ export function PostPartEditor({
           </label>
         )}
       </div>
-
-      <div className="task-text-actions">
-        <button
-          type="button"
-          className="btn btn-sm"
-          onClick={() => {
-            if (!preview) onPreview();
-            setPreview((current) => !current);
-          }}
-        >
-          {preview ? 'Hide preview' : 'Preview this message'}
-        </button>
-      </div>
-      {preview && <MessagePreview guildId={guildId} draft={draft} names={names} />}
     </div>
   );
 }

@@ -5,7 +5,9 @@ import { channelKey, splitChannelKey } from './channelKey';
 import { ChannelSelect } from './ChannelSelect';
 import { TimezoneField } from './TimezoneField';
 import type { MentionNames } from './DiscordMarkdown';
+import { Drawer } from './Drawer';
 import { LiveTagsHelp } from './LiveTagsHelp';
+import { FormStatus } from './OneLine';
 import { MessagePreview, PostPartEditor } from './PostPartEditor';
 import { canSwap, draftOf, inputOf, MAX_PARTS, newDraft, type PartDraft } from './postParts';
 import { formatWhen } from './time';
@@ -198,32 +200,35 @@ export function PostTaskForm({ guild, channels, editing, timezone, onSaved, onCa
               type="button"
               className="btn btn-sm"
               onClick={() => {
-                if (!sequence) loadNames();
-                setSequence((current) => !current);
+                loadNames();
+                setSequence(true);
               }}
             >
-              {sequence ? 'Hide sequence preview' : 'Preview the sequence'}
+              Preview the sequence
             </button>
           )}
         </div>
 
         <LiveTagsHelp />
 
+        {/* In a drawer, over the form: opening it above the messages would push them down. */}
         {sequence && parts.length > 1 && (
-          <div className="sequence-preview" aria-label="Preview of the whole sequence">
-            {parts.map((part, i) => (
-              <div key={part.key}>
-                {i > 0 && (
-                  <div className="sequence-gap muted">
-                    {part.delaySeconds > 0 && !part.posted
-                      ? `⏱ ${part.delaySeconds} seconds later`
-                      : '↓'}
-                  </div>
-                )}
-                <MessagePreview guildId={guild.id} draft={part} names={shownNames} />
-              </div>
-            ))}
-          </div>
+          <Drawer title="The whole sequence" onClose={() => setSequence(false)}>
+            <div className="sequence-preview" aria-label="Preview of the whole sequence">
+              {parts.map((part, i) => (
+                <div key={part.key}>
+                  {i > 0 && (
+                    <div className="sequence-gap muted">
+                      {part.delaySeconds > 0 && !part.posted
+                        ? `⏱ ${part.delaySeconds} seconds later`
+                        : '↓'}
+                    </div>
+                  )}
+                  <MessagePreview guildId={guild.id} draft={part} names={shownNames} />
+                </div>
+              ))}
+            </div>
+          </Drawer>
         )}
 
         {parts.map((part, i) => (
@@ -252,7 +257,14 @@ export function PostTaskForm({ guild, channels, editing, timezone, onSaved, onCa
           >
             + Add message
           </button>
-          {totalWait > 0 && <span className="muted">The waits add up to {totalWait} seconds.</span>}
+          {/* With two messages or more, always there: typing a wait doesn't add a line. */}
+          {parts.length > 1 && (
+            <span className="muted">
+              {totalWait > 0
+                ? `The waits add up to ${totalWait} seconds.`
+                : 'No waits between the messages.'}
+            </span>
+          )}
         </div>
       </div>
 
@@ -262,7 +274,6 @@ export function PostTaskForm({ guild, channels, editing, timezone, onSaved, onCa
         roster) up to date. Turn it off for an old post: it stays as it last was.
       </label>
 
-      {error && <p className="status-error">{error}</p>}
       <div className="form-actions">
         <button type="submit" className="btn btn-primary" disabled={busy}>
           {busy ? 'Saving…' : live ? 'Save changes' : editing ? 'Save' : 'Schedule post'}
@@ -282,6 +293,7 @@ export function PostTaskForm({ guild, channels, editing, timezone, onSaved, onCa
           Cancel
         </button>
       </div>
+      <FormStatus error={error} />
     </form>
   );
 }

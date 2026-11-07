@@ -1,3 +1,4 @@
+import { FormStatus } from './OneLine';
 import { useState, type FormEvent } from 'react';
 import { createHoneypot } from './api';
 import { splitChannelKey } from './channelKey';
@@ -152,19 +153,18 @@ export function HoneypotForm({ guild, channels, onSaved, onCancel }: Props) {
           />
           Test mode: only report in the log channel what would happen, ban nobody
         </label>
-        {!testMode && (
-          <label className="field-toggle field-toggle-danger">
-            <input
-              type="checkbox"
-              checked={confirmLive}
-              onChange={(e) => setConfirmLive(e.target.checked)}
-            />
-            I understand this permanently bans people who post in the channel
-          </label>
-        )}
+        {/* Always there (usable once test mode is off), so switching mode moves nothing. */}
+        <label className="field-toggle field-toggle-danger">
+          <input
+            type="checkbox"
+            checked={confirmLive && !testMode}
+            disabled={testMode}
+            onChange={(e) => setConfirmLive(e.target.checked)}
+          />
+          I understand this permanently bans people who post in the channel
+        </label>
       </div>
 
-      {error && <p className="status-error">{error}</p>}
       <div className="form-actions">
         <button
           type="submit"
@@ -177,6 +177,7 @@ export function HoneypotForm({ guild, channels, onSaved, onCancel }: Props) {
           Cancel
         </button>
       </div>
+      <FormStatus error={error} />
     </form>
   );
 }

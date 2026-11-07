@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { fuzzyWordsScore } from '../fuzzy';
 import { SkeletonLines } from '../Loading';
 import { timeAgo } from '../time';
+import { showToast } from '../toast';
 import { ADDON_URL } from './ImportProfessionsDrawer';
 import { ChevronIcon } from '../Icons';
 import { useConfirm } from '../useConfirm';
@@ -34,7 +35,6 @@ export function CharacterProfessions({
   canDrop?: boolean;
 }) {
   const { confirm, dialog } = useConfirm();
-  const [dropError, setDropError] = useState<string | null>(null);
   const [professions, setProfessions] = useState<Profession[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState('');
@@ -43,13 +43,17 @@ export function CharacterProfessions({
   const [toggled, setToggled] = useState<Set<string>>(new Set());
   useEffect(() => setToggled(new Set()), [searching]);
 
+  // Loading again (after a drop) keeps the list on screen until the new one arrives: only another
+  // character starts from the placeholder.
   const load = useCallback(() => {
-    setProfessions(null);
     fetchCharacterProfessions(characterId)
       .then(setProfessions)
       .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)));
   }, [characterId]);
-  useEffect(load, [load]);
+  useEffect(() => {
+    setProfessions(null);
+    load();
+  }, [load]);
 
   // Unlearned in game: dropped here too, after asking. Its recipes go with it.
   const drop = (name: string, recipes: number) =>
@@ -60,10 +64,10 @@ export function CharacterProfessions({
       danger: true,
     }).then((ok) => {
       if (!ok) return;
-      setDropError(null);
+      // A failed drop is a note over the page: a line above the list would push it down.
       dropProfession(characterId, name)
         .then(load)
-        .catch((err: unknown) => setDropError(err instanceof Error ? err.message : String(err)));
+        .catch((err: unknown) => showToast(err instanceof Error ? err.message : String(err), 8000));
     });
 
   const shown = useMemo(
@@ -117,7 +121,6 @@ export function CharacterProfessions({
     <div className="professions">
       {dialog}
       {importLinks}
-      {dropError && <p className="status-error">{dropError}</p>}
       <div className="search-field">
         <input
           className="post-search"

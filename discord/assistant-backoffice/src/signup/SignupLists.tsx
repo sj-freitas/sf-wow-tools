@@ -1,9 +1,10 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { characterPagePath } from '../guildPath';
 import { BinIcon, PencilIcon } from '../Icons';
 import type { Guild } from '../types';
 import { useConfirm } from '../useConfirm';
+import { OneLine } from '../OneLine';
+import { showToast } from '../toast';
 import { ROLE_CATEGORIES, STATUS_LABELS, entryName, errorText } from './labels';
 import { StatusIcon } from './StatusIcon';
 import { ClassMark } from '../ClassMark';
@@ -40,7 +41,6 @@ export function SignupLists({
   onEdit: (target: DrawerTarget) => void;
 }) {
   const { confirm, dialog } = useConfirm();
-  const [error, setError] = useState<string | null>(null);
   const available = event.entries.filter((entry) => entry.status === 'AVAILABLE').sort(bySignup);
   const officer = event.permissions.isOfficer;
   // Sign-up numbers, as in the Discord post: the order people first answered.
@@ -69,7 +69,8 @@ export function SignupLists({
       if (!ok) return;
       (officer ? removeEntry(guild.id, event.id, entry.id) : withdrawMySignup(guild.id, event.id))
         .then(onChanged)
-        .catch((err: unknown) => setError(errorText(err)));
+        // A note over the page: a line above the lists would push them down.
+        .catch((err: unknown) => showToast(errorText(err), 8000));
     });
 
   const discordUrl = (entry: Entry) => `https://discord.com/users/${entry.discordUserId}`;
@@ -154,9 +155,12 @@ export function SignupLists({
           </>
         )}
       </span>
-      <span className="signup-card-note" title={entry.note ?? undefined}>
-        {entry.note ? `“${entry.note}”` : '\u00a0'}
-      </span>
+      {/* Its line is always kept; a long note is cut short, and a tap shows all of it. */}
+      {entry.note ? (
+        <OneLine className="signup-card-note" text={`“${entry.note}”`} />
+      ) : (
+        <span className="signup-card-note">{'\u00a0'}</span>
+      )}
     </li>
   );
   const rows = (entries: Entry[]) => entries.map(row);
@@ -164,7 +168,6 @@ export function SignupLists({
   return (
     <>
       {dialog}
-      {error && <p className="status-error">{error}</p>}
       {event.layout.usesCharacters ? (
         <div className="signup-columns">
           {ROLE_CATEGORIES.map(({ role, label }) => {

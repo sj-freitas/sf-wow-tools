@@ -3,6 +3,8 @@ import { createAttribute, deleteAttribute, setCharacterAttributes, updateAttribu
 import { AttributeChip } from './AttributeChip';
 import { Drawer } from './Drawer';
 import { InlineSpinner } from './Loading';
+import { FormStatus } from './OneLine';
+import { showToast } from './toast';
 import { ATTRIBUTE_COLORS, type AttributeColor, type Guild, type GuildAttribute } from './types';
 import { useConfirm } from './useConfirm';
 
@@ -57,18 +59,17 @@ export function ManageAttributesDrawer({
   const [editName, setEditName] = useState('');
   const [editColor, setEditColor] = useState<AttributeColor>('blue');
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const { confirm, dialog } = useConfirm();
 
   const run = (action: () => Promise<void>, after?: () => void) => {
     setBusy(true);
-    setError(null);
+    // A failure is a note over the page: a line between the form and the list would push it down.
     action()
       .then(() => {
         after?.();
         onChanged();
       })
-      .catch((err: unknown) => setError(errorText(err)))
+      .catch((err: unknown) => showToast(errorText(err), 8000))
       .finally(() => setBusy(false));
   };
 
@@ -107,8 +108,6 @@ export function ManageAttributesDrawer({
             </button>
           </div>
         </form>
-
-        {error && <p className="status-error">{error}</p>}
 
         {attributes.length === 0 ? (
           <p className="muted">No attributes yet.</p>
@@ -259,7 +258,6 @@ export function CharacterAttributesDrawer({
             ))}
           </ul>
         )}
-        {error && <p className="status-error">{error}</p>}
         <div className="form-actions">
           {attributes.length > 0 && (
             <button type="button" className="btn btn-primary" disabled={busy} onClick={save}>
@@ -270,6 +268,7 @@ export function CharacterAttributesDrawer({
             {attributes.length === 0 ? 'Create attributes' : 'Manage attributes'}
           </button>
         </div>
+        <FormStatus error={error} />
       </div>
     </Drawer>
   );

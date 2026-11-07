@@ -10,6 +10,8 @@ import {
 } from './api';
 import { characterPagePath } from './guildPath';
 import { InlineSpinner, Spinner } from './Loading';
+import { FormStatus } from './OneLine';
+import { showToast } from './toast';
 import { GuildIcon } from './GuildIcon';
 import { MarkdownView } from './MarkdownView';
 import { CharacterProfessions } from './professions/CharacterProfessions';
@@ -120,6 +122,10 @@ function CharacterView({
   gameVersion: string;
   realm: string;
 }) {
+  const ownership = profile.verified
+    ? 'Its player proved on Battle.net that it is theirs: only they can change it.'
+    : 'Claimed by its player; Officers can change it too.';
+  const comingSoon = () => showToast('Coming soon');
   return (
     <>
       <div className="tasks-head">
@@ -127,16 +133,15 @@ function CharacterView({
           <h2>
             {profile.name}{' '}
             {/* Ownership: claimed by its player, or verified by them on Battle.net. */}
-            <span
-              className={profile.verified ? 'badge badge-main' : 'badge'}
-              title={
-                profile.verified
-                  ? 'Its player proved on Battle.net that it is theirs: only they can change it.'
-                  : 'Claimed by its player; Officers can change it too.'
-              }
+            {/* What it means: on hover, or a tap (a phone has no hover). */}
+            <button
+              type="button"
+              className={profile.verified ? 'badge badge-main badge-button' : 'badge badge-button'}
+              title={ownership}
+              onClick={() => showToast(ownership, 6000)}
             >
               {profile.verified ? 'Battle.net verified' : 'Claimed'}
-            </span>
+            </button>
           </h2>
           <div className="card-meta">
             <ClassMark gameVersion={gameVersion} className={profile.class} />
@@ -167,12 +172,22 @@ function CharacterView({
             Verify with Battle.net
           </a>
         )}
-        <span className="btn btn-sm disabled" title="Coming soon">
+        <button
+          type="button"
+          className="btn btn-sm disabled"
+          title="Coming soon"
+          onClick={comingSoon}
+        >
           Armory
-        </span>
-        <span className="btn btn-sm disabled" title="Coming soon">
+        </button>
+        <button
+          type="button"
+          className="btn btn-sm disabled"
+          title="Coming soon"
+          onClick={comingSoon}
+        >
           Logs
-        </span>
+        </button>
       </div>
 
       {/* The guilds it is in: each a small card with its logo, to the guild's roster when the
@@ -192,6 +207,7 @@ function CharacterView({
                 key={guild.path}
                 className="character-guild character-guild-other"
                 title="You’re not in this guild"
+                onClick={() => showToast('You’re not in this guild')}
               >
                 <GuildIcon guild={guild} />
                 <span>{guild.name}</span>
@@ -293,8 +309,10 @@ function BioEditor({ profile, onSaved }: { profile: CharacterProfile; onSaved: (
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [imageError, setImageError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
+  // An image that couldn't be added or removed: a note over the page (it would push the form down).
+  const imageFailed = (err: unknown) =>
+    showToast(err instanceof Error ? err.message : String(err), 8000);
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
@@ -308,7 +326,6 @@ function BioEditor({ profile, onSaved }: { profile: CharacterProfile; onSaved: (
 
   const addImages = (files: FileList | File[] | null) => {
     if (!files || files.length === 0) return;
-    setImageError(null);
     const room = MAX_BIO_IMAGES - images.length;
     const chosen = Array.from(files)
       .filter((file) => file.type.startsWith('image/'))
@@ -317,17 +334,16 @@ function BioEditor({ profile, onSaved }: { profile: CharacterProfile; onSaved: (
     setUploading(true);
     Promise.all(chosen.map((file) => uploadBioImage(profile.characterId, file)))
       .then((added) => setImages((current) => [...current, ...added]))
-      .catch((err: unknown) => setImageError(err instanceof Error ? err.message : String(err)))
+      .catch(imageFailed)
       .finally(() => setUploading(false));
   };
 
   const removeImage = (imageId: string) => {
-    setImageError(null);
     // Kept to put back if the removal fails (it may have been added since the page loaded).
     const removed = images.find((image) => image.id === imageId);
     setImages((current) => current.filter((image) => image.id !== imageId));
     deleteBioImage(profile.characterId, imageId).catch((err: unknown) => {
-      setImageError(err instanceof Error ? err.message : String(err));
+      imageFailed(err);
       if (removed) setImages((current) => [...current, removed]);
     });
   };
@@ -446,14 +462,12 @@ function BioEditor({ profile, onSaved }: { profile: CharacterProfile; onSaved: (
         <span className="muted">
           Up to {MAX_BIO_IMAGES} images — drag and drop, or click to browse.
         </span>
-        {imageError && <p className="status-error">{imageError}</p>}
       </div>
 
       <label className="field-toggle">
         <input type="checkbox" checked={visible} onChange={(e) => setVisible(e.target.checked)} />
         Visible to everyone
       </label>
-      {error && <p className="status-error">{error}</p>}
       <div className="form-actions">
         <button
           type="submit"
@@ -463,6 +477,7 @@ function BioEditor({ profile, onSaved }: { profile: CharacterProfile; onSaved: (
           {saving ? 'Saving…' : 'Save bio'}
         </button>
       </div>
+      <FormStatus error={error} />
     </form>
   );
 }

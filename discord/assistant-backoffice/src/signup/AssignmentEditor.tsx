@@ -1,5 +1,6 @@
 import { useState, type DragEvent, type FormEvent } from 'react';
 import { InlineSpinner } from '../Loading';
+import { FormStatus } from '../OneLine';
 import { MultiSelect } from '../MultiSelect';
 import type { Guild } from '../types';
 import { AssignmentLineView } from './AssignmentLineView';
@@ -299,7 +300,6 @@ export function AssignmentEditor({
         )}
       </div>
 
-      {error && <p className="status-error">{error}</p>}
       <div className="form-actions">
         <button type="submit" className="btn btn-primary" disabled={saving || uploading}>
           {saving ? (
@@ -314,6 +314,7 @@ export function AssignmentEditor({
           Cancel
         </button>
       </div>
+      <FormStatus error={error} />
     </form>
   );
 }

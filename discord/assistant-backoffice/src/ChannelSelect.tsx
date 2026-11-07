@@ -3,6 +3,7 @@ import { ChevronIcon } from './Icons';
 import { checkChannel, type ChannelUse } from './api';
 import { channelKey, splitChannelKey } from './channelKey';
 import { fuzzyWordsScore } from './fuzzy';
+import { showToast } from './toast';
 import type { ServerChannels } from './types';
 
 interface Props {
@@ -15,8 +16,9 @@ interface Props {
   required?: boolean;
   disabled?: boolean;
   /**
-   * Warn (one line under it) when the bot lacks what it needs in the chosen channel for this use;
-   * it never stops a save.
+   * Warn when the bot lacks what it needs in the chosen channel for this use (a mark in the
+   * button, the reason at the top of the list, and a note when it was just picked); it never
+   * stops a save.
    */
   check?: { guildId: string; use: ChannelUse };
 }
@@ -115,7 +117,17 @@ export function ChannelSelect({
       .flatMap((group) => group.channels.map((channel) => channelKey(group.serverId, channel.id)))
       .indexOf(key);
 
+  // What's wrong, shown in place (nothing appears under the picker, so nothing moves): a server
+  // whose channels couldn't be read, or what the bot lacks in the chosen channel.
+  const picked = useRef(false);
+  const missing = useChannelCheck(check, value, picked);
+  const problems = [
+    ...shown.filter((group) => group.error).map((group) => `${group.serverName}: ${group.error}`),
+    ...(missing ? [missing] : []),
+  ];
+
   const choose = (key: string) => {
+    picked.current = true;
     onChange(key);
     setOpen(false);
   };
@@ -142,9 +154,12 @@ export function ChannelSelect({
       <div className="dropdown channel-select" ref={root}>
         <button
           type="button"
-          className="dropdown-button"
+          className={
+            problems.length > 0 ? 'dropdown-button dropdown-button-warning' : 'dropdown-button'
+          }
           aria-haspopup="listbox"
           aria-expanded={open}
+          aria-description={problems.length > 0 ? problems.join(' ') : undefined}
           disabled={disabled}
           onClick={() => (open ? setOpen(false) : openMenu())}
         >
@@ -155,6 +170,11 @@ export function ChannelSelect({
                 ? 'Loading channels…'
                 : 'Choose a channel…'}
           </span>
+          {problems.length > 0 && (
+            <span className="channel-select-warning" title={problems.join('\n')} aria-hidden="true">
+              ⚠
+            </span>
+          )}
           <span className="select-chevron" aria-hidden="true">
             <ChevronIcon />
           </span>
@@ -172,6 +192,11 @@ export function ChannelSelect({
         )}
         {open && (
           <div className="dropdown-menu channel-select-menu">
+            {problems.map((problem) => (
+              <p key={problem} className="dropdown-hint channel-check" role="status">
+                {problem}
+              </p>
+            ))}
             <div className="search-field">
               <span className="search-icon" aria-hidden="true">
                 🔍
@@ -227,48 +252,51 @@ export function ChannelSelect({
           </div>
         )}
       </div>
-      {shown
-        .filter((group) => group.error)
-        .map((group) => (
-          <small key={group.serverId} className="status-error">
-            {group.serverName}: {group.error}
-          </small>
-        ))}
-      {check && value && <ChannelCheck guildId={check.guildId} use={check.use} value={value} />}
     </>
   );
 }
 
-/** "The bot is missing Send Messages in this channel.": what it lacks there, if anything. */
-function ChannelCheck({
-  guildId,
-  use,
-  value,
-}: {
-  guildId: string;
-  use: ChannelUse;
-  value: string;
-}) {
-  const [missing, setMissing] = useState<string[] | null>(null);
+/**
+ * "The bot is missing Send Messages in this channel.": what it lacks in the chosen channel, if
+ * anything (null when nothing, or it can't tell). A channel just picked (`picked`) that lacks
+ * something also says so in a note.
+ */
+function useChannelCheck(
+  check: { guildId: string; use: ChannelUse } | undefined,
+  value: string,
+  picked: { current: boolean },
+): string | null {
+  const [missing, setMissing] = useState<{ value: string; text: string } | null>(null);
+  const guildId = check?.guildId;
+  const use = check?.use;
   useEffect(() => {
+    if (!guildId || !use || !value) return;
     const { channelId } = splitChannelKey(value);
     let live = true;
-    setMissing(null);
     checkChannel(guildId, channelId, use)
-      .then((answer) => live && setMissing(answer.missing))
-      .catch(() => undefined); // can't tell: say nothing
+      .then((answer) => {
+        if (!live) return;
+        const lacking = answer.missing ?? [];
+        if (lacking.length === 0) {
+          setMissing(null);
+          return;
+        }
+        const names =
+          lacking.length === 1
+            ? lacking[0]
+            : `${lacking.slice(0, -1).join(', ')} and ${lacking[lacking.length - 1]}`;
+        const text = `The bot is missing ${names} in this channel.`;
+        setMissing({ value, text });
+        if (picked.current) showToast(text, 6000);
+      })
+      .catch(() => undefined) // can't tell: say nothing
+      .finally(() => {
+        picked.current = false;
+      });
     return () => {
       live = false;
     };
-  }, [guildId, use, value]);
-  if (!missing || missing.length === 0) return null;
-  const names =
-    missing.length === 1
-      ? missing[0]
-      : `${missing.slice(0, -1).join(', ')} and ${missing[missing.length - 1]}`;
-  return (
-    <small className="channel-check" role="status">
-      The bot is missing {names} in this channel.
-    </small>
-  );
+  }, [guildId, use, value, picked]);
+  // Only the answer for the channel chosen now counts.
+  return check && missing?.value === value ? missing.text : null;
 }

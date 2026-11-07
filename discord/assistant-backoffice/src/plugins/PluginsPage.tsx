@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { guildPath } from '../guildPath';
 import { Spinner } from '../Loading';
 import { formatWhen } from '../time';
+import { showToast } from '../toast';
 import type { Guild } from '../types';
 import { useChannels } from '../useChannels';
 import { useConfirm } from '../useConfirm';
@@ -38,7 +39,10 @@ export function PluginsPage({ guild, timezone }: Props) {
 
   const load = useCallback(() => {
     fetchPlugins(guild.id)
-      .then(setPlugins)
+      .then((loaded) => {
+        setPlugins(loaded);
+        setError(null);
+      })
       .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)));
   }, [guild.id]);
 
@@ -51,11 +55,11 @@ export function PluginsPage({ guild, timezone }: Props) {
     return () => clearInterval(timer);
   }, [guild.id, load]);
 
+  // A failed action is a note over the page: a banner would push the plugins down.
   const run = (action: Promise<unknown>) => {
-    setError(null);
     action
       .then(load)
-      .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)));
+      .catch((err: unknown) => showToast(err instanceof Error ? err.message : String(err), 8000));
   };
 
   const channelOf = (plugin: Plugin) =>
@@ -120,15 +124,6 @@ export function PluginsPage({ guild, timezone }: Props) {
         </div>
       </div>
 
-      {error && (
-        <div className="banner banner-error" role="alert">
-          <span>{error}</span>
-          <button type="button" className="btn btn-sm" onClick={() => setError(null)}>
-            Dismiss
-          </button>
-        </div>
-      )}
-
       <section className="plugin-catalog" aria-label="Plugins to add">
         {kinds.map((kind) => (
           <div key={kind.kind} className="plugin-kind">
@@ -148,7 +143,11 @@ export function PluginsPage({ guild, timezone }: Props) {
 
       <h4 className="plugin-list-title">This guild’s plugins</h4>
       {plugins === null ? (
-        <Spinner />
+        error ? (
+          <p className="status-error">{error}</p>
+        ) : (
+          <Spinner />
+        )
       ) : plugins.length === 0 ? (
         <p className="empty">No plugins yet: add one above.</p>
       ) : (

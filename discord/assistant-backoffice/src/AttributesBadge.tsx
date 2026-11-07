@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { AttributeChip } from './AttributeChip';
 import { ATTRIBUTE_COLORS, type GuildAttribute } from './types';
+import { useKeepInView } from './useKeepInView';
 
 /** How many colour dots before the rest is shown as "…". */
 const MAX_DOTS = 4;
@@ -20,6 +21,9 @@ export function AttributesBadge({
 }) {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLSpanElement>(null);
+  // Near the screen's right edge (a phone), it opens further left instead of being cut off.
+  const popover = useRef<HTMLSpanElement>(null);
+  useKeepInView(popover, open);
 
   useEffect(() => {
     if (!open) return;
@@ -57,7 +61,7 @@ export function AttributesBadge({
         {attributes.length > MAX_DOTS && <span className="attribute-dots-more">…</span>}
       </button>
       {open && (
-        <span className="attributes-popover" role="dialog" aria-label="Attributes">
+        <span className="attributes-popover" role="dialog" aria-label="Attributes" ref={popover}>
           <span className="attribute-chips">
             {attributes.map((attribute) => (
               <AttributeChip key={attribute.id} name={attribute.name} color={attribute.color} />

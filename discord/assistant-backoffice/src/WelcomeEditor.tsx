@@ -1,3 +1,4 @@
+import { FormStatus } from './OneLine';
 import { useState, type FormEvent } from 'react';
 import { saveHome } from './api';
 import { MarkdownView } from './MarkdownView';
@@ -15,12 +16,13 @@ interface Props {
 }
 
 /**
- * Writes the guild's welcome post in markdown, with the same Preview toggle as the Discord
- * posts. Saving an empty text removes the post. Used on the home editor and in Settings.
+ * Writes the guild's welcome post in markdown, with Write and Preview tabs like a post's messages
+ * and the bio editor. Saving an empty text removes the post. Used on the home editor and in
+ * Settings.
  */
 export function WelcomeEditor({ guildId, guildName, initial, onSaved, onCancel }: Props) {
   const [text, setText] = useState(initial);
-  const [preview, setPreview] = useState(false);
+  const [tab, setTab] = useState<'write' | 'preview'>('write');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -36,33 +38,49 @@ export function WelcomeEditor({ guildId, guildName, initial, onSaved, onCancel }
 
   return (
     <form onSubmit={submit}>
+      {/* Write and Preview take turns in the same place (a preview opening under the text would
+          push the buttons down), like the bio editor. */}
       <div className="field task-text">
-        <span className="task-text-head">
-          Welcome post (markdown)
-          <span className={text.length > MAX_LENGTH ? 'status-error' : 'muted'}>
+        <span>Welcome post (markdown)</span>
+        <div className="write-tabs" role="tablist">
+          {(['write', 'preview'] as const).map((value) => (
+            <button
+              key={value}
+              type="button"
+              role="tab"
+              aria-selected={tab === value}
+              className={tab === value ? 'write-tab write-tab-active' : 'write-tab'}
+              onClick={() => setTab(value)}
+            >
+              {value === 'write' ? 'Write' : 'Preview'}
+            </button>
+          ))}
+          <span
+            className={
+              text.length > MAX_LENGTH ? 'status-error write-tabs-count' : 'muted write-tabs-count'
+            }
+          >
             {text.length}/{MAX_LENGTH}
           </span>
-        </span>
-        <textarea
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          rows={12}
-          placeholder={`# Welcome to ${guildName}\n\nSay hello, share the rules, when we raid…`}
-        />
-        <div className="task-text-actions">
-          <button type="button" className="btn btn-sm" onClick={() => setPreview((p) => !p)}>
-            {preview ? 'Hide preview' : 'Preview'}
-          </button>
-          <span className="muted">Headings, **bold**, lists, links, tables and more.</span>
         </div>
-        {preview &&
-          (text.trim() === '' ? (
-            <p className="muted">Nothing to preview yet. Saving an empty post removes it.</p>
-          ) : (
-            <MarkdownView text={text} />
-          ))}
+        {tab === 'write' ? (
+          <textarea
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            rows={12}
+            placeholder={`# Welcome to ${guildName}\n\nSay hello, share the rules, when we raid…`}
+          />
+        ) : (
+          <div className="bio-page-card write-preview write-preview-tall">
+            {text.trim() === '' ? (
+              <p className="muted">Nothing to preview yet. Saving an empty post removes it.</p>
+            ) : (
+              <MarkdownView text={text} />
+            )}
+          </div>
+        )}
+        <span className="muted">Headings, **bold**, lists, links, tables and more.</span>
       </div>
-      {error && <p className="status-error">{error}</p>}
       <div className="form-actions">
         <button type="submit" className="btn btn-primary" disabled={saving}>
           {saving ? 'Saving…' : 'Save welcome post'}
@@ -73,6 +91,7 @@ export function WelcomeEditor({ guildId, guildName, initial, onSaved, onCancel }
           </button>
         )}
       </div>
+      <FormStatus error={error} />
     </form>
   );
 }

@@ -66,7 +66,6 @@ export function RosterPage({ guild, currentUser }: Props) {
   // The table's order: a column, A→Z or Z→A (`desc`). Rank (Officers first) unless changed.
   const [sort, setSort] = useState<{ by: SortColumn; desc: boolean }>({ by: 'rank', desc: false });
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [actionError, setActionError] = useState<string | null>(null);
   const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
   const here = useCurrentUrl();
 
@@ -195,21 +194,21 @@ export function RosterPage({ guild, currentUser }: Props) {
     [load, loadRanks],
   );
 
+  // A failed action is a note over the page (a banner would push the rows down, the row you
+  // acted on with them).
+  const failed = (err: unknown) =>
+    showToast(err instanceof Error ? err.message : String(err), 8000);
   const run = (action: Promise<unknown>) => {
-    setActionError(null);
-    action
-      .then(load)
-      .catch((err: unknown) => setActionError(err instanceof Error ? err.message : String(err)));
+    action.then(load).catch(failed);
   };
 
   // Removing a character takes a moment (it waits on the server): the row stays, dimmed and
   // disabled, with a spinner on the button, until it either disappears or the error shows.
   const runDelete = (characterId: string) => {
-    setActionError(null);
     setDeletingIds((prev) => new Set(prev).add(characterId));
     deleteCharacter(guild.id, characterId)
       .then(load)
-      .catch((err: unknown) => setActionError(err instanceof Error ? err.message : String(err)))
+      .catch(failed)
       .finally(() =>
         setDeletingIds((prev) => {
           const next = new Set(prev);
@@ -514,15 +513,6 @@ export function RosterPage({ guild, currentUser }: Props) {
         </div>
       </div>
 
-      {actionError && (
-        <div className="banner banner-error" role="alert">
-          <span>{actionError}</span>
-          <button type="button" className="btn btn-sm" onClick={() => setActionError(null)}>
-            Dismiss
-          </button>
-        </div>
-      )}
-
       {!players ? (
         <div className="table-wrap">
           <table>
@@ -598,22 +588,28 @@ export function RosterPage({ guild, currentUser }: Props) {
                 </span>
               )}
             </div>
-            {filtering && (
-              <div className="roster-filter-summary">
-                <span className="muted">
-                  {shown.length} of {rows.length} characters
-                </span>
-                {matchingRecipes > 0 && (
-                  <Link to={`${guildPath(guild, 'professions')}?q=${encodeURIComponent(query)}`}>
-                    {matchingRecipes} recipe{matchingRecipes === 1 ? '' : 's'} match: see who can
-                    craft {matchingRecipes === 1 ? 'it' : 'them'} →
-                  </Link>
-                )}
+            {/* Always there, one line: typing a search never moves the list. */}
+            <div className="roster-filter-summary">
+              <span className="muted">
+                {filtering
+                  ? `${shown.length} of ${rows.length} characters`
+                  : `${rows.length} character${rows.length === 1 ? '' : 's'}`}
+              </span>
+              {matchingRecipes > 0 && (
+                <Link
+                  to={`${guildPath(guild, 'professions')}?q=${encodeURIComponent(query)}`}
+                  title="See who can craft them on Professions"
+                >
+                  {matchingRecipes} recipe{matchingRecipes === 1 ? '' : 's'} match: see who can
+                  craft {matchingRecipes === 1 ? 'it' : 'them'} →
+                </Link>
+              )}
+              {filtering && (
                 <button type="button" className="btn btn-sm" onClick={clearFilters}>
                   Clear
                 </button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
           {shown.length === 0 ? (
             <p className="empty">No characters match.</p>

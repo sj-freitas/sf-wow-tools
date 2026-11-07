@@ -9,6 +9,8 @@ import { useChannels } from './useChannels';
 import { useConfirm } from './useConfirm';
 import { guildPath } from './guildPath';
 import { Spinner } from './Loading';
+import { DiscordName } from './DiscordName';
+import { showToast } from './toast';
 
 interface Props {
   guild: Guild;
@@ -25,7 +27,10 @@ export function HoneypotsPage({ guild, timezone }: Props) {
 
   const load = useCallback(() => {
     fetchHoneypots(guild.id)
-      .then(setHoneypots)
+      .then((loaded) => {
+        setHoneypots(loaded);
+        setError(null);
+      })
       .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)));
   }, [guild.id]);
 
@@ -35,11 +40,11 @@ export function HoneypotsPage({ guild, timezone }: Props) {
     return () => clearInterval(timer);
   }, [load]);
 
+  // A failed action is a note over the page: a banner would push the cards down.
   const run = (action: Promise<unknown>) => {
-    setError(null);
     action
       .then(load)
-      .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)));
+      .catch((err: unknown) => showToast(err instanceof Error ? err.message : String(err), 8000));
   };
 
   return (
@@ -57,17 +62,12 @@ export function HoneypotsPage({ guild, timezone }: Props) {
         </Link>
       </div>
 
-      {error && (
-        <div className="banner banner-error" role="alert">
-          <span>{error}</span>
-          <button type="button" className="btn btn-sm" onClick={() => setError(null)}>
-            Dismiss
-          </button>
-        </div>
-      )}
-
       {honeypots === null ? (
-        <Spinner />
+        error ? (
+          <p className="status-error">{error}</p>
+        ) : (
+          <Spinner />
+        )
       ) : honeypots.length === 0 ? (
         <p className="empty">No honeypot channels yet.</p>
       ) : (
@@ -99,9 +99,10 @@ export function HoneypotsPage({ guild, timezone }: Props) {
                     {event.action === 'WOULD_BAN' && 'Would ban'}
                     {event.action === 'BANNED' && 'Banned'}
                     {event.action === 'FAILED' && 'Could not ban'}{' '}
-                    <strong className="name-truncate" title={event.username ?? undefined}>
-                      {event.username ?? event.discordUserId}
-                    </strong>
+                    <DiscordName
+                      label={event.username ?? event.discordUserId}
+                      id={event.discordUserId}
+                    />
                     {event.error && <span className="status-error"> · {event.error}</span>}
                   </li>
                 ))}

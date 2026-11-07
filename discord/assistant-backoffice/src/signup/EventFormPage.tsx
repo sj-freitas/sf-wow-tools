@@ -5,6 +5,7 @@ import { ChannelSelect } from '../ChannelSelect';
 import { guildPath } from '../guildPath';
 import { Help } from '../Help';
 import { InlineSpinner, Spinner } from '../Loading';
+import { FormStatus } from '../OneLine';
 import type { Guild } from '../types';
 import { useChannels } from '../useChannels';
 import { TimezoneField } from '../TimezoneField';
@@ -218,32 +219,33 @@ export function EventFormPage({
               />
               At a date and time
             </label>
-            {postLater && (
-              <div className="signup-post-at">
-                <input
-                  type="date"
-                  aria-label="Posting date"
-                  value={publishDate}
-                  max={date || undefined}
-                  onChange={(e) => setPublishDate(e.target.value)}
-                  required
-                />
-                <input
-                  type="time"
-                  aria-label="Posting time"
-                  value={publishTime}
-                  onChange={(e) => setPublishTime(e.target.value)}
-                  required
-                />
-              </div>
-            )}
+            {/* Always there (usable once "At a date and time" is picked), so choosing moves
+                nothing. */}
+            <div className="signup-post-at">
+              <input
+                type="date"
+                aria-label="Posting date"
+                value={publishDate}
+                max={date || undefined}
+                onChange={(e) => setPublishDate(e.target.value)}
+                disabled={!postLater}
+                required={postLater}
+              />
+              <input
+                type="time"
+                aria-label="Posting time"
+                value={publishTime}
+                onChange={(e) => setPublishTime(e.target.value)}
+                disabled={!postLater}
+                required={postLater}
+              />
+            </div>
           </fieldset>
         )}
         {!editing && (
           <ChannelField guild={guild} settings={settings} value={channel} onChange={setChannel} />
         )}
       </div>
-      {error && <p className="status-error">{error}</p>}
       <div className="form-actions">
         <button
           type="submit"
@@ -267,6 +269,7 @@ export function EventFormPage({
         )}
         {actions}
       </div>
+      <FormStatus error={error} />
     </form>
   );
 }

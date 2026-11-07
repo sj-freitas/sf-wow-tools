@@ -5,6 +5,7 @@ import { ArchiveIcon, CalendarIcon, ClockIcon, LockIcon, MailIcon, PinIcon } fro
 import { subscribeEvents } from '../events';
 import { guildPath } from '../guildPath';
 import { SkeletonLines } from '../Loading';
+import { showToast } from '../toast';
 import type { Guild } from '../types';
 import { useConfirm } from '../useConfirm';
 import { AssignmentsTab } from './AssignmentsTab';
@@ -77,12 +78,13 @@ export function EventPage({ guild }: { guild: Guild }) {
     ...(organize ? [['missing', 'Not signed up'] as [Tab, string]] : []),
   ];
 
+  // A failed action is a note over the page: a line under the event's head would push its tabs
+  // and lists down.
   const act = (action: () => Promise<unknown>) => {
     setBusy(true);
-    setError(null);
     action()
       .then(load)
-      .catch((err: unknown) => setError(errorText(err)))
+      .catch((err: unknown) => showToast(errorText(err), 8000))
       .finally(() => setBusy(false));
   };
 
@@ -325,7 +327,6 @@ export function EventPage({ guild }: { guild: Guild }) {
               </button>
             </div>
           ) : null)}
-        {error && <p className="status-error">{error}</p>}
       </div>
 
       {/* The event's sections: tabs, or on a phone (where four tabs wrap) a dropdown, like the

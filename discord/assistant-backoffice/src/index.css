@@ -62,6 +62,10 @@ h3 {
   font-weight: 500;
   cursor: pointer;
   text-decoration: none;
+  /* A label never breaks onto a second line ("Saving…" for "Save" makes no row taller), and a
+     button is never wider than where it sits. */
+  max-width: 100%;
+  white-space: nowrap;
 }
 .btn:hover:not(:disabled) {
   background: var(--border);
@@ -176,7 +180,7 @@ h3 {
 }
 .feature-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
   gap: 1rem;
 }
 .feature {
@@ -320,6 +324,8 @@ h3 {
   margin: 0 auto;
   padding: 1.5rem;
   display: grid;
+  /* One column that never grows past the screen, whatever a long line inside wants. */
+  grid-template-columns: minmax(0, 1fr);
   gap: 1.25rem;
 }
 
@@ -375,10 +381,10 @@ h3 {
 }
 
 /* ---- table ---- */
+/* A table fits its container: cells wrap (never a sideways scroll), and nothing here is a scroll
+   container, so a menu or popover opened in a row is never cut off at the table's edge. */
 .table-wrap {
-  /* A safety net above the stacking breakpoint below; normal wrapping means it should never
-     actually need to scroll. */
-  overflow-x: auto;
+  max-width: 100%;
 }
 table {
   border-collapse: collapse;
@@ -390,9 +396,14 @@ td {
   padding: 0.7rem 1.25rem;
   border-bottom: 1px solid var(--border);
 }
-/* The roster table reads as one line per row above the stacking breakpoint. */
-.table-wrap th,
+/* A word longer than its column (a link) breaks; others wrap at their spaces. */
 .table-wrap td {
+  overflow-wrap: break-word;
+}
+/* Short things stay on one line: a class with its icon, a level, a rank, the row's buttons. */
+.table-wrap th,
+.table-wrap td.cell-compact,
+.table-wrap td.cell-actions {
   white-space: nowrap;
 }
 th {
@@ -506,7 +517,7 @@ tbody tr:last-child td {
 /* ---- form ---- */
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
   gap: 1rem;
 }
 /* Character form: three equal columns, one column on small screens. */
@@ -564,17 +575,25 @@ tbody tr:last-child td {
 .field-wide {
   grid-column: 1 / -1;
 }
+/* A checkbox with its label: a field's height, taller only when a long label wraps (a phone). */
 .field-toggle {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  height: var(--control-height);
-  padding: 0 0.7rem;
+  min-height: var(--control-height);
+  padding: 0.45rem 0.7rem;
   border: 1px solid var(--border);
   border-radius: 6px;
   background: var(--surface-2);
   color: var(--text);
   font-size: 0.9rem;
+}
+.field-toggle > input {
+  flex-shrink: 0;
+}
+/* A choice that doesn't apply yet (it is kept in its place, so nothing moves when it does). */
+.field-toggle:has(input:disabled) {
+  opacity: 0.6;
 }
 .checks {
   display: flex;
@@ -1016,6 +1035,7 @@ tbody tr:last-child td {
 }
 .tasks {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 1rem;
   padding: 1.25rem;
 }
@@ -1099,13 +1119,6 @@ tbody tr:last-child td {
   border-color: var(--danger);
   color: var(--danger);
 }
-/* In place of the reaction counts until they arrive: the height of a row of them. */
-.reactions-loading {
-  display: inline-flex;
-  align-items: center;
-  min-height: 2rem;
-  font-size: 0.85rem;
-}
 /* A post's message: its "Message N" label over its reactions. */
 .part-reactions {
   display: grid;
@@ -1180,6 +1193,7 @@ tbody tr:last-child td {
   background: var(--surface-2);
   font-size: 0.85rem;
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 .md-quote {
   margin: 0.2rem 0;
@@ -1266,9 +1280,11 @@ tbody tr:last-child td {
 .addon-export-dialog {
   width: min(640px, calc(100vw - 2rem));
 }
+/* Long lines wrap (no sideways scroll); copying still gives the lines as they are. */
 .addon-export-code {
   max-height: min(50vh, 420px);
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
   margin: 0 0 0.75rem;
   padding: 0.75rem 1rem;
   border: 1px solid var(--border);
@@ -1276,7 +1292,8 @@ tbody tr:last-child td {
   background: color-mix(in srgb, var(--text) 6%, var(--surface));
   font-size: 0.85rem;
   line-height: 1.5;
-  white-space: pre;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
   user-select: all;
 }
 .addon-export-code .lua-comment {
@@ -1489,9 +1506,11 @@ a.btn {
   background: var(--surface-2);
   font-size: 0.9em;
 }
+/* Code blocks and tables wrap inside the text's width: never a sideways scroll. */
 .markdown pre {
   padding: 0.8rem 1rem;
-  overflow-x: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--surface-2);
@@ -1506,17 +1525,17 @@ a.btn {
   border-left: 3px solid var(--border);
   color: var(--muted);
 }
+/* As wide as the text, its columns alike: a long link can't widen it past the screen. */
 .markdown table {
-  display: block;
-  overflow-x: auto;
-  width: max-content;
-  max-width: 100%;
+  width: 100%;
+  table-layout: fixed;
   margin: 0.8em 0;
 }
 .markdown th,
 .markdown td {
   padding: 0.4rem 0.75rem;
   border: 1px solid var(--border);
+  overflow-wrap: break-word;
 }
 .markdown hr {
   border: none;
@@ -1605,11 +1624,12 @@ a.btn {
 /* A character's page: armory/logs placeholder links (not real buttons yet). */
 .character-links {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
 }
 .character-links .disabled {
   opacity: 0.6;
-  cursor: default;
+  cursor: help;
 }
 
 /* ---- bio editor: Write/Preview tabs ---- */
@@ -1878,7 +1898,7 @@ a.btn {
 }
 .guild-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
   gap: 1rem;
 }
 /* The guild's logo beside its name and details. */
@@ -2069,6 +2089,23 @@ label.btn.disabled {
   border-bottom: 1px solid var(--border);
   text-align: left;
   vertical-align: top;
+  overflow-wrap: anywhere;
+}
+/* "ⓘ Show who reacted (live tags)": opens the help in a drawer. */
+.syntax-help-button {
+  align-self: flex-start;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.85rem;
+  text-align: left;
+  cursor: pointer;
+}
+.syntax-help-button:hover {
+  color: var(--text);
+  text-decoration: underline;
 }
 
 /* ---- posts made of several messages ---- */
@@ -2485,11 +2522,20 @@ label.btn.disabled {
   border-radius: 8px;
   background: var(--surface-2);
 }
+/* The new name's chip and the buttons: one line, so the chip appearing as you type moves nothing
+   (a long name is cut short). */
 .attribute-form-row {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
+}
+.attribute-form-row > .attribute-chip {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.attribute-form-row > .btn {
+  flex-shrink: 0;
 }
 .attribute-input {
   height: var(--control-height);
@@ -2674,12 +2720,12 @@ label.btn.disabled {
   font-size: 0.85rem;
 }
 /* The roster table's columns keep their widths whatever is in them: all but the character fixed
-   and narrow, the character taking what is left so its name shows whole. What doesn't fit
-   elsewhere is cut short (…); a Discord name shows whole on hover. Below the minimum width the
-   table scrolls (the phone list takes over at 720px). */
+   and narrow, the character taking what is left so its name shows whole. A Discord name is cut
+   short (…; a tap shows it), a rank wraps. Narrower than 960px the table would not fit, so the
+   card list takes over there (below): the table never scrolls sideways, and nothing around it
+   cuts off the attributes popover or a role's tooltip. */
 .roster-table table {
   table-layout: fixed;
-  min-width: 52rem;
 }
 .roster-table th,
 .roster-table td {
@@ -2693,7 +2739,7 @@ label.btn.disabled {
   padding-right: 0.6rem;
 }
 .roster-table .col-class {
-  width: 8.5rem;
+  width: 9.5rem;
 }
 .roster-table .col-roles {
   width: 6rem;
@@ -2714,6 +2760,9 @@ label.btn.disabled {
 .roster-table .discord-name .name-truncate {
   max-width: 100%;
 }
+.roster-table td.cell-detail {
+  white-space: normal;
+}
 /* The roles cell lets its icons' tooltips out. */
 .roster-table td.cell-roles {
   overflow: visible;
@@ -2730,13 +2779,15 @@ label.btn.disabled {
   overflow-wrap: anywhere;
   vertical-align: middle;
 }
-@media (max-width: 720px) {
+@media (max-width: 960px) {
   .roster-list {
     display: block;
   }
   .roster-table {
     display: none;
   }
+}
+@media (max-width: 720px) {
   .tasks {
     padding: 1rem;
   }
@@ -2791,11 +2842,25 @@ label.btn.disabled {
   width: 1rem;
   height: 1rem;
 }
+/* How many match, a link to matching recipes, Clear: always there and always one line, so typing
+   a search never moves the list under it. */
 .roster-filter-summary {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   gap: 0.6rem;
+  min-height: 1.85rem;
+  white-space: nowrap;
+}
+.roster-filter-summary > * {
+  flex-shrink: 0;
+}
+/* The recipes link takes what is left, cut short (…); its length never widens the page. */
+.roster-filter-summary > a {
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  contain: inline-size;
 }
 
 /* ---- plugins (plugins/PluginsPage) ---- */
@@ -2912,7 +2977,7 @@ a.character-guild:hover {
 /* A guild the viewer isn't in: shown, not a link. */
 .character-guild-other {
   color: var(--muted);
-  cursor: default;
+  cursor: help;
 }
 .character-guild .guild-icon {
   width: 28px;
@@ -3071,19 +3136,6 @@ a.character-guild:hover {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.armory-import-error {
-  display: block;
-  max-width: 100%;
-  padding: 0;
-  border: none;
-  background: none;
-  font: inherit;
-  text-align: left;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  cursor: help;
-}
 /* The picked player (and its "(guess)") is one line too, cut short with … */
 .armory-import-player .picked-player > span:first-child {
   min-width: 0;
@@ -3098,4 +3150,130 @@ a.character-guild:hover {
   .armory-import-table td.cell-name small {
     max-width: 100%;
   }
+}
+
+/* ---- one line of text (OneLine): cut short with …, the whole text on hover or a tap ---- */
+/* The look comes from where it is (a muted line, an error): only its own resets are here, with no
+   weight, so any class given to it wins. */
+:where(.one-line) {
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: help;
+}
+.one-line {
+  display: block;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* As wide as where it is, never wider: its text (on one line) doesn't count towards how wide the
+   things around it must be, so it can't push a grid or a drawer past the screen. */
+.one-line:not(.one-line-inline) {
+  /* A button shrinks to its text even as a block: as wide as where it is, then. */
+  width: 100%;
+  contain: inline-size;
+}
+.one-line-inline {
+  display: inline-block;
+  vertical-align: bottom;
+}
+.reactions > .one-line {
+  flex: 1 1 auto;
+}
+/* A form's error after a save (FormStatus): its line is always kept, under the buttons. */
+.form-status {
+  min-height: 1.5em;
+  margin: 0.5rem 0 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+/* A badge that explains itself on a tap (its tooltip, as a note). */
+.badge-button {
+  font-family: inherit;
+  cursor: help;
+}
+/* An officer request's author: cut short like a Discord name. */
+.bubble-author {
+  max-width: 12em;
+  font-weight: 600;
+}
+
+/* ---- a post's reactions (ReactionsPanel): one row, who reacted over the page ---- */
+.reactions {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 2rem;
+  font-size: 0.85rem;
+}
+.reactors-popover {
+  position: absolute;
+  z-index: 6;
+  top: calc(100% + 4px);
+  left: 0;
+  width: max-content;
+  max-width: min(22rem, calc(100vw - 3rem));
+  max-height: 14rem;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: 0 8px 24px color-mix(in srgb, #000 25%, transparent);
+}
+
+/* ---- a channel picker's warning (ChannelSelect): a mark in the button, the text in its list ---- */
+.dropdown-button-warning {
+  border-color: var(--danger);
+}
+.channel-select-warning {
+  flex-shrink: 0;
+  margin-left: auto;
+  color: var(--danger);
+}
+.channel-select-menu .channel-check {
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0.35rem 0.5rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.8rem;
+}
+
+/* ---- an officer's reply: the image button keeps its width, whatever the file's name ---- */
+.reply-attach {
+  justify-content: center;
+  width: 10rem;
+}
+.reply-attach-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.reply-attach-remove:disabled {
+  visibility: hidden;
+}
+
+/* ---- a message's Preview tab (PostPartEditor): about the textarea's height ---- */
+.part-preview {
+  display: grid;
+}
+/* The welcome post's Preview tab: about the height of its textarea. */
+.write-preview-tall {
+  min-height: 14rem;
+}
+/* Under "Load from armory" (CharacterForm): one line, always there. */
+.armory-load-status {
+  display: block;
+  min-width: 0;
+  min-height: 1.5em;
+  line-height: 1.5;
 }

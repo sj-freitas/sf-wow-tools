@@ -180,11 +180,17 @@
   align-items: center;
   gap: 0.75rem;
 }
+/* A long character name wraps rather than pushing the button past the screen's edge. */
 .guild-recipe-crafters li a:first-child {
   flex-shrink: 0;
+  max-width: 55%;
+  overflow-wrap: anywhere;
 }
-/* A long Discord name is cut short (…) rather than pushing the button to its own line. */
+/* A long Discord name is cut short (…) rather than pushing the button to its own line, or the
+   list past the screen: it takes the room left between the name and the button. */
 .crafter-discord {
+  flex: 1 1 0;
+  contain: inline-size;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;

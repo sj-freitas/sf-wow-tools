@@ -38,3 +38,8 @@
   padding-top: 0.5rem;
   border-top: 1px solid var(--border);
 }
+/* "Main server" is on every card, usable once two or more servers are picked (so picking one
+   never makes the cards taller). */
+.server-card-main:has(input:disabled) {
+  opacity: 0.55;
+}

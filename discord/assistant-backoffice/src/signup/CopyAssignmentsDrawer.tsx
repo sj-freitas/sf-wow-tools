@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { InlineSpinner, Spinner } from '../Loading';
+import { FormStatus } from '../OneLine';
 import type { Guild } from '../types';
 import { scopeHeading } from './assignmentText';
 import { Drawer } from '../Drawer';
@@ -123,7 +124,6 @@ export function CopyAssignmentsDrawer({
               {event.assignments.some((a) => a.postUrl) &&
                 ' This event’s assignments are in Discord, so the copies are posted too.'}
             </p>
-            {error && <p className="status-error">{error}</p>}
             <div className="form-actions">
               <button
                 type="button"
@@ -143,6 +143,7 @@ export function CopyAssignmentsDrawer({
                 Cancel
               </button>
             </div>
+            <FormStatus error={error} />
           </>
         )}
       </div>

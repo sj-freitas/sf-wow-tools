@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { InlineSpinner } from '../Loading';
+import { showToast } from '../toast';
 import type { Guild } from '../types';
 import { useConfirm } from '../useConfirm';
 import { AssignmentEditor } from './AssignmentEditor';
@@ -33,19 +34,17 @@ export function AssignmentsTab({
   const organize = event.permissions.canOrganize;
   const [editing, setEditing] = useState<Assignment | 'new' | null>(null);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [copying, setCopying] = useState(false);
-  const [notice, setNotice] = useState<string | null>(null);
   const { confirm, dialog } = useConfirm();
   const assignments = event.assignments;
   const posted = assignments.filter((a) => a.postUrl).length;
 
   const run = (action: () => Promise<unknown>) => {
     setBusy(true);
-    setError(null);
+    // A failure is a note over the page: a line above the assignments would push them down.
     action()
       .then(onChanged)
-      .catch((err: unknown) => setError(errorText(err)))
+      .catch((err: unknown) => showToast(errorText(err), 8000))
       .finally(() => setBusy(false));
   };
 
@@ -126,15 +125,13 @@ export function AssignmentsTab({
           </div>
         </div>
       )}
-      {error && <p className="status-error">{error}</p>}
-      {notice && <p className="muted">{notice}</p>}
       {copying && (
         <CopyAssignmentsDrawer
           guild={guild}
           event={event}
           onClose={() => setCopying(false)}
           onCopied={(message) => {
-            setNotice(message);
+            showToast(message, 6000);
             void onChanged();
           }}
         />

@@ -186,24 +186,26 @@ export function RecurringEventForm({
               />
               At a date and time
             </label>
-            {firstLater && (
-              <div className="signup-post-at">
-                <input
-                  type="date"
-                  aria-label="First post date"
-                  value={firstDate}
-                  onChange={(e) => setFirstDate(e.target.value)}
-                  required
-                />
-                <input
-                  type="time"
-                  aria-label="First post time"
-                  value={firstTime}
-                  onChange={(e) => setFirstTime(e.target.value)}
-                  required
-                />
-              </div>
-            )}
+            {/* Always there (usable once "At a date and time" is picked), so choosing moves
+                nothing. */}
+            <div className="signup-post-at">
+              <input
+                type="date"
+                aria-label="First post date"
+                value={firstDate}
+                onChange={(e) => setFirstDate(e.target.value)}
+                disabled={!firstLater}
+                required={firstLater}
+              />
+              <input
+                type="time"
+                aria-label="First post time"
+                value={firstTime}
+                onChange={(e) => setFirstTime(e.target.value)}
+                disabled={!firstLater}
+                required={firstLater}
+              />
+            </div>
             <small>
               {firstLater
                 ? `Then (${zoneLabel}) it posts the event for the next ${WEEKDAYS[eventWeekday - 1]} at ${eventTime}. `

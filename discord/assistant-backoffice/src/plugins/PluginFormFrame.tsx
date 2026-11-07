@@ -1,5 +1,6 @@
 import type { FormEvent, ReactNode } from 'react';
 import { Link } from 'react-router-dom';
+import { FormStatus } from '../OneLine';
 import type { Guild } from '../types';
 import type { Plugin, PluginKind } from './pluginsApi';
 
@@ -39,7 +40,6 @@ export function PluginFormFrame({
         <h3>{title}</h3>
         <p className="muted">{intro}</p>
         {children}
-        {error && <p className="status-error">{error}</p>}
         <div className="form-actions">
           <Link className="btn" to={back}>
             Cancel
@@ -48,6 +48,7 @@ export function PluginFormFrame({
             {editing ? 'Save' : 'Add'}
           </button>
         </div>
+        <FormStatus error={error} />
       </form>
     </div>
   );

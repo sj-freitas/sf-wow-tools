@@ -12,6 +12,7 @@ import { ClassMark } from './ClassMark';
 import { guildPath } from './guildPath';
 import { InlineSpinner, SkeletonLines } from './Loading';
 import { MarkdownView } from './MarkdownView';
+import { FormStatus } from './OneLine';
 import { timeAgo } from './time';
 import type { Guild, OfficerNote } from './types';
 import { useReturnTo } from './useReturnTo';
@@ -221,7 +222,6 @@ export function OfficerNotePage({ guild }: { guild: Guild }) {
         </span>
       </div>
 
-      {error && <p className="status-error">{error}</p>}
       <div className="form-actions">
         <button
           type="submit"
@@ -234,6 +234,7 @@ export function OfficerNotePage({ guild }: { guild: Guild }) {
           Cancel
         </Link>
       </div>
+      <FormStatus error={error} />
     </form>
   );
 }
