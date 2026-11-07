@@ -447,6 +447,20 @@ export class CharactersService {
       if (allowed && !allowed.includes(character.class)) return 'race-not-for-class';
     }
 
+    // A name is unique on its server, whoever plays it. Checked before the player is registered, so a
+    // refused name leaves no player behind; the unique index still catches two at the same moment.
+    const taken = await this.prisma.character.findFirst({
+      where: {
+        gameVersion: guild.gameVersion,
+        region: guild.region,
+        realm: guild.realm,
+        firstName: character.firstName,
+        lastName: character.lastName,
+      },
+      select: { id: true },
+    });
+    if (taken) return 'duplicate';
+
     const player = await this.upsertPlayer(discordUserId, names);
 
     try {

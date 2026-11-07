@@ -14,7 +14,7 @@ import {
 } from '../auth/access-rules';
 import { GuildAccessService } from '../auth/guild-access.service';
 import { isWowClass } from '../game/games';
-import { parseCharacterName } from './character-name';
+import { formatCharacterName, parseCharacterName } from './character-name';
 import {
   CharactersService,
   type CharacterSummary,
@@ -66,7 +66,9 @@ export class CharacterActionsService {
       discordUserId.names,
     );
     if (result === 'duplicate') {
-      throw new ConflictException('That player already has a character with this name');
+      throw new ConflictException(
+        `There is already a character called ${formatCharacterName(name)} on this server`,
+      );
     }
     if (result === 'no-guild') {
       throw new NotFoundException('Guild not found');
@@ -161,7 +163,7 @@ export class CharacterActionsService {
       await this.charactersService.update(id, patch, newOwner);
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-        throw new ConflictException('That player already has a character with this name');
+        throw new ConflictException('There is already a character with this name on this server');
       }
       throw error;
     }

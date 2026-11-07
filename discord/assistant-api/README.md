@@ -634,8 +634,8 @@ characters and sets `verified_at` (and moves the character to that player); unti
 Which characters are mains is up to each guild: an Officer gives them a guild attribute (e.g.
 "Main") on the roster. An **Officer** can also move a character to another Discord
 user (the Discord user field of the edit form, or `discordUserId` in `PATCH /api/characters/:id`): the
-user must be in one of the guild's servers, the other player having a character with the same name is
-refused, and the previous player is removed once it has no characters left. Members cannot move
+user must be in one of the guild's servers, and the previous player is removed once it has no characters
+left. Members cannot move
 characters, not even their own.
 
 After changing `src/bot/commands.json`, run `npm run commands:register`. The class choices of
@@ -781,8 +781,10 @@ and because the same character might raid with more than one guild.
   faction: a race of both factions (like WoW's Pandaren) would have the same race string in both
   `factions.Alliance.races` and `factions.Horde.races` in the config. (Forever's Skyborne are two races,
   High Order Skyborne for the Alliance and Windshaper Skyborne for the Horde.) `faction` is set from the guild's when a character is created, and changes only on a
-  deliberate edit (a "faction change": `CharacterUpdate.faction`). Its name is unique **per player and
-  server** (`characters_unique_per_server`), not per guild.
+  deliberate edit (a "faction change": `CharacterUpdate.faction`). Its name is unique **per server**
+  (`characters_unique_per_server`: version, region, server, name and last name), whoever plays it, as in
+  the game; in Forever a server is a rule set. Adding or renaming to a name already taken there is refused
+  ("There is already a character called … on this server").
 - **`CharacterGuildMembership`** (`character_id`, `guild_id`) is the roster entry. **Removing a character
   from a guild's roster deletes this row, not the character** — `CharactersService.removeFromGuild`. The
   character (and its bio, and its other memberships, if any) are untouched.
@@ -849,8 +851,7 @@ bio's permission model is different from the rest of the character.
   them to the exact stored casing); `namePath` is `Name-Lastname` for a version with last names,
   `Name` otherwise, split on the first dash, matched case-insensitively among **all** characters of
   that server — not scoped to any one guild, since the page isn't either. Character names are unique
-  per player and server, not globally, so two different players could in principle share one; this
-  returns whichever matches first.
+  per server, so it is that one.
 - **Visible globally, not at the guild level.** Whether the viewer can see the bio depends only on
   `bioVisible` (and whether they are the owner) — never on which guild, if any, they share with the
   character. `bioSupported` in the response is `false` when the server's rule set isn't `'RP'`: the

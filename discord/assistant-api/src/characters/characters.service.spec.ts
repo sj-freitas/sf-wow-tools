@@ -28,6 +28,8 @@ describe('CharactersService last name rule', () => {
   let upserts: any[];
   let removedPlayers: string[];
   let charactersLeft: number;
+  let nameTaken: boolean;
+  let nameQueries: unknown[];
   let service: CharactersService;
 
   beforeEach(() => {
@@ -41,6 +43,8 @@ describe('CharactersService last name rule', () => {
     upserts = [];
     removedPlayers = [];
     charactersLeft = 0;
+    nameTaken = false;
+    nameQueries = [];
     const prisma = {
       guild: {
         findFirst: async () => ({ id: 'g', gameVersion, faction, region: 'EU', realm: 'RP' }),
@@ -54,6 +58,11 @@ describe('CharactersService last name rule', () => {
         deleteMany: async (args: any) => void removedPlayers.push(args.where.id),
       },
       character: {
+        // Whether the name is taken on the server (by anyone).
+        findFirst: async (args: any) => {
+          nameQueries.push(args.where);
+          return nameTaken ? { id: 'someone-elses' } : null;
+        },
         create: async (args: any) => {
           created.push(args.data);
           return { id: 'new-char' };
@@ -86,6 +95,23 @@ describe('CharactersService last name rule', () => {
     it('stores a character with a last name in Forever', async () => {
       assert.equal(await service.add(owner, newCharacter), 'created');
       assert.equal(created[0].lastName, 'Menethil');
+    });
+
+    it('refuses a name already on the server, whoever plays it, before registering the player', async () => {
+      nameTaken = true;
+      assert.equal(await service.addToGuild('g', 'someone-else', newCharacter), 'duplicate');
+      assert.deepEqual(nameQueries, [
+        {
+          gameVersion: 'Forever',
+          region: 'EU',
+          realm: 'RP',
+          firstName: 'Arthas',
+          lastName: 'Menethil',
+        },
+      ]);
+      // No player left behind for a refused name.
+      assert.deepEqual(upserts, []);
+      assert.deepEqual(created, []);
     });
 
     it('rejects a character without a last name in Forever, and stores nothing', async () => {

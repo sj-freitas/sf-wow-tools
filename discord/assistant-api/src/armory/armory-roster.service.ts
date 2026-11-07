@@ -111,7 +111,7 @@ export class ArmoryRosterService {
           displayName: character.player.discordDisplayName,
         },
       };
-      // Two players with a character of the same name: the one on this roster is the one.
+      // A name is unique on a server; should two differ only in case, the one on this roster wins.
       if (!byName.get(key)?.inGuild) byName.set(key, known);
     }
 

@@ -65,7 +65,8 @@ export class CharactersCommand {
     if (result === 'unknown-race') return `${race} is not a race of this guild's faction.`;
     if (result === 'race-not-for-class')
       return `A ${race} in this guild's game version cannot be a ${characterClass}.`;
-    if (result === 'duplicate') return `You already have a character named ${label}.`;
+    if (result === 'duplicate')
+      return `There is already a character named ${label} on this server.`;
     return `Added ${label} (${race} ${characterClass}, ${ROLE_LABELS[role]}).`;
   }
 

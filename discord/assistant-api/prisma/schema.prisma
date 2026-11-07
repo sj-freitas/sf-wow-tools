@@ -234,7 +234,11 @@ model Character {
   createdAt          DateTime                   @default(now()) @map("created_at")
   updatedAt          DateTime                   @updatedAt @map("updated_at")
 
-  @@unique([playerId, gameVersion, region, realm, firstName, lastName], map: "characters_unique_per_server")
+  // A name is unique on its server (in Forever, a server is a rule set), whoever plays it: the
+  // game has one character per name there. A version whose servers share a rule set would need
+  // the API to check the other servers of it too.
+  @@unique([gameVersion, region, realm, firstName, lastName], map: "characters_unique_per_server")
+  @@index([playerId])
   @@index([armoryCheckedAt])
   @@map("characters")
 }
