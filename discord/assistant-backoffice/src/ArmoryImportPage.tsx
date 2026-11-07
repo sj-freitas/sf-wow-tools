@@ -47,17 +47,24 @@ const simplify = (text: string): string =>
     .replace(/[^\p{L}]/gu, '');
 
 /**
- * Who probably plays a character: the one guild member whose Discord name is its name (or full
- * name), or starts with it for a name of 4 letters or more. Nobody when none or several are.
+ * Who probably plays a character: the one guild member whose Discord name is its name, last name
+ * or full name, or starts with its name for a name of 4 letters or more. Nobody when none or
+ * several are.
  */
 function suggestPlayer(member: ArmoryGuildMember, people: Person[]): Person | null {
   const first = simplify(member.name);
-  const full = simplify(member.name + member.lastName);
+  const last = simplify(member.lastName);
+  const full = first + last;
   if (first.length < 2) return null;
   const matches = people.filter((person) =>
     [person.username, person.displayName].some((name) => {
       const simple = name ? simplify(name) : '';
-      return simple === first || simple === full || (first.length >= 4 && simple.startsWith(first));
+      return (
+        simple === first ||
+        simple === full ||
+        (last.length >= 2 && simple === last) ||
+        (first.length >= 4 && simple.startsWith(first))
+      );
     }),
   );
   return matches.length === 1 ? matches[0] : null;
@@ -66,8 +73,9 @@ function suggestPlayer(member: ArmoryGuildMember, people: Person[]): Person | nu
 /**
  * `/roster/armory` (Officers): the guild's members in its version's armory, next to the roster.
  * Those not on it are added for the Discord user an Officer picks (a guess is filled in when one
- * member's Discord name is the character's): race, class and level from the armory, roles from its
- * talents (the class's first spec without any), through the same endpoint as "Add character". A
+ * member's Discord name is the character's name, last name or full name): race, class and level
+ * from the armory, roles from its talents (the class's first spec without any), through the same
+ * endpoint as "Add character". A
  * character we already have on the guild's server (another guild's) is added as it is, for its own
  * player.
  */
@@ -212,7 +220,7 @@ export function ArmoryImportPage({ guild, currentUser }: Props) {
     const key = keyOf(member);
     const suggestion = suggestions.get(key);
     return (
-      <div className="armory-import-player">
+      <div className="field armory-import-player">
         <PlayerPicker
           guildId={guild.id}
           people={people ?? undefined}
@@ -227,7 +235,7 @@ export function ArmoryImportPage({ guild, currentUser }: Props) {
           }
         />
         {suggestion && !picks.has(key) && (
-          <small className="muted">A guess: their Discord name is the character’s.</small>
+          <small className="muted">A guess, from their Discord name.</small>
         )}
       </div>
     );

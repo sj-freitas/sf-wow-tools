@@ -3051,10 +3051,13 @@ a.character-guild:hover {
   padding: 0.6rem 0.75rem;
   white-space: normal;
 }
-/* The Discord user column holds a search box: room for it, and its notes wrap. */
+/* A class's icon and name stay on one line. */
+.armory-import-table td.cell-compact {
+  white-space: nowrap;
+}
+/* The Discord user column holds a search box (a .field, so it looks like every other input):
+   room for it, and its notes wrap. */
 .armory-import-player {
-  display: grid;
-  gap: 0.25rem;
   min-width: 15rem;
   white-space: normal;
 }

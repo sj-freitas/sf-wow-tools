@@ -754,8 +754,8 @@ user who plays each, without typing them in one by one.
   are sorted by rank, then name.
 - **Adding:** the page does it with the endpoints the character form uses, so the same rules apply. For a
   member we don't have, an Officer picks the Discord user (a guess is filled in when exactly one member of
-  the guild's servers has the character's name, or full name, as their Discord name); the page looks the
-  character up (`armory/character`, for its specs) and adds it (`POST characters` with `discordUserId`):
+  the guild's servers has the character's name, last name or full name as their Discord name); the page
+  looks the character up (`armory/character`, for its specs) and adds it (`POST characters` with `discordUserId`):
   race, class and level from the armory, roles from its talents (the class's first spec without any). A
   known character is added as it is, for its own player (`POST characters/:id/migrate`). One at a time or
   all those with a player at once, each row saying what went wrong, if anything.
