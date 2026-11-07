@@ -15,8 +15,13 @@ interface Props {
   initial?: { discordId: string; label: string };
   /** The guild's people, when the page already has them (one picker per row): not fetched again. */
   people?: People;
-  /** In a table row: no notes under the search box (the page explains once). */
+  /**
+   * In a table row: nothing under the search box, so the row never changes height ("no player
+   * matches" shows in the results overlay instead; the page explains the rest once).
+   */
   compact?: boolean;
+  /** A word after the selected name, its explanation on hover (a guessed player: "guess"). */
+  pickedNote?: { text: string; title: string };
 }
 
 const NO_PEOPLE: People = { source: 'servers', people: [] };
@@ -40,6 +45,7 @@ export function PlayerPicker({
   initial,
   people: given,
   compact = false,
+  pickedNote,
 }: Props) {
   const [loaded, setLoaded] = useState<People | null>(null);
   const { people, source } = given ?? loaded ?? NO_PEOPLE;
@@ -114,6 +120,12 @@ export function PlayerPicker({
         <span>
           <DiscordName label={value === self.discordId ? self.label : pickedLabel} id={value} />
           {value === self.discordId && <span className="muted"> (you)</span>}
+          {pickedNote && (
+            <span className="muted picked-note" title={pickedNote.title}>
+              {' '}
+              ({pickedNote.text})
+            </span>
+          )}
         </span>
         <button type="button" className="btn btn-sm" onClick={change}>
           Change player
@@ -157,7 +169,7 @@ export function PlayerPicker({
           Nobody is selected. Type to search the guild's players, then pick one from the results.
         </small>
       )}
-      {searching && matches.length === 0 && !idOption && (
+      {searching && matches.length === 0 && !idOption && !compact && (
         <small className="muted">No player matches “{query.trim()}”.</small>
       )}
       {source === 'known' && !compact && (
@@ -190,6 +202,12 @@ export function PlayerPicker({
             </button>
           )}
           {onlyResult && <div className="dropdown-hint muted">Press Tab to select</div>}
+        </div>
+      )}
+      {/* Compact: over the row, like the results, rather than under the box. */}
+      {compact && open && searching && matches.length === 0 && !idOption && (
+        <div className="dropdown-menu" role="status">
+          <div className="dropdown-hint muted">No player matches “{query.trim()}”.</div>
         </div>
       )}
     </div>

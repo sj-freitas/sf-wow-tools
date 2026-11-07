@@ -233,10 +233,12 @@ export function ArmoryImportPage({ guild, currentUser }: Props) {
               ? { discordId: suggestion.discordUserId, label: personLabel(suggestion) }
               : undefined
           }
+          pickedNote={
+            suggestion && !picks.has(key)
+              ? { text: 'guess', title: 'A guess, from their Discord name: check it is them' }
+              : undefined
+          }
         />
-        {suggestion && !picks.has(key) && (
-          <small className="muted">A guess, from their Discord name.</small>
-        )}
       </div>
     );
   };
@@ -268,14 +270,32 @@ export function ArmoryImportPage({ guild, currentUser }: Props) {
         }
         onClick={() => void run([member])}
       >
-        {state?.status === 'busy' ? <InlineSpinner /> : known ? 'Add to roster' : 'Import'}
+        {state?.status === 'busy' ? (
+          <InlineSpinner label="Adding…" />
+        ) : known ? (
+          'Add to roster'
+        ) : (
+          'Import'
+        )}
       </button>
     );
   };
 
   const statusLine = (member: ArmoryGuildMember) => {
     const state = states.get(keyOf(member));
-    if (state?.status === 'error') return <span className="status-error">{state.message}</span>;
+    if (state?.status === 'error') {
+      // One line, like every row's status: the whole message on hover, or as a note on a click.
+      return (
+        <button
+          type="button"
+          className="armory-import-error status-error"
+          title={state.message}
+          onClick={() => showToast(state.message, 8000)}
+        >
+          {state.message}
+        </button>
+      );
+    }
     if (member.character?.inGuild) return <span className="muted">On the roster</span>;
     if (member.character) return <span className="muted">Known, in another guild</span>;
     return <span className="muted">Not on the roster</span>;
@@ -399,7 +419,9 @@ export function ArmoryImportPage({ guild, currentUser }: Props) {
                       <td data-label="Level" className="cell-compact cell-level">
                         {member.level}
                       </td>
-                      <td data-label="Guild rank">{rankLabel(member.rank)}</td>
+                      <td data-label="Guild rank" className="cell-compact">
+                        {rankLabel(member.rank)}
+                      </td>
                       <td data-label="Discord user">{playerCell(member)}</td>
                       <td className="cell-actions">{actionCell(member)}</td>
                     </tr>
@@ -424,7 +446,8 @@ export function ArmoryImportPage({ guild, currentUser }: Props) {
           <p className="muted">
             The guild’s members in Blizzard’s armory. Pick who plays each one that isn’t on the
             roster and add it: race, class and level come from the armory, roles from its talents
-            (check them after).
+            (check them after). A player marked “(guess)” has the character’s name as their Discord
+            name: check it’s them.
           </p>
         </div>
       </div>

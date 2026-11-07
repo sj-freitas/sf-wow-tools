@@ -26,7 +26,9 @@ one Botlog task (project GA, `create_task`):
     profession), and who sees it if it depends on the role (owner, Officer, member).
   - **Try**: numbered steps, each with what should happen.
   - **Also check**: the edge cases that matter (a phone-width window, light/dark, nothing to show,
-    a long name, someone without the right).
+    a long name, someone without the right), and the **ui-rules** skill's three rules for the
+    backoffice: no sideways scroll at a phone width, and rows that stay put while searching,
+    picking, loading or showing an error.
   - **Needs first**, when it does: what the deploy doesn't do (`npm run commands:register`, an
     addon upload). Changes are pushed and deployed before the ticket is created (see CLAUDE.md).
 

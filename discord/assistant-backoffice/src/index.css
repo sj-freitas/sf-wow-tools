@@ -3051,8 +3051,10 @@ a.character-guild:hover {
   padding: 0.6rem 0.75rem;
   white-space: normal;
 }
-/* A class's icon and name stay on one line. */
-.armory-import-table td.cell-compact {
+/* A class's icon and name, a rank and the row's button stay on one line: a button's label changing
+   ("Adding…") never makes the row taller. */
+.armory-import-table td.cell-compact,
+.armory-import-table td.cell-actions {
   white-space: nowrap;
 }
 /* The Discord user column holds a search box (a .field, so it looks like every other input):
@@ -3061,12 +3063,39 @@ a.character-guild:hover {
   min-width: 15rem;
   white-space: normal;
 }
+/* A row's status under its name is always one line, so no message changes the row's height. */
 .armory-import-table td.cell-name small {
   display: block;
-  white-space: normal;
+  max-width: 16rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.armory-import-error {
+  display: block;
+  max-width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: help;
+}
+/* The picked player (and its "(guess)") is one line too, cut short with … */
+.armory-import-player .picked-player > span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 @media (max-width: 720px) {
   .armory-import-player {
     min-width: 0;
+  }
+  .armory-import-table td.cell-name small {
+    max-width: 100%;
   }
 }
