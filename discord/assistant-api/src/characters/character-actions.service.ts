@@ -37,11 +37,22 @@ export class CharacterActionsService {
     private readonly guildAccess: GuildAccessService,
   ) {}
 
-  /** Adds a new character, the user's or (for an Officer) another member's by `discordUserId`. */
+  /**
+   * Adds a new character: the user's, (for an Officer) another member's by `discordUserId`, or (for
+   * an Officer, `unclaimed: true`) no one's yet. A name an unclaimed character has on the server
+   * claims that one instead, for whoever it is being added for.
+   */
   async create(user: SessionUser, guildId: string, body: Record<string, unknown>): Promise<void> {
     const access = await this.guildAccess.find(user.id, guildId);
     if (!access) {
       throw new ForbiddenException('You are not a member of this guild');
+    }
+    const unclaimed = body.unclaimed === true;
+    if (unclaimed && !canManageAllCharacters(access)) {
+      throw new ForbiddenException('Only Officers can add a character no one has claimed');
+    }
+    if (unclaimed && body.discordUserId !== undefined) {
+      throw new BadRequestException('An unclaimed character has no discordUserId');
     }
 
     const name = parseCharacterName(typeof body.name === 'string' ? body.name : '');
@@ -51,11 +62,11 @@ export class CharacterActionsService {
       );
     }
     const fields = parseFields(body, { partial: false });
-    const discordUserId = await this.resolveTargetUser(user, guildId, access, body);
+    const target = unclaimed ? null : await this.resolveTargetUser(user, guildId, access, body);
 
     const result = await this.charactersService.addToGuild(
       guildId,
-      discordUserId.id,
+      target?.id ?? null,
       {
         ...name,
         class: fields.class as string,
@@ -63,7 +74,7 @@ export class CharacterActionsService {
         roles: fields.roles as Role[],
         level: fields.level,
       },
-      discordUserId.names,
+      target?.names,
     );
     if (result === 'duplicate') {
       throw new ConflictException(
@@ -169,6 +180,24 @@ export class CharacterActionsService {
     }
   }
 
+  /**
+   * The user says an unclaimed character on the guild's roster is theirs (any member of the guild):
+   * it becomes theirs. Officers can still move it to someone else if that was wrong.
+   */
+  async claim(user: SessionUser, guildId: string, id: string): Promise<void> {
+    if (!(await this.guildAccess.find(user.id, guildId))) {
+      throw new ForbiddenException('You are not a member of this guild');
+    }
+    const result = await this.charactersService.claim(guildId, id, user.discordId, {
+      username: user.username,
+      displayName: user.displayName === user.username ? null : user.displayName,
+    });
+    if (result === 'not-found') throw new NotFoundException('Character not found');
+    if (result === 'already-claimed') {
+      throw new ConflictException('Someone already plays this character');
+    }
+  }
+
   /** Removes the character from this guild's roster only; it (and its other guilds) are kept. */
   async remove(user: SessionUser, guildId: string, id: string): Promise<void> {
     // Taking it off the roster is the guild's business: Officers can, even for a verified one.
@@ -212,17 +241,25 @@ export class CharacterActionsService {
 
   /**
    * Moving a character to another Discord user is for Officers, and only to a member of the guild's
-   * servers. Returns nothing when the body does not ask for it.
+   * servers; `discordUserId: null` makes it unclaimed (Officers too). Returns nothing when the body
+   * does not ask for it.
    */
   private async parseNewOwner(
     user: SessionUser,
     guildId: string,
     body: Record<string, unknown>,
   ): Promise<
-    | { discordUserId: string; names?: { username?: string; displayName?: string | null } }
+    | { discordUserId: string | null; names?: { username?: string; displayName?: string | null } }
     | undefined
   > {
     if (body.discordUserId === undefined) return undefined;
+    if (body.discordUserId === null) {
+      const access = await this.guildAccess.find(user.id, guildId);
+      if (!access || !canManageAllCharacters(access)) {
+        throw new ForbiddenException('Only Officers can make a character unclaimed');
+      }
+      return { discordUserId: null };
+    }
     if (typeof body.discordUserId !== 'string' || !DISCORD_ID.test(body.discordUserId)) {
       throw new BadRequestException('discordUserId must be a Discord user id (digits)');
     }
@@ -260,7 +297,9 @@ export class CharacterActionsService {
       throw new ForbiddenException(
         verified && access?.isOfficer
           ? 'Its player verified this character on Battle.net: only they can change it.'
-          : 'You can only change your own characters',
+          : ownership.discordUserId === null
+            ? 'No one has claimed this character yet: claim it first if it is yours'
+            : 'You can only change your own characters',
       );
     }
   }

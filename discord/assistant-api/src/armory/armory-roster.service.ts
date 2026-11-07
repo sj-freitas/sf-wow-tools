@@ -21,7 +21,8 @@ export interface KnownCharacter {
   id: string;
   /** On this guild's roster; otherwise known (another guild's, or none) and addable to it. */
   inGuild: boolean;
-  player: { discordUserId: string; username: string | null; displayName: string | null };
+  /** Null: unclaimed (added without knowing who plays it). */
+  player: { discordUserId: string; username: string | null; displayName: string | null } | null;
 }
 
 export type ArmoryGuildMemberDto = ArmoryGuildMember & { character: KnownCharacter | null };
@@ -105,7 +106,7 @@ export class ArmoryRosterService {
       const known: KnownCharacter = {
         id: character.id,
         inGuild: character.guilds.length > 0,
-        player: {
+        player: character.player && {
           discordUserId: character.player.discordUserId,
           username: character.player.discordUsername,
           displayName: character.player.discordDisplayName,

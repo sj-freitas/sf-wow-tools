@@ -49,6 +49,8 @@ interface GuildServer {
 
 export type AddResult =
   | 'created'
+  /** The name was an unclaimed character's: it is the player's now (and on the guild's roster). */
+  | 'claimed'
   | 'duplicate'
   | 'no-guild'
   | 'last-name-required'
@@ -99,8 +101,11 @@ export interface RosterCharacter extends CharacterSummary {
   verified: boolean;
   /** The names of the guild's attributes it has (main, alt, …). */
   attributes: string[];
-  player: { discordUserId: string; username: string | null; displayName: string | null };
+  /** Null for an unclaimed character (no one has said they play it yet). */
+  player: { discordUserId: string; username: string | null; displayName: string | null } | null;
 }
+
+export type ClaimResult = 'claimed' | 'not-found' | 'already-claimed';
 
 const CHARACTER_SELECT = {
   id: true,
@@ -133,10 +138,13 @@ export class CharactersService {
     return this.createForPlayer(guild, owner.discordUserId, character, owner);
   }
 
-  /** Same as `add`, addressed by guild id (used by the backoffice). */
+  /**
+   * Same as `add`, addressed by guild id (used by the backoffice). `discordUserId` null adds it
+   * unclaimed: no one's until a member claims it (Officers only; the caller checks).
+   */
   async addToGuild(
     guildId: string,
-    discordUserId: string,
+    discordUserId: string | null,
     character: NewCharacter,
     names?: DiscordNames,
   ): Promise<AddResult> {
@@ -200,7 +208,8 @@ export class CharactersService {
       },
     });
     if (!character) return 'not-found';
-    if (!allowAnyOwner && character.player.discordUserId !== requesterDiscordUserId) {
+    // An unclaimed character is no member's own: only Officers (allowAnyOwner) add it elsewhere.
+    if (!allowAnyOwner && character.player?.discordUserId !== requesterDiscordUserId) {
       return 'forbidden';
     }
     if (
@@ -253,12 +262,13 @@ export class CharactersService {
    * same character looks the same in every guild it is in, so this does not take a guild (a guild
    * is only needed to check who may make the change, which the controller does separately). With
    * `newOwner` it moves the character to another Discord user's (global) player, created if they
-   * have none; the previous player is removed when it is left with no characters anywhere.
+   * have none, or (`discordUserId: null`) makes it unclaimed; the previous player is removed when
+   * it is left with no characters anywhere.
    */
   async update(
     characterId: string,
     patch: CharacterUpdate,
-    newOwner?: { discordUserId: string; names?: DiscordNames },
+    newOwner?: { discordUserId: string | null; names?: DiscordNames },
   ): Promise<void> {
     if (
       patch.firstName !== undefined ||
@@ -320,35 +330,27 @@ export class CharactersService {
       }
     }
 
-    let playerId: string | undefined;
-    let previousPlayerId: string | undefined;
+    // undefined: who plays it doesn't change; null: no one (unclaimed).
+    let playerId: string | null | undefined;
+    let previousPlayerId: string | null = null;
     if (newOwner) {
       const current = await this.prisma.character.findUnique({
         where: { id: characterId },
         select: { playerId: true, player: { select: { discordUserId: true } } },
       });
       if (!current) throw new NotFoundException('Character not found');
-      if (current.player.discordUserId !== newOwner.discordUserId) {
-        const target = await this.prisma.player.upsert({
-          where: { discordUserId: newOwner.discordUserId },
-          create: {
-            discordUserId: newOwner.discordUserId,
-            discordUsername: newOwner.names?.username,
-            discordDisplayName: newOwner.names?.displayName,
-          },
-          update: {
-            discordUsername: newOwner.names?.username,
-            discordDisplayName: newOwner.names?.displayName,
-          },
-        });
-        playerId = target.id;
+      if ((current.player?.discordUserId ?? null) !== newOwner.discordUserId) {
+        playerId =
+          newOwner.discordUserId === null
+            ? null
+            : (await this.upsertPlayer(newOwner.discordUserId, newOwner.names)).id;
         previousPlayerId = current.playerId;
       }
     }
 
     await this.prisma.character.update({
       where: { id: characterId },
-      data: playerId ? { ...patch, playerId } : patch,
+      data: playerId === undefined ? patch : { ...patch, playerId },
       select: { id: true },
     });
     if (previousPlayerId) {
@@ -366,8 +368,41 @@ export class CharactersService {
       where: { characterId, guildId },
     });
     if (count === 0) return 'not-found';
+    // An unclaimed character on no roster is no one's and nowhere: deleted, so its name (unique on
+    // its server) is free again rather than taken by something no one can see.
+    await this.prisma.character.deleteMany({
+      where: { id: characterId, playerId: null, guilds: { none: {} } },
+    });
     this.realtime.publish(guildId, 'characters');
     return 'removed';
+  }
+
+  /**
+   * A member says an unclaimed character on the guild's roster is theirs: it becomes their player's
+   * (registered on first use), with every guild it is in. Only an unclaimed one: a claimed
+   * character changes hands through an Officer.
+   */
+  async claim(
+    guildId: string,
+    characterId: string,
+    discordUserId: string,
+    names?: DiscordNames,
+  ): Promise<ClaimResult> {
+    const character = await this.prisma.character.findFirst({
+      where: { id: characterId, guilds: { some: { guildId } } },
+      select: { playerId: true },
+    });
+    if (!character) return 'not-found';
+    if (character.playerId !== null) return 'already-claimed';
+    const player = await this.upsertPlayer(discordUserId, names);
+    // Only while it is still unclaimed: two claiming at once, the first one wins.
+    const { count } = await this.prisma.character.updateMany({
+      where: { id: characterId, playerId: null },
+      data: { playerId: player.id },
+    });
+    if (count === 0) return 'already-claimed';
+    await this.publishToItsGuilds(characterId);
+    return 'claimed';
   }
 
   /**
@@ -395,7 +430,7 @@ export class CharactersService {
       name: `${character.firstName} ${character.lastName}`.trim(),
       verified: verifiedAt !== null,
       attributes: attributes.map(({ attribute }) => attribute.name).sort(),
-      player: {
+      player: player && {
         discordUserId: player.discordUserId,
         username: player.discordUsername,
         displayName: player.discordDisplayName,
@@ -403,31 +438,38 @@ export class CharactersService {
     }));
   }
 
-  /** Who plays the character, and whether they verified it on Battle.net; null when none. */
+  /**
+   * Who plays the character (null: unclaimed), and whether they verified it on Battle.net; null
+   * when there is no such character.
+   */
   async findOwnership(
     characterId: string,
-  ): Promise<{ discordUserId: string; verified: boolean } | null> {
+  ): Promise<{ discordUserId: string | null; verified: boolean } | null> {
     const character = await this.prisma.character.findUnique({
       where: { id: characterId },
       select: { verifiedAt: true, player: { select: { discordUserId: true } } },
     });
     return character
-      ? { discordUserId: character.player.discordUserId, verified: character.verifiedAt !== null }
+      ? {
+          discordUserId: character.player?.discordUserId ?? null,
+          verified: character.verifiedAt !== null,
+        }
       : null;
   }
 
-  /** The Discord id of the character's own player, or null if the character does not exist. */
+  /** The Discord id of the character's own player; null if it is unclaimed or doesn't exist. */
   async findOwnerDiscordId(characterId: string): Promise<string | null> {
     const character = await this.prisma.character.findUnique({
       where: { id: characterId },
       select: { player: { select: { discordUserId: true } } },
     });
-    return character?.player.discordUserId ?? null;
+    return character?.player?.discordUserId ?? null;
   }
 
+  /** `discordUserId` null: added unclaimed. */
   private async createForPlayer(
     guild: GuildServer,
-    discordUserId: string,
+    discordUserId: string | null,
     character: NewCharacter,
     names?: DiscordNames,
   ): Promise<Exclude<AddResult, 'no-guild'>> {
@@ -457,16 +499,22 @@ export class CharactersService {
         firstName: character.firstName,
         lastName: character.lastName,
       },
-      select: { id: true },
+      select: { id: true, playerId: true, faction: true },
     });
-    if (taken) return 'duplicate';
+    if (taken) {
+      // An unclaimed character of that name (added from the armory): whoever adds it now plays it.
+      if (taken.playerId !== null || discordUserId === null || taken.faction !== guild.faction) {
+        return 'duplicate';
+      }
+      return this.claimByAdding(guild, taken.id, discordUserId, character, names);
+    }
 
-    const player = await this.upsertPlayer(discordUserId, names);
+    const player = discordUserId === null ? null : await this.upsertPlayer(discordUserId, names);
 
     try {
       const created = await this.prisma.character.create({
         data: {
-          playerId: player.id,
+          playerId: player?.id ?? null,
           gameVersion: guild.gameVersion,
           region: guild.region,
           realm: guild.realm,
@@ -490,6 +538,39 @@ export class CharactersService {
       }
       throw error;
     }
+  }
+
+  /**
+   * Adding a character whose name an unclaimed one has on the server: that one becomes the player's,
+   * with what they filled in (class, race, roles, level), and joins the guild's roster if it isn't
+   * on it yet. Only while it is still unclaimed (someone else may have claimed it meanwhile).
+   */
+  private async claimByAdding(
+    guild: GuildServer,
+    characterId: string,
+    discordUserId: string,
+    character: NewCharacter,
+    names?: DiscordNames,
+  ): Promise<'claimed' | 'duplicate'> {
+    const player = await this.upsertPlayer(discordUserId, names);
+    const { count } = await this.prisma.character.updateMany({
+      where: { id: characterId, playerId: null },
+      data: {
+        playerId: player.id,
+        class: character.class,
+        race: character.race,
+        roles: character.roles,
+        ...(character.level === undefined ? {} : { level: character.level }),
+      },
+    });
+    if (count === 0) return 'duplicate';
+    await this.prisma.characterGuildMembership.createMany({
+      data: [{ characterId, guildId: guild.id }],
+      skipDuplicates: true,
+    });
+    this.realtime.publish(guild.id, 'characters');
+    await this.publishToItsGuilds(characterId);
+    return 'claimed';
   }
 
   /** Returns null if this Discord server isn't linked to a guild. */

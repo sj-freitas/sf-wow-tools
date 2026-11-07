@@ -82,7 +82,7 @@ export class CharactersMcpTools implements OnModuleInit {
       {
         title: 'Find characters',
         description:
-          "A guild's characters, one row each: race, class, level, roles, faction, the guild's attributes it has (main, alt…), whether it is verified, and who plays it (Discord id, name and rank: Officer, Raider, Social). Every filter is optional and they combine. Members of the guild.",
+          "A guild's characters, one row each: race, class, level, roles, faction, the guild's attributes it has (main, alt…), whether it is verified, and who plays it (Discord id, name and rank: Officer, Raider, Social). An unclaimed character (added from the armory, no one has said they play it yet) has player null and unclaimed true, and counts as Social; it never signs up. Every filter is optional and they combine. Members of the guild.",
         inputSchema: {
           guildId,
           query: z.string().optional().describe("Words in the character's or the player's name"),
@@ -107,9 +107,10 @@ export class CharactersMcpTools implements OnModuleInit {
           const found = roster.filter((character) => matches(character, filters));
           return {
             count: found.length,
-            characters: found.map((character) => ({
+            characters: found.map(({ player, ...character }) => ({
               ...character,
-              player: { ...character.player, ranks: ranks[character.player.discordUserId] ?? [] },
+              unclaimed: player === null,
+              player: player && { ...player, ranks: ranks[player.discordUserId] ?? [] },
             })),
           };
         }),
@@ -173,7 +174,7 @@ export class CharactersMcpTools implements OnModuleInit {
       {
         title: 'Add character',
         description:
-          "Adds a new character to the guild's roster: yours, or (Officers) another member's by discordUserId (from find_people). name, race, class and roles are required (see get_character_options). If that player already has the character on the guild's server, use list_migratable_characters and add_existing_character instead. Returns the new character.",
+          "Adds a new character to the guild's roster: yours, (Officers) another member's by discordUserId (from find_people), or (Officers, unclaimed: true) no one's yet, for a guild member whose Discord user isn't known; members claim those with claim_character. name, race, class and roles are required (see get_character_options). A name is unique on its server: if an unclaimed character has it, adding it claims that one for whoever it is added for. If that player already has the character on the guild's server, use list_migratable_characters and add_existing_character instead. Returns the new character.",
         inputSchema: {
           guildId,
           ...characterFields,
@@ -187,17 +188,23 @@ export class CharactersMcpTools implements OnModuleInit {
           discordUserId: discordUserId
             .optional()
             .describe('Who plays it (Officers only); leave it out for your own'),
+          unclaimed: z
+            .boolean()
+            .optional()
+            .describe(
+              'Officers: add it with no player, when you know it is in the guild but not who plays it',
+            ),
         },
       },
       ({ guildId: id, ...input }) =>
         toolResult(async () => {
           await this.actions.create(user, id, input);
           // The new character, found by its player and its name as stored (create checked it).
-          const owner = input.discordUserId ?? user.discordId;
+          const owner = input.unclaimed ? null : (input.discordUserId ?? user.discordId);
           const name = parseCharacterName(input.name);
           const added = (await this.characters.findRoster(id)).find(
             (character) =>
-              character.player.discordUserId === owner &&
+              (character.player?.discordUserId ?? null) === owner &&
               character.firstName === name?.firstName &&
               character.lastName === name.lastName,
           );
@@ -210,15 +217,16 @@ export class CharactersMcpTools implements OnModuleInit {
       {
         title: 'Update character',
         description:
-          "Changes a character of the guild's roster; fields left out stay as they are. The same character is in every guild it is on, so this changes it there too. faction: a deliberate faction change (the race must exist on the new side; pass the new race too when it doesn't). discordUserId moves it to another member (Officers only). Yours, or anyone's for an Officer, unless its player verified it on Battle.net.",
+          "Changes a character of the guild's roster; fields left out stay as they are. The same character is in every guild it is on, so this changes it there too. faction: a deliberate faction change (the race must exist on the new side; pass the new race too when it doesn't). discordUserId moves it to another member, or null makes it unclaimed (Officers only). Yours, or anyone's for an Officer, unless its player verified it on Battle.net; an unclaimed one, Officers only (members claim it first).",
         inputSchema: {
           guildId,
           characterId,
           ...characterFields,
           faction: z.enum(['ALLIANCE', 'HORDE']).optional(),
           discordUserId: discordUserId
+            .nullable()
             .optional()
-            .describe('Move it to this member (Officers only)'),
+            .describe('Move it to this member, or null to make it unclaimed (Officers only)'),
         },
         annotations: { idempotentHint: true },
       },
@@ -243,6 +251,25 @@ export class CharactersMcpTools implements OnModuleInit {
         annotations: { readOnlyHint: true },
       },
       (args) => toolResult(() => this.actions.migratable(user, args.guildId, args.discordUserId)),
+    );
+
+    server.registerTool(
+      'claim_character',
+      {
+        title: 'Claim character',
+        description:
+          "Says an unclaimed character on the guild's roster (find_characters: unclaimed true) is yours: it becomes your character. Any member of the guild. An Officer can move it to someone else if that was wrong.",
+        inputSchema: { guildId, characterId },
+      },
+      (args) =>
+        toolResult(async () => {
+          await this.actions.claim(user, args.guildId, args.characterId);
+          return (
+            (await this.characters.findRoster(args.guildId)).find(
+              (row) => row.id === args.characterId,
+            ) ?? { ok: true }
+          );
+        }),
     );
 
     server.registerTool(
@@ -351,7 +378,7 @@ const same = (a: string, b: string): boolean => a.toLowerCase() === b.toLowerCas
 /** Whether a roster row passes every filter given (names and words ignore case). */
 export function matches(character: RosterCharacter, filters: RosterFilters): boolean {
   const { player } = character;
-  const names = [character.name, player.username, player.displayName];
+  const names = [character.name, player?.username, player?.displayName];
   return (
     searchWords(filters.query).every((word) =>
       names.some((name) => name?.toLowerCase().includes(word)),
@@ -361,7 +388,7 @@ export function matches(character: RosterCharacter, filters: RosterFilters): boo
     (filters.role === undefined || character.roles.includes(filters.role)) &&
     (filters.minLevel === undefined || character.level >= filters.minLevel) &&
     (filters.maxLevel === undefined || character.level <= filters.maxLevel) &&
-    (filters.discordUserId === undefined || player.discordUserId === filters.discordUserId) &&
+    (filters.discordUserId === undefined || player?.discordUserId === filters.discordUserId) &&
     (filters.attribute === undefined ||
       character.attributes.some((name) => same(name, filters.attribute as string)))
   );

@@ -186,8 +186,11 @@ model Player {
 // creation — moving a character to another realm is not supported.
 model Character {
   id                 String                     @id @default(uuid()) @db.Uuid
-  playerId           String                     @map("player_id") @db.Uuid
-  player             Player                     @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  // Who plays it; null for an unclaimed character: one an Officer added (from the armory) without
+  // knowing its Discord user. It is on rosters (as Social) but never in sign-ups, assignments or
+  // roster posts, which go by Discord user; a member claims it, or an Officer gives it to someone.
+  playerId           String?                    @map("player_id") @db.Uuid
+  player             Player?                    @relation(fields: [playerId], references: [id], onDelete: Cascade)
   // One of the game versions/regions/servers in src/game/<version>/config.ts; which guilds can
   // list this character (`addToGuild`) and faction compatibility (for migrating) key off these.
   gameVersion        String                     @map("game_version")

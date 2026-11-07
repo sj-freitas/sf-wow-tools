@@ -6,6 +6,7 @@ import {
   fetchArmoryGuild,
   fetchPeople,
   migrateCharacter,
+  updateCharacter,
 } from './api';
 import { ClassMark } from './ClassMark';
 import { DiscordName } from './DiscordName';
@@ -32,6 +33,13 @@ interface Props {
 }
 
 type RowState = { status: 'busy' } | { status: 'error'; message: string };
+
+/**
+ * What a row's button does: add it for the player picked, add it unclaimed (no one picked), add a
+ * character we already know (another guild's) as it is, or give an unclaimed one on the roster the
+ * player picked.
+ */
+type Action = 'add' | 'add-unclaimed' | 'migrate' | 'assign';
 
 const keyOf = (member: { name: string; lastName: string }): string =>
   `${member.name} ${member.lastName}`.toLocaleLowerCase();
@@ -79,14 +87,18 @@ function suggestPlayer(member: ArmoryGuildMember, people: Person[]): Person | nu
   return matches.length === 1 ? matches[0] : null;
 }
 
+/** On the roster with no player yet (added unclaimed). */
+const unclaimedOnRoster = (member: ArmoryGuildMember): boolean =>
+  Boolean(member.character?.inGuild && !member.character.player);
+
 /**
  * `/roster/armory` (Officers): the guild's members in its version's armory, next to the roster.
  * Those not on it are added for the Discord user an Officer picks (a guess is filled in when one
- * member's Discord name is the character's name, last name or full name): race, class and level
- * from the armory, roles from its talents (the class's first spec without any), through the same
- * endpoint as "Add character". A
- * character we already have on the guild's server (another guild's) is added as it is, for its own
- * player.
+ * member's Discord name is the character's name, last name or full name), or unclaimed when no
+ * one is: race, class and level from the armory, roles from its talents (the class's first spec
+ * without any), through the same endpoint as "Add character". An unclaimed one on the roster can
+ * be given its player here too. A character we already have on the guild's server (another
+ * guild's) is added as it is, for its own player.
  */
 export function ArmoryImportPage({ guild, currentUser }: Props) {
   const game = gameOf(useGames(), guild.gameVersion);
@@ -101,8 +113,13 @@ export function ArmoryImportPage({ guild, currentUser }: Props) {
   // The Discord user picked per character (by `keyOf`); '' once a suggestion is cleared.
   const [picks, setPicks] = useState<Map<string, string>>(new Map());
   const [states, setStates] = useState<Map<string, RowState>>(new Map());
-  const [show, setShow] = useState<'missing' | 'all'>('missing');
-  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
+  const [show, setShow] = useState<'missing' | 'unclaimed' | 'all'>('missing');
+  // A run of several (a bulk button's), and which button started it: its label counts them.
+  const [progress, setProgress] = useState<{
+    done: number;
+    total: number;
+    kind: 'add' | 'add-unclaimed' | 'assign';
+  } | null>(null);
 
   const load = useCallback(
     (name: string) => {
@@ -133,7 +150,8 @@ export function ArmoryImportPage({ guild, currentUser }: Props) {
   const suggestions = useMemo(() => {
     const found = new Map<string, Person>();
     for (const member of roster?.members ?? []) {
-      if (member.character) continue;
+      // Those that need a player: not on the roster, or on it unclaimed.
+      if (member.character && !unclaimedOnRoster(member)) continue;
       const person = suggestPlayer(member, people?.people ?? []);
       if (person) found.set(keyOf(member), person);
     }
@@ -151,15 +169,29 @@ export function ArmoryImportPage({ guild, currentUser }: Props) {
       return next;
     });
 
+  const actionOf = (member: ArmoryGuildMember): Action | null => {
+    const known = member.character;
+    if (known?.inGuild) return !known.player && pickOf(member) !== '' ? 'assign' : null;
+    if (known) return 'migrate';
+    return pickOf(member) !== '' ? 'add' : 'add-unclaimed';
+  };
+
   /**
-   * Adds one member to the roster; throws with a readable message. Says whether its role was
-   * assumed: when the armory can't look the character up (its character pages lag behind the guild
-   * roster, or never have some), it is added anyway from the guild roster's race, class and level,
-   * with its class's first role.
+   * Does a row's action; throws with a readable message. Says whether its role was assumed: when
+   * the armory can't look the character up (its character pages lag behind the guild roster, or
+   * never have some), it is added anyway from the guild roster's race, class and level, with its
+   * class's first role.
    */
-  const addToRoster = async (member: ArmoryGuildMember): Promise<{ assumedRole: boolean }> => {
-    if (member.character) {
+  const act = async (
+    member: ArmoryGuildMember,
+    action: Action,
+  ): Promise<{ assumedRole: boolean }> => {
+    if (action === 'migrate' && member.character) {
       await migrateCharacter(guild.id, member.character.id);
+      return { assumedRole: false };
+    }
+    if (action === 'assign' && member.character) {
+      await updateCharacter(guild.id, member.character.id, { discordUserId: pickOf(member) });
       return { assumedRole: false };
     }
     let character: { class: string; race: string; level: number; roles: Role[] };
@@ -180,7 +212,7 @@ export function ArmoryImportPage({ guild, currentUser }: Props) {
       throw new Error(`No roles are known for ${character.class}: add it with “Add character”.`);
     }
     await createCharacter(guild.id, {
-      discordUserId: pickOf(member),
+      ...(action === 'add-unclaimed' ? { unclaimed: true } : { discordUserId: pickOf(member) }),
       name: member.lastName ? `${member.name}-${member.lastName}` : member.name,
       class: character.class,
       race: character.race,
@@ -190,18 +222,21 @@ export function ArmoryImportPage({ guild, currentUser }: Props) {
     return { assumedRole };
   };
 
-  /** Adds each in turn (each row says how it went), then reads the armory again. */
-  const run = async (batch: ArmoryGuildMember[]) => {
-    let added = 0;
+  /** Does each row's action in turn (each row says how it went), then reads the armory again. */
+  const run = async (
+    batch: { member: ArmoryGuildMember; action: Action }[],
+    kind: 'add' | 'add-unclaimed' | 'assign',
+  ) => {
+    const done: Record<Action, number> = { add: 0, 'add-unclaimed': 0, migrate: 0, assign: 0 };
     let assumed = 0;
-    setProgress({ done: 0, total: batch.length });
-    for (const [i, member] of batch.entries()) {
+    setProgress({ done: 0, total: batch.length, kind });
+    for (const [i, { member, action }] of batch.entries()) {
       const key = keyOf(member);
       setState(key, { status: 'busy' });
       try {
-        const { assumedRole } = await addToRoster(member);
+        const { assumedRole } = await act(member, action);
         setState(key, null);
-        added++;
+        done[action]++;
         if (assumedRole) assumed++;
       } catch (err) {
         setState(key, {
@@ -209,24 +244,33 @@ export function ArmoryImportPage({ guild, currentUser }: Props) {
           message: err instanceof Error ? err.message : String(err),
         });
       }
-      setProgress({ done: i + 1, total: batch.length });
+      setProgress({ done: i + 1, total: batch.length, kind });
     }
     setProgress(null);
-    if (added > 0) {
-      const assumedNote =
-        assumed === 0
-          ? ''
-          : batch.length === 1
-            ? '. The armory couldn’t look it up, so its role is its class’s first: check it.'
-            : `. ${assumed} couldn’t be looked up in the armory, so their role is their class’s first: check them.`;
-      showToast(
-        (batch.length === 1
-          ? `${fullName(batch[0])} is on the roster`
-          : `${added} characters added to the roster`) + assumedNote,
-        assumed > 0 ? 7000 : 3000,
-      );
-      await load(guildName);
-    }
+    const total = Object.values(done).reduce((sum, n) => sum + n, 0);
+    if (total === 0) return;
+    const assumedNote =
+      assumed === 0
+        ? ''
+        : batch.length === 1
+          ? '. The armory couldn’t look it up, so its role is its class’s first: check it.'
+          : `. ${assumed} couldn’t be looked up in the armory, so their role is their class’s first: check them.`;
+    const one = batch.length === 1 ? batch[0] : null;
+    const summary = one
+      ? one.action === 'assign'
+        ? `${fullName(one.member)} has its player now`
+        : one.action === 'add-unclaimed'
+          ? `${fullName(one.member)} is on the roster, unclaimed`
+          : `${fullName(one.member)} is on the roster`
+      : [
+          done.add + done.migrate > 0 && `${done.add + done.migrate} added to the roster`,
+          done['add-unclaimed'] > 0 && `${done['add-unclaimed']} added unclaimed`,
+          done.assign > 0 && `${done.assign} given their player`,
+        ]
+          .filter(Boolean)
+          .join(', ');
+    showToast(summary + assumedNote, assumed > 0 ? 7000 : 3000);
+    await load(guildName);
   };
 
   const lookUp = (event: FormEvent) => {
@@ -238,9 +282,22 @@ export function ArmoryImportPage({ guild, currentUser }: Props) {
 
   const members = roster?.members ?? [];
   const missing = members.filter((m) => !m.character?.inGuild);
-  const shown = show === 'missing' ? missing : members;
-  const ready = missing.filter((m) => m.character || pickOf(m) !== '');
-  const busy = progress !== null;
+  const unclaimed = members.filter(unclaimedOnRoster);
+  const shown = show === 'missing' ? missing : show === 'unclaimed' ? unclaimed : members;
+  // The bulk buttons' rows: with a player (or known), without one, and unclaimed ones given one.
+  const withAction = (rows: ArmoryGuildMember[], ...actions: Action[]) =>
+    rows.flatMap((member) => {
+      const action = actionOf(member);
+      return action && actions.includes(action) ? [{ member, action }] : [];
+    });
+  const ready = withAction(missing, 'add', 'migrate');
+  const noPlayer = withAction(missing, 'add-unclaimed');
+  const toAssign = withAction(unclaimed, 'assign');
+  const busy = progress !== null || [...states.values()].some((s) => s.status === 'busy');
+  const bulkLabel = (kind: 'add' | 'add-unclaimed' | 'assign', idle: string) =>
+    progress?.kind === kind
+      ? `${kind === 'assign' ? 'Assigning' : 'Adding'} ${Math.min(progress.done + 1, progress.total)} of ${progress.total}…`
+      : idle;
   const otherFaction =
     roster && roster.faction && roster.faction.toUpperCase() !== guild.faction
       ? roster.faction
@@ -248,9 +305,11 @@ export function ArmoryImportPage({ guild, currentUser }: Props) {
 
   const playerCell = (member: ArmoryGuildMember) => {
     const known = member.character;
-    if (known) {
+    if (known?.player) {
       return <DiscordName label={personLabel(known.player)} id={known.player.discordUserId} />;
     }
+    // Another guild's unclaimed character: added as it is, still unclaimed.
+    if (known && !known.inGuild) return <span className="muted">Unclaimed</span>;
     const key = keyOf(member);
     const suggestion = suggestions.get(key);
     return (
@@ -279,7 +338,7 @@ export function ArmoryImportPage({ guild, currentUser }: Props) {
 
   const actionCell = (member: ArmoryGuildMember) => {
     const known = member.character;
-    if (known?.inGuild) {
+    if (known?.inGuild && known.player) {
       return (
         <Link
           className="btn btn-sm"
@@ -292,24 +351,38 @@ export function ArmoryImportPage({ guild, currentUser }: Props) {
       );
     }
     const state = states.get(keyOf(member));
+    const action = actionOf(member);
+    // An unclaimed one on the roster with no one picked yet: nothing to do until someone is.
+    const label =
+      action === 'add'
+        ? 'Import'
+        : action === 'add-unclaimed'
+          ? 'Add unclaimed'
+          : action === 'migrate'
+            ? 'Add to roster'
+            : 'Assign';
+    const title =
+      action === 'add'
+        ? 'Adds it to the roster for the Discord user picked'
+        : action === 'add-unclaimed'
+          ? 'No one picked: adds it with no player (Social), for its player to claim'
+          : action === 'migrate'
+            ? 'We know this character (in another guild): adds it to this roster as it is'
+            : 'Gives this unclaimed character the Discord user picked';
     return (
       <button
         type="button"
-        className="btn btn-sm btn-primary"
-        disabled={busy || (!known && pickOf(member) === '')}
-        title={
-          known
-            ? 'We know this character (in another guild): adds it to this roster, for its player'
-            : 'Adds it to the roster for the Discord user picked'
+        className={action === 'add-unclaimed' ? 'btn btn-sm' : 'btn btn-sm btn-primary'}
+        disabled={busy || action === null}
+        title={title}
+        onClick={() =>
+          action && void run([{ member, action }], action === 'assign' ? 'assign' : 'add')
         }
-        onClick={() => void run([member])}
       >
         {state?.status === 'busy' ? (
-          <InlineSpinner label="Adding…" />
-        ) : known ? (
-          'Add to roster'
+          <InlineSpinner label={action === 'assign' ? 'Assigning…' : 'Adding…'} />
         ) : (
-          'Import'
+          label
         )}
       </button>
     );
@@ -321,8 +394,19 @@ export function ArmoryImportPage({ guild, currentUser }: Props) {
       // One line, like every row's status: the whole message on hover, or as a note on a click.
       return <OneLine text={state.message} className="status-error" />;
     }
-    if (member.character?.inGuild) return <span className="muted">On the roster</span>;
-    if (member.character) return <span className="muted">Known, in another guild</span>;
+    const known = member.character;
+    if (known?.inGuild) {
+      return (
+        <span className="muted">{known.player ? 'On the roster' : 'On the roster, unclaimed'}</span>
+      );
+    }
+    if (known) {
+      return (
+        <span className="muted">
+          {known.player ? 'Known, in another guild' : 'Known, unclaimed, in another guild'}
+        </span>
+      );
+    }
     return <span className="muted">Not on the roster</span>;
   };
 
@@ -336,8 +420,8 @@ export function ArmoryImportPage({ guild, currentUser }: Props) {
       <>
         <p className="muted">
           {members.length} member{members.length === 1 ? '' : 's'} of {roster.name} in the{' '}
-          {guild.region} armory: {members.length - missing.length} on the roster, {missing.length}{' '}
-          not.
+          {guild.region} armory: {members.length - missing.length} on the roster
+          {unclaimed.length > 0 && ` (${unclaimed.length} unclaimed)`}, {missing.length} not.
           {loading && (
             <>
               {' '}
@@ -364,6 +448,7 @@ export function ArmoryImportPage({ guild, currentUser }: Props) {
             {(
               [
                 ['missing', `Not on the roster (${missing.length})`],
+                ['unclaimed', `Unclaimed (${unclaimed.length})`],
                 ['all', `Everyone (${members.length})`],
               ] as const
             ).map(([value, label]) => (
@@ -378,20 +463,44 @@ export function ArmoryImportPage({ guild, currentUser }: Props) {
               </button>
             ))}
           </div>
-          <button
-            type="button"
-            className="btn btn-primary"
-            disabled={busy || ready.length === 0}
-            title="Adds every character that has a Discord user, one after the other"
-            onClick={() => void run(ready)}
-          >
-            {progress
-              ? `Adding ${Math.min(progress.done + 1, progress.total)} of ${progress.total}…`
-              : `Add ${ready.length} to the roster`}
-          </button>
+          <div className="armory-import-actions">
+            <button
+              type="button"
+              className="btn"
+              disabled={busy || noPlayer.length === 0}
+              title="Adds every character no one is picked for, with no player (Social), for their players to claim"
+              onClick={() => void run(noPlayer, 'add-unclaimed')}
+            >
+              {bulkLabel('add-unclaimed', `Add ${noPlayer.length} unclaimed`)}
+            </button>
+            {unclaimed.length > 0 && (
+              <button
+                type="button"
+                className="btn"
+                disabled={busy || toAssign.length === 0}
+                title="Gives every unclaimed character on the roster the Discord user picked"
+                onClick={() => void run(toAssign, 'assign')}
+              >
+                {bulkLabel('assign', `Assign ${toAssign.length}`)}
+              </button>
+            )}
+            <button
+              type="button"
+              className="btn btn-primary"
+              disabled={busy || ready.length === 0}
+              title="Adds every character that has a Discord user, one after the other"
+              onClick={() => void run(ready, 'add')}
+            >
+              {bulkLabel('add', `Add ${ready.length} to the roster`)}
+            </button>
+          </div>
         </div>
         {shown.length === 0 ? (
-          <p className="empty">Every member of {roster.name} in the armory is on the roster.</p>
+          <p className="empty">
+            {show === 'unclaimed'
+              ? 'Every character on the roster has its player.'
+              : `Every member of ${roster.name} in the armory is on the roster.`}
+          </p>
         ) : (
           <div className="table-wrap armory-import-table">
             <table>
@@ -472,7 +581,8 @@ export function ArmoryImportPage({ guild, currentUser }: Props) {
             The guild’s members in Blizzard’s armory. Pick who plays each one that isn’t on the
             roster and add it: race, class and level come from the armory, roles from its talents
             (check them after). A player marked “(guess)” has the character’s name as their Discord
-            name: check it’s them.
+            name: check it’s them. No one to pick? Add it unclaimed: it shows on the roster as
+            Social, never in sign-ups or assignments, until its player claims it.
           </p>
         </div>
       </div>

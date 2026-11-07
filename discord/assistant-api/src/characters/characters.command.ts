@@ -67,6 +67,9 @@ export class CharactersCommand {
       return `A ${race} in this guild's game version cannot be a ${characterClass}.`;
     if (result === 'duplicate')
       return `There is already a character named ${label} on this server.`;
+    if (result === 'claimed') {
+      return `${label} was on the roster with no player: it is yours now (${race} ${characterClass}, ${ROLE_LABELS[role]}).`;
+    }
     return `Added ${label} (${race} ${characterClass}, ${ROLE_LABELS[role]}).`;
   }
 

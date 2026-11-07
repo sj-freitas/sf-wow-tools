@@ -10,7 +10,8 @@ const ROLE_WORDS: Record<string, string[]> = {
 };
 
 export interface RosterRow {
-  player: Player;
+  /** Null for an unclaimed character: no one has said they play it yet. */
+  player: Player | null;
   character: Character;
 }
 
@@ -35,9 +36,9 @@ function searchableText(
     ...professions,
     ...attributes.map((attribute) => attribute.name),
     String(character.level),
-    player.discordUsername ?? '',
-    player.discordDisplayName ?? '',
-    player.discordUserId,
+    player?.discordUsername ?? '',
+    player?.discordDisplayName ?? '',
+    player?.discordUserId ?? 'unclaimed',
     ...ranks,
   ].filter((text) => text !== '');
 }
@@ -52,7 +53,7 @@ export function searchRoster(
   rows: readonly RosterRow[],
   query: string,
   attributesOf: (characterId: string) => readonly GuildAttribute[],
-  ranksOf: (discordUserId: string) => readonly string[],
+  ranksOf: (row: RosterRow) => readonly string[],
   professionsOf: (characterId: string) => readonly string[] = () => [],
 ): RosterRow[] {
   const words = query.trim().split(/\s+/).filter(Boolean);
@@ -62,7 +63,7 @@ export function searchRoster(
     const text = searchableText(
       row,
       attributesOf(row.character.id),
-      ranksOf(row.player.discordUserId),
+      ranksOf(row),
       professionsOf(row.character.id),
     );
     let total = 0;

@@ -69,7 +69,12 @@ export class RanksService {
     }
 
     const playerIds = [
-      ...new Set(guild.characterMemberships.map((m) => m.character.player.discordUserId)),
+      // Unclaimed characters have no Discord user, so no roles to read (the roster shows them Social).
+      ...new Set(
+        guild.characterMemberships.flatMap((m) =>
+          m.character.player ? [m.character.player.discordUserId] : [],
+        ),
+      ),
     ];
     const rolesByUser = await this.readMemberRoles(main.discordId, playerIds);
     const ranks: RanksDto = {};

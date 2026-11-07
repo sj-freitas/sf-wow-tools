@@ -68,7 +68,8 @@ export interface CharacterProfile {
     servers: Pick<GuildServer, 'discordId' | 'icon' | 'isMain'>[];
   }[];
   /** Who plays it: their Discord account (name null until the bot has seen them). */
-  player: { discordUserId: string; name: string | null };
+  /** Null for an unclaimed character: no one has said they play it yet. */
+  player: { discordUserId: string; name: string | null } | null;
   /** That player's other characters, on any server, by name. */
   otherCharacters: {
     name: string;
@@ -226,7 +227,8 @@ export interface ArmoryGuildMember {
   character: {
     id: string;
     inGuild: boolean;
-    player: { discordUserId: string; username: string | null; displayName: string | null };
+    /** Null: unclaimed (added without knowing who plays it). */
+    player: { discordUserId: string; username: string | null; displayName: string | null } | null;
   } | null;
 }
 
@@ -302,13 +304,15 @@ export interface CharacterPatch {
   race?: string;
   roles?: Role[];
   level?: number;
-  /** Officers only: move the character to another Discord user of the guild. */
-  discordUserId?: string;
+  /** Officers only: move the character to another Discord user of the guild; null: unclaimed. */
+  discordUserId?: string | null;
 }
 
 export interface NewCharacterInput {
   /** Officers only: add for someone else. Omitted = the logged-in user. */
   discordUserId?: string;
+  /** Officers only: add it with no player (unclaimed), for a guild member whose Discord user isn't known. */
+  unclaimed?: boolean;
   /** `Name` or `Name-Lastname`. */
   name: string;
   class: string;

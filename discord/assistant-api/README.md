@@ -763,6 +763,27 @@ user who plays each, without typing them in one by one.
   (`POST characters/:id/migrate`). One at a time or all those with a player at once, each row saying what
   went wrong, if anything.
 
+## Unclaimed characters
+
+A character can be on a roster with **no player** (`characters.player_id` null): an Officer knows it is
+in the guild (the armory says so) but not which Discord user plays it.
+
+- **Added** by Officers only: `POST /api/guilds/:guildId/characters` with `unclaimed: true` (no
+  `discordUserId`), Import from armory's **Add unclaimed**, or the MCP's `add_character`.
+- **Shown** on the roster (`GET /api/guilds/:guildId/players/unclaimed`, any guild member) as
+  "Unclaimed" with rank **Social**, since it has no Discord roles. It is never in sign-ups, assignments,
+  reminders or roster posts: they all go by Discord user, so it is left out without a flag.
+- **Claimed** by any member of the guild: **Claim** on the roster
+  (`POST /api/guilds/:guildId/characters/:id/claim`, or the MCP's `claim_character`) makes it theirs, in
+  every guild it is in. Only while it is unclaimed; Officers can move it to someone else if it was wrong.
+  Adding a character whose name an unclaimed one has on the server (names are unique per server) claims
+  that one instead, with the fields filled in, for whoever it is added for.
+- **Assigned or unclaimed again** by Officers: the edit form's Discord user (or Import from armory's
+  **Assign**) gives it a player; `PATCH` with `discordUserId: null` (or the MCP's `update_character`)
+  makes a character unclaimed. Members can't edit an unclaimed character until they claim it.
+- **Removed** from a roster: when it is then on no roster at all, an unclaimed character is deleted, so
+  its name isn't taken by something no one can see.
+
 ## Characters, players and guilds (guild-agnostic characters)
 
 A character belongs to a **player** (a Discord account) and a **server** (`gameVersion`/`region`/`realm`),

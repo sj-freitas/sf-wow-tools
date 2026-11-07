@@ -219,15 +219,23 @@ function CharacterView({
 
       <div className="character-player">
         <div>
-          <span className="muted">Played by </span>
-          {/* Their Discord profile (fine here: only messages the bot posts showed a card). */}
-          <a
-            href={`https://discord.com/users/${profile.player.discordUserId}`}
-            target="_blank"
-            rel="noreferrer"
-          >
-            @{profile.player.name ?? profile.player.discordUserId}
-          </a>
+          {profile.player ? (
+            <>
+              <span className="muted">Played by </span>
+              {/* Their Discord profile (fine here: only messages the bot posts showed a card). */}
+              <a
+                href={`https://discord.com/users/${profile.player.discordUserId}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                @{profile.player.name ?? profile.player.discordUserId}
+              </a>
+            </>
+          ) : (
+            <span className="muted">
+              Unclaimed: no one has said they play it yet. Its player can claim it on the roster.
+            </span>
+          )}
         </div>
         {profile.otherCharacters.length > 0 && (
           <ul className="character-player-list">

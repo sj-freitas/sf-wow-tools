@@ -333,6 +333,7 @@ describe('CharactersService, a character in more than one guild', () => {
   >;
   let memberships: { characterId: string; guildId: string }[];
   let removedMemberships: { characterId: string; guildId: string }[];
+  let characterDeletes: unknown[];
   let players: Record<string, { id: string }>;
   let published: string[];
   let service: CharactersService;
@@ -352,12 +353,18 @@ describe('CharactersService, a character in more than one guild', () => {
     };
     memberships = [];
     removedMemberships = [];
+    characterDeletes = [];
     players = { u1: { id: 'p1' } };
     published = [];
     const prisma = {
       guild: { findUnique: async () => guild },
       player: { findUnique: async (args: any) => players[args.where.discordUserId] ?? null },
       character: {
+        // Removing from a roster deletes an unclaimed character left on none (recorded here).
+        deleteMany: async (args: any) => {
+          characterDeletes.push(args.where);
+          return { count: 0 };
+        },
         findUnique: async (args: any) => {
           const c = characters[args.where.id];
           return c ? { ...c, player: { discordUserId: c.discordUserId } } : null;
@@ -487,14 +494,132 @@ describe('CharactersService, a character in more than one guild', () => {
   });
 
   describe('removing a character from one guild', () => {
-    it('deletes the membership, not the character', async () => {
+    it('deletes the membership, not the character (only an unclaimed one left on no roster)', async () => {
       memberships.push({ characterId: 'c1', guildId: 'g2' });
       assert.equal(await service.removeFromGuild('g2', 'c1'), 'removed');
       assert.deepEqual(memberships, []);
+      // An unclaimed character on no roster is deleted, so its name is free; a claimed one stays.
+      assert.deepEqual(characterDeletes, [{ id: 'c1', playerId: null, guilds: { none: {} } }]);
     });
 
     it('is "not-found" when it was not a member', async () => {
       assert.equal(await service.removeFromGuild('g2', 'c1'), 'not-found');
     });
+  });
+});
+
+describe('CharactersService, unclaimed characters', () => {
+  const guild = { id: 'g', gameVersion: 'Forever', faction: 'ALLIANCE', region: 'EU', realm: 'RP' };
+  const arthas = {
+    firstName: 'Arthas',
+    lastName: 'Menethil',
+    class: 'Paladin',
+    race: 'Human',
+    roles: ['TANK' as const],
+    level: 20,
+  };
+  let taken: { id: string; playerId: string | null; faction: string } | null;
+  let stillUnclaimed: boolean;
+  let created: any[];
+  let upserts: any[];
+  let updates: any[];
+  let joined: any[];
+  let rostered: { playerId: string | null } | null;
+  let service: CharactersService;
+
+  beforeEach(() => {
+    taken = null;
+    stillUnclaimed = true;
+    created = [];
+    upserts = [];
+    updates = [];
+    joined = [];
+    rostered = { playerId: null };
+    const prisma = {
+      guild: { findUnique: async () => guild },
+      player: {
+        upsert: async (args: any) => {
+          upserts.push(args.where.discordUserId);
+          return { id: `player-${args.where.discordUserId}` };
+        },
+      },
+      character: {
+        // The name check, then (claim) the character on the guild's roster.
+        findFirst: async (args: any) => (args.where.firstName ? taken : rostered),
+        create: async (args: any) => {
+          created.push(args.data);
+          return { id: 'new' };
+        },
+        updateMany: async (args: any) => {
+          updates.push(args);
+          return { count: stillUnclaimed ? 1 : 0 };
+        },
+      },
+      characterGuildMembership: {
+        create: async (args: any) => void joined.push(args.data),
+        createMany: async (args: any) => void joined.push(...args.data),
+        findMany: async () => [{ guildId: 'g' }],
+      },
+    } as unknown as PrismaService;
+    service = new CharactersService(
+      prisma,
+      { publish: () => undefined } as unknown as RealtimeService,
+      {} as DiscordOAuthService,
+    );
+  });
+
+  it('adds one with no player (registering no one), on the guild’s roster', async () => {
+    assert.equal(await service.addToGuild('g', null, arthas), 'created');
+    assert.equal(created[0].playerId, null);
+    assert.deepEqual(upserts, []);
+    assert.deepEqual(joined, [{ characterId: 'new', guildId: 'g' }]);
+  });
+
+  it('adding a name an unclaimed character has claims that one, with what was filled in', async () => {
+    taken = { id: 'c-unclaimed', playerId: null, faction: 'ALLIANCE' };
+    assert.equal(await service.addToGuild('g', 'u1', { ...arthas, level: 25 }), 'claimed');
+    assert.deepEqual(created, []);
+    assert.deepEqual(upserts, ['u1']);
+    assert.deepEqual(updates[0].where, { id: 'c-unclaimed', playerId: null });
+    assert.deepEqual(updates[0].data, {
+      playerId: 'player-u1',
+      class: 'Paladin',
+      race: 'Human',
+      roles: ['TANK'],
+      level: 25,
+    });
+    assert.deepEqual(joined, [{ characterId: 'c-unclaimed', guildId: 'g' }]);
+  });
+
+  it('refuses a name someone plays, another faction’s unclaimed one, or one claimed meanwhile', async () => {
+    taken = { id: 'c', playerId: 'someone', faction: 'ALLIANCE' };
+    assert.equal(await service.addToGuild('g', 'u1', arthas), 'duplicate');
+    taken = { id: 'c', playerId: null, faction: 'HORDE' };
+    assert.equal(await service.addToGuild('g', 'u1', arthas), 'duplicate');
+    // Adding it unclaimed again is not a claim.
+    taken = { id: 'c', playerId: null, faction: 'ALLIANCE' };
+    assert.equal(await service.addToGuild('g', null, arthas), 'duplicate');
+    stillUnclaimed = false;
+    assert.equal(await service.addToGuild('g', 'u1', arthas), 'duplicate');
+    assert.deepEqual(created, []);
+  });
+
+  it('claims an unclaimed character of the guild’s roster for the member', async () => {
+    assert.equal(await service.claim('g', 'c1', 'u1', { username: 'me' }), 'claimed');
+    assert.deepEqual(upserts, ['u1']);
+    assert.deepEqual(updates[0], {
+      where: { id: 'c1', playerId: null },
+      data: { playerId: 'player-u1' },
+    });
+  });
+
+  it('does not claim one someone plays, one claimed meanwhile, or one not on the roster', async () => {
+    rostered = { playerId: 'someone' };
+    assert.equal(await service.claim('g', 'c1', 'u1'), 'already-claimed');
+    rostered = { playerId: null };
+    stillUnclaimed = false;
+    assert.equal(await service.claim('g', 'c1', 'u1'), 'already-claimed');
+    rostered = null;
+    assert.equal(await service.claim('g', 'c1', 'u1'), 'not-found');
   });
 });

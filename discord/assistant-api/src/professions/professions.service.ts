@@ -302,7 +302,7 @@ export class ProfessionsService {
     if (SECONDARY_PROFESSIONS.includes(name)) {
       throw new BadRequestException(`${name} is a secondary profession: it can't be dropped.`);
     }
-    if (character.player.discordUserId !== user.discordId) {
+    if (character.player?.discordUserId !== user.discordId) {
       const accesses = await Promise.all(
         character.guilds.map(({ guildId }) => this.guildAccess.find(user.id, guildId)),
       );

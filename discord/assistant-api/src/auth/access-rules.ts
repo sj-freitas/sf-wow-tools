@@ -40,11 +40,12 @@ export const canManageAllCharacters = (access: GuildAccessFlags): boolean => acc
 /**
  * Editing a character: Officers can edit any, every other member of the guild
  * only their own. `access` is null for people who aren't in the guild at all. A character its
- * player verified on Battle.net (`verified`) is theirs alone: Officers can't edit or move it.
+ * player verified on Battle.net (`verified`) is theirs alone: Officers can't edit or move it. An
+ * unclaimed one (owner null) is no member's own: Officers edit it, members claim it first.
  */
 export function canEditCharacter(
   access: GuildAccessFlags | null,
-  characterOwnerDiscordId: string,
+  characterOwnerDiscordId: string | null,
   userDiscordId: string,
   verified = false,
 ): boolean {

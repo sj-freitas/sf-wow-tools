@@ -181,6 +181,14 @@ export const fetchPeople = (guildId: string): Promise<People> =>
 export const createCharacter = (guildId: string, input: NewCharacterInput): Promise<void> =>
   request('POST', `/api/guilds/${guildId}/characters`, input);
 
+/** The guild's unclaimed characters: on the roster, no one has said they play them yet. */
+export const fetchUnclaimedCharacters = (guildId: string): Promise<Character[]> =>
+  request('GET', `/api/guilds/${guildId}/players/unclaimed`);
+
+/** "This is mine": an unclaimed character of the guild's roster becomes the user's. */
+export const claimCharacter = (guildId: string, characterId: string): Promise<void> =>
+  request('POST', `/api/guilds/${guildId}/characters/${characterId}/claim`);
+
 /** The caller's (or, for an Officer asking about someone else, that member's) characters already
  * on this guild's server and faction, not yet in it — offered as "migrate" instead of creating. */
 export const fetchMigratableCharacters = (

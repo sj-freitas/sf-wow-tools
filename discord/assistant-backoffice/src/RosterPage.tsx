@@ -1,11 +1,13 @@
 import { Fragment, useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
+  claimCharacter,
   deleteCharacter,
   fetchAttributes,
   fetchCharacterNoteIds,
   fetchPlayers,
   fetchRanks,
+  fetchUnclaimedCharacters,
   refreshPlayerNames,
 } from './api';
 import { CharacterForm } from './CharacterForm';
@@ -16,6 +18,7 @@ import { subscribeEvents } from './events';
 import { characterPath, playerLabel } from './format';
 import {
   ROLE_LABELS,
+  type Character,
   type Guild,
   type GuildAttribute,
   type Player,
@@ -44,7 +47,7 @@ import { CharacterAttributesDrawer, ManageAttributesDrawer } from './AttributeDr
 import { RowMenu } from './RowMenu';
 import { AttributeChip } from './AttributeChip';
 import { fuzzyWordsScore } from './fuzzy';
-import { searchRoster } from './rosterSearch';
+import { searchRoster, type RosterRow } from './rosterSearch';
 import { useConfirm } from './useConfirm';
 import { characterPagePath, guildPath } from './guildPath';
 
@@ -62,6 +65,9 @@ interface Props {
 /** Everyone in the guild sees the roster; Officers manage every character, members their own. */
 export function RosterPage({ guild, currentUser }: Props) {
   const [players, setPlayers] = useState<Player[] | null>(null);
+  // Characters no one has claimed yet (added from the armory): shown with the players, as Social.
+  const [unclaimed, setUnclaimed] = useState<Character[]>([]);
+  const [claimingIds, setClaimingIds] = useState<Set<string>>(new Set());
   const [ranks, setRanks] = useState<Ranks>({});
   // The table's order: a column, A→Z or Z→A (`desc`). Rank (Officers first) unless changed.
   const [sort, setSort] = useState<{ by: SortColumn; desc: boolean }>({ by: 'rank', desc: false });
@@ -70,9 +76,14 @@ export function RosterPage({ guild, currentUser }: Props) {
   const here = useCurrentUrl();
 
   const load = useCallback(() => {
-    fetchPlayers(guild.id)
-      .then((loaded) => {
+    Promise.all([
+      fetchPlayers(guild.id),
+      // Optional: without them the roster still shows everyone who has a player.
+      fetchUnclaimedCharacters(guild.id).catch((): Character[] => []),
+    ])
+      .then(([loaded, noOnes]) => {
         setPlayers(loaded);
+        setUnclaimed(noOnes);
         setLoadError(null);
       })
       .catch((err: unknown) => setLoadError(err instanceof Error ? err.message : String(err)));
@@ -204,6 +215,21 @@ export function RosterPage({ guild, currentUser }: Props) {
 
   // Removing a character takes a moment (it waits on the server): the row stays, dimmed and
   // disabled, with a spinner on the button, until it either disappears or the error shows.
+  const runClaim = (characterId: string) => {
+    setClaimingIds((prev) => new Set(prev).add(characterId));
+    claimCharacter(guild.id, characterId)
+      .then(() => showToast('It’s yours now'))
+      .then(load)
+      .catch(failed)
+      .finally(() =>
+        setClaimingIds((prev) => {
+          const next = new Set(prev);
+          next.delete(characterId);
+          return next;
+        }),
+      );
+  };
+
   const runDelete = (characterId: string) => {
     setDeletingIds((prev) => new Set(prev).add(characterId));
     deleteCharacter(guild.id, characterId)
@@ -230,20 +256,23 @@ export function RosterPage({ guild, currentUser }: Props) {
   }
   // Officers first, then Raiders, Socials and everyone else; alphabetical within each. A search
   // keeps this order among equally good matches.
-  const rankOrder = (discordUserId: string) => {
-    const held = ranks[discordUserId] ?? [];
+  // An unclaimed character has no Discord user, so no roles: it counts as Social.
+  const ranksOf = ({ player }: RosterRow): readonly string[] =>
+    player ? (ranks[player.discordUserId] ?? []) : ['Social'];
+  const rankOrder = (row: RosterRow) => {
+    const held = ranksOf(row);
     const at = RANK_ORDER.findIndex((rank) => held.includes(rank));
     return at === -1 ? RANK_ORDER.length : at;
   };
   const rolesOf = (character: Player['characters'][number]) =>
     character.roles.map((role) => ROLE_LABELS[role]).join(', ');
   // A player's ranks as shown: an Officer is also a Raider, so Raider isn't repeated.
-  const rankLabel = (discordUserId: string) => {
-    const held = ranks[discordUserId] ?? [];
+  const rankLabel = (row: RosterRow) => {
+    const held = ranksOf(row);
     const shown = held.includes('Officer') ? held.filter((rank) => rank !== 'Raider') : held;
     return shown.length > 0 ? shown.join(', ') : undefined;
   };
-  type Row = { player: Player; character: Player['characters'][number] };
+  type Row = RosterRow;
   const text = (a: string, b: string) => a.localeCompare(b, undefined, { sensitivity: 'base' });
   const nameOf = ({ character }: Row) => `${character.firstName} ${character.lastName}`.trim();
   // Each column's order; ties go by the character's name.
@@ -252,16 +281,22 @@ export function RosterPage({ guild, currentUser }: Props) {
     class: (a, b) => text(a.character.class, b.character.class),
     roles: (a, b) => text(rolesOf(a.character), rolesOf(b.character)),
     level: (a, b) => a.character.level - b.character.level,
-    discord: (a, b) => text(playerLabel(a.player), playerLabel(b.player)),
-    rank: (a, b) => rankOrder(a.player.discordUserId) - rankOrder(b.player.discordUserId),
+    // Unclaimed characters after everyone's.
+    discord: (a, b) =>
+      Number(!a.player) - Number(!b.player) ||
+      text(a.player ? playerLabel(a.player) : '', b.player ? playerLabel(b.player) : ''),
+    rank: (a, b) => rankOrder(a) - rankOrder(b),
   };
-  const rows = players
-    ? players
-        .flatMap((player) => player.characters.map((character) => ({ player, character })))
-        .sort((a, b) => {
-          const order = byColumn[sort.by](a, b) || text(nameOf(a), nameOf(b));
-          return sort.desc ? -order : order;
-        })
+  const rows: Row[] = players
+    ? [
+        ...players.flatMap((player) =>
+          player.characters.map((character): Row => ({ player, character })),
+        ),
+        ...unclaimed.map((character): Row => ({ player: null, character })),
+      ].sort((a, b) => {
+        const order = byColumn[sort.by](a, b) || text(nameOf(a), nameOf(b));
+        return sort.desc ? -order : order;
+      })
     : [];
   // A column's header: its name and a chevron; a click sorts by it, again the other way round.
   const sortHeader = (by: SortColumn, label: string) => {
@@ -303,7 +338,7 @@ export function RosterPage({ guild, currentUser }: Props) {
     withRoles,
     query,
     attributesOf,
-    (discordUserId) => ranks[discordUserId] ?? [],
+    ranksOf,
     (characterId) => professionNames.get(characterId) ?? [],
   );
   const filtering = query.trim() !== '' || picked.length > 0 || pickedRoles.length > 0;
@@ -334,9 +369,39 @@ export function RosterPage({ guild, currentUser }: Props) {
           onSelect: () => showToast(`This feature doesn’t exist on ${guild.gameVersion} yet`),
         };
   };
-  const canEditRow = (player: Player) =>
-    guild.isOfficer || player.discordUserId === currentUser.discordId;
-  const rowMenu = (player: Player, character: Player['characters'][number], name: string) => (
+  // An unclaimed character is Officers' to edit; members claim it first.
+  const canEditRow = (player: Player | null) =>
+    guild.isOfficer || player?.discordUserId === currentUser.discordId;
+  const askClaim = (character: Character, name: string) =>
+    void confirm({
+      title: `Claim ${name}?`,
+      message:
+        'It becomes your character, in every guild it is in. Claim only the ones you play: an Officer can give it to someone else if it was wrong.',
+      confirmLabel: 'Claim',
+    }).then((ok) => ok && runClaim(character.id));
+  // Who plays it, or for an unclaimed character a Claim button (anyone in the guild).
+  const playerCell = (player: Player | null, character: Character, name: string) =>
+    player ? (
+      <DiscordName label={playerLabel(player)} id={player.discordUserId} />
+    ) : (
+      <span className="unclaimed-player">
+        <span className="muted">Unclaimed</span>
+        <button
+          type="button"
+          className="btn btn-sm"
+          disabled={claimingIds.has(character.id)}
+          title="Say it’s yours"
+          onClick={() => askClaim(character, name)}
+        >
+          {claimingIds.has(character.id) ? 'Claiming…' : 'Claim'}
+        </button>
+      </span>
+    );
+  const rowMenu = (
+    player: Player | null,
+    character: Player['characters'][number],
+    name: string,
+  ) => (
     <RowMenu
       label={`Actions for ${name}`}
       busy={deletingIds.has(character.id) ? <InlineSpinner label="" /> : undefined}
@@ -402,8 +467,9 @@ export function RosterPage({ guild, currentUser }: Props) {
                 onSelect: () =>
                   void confirm({
                     title: `Remove ${name} from the roster?`,
-                    message:
-                      'The character itself is kept (its other guilds, its bio), so it can be added back later.',
+                    message: player
+                      ? 'The character itself is kept (its other guilds, its bio), so it can be added back later.'
+                      : 'No one has claimed it: on no other roster, it is deleted, and its name can be added again later.',
                     confirmLabel: 'Remove',
                     danger: true,
                   }).then((ok) => ok && runDelete(character.id)),
@@ -619,7 +685,7 @@ export function RosterPage({ guild, currentUser }: Props) {
               <ul className="roster-list">
                 {shown.map(({ player, character }) => {
                   const name = `${character.firstName} ${character.lastName}`.trim();
-                  const rank = rankLabel(player.discordUserId);
+                  const rank = rankLabel({ player, character });
                   return (
                     <li
                       key={character.id}
@@ -641,7 +707,7 @@ export function RosterPage({ guild, currentUser }: Props) {
                           .join(' · ')}
                       </div>
                       <div className="roster-item-meta">
-                        <DiscordName label={playerLabel(player)} id={player.discordUserId} />
+                        {playerCell(player, character, name)}
                         {rank && ` · ${rank}`}
                       </div>
                     </li>
@@ -707,10 +773,10 @@ export function RosterPage({ guild, currentUser }: Props) {
                               {character.level}
                             </td>
                             <td data-label="Discord user" className="cell-detail">
-                              <DiscordName label={playerLabel(player)} id={player.discordUserId} />
+                              {playerCell(player, character, name)}
                             </td>
                             <td data-label="Rank" className="cell-detail">
-                              {rankLabel(player.discordUserId) ?? '—'}
+                              {rankLabel({ player, character }) ?? '—'}
                             </td>
                             <td className="cell-actions">{rowMenu(player, character, name)}</td>
                           </tr>
@@ -734,19 +800,26 @@ export function CharacterEditorPage({ guild, currentUser }: Props) {
   const navigate = useNavigate();
   const back = useReturnTo(guildPath(guild, 'roster'));
   const [players, setPlayers] = useState<Player[] | null>(null);
+  const [unclaimed, setUnclaimed] = useState<Character[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!characterId) return;
-    fetchPlayers(guild.id)
-      .then(setPlayers)
+    Promise.all([fetchPlayers(guild.id), fetchUnclaimedCharacters(guild.id)])
+      .then(([loaded, noOnes]) => {
+        setPlayers(loaded);
+        setUnclaimed(noOnes);
+      })
       .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)));
   }, [guild.id, characterId]);
 
-  const found = characterId
-    ? players
-        ?.flatMap((player) => player.characters.map((character) => ({ player, character })))
-        .find((row) => row.character.id === characterId)
+  const found: RosterRow | undefined = characterId
+    ? [
+        ...(players ?? []).flatMap((player) =>
+          player.characters.map((character): RosterRow => ({ player, character })),
+        ),
+        ...unclaimed.map((character): RosterRow => ({ player: null, character })),
+      ].find((row) => row.character.id === characterId)
     : undefined;
 
   const body = () => {
@@ -763,16 +836,25 @@ export function CharacterEditorPage({ guild, currentUser }: Props) {
     if (error) return <p className="status-error">{error}</p>;
     if (!players) return <Spinner />;
     if (!found) return <p className="empty">That character was not found in this guild.</p>;
-    const mayEdit = guild.isOfficer || found.player.discordUserId === currentUser.discordId;
-    if (!mayEdit) return <p className="empty">You can only edit your own characters.</p>;
+    const mayEdit = guild.isOfficer || found.player?.discordUserId === currentUser.discordId;
+    if (!mayEdit) {
+      return (
+        <p className="empty">
+          {found.player
+            ? 'You can only edit your own characters.'
+            : 'No one has claimed this character yet: claim it on the roster if it’s yours.'}
+        </p>
+      );
+    }
     return (
       <CharacterForm
         guild={guild}
         currentUser={currentUser}
         editing={{
           character: found.character,
-          playerLabel: playerLabel(found.player),
-          playerId: found.player.discordUserId,
+          // Unclaimed: no player yet ('').
+          playerLabel: found.player ? playerLabel(found.player) : 'Unclaimed',
+          playerId: found.player?.discordUserId ?? '',
         }}
         onSaved={() => navigate(back)}
         onCancel={() => navigate(back)}

@@ -12,7 +12,7 @@ import {
 import { AuthGuard } from '../auth/auth.guard';
 import type { AuthenticatedRequest } from '../auth/auth.types';
 import { GuildAccessService } from '../auth/guild-access.service';
-import { PlayerDto } from './dto/player.dto';
+import { CharacterDto, PlayerDto } from './dto/player.dto';
 import { PlayersService } from './players.service';
 
 @Controller('guilds/:guildId/players')
@@ -33,6 +33,18 @@ export class PlayersController {
       throw new ForbiddenException('You are not a member of this guild');
     }
     return this.playersService.findForGuild(guildId);
+  }
+
+  /** The guild's unclaimed characters (no player yet): any member of the guild, like the roster. */
+  @Get('unclaimed')
+  async findUnclaimed(
+    @Req() req: AuthenticatedRequest,
+    @Param('guildId') guildId: string,
+  ): Promise<CharacterDto[]> {
+    if (!(await this.guildAccess.find(req.user.id, guildId))) {
+      throw new ForbiddenException('You are not a member of this guild');
+    }
+    return this.playersService.findUnclaimedForGuild(guildId);
   }
 
   /** Officers: fill in missing Discord usernames of the guild's players. */

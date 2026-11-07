@@ -56,7 +56,8 @@ export interface CharacterProfile {
     servers: { discordId: string; icon: string | null; isMain: boolean }[];
   }[];
   /** Who plays it: their Discord account (name null until the bot has seen them). */
-  player: { discordUserId: string; name: string | null };
+  /** Null for an unclaimed character: no one has said they play it yet. */
+  player: { discordUserId: string; name: string | null } | null;
   /** That player's other characters, on any server: by name. */
   otherCharacters: {
     name: string;
@@ -191,7 +192,7 @@ export class CharacterBioService {
     });
     if (!character) return 'not-found';
 
-    const isOwner = character.player.discordUserId === viewerDiscordUserId;
+    const isOwner = character.player?.discordUserId === viewerDiscordUserId;
     const visible = isOwner || character.bioVisible;
     const bioOffered = supportsBios(server.gameVersion, server.region, server.realm);
     return {
@@ -214,11 +215,11 @@ export class CharacterBioService {
           servers: guild.servers ?? [],
         }))
         .sort((a, b) => a.name.localeCompare(b.name)),
-      player: {
+      player: character.player && {
         discordUserId: character.player.discordUserId,
         name: character.player.discordDisplayName ?? character.player.discordUsername ?? null,
       },
-      otherCharacters: (character.player.characters ?? [])
+      otherCharacters: (character.player?.characters ?? [])
         .filter((other) => other.id !== character.id)
         .map((other) => ({
           name: formatCharacterName(other),
@@ -375,7 +376,7 @@ export class CharacterBioService {
       },
     });
     if (!character) return 'not-found' as const;
-    if (character.player.discordUserId !== discordUserId) return 'forbidden' as const;
+    if (character.player?.discordUserId !== discordUserId) return 'forbidden' as const;
     return character;
   }
 }

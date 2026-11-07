@@ -20,7 +20,8 @@ describe('CharactersAdminController permissions', () => {
   let updated: string[];
   let owners: unknown[];
   let removed: string[];
-  let ownerOfCharacter: string;
+  let ownerOfCharacter: string | null;
+  let claims: unknown[];
   let verified: boolean;
   let isServerMember: boolean;
   let controller: CharactersAdminController;
@@ -32,9 +33,14 @@ describe('CharactersAdminController permissions', () => {
     owners = [];
     removed = [];
     ownerOfCharacter = ME;
+    claims = [];
     verified = false;
     isServerMember = true;
     const characters = {
+      claim: async (...args: unknown[]) => {
+        claims.push(args);
+        return 'claimed';
+      },
       addToGuild: async (_guild: string, discordUserId: string, _c: unknown, names: unknown) => {
         added.push({ discordUserId, names });
         return 'created';
@@ -55,6 +61,45 @@ describe('CharactersAdminController permissions', () => {
     controller = new CharactersAdminController(
       new CharacterActionsService(characters, guildAccess),
     );
+  });
+
+  describe('unclaimed characters', () => {
+    it('lets an Officer add one with no player, and no one else', async () => {
+      await assert.rejects(
+        controller.create(req, 'g', { ...body, unclaimed: true }),
+        ForbiddenException,
+      );
+      access = { isAdmin: false, isOfficer: true };
+      await controller.create(req, 'g', { ...body, unclaimed: true });
+      assert.deepEqual(added, [{ discordUserId: null, names: undefined }]);
+      await assert.rejects(
+        controller.create(req, 'g', { ...body, unclaimed: true, discordUserId: OTHER }),
+        BadRequestException,
+      );
+    });
+
+    it('lets any member claim one, for themselves; not someone outside the guild', async () => {
+      await controller.claim(req, 'g', 'c1');
+      assert.deepEqual(claims, [['g', 'c1', ME, { username: 'me', displayName: undefined }]]);
+      access = null;
+      await assert.rejects(controller.claim(req, 'g', 'c1'), ForbiddenException);
+    });
+
+    it('lets only an Officer edit one, or make a character unclaimed', async () => {
+      ownerOfCharacter = null;
+      await assert.rejects(controller.update(req, 'g', 'c1', { level: 10 }), /claim it first/);
+      ownerOfCharacter = ME;
+      await assert.rejects(
+        controller.update(req, 'g', 'c1', { discordUserId: null }),
+        ForbiddenException,
+      );
+      access = { isAdmin: false, isOfficer: true };
+      ownerOfCharacter = null;
+      await controller.update(req, 'g', 'c1', { level: 10 });
+      ownerOfCharacter = OTHER;
+      await controller.update(req, 'g', 'c1', { discordUserId: null });
+      assert.deepEqual(owners.at(-1), { discordUserId: null });
+    });
   });
 
   describe('adding', () => {

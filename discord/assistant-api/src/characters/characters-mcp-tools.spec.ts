@@ -69,7 +69,7 @@ async function connect(access: { isAdmin: boolean; isOfficer: boolean } | null) 
     findGuildMemberNames: async (_guildId: string, id: string) =>
       id === THEM ? { username: 'jaina', displayName: 'Jay' } : null,
     findOwnership: async (id: string) => ({
-      discordUserId: roster.find((c) => c.id === id)?.player.discordUserId ?? ME,
+      discordUserId: roster.find((c) => c.id === id)?.player?.discordUserId ?? ME,
       verified: false,
     }),
     update: async (...args: unknown[]) => void updated.push(args),
@@ -139,6 +139,7 @@ describe('CharactersMcpTools', () => {
         'add_character',
         'update_character',
         'list_migratable_characters',
+        'claim_character',
         'add_existing_character',
         'remove_character',
         'list_attributes',

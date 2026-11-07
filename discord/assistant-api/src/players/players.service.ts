@@ -1,9 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { DiscordOAuthService } from '../auth/discord-oauth.service';
 import { PrismaService } from '../database/prisma.service';
-import { PlayerDto } from './dto/player.dto';
+import { CharacterDto, PlayerDto } from './dto/player.dto';
 
 const MAX_NAME_LOOKUPS = 100;
+
+const CHARACTER_FIELDS = {
+  id: true,
+  class: true,
+  race: true,
+  roles: true,
+  firstName: true,
+  lastName: true,
+  level: true,
+} as const;
 
 @Injectable()
 export class PlayersService {
@@ -16,6 +26,18 @@ export class PlayersService {
    * (a player's characters on other servers, or not yet in this guild, are not this guild's business). */
   findForGuild(guildId: string): Promise<PlayerDto[]> {
     return this.findMany(guildId);
+  }
+
+  /**
+   * The guild's unclaimed characters: on its roster, no one has said they play them yet (added
+   * from the armory). The roster shows them with the players, as Social.
+   */
+  findUnclaimedForGuild(guildId: string): Promise<CharacterDto[]> {
+    return this.prisma.character.findMany({
+      where: { playerId: null, guilds: { some: { guildId } } },
+      orderBy: [{ firstName: 'asc' }, { lastName: 'asc' }],
+      select: CHARACTER_FIELDS,
+    });
   }
 
   /**
@@ -72,15 +94,7 @@ export class PlayersService {
         characters: {
           where: { guilds: { some: { guildId } } },
           orderBy: [{ firstName: 'asc' }, { lastName: 'asc' }],
-          select: {
-            id: true,
-            class: true,
-            race: true,
-            roles: true,
-            firstName: true,
-            lastName: true,
-            level: true,
-          },
+          select: CHARACTER_FIELDS,
         },
       },
     });

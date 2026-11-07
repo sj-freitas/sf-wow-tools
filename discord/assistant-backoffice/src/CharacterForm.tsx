@@ -39,6 +39,7 @@ interface Props {
   /** The logged-in user: Officers add characters for themselves unless they pick someone else. */
   currentUser: User;
   /** When set the form edits this character instead of adding one. */
+  /** `playerId` is '' for an unclaimed character (no player yet): an Officer may give it one, or not. */
   editing?: { character: Character; playerLabel: string; playerId: string };
   onSaved: () => void;
   onCancel: () => void;
@@ -273,7 +274,9 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
     setError(null);
-    if (guild.isOfficer && discordUserId === '') {
+    // An unclaimed character can stay unclaimed; anything else needs its player.
+    const stillUnclaimed = editing?.playerId === '' && discordUserId === '';
+    if (guild.isOfficer && discordUserId === '' && !stillUnclaimed) {
       setError('Pick a player from the search results, or paste their Discord user ID.');
       return;
     }
@@ -291,9 +294,11 @@ export function CharacterForm({ guild, currentUser, editing, onSaved, onCancel }
       roles,
       level: level === '' ? undefined : Number(level),
     };
-    // Only an Officer who picked someone else moves the character.
+    // Only an Officer who picked someone else moves the character (or gives an unclaimed one its player).
     const moved =
-      editing && guild.isOfficer && discordUserId !== editing.playerId ? discordUserId : undefined;
+      editing && guild.isOfficer && discordUserId !== '' && discordUserId !== editing.playerId
+        ? discordUserId
+        : undefined;
     (initial
       ? updateCharacter(guild.id, initial.id, {
           ...fields,

@@ -61,6 +61,17 @@ export class CharactersAdminController {
     return this.actions.migrate(req.user, guildId, id);
   }
 
+  /** "This is mine": an unclaimed character on the guild's roster becomes the requester's. */
+  @Post('guilds/:guildId/characters/:id/claim')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  claim(
+    @Req() req: AuthenticatedRequest,
+    @Param('guildId') guildId: string,
+    @Param('id') id: string,
+  ): Promise<void> {
+    return this.actions.claim(req.user, guildId, id);
+  }
+
   @Patch('guilds/:guildId/characters/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   update(

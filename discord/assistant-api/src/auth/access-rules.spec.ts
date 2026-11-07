@@ -79,6 +79,12 @@ describe('permission matrix', () => {
     assert.equal(canEditCharacter(officer, 'someone-else', 'me'), true);
   });
 
+  it('an unclaimed character (no player) is Officers’ to edit; members claim it first', () => {
+    assert.equal(canEditCharacter(officer, null, 'me'), true);
+    assert.equal(canEditCharacter(none, null, 'me'), false);
+    assert.equal(canEditCharacter(admin, null, 'me'), false);
+  });
+
   it('a character verified on Battle.net is its player’s alone, not even Officers’', () => {
     assert.equal(canEditCharacter(officer, 'someone-else', 'me', true), false);
     assert.equal(canEditCharacter(officer, 'me', 'me', true), true);
