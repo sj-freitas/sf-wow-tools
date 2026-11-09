@@ -151,10 +151,12 @@ export interface AnswerRecipe {
 }
 
 /**
- * The answer: one line per recipe with all its crafters, each character linking to its player's
- * Discord profile ("- [Bronze Mace](<wowhead>), crafters: [Shivan Darkwhisp](<…/users/…>),
- * [Tearyn Trakand](<…>)"); a character with no Discord account is just its name. At most
- * `MAX_RECIPES` recipes and `MAX_CRAFTERS` crafters a line, the rest counted ("and 4 more").
+ * The answer: one line per recipe, shown like a game item link and opening Wowhead, with all its
+ * crafters, each character followed by its player's Discord mention ("- [[Bronze Mace]](<wowhead>),
+ * crafters: Shivan Darkwhisp <@…>, Tearyn Trakand <@…>"). A mention opens the profile in Discord
+ * and pings nobody (sent with no allowed mentions); a discord.com/users link would put a profile
+ * card under the message, link previews off or not. A character with no Discord account is just
+ * its name. At most `MAX_RECIPES` recipes and `MAX_CRAFTERS` crafters a line, the rest counted.
  */
 export function answerLines(recipes: readonly AnswerRecipe[]): string {
   const lines: string[] = [];
@@ -163,12 +165,13 @@ export function answerLines(recipes: readonly AnswerRecipe[]): string {
   for (const recipe of recipes.slice(0, MAX_RECIPES)) {
     const names = recipe.crafters.map(({ character, discordUserId }) =>
       discordUserId
-        ? `[${escapeMarkdown(character)}](<https://discord.com/users/${discordUserId}>)`
+        ? `${escapeMarkdown(character)} <@${discordUserId}>`
         : escapeMarkdown(character),
     );
     const more = names.length - MAX_CRAFTERS;
     const crafters = `${names.slice(0, MAX_CRAFTERS).join(', ')}${more > 0 ? ` and ${more} more` : ''}`;
-    const line = `- [${escapeMarkdown(recipe.name)}](<${recipe.url}>), crafter${names.length === 1 ? '' : 's'}: ${crafters}`;
+    // "[Bronze Mace]", brackets and all, like the game's item links.
+    const line = `- [\\[${escapeMarkdown(recipe.name)}\\]](<${recipe.url}>), crafter${names.length === 1 ? '' : 's'}: ${crafters}`;
     if (length + line.length + 1 > MAX_LENGTH) {
       left++;
       continue;

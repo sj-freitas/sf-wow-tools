@@ -1129,8 +1129,11 @@ on logout). Blizzard's Classic Era / SoD API has no professions, hence the addon
     mace and bronze axe": both, Bronze Mace dropped as part of Heavy Bronze Mace); else **every word
     asked is in the name** ("bronze boots": Rough and Silvered Bronze Boots); else **nothing**: "who
     can craft Bronze Tube?" gets no answer when nobody has Bronze Tube, not every bronze recipe.
-  - **The answer**: one line per recipe with all its crafters, each character linking to its
-    player's Discord profile, `- [Bronze Mace](<wowhead>), crafters: [Shivan Darkwhisp](<https://discord.com/users/…>), [Tearyn Trakand](<…>)`
+  - **The answer**: one line per recipe, shown like a game item link (`[Bronze Mace]`, opening
+    Wowhead), with all its crafters, each character followed by its player's Discord mention:
+    `- [[Bronze Mace]](<wowhead>), crafters: Shivan Darkwhisp <@…>, Tearyn Trakand <@…>`. A
+    mention opens the profile in Discord and pings nobody; `discord.com/users/…` links are not
+    used, as Discord puts a profile card under the message for each, link previews off or not
     (a character with no Discord account is just its name); at most 5 recipes and 10 crafters a
     line, the rest counted ("and 2 more"). Sent without link previews and pinging nobody. The DM
     starts with a link to the question. The same person asking about the same thing again within a
