@@ -32,7 +32,7 @@ const crafters: Record<string, Crafter> = {
   b: { name: 'Bob', discordUserId: null },
 };
 const crafterOf = (id: string): Crafter => crafters[id] ?? { name: id, discordUserId: null };
-const shivan = 'Shivan Nightpath <@123>';
+const shivan = 'Shivan Nightpath (<@123>)';
 
 describe('professionsMessages', () => {
   it('lists each profession with its recipes like game item links, and their crafters’ mentions', () => {
@@ -53,10 +53,10 @@ describe('professionsMessages', () => {
         '',
         '## Blacksmithing',
         // Escaped brackets: Discord shows "[Copper Rod]" as the link, like the game's item links.
-        `- [\\[Copper Rod\\]](<https://www.wowhead.com/forever/spell=1245287>), crafters: Bob, ${shivan}`,
-        `- [\\[Rough Sharpening Stone\\]](<https://www.wowhead.com/forever/spell=2660>), crafter: ${shivan}`,
+        `- \\[[Copper Rod](<https://www.wowhead.com/forever/spell=1245287>)\\], crafters: Bob, ${shivan}`,
+        `- \\[[Rough Sharpening Stone](<https://www.wowhead.com/forever/spell=2660>)\\], crafter: ${shivan}`,
         '## Cooking',
-        '- [\\[Spell 2538\\]](<https://www.wowhead.com/forever/spell=2538>), crafter: Bob',
+        '- \\[[Spell 2538](<https://www.wowhead.com/forever/spell=2538>)\\], crafter: Bob',
       ].join('\n'),
     ]);
   });
@@ -76,10 +76,10 @@ describe('professionsMessages', () => {
       assert.ok(message.length <= MAX_MESSAGE, `${message.length} characters`);
       const lines = message.split('\n');
       assert.ok(!lines[lines.length - 1].startsWith('## '), 'never a heading alone at the end');
-      for (const line of lines) assert.match(line, /^(## |- \[)/, 'whole lines only');
+      for (const line of lines) assert.match(line, /^(## |- \\\[\[)/, 'whole lines only');
     }
     // A profession carried on into the next message just goes on with its recipes.
-    assert.ok(messages.slice(1).some((m) => m.startsWith('- [\\[Blacksmithing recipe')));
+    assert.ok(messages.slice(1).some((m) => m.startsWith('- \\[[Blacksmithing recipe')));
     assert.ok(!messages.join('\n').includes('(continued)'));
     // Every recipe once, in order.
     const listed = messages.join('\n').match(/recipe \d+/g) ?? [];
@@ -201,7 +201,7 @@ describe('ProfessionsPostPlugin', () => {
     assert.equal(posted.length, 1);
     // Each crafter is its character's name and its player's mention, never a discord.com/users
     // link (Discord shows a profile card for those); nobody is pinged (postQuietMessage).
-    assert.match(posted[0].content, /crafter: Shivan Nightpath <@123>$/m);
+    assert.match(posted[0].content, /crafter: Shivan Nightpath \(<@123>\)$/m);
     assert.doesNotMatch(posted[0].content, /discord\.com\/users/);
     // The intro links to the guild's Professions page.
     assert.match(

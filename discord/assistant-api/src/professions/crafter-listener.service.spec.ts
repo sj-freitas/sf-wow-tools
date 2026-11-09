@@ -153,7 +153,7 @@ const message = (text: string, more: Partial<ChatMessage> = {}): ChatMessage => 
   ...more,
 });
 
-const LINES = `- [\\[Flask of the Titans\\]](<${FLASK_URL}>), crafters: Bob Builder, Svajone Potato <@111>`;
+const LINES = `- \\[[Flask of the Titans](<${FLASK_URL}>)\\], crafters: Bob Builder, Svajone Potato (<@111>)`;
 
 describe('Guild Chat Profession Listener', () => {
   it('DMs whoever asks who can craft it, and logs the answer', async () => {
@@ -404,9 +404,9 @@ describe('answerLines', () => {
         },
         { name: 'Copper Rod', url: 'r', crafters: [crafter('Shivan Darkwhisp', '373')] },
       ]),
-      '- [\\[Bronze Mace\\]](<w>), crafters: Shivan Darkwhisp <@373>, Tearyn Trakand <@176>, ' +
-        'Zya\\_Milfred <@780>, Bob Builder\n' +
-        '- [\\[Copper Rod\\]](<r>), crafter: Shivan Darkwhisp <@373>',
+      '- \\[[Bronze Mace](<w>)\\], crafters: Shivan Darkwhisp (<@373>), Tearyn Trakand (<@176>), ' +
+        'Zya\\_Milfred (<@780>), Bob Builder\n' +
+        '- \\[[Copper Rod](<r>)\\], crafter: Shivan Darkwhisp (<@373>)',
     );
   });
 
@@ -422,7 +422,7 @@ describe('answerLines', () => {
     ]).split('\n');
     assert.equal(
       lines[0],
-      '- [\\[R1\\]](<u>), crafters: C1, C2, C3, C4, C5, C6, C7, C8, C9, C10 and 2 more',
+      '- \\[[R1](<u>)\\], crafters: C1, C2, C3, C4, C5, C6, C7, C8, C9, C10 and 2 more',
     );
     assert.equal(lines.length, 6);
     assert.equal(lines[5], '…and 2 more recipes: ask with the full name, or use `/crafter`.');
