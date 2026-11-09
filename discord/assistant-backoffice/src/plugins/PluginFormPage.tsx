@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { channelKey, splitChannelKey } from '../channelKey';
 import { ChannelSelect } from '../ChannelSelect';
 import { Spinner } from '../Loading';
+import { ProfessionListenerForm } from '../professions/ProfessionListenerForm';
 import { ProfessionsPostForm } from '../professions/ProfessionsPostForm';
 import { RecurringEventForm } from '../signup/RecurringEventForm';
 import type { Guild } from '../types';
@@ -21,8 +22,8 @@ interface Props {
 
 /**
  * `/plugins/create/:kind` and `/plugins/edit/:id`: the form of the plugin's kind (Channel Clean
- * Up here; Recurring Event, which belongs to event sign-ups, in ../signup; Professions List in
- * ../professions).
+ * Up here; Recurring Event, which belongs to event sign-ups, in ../signup; Professions List and
+ * Guild Chat Profession Listener in ../professions).
  */
 export function PluginFormPage({ guild, timezone }: Props) {
   const { id, kind } = useParams();
@@ -59,6 +60,15 @@ export function PluginFormPage({ guild, timezone }: Props) {
         guild={guild}
         timezone={timezone}
         editing={editing?.kind === 'PROFESSIONS_POST' ? editing : undefined}
+      />
+    );
+  }
+  if (which === 'PROFESSION_LISTENER') {
+    return (
+      <ProfessionListenerForm
+        guild={guild}
+        timezone={timezone}
+        editing={editing?.kind === 'PROFESSION_LISTENER' ? editing : undefined}
       />
     );
   }

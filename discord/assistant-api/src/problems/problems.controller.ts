@@ -78,7 +78,7 @@ export class ProblemsController {
     }
     if (!channelId || !/^\d{5,25}$/.test(channelId) || !use || !(use in REQUIRED)) {
       throw new BadRequestException(
-        'channelId and use (post, cleanup, recurring or honeypot) are needed',
+        'channelId and use (post, cleanup, recurring, honeypot, listen or answer) are needed',
       );
     }
     try {

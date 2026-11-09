@@ -99,6 +99,9 @@ just another controller.
 3. Set **Interactions Endpoint URL** (General Information tab) to
    `https://<your-deployment>/api/discord/interactions`. Discord will immediately send a test
    `PING` to verify it — the app must already be deployed and reachable for this to succeed.
+4. For the Guild Chat Profession Listener plugin only: turn on **Message Content Intent** (Bot tab,
+   Privileged Gateway Intents), so the bot can read the text of messages. Without it the plugin
+   says so on its card in the Plugins tab, and everything else works as before.
 
 ### Guilds and access levels
 
@@ -371,7 +374,7 @@ Its only option is `show` (left out: every character's name); the list is called
 ### Plugins
 
 Officers add plugins in the backoffice's **Plugins** tab: features that run on their own, on a
-schedule. Each is an instance of a plugin **kind**; the tab lists the kinds to add, then the guild's
+schedule (or, for a _live_ kind, as messages arrive). Each is an instance of a plugin **kind**; the tab lists the kinds to add, then the guild's
 plugins with their next run and last 5 runs, and Run now / Edit / Pause / Remove.
 
 - **Channel Clean Up** (`CHANNEL_CLEANUP`): deletes a channel's messages daily, weekly (a weekday) or
@@ -392,6 +395,14 @@ plugins with their next run and last 5 runs, and Run now / Edit / Pause / Remove
   that first post archives and deletes nothing, then the weekly schedule takes over. Editing it changes the
   events it posts from then on, not the one already posted; **Pause** suspends it (nothing is
   archived or posted until resumed).
+- **Guild Chat Profession Listener** (`PROFESSION_LISTENER`, professions' kind:
+  `src/professions/crafter-listener.service.ts`): answers "who can craft …?" in a channel. See
+  Professions below.
+- **Live kinds** (`live: true` in the `PluginKindDef`): no schedule. It acts as things happen in
+  Discord, so the worker's schedule never runs it: its schedule columns hold a placeholder (daily
+  at 00:00, no timezone) and `next_run_at` stays null, and **Run now** is refused (and not shown).
+  What it does is still logged as its runs (the Log), and its `notice` (what keeps it from working
+  right now) shows as the card's one status line, with its last failure.
 - **Timezone:** each plugin's schedule is read in its own timezone, picked in its form (`timezone`:
   null for the guild's server time, following its region; else a zone or offset, see
   `src/config/timezones.ts`). Posts take a `timezone` for their date the same way (not stored: the
@@ -555,7 +566,8 @@ bot, other bots, the server owner and Administrators.
   bots stay silent). Nothing is stored for them, and once the honeypot is live exempt people are not
   logged to the channel, only in the server logs.
 - Enforcement uses the bot's gateway connection in the worker, with the non-privileged `Guilds` and
-  `GuildMessages` intents only (message text is not read; no portal setting needed).
+  `GuildMessages` intents only (message text is not read; no portal setting needed). The Guild Chat
+  Profession Listener, which does read text, has a connection of its own (see Professions).
 - Honeypots are reloaded from the database every 30 seconds, so changes apply without a restart.
 - Bot permissions used: View Channel, Send Messages, Manage Channels (to create the channel), Ban
   Members. The bot's role must be above the people it bans.
@@ -1099,6 +1111,42 @@ on logout). Blizzard's Classic Era / SoD API has no professions, hence the addon
   `onRunNow` marks its next run `force`). A post that fails half way is taken back, so the retry
   starts clean.
   Mentions never ping.
+- **Guild Chat Profession Listener plugin** (`crafter-listener.service.ts`, kind
+  `PROFESSION_LISTENER`, a live kind added from `ProfessionsCoreModule`): reads a channel's messages
+  as they arrive (the guild chat) and answers a question about a crafter with who in the guild can
+  craft it. Its form: the channel, the **phrases** that make a message a question (one per line;
+  two words or more each; default `who can craft`, `who can make`, `LF crafter`, `looking for a
+  crafter` and the like, `DEFAULT_PHRASES` in `crafter-question.ts`), **Send a DM** (on by default)
+  and **Also post the answer in the channel** (a reply, off by default); at least one of the two.
+  - **What it is about** (`crafter-question.ts`): a Wowhead link (its id, else the name in its
+    address) or the game's own item link; else a name in brackets (`[Flask of the Titans]`, as game
+    chat shows items); else the words after the phrase in the same sentence (or before it, or the
+    next sentence), the longest run of them that names recipes. Filler words ("me", "pls", "the")
+    are skipped and typos and plurals tolerated (`flasks of the titns`). A question that names the
+    recipe in full gets only that one; a vague one ("who can make a flask") gets every match, the
+    closest first. Nothing matching: no answer.
+  - **The answer**: one line per player and recipe,
+    `[Svajone](<https://discord.com/users/…>) can craft [Flask of the Titans](<wowhead>) with
+    character Svajone Potato` (a character with no Discord account says so), at most 3 recipes,
+    "…and 4 more" pointing at `/crafter`. Sent without link previews and pinging nobody. The DM
+    starts with a link to the question. The same person asking about the same thing again within
+    10 minutes gets no second answer.
+  - **Game chat relayed by a bot or webhook** (a guild chat bridge): the asker is the webhook's name,
+    else the name the message starts with (`Svajone: …`, `[Svajone]: …`, `**Svajone**: …`; a
+    `-Realm` is dropped), looked up among the guild's characters to find their player's Discord
+    account for the DM. Someone with no Discord account is answered in the channel only (when
+    that's on). The bot's own messages are ignored.
+  - **Log**: each answer is one of the plugin's runs ("Freya asked “who can craft” about Flask of
+    the Titans: 2 crafters, sent a DM."); a DM Discord refused (the person doesn't accept DMs from
+    the server) or a reply the bot couldn't post is a failed run, shown on the card.
+  - **Connection**: its own gateway connection in the worker, opened only while some guild has an
+    enabled listener (checked every 30 seconds, so changes apply within half a minute), with the
+    `Guilds`, `GuildMessages` and privileged `MessageContent` intents. Kept apart from the
+    honeypots' connection (which reads no text) so a missing intent can't stop honeypots. If
+    Discord refuses the intent (it's off in the Developer Portal), it tries again every 10 minutes
+    and the plugin's card says what to turn on (the status is left in the cache,
+    `professions:listener-status`, for the API to read). Bot permissions: View Channel; to answer in
+    the channel also Send Messages and Read Message History (the channel picker checks them).
 - **Wowhead cache** (`wowhead_entries`): the English name and icon of each spell or item, looked up
   once from Wowhead's tooltip data (`WowheadService`, not an official API) in the guild's game
   version's data (`wowheadPath` in its game config: Forever's own spells are only in `forever`), a

@@ -43,6 +43,15 @@ export interface PluginKindDef<Config = Record<string, unknown>> {
    */
   scheduleKinds?: readonly ('DAILY' | 'WEEKLY' | 'MONTHLY' | 'HOURLY' | 'EVERY_5_MINUTES')[];
   /**
+   * It has no schedule: it acts as things happen in Discord (the Guild Chat Profession Listener
+   * answers messages), so it never runs from the worker's schedule and has no "Run now". Its
+   * schedule columns hold a placeholder (daily at 00:00) and its next run stays empty; what it does
+   * is still logged as its runs.
+   */
+  live?: boolean;
+  /** A live kind: what keeps it from working right now, if anything (shown on each of its plugins). */
+  notice?: () => Promise<string | null>;
+  /**
    * "Run now": what its next run should know (saved in its state). Left out: the run is like any
    * other. The Professions List uses it to post again even when nothing changed.
    */

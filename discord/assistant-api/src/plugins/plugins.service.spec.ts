@@ -70,3 +70,62 @@ describe('PluginsService.create, timezone', () => {
     await assert.rejects(setup().create(undefined, 'Mars/Olympus'), /Unknown timezone/);
   });
 });
+
+describe('PluginsService, a live kind (acts as messages arrive)', () => {
+  function live() {
+    const saved: Record<string, unknown>[] = [];
+    const stored = () => ({
+      id: 'p1',
+      guildId: 'g1',
+      kind: 'PROFESSION_LISTENER',
+      enabled: true,
+      ...saved[0],
+    });
+    const prisma = {
+      guild: { findUnique: async () => ({ region: 'EU' }) },
+      discordServer: { findMany: async () => [] },
+      guildPlugin: {
+        create: async ({ data }: { data: Record<string, unknown> }) => {
+          saved.push(data);
+          return { id: 'p1', runs: [], ...data };
+        },
+        findUnique: async () => stored(),
+      },
+    } as unknown as PrismaService;
+    const registry = new PluginKindRegistry();
+    registry.add({
+      kind: 'PROFESSION_LISTENER',
+      label: 'Guild Chat Profession Listener',
+      description: '',
+      live: true,
+      notice: async () => 'Turn on Message Content Intent.',
+      parseConfig: async () => ({ channelId: '2' }),
+      run: async () => ({ result: '', state: {} }),
+    });
+    return { service: new PluginsService(prisma, {} as DiscordBotService, registry), saved };
+  }
+
+  it('has no schedule and no next run, whatever is sent', async () => {
+    const { service, saved } = live();
+    const dto = await service.create('g1', 'u1', {
+      kind: 'PROFESSION_LISTENER',
+      confirm: true,
+      scheduleKind: 'NOT_A_SCHEDULE',
+      firstRun: 'now',
+      timezone: 'nowhere',
+    });
+    assert.equal(saved[0].nextRunAt, null);
+    assert.equal(saved[0].timezone, null);
+    assert.equal(saved[0].scheduleKind, 'DAILY');
+    assert.equal(dto.live, true);
+    assert.equal(dto.nextRunAt, null);
+    assert.equal(dto.scheduleText, 'As messages arrive');
+    assert.equal(dto.notice, 'Turn on Message Content Intent.');
+  });
+
+  it('has nothing to run now', async () => {
+    const { service } = live();
+    await service.create('g1', 'u1', { kind: 'PROFESSION_LISTENER', confirm: true });
+    await assert.rejects(service.runNow('p1'), /acts as messages arrive/);
+  });
+});

@@ -345,7 +345,8 @@ export const resolveProblem = (guildId: string, problemId: string): Promise<void
   request('POST', `/api/guilds/${guildId}/problems/${problemId}/resolve`);
 
 /** What a channel is used for: what the bot needs there (the API's channel-permissions.ts). */
-export type ChannelUse = 'post' | 'cleanup' | 'recurring' | 'honeypot';
+/** `listen`: see its messages; `answer`: see them and reply to them (a profession listener). */
+export type ChannelUse = 'post' | 'cleanup' | 'recurring' | 'honeypot' | 'listen' | 'answer';
 
 /** What the bot lacks in a channel for what it'll do there; `null` when it can't be told. */
 export const checkChannel = (

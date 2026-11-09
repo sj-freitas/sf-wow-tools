@@ -30,6 +30,8 @@ export interface PluginKindDto {
   kind: string;
   label: string;
   description: string;
+  /** It acts as things happen in Discord, not on a schedule. */
+  live: boolean;
 }
 
 export interface PluginRunDto {
@@ -46,6 +48,10 @@ export interface PluginDto {
   kindLabel: string;
   name: string;
   enabled: boolean;
+  /** It acts as things happen in Discord: no schedule, next run or "Run now". */
+  live: boolean;
+  /** A live plugin: what keeps it from working right now ("Discord doesn't let the bot read…"). */
+  notice: string | null;
   schedule: {
     kind: PluginScheduleKind;
     timeOfDay: string;
@@ -86,6 +92,14 @@ export interface PluginInput {
   timezone?: unknown;
 }
 
+/** What a live kind stores as its schedule: it has none (see `PluginKindDef.live`). */
+const LIVE_SCHEDULE: Schedule = {
+  kind: 'DAILY',
+  timeOfDay: '00:00',
+  weekday: null,
+  dayOfMonth: null,
+};
+
 /** How many recent runs a plugin comes with: its Log in the Plugins tab. */
 const RECENT_RUNS = 20;
 const MAX_NAME = 80;
@@ -102,7 +116,7 @@ export class PluginsService {
   kinds(): PluginKindDto[] {
     return this.registry
       .all()
-      .map(({ kind, label, description }) => ({ kind, label, description }));
+      .map(({ kind, label, description, live }) => ({ kind, label, description, live: !!live }));
   }
 
   /** The code of a kind of plugin; undefined for one whose feature was taken out. */
@@ -117,7 +131,10 @@ export class PluginsService {
       orderBy: { createdAt: 'asc' },
       include: { runs: { orderBy: { startedAt: 'desc' }, take: RECENT_RUNS } },
     });
-    return plugins.map((plugin) => this.toDto(plugin, plugin.runs, serverZone));
+    const notices = await this.notices(plugins);
+    return plugins.map((plugin) =>
+      this.toDto(plugin, plugin.runs, serverZone, notices.get(plugin.kind)),
+    );
   }
 
   /** One plugin, as the Plugins tab shows it. */
@@ -127,7 +144,24 @@ export class PluginsService {
       include: { runs: { orderBy: { startedAt: 'desc' }, take: RECENT_RUNS } },
     });
     if (!plugin) throw new NotFoundException('Plugin not found');
-    return this.toDto(plugin, plugin.runs, await this.timezoneOf(plugin.guildId));
+    const notices = await this.notices([plugin]);
+    return this.toDto(
+      plugin,
+      plugin.runs,
+      await this.timezoneOf(plugin.guildId),
+      notices.get(plugin.kind),
+    );
+  }
+
+  /** What keeps each live kind among `plugins` from working, asked once per kind. */
+  private async notices(plugins: readonly GuildPlugin[]): Promise<Map<string, string | null>> {
+    const notices = new Map<string, string | null>();
+    for (const kind of new Set(plugins.map((plugin) => plugin.kind))) {
+      const notice = this.registry.get(kind)?.notice;
+      if (!notice) continue;
+      notices.set(kind, await notice().catch(() => null));
+    }
+    return notices;
   }
 
   async create(guildId: string, userId: string, input: PluginInput): Promise<PluginDto> {
@@ -135,13 +169,16 @@ export class PluginsService {
     if (!def) throw new BadRequestException('Pick a kind of plugin.');
     if (input.confirm !== true) {
       throw new BadRequestException(
-        'Confirm adding this plugin: it acts on its own, on a schedule.',
+        def.live
+          ? 'Confirm adding this plugin: it acts on its own, as messages arrive.'
+          : 'Confirm adding this plugin: it acts on its own, on a schedule.',
       );
     }
     const serverZone = await this.timezoneOf(guildId);
-    const ownZone = this.parseTimezone(input.timezone);
+    // A live kind has no schedule or timezone: a placeholder, and no next run.
+    const ownZone = def.live ? null : this.parseTimezone(input.timezone);
     const timezone = this.zone(ownZone, serverZone);
-    const schedule = this.parseSchedule(input, def);
+    const schedule = def.live ? LIVE_SCHEDULE : this.parseSchedule(input, def);
     const config = await def.parseConfig(input.config, await this.context(guildId));
     const plugin = await this.prisma.guildPlugin.create({
       data: {
@@ -154,12 +191,12 @@ export class PluginsService {
         weekday: schedule.weekday ?? null,
         dayOfMonth: schedule.dayOfMonth ?? null,
         timezone: ownZone,
-        nextRunAt: this.parseFirstRun(input.firstRun, schedule, timezone),
+        nextRunAt: def.live ? null : this.parseFirstRun(input.firstRun, schedule, timezone),
         config: config as Prisma.InputJsonValue,
         createdById: userId,
       },
     });
-    return this.toDto(plugin, [], serverZone);
+    return this.toDto(plugin, [], serverZone, (await this.notices([plugin])).get(plugin.kind));
   }
 
   /** Changes what is given: the name, the schedule, the settings, or pauses/resumes it. */
@@ -168,7 +205,8 @@ export class PluginsService {
     const def = this.registry.get(plugin.kind);
     if (!def) throw new BadRequestException('This kind of plugin is no longer available.');
     const serverZone = await this.timezoneOf(plugin.guildId);
-    const timezoneChanged = input.timezone !== undefined;
+    // A live kind has no schedule to change.
+    const timezoneChanged = input.timezone !== undefined && !def.live;
     const ownZone = timezoneChanged ? this.parseTimezone(input.timezone) : plugin.timezone;
     const timezone = this.zone(ownZone, serverZone);
     const data: Prisma.GuildPluginUpdateInput = {};
@@ -180,7 +218,8 @@ export class PluginsService {
       // Somewhere else now: an unfinished clean-up's place means nothing there.
       data.state = {};
     }
-    const scheduleChanged = input.scheduleKind !== undefined || input.timeOfDay !== undefined;
+    const scheduleChanged =
+      !def.live && (input.scheduleKind !== undefined || input.timeOfDay !== undefined);
     const schedule = scheduleChanged
       ? this.parseSchedule(
           {
@@ -200,7 +239,10 @@ export class PluginsService {
     }
     if (input.enabled !== undefined) data.enabled = input.enabled === true;
     // Resumed or rescheduled: the next run is the next occurrence from now.
-    if (scheduleChanged || timezoneChanged || (input.enabled === true && !plugin.enabled)) {
+    if (
+      !def.live &&
+      (scheduleChanged || timezoneChanged || (input.enabled === true && !plugin.enabled))
+    ) {
       data.nextRunAt = nextOccurrence(schedule, timezone, new Date());
     }
     const updated = await this.prisma.guildPlugin.update({
@@ -208,14 +250,25 @@ export class PluginsService {
       data,
       include: { runs: { orderBy: { startedAt: 'desc' }, take: RECENT_RUNS } },
     });
-    return this.toDto(updated, updated.runs, serverZone);
+    return this.toDto(
+      updated,
+      updated.runs,
+      serverZone,
+      (await this.notices([updated])).get(updated.kind),
+    );
   }
 
   /** Runs it within the minute; its schedule carries on as before. */
   async runNow(pluginId: string): Promise<void> {
     const plugin = await this.find(pluginId);
+    const def = this.registry.get(plugin.kind);
+    if (def?.live) {
+      throw new BadRequestException(
+        `A ${def.label} acts as messages arrive: there is nothing to run.`,
+      );
+    }
     if (!plugin.enabled) throw new BadRequestException('Resume the plugin first.');
-    const onRunNow = this.registry.get(plugin.kind)?.onRunNow;
+    const onRunNow = def?.onRunNow;
     await this.prisma.guildPlugin.update({
       where: { id: pluginId },
       data: {
@@ -333,24 +386,33 @@ export class PluginsService {
     return plugin;
   }
 
-  private toDto(plugin: GuildPlugin, runs: PluginRun[], serverZone: string): PluginDto {
+  private toDto(
+    plugin: GuildPlugin,
+    runs: PluginRun[],
+    serverZone: string,
+    notice: string | null = null,
+  ): PluginDto {
     const schedule = this.scheduleOf(plugin);
     const timezone = this.zone(plugin.timezone, serverZone);
+    const def = this.registry.get(plugin.kind);
+    const live = !!def?.live;
     return {
       id: plugin.id,
       kind: plugin.kind,
-      kindLabel: this.registry.get(plugin.kind)?.label ?? plugin.kind,
+      kindLabel: def?.label ?? plugin.kind,
       name: plugin.name,
       enabled: plugin.enabled,
+      live,
+      notice: live && plugin.enabled ? notice : null,
       schedule: {
         kind: plugin.scheduleKind as PluginScheduleKind,
         timeOfDay: plugin.timeOfDay,
         weekday: plugin.weekday,
         dayOfMonth: plugin.dayOfMonth,
       },
-      scheduleText: describeSchedule(schedule, timezone),
+      scheduleText: live ? 'As messages arrive' : describeSchedule(schedule, timezone),
       timezone: plugin.timezone ?? SERVER_TIME,
-      nextRunAt: plugin.enabled ? (plugin.nextRunAt?.toISOString() ?? null) : null,
+      nextRunAt: plugin.enabled && !live ? (plugin.nextRunAt?.toISOString() ?? null) : null,
       lastRunAt: plugin.lastRunAt?.toISOString() ?? null,
       lastStatus: plugin.lastStatus,
       lastError: plugin.lastError,

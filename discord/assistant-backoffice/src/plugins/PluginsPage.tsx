@@ -4,6 +4,7 @@ import { Drawer } from '../Drawer';
 import { Link } from 'react-router-dom';
 import { guildPath } from '../guildPath';
 import { Spinner } from '../Loading';
+import { OneLine } from '../OneLine';
 import { formatWhen } from '../time';
 import { showToast } from '../toast';
 import type { Guild } from '../types';
@@ -80,12 +81,25 @@ export function PluginsPage({ guild, timezone }: Props) {
             runNowDanger: false,
             remove: 'the list it posted stays',
           }
-        : {
-            summary: `posts “${plugin.config.title}” for ${WEEKDAYS[plugin.config.weekday - 1]} ${plugin.config.time}`,
-            runNow: `Archive the events still open in ${channelOf(plugin)}, delete all its other messages (pinned ones too) and post the next “${plugin.config.title}” now? Deleted messages can’t be brought back. Its schedule carries on as before.`,
-            runNowDanger: true,
-            remove: 'the events it already posted stay',
-          };
+        : plugin.kind === 'PROFESSION_LISTENER'
+          ? {
+              summary: `answers “who can craft …?”${
+                plugin.config.sendDm && plugin.config.postInChannel
+                  ? ' by DM and in the channel'
+                  : plugin.config.postInChannel
+                    ? ' in the channel'
+                    : ' by DM'
+              }`,
+              runNow: '',
+              runNowDanger: false,
+              remove: 'the answers it sent stay',
+            }
+          : {
+              summary: `posts “${plugin.config.title}” for ${WEEKDAYS[plugin.config.weekday - 1]} ${plugin.config.time}`,
+              runNow: `Archive the events still open in ${channelOf(plugin)}, delete all its other messages (pinned ones too) and post the next “${plugin.config.title}” now? Deleted messages can’t be brought back. Its schedule carries on as before.`,
+              runNowDanger: true,
+              remove: 'the events it already posted stay',
+            };
 
   return (
     <div className="tasks">
@@ -96,7 +110,9 @@ export function PluginsPage({ guild, timezone }: Props) {
           <Drawer title={`${plugin.name}: log`} onClose={() => setLogOf(null)}>
             {plugin.recentRuns.length === 0 ? (
               <p className="empty">
-                No runs to show yet. Checks that found nothing to do aren’t logged.
+                {plugin.live
+                  ? 'Nothing answered yet: each answer it sends is logged here.'
+                  : 'No runs to show yet. Checks that found nothing to do aren’t logged.'}
               </p>
             ) : (
               <ul className="honeypot-events">
@@ -119,7 +135,7 @@ export function PluginsPage({ guild, timezone }: Props) {
         <div>
           <h3 className="field-label">
             Plugins
-            <Help>Features that run on their own, on a schedule.</Help>
+            <Help>Features that run on their own: on a schedule, or as messages arrive.</Help>
           </h3>
         </div>
       </div>
@@ -162,33 +178,51 @@ export function PluginsPage({ guild, timezone }: Props) {
               <div className="muted card-meta">
                 {channelOf(plugin)} · {plugin.scheduleText} · {describe(plugin).summary}
               </div>
+              {/* One line whatever it says: a long notice is cut short, a tap shows it all. */}
               <div className="muted card-meta">
-                {plugin.enabled
-                  ? `Next run: ${formatWhen(plugin.nextRunAt, timezone)}`
-                  : 'Paused: it won’t run until resumed.'}
+                {!plugin.enabled ? (
+                  plugin.live ? (
+                    'Paused: it doesn’t answer until resumed.'
+                  ) : (
+                    'Paused: it won’t run until resumed.'
+                  )
+                ) : plugin.live ? (
+                  <OneLine
+                    text={liveStatus(plugin)}
+                    className={
+                      plugin.notice || plugin.lastStatus === 'FAILED' ? 'status-error' : undefined
+                    }
+                  />
+                ) : (
+                  `Next run: ${formatWhen(plugin.nextRunAt, timezone)}`
+                )}
               </div>
             </div>
             {/* Its run log is behind "Log"; only a failure shows here, to be seen. */}
-            {plugin.lastStatus === 'FAILED' && (
+            {/* A live plugin says so in its status line, which is always there. */}
+            {plugin.lastStatus === 'FAILED' && !plugin.live && (
               <p className="status-error">Last run failed: {plugin.lastError}</p>
             )}
             <div className="settings-actions task-actions">
-              <button
-                type="button"
-                className="btn btn-sm"
-                disabled={!plugin.enabled}
-                title={plugin.enabled ? 'Runs within a minute' : 'Resume it first'}
-                onClick={() =>
-                  void confirm({
-                    title: 'Run now?',
-                    message: describe(plugin).runNow,
-                    confirmLabel: 'Run now',
-                    danger: describe(plugin).runNowDanger,
-                  }).then((ok) => ok && run(runPluginNow(plugin.id)))
-                }
-              >
-                Run now
-              </button>
+              {/* A live plugin answers as messages arrive: there is nothing to run. */}
+              {!plugin.live && (
+                <button
+                  type="button"
+                  className="btn btn-sm"
+                  disabled={!plugin.enabled}
+                  title={plugin.enabled ? 'Runs within a minute' : 'Resume it first'}
+                  onClick={() =>
+                    void confirm({
+                      title: 'Run now?',
+                      message: describe(plugin).runNow,
+                      confirmLabel: 'Run now',
+                      danger: describe(plugin).runNowDanger,
+                    }).then((ok) => ok && run(runPluginNow(plugin.id)))
+                  }
+                >
+                  Run now
+                </button>
+              )}
               <button type="button" className="btn btn-sm" onClick={() => setLogOf(plugin.id)}>
                 Log
               </button>
@@ -223,3 +257,13 @@ export function PluginsPage({ guild, timezone }: Props) {
     </div>
   );
 }
+
+/**
+ * A live plugin's one status line: what keeps it from working, else how its last answer failed
+ * (a DM Discord refused), else that it is listening.
+ */
+const liveStatus = (plugin: Plugin): string =>
+  plugin.notice ??
+  (plugin.lastStatus === 'FAILED'
+    ? `Last answer failed: ${plugin.lastError ?? 'unknown error'}`
+    : 'Listening: it answers within seconds of a question.');

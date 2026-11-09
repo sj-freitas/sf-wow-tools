@@ -86,8 +86,8 @@ describe('PluginRunnerService', () => {
         { id: messageId(DAY, 3), pinned: false, bot: false },
       ],
     ];
-    const now = new Date('2026-11-03T01:00:30Z');
-    await runner.run(plugin, now);
+    // Now: the run's 3-minute budget is counted on the real clock.
+    await runner.run(plugin, new Date());
     assert.equal(runs[0].status, 'SUCCESS');
     assert.equal(runs[0].result, 'Deleted 2 messages.');
     const update = updates[0];
@@ -112,7 +112,7 @@ describe('PluginRunnerService', () => {
 
   it('records a failure and tries again in 5 minutes, then waits for the next occurrence', async () => {
     listFails = true;
-    await runner.run(plugin, new Date('2026-11-03T01:00:30Z'));
+    await runner.run(plugin, new Date());
     assert.equal(runs[0].status, 'FAILED');
     assert.equal(updates[0].lastStatus, 'FAILED');
     const retryIn = (updates[0].nextRunAt as Date).getTime() - Date.now();
@@ -122,7 +122,7 @@ describe('PluginRunnerService', () => {
     );
 
     failures = 3;
-    await runner.run(plugin, new Date('2026-11-03T01:00:30Z'));
+    await runner.run(plugin, new Date());
     assert.equal((updates[1].nextRunAt as Date).toISOString(), next0200());
   });
 

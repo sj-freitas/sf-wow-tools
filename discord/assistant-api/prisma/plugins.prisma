@@ -11,6 +11,10 @@ enum PluginKind {
   RECURRING_EVENT
   // Posts the guild's professions and reposts them when they change (added by src/professions).
   PROFESSIONS_POST
+  // Guild Chat Profession Listener: answers "who can craft …?" in a channel as messages arrive, by
+  // DM and/or a reply (added by src/professions). A live kind: no schedule (a placeholder daily
+  // 00:00 is stored and next_run_at stays null); each answer is logged as a run.
+  PROFESSION_LISTENER
 
   @@map("plugin_kind")
 }

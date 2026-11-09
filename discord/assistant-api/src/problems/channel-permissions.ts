@@ -32,7 +32,7 @@ export const PERMISSION_LABELS: Record<PermissionName, string> = {
 };
 
 /** What a channel is used for, and what the bot needs there for it. */
-export type ChannelUse = 'post' | 'cleanup' | 'recurring' | 'honeypot';
+export type ChannelUse = 'post' | 'cleanup' | 'recurring' | 'honeypot' | 'listen' | 'answer';
 
 export const REQUIRED: Record<ChannelUse, PermissionName[]> = {
   // Posts and events: send, embed (events are embeds), react (seed reactions), read back.
@@ -50,6 +50,9 @@ export const REQUIRED: Record<ChannelUse, PermissionName[]> = {
   ],
   // A honeypot: see who posts, and ban them.
   honeypot: ['VIEW_CHANNEL', 'BAN_MEMBERS'],
+  // Guild Chat Profession Listener: see the messages; answering in the channel replies to them.
+  listen: ['VIEW_CHANNEL'],
+  answer: ['VIEW_CHANNEL', 'SEND_MESSAGES', 'READ_MESSAGE_HISTORY'],
 };
 
 export interface Overwrite {

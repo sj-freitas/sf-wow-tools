@@ -3,13 +3,15 @@ import { ArmorySyncService } from '../armory/armory-sync.service';
 import { HoneypotGatewayService } from '../honeypot/honeypot-gateway.service';
 import { RetentionService } from '../maintenance/retention.service';
 import { PluginRunnerService } from '../plugins/plugin-runner.service';
+import { CrafterListenerService } from '../professions/crafter-listener.service';
 import { SignupEventsService } from '../signup/signup-events.service';
 import { SignupSchedulerService } from '../signup/signup-scheduler.service';
 import { SchedulerService } from '../tasks/scheduler.service';
 
 /**
- * The background worker: the scheduler for scheduled tasks, the plugins' runs, the armory sync and the live
- * Discord connection for honeypots. Runs in its own process (`worker.ts`) or, on a single instance, inside the
+ * The background worker: the scheduler for scheduled tasks, the plugins' runs, the armory sync, the live
+ * Discord connection for honeypots and, while a guild has a Guild Chat Profession Listener, the one
+ * that reads its guild chat. Runs in its own process (`worker.ts`) or, on a single instance, inside the
  * web process (`WORKER_IN_PROCESS=true`). Officers never see any of this.
  */
 @Injectable()
@@ -24,6 +26,7 @@ export class WorkerService implements OnApplicationShutdown {
     private readonly plugins: PluginRunnerService,
     private readonly retention: RetentionService,
     private readonly armorySync: ArmorySyncService,
+    private readonly crafterListener: CrafterListenerService,
   ) {}
 
   async start(): Promise<void> {
@@ -34,6 +37,8 @@ export class WorkerService implements OnApplicationShutdown {
     this.retention.start();
     // Characters' race, class and level from the armory, a few at a time (every 10 minutes).
     this.armorySync.start();
+    // "Who can craft …?" in a guild chat: its own connection, opened while a listener is enabled.
+    this.crafterListener.start();
     // An event whose sign-up post is deleted in Discord is archived.
     this.honeypotGateway.onMessageDeleted((messageId) => {
       void this.signupEvents.onMessageDeleted(messageId);
@@ -47,6 +52,7 @@ export class WorkerService implements OnApplicationShutdown {
   }
 
   async onApplicationShutdown(): Promise<void> {
+    await this.crafterListener.stop();
     await this.honeypotGateway.stop();
   }
 }

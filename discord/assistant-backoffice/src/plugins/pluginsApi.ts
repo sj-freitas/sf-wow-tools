@@ -2,7 +2,8 @@ import { request } from '../api';
 
 /** Plugins (API: /api/guilds/:guildId/plugins, /api/plugins/:id). */
 
-export type PluginKind = 'CHANNEL_CLEANUP' | 'RECURRING_EVENT' | 'PROFESSIONS_POST';
+export type PluginKind =
+  'CHANNEL_CLEANUP' | 'RECURRING_EVENT' | 'PROFESSIONS_POST' | 'PROFESSION_LISTENER';
 /** HOURLY (on the hour) and EVERY_5_MINUTES: for plugins whose runs are cheap checks. */
 export type PluginScheduleKind = 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'HOURLY' | 'EVERY_5_MINUTES';
 export type PluginRunStatus = 'SUCCESS' | 'FAILED' | 'MISSED';
@@ -12,6 +13,8 @@ export interface PluginKindInfo {
   kind: PluginKind;
   label: string;
   description: string;
+  /** It acts as things happen in Discord (answers messages), not on a schedule. */
+  live: boolean;
 }
 
 export interface PluginSchedule {
@@ -51,6 +54,18 @@ export interface ProfessionsPostConfig {
   channelId: string;
 }
 
+/**
+ * Guild Chat Profession Listener (professions' kind, its form is in ../professions): the channel it
+ * reads, what makes a message a question, and how it answers (at least one of the two).
+ */
+export interface ProfessionListenerConfig {
+  serverId: string;
+  channelId: string;
+  phrases: string[];
+  sendDm: boolean;
+  postInChannel: boolean;
+}
+
 export interface PluginRun {
   id: string;
   startedAt: string;
@@ -64,6 +79,10 @@ interface PluginBase {
   kindLabel: string;
   name: string;
   enabled: boolean;
+  /** It acts as messages arrive: its schedule is a placeholder, no next run, no "Run now". */
+  live: boolean;
+  /** A live plugin: what keeps it from working right now (Discord refused to show it messages). */
+  notice: string | null;
   schedule: PluginSchedule;
   /** e.g. "Every day at 02:00". */
   scheduleText: string;
@@ -82,6 +101,7 @@ export type Plugin = PluginBase &
     | { kind: 'CHANNEL_CLEANUP'; config: ChannelCleanupConfig }
     | { kind: 'RECURRING_EVENT'; config: RecurringEventConfig }
     | { kind: 'PROFESSIONS_POST'; config: ProfessionsPostConfig }
+    | { kind: 'PROFESSION_LISTENER'; config: ProfessionListenerConfig }
   );
 
 export interface PluginInput {
@@ -92,7 +112,8 @@ export interface PluginInput {
   timeOfDay?: string;
   weekday?: number | null;
   dayOfMonth?: number | null;
-  config?: ChannelCleanupConfig | RecurringEventConfig | ProfessionsPostConfig;
+  config?:
+    ChannelCleanupConfig | RecurringEventConfig | ProfessionsPostConfig | ProfessionListenerConfig;
   /** Required to create one: it acts on its own, on a schedule. */
   confirm?: boolean;
   /** Creating only: first run `now` or at "yyyy-MM-ddTHH:mm" (guild timezone); else its schedule's. */

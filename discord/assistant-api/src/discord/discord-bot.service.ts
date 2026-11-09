@@ -56,6 +56,8 @@ export interface RichMessage {
   mention?: boolean;
   /** Shown as a reply to that message (and still posted if it was deleted). */
   replyTo?: string;
+  /** No link previews under it. */
+  suppressEmbeds?: boolean;
 }
 
 /** Only files Discord itself hosts are downloaded. */
@@ -287,6 +289,19 @@ export class DiscordBotService {
   }
 
   /**
+   * Sends a direct message of plain text, with no link previews and nobody pinged. Fails (Discord
+   * error 50007) when the user does not accept DMs.
+   */
+  async sendDirectText(userId: string, content: string): Promise<void> {
+    const dm = (await this.rest.post(Routes.userChannels(), {
+      body: { recipient_id: userId },
+    })) as APIChannel;
+    await this.rest.post(Routes.channelMessages(dm.id), {
+      body: { content, allowed_mentions: { parse: [] }, flags: SUPPRESS_EMBEDS },
+    });
+  }
+
+  /**
    * `suppressEmbeds` sets or clears the "no link previews" flag along with the new text. `quiet`
    * makes sure the edit pings nobody, whatever it mentions. With `files` (an empty list too) the
    * message's attachments are replaced by exactly these files; without it they are left alone.
@@ -326,6 +341,7 @@ export class DiscordBotService {
         ...(message.replyTo
           ? { message_reference: { message_id: message.replyTo, fail_if_not_exists: false } }
           : {}),
+        ...(message.suppressEmbeds ? { flags: SUPPRESS_EMBEDS } : {}),
       },
     })) as APIMessage;
     return sent.id;
