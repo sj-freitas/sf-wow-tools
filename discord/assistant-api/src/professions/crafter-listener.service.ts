@@ -8,6 +8,7 @@ import { DiscordBotService } from '../discord/discord-bot.service';
 import { describeDiscordError, isDiscordError } from '../discord/discord-errors';
 import { parseGuildChannel } from '../plugins/plugin-channel';
 import { PluginKindRegistry, type PluginKindDef } from '../plugins/plugin-kinds';
+import { crafterName, escapeMarkdown, itemLink, recipeLine } from './crafter-format';
 import {
   findQuestion,
   matchRecipes,
@@ -131,8 +132,6 @@ export const REFUSED_NOTICE =
   'Discord doesn’t let the bot read messages yet: turn on Message Content Intent in the Discord ' +
   'Developer Portal (the application’s Bot tab, Privileged Gateway Intents). It tries again every 10 minutes.';
 
-const escapeMarkdown = (text: string): string => text.replace(/([\\*_~`|[\]<>])/g, '\\$1');
-
 const listOf = (names: readonly string[]): string =>
   names.length <= 1
     ? (names[0] ?? '')
@@ -151,12 +150,9 @@ export interface AnswerRecipe {
 }
 
 /**
- * The answer: one line per recipe, shown like a game item link and opening Wowhead, with all its
- * crafters, each character followed by its player's Discord mention ("- [[Bronze Mace]](<wowhead>),
- * crafters: Shivan Darkwhisp <@…>, Tearyn Trakand <@…>"). A mention opens the profile in Discord
- * and pings nobody (sent with no allowed mentions); a discord.com/users link would put a profile
- * card under the message, link previews off or not. A character with no Discord account is just
- * its name. At most `MAX_RECIPES` recipes and `MAX_CRAFTERS` crafters a line, the rest counted.
+ * The answer: one line per recipe with all its crafters, as the Professions List shows them
+ * (crafter-format.ts: "- [Bronze Mace], crafters: Shivan Darkwhisp @Shivan, Tearyn Trakand
+ * @Tearyn"). At most `MAX_RECIPES` recipes and `MAX_CRAFTERS` crafters a line, the rest counted.
  */
 export function answerLines(recipes: readonly AnswerRecipe[]): string {
   const lines: string[] = [];
@@ -164,14 +160,11 @@ export function answerLines(recipes: readonly AnswerRecipe[]): string {
   let left = 0;
   for (const recipe of recipes.slice(0, MAX_RECIPES)) {
     const names = recipe.crafters.map(({ character, discordUserId }) =>
-      discordUserId
-        ? `${escapeMarkdown(character)} <@${discordUserId}>`
-        : escapeMarkdown(character),
+      crafterName(character, discordUserId),
     );
     const more = names.length - MAX_CRAFTERS;
     const crafters = `${names.slice(0, MAX_CRAFTERS).join(', ')}${more > 0 ? ` and ${more} more` : ''}`;
-    // "[Bronze Mace]", brackets and all, like the game's item links.
-    const line = `- [\\[${escapeMarkdown(recipe.name)}\\]](<${recipe.url}>), crafter${names.length === 1 ? '' : 's'}: ${crafters}`;
+    const line = recipeLine(itemLink(recipe.name, recipe.url), names.length, crafters);
     if (length + line.length + 1 > MAX_LENGTH) {
       left++;
       continue;

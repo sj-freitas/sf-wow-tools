@@ -8,7 +8,6 @@ import { PluginKindRegistry, type PluginContext } from '../plugins/plugin-kinds'
 import type { GuildRecipe, GuildRecipesService } from './guild-recipes.service';
 import {
   MAX_MESSAGE,
-  characterPageUrl,
   listIntro,
   ProfessionsPostPlugin,
   professionsMessages,
@@ -27,20 +26,16 @@ const recipe = (profession: string, id: number, name: string | null, crafterIds:
     crafterIds,
   }) as GuildRecipe;
 
-// Shivan links to its Guild Assistant page; Bob has none (yet).
+// Shivan's player is on Discord; Bob has no Discord account (an unclaimed character).
 const crafters: Record<string, Crafter> = {
-  a: {
-    name: 'Shivan Nightpath',
-    url: 'https://guildassistant.app/forever/eu/rp/characters/Shivan-Nightpath',
-  },
-  b: { name: 'Bob', url: null },
+  a: { name: 'Shivan Nightpath', discordUserId: '123' },
+  b: { name: 'Bob', discordUserId: null },
 };
-const crafterOf = (id: string): Crafter => crafters[id] ?? { name: id, url: null };
-const shivan =
-  '[Shivan Nightpath](<https://guildassistant.app/forever/eu/rp/characters/Shivan-Nightpath>)';
+const crafterOf = (id: string): Crafter => crafters[id] ?? { name: id, discordUserId: null };
+const shivan = 'Shivan Nightpath <@123>';
 
 describe('professionsMessages', () => {
-  it('lists each profession with its recipes and their crafters, linked to their pages', () => {
+  it('lists each profession with its recipes like game item links, and their crafters’ mentions', () => {
     const messages = professionsMessages(
       [
         recipe('Blacksmithing', 1245287, 'Copper Rod', ['a', 'b']),
@@ -57,11 +52,11 @@ describe('professionsMessages', () => {
         'Find who can craft something with `/crafter <recipe name>` anywhere on Discord, or with Discord’s search.',
         '',
         '## Blacksmithing',
-        // Escaped brackets: Discord shows "[Bob, Shivan Nightpath]" around the links.
-        `- [Copper Rod](<https://www.wowhead.com/forever/spell=1245287>): Crafters: \\[Bob, ${shivan}\\]`,
-        `- [Rough Sharpening Stone](<https://www.wowhead.com/forever/spell=2660>): Crafters: \\[${shivan}\\]`,
+        // Escaped brackets: Discord shows "[Copper Rod]" as the link, like the game's item links.
+        `- [\\[Copper Rod\\]](<https://www.wowhead.com/forever/spell=1245287>), crafters: Bob, ${shivan}`,
+        `- [\\[Rough Sharpening Stone\\]](<https://www.wowhead.com/forever/spell=2660>), crafter: ${shivan}`,
         '## Cooking',
-        '- [Spell 2538](<https://www.wowhead.com/forever/spell=2538>): Crafters: \\[Bob\\]',
+        '- [\\[Spell 2538\\]](<https://www.wowhead.com/forever/spell=2538>), crafter: Bob',
       ].join('\n'),
     ]);
   });
@@ -84,7 +79,7 @@ describe('professionsMessages', () => {
       for (const line of lines) assert.match(line, /^(## |- \[)/, 'whole lines only');
     }
     // A profession carried on into the next message just goes on with its recipes.
-    assert.ok(messages.slice(1).some((m) => m.startsWith('- [Blacksmithing recipe')));
+    assert.ok(messages.slice(1).some((m) => m.startsWith('- [\\[Blacksmithing recipe')));
     assert.ok(!messages.join('\n').includes('(continued)'));
     // Every recipe once, in order.
     const listed = messages.join('\n').match(/recipe \d+/g) ?? [];
@@ -102,34 +97,17 @@ describe('professionsMessages', () => {
     assert.ok(message.length <= MAX_MESSAGE);
     assert.match(
       message,
-      /, \[\d+ more\]\(<https:\/\/guildassistant\.app\/g\/professions\/2538\/crafters>\)\\\]$/,
+      / and \[\d+ more\]\(<https:\/\/guildassistant\.app\/g\/professions\/2538\/crafters>\)$/,
     );
     // Without the website's address: plain text.
     const [plain] = professionsMessages([recipe('Cooking', 2538, 'Bread', many)], crafterOf);
-    assert.match(plain, /, \d+ more\\\]$/);
+    assert.match(plain, / and \d+ more$/);
   });
 
   it('says so when nobody imported professions', () => {
     assert.deepEqual(professionsMessages([], crafterOf), [
       'Nobody in the guild has imported their professions yet.',
     ]);
-  });
-});
-
-describe('characterPageUrl', () => {
-  it("is the character's page on Guild Assistant, as the website addresses it", () => {
-    const server = { gameVersion: 'Forever', region: 'EU', realm: 'RP' };
-    assert.equal(
-      characterPageUrl('https://guildassistant.app', server, {
-        firstName: 'Shivan',
-        lastName: 'Nightpath',
-      }),
-      'https://guildassistant.app/forever/eu/rp/characters/Shivan-Nightpath',
-    );
-    assert.equal(
-      characterPageUrl('https://guildassistant.app', server, { firstName: 'Bob', lastName: '' }),
-      'https://guildassistant.app/forever/eu/rp/characters/Bob',
-    );
   });
 });
 
@@ -221,11 +199,9 @@ describe('ProfessionsPostPlugin', () => {
     const first = await run({});
     assert.equal(first.result, 'Posted the list: 1 recipe in 1 message.');
     assert.equal(posted.length, 1);
-    // Crafters link to their Guild Assistant page, never a Discord profile (Discord shows a card).
-    assert.match(
-      posted[0].content,
-      /\(<https:\/\/guildassistant\.app\/forever\/eu\/firemaw\/characters\/Shivan-Nightpath\/professions>\)/,
-    );
+    // Each crafter is its character's name and its player's mention, never a discord.com/users
+    // link (Discord shows a profile card for those); nobody is pinged (postQuietMessage).
+    assert.match(posted[0].content, /crafter: Shivan Nightpath <@123>$/m);
     assert.doesNotMatch(posted[0].content, /discord\.com\/users/);
     // The intro links to the guild's Professions page.
     assert.match(

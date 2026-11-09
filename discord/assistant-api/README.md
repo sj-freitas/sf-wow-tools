@@ -1097,11 +1097,13 @@ on logout). Blizzard's Classic Era / SoD API has no professions, hence the addon
 - **Professions List plugin** (`professions-post.plugin.ts`, kind `PROFESSIONS_POST`, added from
   `ProfessionsCoreModule` like sign-ups add Recurring Event): posts the guild's list in a channel,
   under an intro (what it is, a link to the guild's Professions page, `/crafter`), per profession
-  each recipe (a Wowhead link) and "Crafters:" each character linking to its Guild Assistant
-  page's Professions tab (not a Discord profile: Discord shows a card for those even with embeds suppressed), as
-  `Crafters: [A, B]`, over as many messages as it takes (split at line ends; a
-  profession carried on into the next message just goes on with its list). A recipe with too many crafters for one message ends
-  in "12 more", linking to it on the website: `…/professions/<spell id>/crafters` opens the
+  each recipe on a line of its own, as the Guild Chat Profession Listener's answers show it
+  (`crafter-format.ts`): `- [[Bronze Mace]](<wowhead>), crafters: Shivan Darkwhisp <@…>, Tearyn Trakand <@…>`,
+  the item shown like a game link, each character followed by its player's Discord mention (opens
+  the profile, pings nobody; no `discord.com/users` links, which put a profile card under the
+  message), over as many messages as it takes (split at line ends; a profession carried on into
+  the next message just goes on with its list). A recipe with too many crafters for one message
+  ends in "and 12 more", linking to it on the website: `…/professions/<spell id>/crafters` opens the
   Professions page at that recipe with its characters shown (`/professions/<spell id>` without
   them). Posted with embeds suppressed. On its schedule (every 5 minutes, every hour or daily) and two minutes after any
   import, it hashes the messages: unchanged, nothing happens, and the run stays out of the plugin's
