@@ -8,6 +8,7 @@ import { PluginKindRegistry, type PluginContext } from '../plugins/plugin-kinds'
 import type { GuildRecipe, GuildRecipesService } from './guild-recipes.service';
 import {
   MAX_MESSAGE,
+  characterPageUrl,
   listIntro,
   ProfessionsPostPlugin,
   professionsMessages,
@@ -26,16 +27,22 @@ const recipe = (profession: string, id: number, name: string | null, crafterIds:
     crafterIds,
   }) as GuildRecipe;
 
-// Shivan's player is on Discord; Bob has no Discord account (an unclaimed character).
+// Shivan links to its Guild Assistant page and its player's Discord profile; Bob has neither.
 const crafters: Record<string, Crafter> = {
-  a: { name: 'Shivan Nightpath', discordUserId: '123' },
-  b: { name: 'Bob', discordUserId: null },
+  a: {
+    name: 'Shivan Nightpath',
+    page: 'https://guildassistant.app/forever/eu/rp/characters/Shivan-Nightpath/professions',
+    profile: { name: 'Shivan', url: 'https://guildassistant.app/api/public/discord/users/123' },
+  },
+  b: { name: 'Bob', page: null, profile: null },
 };
-const crafterOf = (id: string): Crafter => crafters[id] ?? { name: id, discordUserId: null };
-const shivan = 'Shivan Nightpath (<@123>)';
+const crafterOf = (id: string): Crafter => crafters[id] ?? { name: id, page: null, profile: null };
+const shivan =
+  '[Shivan Nightpath](<https://guildassistant.app/forever/eu/rp/characters/Shivan-Nightpath/professions>) ' +
+  '([Shivan](<https://guildassistant.app/api/public/discord/users/123>))';
 
 describe('professionsMessages', () => {
-  it('lists each profession with its recipes like game item links, and their crafters’ mentions', () => {
+  it('lists each profession with its recipes like game item links, and their crafters’ links', () => {
     const messages = professionsMessages(
       [
         recipe('Blacksmithing', 1245287, 'Copper Rod', ['a', 'b']),
@@ -108,6 +115,23 @@ describe('professionsMessages', () => {
     assert.deepEqual(professionsMessages([], crafterOf), [
       'Nobody in the guild has imported their professions yet.',
     ]);
+  });
+});
+
+describe('characterPageUrl', () => {
+  it("is the character's page on Guild Assistant, as the website addresses it", () => {
+    const server = { gameVersion: 'Forever', region: 'EU', realm: 'RP' };
+    assert.equal(
+      characterPageUrl('https://guildassistant.app', server, {
+        firstName: 'Shivan',
+        lastName: 'Nightpath',
+      }),
+      'https://guildassistant.app/forever/eu/rp/characters/Shivan-Nightpath',
+    );
+    assert.equal(
+      characterPageUrl('https://guildassistant.app', server, { firstName: 'Bob', lastName: '' }),
+      'https://guildassistant.app/forever/eu/rp/characters/Bob',
+    );
   });
 });
 
@@ -199,10 +223,17 @@ describe('ProfessionsPostPlugin', () => {
     const first = await run({});
     assert.equal(first.result, 'Posted the list: 1 recipe in 1 message.');
     assert.equal(posted.length, 1);
-    // Each crafter is its character's name and its player's mention, never a discord.com/users
-    // link (Discord shows a profile card for those); nobody is pinged (postQuietMessage).
-    assert.match(posted[0].content, /crafter: Shivan Nightpath \(<@123>\)$/m);
-    assert.doesNotMatch(posted[0].content, /discord\.com\/users/);
+    // Each crafter links to its Professions page, then its player's Discord profile through
+    // Guild Assistant: no mention (a list of hundreds tags everyone) and no discord.com/users link
+    // (Discord shows a profile card for those).
+    assert.ok(
+      posted[0].content.endsWith(
+        'crafter: [Shivan Nightpath](<https://guildassistant.app/forever/eu/firemaw/characters/Shivan-Nightpath/professions>) ' +
+          '([Discord](<https://guildassistant.app/api/public/discord/users/123>))',
+      ),
+      posted[0].content,
+    );
+    assert.doesNotMatch(posted[0].content, /<@|discord\.com\/users/);
     // The intro links to the guild's Professions page.
     assert.match(
       posted[0].content,

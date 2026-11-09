@@ -23,6 +23,30 @@ export const itemLink = (name: string, url: string): string =>
 export const crafterName = (character: string, discordUserId: string | null): string =>
   discordUserId ? `${escapeMarkdown(character)} (<@${discordUserId}>)` : escapeMarkdown(character);
 
+/** Where a Discord profile opens through Guild Assistant (`/api/public/discord/users/<id>`). */
+export const profileUrl = (origin: string, discordUserId: string): string =>
+  `${origin}/api/public/discord/users/${discordUserId}`;
+
+/** A link's text: nothing escaped (Discord shows a backslash there as typed), brackets left out. */
+const linkText = (text: string): string => text.replace(/[[\]]/g, '');
+
+/**
+ * A crafter in the Professions List: its character's name linking to its Guild Assistant page
+ * (`page`, its Professions tab), then its player's Discord name linking to their Discord profile
+ * through Guild Assistant (`profile`): "[Vrax Duskwalker](<…/characters/Vrax-Duskwalker/professions>)
+ * ([Verexs](<…/api/public/discord/users/…>))". Not a mention: a list of hundreds of them tags
+ * everyone all over the channel. Not a discord.com/users link: Discord puts a profile card under
+ * the message for each. Each part is left out (plain name, no brackets) when it isn't known.
+ */
+export const crafterLinks = (
+  character: string,
+  page: string | null,
+  profile: { name: string | null; url: string } | null,
+): string => {
+  const name = page ? `[${linkText(character)}](<${page}>)` : escapeMarkdown(character);
+  return profile ? `${name} ([${linkText(profile.name ?? 'Discord')}](<${profile.url}>))` : name;
+};
+
 /** "- [Bronze Mace], crafters: …": a recipe's line, `count` crafters in all, `crafters` as shown. */
 export const recipeLine = (item: string, count: number, crafters: string): string =>
   `- ${item}, crafter${count === 1 ? '' : 's'}: ${crafters}`;

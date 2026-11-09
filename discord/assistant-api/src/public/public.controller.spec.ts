@@ -38,3 +38,37 @@ describe('PublicController', () => {
     );
   });
 });
+
+describe('PublicController.discordProfile', () => {
+  const response = () => {
+    const sent: { status?: number; redirect?: [number, string] } = {};
+    const res = {
+      status: (code: number) => {
+        sent.status = code;
+        return { json: () => undefined };
+      },
+      redirect: (code: number, url: string) => {
+        sent.redirect = [code, url];
+      },
+    };
+    return { res: res as never, sent };
+  };
+
+  it('forwards to the Discord profile', () => {
+    const { res, sent } = response();
+    new PublicController(config({ DISCORD_APPLICATION_ID: 'app' })).discordProfile(
+      '150741579831836672',
+      res,
+    );
+    assert.deepEqual(sent.redirect, [302, 'https://discord.com/users/150741579831836672']);
+  });
+
+  it('refuses anything but a Discord id, so it can send nobody elsewhere', () => {
+    for (const id of ['abc', '123', 'https:%2F%2Fevil.test', '1507415798318366720000']) {
+      const { res, sent } = response();
+      new PublicController(config({ DISCORD_APPLICATION_ID: 'app' })).discordProfile(id, res);
+      assert.equal(sent.status, 404, id);
+      assert.equal(sent.redirect, undefined, id);
+    }
+  });
+});

@@ -6,7 +6,7 @@ import { PrismaService } from '../database/prisma.service';
 import { guildPath } from '../guilds/guild-path';
 import { parseGuildChannel } from '../plugins/plugin-channel';
 import { PluginKindRegistry, type PluginKindDef } from '../plugins/plugin-kinds';
-import { crafterName, itemLink, recipeLine } from './crafter-format';
+import { crafterLinks, itemLink, profileUrl, recipeLine } from './crafter-format';
 import { GuildRecipesService, type GuildRecipe } from './guild-recipes.service';
 
 /** Discord's limit for one message. */
@@ -35,8 +35,23 @@ const recipeName = (recipe: GuildRecipe) =>
 /** A crafter as the list shows them: the character, and its player's Discord account when known. */
 export interface Crafter {
   name: string;
-  discordUserId: string | null;
+  /** Its page on Guild Assistant (its Professions tab). */
+  page: string | null;
+  /** Its player's Discord name and profile (through Guild Assistant), when on Discord. */
+  profile: { name: string | null; url: string } | null;
 }
+
+/** A character's page on Guild Assistant: `/<version>/<region>/<server>/characters/<Name-Lastname>`. */
+export const characterPageUrl = (
+  origin: string,
+  server: { gameVersion: string; region: string; realm: string },
+  character: { firstName: string; lastName: string },
+): string =>
+  `${origin}/${[server.gameVersion, server.region, server.realm]
+    .map((part) => encodeURIComponent(part.toLowerCase()))
+    .join('/')}/characters/${encodeURIComponent(
+    character.lastName ? `${character.firstName}-${character.lastName}` : character.firstName,
+  )}`;
 
 /** What the list starts with: what it is, where to add to it, and /crafter. */
 export const listIntro = (professionsUrl: string): string =>
@@ -48,9 +63,9 @@ export const listIntro = (professionsUrl: string): string =>
 
 /**
  * The guild's professions as Discord messages, after `intro`: per profession, each recipe on a
- * line of its own as the Guild Chat Profession Listener's answers show it (crafter-format.ts:
- * "- [Bronze Mace], crafters: Shivan Darkwhisp @Shivan, Tearyn Trakand @Tearyn", the item opening
- * Wowhead, each crafter's mention opening their Discord profile and pinging nobody).
+ * line of its own like the Guild Chat Profession Listener's answers (crafter-format.ts), each
+ * crafter linking to its Guild Assistant page and its player's Discord profile, not mentioning
+ * them: "- [Bronze Mace], crafters: [Shivan Darkwhisp](<page>) ([Shivan](<profile>)), …".
  * Split between messages at line ends, never inside a recipe's line; a profession carried on into
  * the next message just goes on with its list (no heading again). A line too long for one message
  * (a recipe half the guild can craft) shortens its list of crafters to "… and 12 more", linking to
@@ -81,7 +96,7 @@ export function professionsMessages(
     const names = recipe.crafterIds
       .map(crafterOf)
       .sort((a, b) => a.name.localeCompare(b.name))
-      .map((crafter) => crafterName(crafter.name, crafter.discordUserId));
+      .map((crafter) => crafterLinks(crafter.name, crafter.page, crafter.profile));
     // Room for its profession's heading above it (a profession's first recipe goes with it).
     const room = MAX_MESSAGE - heading.length - 1;
     let line = recipeLine(item, names.length, names.join(', '));
@@ -176,7 +191,16 @@ export class ProfessionsPostPlugin implements OnModuleInit {
           const character = byId.get(id);
           return {
             name: character?.name ?? '?',
-            discordUserId: character?.discordUserId ?? null,
+            // Its Professions tab: what it can craft, the list's subject.
+            page: character
+              ? `${characterPageUrl(this.origin, guild, character)}/professions`
+              : null,
+            profile: character?.discordUserId
+              ? {
+                  name: character.discordName,
+                  url: profileUrl(this.origin, character.discordUserId),
+                }
+              : null,
           };
         },
         listIntro(professionsUrl),

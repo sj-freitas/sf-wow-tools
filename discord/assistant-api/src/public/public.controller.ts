@@ -32,6 +32,21 @@ export class PublicController {
     return this.info;
   }
 
+  /**
+   * A Discord profile, by way of a redirect to `https://discord.com/users/<id>`. The Professions
+   * List links each crafter's player here instead of to Discord directly: Discord puts a profile
+   * card under a message for every discord.com/users link, link previews off or not. Only a Discord
+   * id is accepted (17 to 20 digits), so it never sends anyone anywhere else.
+   */
+  @Get('discord/users/:id')
+  discordProfile(@Param('id') id: string, @Res() res: Response): void {
+    if (!/^\d{17,20}$/.test(id)) {
+      res.status(HttpStatus.NOT_FOUND).json({ message: 'No such Discord user' });
+      return;
+    }
+    res.redirect(HttpStatus.FOUND, `https://discord.com/users/${id}`);
+  }
+
   /** A class's icon (game artwork, not private), for the website; 404 when it has none. */
   @Get('games/:gameVersion/classes/:className/icon')
   classIcon(
