@@ -196,6 +196,7 @@ export class PluginsService {
         createdById: userId,
       },
     });
+    def.onChange?.();
     return this.toDto(plugin, [], serverZone, (await this.notices([plugin])).get(plugin.kind));
   }
 
@@ -250,6 +251,7 @@ export class PluginsService {
       data,
       include: { runs: { orderBy: { startedAt: 'desc' }, take: RECENT_RUNS } },
     });
+    def.onChange?.();
     return this.toDto(
       updated,
       updated.runs,
@@ -281,8 +283,9 @@ export class PluginsService {
   }
 
   async remove(pluginId: string): Promise<void> {
-    await this.find(pluginId);
+    const plugin = await this.find(pluginId);
     await this.prisma.guildPlugin.delete({ where: { id: pluginId } });
+    this.registry.get(plugin.kind)?.onChange?.();
   }
 
   async guildIdOf(pluginId: string): Promise<string> {

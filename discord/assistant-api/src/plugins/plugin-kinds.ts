@@ -52,6 +52,11 @@ export interface PluginKindDef<Config = Record<string, unknown>> {
   /** A live kind: what keeps it from working right now, if anything (shown on each of its plugins). */
   notice?: () => Promise<string | null>;
   /**
+   * A live kind: one of its plugins was added, changed or removed, so the worker picks that up at
+   * once instead of at its next check (only where the worker runs in the same process).
+   */
+  onChange?: () => void;
+  /**
    * "Run now": what its next run should know (saved in its state). Left out: the run is like any
    * other. The Professions List uses it to post again even when nothing changed.
    */

@@ -393,6 +393,17 @@ export class DiscordBotService {
     }));
   }
 
+  /**
+   * Up to 100 messages of a channel posted after `after` (a message id, or one made from a time), the
+   * oldest first, as Discord gives them (their text needs the Message Content intent).
+   */
+  async listMessagesAfter(channelId: string, after: string): Promise<APIMessage[]> {
+    const messages = (await this.rest.get(Routes.channelMessages(channelId), {
+      query: new URLSearchParams({ limit: '100', after }),
+    })) as APIMessage[];
+    return [...messages].sort((a, b) => (BigInt(a.id) < BigInt(b.id) ? -1 : 1));
+  }
+
   /** Deletes 2-100 messages at once. Discord refuses ones older than 14 days. */
   async bulkDeleteMessages(channelId: string, messageIds: string[]): Promise<void> {
     await this.rest.post(Routes.channelBulkDelete(channelId), {

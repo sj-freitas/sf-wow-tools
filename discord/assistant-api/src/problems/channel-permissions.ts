@@ -50,8 +50,9 @@ export const REQUIRED: Record<ChannelUse, PermissionName[]> = {
   ],
   // A honeypot: see who posts, and ban them.
   honeypot: ['VIEW_CHANNEL', 'BAN_MEMBERS'],
-  // Guild Chat Profession Listener: see the messages; answering in the channel replies to them.
-  listen: ['VIEW_CHANNEL'],
+  // Guild Chat Profession Listener: see the messages, and read back what it missed while
+  // connecting; answering in the channel replies to them.
+  listen: ['VIEW_CHANNEL', 'READ_MESSAGE_HISTORY'],
   answer: ['VIEW_CHANNEL', 'SEND_MESSAGES', 'READ_MESSAGE_HISTORY'],
 };
 

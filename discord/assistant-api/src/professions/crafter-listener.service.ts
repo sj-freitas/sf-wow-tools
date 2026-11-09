@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, Logger, type OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Client, Events, GatewayIntentBits, type Message } from 'discord.js';
+import type { APIMessage } from 'discord-api-types/v10';
 import { CacheService } from '../cache/cache.service';
 import { PrismaService } from '../database/prisma.service';
 import { DiscordBotService } from '../discord/discord-bot.service';
@@ -70,8 +71,36 @@ type ListenerStatus =
 /** Where the worker leaves its connection's status for the backoffice (API and worker share it). */
 const STATUS_KEY = 'professions:listener-status';
 const STATUS_TTL_MS = 2 * 60 * 1000;
-/** Plugins are reloaded this often, so changes apply without a restart. */
+/** Plugins are reloaded this often, so changes apply without a restart (at once, in one process). */
 const RELOAD_MS = 30 * 1000;
+/**
+ * A listener that wasn't listening (just added or resumed, or the connection was down) reads what
+ * was said meanwhile, at most this far back: a question asked a moment too early still gets its answer.
+ */
+const CATCH_UP_MS = 15 * 60 * 1000;
+/** Message ids already handled (from the connection or a catch-up), so none is answered twice. */
+const HANDLED_KEPT = 500;
+const DISCORD_EPOCH = 1_420_070_400_000n;
+
+/** A message id made from a time: Discord lists messages "after" it. */
+export const snowflakeAt = (ms: number): string =>
+  ((BigInt(Math.floor(ms)) - DISCORD_EPOCH) << 22n).toString();
+
+/** A message read from Discord's REST API (a catch-up), as the listener needs it. */
+export function chatMessageOf(serverId: string, message: APIMessage): ChatMessage {
+  const embed = message.embeds?.[0];
+  return {
+    serverId,
+    channelId: message.channel_id,
+    messageId: message.id,
+    text: message.content || embed?.description || '',
+    authorId: message.author.id,
+    authorName: message.author.global_name ?? message.author.username,
+    relayed: message.author.bot === true || message.webhook_id !== undefined,
+    relayName: message.webhook_id ? message.author.username : (embed?.author?.name ?? null),
+    replyable: !(message.application_id && !message.webhook_id),
+  };
+}
 /** Discord refused the Message Content intent: asking again soon is pointless. */
 const RETRY_REFUSED_MS = 10 * 60 * 1000;
 const RETRY_FAILED_MS = 60 * 1000;
@@ -181,7 +210,8 @@ export function answerLines(recipes: readonly AnswerRecipe[]): string {
 @Injectable()
 export class CrafterListenerService implements OnModuleInit {
   private readonly logger = new Logger(CrafterListenerService.name);
-  private client: Client | null = null;
+  /** The connection; protected so a test can stand in for Discord. */
+  protected client: Client | null = null;
   private connecting = false;
   private timer: NodeJS.Timeout | null = null;
   private status: ListenerStatus = { state: 'idle' };
@@ -193,6 +223,13 @@ export class CrafterListenerService implements OnModuleInit {
   >();
   /** When each asker last got each answer: "plugin|asker|recipes" → ms. */
   private readonly answered = new Map<string, number>();
+  /** Listeners not listened to yet, and since when: what a catch-up reads. */
+  private readonly waiting = new Map<string, number>();
+  /** When the plugins were last read; null before the first time (a start reads nothing back). */
+  private lastReloadAt: number | null = null;
+  private reloading: Promise<void> | null = null;
+  private reloadAgain = false;
+  private readonly handled = new Set<string>();
   private readonly recipes = new Map<
     string,
     { at: number; data: Promise<GuildProfessionsDto & { owners: Map<string, string> }> }
@@ -217,6 +254,8 @@ export class CrafterListenerService implements OnModuleInit {
     description:
       'Listens to a channel (the guild chat) and, when someone asks who can craft something, tells them who in the guild can: by DM, in the channel, or both.',
     live: true,
+    // Added, changed or removed in the backoffice: picked up now, not at the next check.
+    onChange: () => this.changed(),
     notice: async () => {
       const status = await this.cache.get<ListenerStatus>(STATUS_KEY);
       if (status?.state === 'refused') return REFUSED_NOTICE;
@@ -261,26 +300,66 @@ export class CrafterListenerService implements OnModuleInit {
     await this.disconnect();
   }
 
-  /** Reads the enabled listeners, connects or disconnects, and tells the backoffice how it is. */
-  async reload(): Promise<void> {
+  /** A listener was saved: reload now, where the worker runs in this process. */
+  private changed(): void {
+    if (this.timer) void this.reload();
+  }
+
+  /**
+   * Reads the enabled listeners, connects or disconnects, catches up on what the listeners that
+   * weren't listening missed, and tells the backoffice how it is. One at a time: a reload asked for
+   * meanwhile runs right after.
+   */
+  async reload(now = Date.now()): Promise<void> {
+    if (this.reloading) {
+      this.reloadAgain = true;
+      return this.reloading;
+    }
+    this.reloading = this.reloadOnce(now).finally(() => {
+      this.reloading = null;
+    });
+    await this.reloading;
+    if (this.reloadAgain) {
+      this.reloadAgain = false;
+      await this.reload();
+    }
+  }
+
+  private async reloadOnce(now: number): Promise<void> {
     try {
       const plugins = await this.prisma.guildPlugin.findMany({
         where: { kind: 'PROFESSION_LISTENER', enabled: true },
-        select: { id: true, guildId: true, name: true, config: true },
+        select: { id: true, guildId: true, name: true, config: true, createdAt: true },
       });
       const listeners = new Map<
         string,
         { id: string; guildId: string; name: string; config: ProfessionListenerConfig }[]
       >();
-      for (const plugin of plugins) {
+      const ids = new Set<string>();
+      for (const { createdAt, ...plugin } of plugins) {
         const config = plugin.config as unknown as ProfessionListenerConfig;
         const list = listeners.get(config.channelId) ?? [];
         list.push({ ...plugin, config });
         listeners.set(config.channelId, list);
+        ids.add(plugin.id);
+        // New since the last read (added, resumed): what was said since then, or since it was
+        // added. At start-up nothing is read back: whoever ran before answered it.
+        if (!this.waiting.has(plugin.id) && !this.listening.has(plugin.id)) {
+          // A few seconds' margin: a question asked just before it was saved counts too.
+          const since =
+            this.lastReloadAt === null
+              ? now
+              : Math.max(this.lastReloadAt, createdAt.getTime()) - 5_000;
+          this.waiting.set(plugin.id, since);
+        }
       }
+      for (const id of [...this.waiting.keys()]) if (!ids.has(id)) this.waiting.delete(id);
+      for (const id of [...this.listening]) if (!ids.has(id)) this.listening.delete(id);
       this.listeners = listeners;
+      this.lastReloadAt = now;
       if (listeners.size === 0) await this.disconnect();
       else if (!this.client && !this.connecting && Date.now() >= this.retryAt) await this.connect();
+      if (this.client) await this.catchUp(now);
       this.prune();
     } catch (error) {
       this.logger.error(`Profession listeners reload failed: ${String(error)}`);
@@ -288,7 +367,53 @@ export class CrafterListenerService implements OnModuleInit {
     await this.cache.set(STATUS_KEY, this.status, STATUS_TTL_MS).catch(() => undefined);
   }
 
-  private async connect(): Promise<void> {
+  /** Listened to, through a working connection, since the last reload. */
+  private readonly listening = new Set<string>();
+
+  /**
+   * Answers the questions asked in the channels of the listeners that weren't listening yet (at
+   * most 15 minutes back), now that the connection is up; from then on they are listened to.
+   */
+  private async catchUp(now: number): Promise<void> {
+    for (const list of this.listeners.values()) {
+      for (const plugin of list) {
+        const since = this.waiting.get(plugin.id);
+        if (since === undefined) continue;
+        this.waiting.delete(plugin.id);
+        this.listening.add(plugin.id);
+        const after = snowflakeAt(Math.max(since, now - CATCH_UP_MS));
+        let messages: APIMessage[];
+        try {
+          messages = await this.bot.listMessagesAfter(plugin.config.channelId, after);
+        } catch (error) {
+          this.logger.warn(
+            `Profession listener could not read back #${plugin.config.channelId}: ${describeDiscordError(error)}`,
+          );
+          continue;
+        }
+        const botId = this.client?.user?.id;
+        for (const message of messages) {
+          if (message.author.id === botId) continue;
+          await this.handleOnce(chatMessageOf(plugin.config.serverId, message)).catch(
+            (error: unknown) =>
+              this.logger.error(`Profession listener failed on a message: ${String(error)}`),
+          );
+        }
+      }
+    }
+  }
+
+  /** `handle`, once per message, whether it came from the connection or a catch-up. */
+  private async handleOnce(message: ChatMessage): Promise<void> {
+    if (this.handled.has(message.messageId)) return;
+    this.handled.add(message.messageId);
+    if (this.handled.size > HANDLED_KEPT) {
+      this.handled.delete(this.handled.values().next().value as string);
+    }
+    await this.handle(message);
+  }
+
+  protected async connect(): Promise<void> {
     this.connecting = true;
     const client = new Client({
       intents: [
@@ -329,6 +454,8 @@ export class CrafterListenerService implements OnModuleInit {
     const client = this.client;
     this.client = null;
     this.status = { state: 'idle' };
+    // Not listened to any more: when one comes back, it reads what it missed.
+    this.listening.clear();
     await client?.destroy().catch(() => undefined);
   }
 
@@ -337,7 +464,7 @@ export class CrafterListenerService implements OnModuleInit {
     if (message.author.id === client.user?.id) return;
     const embed = message.embeds[0];
     const relayed = message.author.bot || message.webhookId !== null;
-    void this.handle({
+    void this.handleOnce({
       serverId: message.guildId,
       channelId: message.channelId,
       messageId: message.id,

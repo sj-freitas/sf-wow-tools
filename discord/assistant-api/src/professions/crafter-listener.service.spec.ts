@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { DiscordAPIError } from '@discordjs/rest';
 import type { ConfigService } from '@nestjs/config';
+import type { APIMessage } from 'discord-api-types/v10';
+import type { Client } from 'discord.js';
 import type { CacheService } from '../cache/cache.service';
 import type { PrismaService } from '../database/prisma.service';
 import type { DiscordBotService } from '../discord/discord-bot.service';
@@ -9,6 +11,7 @@ import { PluginKindRegistry } from '../plugins/plugin-kinds';
 import {
   answerLines,
   CrafterListenerService,
+  snowflakeAt,
   type ChatMessage,
   type ProfessionListenerConfig,
 } from './crafter-listener.service';
@@ -349,5 +352,104 @@ describe('answerLines', () => {
       '- [a\\_b](<https://discord.com/users/1>) can craft [Copper Rod](<u>) with characters A One and A Two\n' +
         '…and 1 more recipe match: ask with the full name, or use `/crafter`.',
     );
+  });
+});
+
+describe('Guild Chat Profession Listener, catching up', () => {
+  /** A listener whose connection to Discord always works, and a channel's history to read back. */
+  function catchingUp() {
+    const plugins: {
+      id: string;
+      guildId: string;
+      name: string;
+      createdAt: Date;
+      config: unknown;
+    }[] = [];
+    const history: APIMessage[] = [];
+    const readsAfter: string[] = [];
+    const dms: { userId: string; content: string }[] = [];
+    const prisma = {
+      guildPlugin: { findMany: async () => plugins, update: async () => ({}) },
+      pluginRun: { create: async () => ({}) },
+      character: { findMany: async () => [] },
+    };
+    const bot = {
+      sendDirectText: async (userId: string, content: string) => void dms.push({ userId, content }),
+      listMessagesAfter: async (_channelId: string, after: string) => {
+        readsAfter.push(after);
+        return history.filter((m) => BigInt(m.id) > BigInt(after));
+      },
+    };
+    class Connected extends CrafterListenerService {
+      protected override async connect(): Promise<void> {
+        this.client = { user: { id: 'bot' }, destroy: async () => undefined } as unknown as Client;
+      }
+    }
+    const service = new Connected(
+      new PluginKindRegistry(),
+      { guildRecipes: async () => professions } as unknown as GuildRecipesService,
+      prisma as unknown as PrismaService,
+      bot as unknown as DiscordBotService,
+      { set: async () => undefined } as unknown as CacheService,
+      {} as ConfigService,
+    );
+    const add = (id: string, createdAt: number) =>
+      plugins.push({
+        id,
+        guildId: 'g1',
+        name: 'Guild chat',
+        createdAt: new Date(createdAt),
+        config: {
+          serverId: 's1',
+          channelId: 'chat',
+          phrases: [...DEFAULT_PHRASES],
+          sendDm: true,
+          postInChannel: false,
+        },
+      });
+    const say = (at: number, content: string) =>
+      history.push({
+        id: snowflakeAt(at),
+        channel_id: 'chat',
+        content,
+        author: { id: '999', username: 'shivan', global_name: 'Shivan' },
+        application_id: 'game',
+        embeds: [],
+      } as unknown as APIMessage);
+    return { service, add, say, dms, readsAfter };
+  }
+
+  it('answers a question asked just before a new listener was picked up', async () => {
+    const { service, add, say, dms } = catchingUp();
+    const t0 = Date.now() - 60_000;
+    await service.reload(t0); // nothing to listen to yet
+    add('p1', t0 + 20_000);
+    say(t0 + 25_000, 'LF crafter [Flask of the Titans]');
+    await service.reload(t0 + 40_000);
+    assert.equal(dms.length, 1);
+    assert.equal(dms[0].userId, '999');
+    // Listened to from now on: the next reload reads nothing back, nor answers it twice.
+    await service.reload(t0 + 50_000);
+    assert.equal(dms.length, 1);
+  });
+
+  it('reads nothing back when it starts: whoever ran before answered that', async () => {
+    const { service, add, say, dms, readsAfter } = catchingUp();
+    const t0 = Date.now() - 60_000;
+    add('p1', t0 - 3_600_000);
+    say(t0 - 10_000, 'who can craft flask of titans');
+    await service.reload(t0);
+    assert.equal(dms.length, 0);
+    assert.deepEqual(readsAfter, [snowflakeAt(t0)]);
+  });
+
+  it('does not read back what was said before the listener was added', async () => {
+    const { service, add, say, dms } = catchingUp();
+    const t0 = Date.now() - 120_000;
+    await service.reload(t0);
+    say(t0 + 10_000, 'who can craft flask of titans');
+    add('p1', t0 + 60_000);
+    await service.reload(t0 + 61_000);
+    assert.equal(dms.length, 0);
   });
 });

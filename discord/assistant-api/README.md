@@ -1150,13 +1150,21 @@ on logout). Blizzard's Classic Era / SoD API has no professions, hence the addon
     the Titans: 2 crafters, sent a DM."); a DM Discord refused (the person doesn't accept DMs from
     the server) or a reply the bot couldn't post is a failed run, shown on the card.
   - **Connection**: its own gateway connection in the worker, opened only while some guild has an
-    enabled listener (checked every 30 seconds, so changes apply within half a minute), with the
+    enabled listener (checked every 30 seconds, and at once when one is added, changed or removed
+    where the worker runs in the API's process, `WORKER_IN_PROCESS`), with the
     `Guilds`, `GuildMessages` and privileged `MessageContent` intents. Kept apart from the
     honeypots' connection (which reads no text) so a missing intent can't stop honeypots. If
     Discord refuses the intent (it's off in the Developer Portal), it tries again every 10 minutes
     and the plugin's card says what to turn on (the status is left in the cache,
-    `professions:listener-status`, for the API to read). Bot permissions: View Channel; to answer in
-    the channel also Send Messages and Read Message History (the channel picker checks them).
+    `professions:listener-status`, for the API to read). **Catching up:** a listener that wasn't
+    listened to (just added or resumed, or the connection was down or refused) reads its channel's
+    messages since the previous check (or since it was added, with a few seconds' margin; at most 15
+    minutes back) once the connection is up, and answers the questions in them, so one asked while
+    it was connecting isn't lost. Each message is handled once, whether it came live or read back.
+    At start-up nothing is read back: the instance that ran before answered it. Bot permissions:
+    View Channel and Read Message History (reading back); to answer in the channel also Send
+    Messages (the channel picker checks them). A channel linked to a game lobby that requires
+    application authorization (the game's guild chat) takes no messages from bots at all: DMs only.
 - **Wowhead cache** (`wowhead_entries`): the English name and icon of each spell or item, looked up
   once from Wowhead's tooltip data (`WowheadService`, not an official API) in the guild's game
   version's data (`wowheadPath` in its game config: Forever's own spells are only in `forever`), a
