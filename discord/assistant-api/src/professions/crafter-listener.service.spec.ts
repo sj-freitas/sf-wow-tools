@@ -60,7 +60,8 @@ const professions = {
 function setup(
   config: Partial<ProfessionListenerConfig> = {},
   options: {
-    dmFails?: Error;
+    /** An error every DM fails with, or a function saying, DM by DM, what it fails with. */
+    dmFails?: Error | (() => Error | undefined);
     replyFails?: Error;
     characters?: { player: { discordUserId: string } | null }[];
   } = {},
@@ -86,7 +87,8 @@ function setup(
   };
   const bot = {
     sendDirectText: async (userId: string, content: string) => {
-      if (options.dmFails) throw options.dmFails;
+      const fails = typeof options.dmFails === 'function' ? options.dmFails() : options.dmFails;
+      if (fails) throw fails;
       dms.push({ userId, content });
     },
     sendRichMessage: async (channelId: string, message: { content?: string; replyTo?: string }) => {
@@ -191,13 +193,14 @@ describe('Guild Chat Profession Listener', () => {
     assert.equal(posts.length, 1);
   });
 
-  it('answers the same question from the same person once in 10 minutes', async () => {
+  it('answers the same question from the same person once a minute', async () => {
     const { service, dms } = setup();
     const now = Date.now();
     await service.handle(message('who can craft flask of titans'), now);
-    await service.handle(message('who can craft flask of the titans?'), now + 60_000);
+    await service.handle(message('who can craft flask of the titans?'), now + 30_000);
     assert.equal(dms.length, 1);
-    await service.handle(message('who can craft flask of titans'), now + 11 * 60_000);
+    // A minute on, they most likely didn't see it: answered again.
+    await service.handle(message('who can craft flask of titans'), now + 61_000);
     assert.equal(dms.length, 2);
   });
 
@@ -205,11 +208,11 @@ describe('Guild Chat Profession Listener', () => {
     const { service, runs, cards } = setup();
     const now = Date.now();
     await service.handle(message('who can craft flask of titans'), now);
-    await service.handle(message('LF crafter [Flask of the Titans]'), now + 60_000);
+    await service.handle(message('LF crafter [Flask of the Titans]'), now + 30_000);
     assert.equal(runs.length, 2);
     assert.equal(
       runs[1].result,
-      'Freya asked about Flask of the Titans again: answered less than 10 minutes ago, so not again yet.',
+      'Freya asked about Flask of the Titans again: answered less than a minute ago, so not again yet.',
     );
     assert.equal(cards.length, 1);
   });
@@ -293,6 +296,27 @@ describe('Guild Chat Profession Listener', () => {
       service.handle(message('who can craft flask of the titans', { messageId: 'm2' }), now + 6),
     ]);
     assert.equal(dms.length, 1);
+  });
+
+  it('retries a DM Discord refuses as too fast', async () => {
+    const tooFast = new DiscordAPIError(
+      { message: 'You are opening direct messages too fast.', code: 40003 },
+      40003,
+      400,
+      'POST',
+      'u',
+      {},
+    );
+    let refusals = 1;
+    // The first try is refused, the next one goes through.
+    const { service, dms, runs } = setup(
+      {},
+      { dmFails: () => (refusals-- > 0 ? tooFast : undefined) },
+    );
+    (service as unknown as { sleep: () => Promise<void> }).sleep = async () => undefined;
+    await service.handle(message('who can craft flask of titans'));
+    assert.equal(dms.length, 1);
+    assert.equal(runs[0].status, 'SUCCESS');
   });
 
   it('answers the same message id once', async () => {

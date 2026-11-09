@@ -107,6 +107,8 @@ const channelsKey = (serverId: string) => `discord:channels:${serverId}`;
 export class DiscordBotService {
   private readonly rest: REST;
   private botUserId: string | null = null;
+  /** Each person's DM channel with the bot, once opened (sendDirectText). */
+  private readonly dmChannels = new Map<string, string>();
   private readonly applicationId: string | undefined;
   private readonly devServerId: string | undefined;
   /** Command ids only change if a command is deleted and created again, so they are kept. */
@@ -289,16 +291,28 @@ export class DiscordBotService {
   }
 
   /**
-   * Sends a direct message of plain text, with no link previews and nobody pinged. Fails (Discord
-   * error 50007) when the user does not accept DMs.
+   * Sends a direct message of plain text, with no link previews and nobody pinged. Each person's DM
+   * channel is opened once and kept (Discord refuses bots that open DMs too fast, error 40003, and
+   * makes them wait). Fails (Discord error 50007) when the user does not accept DMs.
    */
   async sendDirectText(userId: string, content: string): Promise<void> {
+    const body = { content, allowed_mentions: { parse: [] }, flags: SUPPRESS_EMBEDS };
+    const known = this.dmChannels.get(userId);
+    if (known) {
+      try {
+        await this.rest.post(Routes.channelMessages(known), { body });
+        return;
+      } catch (error) {
+        // Gone (Discord forgets a DM channel now and then): open it again below.
+        if (!(error instanceof DiscordAPIError) || error.code !== 10003) throw error;
+        this.dmChannels.delete(userId);
+      }
+    }
     const dm = (await this.rest.post(Routes.userChannels(), {
       body: { recipient_id: userId },
     })) as APIChannel;
-    await this.rest.post(Routes.channelMessages(dm.id), {
-      body: { content, allowed_mentions: { parse: [] }, flags: SUPPRESS_EMBEDS },
-    });
+    this.dmChannels.set(userId, dm.id);
+    await this.rest.post(Routes.channelMessages(dm.id), { body });
   }
 
   /**

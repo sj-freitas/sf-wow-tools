@@ -1130,9 +1130,13 @@ on logout). Blizzard's Classic Era / SoD API has no professions, hence the addon
     `[Svajone](<https://discord.com/users/…>) can craft [Flask of the Titans](<wowhead>) with
     character Svajone Potato` (a character with no Discord account says so), at most 3 recipes,
     "…and 4 more" pointing at `/crafter`. Sent without link previews and pinging nobody. The DM
-    starts with a link to the question. The same person asking about the same thing again within
-    10 minutes gets no second answer, said in the Log ("asked … again: answered less than 10
-    minutes ago") but not on the card. DMs and channel answers count apart, and only once
+    starts with a link to the question. The same person asking about the same thing again within a
+    minute gets no second answer, said in the Log ("asked … again: answered less than a minute
+    ago") but not on the card; later, they most likely didn't see it, so it's answered again.
+    Discord may put the bot's DMs in a person's **Message Requests** (not a friend): the DM is
+    there, they just have to look. Each person's DM channel is opened once and reused, and a DM
+    Discord refuses as "opening direct messages too fast" (a busy moment) is tried again after
+    5 seconds, twice. DMs and channel answers count apart, and only once
     delivered: a refused DM is tried again next time, and switching from the channel to DMs
     answers the next question by DM. An answer is claimed before it is sent (given back if it
     fails), and the same person posting the same text in the same channel within 10 seconds is

@@ -111,9 +111,13 @@ const RETRY_REFUSED_MS = 10 * 60 * 1000;
 const RETRY_FAILED_MS = 60 * 1000;
 /**
  * The same person asking about the same thing again within this long gets no second answer, by DM
- * or in the channel (each counted on its own, and only once it was delivered).
+ * or in the channel (each counted on its own, and only once it was delivered). Short: someone who
+ * asks again a minute later most likely didn't see the answer (it went to their Message Requests).
  */
-const COOLDOWN_MS = 10 * 60 * 1000;
+const COOLDOWN_MS = 60 * 1000;
+/** Discord's "You are opening direct messages too fast": tried again after this long, twice. */
+const DM_RETRY_MS = 5 * 1000;
+const DM_TOO_FAST = 40003;
 /** The guild's recipes are read again after this long (answers within a burst share one read). */
 const RECIPES_MS = 30 * 1000;
 /** At most this many recipes in an answer. */
@@ -523,7 +527,7 @@ export class CrafterListenerService implements OnModuleInit {
         await this.log(
           plugin.id,
           now,
-          `${asker.label} asked about ${recipeList(shown)} again: answered less than 10 minutes ago, so not again yet.`,
+          `${asker.label} asked about ${recipeList(shown)} again: answered less than a minute ago, so not again yet.`,
           null,
           { quiet: true },
         );
@@ -587,7 +591,7 @@ export class CrafterListenerService implements OnModuleInit {
       } else {
         const link = `https://discord.com/channels/${message.serverId}/${message.channelId}/${message.messageId}`;
         try {
-          await this.bot.sendDirectText(
+          await this.sendDm(
             asker.discordUserId,
             `Who can craft what you [asked about](<${link}>):\n${lines}`,
           );
@@ -615,6 +619,27 @@ export class CrafterListenerService implements OnModuleInit {
     const result = `${asker.label} asked “${question.phrase}” about ${recipeList(recipes)}: ${crafters} crafter${crafters === 1 ? '' : 's'}${done.length > 0 ? `, ${done.join(', ')}` : ''}.`;
     await this.log(plugin.id, startedAt, result, errors.length > 0 ? errors.join(' ') : null);
     return delivered;
+  }
+
+  /**
+   * A DM, tried again (after 5 seconds, twice) when Discord says the bot opens DMs too fast: in a
+   * busy moment it does, and the asker would otherwise get nothing.
+   */
+  private async sendDm(userId: string, content: string): Promise<void> {
+    for (let attempt = 0; ; attempt++) {
+      try {
+        await this.bot.sendDirectText(userId, content);
+        return;
+      } catch (error) {
+        if (!isDiscordError(error, DM_TOO_FAST) || attempt >= 2) throw error;
+        await this.sleep(DM_RETRY_MS);
+      }
+    }
+  }
+
+  /** Waits; a test makes it instant. */
+  protected sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   /**
