@@ -56,11 +56,17 @@ const professions = {
 
 function setup(
   config: Partial<ProfessionListenerConfig> = {},
-  options: { dmFails?: Error; characters?: { player: { discordUserId: string } | null }[] } = {},
+  options: {
+    dmFails?: Error;
+    replyFails?: Error;
+    characters?: { player: { discordUserId: string } | null }[];
+  } = {},
 ) {
   const dms: { userId: string; content: string }[] = [];
   const posts: { channelId: string; content?: string; replyTo?: string }[] = [];
   const runs: { status: string; result: string | null; error: string | null }[] = [];
+  // What the plugin's card says: only updated by answers, not by repeats left unanswered.
+  const cards: { lastStatus: string; lastResult: string }[] = [];
   const prisma = {
     character: { findMany: async () => options.characters ?? [] },
     pluginRun: {
@@ -68,7 +74,12 @@ function setup(
         runs.push({ status: data.status, result: data.result, error: data.error });
       },
     },
-    guildPlugin: { update: async () => ({}) },
+    guildPlugin: {
+      update: async ({ data }: { data: (typeof cards)[number] }) => {
+        cards.push({ lastStatus: data.lastStatus, lastResult: data.lastResult });
+        return {};
+      },
+    },
   };
   const bot = {
     sendDirectText: async (userId: string, content: string) => {
@@ -76,6 +87,7 @@ function setup(
       dms.push({ userId, content });
     },
     sendRichMessage: async (channelId: string, message: { content?: string; replyTo?: string }) => {
+      if (message.replyTo && options.replyFails) throw options.replyFails;
       posts.push({ channelId, ...message });
       return 'reply-1';
     },
@@ -103,7 +115,24 @@ function setup(
       },
     },
   ]);
-  return { service, dms, posts, runs };
+  const configure = (more: Partial<ProfessionListenerConfig>) =>
+    service.setListeners([
+      {
+        id: 'p1',
+        guildId: 'g1',
+        name: 'Guild chat',
+        config: {
+          serverId: 's1',
+          channelId: 'chat',
+          phrases: [...DEFAULT_PHRASES],
+          sendDm: true,
+          postInChannel: false,
+          ...config,
+          ...more,
+        },
+      },
+    ]);
+  return { service, dms, posts, runs, cards, configure };
 }
 
 const message = (text: string, more: Partial<ChatMessage> = {}): ChatMessage => ({
@@ -115,6 +144,7 @@ const message = (text: string, more: Partial<ChatMessage> = {}): ChatMessage => 
   authorName: 'Freya',
   relayed: false,
   relayName: null,
+  replyable: true,
   ...more,
 });
 
@@ -166,6 +196,79 @@ describe('Guild Chat Profession Listener', () => {
     assert.equal(dms.length, 1);
     await service.handle(message('who can craft flask of titans'), now + 11 * 60_000);
     assert.equal(dms.length, 2);
+  });
+
+  it('says in the Log when it leaves a repeat unanswered, without changing the card', async () => {
+    const { service, runs, cards } = setup();
+    const now = Date.now();
+    await service.handle(message('who can craft flask of titans'), now);
+    await service.handle(message('LF crafter [Flask of the Titans]'), now + 60_000);
+    assert.equal(runs.length, 2);
+    assert.equal(
+      runs[1].result,
+      'Freya asked about Flask of the Titans again: answered less than 10 minutes ago, so not again yet.',
+    );
+    assert.equal(cards.length, 1);
+  });
+
+  it('only counts an answer that was delivered: a refused DM is tried again', async () => {
+    const options: { dmFails?: Error } = {
+      dmFails: new DiscordAPIError(
+        { message: 'Cannot send messages to this user', code: 50007 },
+        50007,
+        403,
+        'POST',
+        'u',
+        {},
+      ),
+    };
+    const { service, dms } = setup({}, options);
+    const now = Date.now();
+    await service.handle(message('who can craft flask of titans'), now);
+    options.dmFails = undefined;
+    await service.handle(message('who can craft flask of titans'), now + 60_000);
+    assert.equal(dms.length, 1);
+  });
+
+  it('counts DMs and channel answers apart: switched from the channel to DMs, the DM goes', async () => {
+    const { service, posts, dms, configure } = setup({ sendDm: false, postInChannel: true });
+    const now = Date.now();
+    await service.handle(message('who can craft flask of titans'), now);
+    configure({ sendDm: true, postInChannel: false });
+    await service.handle(message('who can craft flask of titans'), now + 60_000);
+    assert.equal(posts.length, 1);
+    assert.equal(dms.length, 1);
+  });
+
+  it('answers the game’s guild chat (posted by an app as the player) with a message of its own', async () => {
+    const { service, posts, dms } = setup({ postInChannel: true });
+    await service.handle(
+      message('LF crafter [Flask of the Titans]', { authorName: 'Shivan', replyable: false }),
+    );
+    assert.equal(dms[0]?.userId, '999');
+    assert.deepEqual(posts, [
+      { channelId: 'chat', content: `For <@999>:\n${LINES}`, suppressEmbeds: true },
+    ]);
+  });
+
+  it('posts a message of its own when Discord refuses the reply', async () => {
+    const refused = new DiscordAPIError(
+      { message: 'This action requires an application to be authorized by the user.', code: 0 },
+      0,
+      400,
+      'POST',
+      'u',
+      {},
+    );
+    const { service, posts, runs } = setup(
+      { sendDm: false, postInChannel: true },
+      { replyFails: refused },
+    );
+    await service.handle(message('who can craft flask of titans'));
+    assert.deepEqual(posts, [
+      { channelId: 'chat', content: `For <@999>:\n${LINES}`, suppressEmbeds: true },
+    ]);
+    assert.equal(runs[0].status, 'SUCCESS');
   });
 
   it('stays quiet for other messages, other channels and recipes nobody has', async () => {

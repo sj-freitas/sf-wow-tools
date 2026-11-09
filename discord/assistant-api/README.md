@@ -1130,7 +1130,17 @@ on logout). Blizzard's Classic Era / SoD API has no professions, hence the addon
     character Svajone Potato` (a character with no Discord account says so), at most 3 recipes,
     "…and 4 more" pointing at `/crafter`. Sent without link previews and pinging nobody. The DM
     starts with a link to the question. The same person asking about the same thing again within
-    10 minutes gets no second answer.
+    10 minutes gets no second answer, said in the Log ("asked … again: answered less than 10
+    minutes ago") but not on the card. DMs and channel answers count apart, and only once
+    delivered: a refused DM is tried again next time, and switching from the channel to DMs
+    answers the next question by DM.
+  - **The game's guild chat posted by an app as each player** (how Relic Hunters' ⚜️-guild-chat
+    gets it: the message's author is the player's linked Discord account, with the game's
+    `application_id`): answered like anyone's message, but in the channel as a message of its own
+    starting "For @Shivan:" (a mention that pings nobody), since Discord refuses replies to those
+    messages ("This action requires an application to be authorized by the user"). Any other
+    refused reply falls back to that too. Players who haven't linked a Discord account show as a
+    provisional account with a placeholder text, so there is no question to read.
   - **Game chat relayed by a bot or webhook** (a guild chat bridge): the asker is the webhook's name,
     else the name the message starts with (`Svajone: …`, `[Svajone]: …`, `**Svajone**: …`; a
     `-Realm` is dropped), looked up among the guild's characters to find their player's Discord

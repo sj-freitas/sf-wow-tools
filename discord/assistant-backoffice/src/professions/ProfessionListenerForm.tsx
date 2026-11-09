@@ -84,7 +84,7 @@ export function ProfessionListenerForm({ guild, editing }: PluginFormProps<'PROF
       {dialog}
       <PluginFormFrame
         title={editing ? `Edit ${editing.name}` : 'New Guild Chat Profession Listener'}
-        intro="Listens to a channel, like the guild chat. When a message has one of the phrases below and names something the guild can craft (“who can craft flask of titans?”, “LF crafter [Flask of the Titans]”, a Wowhead link), the bot answers with who can craft it, from the professions everyone imported. Guild chat relayed from the game by a bot is answered too: the asker is found by character name."
+        intro="Listens to a channel, like the guild chat. When a message has one of the phrases below and names something the guild can craft (“who can craft flask of titans?”, “LF crafter [Flask of the Titans]”, a Wowhead link), the bot answers with who can craft it, from the professions everyone imported. The game’s guild chat is answered too, whether it’s posted under each player’s linked Discord account or relayed by a bot (then the asker is found by character name)."
         back={back}
         busy={busy}
         error={error}

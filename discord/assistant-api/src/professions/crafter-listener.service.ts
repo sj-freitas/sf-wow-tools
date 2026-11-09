@@ -46,6 +46,12 @@ export interface ChatMessage {
   relayed: boolean;
   /** A webhook's name (relays name it after the character), or the embed's author. */
   relayName: string | null;
+  /**
+   * Others can reply to it. Not to a message an app posted as the person (the game's guild chat,
+   * relayed under each player's linked Discord account): Discord refuses those replies ("This action
+   * requires an application to be authorized by the user").
+   */
+  replyable: boolean;
 }
 
 /** Who asked: their Discord account when known, and how to name them in the log. */
@@ -69,7 +75,10 @@ const RELOAD_MS = 30 * 1000;
 /** Discord refused the Message Content intent: asking again soon is pointless. */
 const RETRY_REFUSED_MS = 10 * 60 * 1000;
 const RETRY_FAILED_MS = 60 * 1000;
-/** The same person asking about the same thing again within this long gets no second answer. */
+/**
+ * The same person asking about the same thing again within this long gets no second answer, by DM
+ * or in the channel (each counted on its own, and only once it was delivered).
+ */
 const COOLDOWN_MS = 10 * 60 * 1000;
 /** The guild's recipes are read again after this long (answers within a burst share one read). */
 const RECIPES_MS = 30 * 1000;
@@ -88,6 +97,10 @@ const listOf = (names: readonly string[]): string =>
   names.length <= 1
     ? (names[0] ?? '')
     : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
+
+/** "Flask of the Titans", "A, B and C", "A, B and C and 2 more": the recipes an answer is about. */
+const recipeList = (recipes: readonly { name: string }[]): string =>
+  `${listOf(recipes.slice(0, MAX_RECIPES).map((r) => r.name))}${recipes.length > MAX_RECIPES ? ` and ${recipes.length - MAX_RECIPES} more` : ''}`;
 
 /** A recipe of an answer and who can craft it. */
 export interface AnswerRecipe {
@@ -156,8 +169,10 @@ export function answerLines(recipes: readonly AnswerRecipe[]): string {
  * Guild Chat Profession Listener, a plugin kind of professions: reads the messages of a channel
  * (the guild chat) as they arrive and, when one asks who can craft something the guild can make
  * ("who can craft flask of titans?", "LF crafter [Flask of the Titans]", a Wowhead link), answers
- * whoever asked in a DM and/or in the channel with who can craft it. A message relayed from the game
- * by a bot or a webhook is answered too: its asker is found by character name.
+ * whoever asked in a DM and/or in the channel with who can craft it. The game's guild chat comes in
+ * two ways: posted by an app as each player's linked Discord account (answered like anyone's, but
+ * not as a reply, which Discord refuses), or relayed by a bot or a webhook (the asker is found by
+ * character name).
  *
  * It has its own connection to Discord, opened only while a guild has one of these plugins, with the
  * privileged Message Content intent (message text). The honeypots' connection reads no text and is
@@ -331,6 +346,8 @@ export class CrafterListenerService implements OnModuleInit {
       authorName: message.member?.displayName ?? message.author.displayName,
       relayed,
       relayName: message.webhookId ? message.author.username : (embed?.author?.name ?? null),
+      // Posted by an app as the person (no webhook): the game's guild chat, under their account.
+      replyable: !(message.applicationId && !message.webhookId),
     }).catch((error: unknown) =>
       this.logger.error(`Profession listener failed on a message: ${String(error)}`),
     );
@@ -354,10 +371,34 @@ export class CrafterListenerService implements OnModuleInit {
       if (!plugin.config.postInChannel && !asker.discordUserId) continue;
       const shown = merged(matches.map((match) => match.recipe));
       const key = `${plugin.id}|${asker.key}|${shown.map((r) => r.name).join('|')}`;
-      if ((this.answered.get(key) ?? 0) > now - COOLDOWN_MS) continue;
-      this.answered.set(key, now);
-
-      await this.answer(plugin, message, question, asker, shown, professions, now);
+      const recent = (way: 'dm' | 'channel') =>
+        (this.answered.get(`${key}|${way}`) ?? 0) > now - COOLDOWN_MS;
+      const ways = {
+        dm: plugin.config.sendDm && !recent('dm'),
+        channel: plugin.config.postInChannel && !recent('channel'),
+      };
+      if (!ways.dm && !ways.channel) {
+        // Answered a moment ago: said in the Log, so a missing answer can be explained.
+        await this.log(
+          plugin.id,
+          now,
+          `${asker.label} asked about ${recipeList(shown)} again: answered less than 10 minutes ago, so not again yet.`,
+          null,
+          { quiet: true },
+        );
+        continue;
+      }
+      const delivered = await this.answer(
+        plugin,
+        message,
+        question,
+        asker,
+        shown,
+        professions,
+        ways,
+        now,
+      );
+      for (const way of delivered) this.answered.set(`${key}|${way}`, now);
     }
   }
 
@@ -368,8 +409,9 @@ export class CrafterListenerService implements OnModuleInit {
     asker: Asker,
     recipes: MergedRecipe[],
     professions: GuildProfessionsDto & { owners: Map<string, string> },
+    ways: { dm: boolean; channel: boolean },
     startedAt: number,
-  ): Promise<void> {
+  ): Promise<('dm' | 'channel')[]> {
     const characters = new Map(professions.characters.map((c) => [c.id, c]));
     const lines = answerLines(
       recipes.map((recipe) => ({
@@ -388,7 +430,8 @@ export class CrafterListenerService implements OnModuleInit {
     );
     const done: string[] = [];
     const errors: string[] = [];
-    if (plugin.config.sendDm) {
+    const delivered: ('dm' | 'channel')[] = [];
+    if (ways.dm) {
       if (!asker.discordUserId) {
         done.push('no DM (no Discord account linked)');
       } else {
@@ -399,6 +442,7 @@ export class CrafterListenerService implements OnModuleInit {
             `Who can craft what you [asked about](<${link}>):\n${lines}`,
           );
           done.push('sent a DM');
+          delivered.push('dm');
         } catch (error) {
           errors.push(
             isDiscordError(error, 50007)
@@ -408,21 +452,47 @@ export class CrafterListenerService implements OnModuleInit {
         }
       }
     }
-    if (plugin.config.postInChannel) {
+    if (ways.channel) {
+      try {
+        await this.postInChannel(message, asker, lines);
+        done.push('answered in the channel');
+        delivered.push('channel');
+      } catch (error) {
+        errors.push(`Could not answer in the channel: ${describeDiscordError(error)}`);
+      }
+    }
+    const crafters = new Set(recipes.flatMap((recipe) => [...recipe.crafterIds])).size;
+    const result = `${asker.label} asked “${question.phrase}” about ${recipeList(recipes)}: ${crafters} crafter${crafters === 1 ? '' : 's'}${done.length > 0 ? `, ${done.join(', ')}` : ''}.`;
+    await this.log(plugin.id, startedAt, result, errors.length > 0 ? errors.join(' ') : null);
+    return delivered;
+  }
+
+  /**
+   * The answer in the channel: a reply to the question when Discord allows one, else (a message the
+   * game's app posted as the person, or a reply refused) a message of its own that names who asked,
+   * a mention that pings nobody.
+   */
+  private async postInChannel(message: ChatMessage, asker: Asker, lines: string): Promise<void> {
+    if (message.replyable) {
       try {
         await this.bot.sendRichMessage(message.channelId, {
           content: lines,
           replyTo: message.messageId,
           suppressEmbeds: true,
         });
-        done.push('answered in the channel');
+        return;
       } catch (error) {
-        errors.push(`Could not answer in the channel: ${describeDiscordError(error)}`);
+        // Without the right to post at all, a message of its own would fail the same way.
+        if (isDiscordError(error, 50013) || isDiscordError(error, 50001)) throw error;
       }
     }
-    const crafters = new Set(recipes.flatMap((recipe) => [...recipe.crafterIds])).size;
-    const result = `${asker.label} asked “${question.phrase}” about ${listOf(recipes.slice(0, MAX_RECIPES).map((r) => r.name))}${recipes.length > MAX_RECIPES ? ` and ${recipes.length - MAX_RECIPES} more` : ''}: ${crafters} crafter${crafters === 1 ? '' : 's'}${done.length > 0 ? `, ${done.join(', ')}` : ''}.`;
-    await this.log(plugin.id, startedAt, result, errors.length > 0 ? errors.join(' ') : null);
+    const who = asker.discordUserId
+      ? `<@${asker.discordUserId}>`
+      : `**${escapeMarkdown(asker.label)}**`;
+    await this.bot.sendRichMessage(message.channelId, {
+      content: `For ${who}:\n${lines}`,
+      suppressEmbeds: true,
+    });
   }
 
   /** Logs an answer as one of the plugin's runs, as the Plugins tab shows them. */
@@ -431,6 +501,7 @@ export class CrafterListenerService implements OnModuleInit {
     startedAt: number,
     result: string,
     error: string | null,
+    options: { quiet?: boolean } = {},
   ): Promise<void> {
     const status = error ? 'FAILED' : 'SUCCESS';
     try {
@@ -444,15 +515,18 @@ export class CrafterListenerService implements OnModuleInit {
           error,
         },
       });
-      await this.prisma.guildPlugin.update({
-        where: { id: pluginId },
-        data: {
-          lastRunAt: new Date(startedAt),
-          lastStatus: status,
-          lastError: error,
-          lastResult: result,
-        },
-      });
+      // A repeat it didn't answer is only in the Log: the card keeps saying how the last answer went.
+      if (!options.quiet) {
+        await this.prisma.guildPlugin.update({
+          where: { id: pluginId },
+          data: {
+            lastRunAt: new Date(startedAt),
+            lastStatus: status,
+            lastError: error,
+            lastResult: result,
+          },
+        });
+      }
     } catch (caught) {
       // Removed while answering, most likely.
       this.logger.warn(`Could not log an answer of plugin ${pluginId}: ${String(caught)}`);
