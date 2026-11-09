@@ -293,7 +293,8 @@ function scoreWords<R extends RecipeRef>(
 
 /**
  * The recipes `question` is about, the best first: those it links to; else a name it gives in full
- * (`[Flask of the Titans]`); else the longest run of its words that names recipes. When the best is
+ * (`[Flask of the Titans]`, nothing when the guild can't craft it); else the longest run of its
+ * words that names recipes. When the best is
  * named in full, only the ones named in full; otherwise ("who can make flask") every match.
  */
 export function matchRecipes<R extends RecipeRef>(
@@ -318,6 +319,9 @@ export function matchRecipes<R extends RecipeRef>(
     const found = best(scoreWords(wordsOf(name), named, memo));
     if (found.length > 0) return found;
   }
+  // An item it links or names in full ([Ez-Thro Dynamite]) that the guild can't craft: no answer,
+  // rather than other recipes sharing one of its words (Coarse Dynamite).
+  if (question.links.length > 0 || question.names.length > 0) return [];
 
   for (const words of question.words) {
     // The longest run of words that names something; of those, the best match.

@@ -1124,7 +1124,8 @@ on logout). Blizzard's Classic Era / SoD API has no professions, hence the addon
     next sentence), the longest run of them that names recipes. Filler words ("me", "pls", "the")
     are skipped and typos and plurals tolerated (`flasks of the titns`). A question that names the
     recipe in full gets only that one; a vague one ("who can make a flask") gets every match, the
-    closest first. Nothing matching: no answer.
+    closest first. Nothing matching: no answer. An item linked or in brackets the guild can't craft
+    (`[Ez-Thro Dynamite]`) gets no answer either, not recipes sharing one of its words.
   - **The answer**: one line per player and recipe,
     `[Svajone](<https://discord.com/users/…>) can craft [Flask of the Titans](<wowhead>) with
     character Svajone Potato` (a character with no Discord account says so), at most 3 recipes,
@@ -1133,7 +1134,10 @@ on logout). Blizzard's Classic Era / SoD API has no professions, hence the addon
     10 minutes gets no second answer, said in the Log ("asked … again: answered less than 10
     minutes ago") but not on the card. DMs and channel answers count apart, and only once
     delivered: a refused DM is tried again next time, and switching from the channel to DMs
-    answers the next question by DM.
+    answers the next question by DM. An answer is claimed before it is sent (given back if it
+    fails), and the same person posting the same text in the same channel within 10 seconds is
+    one question whatever its message id: Discord delivered linked game chat lines twice, which
+    sent two DMs. Each answer is logged with its message id ("answering message …").
   - **The game's guild chat posted by an app as each player** (how Relic Hunters' ⚜️-guild-chat
     gets it: the message's author is the player's linked Discord account, with the game's
     `application_id`): answered like anyone's message, but in the channel as a message of its own

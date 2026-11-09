@@ -80,6 +80,11 @@ const RELOAD_MS = 30 * 1000;
 const CATCH_UP_MS = 15 * 60 * 1000;
 /** Message ids already handled (from the connection or a catch-up), so none is answered twice. */
 const HANDLED_KEPT = 500;
+/**
+ * The same person posting the same text in the same channel within this long is one question,
+ * whatever its message id: Discord can deliver a game chat line twice, under two ids.
+ */
+const SAME_TEXT_MS = 10 * 1000;
 const DISCORD_EPOCH = 1_420_070_400_000n;
 
 /** A message id made from a time: Discord lists messages "after" it. */
@@ -230,6 +235,8 @@ export class CrafterListenerService implements OnModuleInit {
   private reloading: Promise<void> | null = null;
   private reloadAgain = false;
   private readonly handled = new Set<string>();
+  /** "channel|author|text" → when it was last seen (see SAME_TEXT_MS). */
+  private readonly lastText = new Map<string, number>();
   private readonly recipes = new Map<
     string,
     { at: number; data: Promise<GuildProfessionsDto & { owners: Map<string, string> }> }
@@ -394,7 +401,7 @@ export class CrafterListenerService implements OnModuleInit {
         const botId = this.client?.user?.id;
         for (const message of messages) {
           if (message.author.id === botId) continue;
-          await this.handleOnce(chatMessageOf(plugin.config.serverId, message)).catch(
+          await this.receive(chatMessageOf(plugin.config.serverId, message)).catch(
             (error: unknown) =>
               this.logger.error(`Profession listener failed on a message: ${String(error)}`),
           );
@@ -403,14 +410,21 @@ export class CrafterListenerService implements OnModuleInit {
     }
   }
 
-  /** `handle`, once per message, whether it came from the connection or a catch-up. */
-  private async handleOnce(message: ChatMessage): Promise<void> {
+  /**
+   * A message from the connection or a catch-up: handled once, by its id and by what it says (the
+   * same person, channel and text within 10 seconds is one question, under any id).
+   */
+  async receive(message: ChatMessage, now = Date.now()): Promise<void> {
     if (this.handled.has(message.messageId)) return;
     this.handled.add(message.messageId);
     if (this.handled.size > HANDLED_KEPT) {
       this.handled.delete(this.handled.values().next().value as string);
     }
-    await this.handle(message);
+    const said = `${message.channelId}|${message.authorId}|${message.text.trim().toLowerCase()}`;
+    const seen = this.lastText.get(said);
+    this.lastText.set(said, now);
+    if (seen !== undefined && seen > now - SAME_TEXT_MS) return;
+    await this.handle(message, now);
   }
 
   protected async connect(): Promise<void> {
@@ -464,7 +478,7 @@ export class CrafterListenerService implements OnModuleInit {
     if (message.author.id === client.user?.id) return;
     const embed = message.embeds[0];
     const relayed = message.author.bot || message.webhookId !== null;
-    void this.handleOnce({
+    void this.receive({
       serverId: message.guildId,
       channelId: message.channelId,
       messageId: message.id,
@@ -515,6 +529,13 @@ export class CrafterListenerService implements OnModuleInit {
         );
         continue;
       }
+      // Claimed before answering, so a copy of this question arriving meanwhile isn't answered too;
+      // what wasn't delivered is given back, for the next question to try.
+      const claimed = (['dm', 'channel'] as const).filter((way) => ways[way]);
+      for (const way of claimed) this.answered.set(`${key}|${way}`, now);
+      this.logger.log(
+        `Profession listener: answering message ${message.messageId} from ${asker.label} about ${recipeList(shown)}.`,
+      );
       const delivered = await this.answer(
         plugin,
         message,
@@ -525,7 +546,9 @@ export class CrafterListenerService implements OnModuleInit {
         ways,
         now,
       );
-      for (const way of delivered) this.answered.set(`${key}|${way}`, now);
+      for (const way of claimed) {
+        if (!delivered.includes(way)) this.answered.delete(`${key}|${way}`);
+      }
     }
   }
 
@@ -703,6 +726,7 @@ export class CrafterListenerService implements OnModuleInit {
 
   /** Forgets old answers and recipes, so the maps don't grow. */
   private prune(now = Date.now()): void {
+    for (const [key, at] of this.lastText) if (at <= now - SAME_TEXT_MS) this.lastText.delete(key);
     for (const [key, at] of this.answered) if (at <= now - COOLDOWN_MS) this.answered.delete(key);
     for (const [key, entry] of this.recipes)
       if (entry.at <= now - RECIPES_MS) this.recipes.delete(key);

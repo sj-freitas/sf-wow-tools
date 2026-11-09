@@ -274,6 +274,35 @@ describe('Guild Chat Profession Listener', () => {
     assert.equal(runs[0].status, 'SUCCESS');
   });
 
+  it('answers a game chat line Discord delivers twice, under two ids, once', async () => {
+    const { service, dms, runs } = setup();
+    const now = Date.now();
+    await Promise.all([
+      service.receive(message('LF crafter [Flask of the Titans]', { messageId: 'm1' }), now),
+      service.receive(message('LF crafter [Flask of the Titans]', { messageId: 'm2' }), now),
+    ]);
+    assert.equal(dms.length, 1);
+    assert.equal(runs.length, 1);
+  });
+
+  it('answers two copies arriving together once, even when their text differs', async () => {
+    const { service, dms } = setup();
+    const now = Date.now();
+    await Promise.all([
+      service.handle(message('LF crafter [Flask of the Titans]', { messageId: 'm1' }), now),
+      service.handle(message('who can craft flask of the titans', { messageId: 'm2' }), now + 6),
+    ]);
+    assert.equal(dms.length, 1);
+  });
+
+  it('answers the same message id once', async () => {
+    const { service, dms } = setup();
+    const now = Date.now();
+    await service.receive(message('who can craft flask of titans'), now);
+    await service.receive(message('who can craft flask of titans'), now + 11 * 60_000);
+    assert.equal(dms.length, 1);
+  });
+
   it('stays quiet for other messages, other channels and recipes nobody has', async () => {
     const { service, dms, runs } = setup();
     await service.handle(message('just made a flask of the titans'));

@@ -17,6 +17,7 @@ const recipes: RecipeRef[] = [
   { kind: 'spell', id: 20034, name: 'Enchant Weapon - Crusader' },
   { kind: 'spell', id: 16153, name: 'Smelt Thorium' },
   { kind: 'spell', id: 3115, name: 'Rough Sharpening Stone' },
+  { kind: 'spell', id: 3931, name: 'Coarse Dynamite' },
   { kind: 'spell', id: 1245287, name: null },
 ];
 
@@ -68,6 +69,12 @@ describe('findQuestion and matchRecipes', () => {
       ask('who can craft |cff1eff00|Hitem:13510::::::::60:::::|h[Flask of the Titans]|h|r ?'),
       ['Flask of the Titans'],
     );
+  });
+
+  it('does not guess for an item named in full that the guild can’t craft', () => {
+    assert.deepEqual(ask('LF crafter [Ez-Thro Dynamite]'), []);
+    // Without brackets it's a vague question: other dynamite will do.
+    assert.deepEqual(ask('LF crafter dynamite'), ['Coarse Dynamite']);
   });
 
   it('reads Wowhead links: the id, else the name in the address', () => {
