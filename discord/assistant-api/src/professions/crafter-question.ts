@@ -76,8 +76,6 @@ const STOP_WORDS = new Set([
   'you',
 ]);
 
-/** A question's longest run of words tried against the recipes. */
-const MAX_WINDOW = 8;
 /** Words after (or before) the phrase that are looked at. */
 const MAX_WORDS = 14;
 
@@ -225,22 +223,25 @@ function distance(a: string, b: string): number {
   return row[b.length];
 }
 
-const allowedTypos = (length: number): number => (length <= 4 ? 0 : length <= 7 ? 1 : 2);
+const allowedTypos = (length: number): number => (length <= 3 ? 0 : length <= 6 ? 1 : 2);
 
-/** How well a word of the question matches a word of a name, lower is better; null for not at all. */
+/**
+ * How well a word of the question matches a word of a name, lower is better; null for not at all:
+ * the same word, or with an "s" more or less (0); the start of it ("titan" for "titans", 1); or a
+ * typo or two, by its length ("flsk" for "flask", 2).
+ */
 function wordScore(query: string, word: string): number | null {
-  if (query === word) return 0;
-  // "titan" for "titans", "mong" for "mongoose".
+  if (query === word || query === `${word}s` || word === `${query}s`) return 0;
   if (query.length >= 4 && word.startsWith(query)) return 1;
   const typos = distance(query, word);
-  return typos <= allowedTypos(query.length) ? 1 + typos : null;
+  return typos <= allowedTypos(Math.min(query.length, word.length)) ? 1 + typos : null;
 }
 
 /** A recipe the question is about, and how well it matches (lower is better). */
 export interface RecipeMatch<R extends RecipeRef> {
   recipe: R;
   score: number;
-  /** Every word of its name was asked for: "flask of the titans" for Flask of the Titans. */
+  /** Every word of its name is in the question: "flask of the titans" for Flask of the Titans. */
   complete: boolean;
 }
 
@@ -249,53 +250,130 @@ interface Named<R> {
   words: string[];
 }
 
+/** Chat around an item's name that names no recipe: dropped from the question's words. */
+const FILLER = new Set([
+  'around',
+  'asap',
+  'buy',
+  'buying',
+  'crafters',
+  'got',
+  'guys',
+  'help',
+  'looking',
+  'made',
+  'mat',
+  'mats',
+  'now',
+  'online',
+  'pay',
+  'pst',
+  'tip',
+  'tips',
+  'today',
+  'tonight',
+  'want',
+  'whisper',
+  'will',
+  'would',
+]);
+
+/** How each recipe's name and the question's words line up. */
+interface Fit<R> {
+  recipe: R;
+  words: string[];
+  /** Every word of the name is in the question. */
+  complete: boolean;
+  /** Every word of the question is in the name. */
+  covers: boolean;
+  /** Typos and partial words, summed. */
+  typos: number;
+}
+
+function fits<R extends RecipeRef>(asked: readonly string[], named: readonly Named<R>[]): Fit<R>[] {
+  const result: Fit<R>[] = [];
+  for (const { recipe, words } of named) {
+    const bestOf = (
+      word: string,
+      among: readonly string[],
+      scoreOf: (a: string, b: string) => number | null,
+    ) => {
+      let best: number | null = null;
+      for (const other of among) {
+        const score = scoreOf(word, other);
+        if (score !== null && (best === null || score < best)) best = score;
+      }
+      return best;
+    };
+    const forName = words.map((word) => bestOf(word, asked, (n, q) => wordScore(q, n)));
+    const forAsked = asked.map((word) => bestOf(word, words, (q, n) => wordScore(q, n)));
+    const complete = forName.every((score) => score !== null);
+    const covers = forAsked.every((score) => score !== null);
+    if (!complete && !covers) continue;
+    const typos = (complete ? forName : forAsked).reduce<number>(
+      (sum, score) => sum + (score ?? 0),
+      0,
+    );
+    result.push({ recipe, words, complete, covers, typos });
+  }
+  return result;
+}
+
+const byFit = <R extends RecipeRef>(a: Fit<R>, b: Fit<R>): number =>
+  a.typos - b.typos ||
+  (a.recipe.name ?? '').localeCompare(b.recipe.name ?? '') ||
+  a.recipe.id - b.recipe.id;
+
 /**
- * Scores of `words` against each name: every significant word must match a word of the name.
- * Each word of the name that wasn't asked for costs a point, so the full name wins.
+ * The best match of `asked` (the question's words) among the guild's recipes, by how they line up:
+ * 1. named exactly (every word of the name and nothing else: "bronze mace" is Bronze Mace, not
+ *    Heavy Bronze Mace); 2. named in full among other words ("bronze mace tonight", "bronze mace
+ *    and bronze axe"), dropping one whose words are all in another's (Bronze Mace in Heavy Bronze
+ *    Mace); 3. every word asked is in the name ("flask": every flask). Else nothing: "bronze tube"
+ *    is no recipe of the guild's, so it isn't every bronze one either.
  */
-function scoreWords<R extends RecipeRef>(
+function bestFits<R extends RecipeRef>(
   words: readonly string[],
   named: readonly Named<R>[],
-  memo: Map<string, (number | null)[]>,
+  only: 'exact' | 'any' = 'any',
 ): RecipeMatch<R>[] {
-  const asked = words.filter(significant);
+  const asked = words.filter((word) => significant(word) && !FILLER.has(word));
   if (asked.length === 0) return [];
-  const perWord = asked.map((word) => {
-    let scores = memo.get(word);
-    if (!scores) {
-      scores = named.map(({ words: nameWords }) => {
-        let best: number | null = null;
-        for (const nameWord of nameWords) {
-          const score = wordScore(word, nameWord);
-          if (score !== null && (best === null || score < best)) best = score;
-        }
-        return best;
-      });
-      memo.set(word, scores);
-    }
-    return scores;
-  });
-  const matches: RecipeMatch<R>[] = [];
-  named.forEach(({ recipe, words: nameWords }, i) => {
-    let score = 0;
-    for (const scores of perWord) {
-      const s = scores[i];
-      if (s === null) return;
-      score += s;
-    }
-    const left = nameWords.filter(
-      (nameWord) => !asked.some((word) => wordScore(word, nameWord) !== null),
-    ).length;
-    matches.push({ recipe, score: score + left, complete: left === 0 });
-  });
-  return matches;
+  const all = fits(asked, named);
+  const exact = all.filter((fit) => fit.complete && fit.covers).sort(byFit);
+  if (exact.length > 0) {
+    const least = exact[0].typos;
+    return exact
+      .filter((fit) => fit.typos === least)
+      .map((fit) => ({ recipe: fit.recipe, score: fit.typos, complete: true }));
+  }
+  if (only === 'exact') return [];
+  const inFull = all.filter((fit) => fit.complete);
+  if (inFull.length > 0) {
+    const kept = inFull.filter(
+      (fit) =>
+        !inFull.some(
+          (other) =>
+            other !== fit &&
+            other.words.length > fit.words.length &&
+            fit.words.every((word) => other.words.includes(word)),
+        ),
+    );
+    return kept
+      .sort((a, b) => b.words.length - a.words.length || byFit(a, b))
+      .map((fit) => ({ recipe: fit.recipe, score: fit.typos, complete: true }));
+  }
+  return all
+    .filter((fit) => fit.covers)
+    .sort((a, b) => a.words.length - b.words.length || byFit(a, b))
+    .map((fit) => ({ recipe: fit.recipe, score: fit.typos, complete: false }));
 }
 
 /**
  * The recipes `question` is about, the best first: those it links to; else a name it gives in full
- * (`[Flask of the Titans]`, nothing when the guild can't craft it); else the longest run of its
- * words that names recipes. When the best is
- * named in full, only the ones named in full; otherwise ("who can make flask") every match.
+ * (`[Flask of the Titans]`, typos allowed; nothing when the guild can't craft it); else the best
+ * match of its words (see `bestFits`), after the phrase, else before it, else in the next or the
+ * previous sentence.
  */
 export function matchRecipes<R extends RecipeRef>(
   question: CrafterQuestion,
@@ -310,13 +388,12 @@ export function matchRecipes<R extends RecipeRef>(
     .filter((recipe) => recipe.name)
     .map((recipe) => ({ recipe, words: wordsOf(recipe.name!).filter(significant) }))
     .filter(({ words }) => words.length > 0);
-  const memo = new Map<string, (number | null)[]>();
 
   for (const name of question.names) {
     const exact = wordsOf(name).join(' ');
     const same = named.filter(({ recipe }) => wordsOf(recipe.name!).join(' ') === exact);
     if (same.length > 0) return same.map(({ recipe }) => ({ recipe, score: 0, complete: true }));
-    const found = best(scoreWords(wordsOf(name), named, memo));
+    const found = bestFits(wordsOf(name), named, 'exact');
     if (found.length > 0) return found;
   }
   // An item it links or names in full ([Ez-Thro Dynamite]) that the guild can't craft: no answer,
@@ -324,35 +401,10 @@ export function matchRecipes<R extends RecipeRef>(
   if (question.links.length > 0 || question.names.length > 0) return [];
 
   for (const words of question.words) {
-    // The longest run of words that names something; of those, the best match.
-    let found: RecipeMatch<R>[] = [];
-    let foundSize = 0;
-    for (let size = Math.min(MAX_WINDOW, words.length); size >= 1 && found.length === 0; size--) {
-      for (let start = 0; start + size <= words.length; start++) {
-        const window = words.slice(start, start + size);
-        // A run that starts or ends with a filler word is the same as a shorter one.
-        if (!significant(window[0]) || !significant(window[size - 1])) continue;
-        const matches = best(scoreWords(window, named, memo));
-        if (matches.length > 0 && (found.length === 0 || matches[0].score < found[0].score)) {
-          found = matches;
-          foundSize = size;
-        }
-      }
-    }
-    if (found.length > 0 && foundSize > 0) return found;
+    const found = bestFits(words, named);
+    if (found.length > 0) return found;
   }
   return [];
-}
-
-/** Sorted, and only the ones named in full when the best is. */
-function best<R extends RecipeRef>(matches: RecipeMatch<R>[]): RecipeMatch<R>[] {
-  matches.sort(
-    (a, b) =>
-      a.score - b.score ||
-      (a.recipe.name ?? '').localeCompare(b.recipe.name ?? '') ||
-      a.recipe.id - b.recipe.id,
-  );
-  return matches[0]?.complete ? matches.filter((match) => match.complete) : matches;
 }
 
 /**

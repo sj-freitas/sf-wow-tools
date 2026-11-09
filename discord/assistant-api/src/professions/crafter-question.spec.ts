@@ -107,6 +107,62 @@ describe('findQuestion and matchRecipes', () => {
   });
 });
 
+describe('matchRecipes, the best match only (the guild’s own bronze recipes)', () => {
+  const bronze: RecipeRef[] = [
+    'Smelt Bronze',
+    'Copper Tube',
+    'Rough Bronze Leggings',
+    'Rough Bronze Cuirass',
+    'Bronze Mace',
+    'Rough Bronze Shoulders',
+    'Silvered Bronze Gauntlets',
+    'Big Bronze Knife',
+    'Rough Bronze Boots',
+    'Patterned Bronze Bracers',
+    'Bronze Axe',
+    'Bronze Shortsword',
+    'Heavy Bronze Mace',
+    'Silvered Bronze Boots',
+    'Bronze Warhammer',
+    'Bronze Greatsword',
+    'Bronze Battle Axe',
+  ].map((name, i) => ({ kind: 'spell' as const, id: i + 1, name }));
+  const find = (text: string) => {
+    const question = findQuestion(text, DEFAULT_PHRASES);
+    return question ? matchRecipes(question, bronze).map((m) => m.recipe.name) : null;
+  };
+
+  it('answers nothing for an item no recipe is, not every recipe sharing a word', () => {
+    assert.deepEqual(find('who can craft Bronze Tube?'), []);
+  });
+
+  it('takes the recipe named exactly over longer ones sharing its words', () => {
+    assert.deepEqual(find('who can craft bronze mace'), ['Bronze Mace']);
+    assert.deepEqual(find('who can make Heavy Bronze Mace?'), ['Heavy Bronze Mace']);
+    assert.deepEqual(find('LF crafter bronze axe'), ['Bronze Axe']);
+  });
+
+  it('takes recipes named in full among other words, the longest', () => {
+    assert.deepEqual(find('who can make heavy bronze mace and bronze axe'), [
+      'Heavy Bronze Mace',
+      'Bronze Axe',
+    ]);
+    assert.deepEqual(find('who can make bronze mace for my alt'), ['Bronze Mace']);
+  });
+
+  it('lists the recipes holding every word asked when none is named in full', () => {
+    assert.deepEqual(find('who can make bronze boots'), [
+      'Rough Bronze Boots',
+      'Silvered Bronze Boots',
+    ]);
+  });
+
+  it('tolerates typos and plurals in the name', () => {
+    assert.deepEqual(find('who can make bronze maces'), ['Bronze Mace']);
+    assert.deepEqual(find('who can make bronz greatsword'), ['Bronze Greatsword']);
+  });
+});
+
 describe('parsePhrases', () => {
   it('takes one phrase per line, trimmed, without repeats', () => {
     assert.deepEqual(parsePhrases(' who can craft \n\nWho  can craft\nLF crafter'), {

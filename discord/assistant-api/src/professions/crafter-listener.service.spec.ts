@@ -153,9 +153,7 @@ const message = (text: string, more: Partial<ChatMessage> = {}): ChatMessage => 
   ...more,
 });
 
-const LINES =
-  `- [Svajone](<https://discord.com/users/111>) can craft [Flask of the Titans](<${FLASK_URL}>) with character Svajone Potato\n` +
-  `- Bob Builder can craft [Flask of the Titans](<${FLASK_URL}>) (no Discord account linked)`;
+const LINES = `- [Flask of the Titans](<${FLASK_URL}>), crafters: Bob Builder, [Svajone Potato](<https://discord.com/users/111>)`;
 
 describe('Guild Chat Profession Listener', () => {
   it('DMs whoever asks who can craft it, and logs the answer', async () => {
@@ -386,25 +384,48 @@ describe('Guild Chat Profession Listener', () => {
 });
 
 describe('answerLines', () => {
-  it('names a player with several characters once, and cuts what does not fit', () => {
-    const lines = answerLines([
-      {
-        name: 'Copper Rod',
-        url: 'u',
-        crafters: [
-          { character: 'A One', discordUserId: '1', discordName: 'a_b' },
-          { character: 'A Two', discordUserId: '1', discordName: 'a_b' },
-        ],
-      },
-      { name: 'R2', url: 'u', crafters: [] },
-      { name: 'R3', url: 'u', crafters: [] },
-      { name: 'R4', url: 'u', crafters: [] },
-    ]);
+  const crafter = (character: string, discordUserId: string | null = null) => ({
+    character,
+    discordUserId,
+  });
+
+  it('gives each recipe one line, its crafters linked to their Discord profiles', () => {
     assert.equal(
-      lines,
-      '- [a\\_b](<https://discord.com/users/1>) can craft [Copper Rod](<u>) with characters A One and A Two\n' +
-        '…and 1 more recipe match: ask with the full name, or use `/crafter`.',
+      answerLines([
+        {
+          name: 'Bronze Mace',
+          url: 'w',
+          crafters: [
+            crafter('Shivan Darkwhisp', '373'),
+            crafter('Tearyn Trakand', '176'),
+            crafter('Zya_Milfred', '780'),
+            crafter('Bob Builder'),
+          ],
+        },
+        { name: 'Copper Rod', url: 'r', crafters: [crafter('Shivan Darkwhisp', '373')] },
+      ]),
+      '- [Bronze Mace](<w>), crafters: [Shivan Darkwhisp](<https://discord.com/users/373>), ' +
+        '[Tearyn Trakand](<https://discord.com/users/176>), [Zya\\_Milfred](<https://discord.com/users/780>), Bob Builder\n' +
+        '- [Copper Rod](<r>), crafter: [Shivan Darkwhisp](<https://discord.com/users/373>)',
     );
+  });
+
+  it('counts the crafters and recipes past its limits', () => {
+    const many = Array.from({ length: 12 }, (_, i) => crafter(`C${i + 1}`));
+    const lines = answerLines([
+      { name: 'R1', url: 'u', crafters: many },
+      ...['R2', 'R3', 'R4', 'R5', 'R6', 'R7'].map((name) => ({
+        name,
+        url: 'u',
+        crafters: [crafter('A')],
+      })),
+    ]).split('\n');
+    assert.equal(
+      lines[0],
+      '- [R1](<u>), crafters: C1, C2, C3, C4, C5, C6, C7, C8, C9, C10 and 2 more',
+    );
+    assert.equal(lines.length, 6);
+    assert.equal(lines[5], '…and 2 more recipes: ask with the full name, or use `/crafter`.');
   });
 });
 

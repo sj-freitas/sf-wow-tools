@@ -120,8 +120,10 @@ const DM_RETRY_MS = 5 * 1000;
 const DM_TOO_FAST = 40003;
 /** The guild's recipes are read again after this long (answers within a burst share one read). */
 const RECIPES_MS = 30 * 1000;
-/** At most this many recipes in an answer. */
-const MAX_RECIPES = 3;
+/** At most this many recipes in an answer (a vague question can match more), one line each. */
+const MAX_RECIPES = 5;
+/** At most this many crafters on a recipe's line; the rest are "and 4 more". */
+const MAX_CRAFTERS = 10;
 /** Discord's limit for a message, less room for the "more" line. */
 const MAX_LENGTH = 1850;
 
@@ -144,60 +146,40 @@ const recipeList = (recipes: readonly { name: string }[]): string =>
 export interface AnswerRecipe {
   name: string;
   url: string;
-  crafters: { character: string; discordUserId: string | null; discordName: string | null }[];
+  /** Its crafters' characters, and their players' Discord accounts when known. */
+  crafters: { character: string; discordUserId: string | null }[];
 }
 
 /**
- * The answer's lines, one per player and recipe:
- * "- [Svajone](<https://discord.com/users/…>) can craft [Flask of the Titans](<wowhead>) with
- * character Svajone Potato". A character with no Discord account says so. At most `MAX_RECIPES`
- * recipes; what doesn't fit ends in "…and 4 more".
+ * The answer: one line per recipe with all its crafters, each character linking to its player's
+ * Discord profile ("- [Bronze Mace](<wowhead>), crafters: [Shivan Darkwhisp](<…/users/…>),
+ * [Tearyn Trakand](<…>)"); a character with no Discord account is just its name. At most
+ * `MAX_RECIPES` recipes and `MAX_CRAFTERS` crafters a line, the rest counted ("and 4 more").
  */
 export function answerLines(recipes: readonly AnswerRecipe[]): string {
   const lines: string[] = [];
   let length = 0;
   let left = 0;
   for (const recipe of recipes.slice(0, MAX_RECIPES)) {
-    const item = `[${escapeMarkdown(recipe.name)}](<${recipe.url}>)`;
-    const players = new Map<string, { name: string | null; characters: string[] }>();
-    const unlinked: string[] = [];
-    for (const crafter of recipe.crafters) {
-      if (!crafter.discordUserId) {
-        unlinked.push(crafter.character);
-        continue;
-      }
-      const player = players.get(crafter.discordUserId) ?? {
-        name: crafter.discordName,
-        characters: [],
-      };
-      player.characters.push(crafter.character);
-      players.set(crafter.discordUserId, player);
+    const names = recipe.crafters.map(({ character, discordUserId }) =>
+      discordUserId
+        ? `[${escapeMarkdown(character)}](<https://discord.com/users/${discordUserId}>)`
+        : escapeMarkdown(character),
+    );
+    const more = names.length - MAX_CRAFTERS;
+    const crafters = `${names.slice(0, MAX_CRAFTERS).join(', ')}${more > 0 ? ` and ${more} more` : ''}`;
+    const line = `- [${escapeMarkdown(recipe.name)}](<${recipe.url}>), crafter${names.length === 1 ? '' : 's'}: ${crafters}`;
+    if (length + line.length + 1 > MAX_LENGTH) {
+      left++;
+      continue;
     }
-    const recipeLines = [
-      ...[...players].map(([id, player]) => {
-        const who = player.name ?? `${player.characters[0]}’s player`;
-        const characters = player.characters.map(escapeMarkdown);
-        return `- [${escapeMarkdown(who)}](<https://discord.com/users/${id}>) can craft ${item} with character${characters.length === 1 ? '' : 's'} ${listOf(characters)}`;
-      }),
-      ...unlinked.map(
-        (character) =>
-          `- ${escapeMarkdown(character)} can craft ${item} (no Discord account linked)`,
-      ),
-    ];
-    for (const line of recipeLines) {
-      if (length + line.length + 1 > MAX_LENGTH) {
-        left++;
-        continue;
-      }
-      lines.push(line);
-      length += line.length + 1;
-    }
+    lines.push(line);
+    length += line.length + 1;
   }
-  const moreRecipes = Math.max(0, recipes.length - MAX_RECIPES);
-  if (left > 0) lines.push(`…and ${left} more: \`/crafter\` lists them all.`);
+  const moreRecipes = Math.max(0, recipes.length - MAX_RECIPES) + left;
   if (moreRecipes > 0) {
     lines.push(
-      `…and ${moreRecipes} more recipe${moreRecipes === 1 ? '' : 's'} match: ask with the full name, or use \`/crafter\`.`,
+      `…and ${moreRecipes} more recipe${moreRecipes === 1 ? '' : 's'}: ask with the full name, or use \`/crafter\`.`,
     );
   }
   return lines.join('\n');
@@ -575,11 +557,7 @@ export class CrafterListenerService implements OnModuleInit {
           .map((id) => characters.get(id))
           .filter((c): c is NonNullable<typeof c> => !!c)
           .sort((a, b) => a.name.localeCompare(b.name))
-          .map((c) => ({
-            character: c.name,
-            discordUserId: c.discordUserId,
-            discordName: c.discordName,
-          })),
+          .map((c) => ({ character: c.name, discordUserId: c.discordUserId })),
       })),
     );
     const done: string[] = [];

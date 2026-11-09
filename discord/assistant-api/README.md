@@ -1120,16 +1120,19 @@ on logout). Blizzard's Classic Era / SoD API has no professions, hence the addon
   and **Also post the answer in the channel** (a reply, off by default); at least one of the two.
   - **What it is about** (`crafter-question.ts`): a Wowhead link (its id, else the name in its
     address) or the game's own item link; else a name in brackets (`[Flask of the Titans]`, as game
-    chat shows items); else the words after the phrase in the same sentence (or before it, or the
-    next sentence), the longest run of them that names recipes. Filler words ("me", "pls", "the")
-    are skipped and typos and plurals tolerated (`flasks of the titns`). A question that names the
-    recipe in full gets only that one; a vague one ("who can make a flask") gets every match, the
-    closest first. Nothing matching: no answer. An item linked or in brackets the guild can't craft
-    (`[Ez-Thro Dynamite]`) gets no answer either, not recipes sharing one of its words.
-  - **The answer**: one line per player and recipe,
-    `[Svajone](<https://discord.com/users/…>) can craft [Flask of the Titans](<wowhead>) with
-    character Svajone Potato` (a character with no Discord account says so), at most 3 recipes,
-    "…and 4 more" pointing at `/crafter`. Sent without link previews and pinging nobody. The DM
+    chat shows items: that recipe or nothing, so `[Ez-Thro Dynamite]` the guild can't craft gets
+    no answer); else the words after the phrase in the same sentence (or before it, or the next
+    sentence). Filler ("me", "pls", "the", "tonight", "mats") is skipped; typos, a missing or extra
+    "s" and the start of a word (`titan`) count. The best match wins, by how the recipe's name
+    and the words line up: **named exactly** (every word of the name, nothing else: "bronze mace"
+    is Bronze Mace, not Heavy Bronze Mace); else **named in full** among other words ("heavy bronze
+    mace and bronze axe": both, Bronze Mace dropped as part of Heavy Bronze Mace); else **every word
+    asked is in the name** ("bronze boots": Rough and Silvered Bronze Boots); else **nothing**: "who
+    can craft Bronze Tube?" gets no answer when nobody has Bronze Tube, not every bronze recipe.
+  - **The answer**: one line per recipe with all its crafters, each character linking to its
+    player's Discord profile, `- [Bronze Mace](<wowhead>), crafters: [Shivan Darkwhisp](<https://discord.com/users/…>), [Tearyn Trakand](<…>)`
+    (a character with no Discord account is just its name); at most 5 recipes and 10 crafters a
+    line, the rest counted ("and 2 more"). Sent without link previews and pinging nobody. The DM
     starts with a link to the question. The same person asking about the same thing again within a
     minute gets no second answer, said in the Log ("asked … again: answered less than a minute
     ago") but not on the card; later, they most likely didn't see it, so it's answered again.
