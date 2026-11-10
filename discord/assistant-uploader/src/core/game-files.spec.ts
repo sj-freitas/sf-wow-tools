@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import path from 'node:path';
 import { describe, it } from 'node:test';
 import {
   defaultGameFolders,
@@ -10,12 +11,16 @@ import {
   type FileSystem,
 } from './game-files';
 
+/** A path written with "/", as this system writes it (the tests run on Mac and Windows). */
+const p = (written: string): string => written.split('/').join(path.sep);
+
 /** A disk of the given files (their folders follow from their paths). */
-function fakeDisk(files: string[]): FileSystem {
+function fakeDisk(written: string[]): FileSystem {
+  const files = written.map(p);
   const dirs = new Set<string>();
   for (const file of files) {
-    const parts = file.split('/');
-    for (let i = 1; i < parts.length; i++) dirs.add(parts.slice(0, i).join('/'));
+    const parts = file.split(path.sep);
+    for (let i = 1; i < parts.length; i++) dirs.add(parts.slice(0, i).join(path.sep));
   }
   const all = [...dirs, ...files];
   return {
@@ -24,8 +29,8 @@ function fakeDisk(files: string[]): FileSystem {
       return [
         ...new Set(
           all
-            .filter((entry) => entry.startsWith(`${dir}/`))
-            .map((entry) => entry.slice(dir.length + 1).split('/')[0]),
+            .filter((entry) => entry.startsWith(`${dir}${path.sep}`))
+            .map((entry) => entry.slice(dir.length + 1).split(path.sep)[0]),
         ),
       ];
     },
@@ -34,7 +39,7 @@ function fakeDisk(files: string[]): FileSystem {
   };
 }
 
-const WOW = '/Applications/World of Warcraft';
+const WOW = p('/Applications/World of Warcraft');
 const FILE = 'SavedVariables/GuildAssistantProfessions.lua';
 const disk = fakeDisk([
   `${WOW}/_forever_/WTF/Account/ACCOUNT1/${FILE}`,
@@ -48,14 +53,14 @@ describe('game files', () => {
   it('finds the addon’s file in every version and account of the game’s folder', async () => {
     assert.deepEqual(await findProfessionFiles(WOW, disk), [
       {
-        path: `${WOW}/_classic_era_/WTF/Account/ACCOUNT1/${FILE}`,
-        dir: `${WOW}/_classic_era_/WTF/Account/ACCOUNT1/SavedVariables`,
+        path: p(`${WOW}/_classic_era_/WTF/Account/ACCOUNT1/${FILE}`),
+        dir: p(`${WOW}/_classic_era_/WTF/Account/ACCOUNT1/SavedVariables`),
         version: 'Classic Era',
         account: 'ACCOUNT1',
       },
       {
-        path: `${WOW}/_forever_/WTF/Account/ACCOUNT1/${FILE}`,
-        dir: `${WOW}/_forever_/WTF/Account/ACCOUNT1/SavedVariables`,
+        path: p(`${WOW}/_forever_/WTF/Account/ACCOUNT1/${FILE}`),
+        dir: p(`${WOW}/_forever_/WTF/Account/ACCOUNT1/SavedVariables`),
         version: 'Forever',
         account: 'ACCOUNT1',
       },
@@ -63,12 +68,12 @@ describe('game files', () => {
   });
 
   it('takes a version’s folder too, or a folder picked inside it', async () => {
-    const forever = await findProfessionFiles(`${WOW}/_forever_`, disk);
+    const forever = await findProfessionFiles(p(`${WOW}/_forever_`), disk);
     assert.deepEqual(
       forever.map((file) => [file.version, file.account]),
       [['Forever', 'ACCOUNT1']],
     );
-    assert.equal(gameFolderOf(`${WOW}/_forever_/WTF/Account/ACCOUNT1`), `${WOW}/_forever_`);
+    assert.equal(gameFolderOf(p(`${WOW}/_forever_/WTF/Account/ACCOUNT1`)), p(`${WOW}/_forever_`));
     assert.equal(
       gameFolderOf('C:\\Program Files (x86)\\World of Warcraft\\_forever_\\WTF'),
       'C:\\Program Files (x86)\\World of Warcraft\\_forever_',
@@ -78,8 +83,8 @@ describe('game files', () => {
 
   it('tells the game’s folder from any other', async () => {
     assert.equal(await isGameFolder(WOW, disk), true);
-    assert.equal(await isGameFolder(`${WOW}/_forever_`, disk), true);
-    assert.equal(await isGameFolder(`${WOW}/Data`, disk), false);
+    assert.equal(await isGameFolder(p(`${WOW}/_forever_`), disk), true);
+    assert.equal(await isGameFolder(p(`${WOW}/Data`), disk), false);
     assert.equal(await isGameFolder('/nowhere', disk), false);
     assert.equal(await detectGameFolder(['/nowhere', WOW], disk), WOW);
     assert.equal(await detectGameFolder(['/nowhere'], disk), null);

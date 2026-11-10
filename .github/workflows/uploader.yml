@@ -12,6 +12,8 @@ on:
 jobs:
   build:
     strategy:
+      # One system failing doesn't cancel the other's build (its log is worth having).
+      fail-fast: false
       matrix:
         os: [macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
