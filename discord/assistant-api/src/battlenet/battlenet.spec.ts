@@ -4,6 +4,7 @@ import type { ConfigService } from '@nestjs/config';
 import type { Response } from 'express';
 import type { AuthenticatedRequest } from '../auth/auth.types';
 import type { CacheService } from '../cache/cache.service';
+import type { CharactersService } from '../characters/characters.service';
 import type { PrismaService } from '../database/prisma.service';
 import { ArmoryError, type ArmoryQuery, type ArmoryService } from '../armory/armory.service';
 import { BattleNetController } from './battlenet.controller';
@@ -158,25 +159,36 @@ describe('BattleNetController', () => {
     } as unknown as PrismaService;
     const service = new BattleNetService(config(values), armory);
     fakeBattleNet(service);
-    const controller = new BattleNetController(service, cache, prisma);
-    const req = (userId: string) => ({ user: { id: userId } }) as unknown as AuthenticatedRequest;
+    // Who verified which character (c1 is someone else's until u1 verifies it).
+    const verified: { characterId: string; owner: unknown }[] = [];
+    const characters = {
+      verify: async (characterId: string, owner: unknown) => {
+        verified.push({ characterId, owner });
+        return { moved: true };
+      },
+    } as unknown as CharactersService;
+    const controller = new BattleNetController(service, cache, prisma, characters);
+    const req = (userId: string) =>
+      ({
+        user: { id: userId, discordId: `d-${userId}`, username: userId, displayName: 'Shivan' },
+      }) as unknown as AuthenticatedRequest;
     let redirected = '';
     const res = { redirect: (to: string) => void (redirected = to) } as unknown as Response;
-    return { controller, req, res, store, redirectedTo: () => redirected };
+    return { controller, req, res, store, verified, redirectedTo: () => redirected };
   }
 
   /** Logs in for c1 (Aqua Aquantos on EU RP) and returns what the check found. */
   async function check(armory = fakeArmory().armory) {
-    const { controller, req, res, redirectedTo } = setup(CONFIGURED, armory);
+    const { controller, req, res, redirectedTo, verified } = setup(CONFIGURED, armory);
     await controller.login(req('u1'), res, 'c1');
     const state = new URL(redirectedTo()).searchParams.get('state')!;
     await controller.callback(req('u1'), res, 'code-1', state);
     const id = redirectedTo().replace('/battlenet/', '');
-    return { result: await controller.result(req('u1'), id), controller, req, id };
+    return { result: await controller.result(req('u1'), id), controller, req, id, verified };
   }
 
-  it('finds the character on the account, and on its server in the armory', async () => {
-    const { result, controller, req, id } = await check();
+  it('finds the character on the account and on its server, and verifies it for them', async () => {
+    const { result, controller, req, id, verified } = await check();
     assert.deepEqual(result.character, {
       name: 'Aqua Aquantos',
       pagePath: '/forever/eu/rp/characters/Aqua-Aquantos',
@@ -192,29 +204,45 @@ describe('BattleNetController', () => {
       ['Altie Twink', 'Aqua Aquantos', 'Elsewhere Pvper'],
     );
     assert.equal(result.error, null);
+    // Verified, for the player who logged in (and moved to them).
+    assert.deepEqual(verified, [
+      {
+        characterId: 'c1',
+        owner: { discordUserId: 'd-u1', names: { username: 'u1', displayName: 'Shivan' } },
+      },
+    ]);
+    assert.equal(result.verified, true);
+    assert.equal(result.moved, true);
     // Someone else can't see it.
     await assert.rejects(controller.result(req('u2'), id), /expired/);
   });
 
   it('tells apart a character on another server, or someone else’s with the same name', async () => {
-    let { result } = await check(fakeArmory({ 'aqua aquantos': { id: 101, realm: 'PvP' } }).armory);
+    let { result, verified } = await check(
+      fakeArmory({ 'aqua aquantos': { id: 101, realm: 'PvP' } }).armory,
+    );
     assert.equal(result.found, true);
     assert.equal(result.armoryServer, 'PvP');
     assert.equal(result.sameServer, false);
+    // Neither is verified.
+    assert.deepEqual([verified, result.verified, result.moved], [[], false, false]);
     // The armory's Aqua Aquantos isn't the account's (another id): not theirs.
-    ({ result } = await check(
+    ({ result, verified } = await check(
       fakeArmory({ 'aqua aquantos': { id: 999, realm: 'Roleplay' } }).armory,
     ));
     assert.equal(result.found, false);
     assert.equal(result.sameServer, true);
+    assert.deepEqual([verified, result.verified], [[], false]);
   });
 
-  it('goes by name when the armory doesn’t have the character yet', async () => {
-    const { result } = await check(fakeArmory({}).armory);
+  it('goes by name when the armory doesn’t have the character yet, but doesn’t verify it', async () => {
+    const { result, verified } = await check(fakeArmory({}).armory);
     assert.equal(result.found, true);
     assert.equal(result.armoryServer, null);
     assert.equal(result.sameServer, false);
     assert.equal(result.error, null);
+    // Its server isn't confirmed.
+    assert.deepEqual([verified, result.verified], [[], false]);
   });
 
   it('ignores a callback that isn’t the player’s own login', async () => {

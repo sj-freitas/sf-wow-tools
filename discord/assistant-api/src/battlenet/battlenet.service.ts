@@ -71,7 +71,7 @@ export class BattleNetError extends Error {}
  * whether the character is theirs; and the character itself in the armory, which says its
  * server's rule set, checked against the server the character is on (`armoryRuleset` in the game
  * config, "Roleplay" for RP). The account's list can't say that itself: Forever's has no servers.
- * A preview for now: it changes nothing. Uses the same
+ * When both pass, the controller marks the character verified. Uses the same
  * Battle.net developer client as the armory (`BLIZZARD_CLIENT_ID`, `BLIZZARD_CLIENT_SECRET`); the
  * client must list `redirectUri` (`BATTLENET_REDIRECT_URI`, else `<site>/api/battlenet/callback`).
  */

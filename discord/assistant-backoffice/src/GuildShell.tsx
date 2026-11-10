@@ -97,7 +97,7 @@ interface Props {
  *   /overview                                       your guilds: pick one or add one
  *   /privacy                                        the privacy policy (also before logging in)
  *   /guilds/create                                  set up a new guild
- *   /battlenet/:id                                  what "Verify with Battle.net" found (a preview)
+ *   /battlenet/:id                                  what "Verify with Battle.net" found
  *   /<version>/<region>/<server>/characters         your characters on that server
  *   /<version>/<region>/<server>/characters/<name>  a character's own page (guild-agnostic: the
  *                                                    same one regardless of which guild it is in,

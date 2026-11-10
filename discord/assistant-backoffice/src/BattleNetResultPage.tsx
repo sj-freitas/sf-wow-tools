@@ -27,26 +27,35 @@ interface BattleNetResult {
   armoryServer: string | null;
   /** That rule set is its server's here. */
   sameServer: boolean;
+  /** Both passed: the character is now verified (only its player edits or moves it). */
+  verified: boolean;
+  /** It was someone else's (or no one's) and is now the viewer's. */
+  moved: boolean;
   error: string | null;
 }
 
-/** Whether the character is theirs, and on the server it says, in a sentence. */
+/** Whether the character is theirs, on the server it says, and so verified, in a sentence. */
 function verdict(result: BattleNetResult): string {
   const { name } = result.character;
-  if (!result.found) return `❌ ${name} isn’t one of them.`;
+  if (!result.found) return `❌ ${name} isn’t one of them, so it wasn’t verified.`;
   if (result.armoryServer === null) {
-    return `✅ ${name} is one of them. The armory doesn’t have it yet, so its server isn’t confirmed.`;
+    return `⚠️ ${name} is one of them, but the armory doesn’t have it yet, so its server can’t be confirmed and it wasn’t verified. Try again once the armory has it.`;
   }
-  if (!result.sameServer) {
-    return `⚠️ ${name} is one of them, but the armory has it on ${result.armoryServer}, not ${result.server}.`;
+  if (!result.verified) {
+    return `⚠️ ${name} is one of them, but the armory has it on ${result.armoryServer}, not ${result.server}, so it wasn’t verified.`;
   }
-  return `✅ ${name} is one of them, on ${result.server} (${result.armoryServer} in the armory).`;
+  return (
+    `✅ ${name} is yours, on ${result.server} (${result.armoryServer} in the armory): it’s now ` +
+    `Battle.net verified, so only you can edit or move it.` +
+    (result.moved ? ' It’s now one of your characters here, too.' : '')
+  );
 }
 
 /**
  * `/battlenet/:id`: where Battle.net's login comes back to. Shows the account's characters in the
  * character's version and region ("EU · Forever"), whether the character is one of them, and
- * whether the armory has it on its server ("EU · Forever · RP"). A preview: nothing is changed yet.
+ * whether the armory has it on its server ("EU · Forever · RP"). When both, the API has marked it
+ * verified (and moved it to the viewer, if it wasn't theirs).
  */
 export function BattleNetResultPage() {
   const { id = '' } = useParams();
@@ -103,10 +112,7 @@ export function BattleNetResultPage() {
           )}
         </>
       )}
-      <p className="muted">
-        This is a preview: nothing was changed. Later, this check will mark the character as
-        verified.
-      </p>
+      {!result.verified && <p className="muted">Nothing was changed.</p>}
     </div>
   );
 }

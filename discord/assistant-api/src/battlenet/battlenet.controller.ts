@@ -14,6 +14,7 @@ import { AuthGuard } from '../auth/auth.guard';
 import type { AuthenticatedRequest } from '../auth/auth.types';
 import { CacheService } from '../cache/cache.service';
 import { formatCharacterName } from '../characters/character-name';
+import { CharactersService } from '../characters/characters.service';
 import { PrismaService } from '../database/prisma.service';
 import {
   accountLabel,
@@ -50,6 +51,10 @@ export interface BattleNetResultDto {
   armoryServer: string | null;
   /** Whether that is the rule set of the server it's on here (RP is "Roleplay"). */
   sameServer: boolean;
+  /** Both checks passed, so the character is now verified (only its player edits or moves it). */
+  verified: boolean;
+  /** It was someone else's, or no one's, and is now the player's who checked. */
+  moved: boolean;
   /** Why it couldn't check (cancelled, Battle.net down, …); null when it did. */
   error: string | null;
 }
@@ -70,8 +75,9 @@ const nameKey = (name: string) => name.toLowerCase().replace(/[^\p{L}]/gu, '');
 
 /**
  * "Verify with Battle.net" on a character's page: `login` sends the player to Battle.net,
- * `callback` reads their account's characters and keeps the result a while, `results/:id` shows
- * it (only to them). A preview: nothing about the character changes (see BattleNetService).
+ * `callback` reads their account's characters (see BattleNetService) and keeps the result a
+ * while, `results/:id` shows it (only to them). When the character is on their account and on
+ * its server in the armory, it is marked verified and moves to them (CharactersService.verify).
  */
 @Controller('battlenet')
 @UseGuards(AuthGuard)
@@ -80,6 +86,7 @@ export class BattleNetController {
     private readonly battleNet: BattleNetService,
     private readonly cache: CacheService,
     private readonly prisma: PrismaService,
+    private readonly characters: CharactersService,
   ) {}
 
   @Get('login')
@@ -148,12 +155,23 @@ export class BattleNetController {
         entry?.id != null && characters.some((c) => c.id !== null)
           ? characters.some((c) => c.id === entry.id)
           : characters.some((c) => [key, fullKey].includes(nameKey(c.name)));
+      const sameServer = entry?.ruleset.toLowerCase() === ruleset.toLowerCase();
+      // Theirs and on its server: verified, and theirs on Guild Assistant too.
+      const { moved } =
+        found && sameServer
+          ? await this.characters.verify(character.id, {
+              discordUserId: req.user.discordId,
+              names: { username: req.user.username, displayName: req.user.displayName },
+            })
+          : { moved: false };
       return this.show(res, req.user.id, character, {
         battleTag,
         characters,
         found,
         armoryServer: entry?.ruleset ?? null,
-        sameServer: entry?.ruleset.toLowerCase() === ruleset.toLowerCase(),
+        sameServer,
+        verified: found && sameServer,
+        moved,
       });
     } catch (caught) {
       return this.show(res, req.user.id, character, {
@@ -202,7 +220,14 @@ export class BattleNetController {
     outcome: Partial<
       Pick<
         BattleNetResultDto,
-        'battleTag' | 'characters' | 'found' | 'armoryServer' | 'sameServer' | 'error'
+        | 'battleTag'
+        | 'characters'
+        | 'found'
+        | 'armoryServer'
+        | 'sameServer'
+        | 'verified'
+        | 'moved'
+        | 'error'
       >
     >,
   ): Promise<void> {
@@ -223,6 +248,8 @@ export class BattleNetController {
       found: outcome.found ?? false,
       armoryServer: outcome.armoryServer ?? null,
       sameServer: outcome.sameServer ?? false,
+      verified: outcome.verified ?? false,
+      moved: outcome.moved ?? false,
       error: outcome.error ?? null,
     };
     const id = randomBytes(12).toString('base64url');

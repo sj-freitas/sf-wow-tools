@@ -161,7 +161,7 @@ function CharacterView({
             All your characters
           </Link>
         )}
-        {/* A Battle.net login, then a page with what it found (a preview: nothing changes yet).
+        {/* A Battle.net login, then a page with what it found; a pass marks it verified.
             A full page load: the API sends the browser to Battle.net. */}
         {!profile.verified && (
           <a

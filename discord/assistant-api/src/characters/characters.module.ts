@@ -31,5 +31,7 @@ import { CharactersService } from './characters.service';
     CharacterNotesService,
     GuildAttributesService,
   ],
+  // For "Verify with Battle.net" (src/battlenet), which marks a character verified.
+  exports: [CharactersService],
 })
 export class CharactersModule {}

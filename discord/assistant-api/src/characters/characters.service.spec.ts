@@ -297,6 +297,31 @@ describe('CharactersService last name rule', () => {
       });
     });
 
+    describe('verifying it on Battle.net', () => {
+      const names = { username: 'them', displayName: 'Them' };
+
+      it('marks it verified and moves it to whoever proved it, dropping an emptied player', async () => {
+        charactersLeft = 0;
+        const before = Date.now();
+        assert.deepEqual(await service.verify('c', { discordUserId: 'new-user', names }), {
+          moved: true,
+        });
+        assert.deepEqual(upserts[0].where, { discordUserId: 'new-user' });
+        const { verifiedAt, ...rest } = updated.at(-1);
+        assert.ok(verifiedAt instanceof Date && verifiedAt.getTime() >= before);
+        assert.deepEqual(rest, { playerId: 'target-player' });
+        assert.deepEqual(removedPlayers, ['old-player']);
+      });
+
+      it('only marks it verified when it already is the player’s', async () => {
+        assert.deepEqual(await service.verify('c', { discordUserId: 'old-user', names }), {
+          moved: false,
+        });
+        assert.deepEqual(Object.keys(updated.at(-1)), ['verifiedAt']);
+        assert.deepEqual([upserts, removedPlayers], [[], []]);
+      });
+    });
+
     it('lets a rename keep a last name', async () => {
       await service.update('c', { firstName: 'Arthas', lastName: 'Menethil' });
       assert.equal(updated.length, 1);

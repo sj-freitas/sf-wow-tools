@@ -330,35 +330,67 @@ export class CharactersService {
       }
     }
 
-    // undefined: who plays it doesn't change; null: no one (unclaimed).
-    let playerId: string | null | undefined;
-    let previousPlayerId: string | null = null;
-    if (newOwner) {
-      const current = await this.prisma.character.findUnique({
-        where: { id: characterId },
-        select: { playerId: true, player: { select: { discordUserId: true } } },
-      });
-      if (!current) throw new NotFoundException('Character not found');
-      if ((current.player?.discordUserId ?? null) !== newOwner.discordUserId) {
-        playerId =
-          newOwner.discordUserId === null
-            ? null
-            : (await this.upsertPlayer(newOwner.discordUserId, newOwner.names)).id;
-        previousPlayerId = current.playerId;
-      }
-    }
-
+    const { playerId, previousPlayerId } = newOwner
+      ? await this.ownerChange(characterId, newOwner)
+      : { playerId: undefined, previousPlayerId: null };
     await this.prisma.character.update({
       where: { id: characterId },
       data: playerId === undefined ? patch : { ...patch, playerId },
       select: { id: true },
     });
-    if (previousPlayerId) {
-      // A player with no characters left anywhere is removed.
-      const left = await this.prisma.character.count({ where: { playerId: previousPlayerId } });
-      if (left === 0) await this.prisma.player.deleteMany({ where: { id: previousPlayerId } });
-    }
+    await this.removeIfNoCharacters(previousPlayerId);
     await this.publishToItsGuilds(characterId);
+  }
+
+  /**
+   * The player proved on Battle.net that the character is theirs ("Verify with Battle.net",
+   * src/battlenet): it is marked verified (`verifiedAt`, now), so from then on only they edit or
+   * move it, and it moves to them when someone else had it, or no one (the previous player is
+   * removed when left with no characters anywhere). Whether it moved.
+   */
+  async verify(
+    characterId: string,
+    owner: { discordUserId: string; names?: DiscordNames },
+  ): Promise<{ moved: boolean }> {
+    const { playerId, previousPlayerId } = await this.ownerChange(characterId, owner);
+    await this.prisma.character.update({
+      where: { id: characterId },
+      data: { verifiedAt: new Date(), ...(playerId === undefined ? {} : { playerId }) },
+      select: { id: true },
+    });
+    await this.removeIfNoCharacters(previousPlayerId);
+    await this.publishToItsGuilds(characterId);
+    return { moved: playerId !== undefined };
+  }
+
+  /**
+   * Who plays the character once it is `newOwner`'s: `playerId` undefined when that's who already
+   * does (null: no one, unclaimed), and the player it leaves (`previousPlayerId`), if any.
+   */
+  private async ownerChange(
+    characterId: string,
+    newOwner: { discordUserId: string | null; names?: DiscordNames },
+  ): Promise<{ playerId: string | null | undefined; previousPlayerId: string | null }> {
+    const current = await this.prisma.character.findUnique({
+      where: { id: characterId },
+      select: { playerId: true, player: { select: { discordUserId: true } } },
+    });
+    if (!current) throw new NotFoundException('Character not found');
+    if ((current.player?.discordUserId ?? null) === newOwner.discordUserId) {
+      return { playerId: undefined, previousPlayerId: null };
+    }
+    const playerId =
+      newOwner.discordUserId === null
+        ? null
+        : (await this.upsertPlayer(newOwner.discordUserId, newOwner.names)).id;
+    return { playerId, previousPlayerId: current.playerId };
+  }
+
+  /** A player with no characters left anywhere is removed. */
+  private async removeIfNoCharacters(playerId: string | null): Promise<void> {
+    if (!playerId) return;
+    const left = await this.prisma.character.count({ where: { playerId } });
+    if (left === 0) await this.prisma.player.deleteMany({ where: { id: playerId } });
   }
 
   /** Removes a character from one guild's roster; the character itself (and its other guilds, if
