@@ -24,8 +24,8 @@ const SVG = 'http://www.w3.org/2000/svg';
 function icon(tone: Tone): SVGSVGElement {
   const svg = document.createElementNS(SVG, 'svg');
   for (const [name, value] of Object.entries({
-    width: '16',
-    height: '16',
+    width: '15',
+    height: '15',
     viewBox: '0 0 24 24',
     fill: 'none',
     stroke: 'currentColor',
@@ -50,112 +50,112 @@ const $ = <T extends HTMLElement = HTMLElement>(id: string): T => {
   return element as T;
 };
 
-/** An element's content: an icon in its tone's colour, then the text (never HTML). */
-function setLine(element: HTMLElement, tone: Tone, text: string): void {
+/** An icon in its tone's colour, then a short text (never HTML); the details are its tooltip. */
+function setLine(element: HTMLElement, tone: Tone, text: string, tooltip = ''): void {
   element.className = element.className.replace(/\s*tone-\w+/g, '') + ` tone-${tone}`;
   const span = document.createElement('span');
   span.textContent = text;
   element.replaceChildren(icon(tone), span);
+  element.title = tooltip;
 }
 
-const when = (iso: string): string =>
-  new Date(iso).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+/** "14:02" today, else "10 Nov, 14:02". */
+function when(iso: string): string {
+  const date = new Date(iso);
+  const today = date.toDateString() === new Date().toDateString();
+  return date.toLocaleString(
+    undefined,
+    today
+      ? { timeStyle: 'short' }
+      : { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' },
+  );
+}
 
-/** What the uploader is doing, in a line, for the top of the window. */
-function status(state: AppState): { tone: Tone; text: string } {
-  if (!state.key.saved) return { tone: 'warn', text: 'Paste an upload key to start (step 1).' };
-  if (state.key.error)
-    return { tone: 'bad', text: 'The upload key doesn’t work any more (step 1).' };
-  if (!state.gameFolder || state.folderProblem) {
-    return { tone: 'warn', text: 'Choose World of Warcraft’s folder (step 2).' };
+/** What the uploader is doing, in a few words, and its details for the tooltip. */
+function status(state: AppState): { tone: Tone; text: string; tooltip: string } {
+  const folderHint = 'World of Warcraft’s folder: the one with _forever_ in it.';
+  if (!state.gameFolder)
+    return { tone: 'warn', text: 'Choose the game’s folder', tooltip: folderHint };
+  if (state.folderProblem) {
+    return { tone: 'warn', text: 'That isn’t the game’s folder', tooltip: state.folderProblem };
   }
-  if (state.files.some((file) => file.status === 'failed')) {
-    return { tone: 'bad', text: 'The last upload failed: see step 2.' };
+  if (state.files.length === 0) {
+    return {
+      tone: 'warn',
+      text: 'No professions file yet',
+      tooltip: 'In game, open each profession’s window once, then type /ga-prof save.',
+    };
   }
+  const failed = state.files.find((file) => file.status === 'failed');
+  if (failed) return { tone: 'bad', text: 'The last upload failed', tooltip: failed.message };
   if (state.files.some((file) => file.status === 'uploading')) {
-    return { tone: 'busy', text: 'Uploading…' };
+    return { tone: 'busy', text: 'Uploading…', tooltip: '' };
   }
-  const place = state.platform === 'mac' ? 'menu bar' : 'notification area';
-  return state.background
-    ? {
-        tone: 'ok',
-        text: `Running in the background: it keeps watching from the ${place} when you close this window.`,
-      }
-    : { tone: 'ok', text: 'Watching while this window is open.' };
+  const account = state.key.account;
+  const who = account
+    ? account.guilds.length > 0
+      ? `Uploading as ${account.name} to ${account.guilds.join(', ')}.`
+      : `${account.name} isn’t in a guild on Guild Assistant yet.`
+    : '';
+  return {
+    tone: account && account.guilds.length === 0 ? 'warn' : 'ok',
+    text: 'Watching for changes',
+    tooltip: `${who} It uploads each time the game saves a changed file.`.trim(),
+  };
 }
 
 function fileItem(file: FileView): HTMLLIElement {
   const item = document.createElement('li');
   item.className = 'file';
-  const name = document.createElement('div');
+  const name = document.createElement('span');
   name.className = 'file-name';
   name.textContent = `${file.version} · ${file.account}`;
-  name.title = file.path;
-  const line = document.createElement('p');
-  line.className = 'file-status muted';
-  const tone: Tone =
+  const state = document.createElement('span');
+  state.className = 'file-state';
+  const [tone, text]: [Tone, string] =
     file.status === 'uploaded'
-      ? 'ok'
+      ? ['ok', file.at ? when(file.at) : 'Uploaded']
       : file.status === 'failed'
-        ? 'bad'
+        ? ['bad', 'Failed']
         : file.status === 'uploading'
-          ? 'busy'
-          : 'warn';
-  const at = file.at ? ` (${when(file.at)})` : '';
-  const text =
-    file.status === 'uploaded'
-      ? `Uploaded${at}. ${file.message}`
-      : file.status === 'failed'
-        ? `Failed${at}: ${file.message}`
-        : file.message;
-  setLine(line, tone, text);
-  item.append(name, line);
+          ? ['busy', 'Uploading…']
+          : ['warn', 'Waiting'];
+  setLine(state, tone, text);
+  item.append(name, state);
+  item.title = `${file.message}\n${file.path}`;
   return item;
 }
 
+/** This window is the Change Upload Key… one (not the main window). */
+const KEY_WINDOW = location.hash === '#key';
+
 function render(state: AppState): void {
-  const top = status(state);
-  setLine($('status'), top.tone, top.text);
-
-  // 1. The key.
-  $('key-missing').hidden = state.key.saved;
-  $('key-saved').hidden = !state.key.saved;
-  if (state.key.saved) {
-    const account = state.key.account;
-    const text = !account
-      ? 'A key is saved.'
-      : account.guilds.length === 0
-        ? `Uploading as ${account.name}, who isn’t in a guild on Guild Assistant yet.`
-        : `Uploading as ${account.name} to ${account.guilds.join(', ')}.`;
-    setLine(
-      $('key-account'),
-      state.key.error ? 'bad' : account?.guilds.length ? 'ok' : 'warn',
-      text,
-    );
+  // The key comes first: until one works, it's all the main window shows.
+  const keyView = KEY_WINDOW || !state.key.saved || state.key.error !== null;
+  $('key-view').hidden = !keyView;
+  $('main-view').hidden = keyView;
+  $('cancel-key').hidden = !KEY_WINDOW;
+  if (keyView) {
+    if (!pendingKeyError) $('key-error').textContent = KEY_WINDOW ? '' : (state.key.error ?? '');
+    return;
   }
-  if (!pendingKeyError) $('key-error').textContent = state.key.error ?? '';
 
-  // 2. The folder and its files.
-  $('folder').textContent = state.gameFolder ?? 'Not chosen yet.';
-  $('folder-error').textContent = state.folderProblem ?? '';
+  const top = status(state);
+  setLine($('status'), top.tone, top.text, top.tooltip);
+
+  // Its end is what tells folders apart: cut short at the start (the marks keep "/" in place).
+  $('folder').textContent = state.gameFolder ? `‎${state.gameFolder}‎` : 'Not chosen';
+  $('folder').title = state.gameFolder ?? '';
   const files = state.folderProblem ? [] : state.files;
   $('files').replaceChildren(...files.map(fileItem));
-  $('no-files').hidden = !state.gameFolder || state.folderProblem !== null || files.length > 0;
   $<HTMLButtonElement>('upload-now').disabled = !state.watching || files.length === 0;
 
-  // 3. In the background.
   $<HTMLInputElement>('background').checked = state.background;
   $<HTMLInputElement>('login').checked = state.openAtLogin;
-  const place =
+  $('background-label').title =
     state.platform === 'mac'
-      ? 'the menu bar (top right of the screen)'
-      : 'the notification area (bottom right, by the clock)';
-  $('background-note').textContent = state.background
-    ? `On: closing this window keeps it running, with its icon in ${place}. Quit it from there.`
-    : 'Off: closing this window quits it, and nothing is uploaded until you open it again.';
-
-  $('version').textContent = `Version ${state.version}`;
-  $<HTMLAnchorElement>('site').href = state.site;
+      ? 'Closing the window keeps it running in the menu bar. Quit it from there.'
+      : 'Closing the window keeps it running in the notification area, by the clock. Quit it from there.';
 }
 
 /** An error from saving a key: shown until the next try, whatever state comes meanwhile. */
@@ -164,7 +164,8 @@ let pendingKeyError = false;
 function wire(): void {
   const bridge = window.uploader;
   $('get-key').addEventListener('click', () => void bridge.openKeyPage());
-  $('key-form').addEventListener('submit', (event) => {
+  $('cancel-key').addEventListener('click', () => void bridge.closeWindow());
+  $('key-view').addEventListener('submit', (event) => {
     event.preventDefault();
     const input = $<HTMLInputElement>('key-input');
     const button = $<HTMLButtonElement>('save-key');
@@ -176,6 +177,7 @@ function wire(): void {
       .then((answer) => {
         if (answer.ok) {
           input.value = '';
+          if (KEY_WINDOW) void bridge.closeWindow();
         } else {
           pendingKeyError = true;
           $('key-error').textContent = answer.error;
@@ -185,7 +187,6 @@ function wire(): void {
         button.disabled = false;
       });
   });
-  $('forget-key').addEventListener('click', () => void bridge.forgetKey());
   $('choose-folder').addEventListener('click', () => void bridge.chooseFolder());
   $('upload-now').addEventListener('click', () => void bridge.uploadNow());
   $<HTMLInputElement>('background').addEventListener('change', (event) => {
@@ -194,8 +195,11 @@ function wire(): void {
   $<HTMLInputElement>('login').addEventListener('change', (event) => {
     void bridge.setOpenAtLogin((event.target as HTMLInputElement).checked);
   });
+  // The window takes the page's height, whenever it changes: it never scrolls.
+  new ResizeObserver(() => void bridge.fit(document.body.offsetHeight)).observe(document.body);
   bridge.onState(render);
   void bridge.getState().then(render);
+  if (KEY_WINDOW) $('key-input').focus();
 }
 
 wire();

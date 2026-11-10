@@ -6,11 +6,12 @@ const bridge: UploaderBridge = {
   getState: () => ipcRenderer.invoke('state:get'),
   chooseFolder: () => ipcRenderer.invoke('folder:choose'),
   saveKey: (key) => ipcRenderer.invoke('key:save', key),
-  forgetKey: () => ipcRenderer.invoke('key:forget'),
   openKeyPage: () => ipcRenderer.invoke('key:open-page'),
   uploadNow: () => ipcRenderer.invoke('upload:now'),
   setBackground: (on) => ipcRenderer.invoke('background:set', on),
   setOpenAtLogin: (on) => ipcRenderer.invoke('login:set', on),
+  closeWindow: () => ipcRenderer.invoke('window:close'),
+  fit: (height) => ipcRenderer.invoke('window:fit', height),
   onState: (listener) => {
     ipcRenderer.on('state', (_event, state: AppState) => listener(state));
   },

@@ -10,11 +10,15 @@ addon's file to Guild Assistant each time World of Warcraft saves it. Nobody has
    (the `.dmg` on a Mac, the `.exe` on Windows). It isn't signed with a certificate yet:
    - Mac: the first time, System Settings, Privacy & Security, **Open Anyway**.
    - Windows: **More info**, **Run anyway**.
-2. **Upload key:** **Get an upload key** opens Guild Assistant's **Upload keys** page
-   (`/upload-keys`, also in the user menu). Make a key there, copy it, paste it into the app and
-   click **Save**. The app checks it with Guild Assistant and then shows who it uploads as and to
-   which guilds. The key is kept encrypted by the system (Keychain on a Mac, DPAPI on Windows,
-   through Electron's `safeStorage`). It can only upload professions.
+2. **Upload key**, the first step and all the window shows until a key works:
+   - **Get an upload key** opens Guild Assistant's **Upload keys** page (`/upload-keys`, also in
+     the user menu). Make a key there, copy it, paste it into the app and click **Save**.
+   - The app checks the key with Guild Assistant. Who it uploads as and to which guilds is then
+     in the status line's tooltip.
+   - The key is kept encrypted by the system (Keychain on a Mac, DPAPI on Windows, through
+     Electron's `safeStorage`). It can only upload professions.
+   - To use another key later: **Change Upload Key…**, in the icon's menu, the app menu (Mac) or
+     the **Options** menu (Windows). It opens a small window of its own.
 3. **Game folder:** found by itself when the game is where Battle.net puts it:
    - Mac: `/Applications/World of Warcraft` or `~/Applications/World of Warcraft`;
    - Windows: `C:\Program Files (x86)\World of Warcraft`.
@@ -25,8 +29,22 @@ addon's file to Guild Assistant each time World of Warcraft saves it. Nobody has
    `<version>/WTF/Account/<account>/SavedVariables/GuildAssistantProfessions.lua`.
 4. **In the background** (on by default): closing the window keeps the app running. Its icon
    shows it's there: the paperclip in the menu bar on a Mac, or the notification area by the
-   clock on Windows. That icon's menu has **Open**, **Upload now** and **Quit**.
-   **Start when I log in** opens it hidden at login.
+   clock on Windows. That icon's menu has **Open**, **Upload Now**, **Change Upload Key…** and
+   **Quit**. **Start at login** opens it hidden when you log in. That setting is the system's
+   own, so it is read back from the system at start.
+
+**Updating** (a newer release over the old one) keeps the settings, which are in the app's data
+folder (below), and Start at login. Quit the old one first, from its icon. One catch on a Mac: the
+app isn't signed with a certificate, and the Keychain ties the key to each build. So after an
+update macOS asks to let the app use its key (**Always Allow**). If that's refused, the app asks
+for the key again.
+
+**The window** is short on words on purpose:
+- It shows the key step, or a status line, **Game folder** and **In the background**.
+- The details are in tooltips: who uploads to where, why an upload failed, each file's last
+  upload and path, and what each option does.
+- It is always as tall as its contents and never scrolls (the page tells the main process its
+  height, `window:fit`).
 
 ## What it does
 
@@ -68,7 +86,7 @@ npm test             # the logic's tests
 npm run typecheck
 npm start            # builds and opens it
 GA_UPLOADER_SITE=http://localhost:3000 npm start   # against a local assistant-api
-GA_UPLOADER_DATA=/tmp/uploader npm start           # with its own settings folder
+GA_UPLOADER_DATA=/tmp/uploader npm start           # a test run: own settings, key in memory only
 npm run dist:mac     # an installer in release/ (dist:win on Windows)
 ```
 

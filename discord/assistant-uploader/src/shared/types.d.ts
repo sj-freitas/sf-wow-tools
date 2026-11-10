@@ -42,11 +42,14 @@ export interface UploaderBridge {
   chooseFolder(): Promise<void>;
   /** Checks the key with Guild Assistant and keeps it; the error to show when it doesn't work. */
   saveKey(key: string): Promise<{ ok: true } | { ok: false; error: string }>;
-  forgetKey(): Promise<void>;
   /** Opens Guild Assistant's Upload keys page in the browser. */
   openKeyPage(): Promise<void>;
   uploadNow(): Promise<void>;
   setBackground(on: boolean): Promise<void>;
   setOpenAtLogin(on: boolean): Promise<void>;
+  /** Closes this window (the Change Upload Key… one). */
+  closeWindow(): Promise<void>;
+  /** Makes this window as tall as its page (`height`, CSS pixels): it never scrolls. */
+  fit(height: number): Promise<void>;
   onState(listener: (state: AppState) => void): void;
 }

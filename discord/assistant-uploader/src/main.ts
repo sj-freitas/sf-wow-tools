@@ -26,7 +26,11 @@ import { SettingsStore } from './core/settings';
 import { ProfessionsWatcher, type FileState } from './core/watcher';
 import type { AppState } from './shared/types';
 
-// Where its settings go: the system's app data folder, or `GA_UPLOADER_DATA` (a test run's own).
+/**
+ * A test run (`GA_UPLOADER_DATA`): its own settings folder, and the key kept in memory only (never
+ * in the system's keychain), so trying it leaves nothing behind.
+ */
+const TEST_RUN = Boolean(process.env.GA_UPLOADER_DATA);
 if (process.env.GA_UPLOADER_DATA) app.setPath('userData', process.env.GA_UPLOADER_DATA);
 
 /** Guild Assistant's address; `GA_UPLOADER_SITE=http://localhost:3000` for a local API. */
@@ -36,6 +40,9 @@ const STARTED_HIDDEN = process.argv.includes('--hidden');
 const ASSETS = path.join(__dirname, '..', 'assets');
 const NO_KEY = 'Waiting for an upload key.';
 const KEY_PATTERN = /^gak_[A-Za-z0-9_-]{20,}$/;
+const MARKED_IN_MEMORY = 'in-memory';
+/** Both windows' width; their height is their page's (`window:fit`), so they never scroll. */
+const WIDTH = 440;
 
 /**
  * The Guild Assistant Uploader: watches World of Warcraft's folder for the GuildAssistant
@@ -70,6 +77,10 @@ class UploaderApp {
     },
   );
   private window: BrowserWindow | null = null;
+  /** The Change Upload Key… window, while open. */
+  private keyWindow: BrowserWindow | null = null;
+  /** A test run's key (TEST_RUN). */
+  private memoryKey: string | null = null;
   private tray: Tray | null = null;
   private quitting = false;
   private folderProblem: string | null = null;
@@ -89,6 +100,11 @@ class UploaderApp {
       if (!this.settings.background) app.quit();
     });
 
+    // Start at login is the system's setting (it can be changed there, and survives updates):
+    // what the system says wins over what was last saved.
+    if (app.isPackaged && !TEST_RUN) {
+      this.settings.openAtLogin = app.getLoginItemSettings().openAtLogin;
+    }
     if (!this.settings.gameFolder) {
       const found = await detectGameFolder(
         defaultGameFolders(process.platform, os.homedir(), process.env),
@@ -119,22 +135,7 @@ class UploaderApp {
       this.window.focus();
       return;
     }
-    const window = new BrowserWindow({
-      width: 580,
-      height: 780,
-      minWidth: 420,
-      minHeight: 520,
-      title: 'Guild Assistant Uploader',
-      icon: path.join(ASSETS, 'icon.png'),
-      show: false,
-      autoHideMenuBar: true,
-      webPreferences: {
-        preload: path.join(__dirname, 'preload.js'),
-        contextIsolation: true,
-        sandbox: true,
-        nodeIntegration: false,
-      },
-    });
+    const window = this.createWindow('Guild Assistant Uploader');
     window.once('ready-to-show', () => window.show());
     window.on('close', (event) => {
       if (this.quitting || !this.settings.background) return;
@@ -153,7 +154,56 @@ class UploaderApp {
     window.on('closed', () => {
       this.window = null;
     });
-    // Links open in the browser; the window itself never goes anywhere else.
+    void window.loadFile(path.join(__dirname, 'renderer', 'index.html'));
+    this.window = window;
+  }
+
+  /** Change Upload Key…: a small window of its own, over the main one when that's open. */
+  private openKeyWindow(): void {
+    if (process.platform === 'darwin') void app.dock?.show();
+    if (this.keyWindow) {
+      this.keyWindow.show();
+      this.keyWindow.focus();
+      return;
+    }
+    const parent = this.windowVisible() ? (this.window ?? undefined) : undefined;
+    const window = this.createWindow('Change Upload Key', parent);
+    window.setMenu(null);
+    window.once('ready-to-show', () => {
+      window.show();
+      if (process.platform === 'darwin') app.focus({ steal: true });
+    });
+    window.on('closed', () => {
+      this.keyWindow = null;
+      // Back in the background when the main window isn't open either.
+      if (process.platform === 'darwin' && !this.windowVisible() && this.settings.background) {
+        app.dock?.hide();
+      }
+    });
+    void window.loadFile(path.join(__dirname, 'renderer', 'index.html'), { hash: 'key' });
+    this.keyWindow = window;
+  }
+
+  /** A window of the app: its page sizes it (no scrolling), its links open in the browser. */
+  private createWindow(title: string, parent?: BrowserWindow): BrowserWindow {
+    const window = new BrowserWindow({
+      width: WIDTH,
+      height: 240,
+      useContentSize: true,
+      resizable: false,
+      maximizable: false,
+      fullscreenable: false,
+      title,
+      parent,
+      icon: path.join(ASSETS, 'icon.png'),
+      show: false,
+      webPreferences: {
+        preload: path.join(__dirname, 'preload.js'),
+        contextIsolation: true,
+        sandbox: true,
+        nodeIntegration: false,
+      },
+    });
     window.webContents.setWindowOpenHandler(({ url }) => {
       if (url.startsWith('https://') || url.startsWith('http://localhost')) {
         void shell.openExternal(url);
@@ -161,30 +211,78 @@ class UploaderApp {
       return { action: 'deny' };
     });
     window.webContents.on('will-navigate', (event) => event.preventDefault());
-    void window.loadFile(path.join(__dirname, 'renderer', 'index.html'));
-    this.window = window;
+    return window;
   }
 
   private windowVisible(): boolean {
     return Boolean(this.window?.isVisible());
   }
 
-  /** Mac: the app, Edit (so paste works in the key's field) and Window menus. Windows: none. */
+  /**
+   * Mac: the app menu (with Change Upload Key…), Edit (so paste works in the key's field) and
+   * Window. Windows: an Options menu on the window, with Change Upload Key… too.
+   */
   private setMenu(): void {
+    const changeKey: MenuItemConstructorOptions = {
+      label: 'Change Upload Key…',
+      click: () => this.openKeyWindow(),
+    };
     if (process.platform !== 'darwin') {
-      Menu.setApplicationMenu(null);
+      Menu.setApplicationMenu(
+        Menu.buildFromTemplate([
+          {
+            label: 'Options',
+            submenu: [
+              changeKey,
+              { label: 'Upload Now', click: () => void this.watcher.checkAll(true) },
+              { type: 'separator' },
+              { label: 'Quit', click: () => this.quit() },
+            ],
+          },
+        ]),
+      );
       return;
     }
     Menu.setApplicationMenu(
-      Menu.buildFromTemplate([{ role: 'appMenu' }, { role: 'editMenu' }, { role: 'windowMenu' }]),
+      Menu.buildFromTemplate([
+        {
+          label: app.name,
+          submenu: [
+            { role: 'about' },
+            { type: 'separator' },
+            changeKey,
+            { type: 'separator' },
+            { role: 'hide' },
+            { role: 'hideOthers' },
+            { role: 'unhide' },
+            { type: 'separator' },
+            { role: 'quit' },
+          ],
+        },
+        { role: 'editMenu' },
+        { role: 'windowMenu' },
+      ]),
     );
+  }
+
+  private quit(): void {
+    this.quitting = true;
+    app.quit();
   }
 
   private handleWindowCalls(): void {
     ipcMain.handle('state:get', () => this.state());
     ipcMain.handle('folder:choose', () => this.chooseFolder());
     ipcMain.handle('key:save', (_event, key: unknown) => this.saveKey(String(key ?? '')));
-    ipcMain.handle('key:forget', () => this.forgetKey());
+    ipcMain.handle('window:close', (event) => BrowserWindow.fromWebContents(event.sender)?.close());
+    ipcMain.handle('window:fit', (event, height: unknown) => {
+      const window = BrowserWindow.fromWebContents(event.sender);
+      if (!window || typeof height !== 'number' || !Number.isFinite(height)) return;
+      // A window that can't be resized won't get smaller either: allowed for this moment only.
+      window.setResizable(true);
+      window.setContentSize(WIDTH, Math.round(Math.min(Math.max(height, 120), 900)));
+      window.setResizable(false);
+    });
     ipcMain.handle('key:open-page', () => {
       const computer = process.platform === 'darwin' ? 'Mac' : 'Windows PC';
       return shell.openExternal(`${SITE}/upload-keys?name=${encodeURIComponent(computer)}`);
@@ -198,7 +296,10 @@ class UploaderApp {
     });
     ipcMain.handle('login:set', (_event, on: unknown) => {
       this.settings.openAtLogin = on === true;
-      app.setLoginItemSettings({ openAtLogin: this.settings.openAtLogin, args: ['--hidden'] });
+      // A test run only notes it: the development build mustn't open at login.
+      if (!TEST_RUN) {
+        app.setLoginItemSettings({ openAtLogin: this.settings.openAtLogin, args: ['--hidden'] });
+      }
       this.save();
       this.refresh();
     });
@@ -221,7 +322,7 @@ class UploaderApp {
         at,
       })),
       key: {
-        saved: this.settings.key !== null,
+        saved: this.key() !== null,
         account: this.settings.account,
         error: this.keyError,
       },
@@ -231,9 +332,10 @@ class UploaderApp {
     };
   }
 
-  /** Tells the window and the tray what changed. */
+  /** Tells the windows and the tray what changed. */
   private refresh(): void {
-    this.window?.webContents.send('state', this.state());
+    const state = this.state();
+    for (const window of [this.window, this.keyWindow]) window?.webContents.send('state', state);
     this.updateTray();
   }
 
@@ -276,6 +378,7 @@ class UploaderApp {
 
   /** The key, decrypted by the system; null when there's none (or it can't be read any more). */
   private key(): string | null {
+    if (TEST_RUN) return this.memoryKey;
     if (!this.settings.key) return null;
     try {
       return safeStorage.decryptString(Buffer.from(this.settings.key, 'base64'));
@@ -292,7 +395,7 @@ class UploaderApp {
         error: 'That isn’t an upload key: it starts with gak_. Copy it again from Guild Assistant.',
       };
     }
-    if (!safeStorage.isEncryptionAvailable()) {
+    if (!TEST_RUN && !safeStorage.isEncryptionAvailable()) {
       return {
         ok: false,
         error: 'This computer has no safe place for the key (no keychain), so it wasn’t saved.',
@@ -300,7 +403,10 @@ class UploaderApp {
     }
     try {
       const account = await this.api.me(key);
-      this.settings.key = safeStorage.encryptString(key).toString('base64');
+      if (TEST_RUN) this.memoryKey = key;
+      this.settings.key = TEST_RUN
+        ? MARKED_IN_MEMORY
+        : safeStorage.encryptString(key).toString('base64');
       this.settings.account = {
         name: account.user.name,
         guilds: account.guilds.map((guild) => guild.name),
@@ -313,15 +419,6 @@ class UploaderApp {
     } catch (error) {
       return { ok: false, error: error instanceof Error ? error.message : String(error) };
     }
-  }
-
-  private async forgetKey(): Promise<void> {
-    this.settings.key = null;
-    this.settings.account = null;
-    this.keyError = null;
-    this.save();
-    await this.watcher.pause(NO_KEY);
-    this.refresh();
   }
 
   /** Who the key is and where uploads go, again (guilds change); a deleted key says so. */
@@ -406,18 +503,13 @@ class UploaderApp {
       { type: 'separator' },
       { label: 'Open Guild Assistant Uploader', click: () => this.showWindow() },
       {
-        label: 'Upload now',
+        label: 'Upload Now',
         enabled: this.watcher.watching,
         click: () => void this.watcher.checkAll(true),
       },
+      { label: 'Change Upload Key…', click: () => this.openKeyWindow() },
       { type: 'separator' },
-      {
-        label: 'Quit',
-        click: () => {
-          this.quitting = true;
-          app.quit();
-        },
-      },
+      { label: 'Quit', click: () => this.quit() },
     ];
     this.tray.setContextMenu(Menu.buildFromTemplate(menu));
   }

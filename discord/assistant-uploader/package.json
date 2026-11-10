@@ -1,7 +1,7 @@
 {
   "name": "assistant-uploader",
   "productName": "Guild Assistant Uploader",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Uploads the GuildAssistant Professions addon's file to Guild Assistant each time World of Warcraft saves it.",
   "author": "Guild Assistant",
   "private": true,
