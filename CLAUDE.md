@@ -29,7 +29,8 @@ Each part's README explains it; tasks are on the Botlog board (project GA), not 
 - Working the board ("check the board", "do GA-<n>"): follow the **board-task** skill (refined To do
   tasks only, one at a time).
 - Any backoffice UI (`discord/assistant-backoffice`), from a task or from chat: follow the
-  **ui-rules** skill: always responsive, never a horizontal scroll, and nothing that appears
-  (tooltips, search results, messages, spinners) changes a row's or the layout's height.
+  **ui-rules** skill: always responsive, never a horizontal scroll, nothing that appears
+  (tooltips, search results, messages, spinners) changes a row's or the layout's height, and no
+  emojis (the site's own icons, `Icons.tsx`).
 - A UI change Sérgio asked for in chat (not from a board task): when it's done, follow the
   **ui-test-ticket** skill: a "Test: …" ticket assigned to him, one per feature.

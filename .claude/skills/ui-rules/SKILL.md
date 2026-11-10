@@ -1,11 +1,11 @@
 ---
 name: ui-rules
-description: Use whenever building or changing anything people see in the backoffice (discord/assistant-backoffice) — a page, table, form, drawer, dropdown, tooltip, message or loading state — from a board task or a chat request. Sérgio's three UX rules: always responsive, never a horizontal scroll, and nothing that appears (tooltips, search results, messages, spinners) changes a row's or the layout's height. Covers how to meet each with the backoffice's own pieces, and what to check before calling it done.
+description: Use whenever building or changing anything people see in the backoffice (discord/assistant-backoffice) — a page, table, form, drawer, dropdown, tooltip, message or loading state — from a board task or a chat request. Sérgio's four UX rules: always responsive, never a horizontal scroll, nothing that appears (tooltips, search results, messages, spinners) changes a row's or the layout's height, and no emojis (the site's own icons instead). Covers how to meet each with the backoffice's own pieces, and what to check before calling it done.
 ---
 
 # The backoffice's UX rules
 
-Every page, old or new, follows these three rules. They aren't nice-to-haves: a change that breaks
+Every page, old or new, follows these four rules. They aren't nice-to-haves: a change that breaks
 one isn't done. I can't see the UI myself, so I meet them by construction (the patterns below) and
 list them in the test ticket for Sérgio to check (the **ui-test-ticket** skill).
 
@@ -61,11 +61,36 @@ Content that is long by nature, such as a long character name, may still wrap on
 better than a sideways scroll. What must never happen is a size change caused by hovering,
 typing, clicking or loading.
 
+## 4. No emojis: the site's own icons
+
+Anything the backoffice shows as a symbol is one of its own line icons (`Icons.tsx`), in the
+colour of what it means. That includes a status, a verdict, a close or search button, or a check
+mark in a toast. It is never an emoji or a symbol character (✅ ⚠️ ❌ ✕ 🔍 ✓ ⏱ 🛡️). A
+game-config image (`ClassMark`, `RoleMark`) also counts as one of the site's icons.
+
+- **Use what's there:** `CheckCircleIcon`, `AlertTriangleIcon`, `XCircleIcon`, `HelpCircleIcon`,
+  `ClockIcon`, `CalendarIcon` and the rest of `Icons.tsx`.
+- **A new symbol gets a new icon there,** in the same style:
+  - a 24×24 `viewBox`, a 2px stroke, `currentColor`;
+  - `inline` (1em, `.icon-inline`) inside text, `base` (16px) in an icon-only button, which also
+    gets a label.
+- **Its colour says what it means:** `--success` for done or yes, `--gold` for a warning or
+  waiting, `--danger` for no or a failure, `--accent` for unsure. The colour goes on the icon, not
+  the text, through a class (`StatusIcon`, `.battlenet-verdict-<tone>`).
+- **Beside text that wraps,** the icon sits in a flex row with the text in its own `<span>`, so a
+  second line doesn't run under the icon (`BattleNetResultPage`'s verdict).
+- **Except Discord's own content,** which stays as Discord shows it: reactions a post adds
+  ("👍 👎"), a message's text (a honeypot's warning), a channel name, and the Discord posts
+  themselves.
+- **Emojis still left** in the backoffice are listed on GA-87. Touching one of those places means
+  replacing it, and ticking it off there.
+
 ## Before calling it done
 
-- Read the change against the three rules, in the code: every new `title` has a tap route, every
+- Read the change against the four rules, in the code: every new `title` has a tap route, every
   new message appears over the page or in reserved space, every table cell can wrap or is short,
-  and no overlay sits inside an `overflow` container.
+  no overlay sits inside an `overflow` container, and no emoji or symbol character stands in for
+  an icon.
 - `npx tsc -b`, `npm run lint` and `npm run build` pass in `discord/assistant-backoffice`.
 - The test ticket's **Also check** (ui-test-ticket skill) asks Sérgio for a phone width (no
   sideways scroll, tables as cards) and for the interactions that might move things (search, pick,

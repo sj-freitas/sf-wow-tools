@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { request } from './api';
+import { AlertTriangleIcon, CheckCircleIcon, XCircleIcon } from './Icons';
 import { Spinner } from './Loading';
 
 /** What "Verify with Battle.net" found (the API's BattleNetResultDto). */
@@ -34,20 +35,50 @@ interface BattleNetResult {
   error: string | null;
 }
 
+type Tone = 'verified' | 'unconfirmed' | 'not-theirs';
+
+/** Each verdict's icon; its colour is the verdict's (`.battlenet-verdict-<tone>`). */
+const TONE_ICONS: Record<Tone, ReactNode> = {
+  verified: <CheckCircleIcon />,
+  unconfirmed: <AlertTriangleIcon />,
+  'not-theirs': <XCircleIcon />,
+};
+
 /** Whether the character is theirs, on the server it says, and so verified, in a sentence. */
-function verdict(result: BattleNetResult): string {
+function verdict(result: BattleNetResult): { tone: Tone; text: string } {
   const { name } = result.character;
-  if (!result.found) return `❌ ${name} isn’t one of them, so it wasn’t verified.`;
+  if (!result.found) {
+    return { tone: 'not-theirs', text: `${name} isn’t one of them, so it wasn’t verified.` };
+  }
   if (result.armoryServer === null) {
-    return `⚠️ ${name} is one of them, but the armory doesn’t have it yet, so its server can’t be confirmed and it wasn’t verified. Try again once the armory has it.`;
+    return {
+      tone: 'unconfirmed',
+      text: `${name} is one of them, but the armory doesn’t have it yet, so its server can’t be confirmed and it wasn’t verified. Try again once the armory has it.`,
+    };
   }
   if (!result.verified) {
-    return `⚠️ ${name} is one of them, but the armory has it on ${result.armoryServer}, not ${result.server}, so it wasn’t verified.`;
+    return {
+      tone: 'unconfirmed',
+      text: `${name} is one of them, but the armory has it on ${result.armoryServer}, not ${result.server}, so it wasn’t verified.`,
+    };
   }
+  return {
+    tone: 'verified',
+    text:
+      `${name} is yours, on ${result.server} (${result.armoryServer} in the armory): it’s now ` +
+      `Battle.net verified, so only you can edit or move it.` +
+      (result.moved ? ' It’s now one of your characters here, too.' : ''),
+  };
+}
+
+/** The verdict, after its icon in its colour. */
+function Verdict({ result }: { result: BattleNetResult }) {
+  const { tone, text } = verdict(result);
   return (
-    `✅ ${name} is yours, on ${result.server} (${result.armoryServer} in the armory): it’s now ` +
-    `Battle.net verified, so only you can edit or move it.` +
-    (result.moved ? ' It’s now one of your characters here, too.' : '')
+    <p className={`battlenet-verdict battlenet-verdict-${tone}`}>
+      {TONE_ICONS[tone]}
+      <span>{text}</span>
+    </p>
   );
 }
 
@@ -87,7 +118,7 @@ export function BattleNetResultPage() {
             has {result.characters.length} character{result.characters.length === 1 ? '' : 's'} on{' '}
             {result.account}.
           </p>
-          <p>{verdict(result)}</p>
+          <Verdict result={result} />
           {result.characters.length > 0 && (
             <ul className="own-characters">
               {result.characters.map((character) => (

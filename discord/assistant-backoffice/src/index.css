@@ -2889,6 +2889,26 @@ label.btn.disabled {
 }
 
 /* ---- your characters on a server (CharactersPage) ---- */
+/* "Verify with Battle.net"'s verdict (BattleNetResultPage): its icon in its colour, the text
+   wrapping beside it. */
+.battlenet-verdict {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+.battlenet-verdict > svg {
+  margin-top: 0.2em;
+}
+.battlenet-verdict-verified > svg {
+  color: var(--success);
+}
+.battlenet-verdict-unconfirmed > svg {
+  color: var(--gold);
+}
+.battlenet-verdict-not-theirs > svg {
+  color: var(--danger);
+}
+
 .own-characters {
   display: grid;
   gap: 0.6rem;
