@@ -2933,6 +2933,29 @@ label.btn.disabled {
   user-select: all;
 }
 
+/* ---- your characters, all of them (/characters): one section per server ---- */
+.own-server + .own-server {
+  margin-top: 1.25rem;
+}
+.own-server-name {
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+.own-server-name a {
+  color: var(--text);
+  text-decoration: none;
+}
+.own-server-name a:hover {
+  color: var(--accent);
+}
+/* A character's buttons and badge: on its right, under it on a narrow screen. */
+.own-character-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .own-characters {
   display: grid;
   gap: 0.6rem;

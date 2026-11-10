@@ -892,6 +892,11 @@ bio's permission model is different from the rest of the character.
   `Name` otherwise, split on the first dash, matched case-insensitively among **all** characters of
   that server — not scoped to any one guild, since the page isn't either. Character names are unique
   per server, so it is that one.
+- **Your characters:** `GET /api/game/:gameVersion/:region/:realm/characters` lists the
+  logged-in player's on one server (`/<version>/<region>/<server>/characters`).
+  `GET /api/characters/mine` lists all of them, on every server, by server (`/characters`, **Characters** in the
+  user menu). Each comes with its guilds (linked), its bio (RP servers) and whether it is
+  verified on Battle.net (`verified`). The pages offer **Verify with Battle.net** for one that isn't.
 - **Visible globally, not at the guild level.** Whether the viewer can see the bio depends only on
   `bioVisible` (and whether they are the owner) — never on which guild, if any, they share with the
   character. `bioSupported` in the response is `false` when the server's rule set isn't `'RP'`: the

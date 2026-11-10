@@ -7,6 +7,7 @@ import type {
   Character,
   CharacterProfile,
   OwnCharacters,
+  OwnServer,
   PublicInfo,
   CharacterPatch,
   Conversation,
@@ -222,6 +223,10 @@ export const fetchOwnCharacters = (
     'GET',
     `/api/game/${encodeURIComponent(gameVersion)}/${encodeURIComponent(region)}/${encodeURIComponent(realm)}/characters`,
   );
+
+/** All your characters, on every server, by server (`/characters`). */
+export const fetchAllOwnCharacters = (): Promise<OwnServer[]> =>
+  request('GET', '/api/characters/mine');
 
 /** A character's own page (guild-agnostic: by its server, not any one guild). */
 export const fetchCharacterProfile = (

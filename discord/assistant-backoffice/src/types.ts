@@ -38,12 +38,21 @@ export interface OwnCharacter {
   guilds: { name: string; path: string }[];
   hasBio: boolean;
   bioVisible: boolean;
+  /** Its player proved on Battle.net that it is theirs (else it offers Verify with Battle.net). */
+  verified: boolean;
 }
 
 export interface OwnCharacters {
   /** Whether the server offers bios (RP servers). */
   bioSupported: boolean;
   characters: OwnCharacter[];
+}
+
+/** One of your servers with your characters on it (`/characters`): as stored, "Forever". */
+export interface OwnServer extends OwnCharacters {
+  gameVersion: string;
+  region: string;
+  realm: string;
 }
 
 export interface CharacterProfile {

@@ -20,6 +20,7 @@ describe('CharacterBioService', () => {
     roles: ('TANK' | 'HEALER')[];
     bio: string;
     bioVisible: boolean;
+    verifiedAt: Date | null;
     discordUserId: string;
     gameVersion: string;
     region: string;
@@ -42,6 +43,7 @@ describe('CharacterBioService', () => {
       roles: ['TANK'],
       bio: 'A quiet blacksmith.',
       bioVisible: false,
+      verifiedAt: null,
       discordUserId: OWNER,
       gameVersion,
       region,
@@ -112,11 +114,13 @@ describe('CharacterBioService', () => {
         },
         findMany: async (args: any) => {
           if (!character) return [];
-          const matches =
-            character.gameVersion === args.where.gameVersion &&
-            character.region === args.where.region &&
-            character.realm === args.where.realm &&
-            character.discordUserId === args.where.player.discordUserId;
+          // A server's (listOwn), or all of the player's (listAllOwn: no server in the query).
+          const onServer =
+            args.where.gameVersion === undefined ||
+            (character.gameVersion === args.where.gameVersion &&
+              character.region === args.where.region &&
+              character.realm === args.where.realm);
+          const matches = onServer && character.discordUserId === args.where.player.discordUserId;
           if (!matches) return [];
           return [
             {
@@ -311,6 +315,7 @@ describe('CharacterBioService', () => {
           guilds: [{ name: 'Relic Hunters', path: 'forever/eu/rp/guilds/relic-hunters' }],
           hasBio: true,
           bioVisible: false,
+          verified: false,
         },
       ]);
     });
@@ -322,6 +327,30 @@ describe('CharacterBioService', () => {
 
     it('is "not-found" for a server that does not exist', async () => {
       assert.equal(await service.listOwn('forever', 'eu', 'nowhere', OWNER), 'not-found');
+    });
+  });
+
+  describe('listing all the viewer’s characters (/characters)', () => {
+    it('groups them by server, each with its guilds and whether it is verified', async () => {
+      character!.verifiedAt = new Date('2026-11-10T12:00:00Z');
+      const servers = await service.listAllOwn(OWNER);
+      assert.deepEqual(
+        servers.map(({ gameVersion, region, realm, bioSupported }) => ({
+          gameVersion,
+          region,
+          realm,
+          bioSupported,
+        })),
+        [{ gameVersion: 'Forever', region: 'EU', realm: 'RP', bioSupported: true }],
+      );
+      assert.deepEqual(
+        servers[0].characters.map((c) => [c.name, c.verified, c.guilds[0].path]),
+        [['Merric Stone', true, 'forever/eu/rp/guilds/relic-hunters']],
+      );
+    });
+
+    it('is empty for someone with no characters', async () => {
+      assert.deepEqual(await service.listAllOwn(OTHER), []);
     });
   });
 });

@@ -28,6 +28,7 @@ import {
   type BioImage,
   type CharacterProfile,
   type OwnCharacters,
+  type OwnServer,
 } from './character-bio.service';
 
 /**
@@ -39,6 +40,12 @@ import {
 @UseGuards(AuthGuard)
 export class CharacterBioController {
   constructor(private readonly bioService: CharacterBioService) {}
+
+  /** All the logged-in user's characters, on every server, by server (`/characters`). */
+  @Get('characters/mine')
+  listAllOwn(@Req() req: AuthenticatedRequest): Promise<OwnServer[]> {
+    return this.bioService.listAllOwn(req.user.discordId);
+  }
 
   /** The logged-in user's own characters on a server (their characters page). */
   @Get('game/:gameVersion/:region/:realm/characters')

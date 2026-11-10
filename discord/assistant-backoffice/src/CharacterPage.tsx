@@ -87,7 +87,6 @@ export function CharacterPage({ editMode, tab = 'bio', guilds }: Props) {
             .map((guild) => guild.path)}
           viewUrl={viewUrl}
           editUrl={editUrl}
-          charactersUrl={`/${[version, region, realm].map((s) => s.toLowerCase()).join('/')}/characters`}
           gameVersion={version}
           realm={realm}
         />
@@ -103,7 +102,6 @@ function CharacterView({
   viewerOfficerGuildPaths,
   viewUrl,
   editUrl,
-  charactersUrl,
   gameVersion,
   realm,
 }: {
@@ -116,8 +114,6 @@ function CharacterView({
   /** The page's address (its Bio tab); `/professions` is appended for the other. */
   viewUrl: string;
   editUrl: string;
-  /** Your characters on this server. */
-  charactersUrl: string;
   /** As in the address (`forever`): for the class icon, and to tell other servers' characters. */
   gameVersion: string;
   realm: string;
@@ -157,7 +153,7 @@ function CharacterView({
 
       <div className="character-links">
         {profile.isOwner && (
-          <Link className="btn btn-sm" to={charactersUrl}>
+          <Link className="btn btn-sm" to="/characters">
             All your characters
           </Link>
         )}

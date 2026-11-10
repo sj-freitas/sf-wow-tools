@@ -32,6 +32,9 @@ const CharacterPage = lazy(() =>
 const CharactersPage = lazy(() =>
   import('./CharactersPage').then((m) => ({ default: m.CharactersPage })),
 );
+const AllCharactersPage = lazy(() =>
+  import('./CharactersPage').then((m) => ({ default: m.AllCharactersPage })),
+);
 const BattleNetResultPage = lazy(() =>
   import('./BattleNetResultPage').then((m) => ({ default: m.BattleNetResultPage })),
 );
@@ -102,6 +105,7 @@ interface Props {
  *   /guilds/create                                  set up a new guild
  *   /battlenet/:id                                  what "Verify with Battle.net" found
  *   /upload-keys                                    your keys for the Guild Assistant Uploader
+ *   /characters                                     all your characters, on every server
  *   /<version>/<region>/<server>/characters         your characters on that server
  *   /<version>/<region>/<server>/characters/<name>  a character's own page (guild-agnostic: the
  *                                                    same one regardless of which guild it is in,
@@ -163,6 +167,7 @@ export function GuildShell({ guilds, setup, currentUser, onGuildsChanged }: Prop
             />
             <Route path="battlenet/:id" element={<BattleNetResultPage />} />
             <Route path="upload-keys" element={<UploadKeysPage />} />
+            <Route path="characters" element={<AllCharactersPage />} />
             <Route path=":version/:region/:realm/characters" element={<CharactersPage />} />
             <Route
               path=":version/:region/:realm/characters/:namePath"

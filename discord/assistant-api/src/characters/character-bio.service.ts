@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import type { Prisma } from '@prisma/client';
 import { PrismaService } from '../database/prisma.service';
 import { sniffImageType } from '../guilds/banner';
 import { MAX_IMAGE_BYTES } from '../officer-requests/attachments';
@@ -88,6 +89,8 @@ export interface OwnCharacter {
   /** Whether it has a bio written, and shares it (RP servers). */
   hasBio: boolean;
   bioVisible: boolean;
+  /** Its player proved on Battle.net that it is theirs (else "Verify with Battle.net"). */
+  verified: boolean;
 }
 
 /** The viewer's characters on a server, and whether the server offers bios. */
@@ -95,6 +98,56 @@ export interface OwnCharacters {
   bioSupported: boolean;
   characters: OwnCharacter[];
 }
+
+/** One server of the viewer's, with their characters on it (`/characters`: all of them). */
+export interface OwnServer extends OwnCharacters {
+  /** As stored ("Forever", "EU", "RP"); its address is them in lower case. */
+  gameVersion: string;
+  region: string;
+  realm: string;
+}
+
+/** What an own character's row reads. */
+const OWN_CHARACTER = {
+  id: true,
+  firstName: true,
+  lastName: true,
+  gameVersion: true,
+  region: true,
+  realm: true,
+  class: true,
+  race: true,
+  level: true,
+  roles: true,
+  bio: true,
+  bioVisible: true,
+  verifiedAt: true,
+  guilds: {
+    select: {
+      guild: { select: { name: true, gameVersion: true, region: true, realm: true } },
+    },
+  },
+} as const;
+
+type OwnCharacterRow = Prisma.CharacterGetPayload<{ select: typeof OWN_CHARACTER }>;
+
+const toOwnCharacter = (character: OwnCharacterRow, bioSupported: boolean): OwnCharacter => ({
+  characterId: character.id,
+  name: formatCharacterName(character),
+  namePath: character.lastName
+    ? `${character.firstName}-${character.lastName}`
+    : character.firstName,
+  class: character.class,
+  race: character.race,
+  level: character.level,
+  roles: character.roles.map((role) => ROLE_LABELS[role]),
+  guilds: character.guilds
+    .map(({ guild }) => ({ name: guild.name, path: guildPath(guild) }))
+    .sort((a, b) => a.name.localeCompare(b.name)),
+  hasBio: bioSupported && (character.bio ?? '').trim() !== '',
+  bioVisible: bioSupported && character.bioVisible,
+  verified: Boolean(character.verifiedAt),
+});
 export type UpdateBioResult = 'updated' | 'not-found' | 'forbidden' | 'not-supported';
 export type AddImageResult = BioImage | 'not-found' | 'forbidden' | 'not-supported' | 'too-many';
 export type RemoveImageResult = 'removed' | 'not-found' | 'forbidden';
@@ -252,44 +305,49 @@ export class CharacterBioService {
         realm: server.realm,
         player: { discordUserId },
       },
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        class: true,
-        race: true,
-        level: true,
-        roles: true,
-        bio: true,
-        bioVisible: true,
-        guilds: {
-          select: {
-            guild: { select: { name: true, gameVersion: true, region: true, realm: true } },
-          },
-        },
-      },
+      select: OWN_CHARACTER,
       orderBy: [{ firstName: 'asc' }, { lastName: 'asc' }],
     });
     const bioSupported = supportsBios(server.gameVersion, server.region, server.realm);
     return {
       bioSupported,
-      characters: characters.map((character) => ({
-        characterId: character.id,
-        name: formatCharacterName(character),
-        namePath: character.lastName
-          ? `${character.firstName}-${character.lastName}`
-          : character.firstName,
-        class: character.class,
-        race: character.race,
-        level: character.level,
-        roles: character.roles.map((role) => ROLE_LABELS[role]),
-        guilds: character.guilds
-          .map(({ guild }) => ({ name: guild.name, path: guildPath(guild) }))
-          .sort((a, b) => a.name.localeCompare(b.name)),
-        hasBio: bioSupported && (character.bio ?? '').trim() !== '',
-        bioVisible: bioSupported && character.bioVisible,
-      })),
+      characters: characters.map((character) => toOwnCharacter(character, bioSupported)),
     };
+  }
+
+  /**
+   * All the viewer's characters, on every server (`/characters`): by server (version, region,
+   * server), then by name.
+   */
+  async listAllOwn(discordUserId: string): Promise<OwnServer[]> {
+    const characters = await this.prisma.character.findMany({
+      where: { player: { discordUserId } },
+      select: OWN_CHARACTER,
+      orderBy: [
+        { gameVersion: 'asc' },
+        { region: 'asc' },
+        { realm: 'asc' },
+        { firstName: 'asc' },
+        { lastName: 'asc' },
+      ],
+    });
+    const servers: OwnServer[] = [];
+    for (const character of characters) {
+      const { gameVersion, region, realm } = character;
+      let server = servers.at(-1);
+      if (
+        !server ||
+        server.gameVersion !== gameVersion ||
+        server.region !== region ||
+        server.realm !== realm
+      ) {
+        const bioSupported = supportsBios(gameVersion, region, realm);
+        server = { gameVersion, region, realm, bioSupported, characters: [] };
+        servers.push(server);
+      }
+      server.characters.push(toOwnCharacter(character, server.bioSupported));
+    }
+    return servers;
   }
 
   /** Only the character's own player may write its bio; not even an Officer. */
