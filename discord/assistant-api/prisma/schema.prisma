@@ -353,6 +353,8 @@ model User {
   guildAccess  GuildAccess[]
   adminServers UserAdminServer[]
   sessions     Session[]
+  // Keys for the Guild Assistant Uploader (prisma/upload-keys.prisma).
+  uploadKeys   UploadKey[]
   createdAt    DateTime          @default(now()) @map("created_at")
   updatedAt    DateTime          @updatedAt @map("updated_at")
 

@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Guild Assistant Uploader</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="head">
+      <img class="logo" src="../../assets/logo.png" alt="" />
+      <div class="head-text">
+        <h1>Guild Assistant Uploader</h1>
+        <p class="muted">Uploads your professions each time the game saves them.</p>
+      </div>
+    </header>
+
+    <!-- What it's doing, in one line that's always there (it changes, it never comes and goes). -->
+    <p id="status" class="status" role="status"></p>
+
+    <main>
+      <section class="card">
+        <h2><span class="step">1</span> Upload key</h2>
+        <div id="key-missing">
+          <p>The uploader needs a key to upload as you. It can only upload professions.</p>
+          <ol class="steps">
+            <li>
+              Click <strong>Get an upload key</strong>: Guild Assistant opens in your browser (log
+              in with Discord if it asks).
+            </li>
+            <li>Click <strong>Make a key</strong>, then <strong>Copy key</strong>.</li>
+            <li>Paste it below and click <strong>Save</strong>.</li>
+          </ol>
+          <button id="get-key" type="button" class="btn">Get an upload key</button>
+          <form id="key-form" class="row">
+            <input
+              id="key-input"
+              type="password"
+              placeholder="gak_…"
+              autocomplete="off"
+              spellcheck="false"
+              aria-label="Upload key"
+            />
+            <button id="save-key" type="submit" class="btn btn-primary">Save</button>
+          </form>
+        </div>
+        <div id="key-saved" hidden>
+          <p id="key-account" class="line"></p>
+          <button id="forget-key" type="button" class="btn">Use another key</button>
+        </div>
+        <!-- Kept whether or not there's an error, so one appearing moves nothing. -->
+        <p id="key-error" class="error" role="alert"></p>
+      </section>
+
+      <section class="card">
+        <h2><span class="step">2</span> Game folder</h2>
+        <div class="row">
+          <p id="folder" class="folder"></p>
+          <button id="choose-folder" type="button" class="btn">Choose…</button>
+        </div>
+        <p class="muted">
+          World of Warcraft’s folder: the one with <code>_forever_</code> (or
+          <code>_classic_era_</code>) in it.
+        </p>
+        <p id="folder-error" class="error" role="alert"></p>
+        <ul id="files" class="files"></ul>
+        <p id="no-files" class="muted" hidden>
+          No <code>GuildAssistantProfessions.lua</code> in it yet. In game, open each profession’s
+          window once, then type <code>/ga-prof save</code>: the game writes the file, and it’s
+          uploaded right away.
+        </p>
+        <button id="upload-now" type="button" class="btn">Upload now</button>
+      </section>
+
+      <section class="card">
+        <h2><span class="step">3</span> In the background</h2>
+        <label class="check">
+          <input id="background" type="checkbox" />
+          <span>Keep running in the background when this window is closed</span>
+        </label>
+        <p id="background-note" class="muted note"></p>
+        <label class="check">
+          <input id="login" type="checkbox" />
+          <span>Start when I log in to this computer</span>
+        </label>
+      </section>
+    </main>
+
+    <footer class="muted foot">
+      <span id="version"></span> ·
+      <a id="site" href="https://guildassistant.app" target="_blank" rel="noreferrer"
+        >Guild Assistant</a
+      >
+    </footer>
+    <script type="module" src="renderer.js"></script>
+  </body>
+</html>

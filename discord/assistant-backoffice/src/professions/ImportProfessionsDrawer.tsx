@@ -1,4 +1,5 @@
 import { useState, type DragEvent, type FormEvent } from 'react';
+import { Link } from 'react-router-dom';
 import { Drawer } from '../Drawer';
 import { FormStatus } from '../OneLine';
 import { showToast } from '../toast';
@@ -166,6 +167,10 @@ export function ImportProfessionsDrawer({
               All your characters in this guild are updated at once.
             </li>
           </ol>
+          <p className="muted">
+            Or let the Guild Assistant Uploader do it for you each time you play:{' '}
+            <Link to="/upload-keys">Upload keys</Link>.
+          </p>
           <div
             className={dragOver ? 'import-drop import-drop-active' : 'import-drop'}
             onDragOver={(e) => {

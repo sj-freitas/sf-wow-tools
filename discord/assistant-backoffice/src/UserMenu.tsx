@@ -30,7 +30,7 @@ interface Props {
 
 /**
  * The top-right menu: who you are logged in as, your guilds to switch between (the one you are
- * in first), adding a guild, and logging out. Your roles in the guild are in the footer. On a
+ * in first), adding a guild, your upload keys (the Guild Assistant Uploader), and logging out. Your roles in the guild are in the footer. On a
  * phone it covers the whole screen.
  */
 export function UserMenu({ user, guilds, onLogout }: Props) {
@@ -115,6 +115,9 @@ export function UserMenu({ user, guilds, onLogout }: Props) {
             </Link>
           </div>
           <div className="user-menu-section">
+            <Link role="menuitem" className="user-menu-item" to="/upload-keys" onClick={close}>
+              Upload keys
+            </Link>
             <button
               type="button"
               role="menuitem"

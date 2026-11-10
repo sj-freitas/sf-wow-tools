@@ -1083,6 +1083,21 @@ on logout). Blizzard's Classic Era / SoD API has no professions, hence the addon
   Professions, **Import professions** (drop the file, choose it, or paste its contents); the
   Professions page's panel has its own address, `…/guilds/<guild>/professions/import`, which a
   character's Professions tab links its own player to (one link per guild it is in).
+- **By itself, with the Guild Assistant Uploader** (`discord/assistant-uploader`, a desktop app
+  for Mac and Windows): it watches the game's folder and uploads the file each time the game saves
+  a changed one. It sends an **upload key** instead of a login (`src/upload-keys`,
+  `prisma/upload-keys.prisma`): a player makes one on **Upload keys** (`/upload-keys`, in the user
+  menu; `GET`/`POST /api/upload-keys`, `DELETE /api/upload-keys/:id`). The key (`gak_…`) is shown
+  once, only its SHA-256 is kept, and a player has 10 at most. A key works on the uploader's two
+  endpoints only (`UploadKeyGuard`, `Authorization: Bearer gak_…`):
+  - `GET /api/upload/me`: who it is and where uploads go, which the uploader shows once a key is
+    pasted;
+  - `POST /api/upload/professions` (`{ data }` = the file): imports it into each of the player's
+    guilds as **Import** does (`ProfessionsUploadService`). Those are the guilds they could see at
+    their last login that the bot still finds them in (one of the guild's Discord servers), since a
+    key outlives logins.
+
+  Deleting a key stops it at once, and each key's page row shows when it was last used.
 - **The guild's professions** (`GET /api/guilds/:guildId/professions`): anyone in the guild. Every
   recipe someone can craft and who, and each character's professions (`GuildRecipesService`, which
   needs no login: the bot and the worker use it too). The backoffice's **Professions** page lists

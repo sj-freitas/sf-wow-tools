@@ -1,0 +1,65 @@
+{
+  "name": "assistant-uploader",
+  "productName": "Guild Assistant Uploader",
+  "version": "1.0.0",
+  "description": "Uploads the GuildAssistant Professions addon's file to Guild Assistant each time World of Warcraft saves it.",
+  "author": "Guild Assistant",
+  "private": true,
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig.renderer.json && node scripts/copy-static.mjs",
+    "start": "npm run build && electron .",
+    "test": "node --require ts-node/register --test \"src/**/*.spec.ts\"",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.renderer.json --noEmit && tsc -p tsconfig.spec.json --noEmit",
+    "format": "prettier --write src scripts",
+    "format:check": "prettier --check src scripts",
+    "dist": "npm run build && electron-builder --publish never",
+    "dist:mac": "npm run build && electron-builder --mac --publish never",
+    "dist:win": "npm run build && electron-builder --win --publish never"
+  },
+  "build": {
+    "appId": "app.guildassistant.uploader",
+    "productName": "Guild Assistant Uploader",
+    "artifactName": "Guild-Assistant-Uploader-${version}-${os}.${ext}",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**",
+      "assets/**",
+      "package.json"
+    ],
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "universal"
+          ]
+        }
+      ],
+      "category": "public.app-category.utilities",
+      "icon": "assets/icon.png",
+      "identity": "-",
+      "hardenedRuntime": false
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "assets/icon.png"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "electron": "^45.2.3",
+    "electron-builder": "^26.18.0",
+    "prettier": "^3.9.10",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
+}

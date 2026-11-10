@@ -1,0 +1,21 @@
+// Upload keys (src/upload-keys): what the Guild Assistant Uploader (discord/assistant-uploader)
+// sends, instead of a login, to upload its player's professions file for them. A player makes one
+// on the Upload keys page and sees it once: only its SHA-256 is kept, like a session's token. It
+// can do nothing else (the upload's own guard, UploadKeyGuard), and deleting it stops it at once.
+
+model UploadKey {
+  id         String    @id @default(uuid()) @db.Uuid
+  userId     String    @map("user_id") @db.Uuid
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // What the player called it ("MacBook"), to tell their keys apart.
+  name       String
+  keyHash    String    @unique @map("key_hash")
+  // Its first characters ("gak_Ab12Cd"), shown on the page next to the name.
+  prefix     String
+  // When the uploader last used it; null: never.
+  lastUsedAt DateTime? @map("last_used_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@map("upload_keys")
+}

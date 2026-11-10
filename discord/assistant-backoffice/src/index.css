@@ -2909,6 +2909,30 @@ label.btn.disabled {
   color: var(--danger);
 }
 
+/* ---- Upload keys (/upload-keys, UploadKeysPage) ---- */
+.upload-key-steps {
+  margin-bottom: 1rem;
+}
+.upload-key-form {
+  align-items: end;
+}
+.upload-key-form .field {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+/* A new key, shown once: wraps anywhere (never a sideways scroll), easy to select whole. */
+.upload-key-reveal {
+  display: block;
+  margin: 0.75rem 0;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  font-size: 0.95rem;
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+
 .own-characters {
   display: grid;
   gap: 0.6rem;
