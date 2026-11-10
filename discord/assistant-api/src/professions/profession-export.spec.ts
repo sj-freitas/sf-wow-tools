@@ -22,7 +22,7 @@ const savedVariables = (exportJson: string) =>
     '',
     'GuildAssistantProfessionsDB = {',
     '\t["characters"] = {',
-    '\t\t["Luna-Wild Growth"] = {',
+    '\t\t["Luna-Test Realm"] = {',
     '\t\t\t["name"] = "Luna",',
     '\t\t},',
     '\t},',
@@ -68,7 +68,7 @@ describe('parseProfessionExport', () => {
       ],
     );
     const luna = data.characters[2];
-    assert.equal(luna.realm, 'Wild Growth');
+    assert.equal(luna.realm, 'Test Realm');
     assert.deepEqual(luna.professions[0], {
       name: 'Enchanting',
       skill: 300,
@@ -106,8 +106,8 @@ describe('parseProfessionExport', () => {
 
 describe('matchCharacter', () => {
   const own = [
-    { id: 'a', firstName: 'Luna', lastName: 'Starfall', realm: 'Wild Growth' },
-    { id: 'b', firstName: 'Bob', lastName: '', realm: 'Wild Growth' },
+    { id: 'a', firstName: 'Luna', lastName: 'Starfall', realm: 'Test Realm' },
+    { id: 'b', firstName: 'Bob', lastName: '', realm: 'Test Realm' },
     { id: 'c', firstName: 'Bob', lastName: '', realm: 'Living Flame' },
   ];
 
@@ -120,7 +120,7 @@ describe('matchCharacter', () => {
   it('uses the realm on a tie, and gives up when it is still unclear', () => {
     assert.equal(matchCharacter({ name: 'Bob', realm: 'Living Flame' }, own)?.id, 'c');
     assert.equal(matchCharacter({ name: 'Bob', realm: 'Somewhere' }, own), null);
-    assert.equal(matchCharacter({ name: 'Nobody', realm: 'Wild Growth' }, own), null);
+    assert.equal(matchCharacter({ name: 'Nobody', realm: 'Test Realm' }, own), null);
   });
 });
 

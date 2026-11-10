@@ -47,6 +47,11 @@ export interface FactionConfig<C extends string = string> {
  */
 export interface ServerConfig {
   ruleSet: string;
+  /**
+   * What Blizzard's armory calls its rule set, when not `ruleSet` itself (compared ignoring case):
+   * `'Roleplay'` for `'RP'`. "Verify with Battle.net" reads the player's characters on it.
+   */
+  armoryRuleset?: string;
 }
 
 export interface GameConfig<C extends string = string> {
@@ -157,6 +162,12 @@ export function gameConfigProblems(config: unknown): string[] {
         const ruleSet = (serverConfig as ServerConfig | undefined)?.ruleSet;
         if (typeof ruleSet !== 'string' || ruleSet === '') {
           problems.push(`allowedServers.${region}.${server}.ruleSet must be a non-empty string`);
+        }
+        const armoryRuleset = (serverConfig as ServerConfig | undefined)?.armoryRuleset;
+        if (armoryRuleset !== undefined && (typeof armoryRuleset !== 'string' || !armoryRuleset)) {
+          problems.push(
+            `allowedServers.${region}.${server}.armoryRuleset must be a non-empty string`,
+          );
         }
       }
     }

@@ -215,6 +215,21 @@ export const ruleSetOf = (
   return byRegion?.[region]?.[server]?.ruleSet;
 };
 
+/**
+ * What Blizzard's armory calls a server's rule set ("Roleplay" for RP): its `armoryRuleset`, else
+ * its `ruleSet`; undefined if we don't know the server.
+ */
+export const armoryRulesetOf = (
+  gameVersion: string,
+  region: string,
+  server: string,
+): string | undefined => {
+  const byRegion: Record<string, Readonly<Record<string, ServerConfig>>> | undefined =
+    getGame(gameVersion)?.allowedServers;
+  const config = byRegion?.[region]?.[server];
+  return config ? (config.armoryRuleset ?? config.ruleSet) : undefined;
+};
+
 /** The rule sets of roleplay servers: their guilds' characters get bios. */
 export const RP_RULE_SETS: readonly string[] = ['RP', 'RP-PVP'];
 

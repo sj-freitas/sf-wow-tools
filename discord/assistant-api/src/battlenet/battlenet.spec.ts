@@ -6,7 +6,7 @@ import type { AuthenticatedRequest } from '../auth/auth.types';
 import type { CacheService } from '../cache/cache.service';
 import type { PrismaService } from '../database/prisma.service';
 import { BattleNetController } from './battlenet.controller';
-import { BattleNetService } from './battlenet.service';
+import { BattleNetService, serverLabel } from './battlenet.service';
 
 const config = (values: Record<string, string>) =>
   ({ get: (key: string) => values[key] }) as unknown as ConfigService;
@@ -16,31 +16,37 @@ const CONFIGURED = {
   SITE_URL: 'https://guild.test',
 };
 
+const roleplay = { name: 'Roleplay', id: 3 };
+
+/** Forever's answer: characters have last names, and a rule set instead of a realm. */
+const FOREVER_ACCOUNT = {
+  wow_accounts: [
+    {
+      characters: [
+        {
+          name: 'Aqua',
+          surname: 'Aquantos',
+          level: 60,
+          ruleset: roleplay,
+          playable_class: { name: 'Warrior' },
+          playable_race: { name: 'Human' },
+          faction: { name: 'Alliance' },
+        },
+        { name: 'Elsewhere', surname: 'Pvper', level: 10, ruleset: { name: 'PvP', id: 1 } },
+      ],
+    },
+    { characters: [{ name: 'Altie', surname: 'Twink', level: 25, ruleset: roleplay }] },
+  ],
+};
+
 /** Battle.net answering the token, the account's characters and its BattleTag. */
-function fakeBattleNet(service: BattleNetService) {
+function fakeBattleNet(service: BattleNetService, account: unknown = FOREVER_ACCOUNT) {
   const asked: { url: string; init?: RequestInit }[] = [];
   service.fetcher = (async (url: string, init?: RequestInit) => {
     asked.push({ url, init });
     if (url.endsWith('/token')) return Response.json({ access_token: 'player-token' });
     if (url.endsWith('/userinfo')) return Response.json({ battletag: 'Shivan#1234' });
-    return Response.json({
-      wow_accounts: [
-        {
-          characters: [
-            {
-              name: 'Darkshivan',
-              level: 60,
-              realm: { name: 'Wild Growth', slug: 'wild-growth' },
-              playable_class: { name: 'Warrior' },
-              playable_race: { name: 'Human' },
-              faction: { name: 'Alliance' },
-            },
-            { name: 'Elsewhere', level: 10, realm: { name: 'Lone Wolf', slug: 'lone-wolf' } },
-          ],
-        },
-        { characters: [{ name: 'Altie', level: 25, realm: { slug: 'wild-growth' } }] },
-      ],
-    });
+    return Response.json(account);
   }) as typeof fetch;
   return asked;
 }
@@ -55,19 +61,40 @@ describe('BattleNetService', () => {
     assert.equal(url.searchParams.get('redirect_uri'), 'https://guild.test/api/battlenet/callback');
   });
 
-  it('reads the account’s characters on the checked server only, by name', async () => {
+  it('reads the account’s characters on the character’s own server only, by name', async () => {
     const service = new BattleNetService(config(CONFIGURED));
     const asked = fakeBattleNet(service);
     const token = await service.exchange('code-1');
     assert.equal(token, 'player-token');
     assert.match(asked[0].init?.body as string, /grant_type=authorization_code&code=code-1/);
+    const rp = { gameVersion: 'Forever', region: 'EU', server: 'RP' };
     assert.deepEqual(
-      (await service.characters(token)).map((c) => [c.name, c.level, c.class]),
+      (await service.characters(token, rp)).map((c) => [c.name, c.level, c.class]),
       [
-        ['Altie', 25, null],
-        ['Darkshivan', 60, 'Warrior'],
+        ['Altie Twink', 25, null],
+        ['Aqua Aquantos', 60, 'Warrior'],
       ],
     );
+    // Forever's armory in the character's region.
+    assert.equal(
+      asked.at(-1)?.url,
+      'https://eu.api.blizzard.com/profile/user/wow?namespace=profile-forever-eu&locale=en_GB',
+    );
+    // PVP is the armory's "PvP": the other character.
+    assert.deepEqual(
+      (await service.characters(token, { ...rp, server: 'PVP' })).map((c) => c.name),
+      ['Elsewhere Pvper'],
+    );
+    assert.equal(serverLabel(rp), 'EU · Forever · RP');
+  });
+
+  it('refuses a server it doesn’t know, a version with no armory and an answer with no servers', async () => {
+    const service = new BattleNetService(config(CONFIGURED));
+    fakeBattleNet(service, { wow_accounts: [{ characters: [{ name: 'Old', level: 60 }] }] });
+    const rp = { gameVersion: 'Forever', region: 'EU', server: 'RP' };
+    await assert.rejects(service.characters('t', { ...rp, server: 'Wild' }), /isn’t a server/);
+    await assert.rejects(service.characters('t', { ...rp, gameVersion: 'Retail' }), /no armory/);
+    await assert.rejects(service.characters('t', rp), /didn’t say which server/);
   });
 });
 
@@ -85,8 +112,8 @@ describe('BattleNetController', () => {
           where.id === 'c1'
             ? {
                 id: 'c1',
-                firstName: 'Darkshivan',
-                lastName: '',
+                firstName: 'Aqua',
+                lastName: 'Aquantos',
                 gameVersion: 'Forever',
                 region: 'EU',
                 realm: 'RP',
@@ -111,14 +138,15 @@ describe('BattleNetController', () => {
     const id = redirectedTo().replace('/battlenet/', '');
     const result = await controller.result(req('u1'), id);
     assert.deepEqual(result.character, {
-      name: 'Darkshivan',
-      pagePath: '/forever/eu/rp/characters/Darkshivan',
+      name: 'Aqua Aquantos',
+      pagePath: '/forever/eu/rp/characters/Aqua-Aquantos',
     });
+    assert.equal(result.server, 'EU · Forever · RP');
     assert.equal(result.battleTag, 'Shivan#1234');
     assert.equal(result.found, true);
     assert.deepEqual(
       result.characters.map((c) => c.name),
-      ['Altie', 'Darkshivan'],
+      ['Altie Twink', 'Aqua Aquantos'],
     );
     assert.equal(result.error, null);
     // Someone else can't see it.

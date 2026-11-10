@@ -7,6 +7,7 @@ import { defineGame, gameConfigProblems } from './game-config';
 import {
   armoryLinkFor,
   armoryNamespaceFor,
+  armoryRulesetOf,
   classesOf,
   gameVersions,
   games,
@@ -147,6 +148,14 @@ describe('checking a config', () => {
     assert.match(problems, /allowedServers\.EU\.RP\.ruleSet must be a non-empty string/);
   });
 
+  it('checks armoryRuleset, when given, is a non-empty string', () => {
+    const config = valid();
+    config.allowedServers = { EU: { PVE: { ruleSet: 'Normal', armoryRuleset: 'Normal' } } };
+    assert.deepEqual(gameConfigProblems(config), []);
+    config.allowedServers = { EU: { PVE: { ruleSet: 'Normal', armoryRuleset: '' } } };
+    assert.match(gameConfigProblems(config).join(), /PVE\.armoryRuleset must be a non-empty/);
+  });
+
   it('checks armoryPending, when given, is true or false', () => {
     const config = valid();
     (config as { armoryPending?: unknown }).armoryPending = true;
@@ -277,6 +286,14 @@ describe('asking about a version', () => {
     assert.equal(ruleSetOf('Forever', 'EU', 'Hardcore'), 'Hardcore');
     assert.equal(ruleSetOf('Forever', 'EU', 'Nowhere'), undefined);
     assert.equal(ruleSetOf('Retail', 'EU', 'RP'), undefined);
+  });
+
+  it('gives what the armory calls a server’s rule set, else the rule set itself', () => {
+    assert.equal(armoryRulesetOf('Forever', 'EU', 'RP'), 'Roleplay');
+    assert.equal(armoryRulesetOf('Forever', 'US', 'RP-PVP'), 'Roleplay PvP');
+    assert.equal(armoryRulesetOf('Forever', 'EU', 'PVE'), 'Normal');
+    assert.equal(armoryRulesetOf('Forever', 'EU', 'Hardcore'), 'Hardcore', 'not in the armory yet');
+    assert.equal(armoryRulesetOf('Forever', 'EU', 'Nowhere'), undefined);
   });
 
   it('supports bios only for a guild on an RP rule-set server', () => {

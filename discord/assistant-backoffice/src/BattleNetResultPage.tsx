@@ -9,8 +9,8 @@ interface BattleNetResult {
   server: string;
   battleTag: string | null;
   characters: {
+    /** In full, with its last name. */
     name: string;
-    realm: string;
     level: number | null;
     class: string | null;
     race: string | null;
@@ -22,8 +22,8 @@ interface BattleNetResult {
 
 /**
  * `/battlenet/:id`: where Battle.net's login comes back to. Shows the account's characters on the
- * server it read and whether the character is one of them. A preview: nothing is changed yet;
- * at WoW Forever's launch this will verify the character.
+ * character's own server ("EU · Forever · RP") and whether the character is one of them. A
+ * preview: nothing is changed yet.
  */
 export function BattleNetResultPage() {
   const { id = '' } = useParams();
@@ -63,7 +63,7 @@ export function BattleNetResultPage() {
           {result.characters.length > 0 && (
             <ul className="own-characters">
               {result.characters.map((character) => (
-                <li key={`${character.realm}/${character.name}`} className="own-character">
+                <li key={character.name} className="own-character">
                   <div className="own-character-main">
                     <strong>{character.name}</strong>
                     <div className="muted">
@@ -84,8 +84,8 @@ export function BattleNetResultPage() {
         </>
       )}
       <p className="muted">
-        This is a preview: nothing was changed. When WoW Forever launches, this check will read
-        Forever’s characters and mark the character as verified.
+        This is a preview: nothing was changed. Later, this check will mark the character as
+        verified.
       </p>
     </div>
   );

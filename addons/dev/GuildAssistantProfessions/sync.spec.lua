@@ -56,7 +56,7 @@ local function player(name, guild, last, saved)
     env.SlashCmdList = {}
     env.UnitClass = function() return "Mage", "MAGE" end
     env.UnitName = function() return name, last end
-    env.GetRealmName = function() return "Wild Growth" end
+    env.GetRealmName = function() return "Test Realm" end
     env.IsInGuild = function() return me.guild ~= nil end
     env.GetGuildInfo = function() return me.guild end
     env.GetServerTime = function() return clock end
@@ -72,7 +72,7 @@ local function player(name, guild, last, saved)
             for _, other in ipairs(players) do
                 if other ~= me and other.online and other.guild == me.guild and other.prefix == prefix then
                     other.frame.onEvent(other.frame, "CHAT_MSG_ADDON", prefix, message, channel,
-                        name .. "-Wild Growth")
+                        name .. "-Test Realm")
                 end
             end
         end,
@@ -98,7 +98,7 @@ local function learn(p, profession, ...)
 end
 
 local function knows(p, name, profession, id)
-    local character = p.ns.db.characters[name .. "-Wild Growth"]
+    local character = p.ns.db.characters[name .. "-Test Realm"]
     if not character then return false end
     local entry = character.professions[profession]
     return entry ~= nil and (id == nil or entry.recipes["spell:" .. id] == true)
@@ -123,7 +123,7 @@ it("sends a character's professions to the guild, quietly", function()
     learn(luna, "Tailoring", 2387, 3914)
     run(30)
     eq(knows(kael, "Luna", "Tailoring", 3914), true, "Kael has Luna's Tailoring")
-    eq(kael.ns.db.characters["Luna-Wild Growth"].source, "guild", "as a guild character")
+    eq(kael.ns.db.characters["Luna-Test Realm"].source, "guild", "as a guild character")
     assert(kael.ns.db.export:find('"name":"Luna"', 1, true), "and in Kael's export")
     for _, line in ipairs(kael.chat) do
         assert(not line:find("Luna", 1, true), "nothing said in Kael's chat: " .. line)
@@ -193,12 +193,12 @@ it("doesn't bring back a character's first-name entry from a guildmate's old cop
     reset()
     local kael = player("Kael", "Relic Hunters")
     -- What Kael got from Luna's 1.0.2, which saved her under her first name alone.
-    kael.ns.db.characters["Luna-Wild Growth"] = { name = "Luna", realm = "Wild Growth", class = "MAGE",
+    kael.ns.db.characters["Luna-Test Realm"] = { name = "Luna", realm = "Test Realm", class = "MAGE",
         source = "guild", guild = "Relic Hunters", updated = clock,
         professions = { Tailoring = { rank = 1, max = 75, recipes = { ["spell:2387"] = true } } } }
     local luna = player("Luna", "Relic Hunters", "Moonbrook")
     run(120)
-    eq(luna.ns.db.characters["Luna-Wild Growth"], nil, "not kept by Luna")
+    eq(luna.ns.db.characters["Luna-Test Realm"], nil, "not kept by Luna")
     learn(luna, "Tailoring", 2387)
     run(30)
     eq(knows(kael, "Luna Moonbrook", "Tailoring", 2387), true, "Luna shared under her full name")
@@ -214,21 +214,21 @@ it("says what was shared and received in /ga-prof status", function()
     kael.env.SlashCmdList.GAPROF("status")
     local text = table.concat(kael.chat, "\n")
     assert(text:find("Guild sharing (Relic Hunters): 1 guild character received so far", 1, true), text)
-    assert(not text:find("Luna-Wild Growth:", 1, true), "guild characters aren't listed one by one")
+    assert(not text:find("Luna-Test Realm:", 1, true), "guild characters aren't listed one by one")
 end)
 
 local DAY = 24 * 60 * 60
 
 -- A guild character `name` as kept by a guildmate's addon, updated `updated`.
 local function guildCharacter(name, updated)
-    return { name = name, realm = "Wild Growth", class = "MAGE", source = "guild", guild = "Relic Hunters",
+    return { name = name, realm = "Test Realm", class = "MAGE", source = "guild", guild = "Relic Hunters",
         updated = updated, professions = { Tailoring = { rank = 1, max = 75, recipes = { ["spell:2387"] = true } } } }
 end
 
 it("sends a backlog's characters once, even when asked again while they wait", function()
     reset()
     local saved = { characters = {} }
-    for i = 1, 120 do saved.characters["P" .. i .. "-Wild Growth"] = guildCharacter("P" .. i, clock) end
+    for i = 1, 120 do saved.characters["P" .. i .. "-Test Realm"] = guildCharacter("P" .. i, clock) end
     player("Kael", "Relic Hunters", nil, saved)
     run(60)
     sent = {}
@@ -244,7 +244,7 @@ end)
 it("rebuilds the export once for a burst of characters received, not once each", function()
     reset()
     local saved = { characters = {} }
-    for i = 1, 30 do saved.characters["P" .. i .. "-Wild Growth"] = guildCharacter("P" .. i, clock) end
+    for i = 1, 30 do saved.characters["P" .. i .. "-Test Realm"] = guildCharacter("P" .. i, clock) end
     player("Kael", "Relic Hunters", nil, saved)
     run(60)
     local mira = player("Mira", "Relic Hunters")
@@ -263,20 +263,20 @@ it("restamps a character still played, so guildmates don't forget it", function(
     local old = clock - 40 * DAY
     local mine = guildCharacter("Luna", old)
     mine.source = "own"
-    player("Kael", "Relic Hunters", nil, { characters = { ["Luna-Wild Growth"] = guildCharacter("Luna", old) } })
-    local luna = player("Luna", "Relic Hunters", nil, { characters = { ["Luna-Wild Growth"] = mine } })
+    player("Kael", "Relic Hunters", nil, { characters = { ["Luna-Test Realm"] = guildCharacter("Luna", old) } })
+    local luna = player("Luna", "Relic Hunters", nil, { characters = { ["Luna-Test Realm"] = mine } })
     run(120)
-    eq(luna.ns.db.characters["Luna-Wild Growth"].updated > old, true, "Luna's restamped")
+    eq(luna.ns.db.characters["Luna-Test Realm"].updated > old, true, "Luna's restamped")
     local kael = players[1]
-    eq(kael.ns.db.characters["Luna-Wild Growth"].updated, luna.ns.db.characters["Luna-Wild Growth"].updated,
+    eq(kael.ns.db.characters["Luna-Test Realm"].updated, luna.ns.db.characters["Luna-Test Realm"].updated,
         "and Kael has the new stamp")
 end)
 
 it("forgets at login a guildmate not heard of for 90 days", function()
     reset()
     local kael = player("Kael", "Relic Hunters", nil,
-        { characters = { ["Gone-Wild Growth"] = guildCharacter("Gone", clock - 91 * DAY) } })
-    eq(kael.ns.db.characters["Gone-Wild Growth"], nil, "forgotten")
+        { characters = { ["Gone-Test Realm"] = guildCharacter("Gone", clock - 91 * DAY) } })
+    eq(kael.ns.db.characters["Gone-Test Realm"], nil, "forgotten")
 end)
 
 realPrint(("%d passed, %d failed"):format(passed, failed))

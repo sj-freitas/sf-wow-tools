@@ -49,7 +49,7 @@ end)
 
 it("keeps the professions the skill list shows and drops unlearned ones", function()
     local db = Core.newDB()
-    local luna = Core.character(db, "Luna", "Wild Growth", "MAGE")
+    local luna = Core.character(db, "Luna", "Test Realm", "MAGE")
     Core.setProfessions(luna, {
         { name = "Tailoring", rank = 280, max = 300 },
         { name = "Enchanting", rank = 300, max = 300 },
@@ -62,7 +62,7 @@ it("keeps the professions the skill list shows and drops unlearned ones", functi
 end)
 
 it("only ever adds recipes, and counts the new ones", function()
-    local luna = Core.character(Core.newDB(), "Luna", "Wild Growth", "MAGE")
+    local luna = Core.character(Core.newDB(), "Luna", "Test Realm", "MAGE")
     eq(Core.addRecipes(luna, "Enchanting", 300, 300, {
         { kind = "spell", id = 20034 }, { kind = "spell", id = 13890 },
     }), 2)
@@ -76,7 +76,7 @@ it("only ever adds recipes, and counts the new ones", function()
 end)
 
 it("replaces a profession's recipes with a full list, saying whether it changed", function()
-    local luna = Core.character(Core.newDB(), "Luna", "Wild Growth", "MAGE")
+    local luna = Core.character(Core.newDB(), "Luna", "Test Realm", "MAGE")
     -- Recorded wrongly before: Cooking's 2538 under Blacksmithing.
     Core.addRecipes(luna, "Blacksmithing", 25, 75, { { kind = "spell", id = 2538 }, { kind = "spell", id = 2660 } }, 100)
     eq(Core.setRecipes(luna, "Blacksmithing", 25, 75, { { kind = "spell", id = 2660 } }, 200), true)
@@ -90,7 +90,7 @@ it("replaces a profession's recipes with a full list, saying whether it changed"
 end)
 
 it("drops an unlearned profession with its recipes and says which, but not on an empty list", function()
-    local luna = Core.character(Core.newDB(), "Luna", "Wild Growth", "MAGE")
+    local luna = Core.character(Core.newDB(), "Luna", "Test Realm", "MAGE")
     Core.setProfessions(luna, {
         { name = "Tailoring", rank = 280, max = 300 },
         { name = "Enchanting", rank = 300, max = 300 },
@@ -114,7 +114,7 @@ it("drops an unlearned profession with its recipes and says which, but not on an
 end)
 
 it("marks a character updated when something new is recorded, not otherwise", function()
-    local luna = Core.character(Core.newDB(), "Luna", "Wild Growth", "MAGE")
+    local luna = Core.character(Core.newDB(), "Luna", "Test Realm", "MAGE")
     eq(Core.setProfessions(luna, { { name = "Tailoring", rank = 280, max = 300 } }, 100), true)
     eq(luna.updated, 100)
     eq(Core.setProfessions(luna, { { name = "Tailoring", rank = 280, max = 300 } }, 200), false)
@@ -127,16 +127,16 @@ end)
 
 it("keeps a character seen through a link apart, until it turns out to be one's own", function()
     local db = Core.newDB()
-    eq(Core.character(db, "Mira", "Wild Growth", nil, "link").source, "link")
-    eq(Core.character(db, "Mira", "Wild Growth", "PRIEST", "own").source, "own", "logged in with it")
-    eq(Core.character(db, "Mira", "Wild Growth", nil, "link").source, "own", "stays own")
+    eq(Core.character(db, "Mira", "Test Realm", nil, "link").source, "link")
+    eq(Core.character(db, "Mira", "Test Realm", "PRIEST", "own").source, "own", "logged in with it")
+    eq(Core.character(db, "Mira", "Test Realm", nil, "link").source, "own", "stays own")
 end)
 
 -- Export -------------------------------------------------------------------------------------
 
 local function sampleDB()
     local db = Core.newDB()
-    local luna = Core.character(db, "Luna", "Wild Growth", "MAGE")
+    local luna = Core.character(db, "Luna", "Test Realm", "MAGE")
     Core.setProfessions(luna, {
         { name = "Enchanting", rank = 300, max = 300 },
         { name = "Tailoring", rank = 280, max = 300 },
@@ -147,14 +147,14 @@ local function sampleDB()
     Core.addRecipes(luna, "Tailoring", 280, 300, {
         { kind = "spell", id = 18560 }, { kind = "item", id = 14146 },
     }, 1791700000)
-    local bob = Core.character(db, "Bob", "Wild Growth", "WARRIOR")
+    local bob = Core.character(db, "Bob", "Test Realm", "WARRIOR")
     Core.setProfessions(bob, { { name = "First Aid", rank = 300, max = 300 } }, 1791500000)
     Core.addRecipes(bob, "First Aid", 300, 300, { { kind = "spell", id = 18630 } }, 1791500000)
-    local mira = Core.character(db, "Mira", "Wild Growth", nil, "link")
+    local mira = Core.character(db, "Mira", "Test Realm", nil, "link")
     Core.addRecipes(mira, "Alchemy", 250, 300, { { kind = "spell", id = 11459 } }, 1792000000)
     -- A guildmate's character, received from the guild (guild sharing).
     Core.receive(db, "Relic Hunters", {
-        name = "Kael", realm = "Wild Growth", class = "PRIEST", updated = 1792100000,
+        name = "Kael", realm = "Test Realm", class = "PRIEST", updated = 1792100000,
         professions = { Herbalism = { rank = 150, max = 225, learned = 1791000000,
             updated = 1792100000, recipes = { ["spell:2366"] = true } } },
     }, 1792200000)
@@ -206,7 +206,7 @@ it("records skills under the profession headers and the open window's recipes", 
     }
     _G.UnitClass = function() return "Mage", "MAGE" end
     _G.UnitName = function() return "Luna" end
-    _G.GetRealmName = function() return "Wild Growth" end
+    _G.GetRealmName = function() return "Test Realm" end
     _G.GetNumSkillLines = function() return #skills end
     _G.GetSkillLineInfo = function(i)
         local s = skills[i]
@@ -227,7 +227,7 @@ it("records skills under the profession headers and the open window's recipes", 
     assert(loadfile("GuildAssistantProfessions/Scan.lua"))("GuildAssistantProfessions", game)
     game.Scan.skills()
     game.Scan.crafts()
-    local luna = game.db.characters["Luna-Wild Growth"]
+    local luna = game.db.characters["Luna-Test Realm"]
     eq(luna.class, "MAGE")
     eq(luna.professions.Enchanting.rank, 300)
     eq(luna.professions.Cooking.max, 225)
@@ -244,7 +244,7 @@ it("reads professions and recipes with the modern API (WoW Forever's client)", f
     end
     _G.UnitClass = function() return "Priest", "PRIEST" end
     _G.UnitName = function() return "Sol" end
-    _G.GetRealmName = function() return "Wild Growth" end
+    _G.GetRealmName = function() return "Test Realm" end
     -- Primary, primary, archaeology, fishing, cooking: unlearned slots are nil.
     _G.GetProfessions = function() return 1, nil, nil, nil, 5 end
     local professions = { [1] = { "Tailoring", 280, 300 }, [5] = { "Cooking", 75, 150 } }
@@ -266,7 +266,7 @@ it("reads professions and recipes with the modern API (WoW Forever's client)", f
     local game = { Core = Core, db = Core.newDB() }
     assert(loadfile("GuildAssistantProfessions/Scan.lua"))("GuildAssistantProfessions", game)
     game.Scan.skills()
-    local sol = game.db.characters["Sol-Wild Growth"]
+    local sol = game.db.characters["Sol-Test Realm"]
     eq(sol.professions.Tailoring.rank, 280)
     eq(sol.professions.Cooking.max, 150)
     game.Scan.tradeSkills()
@@ -298,18 +298,18 @@ it("reads professions and recipes with the modern API (WoW Forever's client)", f
     eq(mira.professions.Tailoring.recipes["spell:12088"], true, "recorded as Mira's")
     linked = "Kai"
     game.Scan.tradeSkills()
-    eq(game.db.characters["Kai-Wild Growth"].source, "link", "no realm in the link: ours")
+    eq(game.db.characters["Kai-Test Realm"].source, "link", "no realm in the link: ours")
 
     -- Sol's own link, with the full name a link carries: Sol's, and an earlier entry as someone
     -- else's goes.
-    game.db.characters["Sol Dawnward-Wild Growth"] = { name = "Sol Dawnward", realm = "Wild Growth", professions = {}, source = "link" }
+    game.db.characters["Sol Dawnward-Test Realm"] = { name = "Sol Dawnward", realm = "Test Realm", professions = {}, source = "link" }
     linked, recipes[12088] = "Sol Dawnward", true
     game.Scan.tradeSkills()
-    eq(game.db.characters["Sol Dawnward-Wild Growth"], nil, "not someone else")
+    eq(game.db.characters["Sol Dawnward-Test Realm"], nil, "not someone else")
     eq(sol.professions.Tailoring.recipes["spell:12088"], true, "recorded as Sol's")
     linked = "Solveig"
     game.Scan.tradeSkills()
-    eq(game.db.characters["Solveig-Wild Growth"].source, "link", "a name that only starts like Sol's")
+    eq(game.db.characters["Solveig-Test Realm"].source, "link", "a name that only starts like Sol's")
     _G.print = realPrint
     eq(table.concat(game.Scan.client(), ","),
         "GetProfessions,GetProfessionInfo,C_TradeSkillUI.GetAllRecipeIDs,C_TradeSkillUI.GetRecipeInfo,"
@@ -321,7 +321,7 @@ end)
 
 local G = "Relic Hunters"
 local function guildmate(name, updated, professions)
-    return { name = name, realm = "Wild Growth", class = "PRIEST", updated = updated, professions = professions }
+    return { name = name, realm = "Test Realm", class = "PRIEST", updated = updated, professions = professions }
 end
 local function recipes(...)
     local set = {}
@@ -345,7 +345,7 @@ it("sends a character as text and reads it back, history included", function()
     local text = Core.encodeCharacter(sent)
     assert(not text:find("\t"), "no tabs: " .. text)
     local got = Core.decodeCharacter(text)
-    eq(got.name, "Kael Dawnward"); eq(got.realm, "Wild Growth"); eq(got.class, "PRIEST")
+    eq(got.name, "Kael Dawnward"); eq(got.realm, "Test Realm"); eq(got.class, "PRIEST")
     eq(got.updated, 1792100000, "updated")
     eq(got.professions.Herbalism.rank, 150); eq(got.professions.Herbalism.max, 225)
     eq(got.professions.Herbalism.learned, 1791000000, "learned")
@@ -367,7 +367,7 @@ it("splits a long message in pieces and puts them back together, per sender", fu
     for _, piece in ipairs(pieces) do assert(#piece <= 255, "fits one addon message") end
     local assembler = Core.newAssembler()
     eq(assembler.add("Kael", pieces[1]), nil, "not yet")
-    eq(assembler.add("Mira", Core.pieces("H", "x1", "Luna-Wild Growth=1")[1]), "H", "another sender, whole")
+    eq(assembler.add("Mira", Core.pieces("H", "x1", "Luna-Test Realm=1")[1]), "H", "another sender, whole")
     eq(assembler.add("Kael", pieces[3]), nil, "out of order")
     local kind, whole = assembler.add("Kael", pieces[2])
     eq(kind, "C"); eq(whole, payload, "payload")
@@ -376,29 +376,29 @@ end)
 
 it("shares only this guild's characters: the account's own and those received from it", function()
     local db = Core.newDB()
-    local luna = Core.character(db, "Luna", "Wild Growth", "MAGE")
+    local luna = Core.character(db, "Luna", "Test Realm", "MAGE")
     luna.guild, luna.updated = G, 10
-    local alt = Core.character(db, "Alt", "Wild Growth", "MAGE")
+    local alt = Core.character(db, "Alt", "Test Realm", "MAGE")
     alt.guild, alt.updated = "Other Guild", 10
-    Core.character(db, "Mira", "Wild Growth", nil, "link").updated = 10
+    Core.character(db, "Mira", "Test Realm", nil, "link").updated = 10
     Core.receive(db, G, guildmate("Kael", 20, {}))
-    eq(Core.digest(db, G), "Kael-Wild Growth=k;Luna-Wild Growth=a", "digest")
+    eq(Core.digest(db, G), "Kael-Test Realm=k;Luna-Test Realm=a", "digest")
     eq(Core.digest(db, nil), "", "not in a guild: nothing")
-    local theirs = Core.parseDigest("Kael-Wild Growth=k;Luna-Wild Growth=5")
-    eq(theirs["Kael-Wild Growth"], 20)
-    eq(table.concat(Core.newerThan(db, G, theirs), ","), "Luna-Wild Growth", "they have Luna older")
-    eq(table.concat(Core.newerThan(db, G, {}), ","), "Kael-Wild Growth,Luna-Wild Growth", "they have none")
+    local theirs = Core.parseDigest("Kael-Test Realm=k;Luna-Test Realm=5")
+    eq(theirs["Kael-Test Realm"], 20)
+    eq(table.concat(Core.newerThan(db, G, theirs), ","), "Luna-Test Realm", "they have Luna older")
+    eq(table.concat(Core.newerThan(db, G, {}), ","), "Kael-Test Realm,Luna-Test Realm", "they have none")
 end)
 
 it("keeps a received character; the newer copy wins, whoever's it is", function()
     local db = Core.newDB()
     eq(Core.receive(db, G, guildmate("Kael", 5, { Herbalism = { rank = 10, recipes = recipes(1) } })), true)
-    local kael = db.characters["Kael-Wild Growth"]
+    local kael = db.characters["Kael-Test Realm"]
     eq(kael.source, "guild"); eq(kael.guild, G)
     eq(Core.receive(db, G, guildmate("Kael", 5, { Herbalism = { rank = 10, recipes = recipes(1) } })), false,
         "the same again: nothing new")
     -- One of the account's own (played from another computer, say): a newer copy wins too.
-    local luna = Core.character(db, "Luna", "Wild Growth", "MAGE")
+    local luna = Core.character(db, "Luna", "Test Realm", "MAGE")
     luna.updated = 10
     eq(Core.receive(db, G, guildmate("Luna", 20, { Alchemy = { recipes = recipes(1) } })), true, "newer")
     eq(luna.professions.Alchemy ~= nil, true, "taken")
@@ -416,7 +416,7 @@ it("drops a profession a newer copy no longer has, and an older copy can't bring
         Engineering = { rank = 1, learned = 190, updated = 200, recipes = recipes(4) },
         Mining = { rank = 160, learned = 10, updated = 150, recipes = recipes(3) },
     })), true)
-    local kael = db.characters["Kael-Wild Growth"]
+    local kael = db.characters["Kael-Test Realm"]
     eq(kael.professions.Blacksmithing, nil, "Blacksmithing replaced")
     eq(kael.professions.Engineering ~= nil, true, "Engineering")
     eq(kael.professions.Mining.rank, 160, "Mining kept")
@@ -432,7 +432,7 @@ it("keeps a profession learned after a newer copy that doesn't list it yet", fun
     Core.receive(db, G, guildmate("Kael", 300, { Tailoring = { learned = 290, updated = 300, recipes = recipes(1) } }))
     Core.receive(db, G, guildmate("Kael", 400, { Mining = { learned = 10, updated = 400, recipes = recipes(2) } }))
     -- Tailoring's dates are before 400: dropped. One learned after the copy would stay:
-    local kael = db.characters["Kael-Wild Growth"]
+    local kael = db.characters["Kael-Test Realm"]
     eq(kael.professions.Tailoring, nil, "unlearned before the newer copy")
     kael.professions.Alchemy = { learned = 500, updated = 500, recipes = recipes(9) }
     Core.receive(db, G, guildmate("Kael", 450, { Mining = { learned = 10, updated = 450, recipes = recipes(2) } }))
@@ -449,7 +449,7 @@ it("merges what arrives: recipes are added, never removed; skill and dates keep 
     eq(Core.receive(db, G, guildmate("Kael", 3, {
         Herbalism = { rank = 40, learned = 300, recipes = recipes(3) },
     }), 50), true, "something new")
-    local kael = db.characters["Kael-Wild Growth"]
+    local kael = db.characters["Kael-Test Realm"]
     local herbalism = kael.professions.Herbalism
     eq(herbalism.recipes["spell:1"] and herbalism.recipes["spell:2"] and herbalism.recipes["spell:3"], true, "all three")
     eq(herbalism.rank, 50, "higher skill kept")
@@ -462,12 +462,12 @@ it("restamps a merge that holds more than an as-new copy, so those with only tha
     local db = Core.newDB()
     Core.receive(db, G, guildmate("Kael", 5, { Herbalism = { recipes = recipes(1, 2) } }))
     Core.receive(db, G, guildmate("Kael", 7, { Herbalism = { recipes = recipes(3) } }), 50)
-    eq(db.characters["Kael-Wild Growth"].updated, 50, "restamped: newer than the copy with only 3")
+    eq(db.characters["Kael-Test Realm"].updated, 50, "restamped: newer than the copy with only 3")
 end)
 
 it("keeps each profession's history: learned once, updated on each change", function()
     local db = Core.newDB()
-    local luna = Core.character(db, "Luna", "Wild Growth", "MAGE")
+    local luna = Core.character(db, "Luna", "Test Realm", "MAGE")
     Core.setProfessions(luna, { { name = "Tailoring", rank = 1, max = 75 } }, 100)
     Core.addRecipes(luna, "Tailoring", 1, 75, { { kind = "spell", id = 2387 } }, 200)
     Core.setProfessions(luna, { { name = "Tailoring", rank = 5, max = 75 } }, 300)
@@ -485,7 +485,7 @@ it("saves WoW Forever's realm as its rule set, and any other realm as it is", fu
     eq(Core.realmName("CAMWOW EU4 Realm 10 RP"), "RP")
     eq(Core.realmName("CAMWOW EU5 Realm 2 PvP"), "PvP")
     eq(Core.realmName("CAMWOW EU1 Realm 3 RP-PvP"), "RP-PvP")
-    eq(Core.realmName("Wild Growth"), "Wild Growth")
+    eq(Core.realmName("Test Realm"), "Test Realm")
     eq(Core.realmName(nil), nil)
     eq(Core.parseDigest("Mira-CAMWOW EU4 Realm 10 RP=a;Kai-RP=b")["Mira-RP"], 10, "an old digest")
 end)
@@ -504,12 +504,12 @@ it("renames 1.0.2's entries: the realm to its rule set, keeping the newer of two
     db.characters["Sol-CAMWOW EU4 Realm 10 RP"] = { name = "Sol", realm = "CAMWOW EU4 Realm 10 RP", updated = 5, professions = {} }
     db.characters["Mira-CAMWOW EU4 Realm 10 RP"] = { name = "Mira", realm = "CAMWOW EU4 Realm 10 RP", updated = 1, professions = {} }
     db.characters["Mira-CAMWOW EU4 Realm 3 RP"] = { name = "Mira", realm = "CAMWOW EU4 Realm 3 RP", updated = 9, professions = {} }
-    db.characters["Kai-Wild Growth"] = { name = "Kai", realm = "Wild Growth", professions = {} }
+    db.characters["Kai-Test Realm"] = { name = "Kai", realm = "Test Realm", professions = {} }
     Core.migrate(db)
     local keys = {}
     for key in pairs(db.characters) do keys[#keys + 1] = key end
     table.sort(keys)
-    eq(table.concat(keys, ","), "Kai-Wild Growth,Mira-RP,Sol-RP")
+    eq(table.concat(keys, ","), "Kai-Test Realm,Mira-RP,Sol-RP")
     eq(db.characters["Sol-RP"].realm, "RP")
     eq(db.characters["Mira-RP"].updated, 9, "the newer Mira")
 end)
@@ -541,24 +541,24 @@ it("forgets guildmates not heard of for 90 days and links unchanged for 60, neve
     local db, now = Core.newDB(), 1000 * DAY
     Core.receive(db, G, guildmate("Kael", now - 89 * DAY, {}))
     Core.receive(db, G, guildmate("Mira", now - 10 * DAY, {}))
-    db.characters["Mira-Wild Growth"].updated = now - 91 * DAY -- not heard of since
-    Core.character(db, "Sol", "Wild Growth", nil, "link").updated = now - 61 * DAY
-    Core.character(db, "Ash", "Wild Growth", nil, "link").updated = now - 59 * DAY
-    Core.character(db, "Nyx", "Wild Growth", nil, "link") -- opened, nothing recorded
-    Core.character(db, "Luna", "Wild Growth", "MAGE").updated = now - 900 * DAY
+    db.characters["Mira-Test Realm"].updated = now - 91 * DAY -- not heard of since
+    Core.character(db, "Sol", "Test Realm", nil, "link").updated = now - 61 * DAY
+    Core.character(db, "Ash", "Test Realm", nil, "link").updated = now - 59 * DAY
+    Core.character(db, "Nyx", "Test Realm", nil, "link") -- opened, nothing recorded
+    Core.character(db, "Luna", "Test Realm", "MAGE").updated = now - 900 * DAY
     eq(Core.prune(db, now), 3, "removed")
-    eq(db.characters["Kael-Wild Growth"] ~= nil, true, "Kael heard of 89 days ago")
-    eq(db.characters["Mira-Wild Growth"], nil, "Mira gone")
-    eq(db.characters["Sol-Wild Growth"], nil, "an old link gone")
-    eq(db.characters["Ash-Wild Growth"] ~= nil, true, "a recent link kept")
-    eq(db.characters["Nyx-Wild Growth"], nil, "a link with nothing recorded gone")
-    eq(db.characters["Luna-Wild Growth"] ~= nil, true, "the account's own, however old")
+    eq(db.characters["Kael-Test Realm"] ~= nil, true, "Kael heard of 89 days ago")
+    eq(db.characters["Mira-Test Realm"], nil, "Mira gone")
+    eq(db.characters["Sol-Test Realm"], nil, "an old link gone")
+    eq(db.characters["Ash-Test Realm"] ~= nil, true, "a recent link kept")
+    eq(db.characters["Nyx-Test Realm"], nil, "a link with nothing recorded gone")
+    eq(db.characters["Luna-Test Realm"] ~= nil, true, "the account's own, however old")
 end)
 
 it("doesn't take back a character too old to keep, from a guildmate who still has it", function()
     local db, now = Core.newDB(), 1000 * DAY
     eq(Core.receive(db, G, guildmate("Kael", now - 91 * DAY, {}), now), false, "refused")
-    eq(db.characters["Kael-Wild Growth"], nil, "not kept")
+    eq(db.characters["Kael-Test Realm"], nil, "not kept")
     eq(Core.receive(db, G, guildmate("Kael", now - 89 * DAY, {}), now), true, "recent enough")
 end)
 
@@ -567,9 +567,9 @@ it("keeps a guild's most recent 1000 characters", function()
     for i = 1, Core.MAX_GUILD + 5 do Core.receive(db, G, guildmate("P" .. i, now - i, {})) end
     Core.receive(db, "Other Guild", guildmate("Q", now - 50 * DAY, {}))
     eq(Core.prune(db, now), 5, "the oldest five")
-    eq(db.characters["P" .. Core.MAX_GUILD .. "-Wild Growth"] ~= nil, true, "the 1000th kept")
-    eq(db.characters["P" .. (Core.MAX_GUILD + 1) .. "-Wild Growth"], nil, "the 1001st gone")
-    eq(db.characters["Q-Wild Growth"] ~= nil, true, "another guild counted apart")
+    eq(db.characters["P" .. Core.MAX_GUILD .. "-Test Realm"] ~= nil, true, "the 1000th kept")
+    eq(db.characters["P" .. (Core.MAX_GUILD + 1) .. "-Test Realm"], nil, "the 1001st gone")
+    eq(db.characters["Q-Test Realm"] ~= nil, true, "another guild counted apart")
 end)
 
 it("restamps this player's character at login when it's older than 30 days", function()

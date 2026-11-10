@@ -49,7 +49,7 @@ local function loadAddon(unknownEvents)
     end
     _G.UnitClass = function() return "Mage", "MAGE" end
     _G.UnitName = function() return "Luna" end
-    _G.GetRealmName = function() return "Wild Growth" end
+    _G.GetRealmName = function() return "Test Realm" end
     _G.time, _G.date = os.time, os.date -- the game's time() and date()
     _G.GetNumSkillLines = function() return 0 end
     _G.GetSkillLineInfo = function() end
@@ -80,7 +80,7 @@ it("answers its slash commands", function()
     eq(said("/ga-prof export"), false, "no export command: the file is the export")
     SlashCmdList.GAPROF("status")
     eq(said("1 character, 0 professions, 0 recipes saved."), true, "status")
-    eq(said("Luna-Wild Growth: no professions. Updated never."), true, "status per character")
+    eq(said("Luna-Test Realm: no professions. Updated never."), true, "status per character")
     eq(said("Last update: never."), true, "last update")
     eq(said("File: WTF/Account/<account>/SavedVariables/GuildAssistantProfessions.lua"), true, "file")
 end)
@@ -98,7 +98,7 @@ it("keeps the export in the saved data up to date, and says when it was updated"
     fire("PLAYER_LOGIN")
     assert(db.export:find('"name":"Tailoring"', 1, true), "export after a change: " .. db.export)
     SlashCmdList.GAPROF("status")
-    eq(said("Last update: " .. os.date("%Y-%m-%d %H:%M", db.characters["Luna-Wild Growth"].updated)), true,
+    eq(said("Last update: " .. os.date("%Y-%m-%d %H:%M", db.characters["Luna-Test Realm"].updated)), true,
         "last update")
     db.export = nil
     fire("PLAYER_LOGOUT")

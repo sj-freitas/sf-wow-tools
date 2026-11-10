@@ -96,7 +96,7 @@ few seconds later for what arrives from the guild, once for a whole batch), on `
 on logout. For example:
 
 ```json
-{"addon":"GuildAssistantProfessions","format":2,"characters":[{"name":"Luna","realm":"Wild Growth","class":"MAGE","source":"own","updated":1792000000,"professions":[{"name":"Enchanting","skill":300,"max":300,"learned":1791000000,"updated":1792000000,"spells":[13890,20034],"items":[]}]}]}
+{"addon":"GuildAssistantProfessions","format":2,"characters":[{"name":"Luna","realm":"Test Realm","class":"MAGE","source":"own","updated":1792000000,"professions":[{"name":"Enchanting","skill":300,"max":300,"learned":1791000000,"updated":1792000000,"spells":[13890,20034],"items":[]}]}]}
 ```
 
 `source` is `own` (one of your account's), `guild` (a guildmate's, received from the guild) or

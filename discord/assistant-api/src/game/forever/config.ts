@@ -16,20 +16,22 @@ export default defineGame({
   // Recipe and item links (professions): https://www.wowhead.com/forever/spell=20034/…
   wowheadPath: 'forever',
   // Each server's name and the gameplay rules it enforces (several could share one; features
-  // gate on the rule set, not the name, e.g. bios need 'RP').
+  // gate on the rule set, not the name, e.g. bios need 'RP'), and the armory's name for that rule
+  // set (/data/wow/ruleset/<id>: 1 PvP, 2 Normal, 3 Roleplay, 15 Roleplay PvP; no Hardcore yet,
+  // so its own name).
   allowedServers: {
     US: {
-      RP: { ruleSet: 'RP' },
-      PVP: { ruleSet: 'PVP' },
-      'RP-PVP': { ruleSet: 'RP-PVP' },
-      PVE: { ruleSet: 'Normal' },
+      RP: { ruleSet: 'RP', armoryRuleset: 'Roleplay' },
+      PVP: { ruleSet: 'PVP', armoryRuleset: 'PvP' },
+      'RP-PVP': { ruleSet: 'RP-PVP', armoryRuleset: 'Roleplay PvP' },
+      PVE: { ruleSet: 'Normal', armoryRuleset: 'Normal' },
       Hardcore: { ruleSet: 'Hardcore' },
     },
     EU: {
-      RP: { ruleSet: 'RP' },
-      PVP: { ruleSet: 'PVP' },
-      'RP-PVP': { ruleSet: 'RP-PVP' },
-      PVE: { ruleSet: 'Normal' },
+      RP: { ruleSet: 'RP', armoryRuleset: 'Roleplay' },
+      PVP: { ruleSet: 'PVP', armoryRuleset: 'PvP' },
+      'RP-PVP': { ruleSet: 'RP-PVP', armoryRuleset: 'Roleplay PvP' },
+      PVE: { ruleSet: 'Normal', armoryRuleset: 'Normal' },
       Hardcore: { ruleSet: 'Hardcore' },
     },
   },

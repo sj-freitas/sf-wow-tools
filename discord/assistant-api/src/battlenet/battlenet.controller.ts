@@ -15,7 +15,7 @@ import type { AuthenticatedRequest } from '../auth/auth.types';
 import { CacheService } from '../cache/cache.service';
 import { formatCharacterName } from '../characters/character-name';
 import { PrismaService } from '../database/prisma.service';
-import { BattleNetService, type BattleNetCharacter } from './battlenet.service';
+import { BattleNetService, serverLabel, type BattleNetCharacter } from './battlenet.service';
 
 /** A login started for a character, waiting for Battle.net to send the player back. */
 const STATE_TTL_MS = 10 * 60 * 1000;
@@ -31,7 +31,7 @@ interface PendingCheck {
 export interface BattleNetResultDto {
   /** The character it was for, and its page. */
   character: { name: string; pagePath: string };
-  /** The server it read ("EU · Classic Season of Discovery · Wild Growth"). */
+  /** The character's server, which it read ("EU · Forever · RP"). */
   server: string;
   battleTag: string | null;
   /** The account's characters on that server. */
@@ -111,7 +111,11 @@ export class BattleNetController {
     try {
       const token = await this.battleNet.exchange(code);
       const [characters, battleTag] = await Promise.all([
-        this.battleNet.characters(token),
+        this.battleNet.characters(token, {
+          gameVersion: character.gameVersion,
+          region: character.region,
+          server: character.realm,
+        }),
         this.battleNet.battleTag(token),
       ]);
       const key = nameKey(character.firstName);
@@ -177,7 +181,11 @@ export class BattleNetController {
           .map((part) => part.toLowerCase())
           .join('/')}/characters/${namePath}`,
       },
-      server: this.battleNet.server,
+      server: serverLabel({
+        gameVersion: character.gameVersion,
+        region: character.region,
+        server: character.realm,
+      }),
       battleTag: outcome.battleTag ?? null,
       characters: outcome.characters ?? [],
       found: outcome.found ?? false,

@@ -42,7 +42,7 @@ function setup(member = true, officer = false) {
             id,
             firstName: person.firstName,
             lastName: person.lastName,
-            realm: 'Wild Growth',
+            realm: 'Test Realm',
           })),
       // Luna: played by d1, in guild g1.
       findUnique: async ({ where }: { where: { id: string } }) =>
@@ -214,7 +214,7 @@ function exportOf(
     characters: [
       {
         name,
-        realm: 'Wild Growth',
+        realm: 'Test Realm',
         source,
         updated,
         professions: professions.map((p) => ({ max: 300, items: [], ...p })),
@@ -228,9 +228,9 @@ describe('ProfessionsService', () => {
     const { service, professions } = setup();
     const result = await service.import(user, 'g1', FIXTURE);
     // Bob is "own" but not one of the user's characters in this guild.
-    assert.deepEqual(result.skipped, [{ name: 'Bob', realm: 'Wild Growth' }]);
+    assert.deepEqual(result.skipped, [{ name: 'Bob', realm: 'Test Realm' }]);
     // Someone else's, seen through a profession link: listed, not imported (nor matched by name).
-    assert.deepEqual(result.linked, [{ name: 'Mira', realm: 'Wild Growth' }]);
+    assert.deepEqual(result.linked, [{ name: 'Mira', realm: 'Test Realm' }]);
     assert.deepEqual(result.imported, [
       // A guildmate's, shared by their addon: any character on the guild's roster.
       {

@@ -638,9 +638,12 @@ take it off the roster (`canEditCharacter` in `src/auth/access-rules.ts`). The c
 shows which. **Verify with Battle.net** on that page (`src/battlenet`) logs the player in on
 Battle.net (OAuth, `wow.profile`; the same Blizzard client as the armory, with
 `BATTLENET_REDIRECT_URI` or `<site>/api/battlenet/callback` registered as its redirect URL) and
-shows their account's characters on Wild Growth EU (Season of Discovery) and whether the character
-is one of them: a preview that changes nothing. At WoW Forever's launch it reads Forever's
-characters and sets `verified_at` (and moves the character to that player); until then
+shows their account's characters on the character's own server and whether the character is one
+of them: a preview that changes nothing. The server is the character's version's armory
+(`armoryNamespace`), its region, and its server's rule set as the armory names it
+(`armoryRuleset` in `allowedServers`, else its `ruleSet`: Forever's RP is the armory's
+"Roleplay", RP-PVP "Roleplay PvP", PVP "PvP", PVE "Normal"); names are compared in full, last name
+too. Later it will set `verified_at` (and move the character to that player); until then
 `verified_at` is set by hand.
 
 Which characters are mains is up to each guild: an Officer gives them a guild attribute (e.g.
@@ -745,8 +748,8 @@ form shows why and the character is added by hand as before.
   none). A character of the other faction is taken for someone else with the same name and left alone, as
   is one the armory doesn't have (checked again 6 hours later). When Blizzard is down the pass stops and
   the next carries on. Open rosters reload; roster posts follow within a minute, as on any roster change.
-- **Verify with Battle.net** (TEST, below) still reads a stand-in server, `src/armory/armory.config.ts`
-  (Season of Discovery on Wild Growth, EU).
+- **Verify with Battle.net** (below) reads the same armory, on the character's own server (its
+  rule set, `armoryRuleset`).
 
 ## Import from armory
 
