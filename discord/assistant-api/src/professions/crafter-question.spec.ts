@@ -97,6 +97,47 @@ describe('findQuestion and matchRecipes', () => {
     assert.equal(ask('who can craft?'), null);
   });
 
+  it('finds the recipe in the gap of a phrase like “looking for * crafter”', () => {
+    assert.deepEqual(ask('looking for flask of titans crafter'), ['Flask of the Titans']);
+    assert.deepEqual(ask('LF mongoose elixir crafters, have mats'), ['Elixir of the Mongoose']);
+    assert.deepEqual(ask('need a thorium smelt crafter pls'), ['Smelt Thorium']);
+    // The words around the gap say nothing about what.
+    assert.deepEqual(ask('need flask of titans crafter, coarse dynamite too'), [
+      'Flask of the Titans',
+    ]);
+  });
+
+  it('asks nothing with the start of a gap phrase but not its end', () => {
+    assert.equal(ask('looking for group'), null);
+    assert.equal(ask('looking for more dps for ZG'), null);
+    assert.equal(ask('looking for silk'), null);
+    assert.equal(ask('LF titans flask'), null);
+  });
+
+  it('keeps a gap to a recipe’s name, give or take', () => {
+    assert.equal(
+      ask('looking for someone with the time tonight to be my next guild flask crafter'),
+      null,
+    );
+  });
+
+  it('leaves a gap that names nothing to the other phrases', () => {
+    assert.deepEqual(ask('looking for a crafter for flask of titans'), ['Flask of the Titans']);
+    assert.deepEqual(ask('LF [Flask of the Titans] crafter'), ['Flask of the Titans']);
+    // On its own, a gap phrase asks nothing with an empty gap, unless the item is linked.
+    const gapOnly = ['looking for * crafter'];
+    assert.equal(findQuestion('looking for a crafter', gapOnly), null);
+    const linked = findQuestion(
+      'looking for https://www.wowhead.com/classic/spell=17557/elixir crafter',
+      gapOnly,
+    );
+    assert.ok(linked);
+    assert.deepEqual(
+      matchRecipes(linked, recipes).map((m) => m.recipe.name),
+      ['Elixir of the Mongoose'],
+    );
+  });
+
   it('uses the phrases it is given', () => {
     const question = findQuestion('wts? no, need flask of titans', ['need flask']);
     assert.ok(question);
@@ -172,12 +213,27 @@ describe('parsePhrases', () => {
 
   it('defaults to the usual phrases', () => {
     assert.deepEqual(parsePhrases(undefined), { phrases: [...DEFAULT_PHRASES] });
+    assert.ok(DEFAULT_PHRASES.includes('looking for * crafter'));
   });
 
   it('refuses one-word phrases, the bot’s own words and an empty list', () => {
     assert.ok('error' in parsePhrases(['craft']));
     assert.ok('error' in parsePhrases(['Can craft']));
     assert.ok('error' in parsePhrases(['  ']));
+  });
+
+  it('takes a gap between words, once, its words on both sides counting', () => {
+    assert.deepEqual(parsePhrases('looking for * crafter\nLF … crafter\nlf...crafter'), {
+      phrases: ['looking for * crafter', 'LF … crafter'],
+    });
+    // A gap is not the same phrase as none.
+    assert.deepEqual(parsePhrases('looking for * crafter\nlooking for crafter'), {
+      phrases: ['looking for * crafter', 'looking for crafter'],
+    });
+    assert.match((parsePhrases(['* crafter']) as { error: string }).error, /between words/);
+    assert.match((parsePhrases(['looking for *']) as { error: string }).error, /between words/);
+    assert.match((parsePhrases(['a * b * c']) as { error: string }).error, /more than one/);
+    assert.ok('error' in parsePhrases(['lf *']));
   });
 });
 

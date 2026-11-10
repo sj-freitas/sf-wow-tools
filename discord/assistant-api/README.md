@@ -1121,8 +1121,18 @@ on logout). Blizzard's Classic Era / SoD API has no professions, hence the addon
   as they arrive (the guild chat) and answers a question about a crafter with who in the guild can
   craft it. Its form: the channel, the **phrases** that make a message a question (one per line;
   two words or more each; default `who can craft`, `who can make`, `LF crafter`, `looking for a
-  crafter` and the like, `DEFAULT_PHRASES` in `crafter-question.ts`), **Send a DM** (on by default)
+  crafter` and the like, and the gap phrases `looking for * crafter`, `lf * crafter` and `need *
+  crafter`, `DEFAULT_PHRASES` in `crafter-question.ts`), **Send a DM** (on by default)
   and **Also post the answer in the channel** (a reply, off by default); at least one of the two.
+  - **Phrases** match word for word, a word with an "s" more or less ("LF crafters"), capitals and
+    punctuation ignored. A **gap phrase** has one `*` (or `…`, `...`) between words where the recipe
+    goes: `looking for * crafter` answers "looking for flask of titans crafter", the recipe being
+    the words in the gap (at most 8, in the same sentence), and never "looking for group" or
+    "looking for silk": a bare `looking for` would answer LFG lines and mats talk, since recipe
+    names match loosely. A gap naming nothing ("looking for a crafter") leaves the message to the
+    other phrases; an empty one is fine when the item is linked. Phrases are saved with the
+    listener, so new defaults only reach new listeners: an existing one gets them by adding them
+    in its form.
   - **What it is about** (`crafter-question.ts`): a Wowhead link (its id, else the name in its
     address) or the game's own item link; else a name in brackets (`[Flask of the Titans]`, as game
     chat shows items: that recipe or nothing, so `[Ez-Thro Dynamite]` the guild can't craft gets

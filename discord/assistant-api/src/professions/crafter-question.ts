@@ -20,6 +20,10 @@ export const DEFAULT_PHRASES: readonly string[] = [
   'looking for a crafter',
   'need a crafter',
   'need crafter',
+  // The recipe between the words: "looking for flask of titans crafter", never "looking for group".
+  'looking for * crafter',
+  'lf * crafter',
+  'need * crafter',
 ];
 
 export const MAX_PHRASES = 40;
@@ -78,6 +82,10 @@ const STOP_WORDS = new Set([
 
 /** Words after (or before) the phrase that are looked at. */
 const MAX_WORDS = 14;
+/** Words a gap phrase's gap may hold ("looking for * crafter"): a recipe's name, give or take. */
+const MAX_GAP = 8;
+/** Where the recipe goes in a phrase: "looking for * crafter" (or "…", "..."). */
+const GAP = /\*|…|\.{3}/;
 
 /** Lower case, no accents, apostrophes dropped, anything else that isn't a letter or digit a space. */
 export function normalize(text: string): string {
@@ -97,9 +105,21 @@ const significant = (word: string): boolean =>
   word.length >= 3 && !STOP_WORDS.has(word) && !/^\d+x?$/.test(word);
 
 /**
+ * A phrase's words: `start`, and for a gap phrase ("looking for * crafter") `end`, the words after
+ * the gap; null for a phrase with none. Split before the words are taken: they'd lose the "*".
+ */
+function phraseParts(phrase: string): { start: string[]; end: string[] | null } {
+  const parts = phrase.split(GAP);
+  return parts.length === 1
+    ? { start: wordsOf(phrase), end: null }
+    : { start: wordsOf(parts[0]), end: wordsOf(parts.slice(1).join(' ')) };
+}
+
+/**
  * The phrases an Officer typed (a list, or one per line), checked: two words or more each (one word,
  * like "craft", would answer half the chat, and the bot's own answers say "can craft"), at most
- * `MAX_PHRASES`. Returns the phrases, or what is wrong.
+ * `MAX_PHRASES`. A phrase may have one gap, a "*" between words where the recipe goes ("looking for
+ * * crafter"); its words on both sides count towards the two. Returns the phrases, or what is wrong.
  */
 export function parsePhrases(input: unknown): { phrases: string[] } | { error: string } {
   const raw = Array.isArray(input)
@@ -111,6 +131,8 @@ export function parsePhrases(input: unknown): { phrases: string[] } | { error: s
         : null;
   if (!raw) return { error: 'The phrases must be a list.' };
   const phrases: string[] = [];
+  /** The phrases so far as their words, a gap as "*": "Who  can craft" repeats "who can craft". */
+  const seen = new Set<string>();
   for (const item of raw) {
     if (typeof item !== 'string') return { error: 'Each phrase must be text.' };
     const phrase = item.trim().replace(/\s+/g, ' ');
@@ -120,14 +142,29 @@ export function parsePhrases(input: unknown): { phrases: string[] } | { error: s
         error: `“${phrase.slice(0, 20)}…” is too long: at most ${MAX_PHRASE_LENGTH} characters.`,
       };
     }
-    const words = wordsOf(phrase);
+    if (phrase.split(GAP).length > 2) {
+      return {
+        error: `“${phrase}” has more than one “*”: use one, where the recipe is, like “looking for * crafter”.`,
+      };
+    }
+    const { start, end } = phraseParts(phrase);
+    if (end && (start.length === 0 || end.length === 0)) {
+      return {
+        error: `In “${phrase}”, the “*” goes between words, where the recipe is: “looking for * crafter”.`,
+      };
+    }
+    const words = [...start, ...(end ?? [])];
     if (words.length < 2) {
       return { error: `“${phrase}” is too short: use two words or more, like “who can craft”.` };
     }
-    if (words.join(' ') === 'can craft') {
+    if (!end && words.join(' ') === 'can craft') {
       return { error: '“can craft” is what the bot’s own answers say: use “who can craft”.' };
     }
-    if (!phrases.some((p) => wordsOf(p).join(' ') === words.join(' '))) phrases.push(phrase);
+    const key = end ? `${start.join(' ')} * ${end.join(' ')}` : words.join(' ');
+    if (!seen.has(key)) {
+      seen.add(key);
+      phrases.push(phrase);
+    }
   }
   if (phrases.length === 0) return { error: 'Add at least one phrase to listen for.' };
   if (phrases.length > MAX_PHRASES) return { error: `At most ${MAX_PHRASES} phrases.` };
@@ -153,17 +190,41 @@ export interface CrafterQuestion {
   words: string[][];
 }
 
-const indexOf = (words: readonly string[], phrase: readonly string[]): number => {
-  for (let i = 0; i + phrase.length <= words.length; i++) {
-    if (phrase.every((word, j) => words[i + j] === word)) return i;
+/** A phrase's word in a message: the same, or with an "s" more or less ("lf crafters"). */
+const sameWord = (word: string, phraseWord: string): boolean =>
+  word === phraseWord ||
+  (phraseWord.length >= 3 && word === `${phraseWord}s`) ||
+  (word.length >= 3 && phraseWord === `${word}s`);
+
+/** Where `phrase` is in `words`, from `from` on; -1 when it isn't. */
+const indexOf = (words: readonly string[], phrase: readonly string[], from = 0): number => {
+  for (let i = from; i + phrase.length <= words.length; i++) {
+    if (phrase.every((word, j) => sameWord(words[i + j], word))) return i;
   }
   return -1;
 };
 
 /**
+ * The words between a gap phrase's `start` and `end` in a clause ("looking for" flask of titans
+ * "crafter"), each time the start is followed by the end, `MAX_GAP` words apart at most.
+ */
+function* gapsIn(
+  words: readonly string[],
+  start: readonly string[],
+  end: readonly string[],
+): Generator<string[]> {
+  for (let i = indexOf(words, start); i >= 0; i = indexOf(words, start, i + 1)) {
+    const from = i + start.length;
+    const to = indexOf(words.slice(0, from + MAX_GAP + end.length), end, from);
+    if (to >= 0) yield words.slice(from, to);
+  }
+}
+
+/**
  * The question in a chat message, or null when it asks no question (none of `phrases` is in it, or
  * it says nothing about what). A phrase must be there even when the message links an item: a
- * message showing off a crafted item isn't a question.
+ * message showing off a crafted item isn't a question. A gap phrase ("looking for * crafter") must
+ * be there whole, its gap holding the recipe: "looking for group" asks nothing.
  */
 export function findQuestion(text: string, phrases: readonly string[]): CrafterQuestion | null {
   const links: CrafterQuestion['links'] = [];
@@ -192,9 +253,19 @@ export function findQuestion(text: string, phrases: readonly string[]): CrafterQ
     .map(wordsOf)
     .filter((words) => words.length > 0);
   for (const phrase of phrases) {
-    const phraseWords = wordsOf(phrase);
+    const { start: phraseWords, end } = phraseParts(phrase);
     if (phraseWords.length === 0) continue;
     for (let c = 0; c < clauses.length; c++) {
+      if (end) {
+        // "looking for flask of titans crafter": the recipe is the gap, nothing else. A gap that
+        // names nothing ("looking for a crafter") leaves the message to the other phrases; an empty
+        // one is fine when the message links the item (a link is blanked out of the words).
+        for (const gap of gapsIn(clauses[c], phraseWords, end)) {
+          if (gap.some(significant)) return { phrase, links, names, words: [gap] };
+          if (links.length > 0 || names.length > 0) return { phrase, links, names, words: [] };
+        }
+        continue;
+      }
       const at = indexOf(clauses[c], phraseWords);
       if (at < 0) continue;
       const after = clauses[c].slice(at + phraseWords.length, at + phraseWords.length + MAX_WORDS);

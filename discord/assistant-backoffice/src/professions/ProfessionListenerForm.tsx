@@ -23,6 +23,9 @@ const DEFAULT_PHRASES = [
   'looking for a crafter',
   'need a crafter',
   'need crafter',
+  'looking for * crafter',
+  'lf * crafter',
+  'need * crafter',
 ];
 
 /**
@@ -118,11 +121,13 @@ export function ProfessionListenerForm({ guild, editing }: PluginFormProps<'PROF
               onChange={(e) => setPhrases(e.target.value)}
               rows={8}
               spellCheck={false}
-              placeholder={'who can craft\nLF crafter'}
+              placeholder={'who can craft\nLF crafter\nlooking for * crafter'}
             />
             <span className="muted">
               Two words or more each; capitals and punctuation don’t matter. What follows the phrase
-              (or comes before it) is matched against the guild’s recipes, typos and all.
+              (or comes before it) is matched against the guild’s recipes, typos and all. A * marks
+              where the recipe goes: “looking for * crafter” answers “looking for flask of titans
+              crafter” but not “looking for group”.
             </span>
           </label>
           <label className="field-toggle">
