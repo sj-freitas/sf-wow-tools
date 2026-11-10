@@ -1,5 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { ArmoryError, ArmoryService } from '../armory/armory.service';
 import { siteOrigin } from '../config/site-origin';
 import { armoryNamespaceFor, armoryRulesetOf } from '../game/games';
 
@@ -17,23 +18,38 @@ export interface BattleNetServer {
   server: string;
 }
 
-/** "EU · Forever · RP": the server the check read, to show with the result. */
+/** "EU · Forever · RP": the character's server, to show with the result. */
 export const serverLabel = ({ gameVersion, region, server }: BattleNetServer): string =>
   `${region.toUpperCase()} · ${gameVersion} · ${server}`;
 
-/** One of the Battle.net account's characters on the server the check reads. */
+/** "EU · Forever": where the account's characters were read (every server of the region). */
+export const accountLabel = ({ gameVersion, region }: BattleNetServer): string =>
+  `${region.toUpperCase()} · ${gameVersion}`;
+
+/** One of the Battle.net account's characters in the version and region the check reads. */
 export interface BattleNetCharacter {
+  /** Blizzard's id for it, the same as in the armory; null when Battle.net doesn't give it. */
+  id: number | null;
   /** In full: "Aqua Aquantos" (with its last name, in a version that has them). */
   name: string;
   level: number | null;
   class: string | null;
   race: string | null;
   faction: string | null;
+  /** Its server's rule set ("Roleplay") when Battle.net says; null when not (Forever's list doesn't). */
+  server: string | null;
+}
+
+/** The character as the armory has it: its id, and its server's rule set ("Roleplay"). */
+export interface ArmoryEntry {
+  id: number | null;
+  ruleset: string;
 }
 
 interface AccountProfile {
   wow_accounts?: {
     characters?: {
+      id?: number;
       name?: string;
       /** Forever: the last name, and the rule set it plays under (it has no realm). */
       surname?: string;
@@ -50,16 +66,25 @@ export class BattleNetError extends Error {}
 
 /**
  * Logging a player in on Battle.net (OAuth, `wow.profile`) to read their account's characters:
- * the check behind "Verify with Battle.net" on a character's page. It reads the characters on the
- * character's own server: its version's armory (`armoryNamespace`), its region, and its server's
- * rule set as the armory names it (`armoryRuleset` in the game config, "Roleplay" for RP). A
- * preview for now: it changes nothing. Uses the same
+ * the check behind "Verify with Battle.net" on a character's page. Two reads: the account's
+ * characters in the character's version and region (its version's `armoryNamespace`), which says
+ * whether the character is theirs; and the character itself in the armory, which says its
+ * server's rule set, checked against the server the character is on (`armoryRuleset` in the game
+ * config, "Roleplay" for RP). The account's list can't say that itself: Forever's has no servers.
+ * A preview for now: it changes nothing. Uses the same
  * Battle.net developer client as the armory (`BLIZZARD_CLIENT_ID`, `BLIZZARD_CLIENT_SECRET`); the
  * client must list `redirectUri` (`BATTLENET_REDIRECT_URI`, else `<site>/api/battlenet/callback`).
  */
 @Injectable()
 export class BattleNetService {
-  constructor(private readonly config: ConfigService) {}
+  private readonly logger = new Logger(BattleNetService.name);
+  /** The fields of the account list's characters were logged once (what Battle.net sends). */
+  private shapeLogged = false;
+
+  constructor(
+    private readonly config: ConfigService,
+    private readonly armory: ArmoryService,
+  ) {}
 
   /** For tests: how requests are made. */
   fetcher: typeof fetch = (input, init) => fetch(input, init);
@@ -127,14 +152,40 @@ export class BattleNetService {
     }
   }
 
-  /** The account's characters on `where`, the character's server, by name. */
-  async characters(token: string, where: BattleNetServer): Promise<BattleNetCharacter[]> {
-    const namespace = armoryNamespaceFor(where.gameVersion, where.region);
-    if (!namespace) {
-      throw new BattleNetError(`${where.gameVersion} has no armory to read characters from.`);
-    }
+  /** The rule set `where`'s server is in the armory ("Roleplay" for RP); throws if unknown. */
+  ruleset(where: BattleNetServer): string {
     const ruleset = armoryRulesetOf(where.gameVersion, where.region, where.server);
     if (!ruleset) throw new BattleNetError(`${serverLabel(where)} isn’t a server we know.`);
+    return ruleset;
+  }
+
+  /**
+   * The character in the armory (by its full name, in its version and region): its id and its
+   * server's rule set. Null when the armory doesn't have it (new, or not there yet).
+   */
+  async armoryEntry(
+    where: BattleNetServer,
+    name: string,
+    lastName: string,
+  ): Promise<ArmoryEntry | null> {
+    const namespace = this.namespace(where);
+    try {
+      const found = await this.armory.lookup(
+        { namespace, region: where.region, name, lastName },
+        { talents: false },
+      );
+      return { id: found.id ?? null, ruleset: found.realm };
+    } catch (error) {
+      if (error instanceof ArmoryError && error.failure === 'not-found') return null;
+      throw new BattleNetError(
+        `The armory couldn’t be read: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  /** The account's characters in `where`'s version and region (every server), by name. */
+  async characters(token: string, where: BattleNetServer): Promise<BattleNetCharacter[]> {
+    const namespace = this.namespace(where);
     const region = where.region.toLowerCase();
     const url =
       `https://${region}.api.blizzard.com/profile/user/wow` +
@@ -149,23 +200,33 @@ export class BattleNetService {
     }
     const profile = (await response.json()) as AccountProfile;
     const all = (profile.wow_accounts ?? []).flatMap((account) => account.characters ?? []);
-    // Better an error than "no characters" for an answer that doesn't say where each one plays.
-    if (all.length > 0 && all.every((character) => !character.ruleset?.name)) {
-      throw new BattleNetError('Battle.net didn’t say which server your characters are on.');
+    if (!this.shapeLogged && all.length > 0) {
+      // Which fields Battle.net gives for this version (names only, nothing about the player).
+      this.shapeLogged = true;
+      this.logger.log(
+        `Battle.net account list (${namespace}): characters have ${Object.keys(all[0]).join(', ')}`,
+      );
     }
     return all
-      .filter(
-        (character) =>
-          character.name && character.ruleset?.name?.toLowerCase() === ruleset.toLowerCase(),
-      )
+      .filter((character) => character.name)
       .map((character) => ({
+        id: typeof character.id === 'number' ? character.id : null,
         name: [character.name!, character.surname].filter(Boolean).join(' '),
         level: character.level ?? null,
         class: character.playable_class?.name ?? null,
         race: character.playable_race?.name ?? null,
         faction: character.faction?.name ?? null,
+        server: character.ruleset?.name ?? null,
       }))
       .sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  private namespace(where: BattleNetServer): string {
+    const namespace = armoryNamespaceFor(where.gameVersion, where.region);
+    if (!namespace) {
+      throw new BattleNetError(`${where.gameVersion} has no armory to read characters from.`);
+    }
+    return namespace;
   }
 
   private async request(url: string, init: RequestInit): Promise<Response> {

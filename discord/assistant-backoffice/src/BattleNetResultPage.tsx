@@ -6,7 +6,10 @@ import { Spinner } from './Loading';
 /** What "Verify with Battle.net" found (the API's BattleNetResultDto). */
 interface BattleNetResult {
   character: { name: string; pagePath: string };
+  /** The character's server ("EU · Forever · RP"). */
   server: string;
+  /** Where the account's characters were read ("EU · Forever"). */
+  account: string;
   battleTag: string | null;
   characters: {
     /** In full, with its last name. */
@@ -15,15 +18,35 @@ interface BattleNetResult {
     class: string | null;
     race: string | null;
     faction: string | null;
+    /** Its server's rule set, when Battle.net says ("Roleplay"). */
+    server: string | null;
   }[];
+  /** The character is on the account. */
   found: boolean;
+  /** Its server's rule set in the armory; null when the armory doesn't have it. */
+  armoryServer: string | null;
+  /** That rule set is its server's here. */
+  sameServer: boolean;
   error: string | null;
 }
 
+/** Whether the character is theirs, and on the server it says, in a sentence. */
+function verdict(result: BattleNetResult): string {
+  const { name } = result.character;
+  if (!result.found) return `❌ ${name} isn’t one of them.`;
+  if (result.armoryServer === null) {
+    return `✅ ${name} is one of them. The armory doesn’t have it yet, so its server isn’t confirmed.`;
+  }
+  if (!result.sameServer) {
+    return `⚠️ ${name} is one of them, but the armory has it on ${result.armoryServer}, not ${result.server}.`;
+  }
+  return `✅ ${name} is one of them, on ${result.server} (${result.armoryServer} in the armory).`;
+}
+
 /**
- * `/battlenet/:id`: where Battle.net's login comes back to. Shows the account's characters on the
- * character's own server ("EU · Forever · RP") and whether the character is one of them. A
- * preview: nothing is changed yet.
+ * `/battlenet/:id`: where Battle.net's login comes back to. Shows the account's characters in the
+ * character's version and region ("EU · Forever"), whether the character is one of them, and
+ * whether the armory has it on its server ("EU · Forever · RP"). A preview: nothing is changed yet.
  */
 export function BattleNetResultPage() {
   const { id = '' } = useParams();
@@ -53,13 +76,9 @@ export function BattleNetResultPage() {
               ? `Battle.net account ${result.battleTag}`
               : 'Your Battle.net account'}{' '}
             has {result.characters.length} character{result.characters.length === 1 ? '' : 's'} on{' '}
-            {result.server}.
+            {result.account}.
           </p>
-          {result.found ? (
-            <p>✅ {result.character.name} is one of them.</p>
-          ) : (
-            <p>❌ {result.character.name} isn’t one of them.</p>
-          )}
+          <p>{verdict(result)}</p>
           {result.characters.length > 0 && (
             <ul className="own-characters">
               {result.characters.map((character) => (
@@ -72,6 +91,7 @@ export function BattleNetResultPage() {
                         character.race,
                         character.class,
                         character.faction,
+                        character.server,
                       ]
                         .filter(Boolean)
                         .join(' · ')}

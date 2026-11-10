@@ -15,7 +15,13 @@ import type { AuthenticatedRequest } from '../auth/auth.types';
 import { CacheService } from '../cache/cache.service';
 import { formatCharacterName } from '../characters/character-name';
 import { PrismaService } from '../database/prisma.service';
-import { BattleNetService, serverLabel, type BattleNetCharacter } from './battlenet.service';
+import {
+  accountLabel,
+  BattleNetService,
+  serverLabel,
+  type BattleNetCharacter,
+  type BattleNetServer,
+} from './battlenet.service';
 
 /** A login started for a character, waiting for Battle.net to send the player back. */
 const STATE_TTL_MS = 10 * 60 * 1000;
@@ -31,16 +37,33 @@ interface PendingCheck {
 export interface BattleNetResultDto {
   /** The character it was for, and its page. */
   character: { name: string; pagePath: string };
-  /** The character's server, which it read ("EU · Forever · RP"). */
+  /** The character's server ("EU · Forever · RP"). */
   server: string;
+  /** Where the account's characters were read: its version and region ("EU · Forever"). */
+  account: string;
   battleTag: string | null;
-  /** The account's characters on that server. */
+  /** The account's characters there, on every server. */
   characters: BattleNetCharacter[];
-  /** Whether the character is one of them. */
+  /** Whether the character is one of them (by Blizzard's id, else by name). */
   found: boolean;
+  /** Its server's rule set in the armory ("Roleplay"); null when the armory doesn't have it. */
+  armoryServer: string | null;
+  /** Whether that is the rule set of the server it's on here (RP is "Roleplay"). */
+  sameServer: boolean;
   /** Why it couldn't check (cancelled, Battle.net down, …); null when it did. */
   error: string | null;
 }
+
+/** The character's version, region and server (`realm` holds the server's name, `RP`). */
+const serverOf = (character: {
+  gameVersion: string;
+  region: string;
+  realm: string;
+}): BattleNetServer => ({
+  gameVersion: character.gameVersion,
+  region: character.region,
+  server: character.realm,
+});
 
 /** Name as compared: lower case, letters only ("Dark Shivan" = "darkshivan"). */
 const nameKey = (name: string) => name.toLowerCase().replace(/[^\p{L}]/gu, '');
@@ -109,21 +132,28 @@ export class BattleNetController {
       });
     }
     try {
+      const where = serverOf(character);
+      const ruleset = this.battleNet.ruleset(where);
       const token = await this.battleNet.exchange(code);
-      const [characters, battleTag] = await Promise.all([
-        this.battleNet.characters(token, {
-          gameVersion: character.gameVersion,
-          region: character.region,
-          server: character.realm,
-        }),
+      // The account's characters say whether it's theirs; the armory, which server it is on.
+      const [characters, battleTag, entry] = await Promise.all([
+        this.battleNet.characters(token, where),
         this.battleNet.battleTag(token),
+        this.battleNet.armoryEntry(where, character.firstName, character.lastName),
       ]);
       const key = nameKey(character.firstName);
       const fullKey = nameKey(`${character.firstName}${character.lastName}`);
+      // Blizzard's id when both reads have it (two characters can share a first name); else names.
+      const found =
+        entry?.id != null && characters.some((c) => c.id !== null)
+          ? characters.some((c) => c.id === entry.id)
+          : characters.some((c) => [key, fullKey].includes(nameKey(c.name)));
       return this.show(res, req.user.id, character, {
         battleTag,
         characters,
-        found: characters.some((c) => [key, fullKey].includes(nameKey(c.name))),
+        found,
+        armoryServer: entry?.ruleset ?? null,
+        sameServer: entry?.ruleset.toLowerCase() === ruleset.toLowerCase(),
       });
     } catch (caught) {
       return this.show(res, req.user.id, character, {
@@ -169,7 +199,12 @@ export class BattleNetController {
     res: Response,
     userId: string,
     character: NonNullable<Awaited<ReturnType<BattleNetController['character']>>>,
-    outcome: Partial<Pick<BattleNetResultDto, 'battleTag' | 'characters' | 'found' | 'error'>>,
+    outcome: Partial<
+      Pick<
+        BattleNetResultDto,
+        'battleTag' | 'characters' | 'found' | 'armoryServer' | 'sameServer' | 'error'
+      >
+    >,
   ): Promise<void> {
     const namePath = character.lastName
       ? `${character.firstName}-${character.lastName}`
@@ -181,14 +216,13 @@ export class BattleNetController {
           .map((part) => part.toLowerCase())
           .join('/')}/characters/${namePath}`,
       },
-      server: serverLabel({
-        gameVersion: character.gameVersion,
-        region: character.region,
-        server: character.realm,
-      }),
+      server: serverLabel(serverOf(character)),
+      account: accountLabel(serverOf(character)),
       battleTag: outcome.battleTag ?? null,
       characters: outcome.characters ?? [],
       found: outcome.found ?? false,
+      armoryServer: outcome.armoryServer ?? null,
+      sameServer: outcome.sameServer ?? false,
       error: outcome.error ?? null,
     };
     const id = randomBytes(12).toString('base64url');

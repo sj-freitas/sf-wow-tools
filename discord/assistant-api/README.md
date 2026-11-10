@@ -638,12 +638,14 @@ take it off the roster (`canEditCharacter` in `src/auth/access-rules.ts`). The c
 shows which. **Verify with Battle.net** on that page (`src/battlenet`) logs the player in on
 Battle.net (OAuth, `wow.profile`; the same Blizzard client as the armory, with
 `BATTLENET_REDIRECT_URI` or `<site>/api/battlenet/callback` registered as its redirect URL) and
-shows their account's characters on the character's own server and whether the character is one
-of them: a preview that changes nothing. The server is the character's version's armory
-(`armoryNamespace`), its region, and its server's rule set as the armory names it
-(`armoryRuleset` in `allowedServers`, else its `ruleSet`: Forever's RP is the armory's
-"Roleplay", RP-PVP "Roleplay PvP", PVP "PvP", PVE "Normal"); names are compared in full, last name
-too. Later it will set `verified_at` (and move the character to that player); until then
+checks two things, a preview that changes nothing. **Is it theirs:** their account's characters
+in the character's version and region (`/profile/user/wow` in its version's `armoryNamespace`,
+all servers: Forever's list doesn't say which server each is on) include it, by Blizzard's
+character id, else by full name. **Is it on its server:** the character itself in the armory (the
+same lookup as "Load from armory") has the rule set of the server it is on here (`armoryRuleset`
+in `allowedServers`, else its `ruleSet`: Forever's RP is the armory's "Roleplay", RP-PVP
+"Roleplay PvP", PVP "PvP", PVE "Normal"). The page shows the account's characters and the verdict.
+Later it will set `verified_at` (and move the character to that player); until then
 `verified_at` is set by hand.
 
 Which characters are mains is up to each guild: an Officer gives them a guild attribute (e.g.

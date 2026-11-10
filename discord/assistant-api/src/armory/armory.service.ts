@@ -4,6 +4,8 @@ import type { TalentBuild } from './spec-roles';
 
 /** What the armory says about a character, reduced to what the character form fills in. */
 export interface ArmoryCharacter {
+  /** Blizzard's id for the character, the same in its player's Battle.net account list. */
+  id?: number;
   name: string;
   class: string;
   race: string;
@@ -64,6 +66,7 @@ function parseTalents(body: SpecializationsResponse): TalentBuild[] | null {
 }
 
 interface ProfileResponse {
+  id?: number;
   name?: string;
   faction?: { name?: string };
   race?: { name?: string };
@@ -214,6 +217,7 @@ export class ArmoryService {
       );
     }
     return {
+      ...(typeof profile.id === 'number' ? { id: profile.id } : {}),
       name: profile.name ? [profile.name, profile.surname].filter(Boolean).join(' ') : trimmed,
       class: characterClass.name,
       race: race.name,
