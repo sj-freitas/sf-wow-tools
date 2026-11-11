@@ -1,5 +1,11 @@
 # GuildAssistant Database
 
+## 1.4.8
+
+- **Click the item** at the top of a recipe's details to open your profession window at that
+  recipe, when this character knows it (hovering it says so). Where the game only lets an addon
+  open the profession, it opens that; where it allows neither, the chat says so.
+
 ## 1.4.7
 
 - The window's bottom line is shorter: where the recipes come from (the game's data, its build and

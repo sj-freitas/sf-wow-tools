@@ -40,6 +40,10 @@ Type `/gadb` (or `/ga-db`), or click the clip on the minimap, to open or close t
 - Hover a recipe, a reagent or a recipe item for the game's tooltip; **shift-click** to link it in
   the chat (a recipe in the list: the recipe, to craft it; the item at the top of its details: the
   item); **ctrl-click** to try it on in the dressing room (a recipe: the item it makes).
+- **Click the item** at the top of the details to open your profession window at that recipe, when
+  this character knows it (its tooltip says so). It takes what the game allows an addon:
+  `C_TradeSkillUI.OpenRecipe`, else just the profession's window (`OpenTradeSkill`); with
+  neither, the chat says so.
 - At the bottom, how many recipes match: hover it for where they come from (the game's data, its
   build, and the sources). The addon's version is in grey on the right.
 

@@ -391,6 +391,8 @@ local function drawDetails()
     d.hint:Hide()
     -- The item it makes (its link on shift-click); an enchant, which makes none, links the recipe.
     d.name.recipe, d.name.item, d.name.hyperlink = recipe, recipe.creates, Game.hyperlink(recipe)
+    local mine = Game.myProfessions()[recipe.profession]
+    d.name.known = mine and mine.knows(recipe) and mine or nil
     d.name.icon:SetTexture(iconOf(recipe))
     d.name.text:SetText(Game.coloredName(recipe))
     d.name:Show()
@@ -851,6 +853,16 @@ local function buildDetails()
     d.hint:SetText("Pick a recipe to see its reagents, how to learn it and who can craft it.\n\nShift-click a recipe to link it in the chat, or the item at the top of its details for the item's link; ctrl-click to try it on. Click a name under Who can craft it to whisper them.")
 
     d.name = linkButton(d, 32)
+    -- A plain click on it opens your profession at the recipe, when this character knows it.
+    d.name:SetScript("OnClick", function(self)
+        if linkClicked(self) or not self.known then return end
+        if not Game.openRecipe(self.recipe, self.known) then
+            Game.say("the game doesn't let addons open your %s window.", self.recipe.profession)
+        end
+    end)
+    d.name:SetScript("OnEnter", function(self)
+        Game.showTooltip(self, self.hyperlink, self.known and ("Click to open it in " .. self.recipe.profession) or nil)
+    end)
     d.info = fontString(d, "GameFontHighlightSmall")
     d.info:SetWidth(width)
     d.info:SetSpacing(2)

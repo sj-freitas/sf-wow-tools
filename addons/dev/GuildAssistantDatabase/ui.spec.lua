@@ -5,7 +5,7 @@
 
 local specPrint = print
 local passed, failed = 0, 0
-local chat, linked, timers, created, dressed, told
+local chat, linked, timers, created, dressed, told, opened
 local function it(name, fn)
     local ok, err = pcall(fn)
     _G.print = specPrint
@@ -149,7 +149,7 @@ end
 -- Sources.fixture.lua), itemNames (what GetItemInfo knows beyond Copper Chain Pants).
 local function loadAddon(options)
     options = options or {}
-    chat, linked, timers, created, dressed, told = {}, {}, {}, {}, {}, {}
+    chat, linked, timers, created, dressed, told, opened = {}, {}, {}, {}, {}, {}, {}
     focused = nil
     _G.print = function(text) chat[#chat + 1] = tostring(text) end
     _G.SlashCmdList = {}
@@ -178,8 +178,8 @@ local function loadAddon(options)
     _G.GetRealmName = function() return "Test Realm" end
     _G.GetProfessions = function() return 1, nil, 3 end
     _G.GetProfessionInfo = function(index)
-        if index == 1 then return "Blacksmithing", "icon", 120, 150 end
-        if index == 3 then return "Cooking", "icon", 40, 75 end
+        if index == 1 then return "Blacksmithing", "icon", 120, 150, 0, 0, 164 end
+        if index == 3 then return "Cooking", "icon", 40, 75, 0, 0, 185 end
     end
     _G.GetNumSkillLines, _G.GetSkillLineInfo = nil, nil
     _G.IsPlayerSpell = function(id) return (options.knownSpells or {})[id] == true end
@@ -201,6 +201,12 @@ local function loadAddon(options)
     _G.DressUpItemLink = function(link) dressed[#dressed + 1] = link end
     _G.ChatFrame_SendTell = function(name) told[#told + 1] = name end
     _G.C_AddOns = nil
+    -- options.tradeSkill: what the game has to open a profession window ("recipe": both, "profession":
+    -- OpenTradeSkill alone); none by default.
+    _G.C_TradeSkillUI = options.tradeSkill and {
+        OpenRecipe = options.tradeSkill == "recipe" and function(id) opened[#opened + 1] = "recipe " .. id end or nil,
+        OpenTradeSkill = function(skillLine) opened[#opened + 1] = "profession " .. skillLine end,
+    } or nil
     _G.GetAddOnMetadata = function(name, field)
         if name == "GuildAssistantDatabase" and field == "Version" and not options.noVersion then return "9.9.9" end
     end
@@ -702,6 +708,40 @@ it("links a recipe or item in the chat on shift-click, and shows its tooltip on 
     _G.IsShiftKeyDown = function() return true end
     d.name:Click()
     eq(linked[3], "|cff71d5ff|Hspell:7418|h[Enchant]|h|r")
+end)
+
+it("opens your profession at a recipe you know on a click on the item at the top of its details", function()
+    local ns = loadAddon({ professionsAddon = true, tradeSkill = "recipe" })
+    SlashCmdList.GADB("breastplate")
+    rowNamed(ns, "Runed Copper Breastplate"):Click()
+    local d = ns.UI.parts().details
+    d.name:Fire("OnEnter")
+    eq(GameTooltip.lines[1], "Click to open it in Blacksmithing", "said under the item's tooltip")
+    d.name:Click()
+    eq(opened[1], "recipe 2667", "at the recipe")
+    -- Shift-click links it, as before (this item isn't loaded yet: said), and opens nothing.
+    _G.IsShiftKeyDown = function() return true end
+    d.name:Click()
+    eq(#opened, 1); eq(said("doesn't have that item yet"), true)
+    _G.IsShiftKeyDown = function() return false end
+    -- One this character doesn't know: no hint, and a click does nothing.
+    rowNamed(ns, "Ornate Mithril Breastplate"):Click()
+    d.name:Fire("OnEnter")
+    eq(#GameTooltip.lines, 0)
+    d.name:Click()
+    eq(#opened, 1)
+    -- A game that can only open the profession: its window, by its skill line.
+    local ns2 = loadAddon({ professionsAddon = true, tradeSkill = "profession" })
+    SlashCmdList.GADB("breastplate")
+    rowNamed(ns2, "Runed Copper Breastplate"):Click()
+    ns2.UI.parts().details.name:Click()
+    eq(opened[1], "profession 164")
+    -- One that can't: said.
+    local ns3 = loadAddon({ professionsAddon = true })
+    SlashCmdList.GADB("breastplate")
+    rowNamed(ns3, "Runed Copper Breastplate"):Click()
+    ns3.UI.parts().details.name:Click()
+    eq(said("the game doesn't let addons open your Blacksmithing window."), true)
 end)
 
 it("tries an item on in the dressing room on ctrl-click: a recipe's, the item it makes", function()

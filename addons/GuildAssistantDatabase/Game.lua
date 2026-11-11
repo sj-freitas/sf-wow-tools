@@ -55,8 +55,8 @@ function Game.liveProfessions()
     local skills = {}
     if GetProfessions and GetProfessionInfo then
         for _, index in pairs({ GetProfessions() }) do
-            local name, _, rank, max = GetProfessionInfo(index)
-            if name then skills[name] = { rank = rank, max = max } end
+            local name, _, rank, max, _, _, skillLine = GetProfessionInfo(index)
+            if name then skills[name] = { rank = rank, max = max, skillLine = skillLine } end
         end
     elseif GetNumSkillLines and GetSkillLineInfo then
         local inProfessions = false
@@ -89,7 +89,7 @@ function Game.myProfessions()
         local record = saved and saved.professions and saved.professions[name]
         local recorded = record ~= nil and next(record.recipes or {}) ~= nil
         mine[name] = {
-            name = name, rank = skill.rank or 0, max = skill.max or 0, recorded = recorded,
+            name = name, rank = skill.rank or 0, max = skill.max or 0, recorded = recorded, skillLine = skill.skillLine,
             knows = function(recipe)
                 if recorded then return Core.knows(record, recipe) end
                 return IsPlayerSpell ~= nil and IsPlayerSpell(recipe.id) == true
@@ -222,11 +222,30 @@ function Game.whisper(target)
     end
 end
 
-function Game.showTooltip(owner, hyperlink)
+--- The game's tooltip for `hyperlink`, with `hint` (what a click does) in green under it when given.
+function Game.showTooltip(owner, hyperlink, hint)
     if not GameTooltip then return end
     GameTooltip:SetOwner(owner, "ANCHOR_RIGHT")
     GameTooltip:SetHyperlink(hyperlink)
+    if hint then GameTooltip:AddLine(hint, 0.1, 1, 0.1) end
     GameTooltip:Show()
+end
+
+--- Opens this character's profession window at the recipe (Game.myProfessions' `profession`), as
+--- far as the game lets an addon: at the recipe (C_TradeSkillUI.OpenRecipe; a recipe's id is its
+--- crafting spell's, as the game's), else the profession's window (OpenTradeSkill, by its skill
+--- line). Returns whether it could.
+function Game.openRecipe(recipe, profession)
+    local ui = C_TradeSkillUI
+    if ui and ui.OpenRecipe then
+        ui.OpenRecipe(recipe.id)
+        return true
+    end
+    if ui and ui.OpenTradeSkill and profession.skillLine then
+        ui.OpenTradeSkill(profession.skillLine)
+        return true
+    end
+    return false
 end
 
 --- A tooltip of plain text: `title`, then each of `lines` in white.
