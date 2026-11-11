@@ -1,5 +1,13 @@
 # GuildAssistant Database
 
+## 1.4.0
+
+- **Show unknown recipes** has its own section in the Filter: recipes no one knows how to get
+  (unreleased, removed, or not found yet). Unticked at first; once ticked it stays ticked, also
+  after Clear, Reset or logging out.
+- A recipe whose plans (pattern, formula…) someone found is known now, even if it wasn't before:
+  it shows without ticking anything, and no longer says "No known source".
+
 ## 1.3.0
 
 - What players found of how recipes are obtained, gathered by Guild Assistant from their

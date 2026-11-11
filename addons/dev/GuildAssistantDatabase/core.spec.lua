@@ -251,6 +251,20 @@ it("vouches for the recipes a companion lists, and hides the others when asked",
     eq(names(Core.search({ blacksmithing }, { terms = Core.terms("gauntlets") })), "Ironforge Gauntlets", "shown when not asked to hide")
 end)
 
+it("knows a recipe when a source says where its plans come from, even if none lists the recipe", function()
+    -- A complete source that lists no recipe, and a drop of the Golden Scale Coif's plans.
+    local complete = { name = "Seed", complete = true, recipes = "", items = "6047\t\t\t\tD:Badlands=Some Ogre" }
+    local ns = {}
+    assert(loadfile("GuildAssistantDatabase/Core.lua"))("GuildAssistantDatabase", ns)
+    assert(loadfile("dev/GuildAssistantDatabase/Data.fixture.lua"))("GuildAssistantDatabase", ns)
+    local blacksmithing = ns.Core.load(ns.Data.professions[1], { complete })
+    local coif = recipeNamed(blacksmithing, "Golden Scale Coif")
+    eq(coif.vouched, true, "its plans' drop vouches for it")
+    eq(table.concat(ns.Core.howToLearn(coif), " | "), "Drop: Some Ogre (Badlands)", "no 'No known source'")
+    eq(recipeNamed(blacksmithing, "Copper Chain Pants").vouched, false, "nothing known of this one")
+    eq(blacksmithing.vouchedCount, 1)
+end)
+
 it("takes a companion's stats with values and the names the game's tables lack", function()
     local loaded = withSources()
     local ornate = recipeNamed(loaded.Blacksmithing, "Ornate Mithril Breastplate")

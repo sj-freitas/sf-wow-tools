@@ -268,10 +268,18 @@ function Core.load(entry, providers)
             -- By its spell, by the item it makes, by its name (what a trainer window shows): all of them.
             local known = combined(sources.recipes[id], recipe.creates and sources.byItem[recipe.creates.id],
                 sources.byName[recipe.name:lower()])
+            -- A source saying where its plans (pattern, formula…) come from vouches for it too: a drop
+            -- found for a recipe nobody listed makes it known.
+            local taught = false
+            for _, recipeItem in ipairs(recipe.recipeItems) do
+                if #recipeItem.sources > 0 then taught = true end
+            end
             -- Unvouched (false) only when a complete source would have listed it.
-            if known then
+            if known or taught then
                 recipe.vouched = true
-                recipe.sources, recipe.trainingCost, recipe.trainers = known.codes, known.cost, known.trainers
+                if known then
+                    recipe.sources, recipe.trainingCost, recipe.trainers = known.codes, known.cost, known.trainers
+                end
                 vouched = vouched + 1
             elseif sources.complete then
                 recipe.vouched = false

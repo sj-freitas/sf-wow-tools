@@ -102,6 +102,13 @@ function Game.zoneName(id)
     return nil
 end
 
+--- The account's saved settings (GuildAssistantDatabaseDB): the minimap button's place, whether
+--- unknown recipes are shown.
+function Game.savedSettings()
+    GuildAssistantDatabaseDB = type(GuildAssistantDatabaseDB) == "table" and GuildAssistantDatabaseDB or {}
+    return GuildAssistantDatabaseDB
+end
+
 local providers
 --- The sources: those in GuildAssistantDatabaseSources (the seed, Seed.lua, and any companion), and
 --- what GuildAssistant Professions saw, as it was the first time they were asked for (what it sees

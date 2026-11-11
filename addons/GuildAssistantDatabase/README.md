@@ -21,8 +21,9 @@ Type `/gadb` (or `/ga-db`), or click the clip on the minimap, to open or close t
   **Skill**: the profession skill it takes to learn. Leave a box empty for no limit.
 - **Filter**: tick armor types (Cloth, Leather, Mail, Plate) and slots (Head, Chest, One-Hand,
   Ranged…). Any of the armor types ticked, and any of the slots; both when both have some. The
-  button says how many are ticked. With a sources companion installed (below), **Recipes with no
-  known source** shows the recipes it doesn't vouch for too.
+  button says how many are ticked. Under a line, **Show unknown recipes** also lists the recipes
+  no source knows (unreleased, removed, or not found yet): unticked at first, and once ticked it
+  stays ticked (saved for the account; Clear and Reset leave it).
 - While searching (words, limits or a filter), each profession on the left says in gold how many
   of its recipes match, and nothing when none do; without a search, how many it has.
 - **Not known yet**: only your professions' recipes this character doesn't know yet. The skill
@@ -68,7 +69,8 @@ data files. It comes from **sources**, listed under the details ("Sources: …")
   "Sources companions").
 
 Recipes no source vouches for (unreleased, removed, or not found yet) are hidden unless you tick
-**Recipes with no known source** in the Filter; one a guildmate has learned shows. When nothing
+**Show unknown recipes** in the Filter. One a guildmate has learned shows, and so does one whose
+plans someone found (a source says where they drop or who sells them). When nothing
 says how, the window says what it can ("From the item below", "A trainer or a quest").
 
 ## Where the data comes from
@@ -81,8 +83,8 @@ Action does it for each new build; see "GuildAssistant Database's data" in
 item's level): the tooltip shows them. A few items aren't in them either (the servers send them):
 those are named as the game names them in play.
 
-Only the minimap button's place (and whether it's hidden) is saved, per account
-(`GuildAssistantDatabaseDB`).
+Only the minimap button's place (and whether it's hidden) and **Show unknown recipes** are saved,
+per account (`GuildAssistantDatabaseDB`).
 
 ## Thanks
 

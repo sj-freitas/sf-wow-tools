@@ -34,7 +34,7 @@ local state = {
     loadingScheduled = false,
     mine = {}, -- Game.myProfessions() at the last refresh
     slots = {}, armor = {}, -- the Filter's choices, by name (Core.SLOTS, Core.ARMOR_TYPES)
-    showUnvouched = false, -- with a sources companion: also recipes none of them lists
+    showUnvouched = false, -- "Show unknown recipes": also those no source knows (saved: showUnknown)
     counts = nil, -- with a search: how many recipes of each profession match ({ [name] = n })
     total = 0, -- how many match in all the listed professions
 }
@@ -548,11 +548,10 @@ local function updateFilterButton()
     filterButton:SetText(picked > 0 and ("Filter (%d)"):format(picked) or "Filter")
 end
 
---- Unticks every armor type and slot, and hides recipes with no known source again.
+--- Unticks every armor type and slot. "Show unknown recipes" is a saved preference: it stays.
 function UI.clearFilter()
-    state.slots, state.armor, state.showUnvouched = {}, {}, false
+    state.slots, state.armor = {}, {}
     for _, check in pairs(filterChecks) do check:SetChecked(false) end
-    if filterPopup and filterPopup.unvouched then filterPopup.unvouched:SetChecked(false) end
     updateFilterButton()
 end
 
@@ -588,7 +587,7 @@ local function buildFilterPopup()
     local slotColumns, slotRows = 3, math.ceil(#Core.SLOTS / 3)
     filterPopup = CreateFrame("Frame", nil, frame)
     filterPopup:SetFrameStrata("DIALOG")
-    filterPopup:SetSize(20 + (1 + slotColumns) * FILTER_COLUMN, 30 + slotRows * FILTER_ROW + 36 + FILTER_ROW + 6)
+    filterPopup:SetSize(20 + (1 + slotColumns) * FILTER_COLUMN, 30 + slotRows * FILTER_ROW + 88)
     filterPopup:SetPoint("TOPRIGHT", filterButton, "BOTTOMRIGHT", 0, -2)
     filterPopup:EnableMouse(true) -- clicks on it don't reach the list below
     local edge = filterPopup:CreateTexture(nil, "BACKGROUND")
@@ -612,22 +611,37 @@ local function buildFilterPopup()
         filterCheck("slots", choice.name, 1 + math.floor((i - 1) / slotRows), (i - 1) % slotRows)
     end
 
-    -- With a sources companion installed: also the recipes none of them lists (unreleased, removed,
-    -- or not recorded yet), hidden otherwise.
-    local unvouched = CreateFrame("CheckButton", nil, filterPopup, "UICheckButtonTemplate")
+    -- Its own section, under a line: "Show unknown recipes", those no source knows (unreleased,
+    -- removed, or not found yet), hidden otherwise. A saved preference (showUnknown): it stays ticked
+    -- across sessions, and Clear and Reset leave it. Only there when a complete source is (the seed).
+    local section = CreateFrame("Frame", nil, filterPopup)
+    section:SetPoint("TOPLEFT", filterPopup, "TOPLEFT", 0, -30 - slotRows * FILTER_ROW - 4)
+    section:SetPoint("RIGHT", filterPopup, "RIGHT", 0, 0)
+    section:SetHeight(48)
+    local line = section:CreateTexture(nil, "ARTWORK")
+    line:SetHeight(1)
+    line:SetPoint("TOPLEFT", section, "TOPLEFT", 10, 0)
+    line:SetPoint("TOPRIGHT", section, "TOPRIGHT", -10, 0)
+    line:SetColorTexture(0.55, 0.45, 0.2, 0.6)
+    local unvouched = CreateFrame("CheckButton", nil, section, "UICheckButtonTemplate")
     unvouched:SetSize(20, 20)
-    unvouched:SetPoint("TOPLEFT", filterPopup, "TOPLEFT", 10, -30 - slotRows * FILTER_ROW - 6)
+    unvouched:SetPoint("TOPLEFT", section, "TOPLEFT", 10, -8)
     local unvouchedText = unvouched.text or unvouched.Text or fontString(unvouched, "GameFontHighlightSmall")
     unvouchedText:ClearAllPoints()
     unvouchedText:SetPoint("LEFT", unvouched, "RIGHT", 1, 0)
-    unvouchedText:SetText("Recipes with no known source (unreleased, removed, or not recorded yet)")
+    unvouchedText:SetText("Show unknown recipes")
+    local hint = fontString(section, "GameFontDisableSmall")
+    hint:SetPoint("TOPLEFT", unvouched, "BOTTOMLEFT", 22, 0)
+    hint:SetText("No known source: unreleased, removed, or not found yet")
+    unvouched:SetChecked(state.showUnvouched)
     unvouched:SetScript("OnClick", function(self)
         state.showUnvouched, state.offset = self:GetChecked() and true or false, 0
+        Game.savedSettings().showUnknown = state.showUnvouched
         UI.refresh()
     end)
-    filterPopup.unvouched = unvouched
+    filterPopup.unvouched, filterPopup.unknownSection = unvouched, section
     filterPopup:SetScript("OnShow", function(self)
-        self.unvouched:SetShown(Game.hidesUnvouched())
+        self.unknownSection:SetShown(Game.hidesUnvouched())
     end)
 
     local clear = CreateFrame("Button", nil, filterPopup, "UIPanelButtonTemplate")
@@ -820,6 +834,7 @@ local function build()
     title:SetText("GuildAssistant Database")
     tinsert(UISpecialFrames, "GuildAssistantDatabaseFrame")
 
+    state.showUnvouched = Game.savedSettings().showUnknown == true
     buildFilters()
     buildFilterPopup()
     buildSidebar()

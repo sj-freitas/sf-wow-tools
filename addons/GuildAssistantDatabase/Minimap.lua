@@ -15,8 +15,7 @@ local button
 
 --- The saved settings of the button: { angle, hidden }.
 local function settings()
-    GuildAssistantDatabaseDB = type(GuildAssistantDatabaseDB) == "table" and GuildAssistantDatabaseDB or {}
-    local db = GuildAssistantDatabaseDB
+    local db = ns.Game.savedSettings()
     if type(db.minimap) ~= "table" then db.minimap = {} end
     db.minimap.angle = tonumber(db.minimap.angle) or DEFAULT_ANGLE
     return db.minimap
