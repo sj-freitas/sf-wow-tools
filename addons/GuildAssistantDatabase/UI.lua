@@ -92,12 +92,17 @@ local function linkable(button)
     button:SetScript("OnLeave", Game.hideTooltip)
 end
 
--- Shift-click: its link in the chat. Ctrl-click: the item tried on in the dressing room (a
--- recipe's: the item it makes). Returns whether it was one of those rather than a plain click.
+-- Shift-click: its link in the chat, the item's when it shows one (a reagent, plans, the top of the
+-- details), else the recipe's, to craft it (a row of the list), as the game's profession window
+-- does. Ctrl-click: the item tried on in the dressing room (a recipe's: the item it makes).
+-- Returns whether it was one of those rather than a plain click.
 local function linkClicked(self)
     if IsModifiedClick and IsModifiedClick("CHATLINK") or (IsShiftKeyDown and IsShiftKeyDown()) then
-        if self.item then Game.insertLink(Game.chatLink(self.item, false)) end
-        if self.recipe then Game.insertLink(Game.chatLink(self.recipe, true)) end
+        if self.item then
+            Game.insertLink(Game.chatLink(self.item, false))
+        elseif self.recipe then
+            Game.insertLink(Game.chatLink(self.recipe, true))
+        end
         return true
     end
     local item = self.item or (self.recipe and self.recipe.creates)
@@ -344,7 +349,8 @@ local function drawDetails()
         return
     end
     d.hint:Hide()
-    d.name.recipe, d.name.hyperlink = recipe, Game.hyperlink(recipe)
+    -- The item it makes (its link on shift-click); an enchant, which makes none, links the recipe.
+    d.name.recipe, d.name.item, d.name.hyperlink = recipe, recipe.creates, Game.hyperlink(recipe)
     d.name.icon:SetTexture(iconOf(recipe))
     d.name.text:SetText(Game.coloredName(recipe))
     d.name:Show()
@@ -802,7 +808,7 @@ local function buildDetails()
     d.hint = fontString(d, "GameFontDisable")
     d.hint:SetPoint("TOPLEFT", d, "TOPLEFT", 10, -10)
     d.hint:SetWidth(width)
-    d.hint:SetText("Pick a recipe to see its reagents, how to learn it and who can craft it.\n\nShift-click a recipe or an item to link it in the chat; ctrl-click to try it on.")
+    d.hint:SetText("Pick a recipe to see its reagents, how to learn it and who can craft it.\n\nShift-click a recipe to link it in the chat, or the item at the top of its details for the item's link; ctrl-click to try it on.")
 
     d.name = linkButton(d, 32)
     d.info = fontString(d, "GameFontHighlightSmall")

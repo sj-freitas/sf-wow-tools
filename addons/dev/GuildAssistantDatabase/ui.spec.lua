@@ -596,19 +596,36 @@ it("shows an enchant (no item) by its spell", function()
 end)
 
 it("links a recipe or item in the chat on shift-click, and shows its tooltip on hover", function()
-    local ns = loadAddon({ shift = true })
+    local ns = loadAddon()
     SlashCmdList.GADB("pants")
     local row = rowNamed(ns, "Copper Chain Pants")
     row:Fire("OnEnter")
     eq(GameTooltip.last[1], "Show")
     row:Click()
-    eq(linked[1], "|cff1eff00|Hitem:2852::::::::4:::::::|h[Copper Chain Pants]|h|r")
-    eq(ns.UI.parts().state.selected, nil, "shift-click links, doesn't pick")
+    local d = ns.UI.parts().details
+    _G.IsShiftKeyDown = function() return true end
+    -- A recipe in the list: the recipe, to craft it (its spell's link, as the game makes it).
+    row:Click()
+    eq(linked[1], "|cff71d5ff|Hspell:" .. row.recipe.id .. "|h[Enchant]|h|r")
+    -- The item at the top of its details: the item.
+    d.name:Click()
+    eq(linked[2], "|cff1eff00|Hitem:2852::::::::4:::::::|h[Copper Chain Pants]|h|r")
+    eq(ns.UI.parts().state.selected.name, "Copper Chain Pants", "shift-click links, doesn't pick another")
     -- An item the game doesn't have yet: said, nothing linked.
     SlashCmdList.GADB("breastplate")
+    _G.IsShiftKeyDown = function() return false end
     rowNamed(ns, "Runed Copper Breastplate"):Click()
-    eq(#linked, 1)
+    _G.IsShiftKeyDown = function() return true end
+    d.name:Click()
+    eq(#linked, 2)
     eq(said("doesn't have that item yet"), true)
+    -- An enchant makes no item: the top of its details links the recipe too.
+    SlashCmdList.GADB("bracer")
+    _G.IsShiftKeyDown = function() return false end
+    rowNamed(ns, "Enchant Bracer - Minor Health"):Click()
+    _G.IsShiftKeyDown = function() return true end
+    d.name:Click()
+    eq(linked[3], "|cff71d5ff|Hspell:7418|h[Enchant]|h|r")
 end)
 
 it("tries an item on in the dressing room on ctrl-click: a recipe's, the item it makes", function()

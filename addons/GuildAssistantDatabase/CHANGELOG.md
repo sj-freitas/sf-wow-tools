@@ -1,5 +1,11 @@
 # GuildAssistant Database
 
+## 1.4.4
+
+- **Shift-click** a recipe in the list to link the recipe in the chat (to craft it), as the game's
+  profession window does; shift-click the item at the top of its details to link the item.
+  Reagents and plans link themselves, as before.
+
 ## 1.4.3
 
 - **Ctrl-click** a recipe, a reagent or plans to try the item on in the dressing room (a recipe:

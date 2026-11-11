@@ -172,13 +172,14 @@ function Game.hyperlink(recipe)
 end
 
 --- A link to put in the chat: the game's own (it checks links sent in the chat), nil when the
---- game doesn't have the item yet (asked for, so it does next time).
+--- game doesn't have the item yet (asked for, so it does next time). A recipe's is its crafting
+--- spell's, as a profession window links it; an item's, the item's.
 function Game.chatLink(itemOrRecipe, isRecipe)
-    if isRecipe and not itemOrRecipe.creates then
+    if isRecipe then
         local spellLink = (C_Spell and C_Spell.GetSpellLink) or GetSpellLink
         return spellLink and spellLink(itemOrRecipe.id) or nil
     end
-    local id = isRecipe and itemOrRecipe.creates.id or itemOrRecipe.id
+    local id = itemOrRecipe.id
     local info = (C_Item and C_Item.GetItemInfo) or GetItemInfo
     local link = info and select(2, info(id))
     if not link and C_Item and C_Item.RequestLoadItemDataByID then C_Item.RequestLoadItemDataByID(id) end
