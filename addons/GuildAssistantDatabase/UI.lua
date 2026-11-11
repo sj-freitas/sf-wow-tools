@@ -509,12 +509,24 @@ local function buildFilters()
     maxSkillBox = numberBox(frame, 34)
     maxSkillBox:SetPoint("LEFT", dash2, "RIGHT", 8, 0)
 
+    -- Tab goes to the next box, Shift-Tab to the one before, round all five; the box's text is
+    -- selected, so typing replaces it.
+    local boxes = { searchBox, minLevelBox, maxLevelBox, minSkillBox, maxSkillBox }
+    for i, box in ipairs(boxes) do
+        box:SetScript("OnTabPressed", function()
+            local back = IsShiftKeyDown and IsShiftKeyDown()
+            local nextBox = boxes[(i + (back and -2 or 0)) % #boxes + 1]
+            nextBox:SetFocus()
+            nextBox:HighlightText()
+        end)
+    end
+
     resetButton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
     resetButton:SetSize(70, 22)
     resetButton:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -14, -33)
     resetButton:SetText("Reset")
     resetButton:SetScript("OnClick", function()
-        for _, box in ipairs({ searchBox, minLevelBox, maxLevelBox, minSkillBox, maxSkillBox }) do
+        for _, box in ipairs(boxes) do
             box:SetText("")
             box:ClearFocus()
         end

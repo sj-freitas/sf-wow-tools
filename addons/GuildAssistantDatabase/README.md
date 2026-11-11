@@ -19,6 +19,8 @@ Type `/gadb` (or `/ga-db`), or click the clip on the minimap, to open or close t
   first. The cross at its end clears it.
 - **Level**: the level the item it makes requires (an item that needs none counts as level 1).
   **Skill**: the profession skill it takes to learn. Leave a box empty for no limit.
+- **Tab** moves from one box to the next (search, then the level and skill boxes), **Shift-Tab**
+  back.
 - **Filter**: tick armor types (Cloth, Leather, Mail, Plate) and slots (Head, Chest, One-Hand,
   Ranged…). Any of the armor types ticked, and any of the slots; both when both have some. The
   button says how many are ticked. Under a line, **Show unknown recipes** also lists the recipes

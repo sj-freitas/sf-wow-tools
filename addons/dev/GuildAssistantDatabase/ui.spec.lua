@@ -88,11 +88,20 @@ function Region:SetText(text)
 end
 function Region:GetText() return self._text end
 function Region:SetTexture(texture) self._texture = texture end
+-- One box has the focus at a time, as in the game: focusing one takes it from the other.
+local focused
 function Region:HasFocus() return self._focus == true end
-function Region:SetFocus() self._focus = true; self:Fire("OnEditFocusGained") end
+function Region:SetFocus()
+    if focused and focused ~= self then focused:ClearFocus() end
+    focused = self
+    self._focus = true
+    self:Fire("OnEditFocusGained")
+end
 function Region:ClearFocus()
+    if focused == self then focused = nil end
     if self._focus then self._focus = false; self:Fire("OnEditFocusLost") end
 end
+function Region:HighlightText() self._highlighted = true end
 function Region:SetChecked(checked) self._checked = checked and true or false end
 function Region:GetChecked() return self._checked end
 function Region:SetMinMaxValues(min, max) self._min, self._max = min, max end
@@ -139,6 +148,7 @@ end
 local function loadAddon(options)
     options = options or {}
     chat, linked, timers, created = {}, {}, {}, {}
+    focused = nil
     _G.print = function(text) chat[#chat + 1] = tostring(text) end
     _G.SlashCmdList = {}
     _G.UISpecialFrames = {}
@@ -350,6 +360,35 @@ it("keeps the level and skill within the boxes' limits", function()
     parts.maxLevelBox:SetText("")
     parts.minSkillBox:SetText("200")
     eq(shownRows(ns), "The Shatterer, Ornate Mithril Breastplate")
+end)
+
+it("moves between the boxes with Tab, and back with Shift-Tab, round all five", function()
+    local ns = loadAddon()
+    SlashCmdList.GADB("")
+    local parts = ns.UI.parts()
+    local boxes = { parts.searchBox, parts.minLevelBox, parts.maxLevelBox, parts.minSkillBox, parts.maxSkillBox }
+    -- Which box has the focus (only ever one).
+    local function at()
+        local found = {}
+        for i, box in ipairs(boxes) do if box:HasFocus() then found[#found + 1] = i end end
+        eq(#found, 1, "boxes with the focus")
+        return found[1]
+    end
+    parts.searchBox:SetFocus()
+    local visited = {}
+    for _ = 1, 5 do
+        boxes[at()]:Fire("OnTabPressed")
+        visited[#visited + 1] = at()
+    end
+    eq(table.concat(visited, " "), "2 3 4 5 1", "forwards, and from the last back to the search")
+    _G.IsShiftKeyDown = function() return true end
+    visited = {}
+    for _ = 1, 5 do
+        boxes[at()]:Fire("OnTabPressed")
+        visited[#visited + 1] = at()
+    end
+    eq(table.concat(visited, " "), "5 4 3 2 1", "backwards, and from the search to the last")
+    eq(parts.maxLevelBox._highlighted, true, "its text selected, so typing replaces it")
 end)
 
 it("shows one profession when it's picked on the left, and Reset clears it all", function()

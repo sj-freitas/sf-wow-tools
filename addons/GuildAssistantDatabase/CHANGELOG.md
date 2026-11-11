@@ -1,5 +1,10 @@
 # GuildAssistant Database
 
+## 1.4.2
+
+- **Tab** moves from the search box to the level and skill boxes and round again; **Shift-Tab**
+  goes back. The box's text is selected, so typing replaces it.
+
 ## 1.4.1
 
 - A recipe's details no longer end with a grey "Sources: …" line: hover **How to learn it** to see
