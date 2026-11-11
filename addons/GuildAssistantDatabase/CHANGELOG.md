@@ -1,5 +1,11 @@
 # GuildAssistant Database
 
+## 0.3.0
+
+- A minimap button, GuildAssistant's clip: click it to open or close the window, drag it around
+  the minimap. `/gadb minimap` hides it (or brings it back). Where it sits is remembered.
+- The clip is the addon's icon in the game's addon list too.
+
 ## 0.2.0
 
 - While you search, each profession on the left says how many of its recipes match (in gold), so

@@ -336,6 +336,21 @@ function Core.crafters(db, recipe, you)
     return found
 end
 
+-- The minimap button ------------------------------------------------------------------------------
+
+--- Where the minimap button sits from the minimap's centre: `angle` degrees counter-clockwise from
+--- its right, `radius` away.
+function Core.minimapOffset(angle, radius)
+    local rad = math.rad(angle)
+    return math.cos(rad) * radius, math.sin(rad) * radius
+end
+
+--- The angle (degrees, 0 to 360) of a point `dx`, `dy` from the minimap's centre.
+function Core.angleTo(dx, dy)
+    local atan2 = math.atan2 or math.atan -- the game's Lua 5.1 has atan2; 5.3's atan takes two
+    return math.deg(atan2(dy, dx)) % 360
+end
+
 --- "1,234".
 function Core.thousands(n)
     local text = tostring(math.floor(n))

@@ -9,8 +9,9 @@ Made for WoW Forever: its data is Wowhead's for Forever. Experimental: not on Cu
 
 ## Using it
 
-Type `/gadb` (or `/ga-db`) to open or close the window; `/gadb mithril` opens it searching for
-"mithril".
+Type `/gadb` (or `/ga-db`), or click the clip on the minimap, to open or close the window;
+`/gadb mithril` opens it searching for "mithril". Drag the clip to move it around the minimap;
+`/gadb minimap` hides it (and brings it back).
 
 - **Search** (top left): words that must all be somewhere in the recipe: its name, the item it
   makes (its slot, type and stats: `plate chest`, `stamina`, `fire resistance`, `maces`), its
@@ -56,4 +57,5 @@ pattern drops, who sells it, which quest gives it). `npm run database` in `addon
 addon's `Data.lua` from them; see "GuildAssistant Database's data" in
 [addons/README.md](../README.md). Zone names and item types come from the game itself.
 
-Nothing is saved between sessions.
+Only the minimap button's place (and whether it's hidden) is saved, per account
+(`GuildAssistantDatabaseDB`).

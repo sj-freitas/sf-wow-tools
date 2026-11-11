@@ -54,9 +54,16 @@ for _, name in ipairs({ "SetSize", "SetPoint", "SetFrameStrata", "SetToplevel", 
     "SetMovable", "RegisterForDrag", "StartMoving", "StopMovingOrSizing", "SetWidth", "SetHeight", "EnableMouseWheel",
     "ClearAllPoints", "SetAllPoints", "SetAutoFocus", "SetNumeric", "SetMaxLetters", "SetHighlightTexture",
     "SetOrientation", "SetThumbTexture", "SetValueStep", "SetObeyStepOnDrag", "SetJustifyH", "SetWordWrap",
-    "SetSpacing", "SetColorTexture", "SetBlendMode", "UnregisterEvent", "SetTextInsets", "SetAlpha" }) do
+    "SetSpacing", "SetColorTexture", "SetBlendMode", "UnregisterEvent", "SetTextInsets", "SetAlpha",
+    "SetFrameLevel", "RegisterForClicks" }) do
     Region[name] = noop
 end
+-- Only where a frame was last put matters to the specs (the minimap button's place).
+local setPoint = Region.SetPoint
+function Region:SetPoint(...) self._point = { ... }; return setPoint(self, ...) end
+function Region:GetWidth() return self._width or 140 end
+function Region:GetCenter() return 1000, 500 end
+function Region:GetEffectiveScale() return 1 end
 function Region:RegisterEvent(event) self._events = self._events or {}; self._events[event] = true end
 function Region:SetScript(name, fn) self._scripts[name] = fn end
 function Region:GetScript(name) return self._scripts[name] end
@@ -126,7 +133,8 @@ local function professionsDB()
 end
 
 -- `options`: professionsAddon (GuildAssistant Professions installed), timers (C_Timer: run with
--- runTimers()), knownSpells (what IsPlayerSpell says yes to).
+-- runTimers()), knownSpells (what IsPlayerSpell says yes to), saved (GuildAssistantDatabaseDB as
+-- the game loaded it).
 local function loadAddon(options)
     options = options or {}
     chat, linked, timers, created = {}, {}, {}, {}
@@ -176,10 +184,15 @@ local function loadAddon(options)
     _G.IsModifiedClick = nil
     _G.ChatEdit_InsertLink = function(link) linked[#linked + 1] = link end
     _G.GuildAssistantProfessionsDB = options.professionsAddon and professionsDB() or nil
+    _G.GuildAssistantDatabaseDB = options.saved
+    _G.GuildAssistantDatabaseMinimapButton = nil
+    _G.Minimap = region("Frame")
+    _G.GetCursorPosition = function() return 1100, 500 end -- right of the minimap's centre
 
     local ns = {}
     for _, file in ipairs({ "GuildAssistantDatabase/Core.lua", "dev/GuildAssistantDatabase/Data.fixture.lua",
-        "GuildAssistantDatabase/Game.lua", "GuildAssistantDatabase/UI.lua", "GuildAssistantDatabase/Main.lua" }) do
+        "GuildAssistantDatabase/Game.lua", "GuildAssistantDatabase/UI.lua", "GuildAssistantDatabase/Minimap.lua",
+        "GuildAssistantDatabase/Main.lua" }) do
         assert(loadfile(file))("GuildAssistantDatabase", ns)
     end
     return ns
@@ -219,7 +232,67 @@ it("says what it has once loaded, and nothing for another addon", function()
     events:Fire("OnEvent", "ADDON_LOADED", "Bagnon")
     eq(#chat, 0, "not for another addon")
     events:Fire("OnEvent", "ADDON_LOADED", "GuildAssistantDatabase")
-    eq(said("8 recipes from Wowhead, 2026-11-11. Type /gadb to search them."), true, "says what it has")
+    eq(said("8 recipes from Wowhead, 2026-11-11. Type /gadb (or click the clip on the minimap) to search them."), true, "says what it has")
+end)
+
+local function loaded(options)
+    local ns = loadAddon(options)
+    for _, f in ipairs(created) do
+        if f._events and f._events.ADDON_LOADED then f:Fire("OnEvent", "ADDON_LOADED", "GuildAssistantDatabase") end
+    end
+    return ns, _G.GuildAssistantDatabaseMinimapButton
+end
+
+-- The minimap button --------------------------------------------------------------------------------
+
+it("puts the clip on the minimap's edge once loaded, and opens and closes the window", function()
+    local ns, button = loaded()
+    eq(button ~= nil, true, "made")
+    eq(button._parent, Minimap)
+    eq(button.icon._texture, "Interface\\AddOns\\GuildAssistantDatabase\\Media\\Icon")
+    eq(button:IsShown(), true)
+    -- Lower left by default, just outside the edge (radius 70 + 10).
+    local x, y = button._point[4], button._point[5]
+    eq(x < 0 and y < 0, true, "lower left")
+    eq(math.floor(math.sqrt(x * x + y * y) + 0.5), 80)
+    button:Click()
+    eq(ns.UI.isShown(), true, "opens")
+    button:Click()
+    eq(ns.UI.isShown(), false, "closes")
+    button:Fire("OnEnter")
+    eq(GameTooltip.last[1], "Show")
+end)
+
+it("moves around the minimap while dragged, and remembers where", function()
+    local _, button = loaded()
+    button:Fire("OnDragStart")
+    button:Fire("OnUpdate") -- the cursor is right of the centre
+    button:Fire("OnDragStop")
+    eq(button:GetScript("OnUpdate"), nil, "stops following")
+    eq(math.floor(GuildAssistantDatabaseDB.minimap.angle + 0.5) % 360, 0)
+    eq(math.floor(button._point[4] + 0.5), 80); eq(math.floor(button._point[5] + 0.5), 0)
+    -- Next session, it's where it was left.
+    local _, again = loaded({ saved = { minimap = { angle = 90 } } })
+    eq(math.floor(again._point[4] + 0.5), 0); eq(math.floor(again._point[5] + 0.5), 80)
+end)
+
+it("hides and shows with /gadb minimap, and stays hidden next time", function()
+    local _, button = loaded()
+    SlashCmdList.GADB("minimap")
+    eq(button:IsShown(), false)
+    eq(GuildAssistantDatabaseDB.minimap.hidden, true)
+    eq(said("/gadb minimap brings it back"), true)
+    local _, again = loaded({ saved = { minimap = { angle = 90, hidden = true } } })
+    eq(again:IsShown(), false, "still hidden")
+    SlashCmdList.GADB("minimap")
+    eq(again:IsShown(), true)
+    eq(said("the minimap button is back."), true)
+end)
+
+it("copes with saved data it doesn't understand", function()
+    local _, button = loaded({ saved = { minimap = "nonsense" } })
+    eq(button:IsShown(), true)
+    eq(GuildAssistantDatabaseDB.minimap.angle, 210)
 end)
 
 it("opens and closes with /gadb, and reads no profession before it opens", function()
