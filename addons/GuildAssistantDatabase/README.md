@@ -38,7 +38,7 @@ Type `/gadb` (or `/ga-db`), or click the clip on the minimap, to open or close t
 - Click a recipe for its details: the item (its slot, type and stats), how many it makes, the
   skill-up colours, the reagents, how to learn it and who can craft it.
 - Hover a recipe, a reagent or a recipe item for the game's tooltip; **shift-click** to link it in
-  the chat.
+  the chat; **ctrl-click** to try it on in the dressing room (a recipe: the item it makes).
 
 ## Who can craft it
 

@@ -5,7 +5,7 @@
 
 local specPrint = print
 local passed, failed = 0, 0
-local chat, linked, timers, created
+local chat, linked, timers, created, dressed
 local function it(name, fn)
     local ok, err = pcall(fn)
     _G.print = specPrint
@@ -147,7 +147,7 @@ end
 -- Sources.fixture.lua), itemNames (what GetItemInfo knows beyond Copper Chain Pants).
 local function loadAddon(options)
     options = options or {}
-    chat, linked, timers, created = {}, {}, {}, {}
+    chat, linked, timers, created, dressed = {}, {}, {}, {}, {}
     focused = nil
     _G.print = function(text) chat[#chat + 1] = tostring(text) end
     _G.SlashCmdList = {}
@@ -195,6 +195,8 @@ local function loadAddon(options)
     _G.IsShiftKeyDown = function() return options.shift == true end
     _G.IsModifiedClick = nil
     _G.ChatEdit_InsertLink = function(link) linked[#linked + 1] = link end
+    _G.IsControlKeyDown = function() return options.ctrl == true end
+    _G.DressUpItemLink = function(link) dressed[#dressed + 1] = link end
     _G.GuildAssistantProfessionsDB = options.professionsAddon and professionsDB() or nil
     _G.GuildAssistantDatabaseDB = options.saved
     _G.GuildAssistantDatabaseMinimapButton = nil
@@ -607,6 +609,28 @@ it("links a recipe or item in the chat on shift-click, and shows its tooltip on 
     rowNamed(ns, "Runed Copper Breastplate"):Click()
     eq(#linked, 1)
     eq(said("doesn't have that item yet"), true)
+end)
+
+it("tries an item on in the dressing room on ctrl-click: a recipe's, the item it makes", function()
+    local ns = loadAddon({ ctrl = true })
+    SlashCmdList.GADB("pants")
+    rowNamed(ns, "Copper Chain Pants"):Click()
+    eq(dressed[1], "|cff1eff00|Hitem:2852::::::::4:::::::|h[Copper Chain Pants]|h|r", "the game's link")
+    eq(ns.UI.parts().state.selected, nil, "ctrl-click tries it on, doesn't pick")
+    -- An enchant makes no item: a plain click.
+    SlashCmdList.GADB("bracer")
+    rowNamed(ns, "Enchant Bracer - Minor Health"):Click()
+    eq(#dressed, 1)
+    eq(ns.UI.parts().state.selected.name, "Enchant Bracer - Minor Health")
+    -- A reagent or plans: the item itself; one the game hasn't loaded, by its id.
+    SlashCmdList.GADB("breastplate")
+    _G.IsControlKeyDown = function() return false end
+    rowNamed(ns, "Runed Copper Breastplate"):Click()
+    _G.IsControlKeyDown = function() return true end
+    ns.UI.parts().details.recipeItems[1]:Click()
+    eq(dressed[2], "item:2881")
+    ns.UI.parts().details.name:Click()
+    eq(#dressed, 3, "the recipe's own name in the details too")
 end)
 
 -- Not known yet -----------------------------------------------------------------------------------

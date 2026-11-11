@@ -1,5 +1,10 @@
 # GuildAssistant Database
 
+## 1.4.3
+
+- **Ctrl-click** a recipe, a reagent or plans to try the item on in the dressing room (a recipe:
+  the item it makes), as in the game's own windows. What can't be worn does nothing.
+
 ## 1.4.2
 
 - **Tab** moves from the search box to the level and skill boxes and round again; **Shift-Tab**

@@ -83,7 +83,8 @@ local function label(parent, text, anchor, relativeTo, x)
     return region
 end
 
--- Tooltip and shift-click (to the chat) for anything that shows an item or a recipe.
+-- Tooltip, shift-click (to the chat) and ctrl-click (the dressing room) for anything that shows an
+-- item or a recipe.
 local function linkable(button)
     button:SetScript("OnEnter", function(self)
         if self.hyperlink then Game.showTooltip(self, self.hyperlink) end
@@ -91,10 +92,17 @@ local function linkable(button)
     button:SetScript("OnLeave", Game.hideTooltip)
 end
 
+-- Shift-click: its link in the chat. Ctrl-click: the item tried on in the dressing room (a
+-- recipe's: the item it makes). Returns whether it was one of those rather than a plain click.
 local function linkClicked(self)
     if IsModifiedClick and IsModifiedClick("CHATLINK") or (IsShiftKeyDown and IsShiftKeyDown()) then
         if self.item then Game.insertLink(Game.chatLink(self.item, false)) end
         if self.recipe then Game.insertLink(Game.chatLink(self.recipe, true)) end
+        return true
+    end
+    local item = self.item or (self.recipe and self.recipe.creates)
+    if item and (IsModifiedClick and IsModifiedClick("DRESSUP") or (IsControlKeyDown and IsControlKeyDown())) then
+        Game.dressUp(item)
         return true
     end
     return false
@@ -794,7 +802,7 @@ local function buildDetails()
     d.hint = fontString(d, "GameFontDisable")
     d.hint:SetPoint("TOPLEFT", d, "TOPLEFT", 10, -10)
     d.hint:SetWidth(width)
-    d.hint:SetText("Pick a recipe to see its reagents, how to learn it and who can craft it.\n\nShift-click a recipe or an item to link it in the chat.")
+    d.hint:SetText("Pick a recipe to see its reagents, how to learn it and who can craft it.\n\nShift-click a recipe or an item to link it in the chat; ctrl-click to try it on.")
 
     d.name = linkButton(d, 32)
     d.info = fontString(d, "GameFontHighlightSmall")

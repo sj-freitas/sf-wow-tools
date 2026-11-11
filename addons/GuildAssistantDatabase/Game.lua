@@ -194,6 +194,12 @@ function Game.insertLink(link)
     if ChatEdit_InsertLink then ChatEdit_InsertLink(link) end
 end
 
+--- Tries the item on in the dressing room (ctrl-click), as the game's own windows do: the game
+--- opens it only for what can be worn, not a potion or a bag.
+function Game.dressUp(item)
+    if DressUpItemLink then DressUpItemLink(Game.chatLink(item, false) or ("item:" .. item.id)) end
+end
+
 function Game.showTooltip(owner, hyperlink)
     if not GameTooltip then return end
     GameTooltip:SetOwner(owner, "ANCHOR_RIGHT")
