@@ -44,6 +44,10 @@ Type `/gadb` (or `/ga-db`), or click the clip on the minimap, to open or close t
   this character knows it (its tooltip says so). It takes what the game allows an addon:
   `C_TradeSkillUI.OpenRecipe`, else just the profession's window (`OpenTradeSkill`); with
   neither, the chat says so.
+- **Craft**, above the item, for a recipe this character knows: crafts one (the profession window
+  opens at it, then `C_TradeSkillUI.CraftRecipe`). Enabled when your bags hold the reagents;
+  hovering it says for how many, or what's missing. Not shown where the game doesn't let addons
+  craft.
 - At the bottom, how many recipes match: hover it for where they come from (the game's data, its
   build, and the sources). The addon's version is in grey on the right.
 

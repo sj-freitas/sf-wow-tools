@@ -554,6 +554,19 @@ function Core.crafters(db, recipe, you)
     return found
 end
 
+--- How many times the recipe can be made from what you carry (`countOf(itemId)`), and the reagents
+--- short of one: { { item, short } }. A recipe without reagents can always be made (once at a time).
+function Core.craftable(recipe, countOf)
+    if #recipe.reagents == 0 then return 1, {} end
+    local times, missing = math.huge, {}
+    for _, reagent in ipairs(recipe.reagents) do
+        local have = countOf(reagent.item.id) or 0
+        times = math.min(times, math.floor(have / reagent.count))
+        if have < reagent.count then missing[#missing + 1] = { item = reagent.item, short = reagent.count - have } end
+    end
+    return times, missing
+end
+
 --- Who to whisper to reach a crafter: the name, with the realm (as the game writes it in a name,
 --- no spaces or dashes) when it isn't `realm`, this character's as the game names it ("Realm 12
 --- Grim" is "Grim", as GuildAssistant Professions saves it). Nil for this character.

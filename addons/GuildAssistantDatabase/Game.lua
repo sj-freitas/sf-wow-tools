@@ -222,6 +222,25 @@ function Game.whisper(target)
     end
 end
 
+--- How many of an item are in your bags.
+function Game.itemCount(id)
+    local count = (C_Item and C_Item.GetItemCount) or GetItemCount
+    return count and count(id) or 0
+end
+
+--- Whether the game lets an addon craft (C_TradeSkillUI.CraftRecipe).
+function Game.canCraft()
+    return C_TradeSkillUI ~= nil and C_TradeSkillUI.CraftRecipe ~= nil
+end
+
+--- Crafts the recipe once, as the profession window's Create button does: the window is opened at
+--- it first (the game crafts from an open profession), then CraftRecipe.
+function Game.craft(recipe)
+    local ui = C_TradeSkillUI
+    if ui.OpenRecipe then ui.OpenRecipe(recipe.id) end
+    ui.CraftRecipe(recipe.id, 1)
+end
+
 --- The game's tooltip for `hyperlink`, with `hint` (what a click does) in green under it when given.
 function Game.showTooltip(owner, hyperlink, hint)
     if not GameTooltip then return end

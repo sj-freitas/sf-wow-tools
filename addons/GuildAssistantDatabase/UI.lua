@@ -379,6 +379,30 @@ local function drawCrafters(d, recipe)
     box:Show()
 end
 
+-- The Craft button (shown for a recipe you know, when the game lets addons craft): enabled when
+-- your bags hold the reagents, its tooltip says for how many or what's missing.
+local function drawCraft()
+    local button, recipe = details.craft, state.selected
+    if not button:IsShown() or not recipe then return end
+    button.times, button.missing = Core.craftable(recipe, Game.itemCount)
+    button:SetEnabled(button.times > 0)
+end
+
+local function craftTooltip(button)
+    local recipe = state.selected
+    if not recipe then return end
+    local lines = {}
+    if button.times > 0 then
+        lines[1] = ("You have the reagents for %d."):format(button.times)
+        Game.showTextTooltip(button, "Craft " .. recipe.name, lines)
+    else
+        for i, missing in ipairs(button.missing) do
+            lines[i] = ("%d x %s"):format(missing.short, Game.coloredItem(missing.item))
+        end
+        Game.showTextTooltip(button, "Missing reagents", lines)
+    end
+end
+
 local function drawDetails()
     local recipe = state.selected
     local d = details
@@ -393,6 +417,8 @@ local function drawDetails()
     d.name.recipe, d.name.item, d.name.hyperlink = recipe, recipe.creates, Game.hyperlink(recipe)
     local mine = Game.myProfessions()[recipe.profession]
     d.name.known = mine and mine.knows(recipe) and mine or nil
+    d.craft:SetShown(d.name.known ~= nil and Game.canCraft())
+    drawCraft()
     d.name.icon:SetTexture(iconOf(recipe))
     d.name.text:SetText(Game.coloredName(recipe))
     d.name:Show()
@@ -852,6 +878,20 @@ local function buildDetails()
     d.hint:SetWidth(width)
     d.hint:SetText("Pick a recipe to see its reagents, how to learn it and who can craft it.\n\nShift-click a recipe to link it in the chat, or the item at the top of its details for the item's link; ctrl-click to try it on. Click a name under Who can craft it to whisper them.")
 
+    d.craft = CreateFrame("Button", nil, d, "UIPanelButtonTemplate")
+    d.craft:SetSize(90, 22)
+    d.craft:SetText("Craft")
+    d.craft:SetScript("OnClick", function(self)
+        local recipe = state.selected
+        if not recipe or not self:IsEnabled() then return end
+        Game.craft(recipe)
+    end)
+    d.craft:SetScript("OnEnter", craftTooltip)
+    d.craft:SetScript("OnLeave", Game.hideTooltip)
+    d.craft:Hide()
+    -- Your bags change (a craft, loot): whether you have the reagents too.
+    d.craft:RegisterEvent("BAG_UPDATE_DELAYED")
+    d.craft:SetScript("OnEvent", function() ns.safely(drawCraft) end)
     d.name = linkButton(d, 32)
     -- A plain click on it opens your profession at the recipe, when this character knows it.
     d.name:SetScript("OnClick", function(self)
@@ -913,7 +953,7 @@ local function buildDetails()
     end
     d.crafterNames.more = fontString(d.crafterNames, "GameFontHighlightSmall")
 
-    d.regions = { { d.name }, { d.info, 6 }, { d.reagentsHeader, 12 } }
+    d.regions = { { d.craft }, { d.name, 6 }, { d.info, 6 }, { d.reagentsHeader, 12 } }
     for _, button in ipairs(d.reagents) do d.regions[#d.regions + 1] = { button, 2 } end
     d.regions[#d.regions + 1] = { d.learnHeader, 12 }
     d.regions[#d.regions + 1] = { d.learn, 4 }

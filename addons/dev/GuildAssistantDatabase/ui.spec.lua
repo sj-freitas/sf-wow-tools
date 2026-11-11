@@ -5,7 +5,7 @@
 
 local specPrint = print
 local passed, failed = 0, 0
-local chat, linked, timers, created, dressed, told, opened
+local chat, linked, timers, created, dressed, told, opened, bags
 local function it(name, fn)
     local ok, err = pcall(fn)
     _G.print = specPrint
@@ -104,6 +104,8 @@ function Region:ClearFocus()
     if self._focus then self._focus = false; self:Fire("OnEditFocusLost") end
 end
 function Region:HighlightText() self._highlighted = true end
+function Region:SetEnabled(enabled) self._enabled = enabled and true or false end
+function Region:IsEnabled() return self._enabled ~= false end
 function Region:SetChecked(checked) self._checked = checked and true or false end
 function Region:GetChecked() return self._checked end
 function Region:SetMinMaxValues(min, max) self._min, self._max = min, max end
@@ -149,7 +151,7 @@ end
 -- Sources.fixture.lua), itemNames (what GetItemInfo knows beyond Copper Chain Pants).
 local function loadAddon(options)
     options = options or {}
-    chat, linked, timers, created, dressed, told, opened = {}, {}, {}, {}, {}, {}, {}
+    chat, linked, timers, created, dressed, told, opened, bags = {}, {}, {}, {}, {}, {}, {}, {}
     focused = nil
     _G.print = function(text) chat[#chat + 1] = tostring(text) end
     _G.SlashCmdList = {}
@@ -206,7 +208,9 @@ local function loadAddon(options)
     _G.C_TradeSkillUI = options.tradeSkill and {
         OpenRecipe = options.tradeSkill == "recipe" and function(id) opened[#opened + 1] = "recipe " .. id end or nil,
         OpenTradeSkill = function(skillLine) opened[#opened + 1] = "profession " .. skillLine end,
+        CraftRecipe = options.tradeSkill == "recipe" and function(id, times) opened[#opened + 1] = ("craft %d x%d"):format(id, times) end or nil,
     } or nil
+    _G.GetItemCount = function(id) return bags[id] or 0 end
     _G.GetAddOnMetadata = function(name, field)
         if name == "GuildAssistantDatabase" and field == "Version" and not options.noVersion then return "9.9.9" end
     end
@@ -742,6 +746,36 @@ it("opens your profession at a recipe you know on a click on the item at the top
     rowNamed(ns3, "Runed Copper Breastplate"):Click()
     ns3.UI.parts().details.name:Click()
     eq(said("the game doesn't let addons open your Blacksmithing window."), true)
+end)
+
+it("crafts a recipe you know from the Craft button above it, when your bags hold the reagents", function()
+    local ns = loadAddon({ professionsAddon = true, tradeSkill = "recipe" })
+    SlashCmdList.GADB("breastplate")
+    rowNamed(ns, "Runed Copper Breastplate"):Click()
+    local d, recipe = ns.UI.parts().details, ns.UI.parts().state.selected
+    eq(d.craft:IsShown(), true, "you know it")
+    eq(d.craft:IsEnabled(), false, "nothing in your bags")
+    d.craft:Fire("OnEnter")
+    eq(GameTooltip.lines[1], "Missing reagents")
+    eq(GameTooltip.lines[2], "12 x |cffffffffCopper Bar|r")
+    d.craft:Click()
+    eq(#opened, 0)
+    -- The bags fill (twice the reagents): it says so, and crafts one.
+    for _, reagent in ipairs(recipe.reagents) do bags[reagent.item.id] = reagent.count * 2 end
+    d.craft:Fire("OnEvent", "BAG_UPDATE_DELAYED")
+    eq(d.craft:IsEnabled(), true)
+    d.craft:Fire("OnEnter")
+    eq(table.concat(GameTooltip.lines, " | "), "Craft Runed Copper Breastplate | You have the reagents for 2.")
+    d.craft:Click()
+    eq(table.concat(opened, ", "), "recipe 2667, craft 2667 x1", "the window opened at it, then crafted")
+    -- One this character doesn't know: no button.
+    rowNamed(ns, "Ornate Mithril Breastplate"):Click()
+    eq(d.craft:IsShown(), false)
+    -- A game that doesn't let addons craft: none either.
+    local ns2 = loadAddon({ professionsAddon = true, tradeSkill = "profession" })
+    SlashCmdList.GADB("breastplate")
+    rowNamed(ns2, "Runed Copper Breastplate"):Click()
+    eq(ns2.UI.parts().details.craft:IsShown(), false)
 end)
 
 it("tries an item on in the dressing room on ctrl-click: a recipe's, the item it makes", function()

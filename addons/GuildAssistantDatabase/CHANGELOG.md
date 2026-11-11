@@ -1,5 +1,11 @@
 # GuildAssistant Database
 
+## 1.4.9
+
+- **Craft**: a button above the item of a recipe this character knows crafts one, as the profession
+  window's Create button does. It's enabled when your bags hold the reagents; hovering it says for
+  how many, or which reagents are missing.
+
 ## 1.4.8
 
 - **Click the item** at the top of a recipe's details to open your profession window at that

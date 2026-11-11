@@ -325,6 +325,18 @@ it("finds who knows a recipe: you first, then your alts, the guild, links", func
     eq(#Core.crafters(nil, breastplate, "Luna-RP"), 0, "no saved data, nobody")
 end)
 
+it("counts how many times a recipe can be made from your bags, and what's short", function()
+    local bar, stone = { id = 2840 }, { id = 2836 }
+    local recipe = { reagents = { { item = bar, count = 12 }, { item = stone, count = 2 } } }
+    local bags = { [2840] = 30, [2836] = 5 }
+    local times, missing = Core.craftable(recipe, function(id) return bags[id] end)
+    eq(times, 2); eq(#missing, 0)
+    bags[2840] = 7
+    times, missing = Core.craftable(recipe, function(id) return bags[id] end)
+    eq(times, 0); eq(#missing, 1); eq(missing[1].item, bar); eq(missing[1].short, 5)
+    eq(Core.craftable({ reagents = {} }, function() return 0 end), 1, "no reagents: always")
+end)
+
 it("whispers a crafter by name, with the realm only when it isn't this one", function()
     local realm = "CAMWOW EU4 Realm 10 RP"
     eq(Core.whisperTarget({ name = "Shivan Darkwhisp", realm = "RP" }, realm), "Shivan Darkwhisp", "the whole name")
