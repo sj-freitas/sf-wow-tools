@@ -66,8 +66,8 @@ characters; the API's import test reads the same file, so the two stay in step.
 ## GuildAssistantDatabase
 
 Every profession's recipes, searchable in game, with reagents, how to learn them and who can craft
-them (from GuildAssistantProfessions' saved data). Experimental: no CurseForge project, so
-`publish:curseforge` refuses it. How to use it:
+them (from GuildAssistantProfessions' saved data). Experimental; its CurseForge project is
+1798408 (not public until CurseForge approves it). How to use it:
 [GuildAssistantDatabase/README.md](GuildAssistantDatabase/README.md).
 
 ### GuildAssistant Database's data

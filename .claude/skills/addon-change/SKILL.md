@@ -12,6 +12,7 @@ The addons live in `addons/<Name>/` (Lua, `.toc`, `README.md`, `CHANGELOG.md`); 
 | ------------------------- | ----------------------------------------------------------------- |
 | Raidsort                  | https://www.curseforge.com/wow/addons/raid-sort                   |
 | GuildAssistantProfessions | https://www.curseforge.com/wow/addons/guild-assistant-professions |
+| GuildAssistantDatabase    | not public yet (project 1798408): https://authors.curseforge.com/#/projects/1798408 |
 
 Each addon's CurseForge project id is in its `.toc` (`## X-Curse-Project-ID`). Its description is
 edited at `https://authors.curseforge.com/#/projects/<project id>/description` (e.g.

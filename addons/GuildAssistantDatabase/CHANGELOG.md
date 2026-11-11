@@ -1,5 +1,9 @@
 # GuildAssistant Database
 
+## 0.3.1
+
+- Thanks to Makalak Violeteye, whose idea this addon was, in its description.
+
 ## 0.3.0
 
 - A minimap button, GuildAssistant's clip: click it to open or close the window, drag it around

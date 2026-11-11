@@ -5,7 +5,7 @@ level and skill range, and see what each one makes, what it needs, how to learn 
 [GuildAssistant Professions](../GuildAssistantProfessions/README.md), who you know that can craft
 it. It also lists your own professions' recipes you don't know yet.
 
-Made for WoW Forever: its data is Wowhead's for Forever. Experimental: not on CurseForge yet.
+Made for WoW Forever: its data is Wowhead's for Forever. Experimental.
 
 ## Using it
 
@@ -59,3 +59,7 @@ addon's `Data.lua` from them; see "GuildAssistant Database's data" in
 
 Only the minimap button's place (and whether it's hidden) is saved, per account
 (`GuildAssistantDatabaseDB`).
+
+## Thanks
+
+Thank you to **Makalak Violeteye** for the idea for this addon.
