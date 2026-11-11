@@ -1,5 +1,13 @@
 # GuildAssistant Professions
 
+## 1.3.0
+
+- What you find of how recipes are obtained (vendors, trainers, loot, quest rewards) is shared with
+  your guild, quietly: each new finding as it's made, and at login what guildmates are missing.
+  What two players found of the same recipe is put together.
+- The file you upload to Guild Assistant carries those findings too, so the next GuildAssistant
+  Database release can include them for everyone.
+
 ## 1.2.0
 
 - Records, quietly, how recipes are obtained, for GuildAssistant Database: the recipes a vendor

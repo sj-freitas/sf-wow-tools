@@ -1,7 +1,7 @@
 ## Interface: 16001
 ## Title: GuildAssistant Database
 ## Notes: Every profession's recipes, searchable by name, stat, slot or reagent: what they need, how to learn them, and who can craft them (with GuildAssistant Professions). /gadb
-## Version: 1.2.0
+## Version: 1.3.0
 ## Author: Sérgio Freitas
 ## X-License: MIT
 ## X-Curse-Project-ID: 1798408
@@ -14,6 +14,7 @@
 Core.lua
 Data.lua
 Seed.lua
+Found.lua
 Game.lua
 UI.lua
 Minimap.lua

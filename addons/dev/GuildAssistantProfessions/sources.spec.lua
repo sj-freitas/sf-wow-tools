@@ -143,6 +143,29 @@ it("does nothing on a client without those windows", function()
     eq(ns.Sources.merchant(), 0); eq(ns.Sources.trainer(), 0); eq(ns.Sources.loot(), 0); eq(ns.Sources.questRewards(), 0)
 end)
 
+local function read(path)
+    if readfile then return readfile(path) end
+    local file = assert(io.open(path))
+    local text = file:read("*a")
+    file:close()
+    return text
+end
+
+it("puts what it recorded in the export, as Guild Assistant reads it (export-sources.fixture.json)", function()
+    local ns = load()
+    local db, Core = ns.db, ns.Core
+    eq(Core.exportSources(db), nil, "nothing recorded: no sources in the export")
+    eq(Core.toJSON(Core.exportData(db)), '{"addon":"GuildAssistantProfessions","characters":[],"format":2}')
+    Core.recordItemSource(db, 6047, "V", "Tanaris", "Krinkle Goodsteel", 10)
+    Core.recordItemSource(db, 2881, "D", "Westfall", "Defias Renegade Mage", 10)
+    Core.recordItemSource(db, 2881, "O", "Westfall", "", 10)
+    Core.recordTrainer(db, "item:2852", 50, "Stormwind City", "Grimand Elmore", 10)
+    Core.recordTrainer(db, "name:enchant bracer - minor health", 10, "Stormwind City", "Lucan Cordell", 10)
+    -- The API's tests read the same file (profession-export.spec.ts).
+    local expected = read("dev/GuildAssistantProfessions/export-sources.fixture.json"):gsub("%s+$", "")
+    eq(Core.toJSON(Core.exportData(db)), expected, "export-sources.fixture.json")
+end)
+
 -- What GuildAssistant Database reads from it: the two addons agree on the format.
 it("is read by GuildAssistant Database as a source", function()
     local ns = load()

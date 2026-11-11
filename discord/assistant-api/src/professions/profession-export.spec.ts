@@ -7,6 +7,7 @@ import {
   matchCharacter,
   nameKey,
   parseProfessionExport,
+  parseSources,
   wowheadUrl,
 } from './profession-export';
 
@@ -133,6 +134,67 @@ describe('wowheadUrl', () => {
     assert.equal(
       wowheadUrl('forever', 'item', 14146, null),
       'https://www.wowhead.com/forever/item=14146',
+    );
+  });
+});
+
+describe('parseSources', () => {
+  const SOURCES_FIXTURE = readFileSync(
+    join(__dirname, '../../../../addons/dev/GuildAssistantProfessions/export-sources.fixture.json'),
+    'utf8',
+  );
+
+  it('reads what the addon exports of how recipes are obtained (its test writes the same file)', () => {
+    assert.deepEqual(parseProfessionExport(SOURCES_FIXTURE).sources, {
+      items: [
+        { id: 2881, entries: ['D:Westfall=Defias Renegade Mage', 'O:Westfall='] },
+        { id: 6047, entries: ['V:Tanaris=Krinkle Goodsteel'] },
+      ],
+      trainers: [
+        { recipe: 'item:2852', cost: 50, entries: ['Stormwind City=Grimand Elmore'] },
+        {
+          recipe: 'name:enchant bracer - minor health',
+          cost: 10,
+          entries: ['Stormwind City=Lucan Cordell'],
+        },
+      ],
+    });
+    assert.equal(parseProfessionExport(FIXTURE).sources, null, 'an export without any');
+  });
+
+  it("leaves out what isn't a source, without failing the import", () => {
+    assert.deepEqual(
+      parseSources({
+        items: [
+          {
+            id: 6047,
+            entries: ['V:Tanaris=Krinkle', 'nonsense', 'X:Zone=Who', 42, 'V440=By area id'],
+          },
+          { id: -1, entries: ['V=Nobody'] },
+          { id: 7, entries: [`V=${'x'.repeat(100)}`] },
+        ],
+        trainers: [
+          { recipe: 'spell:1', cost: 5, entries: ['Zone=Trainer'] },
+          { recipe: 'item:2852', cost: 'free', entries: ['=Grimand', 'no equals'] },
+        ],
+      }),
+      {
+        items: [{ id: 6047, entries: ['V:Tanaris=Krinkle', 'V440=By area id'] }],
+        trainers: [{ recipe: 'item:2852', cost: null, entries: ['=Grimand'] }],
+      },
+    );
+    assert.equal(parseSources('nonsense'), null);
+    assert.equal(parseSources({ items: [], trainers: [] }), null);
+  });
+
+  it('takes at most 12 places per item and 2,000 in all', () => {
+    const many = Array.from({ length: 30 }, (_, i) => `V:Zone ${i}=Vendor`);
+    const items = Array.from({ length: 300 }, (_, i) => ({ id: i + 1, entries: many }));
+    const parsed = parseSources({ items })!;
+    assert.equal(parsed.items[0].entries.length, 12);
+    assert.equal(
+      parsed.items.reduce((n, item) => n + item.entries.length, 0),
+      2000,
     );
   });
 });

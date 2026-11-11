@@ -93,7 +93,12 @@ servers know that). Two sources add it (the format is in `GuildAssistantDatabase
 - `GuildAssistantDatabase/Seed.lua`: what was known as of November 2026, compiled once and not
   regenerated (no script for it in the repo). Edit it only to fix a mistake.
 - GuildAssistantProfessions (1.2.0 and later): what players see from then on (vendors, trainers,
-  loot, quest rewards; `Sources.lua` there), read from its saved data.
+  loot, quest rewards; `Sources.lua` there), read from its saved data, and shared with the guild
+  (1.3.0, `Sync.lua`).
+- `GuildAssistantDatabase/Found.lua`: every player's findings, which their uploads carry to Guild
+  Assistant (`recipe_sources`, published at `GET /api/recipe-sources`). `npm run database` writes it
+  (`found.mjs`; `GUILD_ASSISTANT_URL` for another site), so the Monday pull request carries new
+  findings: review them before merging, they come from players' files.
 
 The professions are in `scripts/database/professions.mjs`. How the data is read (`gamedata.mjs`,
 `csv.mjs`), written (`lua.mjs`, one text line per recipe and item, read by the addon's `Core.lua` the

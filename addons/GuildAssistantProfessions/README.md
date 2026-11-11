@@ -56,8 +56,17 @@ know that can craft each recipe (from what this addon saved). This addon also re
 recipes are obtained, which GuildAssistant Database shows with each recipe: the recipes a vendor
 sells (when you open its window), what a profession trainer teaches and for how much, plans and
 patterns you loot (from a creature, an object, or fishing), and those a quest gives. It's kept in
-the saved data (`sources`), not in the export, and not shared with the guild yet. `/ga-prof status`
-says how many it has.
+the saved data (`sources`), and `/ga-prof status` says how many it has.
+
+What you find reaches everyone:
+
+- **Your guild**, quietly, over the same hidden channel as professions: each new finding is sent as
+  it's made, and at login the addons compare what they have and send each other what's missing
+  (findings are only ever added, never replaced). A guildmate's GuildAssistant Database shows it
+  after a `/reload`.
+- **Every GuildAssistant Database player**, through Guild Assistant: the export carries the
+  findings, Guild Assistant gathers them from every upload, and the next GuildAssistant Database
+  release includes them (reviewed by a person first).
 
 ## Commands
 
@@ -110,5 +119,8 @@ on logout. For example:
 ```
 
 `source` is `own` (one of your account's), `guild` (a guildmate's, received from the guild) or
-`link`. Guild Assistant reads it from the uploaded file, matches your characters by name to yours in
+`link`. Once it has recorded how recipes are obtained, the export also has `sources`:
+`{"items":[{"id":6047,"entries":["V:Tanaris=Krinkle Goodsteel"]}],"trainers":[{"recipe":"item:2852","cost":50,"entries":["Stormwind City=Grimand Elmore"]}]}`
+(an entry is the kind, V vendor, D drop, O object, F fishing or Q quest, then the zone and who; a
+trainer's is the zone and the trainer). Guild Assistant reads it from the uploaded file, matches your characters by name to yours in
 the guild and the guild's to its roster, and looks the recipe names up on Wowhead.

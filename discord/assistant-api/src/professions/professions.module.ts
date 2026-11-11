@@ -6,6 +6,7 @@ import { ProfessionsCoreModule } from './professions-core.module';
 import { ProfessionsUploadController } from './professions-upload.controller';
 import { ProfessionsUploadService } from './professions-upload.service';
 import { ProfessionsService } from './professions.service';
+import { RecipeSourcesController, RecipeSourcesService } from './recipe-sources.service';
 import { UploadKeysModule } from '../upload-keys/upload-keys.module';
 
 /**
@@ -15,7 +16,17 @@ import { UploadKeysModule } from '../upload-keys/upload-keys.module';
  */
 @Module({
   imports: [AuthModule, ProfessionsCoreModule, UploadKeysModule],
-  controllers: [ProfessionsController, CharacterProfessionsController, ProfessionsUploadController],
-  providers: [ProfessionsService, ProfessionsCommand, ProfessionsUploadService],
+  controllers: [
+    ProfessionsController,
+    CharacterProfessionsController,
+    ProfessionsUploadController,
+    RecipeSourcesController,
+  ],
+  providers: [
+    ProfessionsService,
+    ProfessionsCommand,
+    ProfessionsUploadService,
+    RecipeSourcesService,
+  ],
 })
 export class ProfessionsModule {}

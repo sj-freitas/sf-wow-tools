@@ -60,8 +60,10 @@ data files. It comes from **sources**, listed under the details ("Sources: …")
   items' stat values, and which recipes can be learned at all. Compiled once, not updated.
 - **What GuildAssistant Professions saw** (1.2.0 and later): it records, as you play, the recipes
   vendors sell, what profession trainers teach and for how much, plans looted from creatures,
-  objects or fishing, and plans quests give. And every recipe a character it knows has learned can
-  be learned. What it records shows after a `/reload`.
+  objects or fishing, and plans quests give, and shares them with your guild (1.3.0). And every
+  recipe a character it knows has learned can be learned. What it records shows after a `/reload`.
+- **What players found** (`Found.lua`): every player's findings, gathered by Guild Assistant from
+  their uploads and included with each release.
 - Any other addon that adds itself to `GuildAssistantDatabaseSources` (the format is in `Core.lua`,
   "Sources companions").
 

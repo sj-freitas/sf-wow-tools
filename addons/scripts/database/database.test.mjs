@@ -10,6 +10,7 @@ import { meta, tables } from '../../dev/GuildAssistantDatabase/gamedata.fixture.
 import { root } from '../addons.mjs';
 import { parseCsv } from './csv.mjs';
 import { buildDatabase, fetchTables, itemKind, itemStats, latestBuild, TABLES } from './gamedata.mjs';
+import { EMPTY_FOUND, fetchFound, toFoundLua } from './found.mjs';
 import { itemLine, longString, recipeLine, toLua } from './lua.mjs';
 
 const FIXTURE_LUA = join(root, 'dev', 'GuildAssistantDatabase', 'Data.fixture.lua');
@@ -123,4 +124,37 @@ test("asks wago.tools for the latest build and downloads a build's tables once",
   }
   const failing = async () => ({ ok: false, status: 503 });
   await assert.rejects(latestBuild('wowf', failing), /HTTP 503/);
+});
+
+test("writes what players found as a source that only adds, leaving out what isn't one", () => {
+  const published = {
+    items: [
+      { id: 6047, entries: [{ entry: 'V:Tanaris=Krinkle Goodsteel', reporters: 2 }, { entry: 'V:Booty Bay=Narkk', reporters: 1 }] },
+      { id: 2881, entries: [{ entry: 'D:Westfall=Defias Renegade Mage' }, { entry: 'not one' }] },
+      { id: -1, entries: [{ entry: 'V=Nobody' }] },
+    ],
+    trainers: [
+      { recipe: 'item:2852', cost: 50, entries: [{ entry: 'Stormwind City=Grimand Elmore' }] },
+      { recipe: 'spell:1', cost: 5, entries: [{ entry: 'Zone=Trainer' }] },
+    ],
+  };
+  const lua = toFoundLua(published, '2026-11-18');
+  assert.match(lua, /name = "found by players",/);
+  assert.doesNotMatch(lua, /complete/, 'it hides nothing');
+  assert.match(lua, /recipes = \[\[\nitem:2852\t6\t50\tStormwind City=Grimand Elmore\]\],/);
+  assert.match(lua, /items = \[\[\n2881\t\t\t\tD:Westfall=Defias Renegade Mage\n6047\t\t\t\tV:Booty Bay=Narkk;V:Tanaris=Krinkle Goodsteel\]\],/);
+  assert.equal(toFoundLua({ items: [], trainers: [] }, '2026-11-18'), null, 'nothing found');
+  assert.equal(toFoundLua(undefined, '2026-11-18'), null);
+  assert.doesNotMatch(EMPTY_FOUND, /table\.insert/, 'an empty one adds no source');
+});
+
+test('fetches what players found from Guild Assistant', async () => {
+  const asked = [];
+  const published = await fetchFound('https://example.test', async (url) => {
+    asked.push(url);
+    return { ok: true, json: async () => ({ items: [], trainers: [] }) };
+  });
+  assert.deepEqual(published, { items: [], trainers: [] });
+  assert.deepEqual(asked, ['https://example.test/api/recipe-sources']);
+  await assert.rejects(fetchFound('https://example.test', async () => ({ ok: false, status: 404 })), /HTTP 404/);
 });

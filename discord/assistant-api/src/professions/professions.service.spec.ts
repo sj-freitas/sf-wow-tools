@@ -7,6 +7,7 @@ import type { PrismaService } from '../database/prisma.service';
 import { GuildRecipesService } from './guild-recipes.service';
 import type { ProfessionsPostPlugin } from './professions-post.plugin';
 import { ProfessionsService } from './professions.service';
+import type { RecipeSourcesService } from './recipe-sources.service';
 import { WowheadService } from './wowhead.service';
 
 const FIXTURE = readFileSync(
@@ -32,6 +33,8 @@ function setup(member = true, officer = false) {
   const wowhead = new Map<string, Record<string, unknown>>();
   // Guilds whose Professions Lists were asked to post soon (after an import).
   const postedSoon: string[] = [];
+  // What each import gave RecipeSourcesService.
+  const recordedSources: unknown[] = [];
   const prisma = {
     character: {
       // The user's own characters (`player`), or the guild's whole roster.
@@ -185,9 +188,22 @@ function setup(member = true, officer = false) {
     {
       soon: async (guildId: string) => void postedSoon.push(guildId),
     } as unknown as ProfessionsPostPlugin,
+    {
+      record: async (_userId: string, sources: unknown) => void recordedSources.push(sources),
+    } as unknown as RecipeSourcesService,
   );
   service.now = () => new Date(clock.now);
-  return { service, professions, drops, clock, wowhead, asked, wowheadService, postedSoon };
+  return {
+    service,
+    professions,
+    drops,
+    clock,
+    wowhead,
+    asked,
+    wowheadService,
+    postedSoon,
+    recordedSources,
+  };
 }
 
 const user = { id: 'u1', discordId: 'd1' };
@@ -262,6 +278,21 @@ describe('ProfessionsService', () => {
       (professions[0].learnedAt as Date).toISOString(),
       new Date(1791000000 * 1000).toISOString(),
     );
+  });
+
+  it('hands the recipe sources an export carries to RecipeSourcesService', async () => {
+    const { service, recordedSources } = setup();
+    await service.import(user, 'g1', FIXTURE);
+    assert.deepEqual(recordedSources, [null], 'none in this export');
+    const withSources = readFileSync(
+      join(
+        __dirname,
+        '../../../../addons/dev/GuildAssistantProfessions/export-sources.fixture.json',
+      ),
+      'utf8',
+    );
+    await service.import(user, 'g1', withSources);
+    assert.equal((recordedSources[1] as unknown as { items: unknown[] }).items.length, 2);
   });
 
   it("has the guild's Professions Lists post the change soon after an import", async () => {

@@ -24,8 +24,14 @@ local function zone()
     return GetRealZoneText and GetRealZoneText() or ""
 end
 
+-- Tells the guild about a new finding (Sync.lua), and says whether it was new.
+local function shared(isNew, record)
+    if isNew and ns.Sync and ns.Sync.sourceChanged then ns.Sync.sourceChanged(record) end
+    return isNew
+end
+
 local function record(id, kind, who)
-    return Core.recordItemSource(ns.db, id, kind, zone(), who or "", ns.now())
+    return shared(Core.recordItemSource(ns.db, id, kind, zone(), who or "", ns.now()), Core.itemRecord(id))
 end
 
 --- A vendor's window: the recipe items it sells. Returns how many sources were new.
@@ -55,7 +61,8 @@ function Sources.trainer()
             local id = itemId(GetTrainerServiceItemLink and GetTrainerServiceItemLink(i))
             local recipe = id and ("item:" .. id) or ("name:" .. name:lower())
             local cost = GetTrainerServiceCost and GetTrainerServiceCost(i) or 0
-            if Core.recordTrainer(ns.db, recipe, cost, zone(), trainer, ns.now()) then new = new + 1 end
+            local isNew = Core.recordTrainer(ns.db, recipe, cost, zone(), trainer, ns.now())
+            if shared(isNew, Core.trainerRecord(recipe)) then new = new + 1 end
         end
     end
     return new
@@ -103,7 +110,8 @@ function Sources.questRewards()
         for i = 1, count do
             local id = itemId(GetQuestItemLink(kind, i))
             -- A quest is the same wherever it's handed in: no zone.
-            if isRecipe(id) and Core.recordItemSource(ns.db, id, "Q", "", title, ns.now()) then new = new + 1 end
+            local isNew = isRecipe(id) and Core.recordItemSource(ns.db, id, "Q", "", title, ns.now())
+            if isNew and shared(isNew, Core.itemRecord(id)) then new = new + 1 end
         end
     end
     return new

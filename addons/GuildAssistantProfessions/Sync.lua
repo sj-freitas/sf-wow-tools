@@ -9,6 +9,9 @@
 --     whole guild hears the first answer, and the others then don't send theirs.
 --   * A character received is kept unless it is one of this account's (its own data wins), or what
 --     is kept is as new. Only characters of the same guild are shared.
+--   * How recipes are obtained (Sources.lua: vendors, trainers, loot, quests) goes the same way, as
+--     records: each new finding is sent; at login a summary of the records ("D"), answered with
+--     the records ("R") the sender lacks or has older. Records are merged, never replaced.
 -- The pure parts (the messages, what to send, what to keep) are in Core.lua.
 
 local _, ns = ...
@@ -23,7 +26,7 @@ local INTERVAL, BURST = 1.0, 4
 local HELLO_DELAY = 20 -- seconds after login: the guild's roster and the chat are ready by then
 local OWN_DELAY = 10 -- seconds after a scan: a window being browsed changes several times
 
-Sync.stats = { sent = 0, received = 0 }
+Sync.stats = { sent = 0, received = 0, sourcesSent = 0, sourcesReceived = 0 }
 
 local function now() return ns.now() end
 local function after(seconds, fn)
@@ -119,6 +122,27 @@ local function sendCharacter(key, answer)
     end)
 end
 
+-- A record of sources (Core.encodeSourceRecord), sent as it is when its turn comes.
+local function sendSourceRecord(record, answer)
+    if answer and answer.cancelled then return end
+    enqueue("R" .. record, function()
+        local payload = ns.db and guild() and Core.encodeSourceRecord(ns.db, record)
+        if not payload then return nil end
+        Sync.stats.sourcesSent = Sync.stats.sourcesSent + 1
+        lastSent["R" .. record] = { updated = ns.db.sources.stamps[record], at = now() }
+        return Core.pieces("R", nextId(), payload)
+    end, answer and function()
+        local copy = lastSent["R" .. record]
+        return answer.cancelled
+            or (copy ~= nil and copy.updated >= answer.updated and copy.at >= answer.asked - CROSSED)
+    end)
+end
+
+--- Something new was found of how a recipe is obtained (Sources.lua): send its record.
+function Sync.sourceChanged(record)
+    if guild() then sendSourceRecord(record) end
+end
+
 --- This character's professions changed: send them to the guild (once things settle).
 local ownPending = 0
 function Sync.ownChanged()
@@ -138,6 +162,10 @@ function Sync.hello()
     enqueue("H", function()
         local current = guild()
         return current and Core.pieces("H", nextId(), Core.digest(ns.db, current)) or nil
+    end)
+    -- And of the records of sources: anyone with more answers.
+    enqueue("D", function()
+        return guild() and Core.pieces("D", nextId(), Core.sourcesDigest(ns.db)) or nil
     end)
     -- This character's own professions too: the others may not have them yet. Restamped when old,
     -- so guildmates don't forget a character still played (Core.heartbeat).
@@ -167,6 +195,33 @@ local function onDigest(sender, payload)
         end
     end
     Sync.stats.peers = (Sync.stats.peers or 0) + 1
+end
+
+local function onSourcesDigest(sender, payload)
+    if not guild() then return end
+    for _, record in ipairs(Core.sourcesNewerThan(ns.db, Core.parseSourcesDigest(payload))) do
+        local key = "R" .. record
+        if not answering[key] then
+            local answer = { updated = ns.db.sources.stamps[record], asked = now() }
+            answering[key] = answer
+            after(2 + math.random() * 8, function()
+                answering[key] = nil
+                sendSourceRecord(record, answer)
+            end)
+        end
+    end
+end
+
+local function onSourceRecord(sender, payload)
+    local received = guild() and Core.decodeSourceRecord(payload)
+    if not received then return end
+    local answer = answering["R" .. received.record]
+    if answer and received.stamp >= answer.updated then answer.cancelled = true end
+    local changed, more = Core.receiveSourceRecord(ns.db, received, now())
+    if changed then Sync.stats.sourcesReceived = Sync.stats.sourcesReceived + 1 end
+    -- Holding more than the sender: send the whole record back, so both have it all now (the other
+    -- side then has nothing more, so it stops there).
+    if more then sendSourceRecord(received.record) end
 end
 
 local function onCharacter(sender, payload)
@@ -201,6 +256,10 @@ function Sync.onMessage(prefix, message, channel, sender)
         onDigest(sender, payload)
     elseif kind == "C" then
         onCharacter(sender, payload)
+    elseif kind == "D" then
+        onSourcesDigest(sender, payload)
+    elseif kind == "R" then
+        onSourceRecord(sender, payload)
     end
 end
 
@@ -222,6 +281,7 @@ function Sync.describe(db, when)
         if character.source == "guild" and character.guild == g then known = known + 1 end
     end
     local s = Sync.stats
-    return ("Guild sharing (%s): %d guild character%s received so far. This session: %d received (last %s), %d sent (last %s)."):format(
-        g, known, known == 1 and "" or "s", s.received, when(s.lastReceived), s.sent, when(s.lastSent))
+    return ("Guild sharing (%s): %d guild character%s received so far. This session: %d received (last %s), %d sent (last %s); recipe sources: %d received, %d sent."):format(
+        g, known, known == 1 and "" or "s", s.received, when(s.lastReceived), s.sent, when(s.lastSent),
+        s.sourcesReceived, s.sourcesSent)
 end

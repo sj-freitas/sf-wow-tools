@@ -12,6 +12,19 @@ export interface ProfessionExport {
   /** 1: the addon before 1.0 (no dates by the game server); 2: 1.0 and later. */
   format: number;
   characters: ExportedCharacter[];
+  /** How recipes are obtained, as the addon saw it in game (1.3.0 and later); null without any. */
+  sources: ExportedSources | null;
+}
+
+/**
+ * What the addon recorded of how recipes are obtained (RecipeSourcesService keeps it for
+ * GuildAssistant Database). Entries are as the addon writes them.
+ */
+export interface ExportedSources {
+  /** Recipe items, and where each comes from: "V:Tanaris=Krinkle Goodsteel" (V vendor, D drop, O object, F fishing, Q quest; the zone; who). */
+  items: { id: number; entries: string[] }[];
+  /** Recipes a trainer teaches ("item:<item made>" or "name:<recipe>"), the cost, and "<zone>=<trainer>". */
+  trainers: { recipe: string; cost: number | null; entries: string[] }[];
 }
 
 export interface ExportedCharacter {
@@ -95,6 +108,52 @@ const ids = (value: unknown, what: string): number[] => {
   return [...new Set(list as number[])].sort((a, b) => a - b);
 };
 
+const ITEM_ENTRY = /^[VDOFQ](\d{1,6}|:[^=;\t]{1,60})?=[^;\t]{0,60}$/;
+const TRAINER_ENTRY = /^[^=;\t]{0,60}=[^=;\t]{1,60}$/;
+const TRAINER_RECIPE = /^(item:\d{1,8}|name:[^=;\t]{1,80})$/;
+const MAX_SOURCE_ENTRIES = 2000;
+
+/**
+ * The export's recipe sources, checked. Never fails the import: anything that isn't one (from
+ * someone's edited file, say) is left out, and at most MAX_SOURCE_ENTRIES are taken.
+ */
+export function parseSources(value: unknown): ExportedSources | null {
+  if (!value || typeof value !== 'object') return null;
+  const root = value as { items?: unknown; trainers?: unknown };
+  let budget = MAX_SOURCE_ENTRIES;
+  const entries = (list: unknown, pattern: RegExp): string[] => {
+    if (!Array.isArray(list)) return [];
+    const good = [
+      ...new Set(list.filter((e): e is string => typeof e === 'string' && pattern.test(e))),
+    ].slice(0, Math.max(0, Math.min(12, budget)));
+    budget -= good.length;
+    return good;
+  };
+  const items: ExportedSources['items'] = [];
+  for (const item of Array.isArray(root.items) ? (root.items as Record<string, unknown>[]) : []) {
+    const id = item?.id;
+    if (typeof id !== 'number' || !Number.isInteger(id) || id <= 0 || id >= 1e8) continue;
+    const list = entries(item.entries, ITEM_ENTRY);
+    if (list.length > 0) items.push({ id, entries: list });
+  }
+  const trainers: ExportedSources['trainers'] = [];
+  for (const trainer of Array.isArray(root.trainers)
+    ? (root.trainers as Record<string, unknown>[])
+    : []) {
+    if (typeof trainer?.recipe !== 'string' || !TRAINER_RECIPE.test(trainer.recipe)) continue;
+    const list = entries(trainer.entries, TRAINER_ENTRY);
+    const cost =
+      typeof trainer.cost === 'number' &&
+      Number.isInteger(trainer.cost) &&
+      trainer.cost > 0 &&
+      trainer.cost < 1e8
+        ? trainer.cost
+        : null;
+    if (list.length > 0) trainers.push({ recipe: trainer.recipe, cost, entries: list });
+  }
+  return items.length > 0 || trainers.length > 0 ? { items, trainers } : null;
+}
+
 /** The uploaded saved variables file, or the export's JSON (as text or parsed), checked. */
 export function parseProfessionExport(input: unknown): ProfessionExport {
   let data: unknown = input;
@@ -107,7 +166,12 @@ export function parseProfessionExport(input: unknown): ProfessionExport {
       fail('not JSON');
     }
   }
-  const root = data as { addon?: unknown; format?: unknown; characters?: unknown } | null;
+  const root = data as {
+    addon?: unknown;
+    format?: unknown;
+    characters?: unknown;
+    sources?: unknown;
+  } | null;
   if (!root || typeof root !== 'object' || root.addon !== 'GuildAssistantProfessions') {
     fail('not from the addon');
   }
@@ -115,6 +179,7 @@ export function parseProfessionExport(input: unknown): ProfessionExport {
   if (!Array.isArray(characters) || characters.length > MAX_CHARACTERS) fail('no characters');
   return {
     format: typeof root!.format === 'number' ? root!.format : 1,
+    sources: parseSources(root!.sources),
     characters: (characters as Record<string, unknown>[]).map((character) => {
       const professions = character.professions;
       if (!Array.isArray(professions) || professions.length > MAX_PROFESSIONS) {

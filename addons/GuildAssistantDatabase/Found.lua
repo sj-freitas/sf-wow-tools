@@ -1,0 +1,2 @@
+-- GuildAssistant Database: how recipes are obtained, as players' GuildAssistant Professions found it in game.
+-- Nothing yet: `npm run database` in addons/ (scripts/database/found.mjs) fills it in from Guild Assistant.

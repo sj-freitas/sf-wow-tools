@@ -48,6 +48,7 @@ authorization), the character and guild rules, token encryption and name parsing
 | GET    | `/api/auth/me`              | Current user, or 401                                           |
 | POST   | `/api/auth/logout`          | Destroys the session                                           |
 | POST   | `/api/discord/interactions` | Discord's HTTP Interactions Endpoint — see below               |
+| GET    | `/api/recipe-sources`       | How recipes are obtained, as players' addons found it (no login) — see Professions |
 
 Backoffice auth: Discord OAuth2 login using the **same Discord application** as the bot (add the
 redirect URI under OAuth2 → Redirects; set `DISCORD_CLIENT_SECRET` and
@@ -1103,6 +1104,14 @@ on logout). Blizzard's Classic Era / SoD API has no professions, hence the addon
     key outlives logins.
 
   Deleting a key stops it at once, and each key's page row shows when it was last used.
+- **How recipes are obtained** (GuildAssistant Professions 1.3.0+): an export may carry `sources`,
+  what the player's addon (and their guild's) saw in game: where recipe items are sold, dropped,
+  fished or given by quests, and which trainers teach which recipes for how much
+  (`parseSources`, which leaves out anything that isn't one and never fails an import). Every
+  import adds them to `recipe_sources` (`RecipeSourcesService`, `prisma/professions.prisma`): merged,
+  never replaced, with how many users reported each, and no player or guild. `GET
+  /api/recipe-sources` (no login: game facts) publishes them for GuildAssistant Database's data
+  build (`addons/scripts/database/found.mjs`), which a person reviews before release.
 - **The guild's professions** (`GET /api/guilds/:guildId/professions`): anyone in the guild. Every
   recipe someone can craft and who, and each character's professions (`GuildRecipesService`, which
   needs no login: the bot and the worker use it too). The backoffice's **Professions** page lists

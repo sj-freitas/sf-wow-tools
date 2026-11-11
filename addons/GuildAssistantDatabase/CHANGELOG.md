@@ -1,5 +1,11 @@
 # GuildAssistant Database
 
+## 1.3.0
+
+- What players found of how recipes are obtained, gathered by Guild Assistant from their
+  GuildAssistant Professions, is included with each release ("found by players" under a recipe's
+  sources). What your guild finds shows after a /reload, through GuildAssistant Professions 1.3.0.
+
 ## 1.2.0
 
 - How to learn a recipe is back: trainers and their costs, where plans and patterns drop, who sells
@@ -14,7 +20,7 @@
 
 ## 1.1.0
 
-- The recipes now come from the game's own data files for WoW Forever, not from Wowhead, and are
+- The recipes now come from the game's own data files for WoW Forever, and are
   updated with each new build of the game. Every recipe the game has is listed, with its reagents,
   skill and skill-up colours, the item it makes (slot, type and stats) and the plans, pattern or
   formula that teach it.
@@ -29,7 +35,7 @@
 ## 1.0.0
 
 - The first full release: no longer experimental. Everything from 0.1.0 to 0.3.1: every
-  profession's recipes from Wowhead (WoW Forever), searchable by name, stat, slot or reagent, with
+  profession's recipes (WoW Forever), searchable by name, stat, slot or reagent, with
   level and skill limits and a Filter for armor types and slots; how many match in each
   profession; each recipe's item, reagents, how to learn it and who can craft it (with
   GuildAssistant Professions); your recipes not known yet; and the minimap button.
@@ -55,7 +61,7 @@
 
 ## 0.1.0
 
-- First, experimental version: every profession's recipes from Wowhead (WoW Forever), searchable
+- First, experimental version: every profession's recipes (WoW Forever), searchable
   by name, stat, slot or reagent, within a level and skill range (`/gadb`).
 - A recipe's details: the item it makes, its reagents, how to learn it (trainer, drop, vendor,
   quest) and, with GuildAssistant Professions, who you know that can craft it.

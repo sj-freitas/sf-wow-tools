@@ -193,7 +193,29 @@ function Core.exportData(db)
     end
     -- Format 2 (1.0): characters and professions dated by the game server's clock, which Guild
     -- Assistant needs to tell the newer data; it leaves format 1's characters out.
-    return { addon = "GuildAssistantProfessions", format = 2, characters = characters }
+    local export = { addon = "GuildAssistantProfessions", format = 2, characters = characters }
+    export.sources = Core.exportSources(db)
+    return export
+end
+
+--- How recipes are obtained, as recorded (1.3.0 and later), for Guild Assistant to gather into
+--- GuildAssistant Database: { items = { { id, entries } }, trainers = { { recipe, cost, entries } } }
+--- (entries as kept, sorted), nil when nothing is recorded.
+function Core.exportSources(db)
+    local sources = db.sources
+    if not sources then return nil end
+    local items, trainers = {}, {}
+    for _, id in ipairs(sortedKeys(sources.items or {})) do
+        local entries = sortedKeys(sources.items[id])
+        if #entries > 0 then items[#items + 1] = { id = id, entries = entries } end
+    end
+    for _, recipe in ipairs(sortedKeys(sources.recipes or {})) do
+        local known = sources.recipes[recipe]
+        local entries = sortedKeys(known.trainers or {})
+        if #entries > 0 then trainers[#trainers + 1] = { recipe = recipe, cost = known.cost, entries = entries } end
+    end
+    if #items == 0 and #trainers == 0 then return nil end
+    return { items = items, trainers = trainers }
 end
 
 --- Rebuilds the export kept in the saved data (`db.export`, JSON), stamped `now`: the game writes
@@ -521,7 +543,9 @@ end
 -- and for how much. db.sources = { items = { [item id] = { [entry] = last seen } }, recipes = {
 -- [recipe] = { cost, trainers = { ["<zone>=<trainer>"] = last seen } } } }; an entry is
 -- "<kind>[:<zone>]=<who>" (V vendor, D drop, O object, F fishing, Q quest), a recipe "item:<id>"
--- (the item it makes) or "name:<recipe name>". Not exported, not shared with the guild (yet).
+-- (the item it makes) or "name:<recipe name>". Each recipe item's sources and each trainer recipe is
+-- a record ("i<item id>", "r<recipe>"), stamped when it last changed (db.sources.stamps): the guild
+-- shares records like characters (Sync.lua), and the export carries them for Guild Assistant.
 
 --- At most this many places per recipe item, and trainers per recipe: enough to say where to go.
 Core.MAX_SOURCES = 12
@@ -532,6 +556,15 @@ local function countKeys(map)
     local n = 0
     for _ in pairs(map) do n = n + 1 end
     return n
+end
+
+--- The record of a recipe item's sources, and of a trainer recipe.
+function Core.itemRecord(itemId) return "i" .. itemId end
+function Core.trainerRecord(recipe) return "r" .. recipe end
+
+local function stamp(db, record, now)
+    db.sources.stamps = db.sources.stamps or {}
+    db.sources.stamps[record] = math.max(now, db.sources.stamps[record] or 0)
 end
 
 --- Records that recipe item `itemId` comes from `kind` ("V", "D", "O", "F", "Q") in `zone`, by
@@ -547,6 +580,7 @@ function Core.recordItemSource(db, itemId, kind, zone, who, now)
     if new and countKeys(entries) >= Core.MAX_SOURCES then return false end
     entries[entry] = now
     db.sources.items[itemId] = entries
+    if new then stamp(db, Core.itemRecord(itemId), now) end
     return new
 end
 
@@ -560,9 +594,121 @@ function Core.recordTrainer(db, recipe, cost, zone, who, now)
     local new = known.trainers[entry] == nil
     if new and countKeys(known.trainers) >= Core.MAX_SOURCES then return false end
     known.trainers[entry] = now
+    local costChanged = cost and cost > 0 and cost ~= known.cost
     known.cost = cost and cost > 0 and cost or known.cost
     db.sources.recipes[recipe] = known
+    if new or costChanged then stamp(db, Core.trainerRecord(recipe), now) end
     return new
+end
+
+--- The summary of the records of sources this addon has, for the guild: "i6047=<stamp>;…".
+function Core.sourcesDigest(db)
+    local parts = {}
+    for record, at in pairs(db.sources and db.sources.stamps or {}) do
+        parts[#parts + 1] = record .. "=" .. Core.toBase36(at)
+    end
+    table.sort(parts)
+    return table.concat(parts, ";")
+end
+
+function Core.parseSourcesDigest(text)
+    local known = {}
+    for record, at in (text or ""):gmatch("([^;=]+)=([0-9a-z]+)") do known[record] = Core.fromBase36(at) end
+    return known
+end
+
+--- The records to send someone whose summary is `theirs`: those they lack, or have older.
+function Core.sourcesNewerThan(db, theirs)
+    local records = {}
+    for record, at in pairs(db.sources and db.sources.stamps or {}) do
+        if at > (theirs[record] or -1) then records[#records + 1] = record end
+    end
+    table.sort(records)
+    return records
+end
+
+--- A record as text: "<record>\t<stamp>\t<cost>\t<entry>\t…" (numbers in base 36; cost only
+--- for a trainer recipe; entries as kept). Nil when this addon doesn't have it.
+function Core.encodeSourceRecord(db, record)
+    local sources = db.sources or {}
+    local at = sources.stamps and sources.stamps[record]
+    if not at then return nil end
+    local entries, cost = {}, ""
+    local itemId = tonumber(record:match("^i(%d+)$") or "")
+    if itemId then
+        for entry in pairs(sources.items and sources.items[itemId] or {}) do entries[#entries + 1] = entry end
+    else
+        local known = sources.recipes and sources.recipes[record:sub(2)]
+        if not known then return nil end
+        for entry in pairs(known.trainers) do entries[#entries + 1] = entry end
+        cost = known.cost and Core.toBase36(known.cost) or ""
+    end
+    table.sort(entries)
+    local fields = { record, Core.toBase36(at), cost }
+    for _, entry in ipairs(entries) do fields[#fields + 1] = entry end
+    return table.concat(fields, "\t")
+end
+
+local ITEM_ENTRY = "^[VDOFQ][^=\t;]*=[^\t;]*$"
+local TRAINER_ENTRY = "^[^=\t;]*=[^=\t;]+$"
+
+--- A record from `encodeSourceRecord`'s text, checked (anyone in the guild can send anything):
+--- { record, stamp, cost, entries }, nil when it isn't one.
+function Core.decodeSourceRecord(text)
+    if type(text) ~= "string" then return nil end
+    local fields = {}
+    for field in (text .. "\t"):gmatch("([^\t]*)\t") do fields[#fields + 1] = field end
+    local record, at = fields[1], Core.fromBase36(fields[2])
+    local isItem = record and record:match("^i%d+$") ~= nil
+    local isTrainer = record and (record:match("^ritem:%d+$") or record:match("^rname:[^=;]+$")) ~= nil
+    if not at or not (isItem or isTrainer) or #fields - 3 > Core.MAX_SOURCES or #fields < 4 then return nil end
+    local decoded = { record = record, stamp = at, cost = Core.fromBase36(fields[3]), entries = {} }
+    for i = 4, #fields do
+        local entry = fields[i]
+        if #entry > 120 or not entry:match(isItem and ITEM_ENTRY or TRAINER_ENTRY) then return nil end
+        decoded.entries[#decoded.entries + 1] = entry
+    end
+    return decoded
+end
+
+--- Merges a record received from the guild into what is kept: its entries are added (at most
+--- Core.MAX_SOURCES), a trainer's cost taken. Holding more than received, the record is restamped
+--- newer, so those who only have what was received ask for it. Returns whether anything changed,
+--- and whether what is kept has more than what was received (worth sending back).
+function Core.receiveSourceRecord(db, received, now)
+    db.sources = db.sources or {}
+    db.sources.stamps = db.sources.stamps or {}
+    local itemId = tonumber(received.record:match("^i(%d+)$") or "")
+    local entries
+    if itemId then
+        db.sources.items = db.sources.items or {}
+        entries = db.sources.items[itemId] or {}
+        db.sources.items[itemId] = entries
+    else
+        db.sources.recipes = db.sources.recipes or {}
+        local known = db.sources.recipes[received.record:sub(2)] or { trainers = {} }
+        db.sources.recipes[received.record:sub(2)] = known
+        entries = known.trainers
+        if received.cost and received.cost > 0 and received.cost ~= known.cost then
+            known.cost = received.cost
+        end
+    end
+    local changed, incoming = false, {}
+    for _, entry in ipairs(received.entries) do
+        incoming[entry] = true
+        if entries[entry] == nil and countKeys(entries) < Core.MAX_SOURCES then
+            entries[entry], changed = received.stamp, true
+        end
+    end
+    local more = false
+    for entry in pairs(entries) do
+        if not incoming[entry] then more = true end
+    end
+    local current = db.sources.stamps[received.record] or 0
+    local at = math.max(current, received.stamp)
+    if more and received.stamp >= current then at = math.max(at + 1, now or 0) end
+    if at ~= current then db.sources.stamps[received.record], changed = at, true end
+    return changed, more
 end
 
 --- "12 recipe items' sources, 30 trainer recipes": what is recorded, for /ga-prof status.
@@ -593,7 +739,8 @@ local function isArray(value)
     return true
 end
 
-local ARRAY_FIELDS = { characters = true, professions = true, spells = true, items = true }
+local ARRAY_FIELDS = { characters = true, professions = true, spells = true, items = true, trainers = true,
+    entries = true }
 
 local function encode(value, field)
     local kind = type(value)

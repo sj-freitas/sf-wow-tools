@@ -72,3 +72,33 @@ model WowheadEntry {
   @@id([kind, id])
   @@map("wowhead_entries")
 }
+
+enum RecipeSourceKind {
+  ITEM
+  TRAINER
+
+  @@map("recipe_source_kind")
+}
+
+// How recipes are obtained, as players' GuildAssistant Professions addons saw it in game (1.3.0 and
+// later): where a recipe item is sold, dropped, fished or given by a quest (ITEM, `key` its item
+// id), and which trainer teaches a recipe for how much (TRAINER, `key` "item:<item made>" or
+// "name:<recipe name>"). Gathered from every import (RecipeSourcesService) and published (GET
+// /api/recipe-sources) for GuildAssistant Database's data build. No player or guild in it, only
+// how many users reported each.
+model RecipeSource {
+  kind        RecipeSourceKind
+  key         String
+  // As the addon writes it: "V:Tanaris=Krinkle Goodsteel" (ITEM), "Stormwind City=Grimand Elmore"
+  // (TRAINER).
+  entry       String
+  // A trainer's cost, in copper.
+  cost        Int?
+  // The users whose imports reported it (at most 20), to count them.
+  reporters   String[]
+  firstSeenAt DateTime         @default(now()) @map("first_seen_at")
+  lastSeenAt  DateTime         @default(now()) @map("last_seen_at")
+
+  @@id([kind, key, entry])
+  @@map("recipe_sources")
+}

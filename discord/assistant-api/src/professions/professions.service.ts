@@ -16,6 +16,7 @@ import {
   type ProfessionDto,
 } from './guild-recipes.service';
 import { ProfessionsPostPlugin } from './professions-post.plugin';
+import { RecipeSourcesService } from './recipe-sources.service';
 import { WowheadService, type WowheadRef } from './wowhead.service';
 
 export type { GuildProfessionsDto, ProfessionDto, RecipeDto } from './guild-recipes.service';
@@ -86,6 +87,7 @@ export class ProfessionsService {
     private readonly wowhead: WowheadService,
     private readonly guildRecipes: GuildRecipesService,
     private readonly professionsPost: ProfessionsPostPlugin,
+    private readonly recipeSources: RecipeSourcesService,
   ) {}
 
   /** For tests: the time now (a drop by hand is dated by it). */
@@ -230,6 +232,8 @@ export class ProfessionsService {
     void this.wowhead.resolve(refs, path);
     // The guild's Professions Lists post the change.
     if (result.imported.length > 0) await this.professionsPost.soon(guildId);
+    // How recipes are obtained, as the addon saw it (1.3.0+): gathered for GuildAssistant Database.
+    await this.recipeSources.record(user.id, data.sources);
     return result;
   }
 

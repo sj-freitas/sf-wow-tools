@@ -279,5 +279,79 @@ it("forgets at login a guildmate not heard of for 90 days", function()
     eq(kael.ns.db.characters["Gone-Test Realm"], nil, "forgotten")
 end)
 
+-- Recipe sources -----------------------------------------------------------------------------------
+
+-- `p` opens a vendor selling recipe item `id`, as Sources.merchant records it and tells the guild.
+local function sawVendor(p, id, vendor, zone)
+    if p.ns.Core.recordItemSource(p.ns.db, id, "V", zone, vendor, clock) then
+        p.ns.Sync.sourceChanged(p.ns.Core.itemRecord(id))
+    end
+end
+
+local function sourcesOf(p, id)
+    local entries = {}
+    for entry in pairs(p.ns.db.sources and p.ns.db.sources.items and p.ns.db.sources.items[id] or {}) do
+        entries[#entries + 1] = entry
+    end
+    table.sort(entries)
+    return table.concat(entries, " | ")
+end
+
+it("sends a new finding of how a recipe is obtained to the guild, quietly", function()
+    reset()
+    local luna = player("Luna", "Relic Hunters")
+    local kael = player("Kael", "Relic Hunters")
+    run(60)
+    sawVendor(luna, 6047, "Krinkle Goodsteel", "Tanaris")
+    run(30)
+    eq(sourcesOf(kael, 6047), "V:Tanaris=Krinkle Goodsteel")
+    eq(luna.ns.Core.recordTrainer(luna.ns.db, "item:2852", 50, "Stormwind City", "Grimand Elmore", clock), true)
+    luna.ns.Sync.sourceChanged(luna.ns.Core.trainerRecord("item:2852"))
+    run(30)
+    eq(kael.ns.db.sources.recipes["item:2852"].cost, 50)
+    eq(kael.ns.db.sources.recipes["item:2852"].trainers["Stormwind City=Grimand Elmore"] ~= nil, true)
+    for _, line in ipairs(kael.chat) do
+        assert(not line:find("Krinkle", 1, true), "nothing said in Kael's chat: " .. line)
+    end
+    eq(kael.ns.Sync.stats.sourcesReceived, 2)
+end)
+
+it("catches up a guildmate who logs in later, and merges what both found", function()
+    reset()
+    local luna = player("Luna", "Relic Hunters")
+    run(60)
+    sawVendor(luna, 6047, "Krinkle Goodsteel", "Tanaris")
+    run(30)
+    -- Kael found another vendor of it while Luna wasn't around, and logs in now.
+    local kael = player("Kael", "Relic Hunters", nil, {
+        characters = {},
+        sources = { items = { [6047] = { ["V:Booty Bay=Narkk"] = clock - 100 } }, stamps = { i6047 = clock - 100 } },
+    })
+    run(120)
+    eq(sourcesOf(kael, 6047), "V:Booty Bay=Narkk | V:Tanaris=Krinkle Goodsteel", "Kael got Luna's")
+    eq(sourcesOf(luna, 6047), "V:Booty Bay=Narkk | V:Tanaris=Krinkle Goodsteel", "and Luna Kael's")
+    -- And then it stops: nothing bounces back and forth.
+    local function records()
+        local n = 0
+        for _, s in ipairs(sent) do if s.message:match("^R") then n = n + 1 end end
+        return n
+    end
+    local before = records()
+    run(600)
+    eq(records(), before, "no more records sent")
+end)
+
+it("ignores a record that isn't one", function()
+    reset()
+    local core = player("Luna", "Relic Hunters").ns.Core
+    eq(core.decodeSourceRecord("i6047\t\t\tV:Tanaris=Krinkle"), nil, "no stamp")
+    eq(core.decodeSourceRecord("x6047\t1\t\tV=Krinkle"), nil, "unknown record")
+    eq(core.decodeSourceRecord("i6047\t1\t\tGarbage"), nil, "not an entry")
+    eq(core.decodeSourceRecord("i6047\t1\t"), nil, "no entries")
+    eq(core.decodeSourceRecord("i6047\t1\t\tV=" .. ("x"):rep(200)), nil, "too long")
+    eq(core.decodeSourceRecord("ritem:2852\t1\t1e\tZone=Trainer").cost, 50)
+    eq(core.decodeSourceRecord("i6047\t1\t\tV:Tanaris=Krinkle").entries[1], "V:Tanaris=Krinkle")
+end)
+
 realPrint(("%d passed, %d failed"):format(passed, failed))
 if failed > 0 then error(failed .. " failed") end
