@@ -14,10 +14,11 @@ GuildAssistantDatabase (experimental). `npm install` once, then:
 ## Trying an addon in game
 
 Copy it into the game's AddOns folder and `/reload`. WoW Forever (client 1.60.1, interface 16001)
-is installed as `_classic_beta_` for now; Classic Era (`_classic_era_`, 11509) works too:
+is installed as `_forever_`; Classic Era (`_classic_era_`, 11509) works too, except for
+GuildAssistantDatabase, whose data is Forever's:
 
 ```sh
-cp -R "./Raidsort" "$HOME/Applications/World of Warcraft/_classic_beta_/Interface/AddOns"
+cp -R "./Raidsort" "$HOME/Applications/World of Warcraft/_forever_/Interface/AddOns"
 ```
 
 Turn on Lua errors while testing: `/console scriptErrors 1`. The game also writes them to
