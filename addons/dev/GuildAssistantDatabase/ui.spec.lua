@@ -54,7 +54,7 @@ for _, name in ipairs({ "SetSize", "SetPoint", "SetFrameStrata", "SetToplevel", 
     "SetMovable", "RegisterForDrag", "StartMoving", "StopMovingOrSizing", "SetWidth", "SetHeight", "EnableMouseWheel",
     "ClearAllPoints", "SetAllPoints", "SetAutoFocus", "SetNumeric", "SetMaxLetters", "SetHighlightTexture",
     "SetOrientation", "SetThumbTexture", "SetValueStep", "SetObeyStepOnDrag", "SetJustifyH", "SetWordWrap",
-    "SetSpacing", "SetColorTexture", "SetBlendMode", "UnregisterEvent" }) do
+    "SetSpacing", "SetColorTexture", "SetBlendMode", "UnregisterEvent", "SetTextInsets", "SetAlpha" }) do
     Region[name] = noop
 end
 function Region:RegisterEvent(event) self._events = self._events or {}; self._events[event] = true end
@@ -157,10 +157,13 @@ local function loadAddon(options)
     end
     _G.GetNumSkillLines, _G.GetSkillLineInfo = nil, nil
     _G.IsPlayerSpell = function(id) return (options.knownSpells or {})[id] == true end
+    -- itemID, type, subtype, equip location, icon, class id, subclass id.
     _G.GetItemInfoInstant = function(id)
-        if id == 7935 or id == 2864 then return id, "Armor", "Plate", "INVTYPE_CHEST" end
-        if id == 7954 then return id, "Weapon", "One-Handed Maces", "INVTYPE_WEAPON" end
-        return id, "Trade Goods", "Trade Goods"
+        if id == 7935 or id == 2864 then return id, "Armor", "Plate", "INVTYPE_CHEST", 1, 4, 4 end
+        if id == 3837 then return id, "Armor", "Mail", "INVTYPE_HEAD", 1, 4, 3 end
+        if id == 2852 then return id, "Armor", "Mail", "INVTYPE_LEGS", 1, 4, 3 end
+        if id == 7954 then return id, "Weapon", "One-Handed Maces", "INVTYPE_WEAPON", 1, 2, 4 end
+        return id, "Trade Goods", "Trade Goods", "", 1, 7, 0
     end
     _G.GetItemInfo = function(id)
         if id == 2852 then return "Copper Chain Pants", "|cff1eff00|Hitem:2852::::::::4:::::::|h[Copper Chain Pants]|h|r" end
@@ -227,7 +230,7 @@ it("opens and closes with /gadb, and reads no profession before it opens", funct
     eq(shownRows(ns), "Enchant Bracer - Minor Health, Copper Chain Pants, Rough Sharpening Stone, Runed Copper Breastplate, "
         .. "Greater Magic Wand, Golden Scale Coif, The Shatterer, Ornate Mithril Breastplate")
     eq(ns.UI.parts().statusText:GetText(), "8 recipes")
-    eq(sidebar(ns), "All professions | Blacksmithing 6 | Enchanting 2")
+    eq(sidebar(ns), "All professions 8 | Blacksmithing 6 | Enchanting 2")
     eq(_G.GuildAssistantDatabaseFrame.TitleText:GetText(), "GuildAssistant Database")
     SlashCmdList.GADB("")
     eq(ns.UI.isShown(), false, "closed")
@@ -309,6 +312,116 @@ it("reads one profession per frame when the game has timers, saying so meanwhile
     eq(shownRows(ns):find("Copper") ~= nil, true, "not yet")
     runTimers()
     eq(shownRows(ns), "Greater Magic Wand")
+end)
+
+-- How many match, per profession -----------------------------------------------------------------
+
+local GOLD = "|cffffd100"
+
+it("says how many recipes of each profession match a search, in gold, and none for those without", function()
+    local ns = loadAddon()
+    SlashCmdList.GADB("")
+    local parts = ns.UI.parts()
+    parts.searchBox:SetText("breastplate")
+    eq(sidebar(ns), "All professions " .. GOLD .. "2|r | Blacksmithing " .. GOLD .. "2|r | Enchanting")
+    parts.searchBox:SetText("dust")
+    eq(sidebar(ns), "All professions " .. GOLD .. "2|r | Blacksmithing | Enchanting " .. GOLD .. "2|r")
+    -- The limits count as a search too.
+    parts.searchBox:SetText("")
+    parts.maxLevelBox:SetText("8")
+    eq(sidebar(ns), "All professions " .. GOLD .. "4|r | Blacksmithing " .. GOLD .. "2|r | Enchanting " .. GOLD .. "2|r")
+    parts.maxLevelBox:SetText("")
+    eq(sidebar(ns), "All professions 8 | Blacksmithing 6 | Enchanting 2", "back to the totals, in grey")
+end)
+
+it("counts every profession while one is picked, and says where the matches are when it has none", function()
+    local ns = loadAddon()
+    SlashCmdList.GADB("")
+    local parts = ns.UI.parts()
+    parts.sidebarButtons[3]:Click() -- Enchanting
+    eq(ns.Data.professions[1].loaded ~= nil, true, "all read: none picked at first")
+    parts.searchBox:SetText("breastplate")
+    eq(shownRows(ns), "")
+    eq(parts.statusText:GetText(), "None in Enchanting; 2 in other professions.")
+    eq(sidebar(ns), "All professions " .. GOLD .. "2|r | Blacksmithing " .. GOLD .. "2|r | Enchanting")
+    parts.sidebarButtons[2]:Click()
+    eq(shownRows(ns), "Runed Copper Breastplate, Ornate Mithril Breastplate")
+end)
+
+it("reads only the profession picked until there's a search, then the others for their counts", function()
+    local ns = loadAddon({ timers = true })
+    SlashCmdList.GADB("")
+    local parts = ns.UI.parts()
+    parts.sidebarButtons[3]:Click() -- Enchanting, before anything is read
+    runTimers()
+    eq(ns.Data.professions[2].loaded ~= nil, true, "Enchanting read")
+    eq(ns.Data.professions[1].loaded, nil, "Blacksmithing not needed")
+    eq(shownRows(ns), "Enchant Bracer - Minor Health, Greater Magic Wand")
+    parts.searchBox:SetText("wand")
+    runTimers()
+    eq(ns.Data.professions[1].loaded ~= nil, true, "Blacksmithing read for its count")
+    eq(sidebar(ns), "All professions " .. GOLD .. "1|r | Blacksmithing | Enchanting " .. GOLD .. "1|r")
+end)
+
+-- Clearing the search and the Filter ----------------------------------------------------------------
+
+it("clears the search with the cross, shown only while there's something to clear", function()
+    local ns = loadAddon()
+    SlashCmdList.GADB("")
+    local parts = ns.UI.parts()
+    eq(parts.clearButton:IsShown(), false, "nothing to clear")
+    parts.searchBox:SetText("wand")
+    eq(parts.clearButton:IsShown(), true)
+    parts.clearButton:Click()
+    eq(parts.searchBox:GetText(), "")
+    eq(parts.clearButton:IsShown(), false)
+    eq(#parts.state.results, 8)
+end)
+
+it("filters by armor type and slot from the Filter panel", function()
+    local ns = loadAddon()
+    SlashCmdList.GADB("")
+    local parts = ns.UI.parts()
+    eq(parts.filterPopup:IsShown(), false)
+    parts.filterButton:Click()
+    eq(parts.filterPopup:IsShown(), true, "opens")
+    parts.filterChecks.Plate:Click()
+    eq(shownRows(ns), "Runed Copper Breastplate, Ornate Mithril Breastplate")
+    eq(parts.filterButton:GetText(), "Filter (1)")
+    eq(sidebar(ns), "All professions " .. GOLD .. "2|r | Blacksmithing " .. GOLD .. "2|r | Enchanting", "a filter counts")
+    -- Two armor types: either; a slot as well: both.
+    parts.filterChecks.Mail:Click()
+    eq(shownRows(ns), "Copper Chain Pants, Runed Copper Breastplate, Golden Scale Coif, Ornate Mithril Breastplate")
+    parts.filterChecks.Head:Click()
+    eq(shownRows(ns), "Golden Scale Coif")
+    eq(parts.filterButton:GetText(), "Filter (3)")
+    -- A slot alone: weapons too.
+    parts.filterPopup.clear:Click()
+    eq(parts.filterButton:GetText(), "Filter")
+    eq(parts.filterChecks.Plate:GetChecked(), false)
+    parts.filterChecks["One-Hand"]:Click()
+    eq(shownRows(ns), "The Shatterer")
+    parts.filterChecks.Ranged:Click()
+    eq(shownRows(ns), "Greater Magic Wand, The Shatterer")
+    -- With words too.
+    parts.searchBox:SetText("wand")
+    eq(shownRows(ns), "Greater Magic Wand")
+    parts.filterPopup.done:Click()
+    eq(parts.filterPopup:IsShown(), false, "Done closes it")
+    eq(parts.filterButton:GetText(), "Filter (2)", "and keeps the filter")
+end)
+
+it("Reset clears the Filter too, and closes its panel", function()
+    local ns = loadAddon()
+    SlashCmdList.GADB("")
+    local parts = ns.UI.parts()
+    parts.filterButton:Click()
+    parts.filterChecks.Plate:Click()
+    parts.resetButton:Click()
+    eq(parts.filterPopup:IsShown(), false)
+    eq(parts.filterButton:GetText(), "Filter")
+    eq(parts.filterChecks.Plate:GetChecked(), false)
+    eq(#parts.state.results, 8)
 end)
 
 -- The details -------------------------------------------------------------------------------------

@@ -15,14 +15,19 @@ Type `/gadb` (or `/ga-db`) to open or close the window; `/gadb mithril` opens it
 - **Search** (top left): words that must all be somewhere in the recipe: its name, the item it
   makes (its slot, type and stats: `plate chest`, `stamina`, `fire resistance`, `maces`), its
   reagents (`thorium bar`: what uses them), or the profession. Recipes whose own name matches come
-  first.
+  first. The cross at its end clears it.
 - **Level**: the level the item it makes requires (an item that needs none counts as level 1).
   **Skill**: the profession skill it takes to learn. Leave a box empty for no limit.
+- **Filter**: tick armor types (Cloth, Leather, Mail, Plate) and slots (Head, Chest, One-Hand,
+  Ranged…). Any of the armor types ticked, and any of the slots; both when both have some. The
+  button says how many are ticked.
+- While searching (words, limits or a filter), each profession on the left says in gold how many
+  of its recipes match, and nothing when none do; without a search, how many it has.
 - **Not known yet**: only your professions' recipes this character doesn't know yet. The skill
   shows green when you can learn it now, red when not yet. What you know comes from
   GuildAssistant Professions (open each profession's window once so it records it); without it,
   from what the game says, which can miss some.
-- **Reset** clears it all.
+- **Reset** clears it all, the Filter too.
 - On the left, a profession shows only its recipes (with Not known yet, only yours are listed,
   with your skill).
 - Click a recipe for its details: the item (its type, slot and stats), how many it makes, the

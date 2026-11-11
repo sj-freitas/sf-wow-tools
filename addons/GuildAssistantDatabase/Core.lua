@@ -52,13 +52,14 @@ local function unknownItem(id)
 end
 
 --- The profession's recipes and items as tables, decoded from its text the first time (then kept).
---- `extra(itemId)`, when given, adds words to an item's search text (in game: its type, "Plate",
---- "One-Handed Maces", which the client knows without asking the server).
+--- `describe(itemId)`, when given, says what the game knows of an item made, without asking the
+--- server: words for its search text (its type, "Armor Plate", "Weapon One-Handed Maces"), and its
+--- class and subclass ids (what the armor type filter reads: Core.ARMOR_TYPES).
 --- Returns { name, skill, recipes = { recipe… }, items = { [id] = item } }; a recipe is
 --- { id, name, profession, skill, colors = { yellow, green, grey }, creates (item or nil),
 --- makes = { min, max }, reagents = { { item, count } }, sources = { code… }, trainingCost,
 --- recipeItems = { item… }, level (of the item it makes, 0 when none), search (lowercase text) }.
-function Core.load(entry, extra)
+function Core.load(entry, describe)
     if entry.loaded then return entry.loaded end
     local items = {}
     for line in (entry.items or ""):gmatch("[^\n]+") do
@@ -95,7 +96,12 @@ function Core.load(entry, extra)
         if recipe.creates then
             words[#words + 1] = recipe.creates.name
             words[#words + 1] = recipe.creates.summary
-            if extra then words[#words + 1] = extra(recipe.creates.id) end
+            local made = recipe.creates
+            if describe and not made.described then
+                made.described = true
+                made.words, made.classID, made.subclassID = describe(made.id)
+            end
+            words[#words + 1] = made.words
         end
         for _, reagent in ipairs(recipe.reagents) do words[#words + 1] = reagent.item.name end
         recipe.search = table.concat(words, " "):lower()
@@ -122,19 +128,75 @@ local function hasAll(haystack, terms)
     return true
 end
 
+-- The Filter button's choices. Slots are the game's inventory types (the data's `slot`, from
+-- Wowhead); armor types the game's armor subclasses (Core.load's `describe`).
+Core.SLOTS = {
+    { name = "Head", slots = { 1 } }, { name = "Neck", slots = { 2 } }, { name = "Shoulder", slots = { 3 } },
+    { name = "Back", slots = { 16 } }, { name = "Chest", slots = { 5, 20 } }, { name = "Wrist", slots = { 9 } },
+    { name = "Hands", slots = { 10 } }, { name = "Waist", slots = { 6 } }, { name = "Legs", slots = { 7 } },
+    { name = "Feet", slots = { 8 } }, { name = "Finger", slots = { 11 } }, { name = "Trinket", slots = { 12 } },
+    { name = "One-Hand", slots = { 13, 21 } }, { name = "Two-Hand", slots = { 17 } },
+    { name = "Off Hand", slots = { 22, 23 } }, { name = "Shield", slots = { 14 } },
+    { name = "Ranged", slots = { 15, 25, 26 } }, { name = "Bag", slots = { 18 } },
+}
+Core.ARMOR_CLASS = 4
+Core.ARMOR_TYPES = {
+    { name = "Cloth", subclass = 1 }, { name = "Leather", subclass = 2 },
+    { name = "Mail", subclass = 3 }, { name = "Plate", subclass = 4 },
+}
+
+--- The query's slot and armor type sets from the names picked: { slots = { [inventory type] = true }
+--- or nil, armor = { [subclass] = true } or nil } (nil: no filter of that kind).
+function Core.filterSets(slotNames, armorNames)
+    local slots, armor
+    for _, choice in ipairs(Core.SLOTS) do
+        if slotNames[choice.name] then
+            slots = slots or {}
+            for _, slot in ipairs(choice.slots) do slots[slot] = true end
+        end
+    end
+    for _, choice in ipairs(Core.ARMOR_TYPES) do
+        if armorNames[choice.name] then
+            armor = armor or {}
+            armor[choice.subclass] = true
+        end
+    end
+    return slots, armor
+end
+
 --- Whether `recipe` matches `query`: every term somewhere in its text (name, the item it makes and
 --- its stats and slot, its reagents, the profession), the level the item needs within
 --- minLevel..maxLevel (an item with none counts as level 1, a recipe that makes no item too), its
---- skill within minSkill..maxSkill (any of them nil: no limit), and, when `query.include` is given,
---- that it says yes.
+--- skill within minSkill..maxSkill (any of them nil: no limit), the item's slot in `query.slots` and
+--- its armor type in `query.armor` (sets; nil: any), and, when `query.include` is given, that it
+--- says yes.
 function Core.matches(recipe, query)
     local level = math.max(recipe.level or 0, 1)
     if query.minLevel and level < query.minLevel then return false end
     if query.maxLevel and level > query.maxLevel then return false end
     if query.minSkill and recipe.skill < query.minSkill then return false end
     if query.maxSkill and recipe.skill > query.maxSkill then return false end
+    local item = recipe.creates
+    if query.slots and not (item and query.slots[item.slot]) then return false end
+    if query.armor and not (item and item.classID == Core.ARMOR_CLASS and query.armor[item.subclassID]) then
+        return false
+    end
     if query.include and not query.include(recipe) then return false end
     return hasAll(recipe.search, query.terms or {})
+end
+
+--- Whether the query narrows anything down (words, limits, filters), as opposed to listing all.
+--- `include` (not known yet) is a mode, not a query.
+function Core.isQuery(query)
+    return #(query.terms or {}) > 0 or query.minLevel ~= nil or query.maxLevel ~= nil
+        or query.minSkill ~= nil or query.maxSkill ~= nil or query.slots ~= nil or query.armor ~= nil
+end
+
+--- How many of `recipes` each profession has: { [profession] = n }.
+function Core.countByProfession(recipes)
+    local counts = {}
+    for _, recipe in ipairs(recipes) do counts[recipe.profession] = (counts[recipe.profession] or 0) + 1 end
+    return counts
 end
 
 --- The recipes of `professions` (loaded ones) that match `query`, best first: those whose own

@@ -91,11 +91,17 @@ it("reads an enchant, which makes no item", function()
     eq(enchant.reagents[1].item.name, "Strange Dust")
 end)
 
-it("adds the game's words for an item to what a search reads", function()
+it("adds what the game knows of an item made: words searched, and its class", function()
     local entry = { name = "Test", recipes = "1\tThing\t5\t1,2,3\t99,1,1\t\t\t\t", items = "99\tThing\t2\t10\t5\t\tChest\t\t" }
-    local loaded = Core.load(entry, function(id) return id == 99 and "Armor Plate" or nil end)
+    local asked = 0
+    local loaded = Core.load(entry, function(id)
+        asked = asked + 1
+        if id == 99 then return "Armor Plate", 4, 4 end
+    end)
     eq(loaded.recipes[1].search:find("plate", 1, true) ~= nil, true, "its type is searched")
     eq(loaded.recipes[1].creates.summary, "Chest")
+    eq(loaded.recipes[1].creates.classID, 4); eq(loaded.recipes[1].creates.subclassID, 4)
+    eq(asked, 1)
 end)
 
 -- Searching ----------------------------------------------------------------------------------------
@@ -135,6 +141,40 @@ it("keeps the level and skill within the limits given", function()
     eq(names(Core.search(all(), { maxLevel = 1 })), "Enchant Bracer - Minor Health, Rough Sharpening Stone")
     eq(names(Core.search(all(), { minSkill = 200, maxSkill = 239 })), "The Shatterer")
     eq(names(Core.search(all(), { minSkill = 1, maxSkill = 15, minLevel = 2 })), "Copper Chain Pants")
+end)
+
+it("keeps to the slots and armor types picked", function()
+    -- What the game would say: Runed Copper Breastplate and Ornate Mithril Breastplate are plate,
+    -- Golden Scale Coif and Copper Chain Pants mail.
+    local classes = { [2864] = 4, [7935] = 4, [3837] = 3, [2852] = 3 }
+    for _, profession in ipairs(all()) do
+        for _, item in pairs(profession.items) do
+            if classes[item.id] then item.classID, item.subclassID = 4, classes[item.id] end
+        end
+    end
+    local function filtered(slotNames, armorNames)
+        local slots, armor = Core.filterSets(slotNames, armorNames)
+        return names(Core.search(all(), { slots = slots, armor = armor }))
+    end
+    eq(filtered({ Chest = true }, {}), "Runed Copper Breastplate, Ornate Mithril Breastplate")
+    eq(filtered({}, { Plate = true }), "Runed Copper Breastplate, Ornate Mithril Breastplate")
+    eq(filtered({}, { Mail = true, Plate = true }), "Copper Chain Pants, Runed Copper Breastplate, Golden Scale Coif, Ornate Mithril Breastplate")
+    eq(filtered({ Head = true }, { Plate = true }), "")
+    eq(filtered({ Head = true, Legs = true }, { Mail = true }), "Copper Chain Pants, Golden Scale Coif")
+    -- One-Hand takes main-hand weapons too; Ranged takes wands.
+    eq(filtered({ ["One-Hand"] = true, Ranged = true }, {}), "Greater Magic Wand, The Shatterer")
+    local slots, armor = Core.filterSets({}, {})
+    eq(slots, nil); eq(armor, nil)
+end)
+
+it("tells a search from listing everything, and counts matches per profession", function()
+    eq(Core.isQuery({ terms = {} }), false)
+    eq(Core.isQuery({ terms = {}, include = function() return true end }), false, "not known yet is a mode")
+    eq(Core.isQuery({ terms = { "x" } }), true)
+    eq(Core.isQuery({ terms = {}, maxLevel = 10 }), true)
+    eq(Core.isQuery({ terms = {}, slots = { [1] = true } }), true)
+    local counts = Core.countByProfession(Core.search(all(), { terms = Core.terms("dust") }))
+    eq(counts.Enchanting, 2); eq(counts.Blacksmithing, nil)
 end)
 
 it("leaves out what `include` says no to", function()

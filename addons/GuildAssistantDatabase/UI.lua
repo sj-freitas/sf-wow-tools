@@ -1,8 +1,9 @@
--- GuildAssistant Database: the window. A search box and level/skill limits along the top; the
--- professions on the left; the matching recipes in the middle (only the visible rows exist, reused
--- as the list scrolls); the chosen recipe's details on the right: what it makes, its reagents, how
--- to learn it and who can craft it. A profession's data is only read the first time it's needed,
--- one profession per frame, so opening the window never stalls the game.
+-- GuildAssistant Database: the window. A search box, level/skill limits and a Filter button (slots,
+-- armor types) along the top; the professions on the left, with how many recipes of each match
+-- the search; the matching recipes in the middle (only the visible rows exist, reused as the list
+-- scrolls); the chosen recipe's details on the right: what it makes, its reagents, how to learn it
+-- and who can craft it. A profession's data is only read the first time it's needed, one
+-- profession per frame, so opening the window never stalls the game.
 
 local _, ns = ...
 local Core, Game = ns.Core, ns.Game
@@ -19,7 +20,8 @@ local QUESTION_MARK = "Interface\\Icons\\INV_Misc_QuestionMark"
 local HIGHLIGHT = "Interface\\QuestFrame\\UI-QuestTitleHighlight"
 
 local frame
-local searchBox, placeholder, minLevelBox, maxLevelBox, minSkillBox, maxSkillBox, unknownCheck, resetButton
+local searchBox, placeholder, clearButton, minLevelBox, maxLevelBox, minSkillBox, maxSkillBox, unknownCheck, resetButton
+local filterButton, filterPopup, filterChecks
 local sidebarButtons, rows, slider, statusText, dataText, columnSkill
 local details
 
@@ -31,6 +33,9 @@ local state = {
     selected = nil, -- the recipe whose details are shown
     loadingScheduled = false,
     mine = {}, -- Game.myProfessions() at the last refresh
+    slots = {}, armor = {}, -- the Filter's choices, by name (Core.SLOTS, Core.ARMOR_TYPES)
+    counts = nil, -- with a search: how many recipes of each profession match ({ [name] = n })
+    total = 0, -- how many match in all the listed professions
 }
 
 -- Building blocks ----------------------------------------------------------------------------------
@@ -127,18 +132,25 @@ end
 --- Reads the first profession not read yet, on the next frame, then refreshes (and so on, one per
 --- frame). Without timers (the specs) they're all read now. Returns how many are still to read.
 local function loadPending(entries)
+    state.wanted = entries
     local pending = 0
     for _, entry in ipairs(entries) do
         if not entry.loaded then
             if not (C_Timer and C_Timer.After) then
-                Core.load(entry, Game.itemWords)
+                Core.load(entry, Game.describeItem)
             else
                 pending = pending + 1
                 if not state.loadingScheduled then
                     state.loadingScheduled = true
                     C_Timer.After(0, function()
                         state.loadingScheduled = false
-                        ns.safely(Core.load, entry, Game.itemWords)
+                        -- What's needed by then: another profession may have been picked meanwhile.
+                        for _, wanted in ipairs(state.wanted) do
+                            if not wanted.loaded then
+                                ns.safely(Core.load, wanted, Game.describeItem)
+                                break
+                            end
+                        end
                         ns.safely(UI.refresh)
                     end)
                 end
@@ -156,22 +168,44 @@ local function query()
             return profession ~= nil and not profession.knows(recipe)
         end
     end
+    local slots, armor = Core.filterSets(state.slots, state.armor)
     return {
         terms = Core.terms(searchBox:GetText()),
         minLevel = Core.limit(minLevelBox:GetText()), maxLevel = Core.limit(maxLevelBox:GetText()),
         minSkill = Core.limit(minSkillBox:GetText()), maxSkill = Core.limit(maxSkillBox:GetText()),
-        include = include,
+        slots = slots, armor = armor, include = include,
     }
 end
 
 -- The left column ---------------------------------------------------------------------------------
 
+-- With a search, each profession says how many of its recipes match, in gold (none: nothing);
+-- without one, how many it has (or your skill in it), in grey.
+local function matchCount(n)
+    return (n or 0) > 0 and ("|cffffd100%s|r"):format(Core.thousands(n)) or ""
+end
+
 local function drawSidebar()
     local entries = listedEntries()
-    local items = { { name = nil, text = state.unknownOnly and "All my professions" or "All professions" } }
+    local all = ""
+    if state.counts then
+        all = matchCount(state.total)
+    elseif not state.unknownOnly then
+        local count = 0
+        for _, entry in ipairs(entries) do count = count + (entry.count or 0) end
+        all = Core.thousands(count)
+    end
+    local items = { { name = nil, text = state.unknownOnly and "All my professions" or "All professions", right = all } }
     for _, entry in ipairs(entries) do
         local mine = state.mine[entry.name]
-        local right = mine and state.unknownOnly and ("%d/%d"):format(mine.rank, mine.max) or Core.thousands(entry.count or 0)
+        local right
+        if state.counts then
+            right = matchCount(state.counts[entry.name])
+        elseif mine and state.unknownOnly then
+            right = ("%d/%d"):format(mine.rank, mine.max)
+        else
+            right = Core.thousands(entry.count or 0)
+        end
         items[#items + 1] = { name = entry.name, text = entry.name, right = right }
     end
     for i, button in ipairs(sidebarButtons) do
@@ -343,6 +377,10 @@ local function statusLine(pending, total)
     end
     local count = #state.results
     local line = count == 0 and "No recipes match." or ("%s recipe%s"):format(Core.thousands(count), count == 1 and "" or "s")
+    if count == 0 and state.profession and state.total > 0 then
+        -- The others have some: their counts are on the left.
+        line = ("None in %s; %s in other professions."):format(state.profession, Core.thousands(state.total))
+    end
     if state.unknownOnly then
         if next(state.mine) == nil then return "You have no professions with recipes." end
         -- Your professions whose recipes GuildAssistant Professions hasn't recorded yet.
@@ -371,13 +409,26 @@ function UI.refresh()
         for _, entry in ipairs(listedEntries()) do listed = listed or entry.name == state.profession end
         if not listed then state.profession = nil end
     end
-    local entries = searchedEntries()
+    local q = query()
+    -- With a search, every listed profession is searched, for its count on the left; without one,
+    -- only the one picked (or all of them).
+    local entries = Core.isQuery(q) and listedEntries() or searchedEntries()
     local pending = loadPending(entries)
     local loaded = {}
     for _, entry in ipairs(entries) do
         if entry.loaded then loaded[#loaded + 1] = entry.loaded end
     end
-    state.results = Core.search(loaded, query())
+    local matches = Core.search(loaded, q)
+    state.counts = Core.isQuery(q) and Core.countByProfession(matches) or nil
+    state.total = #matches
+    if state.profession then
+        local picked = {}
+        for _, recipe in ipairs(matches) do
+            if recipe.profession == state.profession then picked[#picked + 1] = recipe end
+        end
+        matches = picked
+    end
+    state.results = matches
     drawSidebar()
     drawRows()
     drawDetails()
@@ -404,8 +455,10 @@ local function buildFilters()
     searchBox:SetMaxLetters(80)
     searchBox:SetScript("OnEnterPressed", searchBox.ClearFocus)
     searchBox:SetScript("OnEscapePressed", searchBox.ClearFocus)
+    searchBox:SetTextInsets(0, 18, 0, 0) -- room for the clear button
     searchBox:SetScript("OnTextChanged", function()
         placeholder:SetShown(searchBox:GetText() == "" and not searchBox:HasFocus())
+        clearButton:SetShown(searchBox:GetText() ~= "")
         UI.refreshSoon()
     end)
     searchBox:SetScript("OnEditFocusGained", function() placeholder:Hide() end)
@@ -413,6 +466,24 @@ local function buildFilters()
     placeholder = fontString(searchBox, "GameFontDisable")
     placeholder:SetPoint("LEFT", searchBox, "LEFT", 2, 0)
     placeholder:SetText("Search: name, stat, slot, reagent")
+
+    -- A cross at the end of the box, while there's something in it, to clear it.
+    clearButton = CreateFrame("Button", nil, searchBox)
+    clearButton:SetSize(14, 14)
+    clearButton:SetPoint("RIGHT", searchBox, "RIGHT", -3, 0)
+    local cross = clearButton:CreateTexture(nil, "ARTWORK")
+    cross:SetAllPoints(clearButton)
+    cross:SetTexture("Interface\\FriendsFrame\\ClearBroadcastIcon")
+    cross:SetAlpha(0.6)
+    clearButton:SetScript("OnEnter", function() cross:SetAlpha(1) end)
+    clearButton:SetScript("OnLeave", function() cross:SetAlpha(0.6) end)
+    clearButton:SetScript("OnClick", function()
+        searchBox:SetText("")
+        searchBox:ClearFocus()
+        state.offset = 0
+        UI.refresh()
+    end)
+    clearButton:Hide()
 
     local levelLabel = label(frame, "Level", "RIGHT", searchBox, 18)
     minLevelBox = numberBox(frame, 30)
@@ -437,6 +508,8 @@ local function buildFilters()
             box:SetText("")
             box:ClearFocus()
         end
+        UI.clearFilter()
+        filterPopup:Hide()
         unknownCheck:SetChecked(false)
         state.unknownOnly, state.profession, state.offset = false, nil, 0
         UI.refresh()
@@ -453,6 +526,95 @@ local function buildFilters()
         state.unknownOnly, state.offset = self:GetChecked() and true or false, 0
         UI.refresh()
     end)
+end
+
+-- The Filter button and its panel: armor types and slots to tick (any of those ticked in a group;
+-- both groups when both have some).
+local function updateFilterButton()
+    local picked = 0
+    for _ in pairs(state.slots) do picked = picked + 1 end
+    for _ in pairs(state.armor) do picked = picked + 1 end
+    filterButton:SetText(picked > 0 and ("Filter (%d)"):format(picked) or "Filter")
+end
+
+--- Unticks every armor type and slot.
+function UI.clearFilter()
+    state.slots, state.armor = {}, {}
+    for _, check in pairs(filterChecks) do check:SetChecked(false) end
+    updateFilterButton()
+end
+
+local FILTER_COLUMN, FILTER_ROW = 96, 22
+
+local function filterCheck(group, name, column, row)
+    local check = CreateFrame("CheckButton", nil, filterPopup, "UICheckButtonTemplate")
+    check:SetSize(20, 20)
+    check:SetPoint("TOPLEFT", filterPopup, "TOPLEFT", 10 + column * FILTER_COLUMN, -30 - row * FILTER_ROW)
+    local text = check.text or check.Text or fontString(check, "GameFontHighlightSmall")
+    text:ClearAllPoints()
+    text:SetPoint("LEFT", check, "RIGHT", 1, 0)
+    text:SetText(name)
+    check:SetScript("OnClick", function(self)
+        state[group][name] = self:GetChecked() and true or nil
+        state.offset = 0
+        updateFilterButton()
+        UI.refresh()
+    end)
+    filterChecks[name] = check
+    return check
+end
+
+local function buildFilterPopup()
+    filterButton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+    filterButton:SetSize(96, 22)
+    filterButton:SetPoint("LEFT", maxSkillBox, "RIGHT", 20, 0)
+    filterButton:SetText("Filter")
+    filterButton:SetScript("OnClick", function()
+        if filterPopup:IsShown() then filterPopup:Hide() else filterPopup:Show() end
+    end)
+
+    local slotColumns, slotRows = 3, math.ceil(#Core.SLOTS / 3)
+    filterPopup = CreateFrame("Frame", nil, frame)
+    filterPopup:SetFrameStrata("DIALOG")
+    filterPopup:SetSize(20 + (1 + slotColumns) * FILTER_COLUMN, 30 + slotRows * FILTER_ROW + 36)
+    filterPopup:SetPoint("TOPRIGHT", filterButton, "BOTTOMRIGHT", 0, -2)
+    filterPopup:EnableMouse(true) -- clicks on it don't reach the list below
+    local edge = filterPopup:CreateTexture(nil, "BACKGROUND")
+    edge:SetPoint("TOPLEFT", filterPopup, "TOPLEFT", -1, 1)
+    edge:SetPoint("BOTTOMRIGHT", filterPopup, "BOTTOMRIGHT", 1, -1)
+    edge:SetColorTexture(0.55, 0.45, 0.2, 1)
+    local fill = filterPopup:CreateTexture(nil, "BORDER")
+    fill:SetAllPoints(filterPopup)
+    fill:SetColorTexture(0.05, 0.05, 0.05, 0.96)
+    filterPopup:Hide()
+
+    local armorTitle = fontString(filterPopup, "GameFontNormal")
+    armorTitle:SetPoint("TOPLEFT", filterPopup, "TOPLEFT", 12, -10)
+    armorTitle:SetText("Armor type")
+    local slotTitle = fontString(filterPopup, "GameFontNormal")
+    slotTitle:SetPoint("TOPLEFT", filterPopup, "TOPLEFT", 12 + FILTER_COLUMN, -10)
+    slotTitle:SetText("Slot")
+    filterChecks = {}
+    for i, choice in ipairs(Core.ARMOR_TYPES) do filterCheck("armor", choice.name, 0, i - 1) end
+    for i, choice in ipairs(Core.SLOTS) do
+        filterCheck("slots", choice.name, 1 + math.floor((i - 1) / slotRows), (i - 1) % slotRows)
+    end
+
+    local clear = CreateFrame("Button", nil, filterPopup, "UIPanelButtonTemplate")
+    clear:SetSize(70, 20)
+    clear:SetPoint("BOTTOMLEFT", filterPopup, "BOTTOMLEFT", 10, 10)
+    clear:SetText("Clear")
+    clear:SetScript("OnClick", function()
+        UI.clearFilter()
+        state.offset = 0
+        UI.refresh()
+    end)
+    local done = CreateFrame("Button", nil, filterPopup, "UIPanelButtonTemplate")
+    done:SetSize(70, 20)
+    done:SetPoint("BOTTOMRIGHT", filterPopup, "BOTTOMRIGHT", -10, 10)
+    done:SetText("Done")
+    done:SetScript("OnClick", function() filterPopup:Hide() end)
+    filterPopup.clear, filterPopup.done = clear, done
 end
 
 local function buildSidebar()
@@ -629,6 +791,7 @@ local function build()
     tinsert(UISpecialFrames, "GuildAssistantDatabaseFrame")
 
     buildFilters()
+    buildFilterPopup()
     buildSidebar()
     buildList()
     buildDetails()
@@ -667,6 +830,7 @@ function UI.parts()
     return {
         frame = frame, searchBox = searchBox, minLevelBox = minLevelBox, maxLevelBox = maxLevelBox,
         minSkillBox = minSkillBox, maxSkillBox = maxSkillBox, unknownCheck = unknownCheck, resetButton = resetButton,
+        clearButton = clearButton, filterButton = filterButton, filterPopup = filterPopup, filterChecks = filterChecks,
         sidebarButtons = sidebarButtons, rows = rows, details = details, statusText = statusText,
         state = state,
     }

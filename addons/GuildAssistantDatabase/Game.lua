@@ -102,17 +102,18 @@ function Game.zoneName(id)
     return nil
 end
 
---- An item's type and subtype ("Armor Plate", "Weapon One-Handed Maces"), which the client knows
---- without asking the server; nil when it can't say.
-function Game.itemWords(id)
+--- What the client knows of an item without asking the server (Core.load's `describe`): its type
+--- and subtype as words ("Armor Plate", "Weapon One-Handed Maces"), and its class and subclass ids
+--- (4 and 4 for plate armor). Nils when it can't say.
+function Game.describeItem(id)
     local instant = (C_Item and C_Item.GetItemInfoInstant) or GetItemInfoInstant
     if not instant then return nil end
-    local ok, _, itemType, subType = pcall(instant, id)
+    local ok, _, itemType, subType, _, _, classID, subclassID = pcall(instant, id)
     if not ok then return nil end
     local words = {}
     if type(itemType) == "string" then words[#words + 1] = itemType end
     if type(subType) == "string" and subType ~= itemType then words[#words + 1] = subType end
-    return #words > 0 and table.concat(words, " ") or nil
+    return #words > 0 and table.concat(words, " ") or nil, tonumber(classID), tonumber(subclassID)
 end
 
 --- The item's subtype alone ("Plate"), for showing next to its slot; nil when unknown or the same
