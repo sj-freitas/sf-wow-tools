@@ -92,4 +92,4 @@ per account (`GuildAssistantDatabaseDB`).
 
 ## Thanks
 
-Thank you to **Makalak Violeteye** for the idea for this addon.
+Thank you to **Makalak Violeteye** (WoW Forever EU / RP) for the idea for this addon.
