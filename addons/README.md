@@ -1,7 +1,7 @@
 # WoW addons
 
 An npm project for the addons in this folder: Raidsort, GuildAssistantProfessions and
-GuildAssistantDatabase (experimental). `npm install` once, then:
+GuildAssistantDatabase. `npm install` once, then:
 
 | Command                                   | What it does                                              |
 | ----------------------------------------- | --------------------------------------------------------- |
@@ -66,7 +66,7 @@ characters; the API's import test reads the same file, so the two stay in step.
 ## GuildAssistantDatabase
 
 Every profession's recipes, searchable in game, with reagents, how to learn them and who can craft
-them (from GuildAssistantProfessions' saved data). Experimental; its CurseForge project is
+them (from GuildAssistantProfessions' saved data). Its CurseForge project is
 1798408 (not public until CurseForge approves it). How to use it:
 [GuildAssistantDatabase/README.md](GuildAssistantDatabase/README.md).
 

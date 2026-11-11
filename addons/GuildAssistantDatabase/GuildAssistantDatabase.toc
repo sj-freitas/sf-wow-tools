@@ -1,14 +1,14 @@
 ## Interface: 16001
 ## Title: GuildAssistant Database
-## Notes: Every profession's recipes, searchable by name, stat, slot or reagent: what they need, how to learn them, and who can craft them (with GuildAssistant Professions). Experimental. /gadb
-## Version: 0.3.1
+## Notes: Every profession's recipes, searchable by name, stat, slot or reagent: what they need, how to learn them, and who can craft them (with GuildAssistant Professions). /gadb
+## Version: 1.0.0
 ## Author: Sérgio Freitas
 ## X-License: MIT
 ## X-Curse-Project-ID: 1798408
 ## OptionalDeps: GuildAssistantProfessions
 ## SavedVariables: GuildAssistantDatabaseDB
 ## IconTexture: Interface\AddOns\GuildAssistantDatabase\Media\Icon
-# 16001 is WoW Forever (client 1.60.1): the data is Wowhead's for Forever. Experimental.
+# 16001 is WoW Forever (client 1.60.1): the data is Wowhead's for Forever.
 # Saved (per account): only where the minimap button is.
 
 Core.lua

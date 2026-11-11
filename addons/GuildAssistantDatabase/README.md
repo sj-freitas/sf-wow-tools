@@ -1,11 +1,11 @@
-# GuildAssistant Database (experimental)
+# GuildAssistant Database
 
 Every profession's recipes, in game: search them by name, stat, slot or reagent, keep them to a
 level and skill range, and see what each one makes, what it needs, how to learn it and, with
 [GuildAssistant Professions](../GuildAssistantProfessions/README.md), who you know that can craft
 it. It also lists your own professions' recipes you don't know yet.
 
-Made for WoW Forever: its data is Wowhead's for Forever. Experimental.
+Made for WoW Forever: its data is Wowhead's for Forever.
 
 ## Using it
 

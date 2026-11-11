@@ -1,5 +1,13 @@
 # GuildAssistant Database
 
+## 1.0.0
+
+- The first full release: no longer experimental. Everything from 0.1.0 to 0.3.1: every
+  profession's recipes from Wowhead (WoW Forever), searchable by name, stat, slot or reagent, with
+  level and skill limits and a Filter for armor types and slots; how many match in each
+  profession; each recipe's item, reagents, how to learn it and who can craft it (with
+  GuildAssistant Professions); your recipes not known yet; and the minimap button.
+
 ## 0.3.1
 
 - Thanks to Makalak Violeteye, whose idea this addon was, in its description.
