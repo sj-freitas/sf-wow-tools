@@ -1,0 +1,432 @@
+-- Tests of GuildAssistantDatabase's window (UI.lua), slash command (Main.lua) and game calls
+-- (Game.lua) against a fake game, outside WoW, on Data.fixture.lua. The fake has only the methods
+-- the addon uses: calling any other is an error here, so a typo or a method the game lacks shows up.
+-- Run with `npm test` in addons/ (or lua dev/GuildAssistantDatabase/ui.spec.lua).
+
+local specPrint = print
+local passed, failed = 0, 0
+local chat, linked, timers, created
+local function it(name, fn)
+    local ok, err = pcall(fn)
+    _G.print = specPrint
+    for _, line in ipairs(chat or {}) do
+        if line:find("something went wrong", 1, true) then ok, err = false, tostring(err or "") .. "\n     " .. line end
+    end
+    if ok then
+        passed = passed + 1
+    else
+        failed = failed + 1
+        specPrint("FAIL " .. name .. "\n     " .. tostring(err))
+    end
+end
+
+local function eq(actual, expected, what)
+    if actual ~= expected then
+        error(("%s: expected %s, got %s"):format(what or "value", tostring(expected), tostring(actual)), 2)
+    end
+end
+
+local function has(text, part, what)
+    if not tostring(text):find(part, 1, true) then
+        error(("%s: %q not in %q"):format(what or "text", part, tostring(text)), 2)
+    end
+end
+
+-- The fake game -----------------------------------------------------------------------------------
+
+local Region = {}
+Region.__index = function(_, key)
+    local method = Region[key]
+    if method then return method end
+    if type(key) == "string" and key:match("^[A-Z]") and not key:match("Text$") then
+        error("the fake game has no method " .. key, 2)
+    end
+    return nil
+end
+
+local function region(kind, parent)
+    -- The fake's own fields start with "_": the addon puts its own on frames (button.text…).
+    return setmetatable({ _kind = kind, _parent = parent, _shown = true, _text = "", _scripts = {}, _checked = false }, Region)
+end
+
+local function noop() end
+for _, name in ipairs({ "SetSize", "SetPoint", "SetFrameStrata", "SetToplevel", "SetClampedToScreen", "EnableMouse",
+    "SetMovable", "RegisterForDrag", "StartMoving", "StopMovingOrSizing", "SetWidth", "SetHeight", "EnableMouseWheel",
+    "ClearAllPoints", "SetAllPoints", "SetAutoFocus", "SetNumeric", "SetMaxLetters", "SetHighlightTexture",
+    "SetOrientation", "SetThumbTexture", "SetValueStep", "SetObeyStepOnDrag", "SetJustifyH", "SetWordWrap",
+    "SetSpacing", "SetColorTexture", "SetBlendMode", "UnregisterEvent" }) do
+    Region[name] = noop
+end
+function Region:RegisterEvent(event) self._events = self._events or {}; self._events[event] = true end
+function Region:SetScript(name, fn) self._scripts[name] = fn end
+function Region:GetScript(name) return self._scripts[name] end
+function Region:Fire(name, ...) if self._scripts[name] then return self._scripts[name](self, ...) end end
+function Region:Show()
+    if not self._shown then
+        self._shown = true
+        self:Fire("OnShow")
+    end
+end
+function Region:Hide()
+    if self._shown then
+        self._shown = false
+        self:Fire("OnHide")
+    end
+end
+function Region:IsShown() return self._shown end
+function Region:SetShown(shown) if shown then self:Show() else self:Hide() end end
+function Region:SetText(text)
+    self._text = text or ""
+    if self._kind == "EditBox" then self:Fire("OnTextChanged", false) end
+end
+function Region:GetText() return self._text end
+function Region:SetTexture(texture) self._texture = texture end
+function Region:HasFocus() return self._focus == true end
+function Region:SetFocus() self._focus = true; self:Fire("OnEditFocusGained") end
+function Region:ClearFocus()
+    if self._focus then self._focus = false; self:Fire("OnEditFocusLost") end
+end
+function Region:SetChecked(checked) self._checked = checked and true or false end
+function Region:GetChecked() return self._checked end
+function Region:SetMinMaxValues(min, max) self._min, self._max = min, max end
+function Region:SetValue(value)
+    if value ~= self._value then
+        self._value = value
+        self:Fire("OnValueChanged", value)
+    end
+end
+function Region:Click()
+    if self._kind == "CheckButton" then self._checked = not self._checked end
+    self:Fire("OnClick", "LeftButton")
+end
+function Region:CreateFontString() return region("FontString", self) end
+function Region:CreateTexture() return region("Texture", self) end
+
+local function said(text)
+    for _, line in ipairs(chat) do
+        if line:find(text, 1, true) then return true end
+    end
+    return false
+end
+
+local function runTimers()
+    while #timers > 0 do table.remove(timers, 1)() end
+end
+
+-- GuildAssistant Professions' saved data: Luna (this character) knows two Blacksmithing recipes.
+local function professionsDB()
+    return {
+        characters = {
+            ["Luna-Test Realm"] = { name = "Luna", realm = "Test Realm", class = "MAGE", source = "own",
+                professions = { Blacksmithing = { rank = 120, max = 150, recipes = { ["spell:2662"] = true, ["spell:2667"] = true } } } },
+            ["Ana-Test Realm"] = { name = "Ana", realm = "Test Realm", class = "PRIEST", source = "guild",
+                professions = { Blacksmithing = { rank = 300, max = 300, recipes = { ["spell:2667"] = true } } } },
+        },
+    }
+end
+
+-- `options`: professionsAddon (GuildAssistant Professions installed), timers (C_Timer: run with
+-- runTimers()), knownSpells (what IsPlayerSpell says yes to).
+local function loadAddon(options)
+    options = options or {}
+    chat, linked, timers, created = {}, {}, {}, {}
+    _G.print = function(text) chat[#chat + 1] = tostring(text) end
+    _G.SlashCmdList = {}
+    _G.UISpecialFrames = {}
+    _G.tinsert = table.insert
+    _G.UIParent = region("Frame")
+    _G.CreateFrame = function(kind, name, parent, template)
+        local frame = region(kind, parent)
+        frame._template = template
+        created[#created + 1] = frame
+        if template == "BasicFrameTemplateWithInset" then frame.TitleText = region("FontString", frame) end
+        if template == "UICheckButtonTemplate" then frame.Text = region("FontString", frame) end
+        if name then _G[name] = frame end
+        return frame
+    end
+    _G.GameTooltip = setmetatable({}, { __index = function(t, key)
+        return function(_, ...) t.last = { key, ... } end
+    end })
+    _G.C_Timer = options.timers and { After = function(_, fn) timers[#timers + 1] = fn end } or nil
+    _G.UnitName = function() return "Luna" end
+    _G.GetRealmName = function() return "Test Realm" end
+    _G.GetProfessions = function() return 1, nil, 3 end
+    _G.GetProfessionInfo = function(index)
+        if index == 1 then return "Blacksmithing", "icon", 120, 150 end
+        if index == 3 then return "Cooking", "icon", 40, 75 end
+    end
+    _G.GetNumSkillLines, _G.GetSkillLineInfo = nil, nil
+    _G.IsPlayerSpell = function(id) return (options.knownSpells or {})[id] == true end
+    _G.GetItemInfoInstant = function(id)
+        if id == 7935 or id == 2864 then return id, "Armor", "Plate", "INVTYPE_CHEST" end
+        if id == 7954 then return id, "Weapon", "One-Handed Maces", "INVTYPE_WEAPON" end
+        return id, "Trade Goods", "Trade Goods"
+    end
+    _G.GetItemInfo = function(id)
+        if id == 2852 then return "Copper Chain Pants", "|cff1eff00|Hitem:2852::::::::4:::::::|h[Copper Chain Pants]|h|r" end
+    end
+    _G.GetSpellTexture = function() return 135913 end
+    _G.GetSpellLink = function(id) return "|cff71d5ff|Hspell:" .. id .. "|h[Enchant]|h|r" end
+    _G.C_Map = { GetAreaInfo = function(id) return ({ [40] = "Westfall", [440] = "Tanaris" })[id] end }
+    _G.RAID_CLASS_COLORS = { MAGE = { r = 0.25, g = 0.78, b = 0.92, colorStr = "ff3fc7eb" }, PRIEST = { r = 1, g = 1, b = 1 } }
+    _G.IsShiftKeyDown = function() return options.shift == true end
+    _G.IsModifiedClick = nil
+    _G.ChatEdit_InsertLink = function(link) linked[#linked + 1] = link end
+    _G.GuildAssistantProfessionsDB = options.professionsAddon and professionsDB() or nil
+
+    local ns = {}
+    for _, file in ipairs({ "GuildAssistantDatabase/Core.lua", "dev/GuildAssistantDatabase/Data.fixture.lua",
+        "GuildAssistantDatabase/Game.lua", "GuildAssistantDatabase/UI.lua", "GuildAssistantDatabase/Main.lua" }) do
+        assert(loadfile(file))("GuildAssistantDatabase", ns)
+    end
+    return ns
+end
+
+local function shownRows(ns)
+    local names = {}
+    for _, row in ipairs(ns.UI.parts().rows) do
+        if row:IsShown() then names[#names + 1] = row.recipe.name end
+    end
+    return table.concat(names, ", ")
+end
+
+local function sidebar(ns)
+    local out = {}
+    for _, button in ipairs(ns.UI.parts().sidebarButtons) do
+        if button:IsShown() then out[#out + 1] = button.text:GetText() .. (button.right:GetText() ~= "" and (" " .. button.right:GetText()) or "") end
+    end
+    return table.concat(out, " | ")
+end
+
+local function rowNamed(ns, name)
+    for _, row in ipairs(ns.UI.parts().rows) do
+        if row:IsShown() and row.recipe.name == name then return row end
+    end
+end
+
+-- Loading and the command -------------------------------------------------------------------------
+
+it("says what it has once loaded, and nothing for another addon", function()
+    local ns = loadAddon()
+    local events
+    for _, f in ipairs(created) do if f._events and f._events.ADDON_LOADED then events = f end end
+    eq(ns.UI.isShown(), false)
+    eq(#chat, 0, "nothing said before ADDON_LOADED")
+    eq(events ~= nil, true, "has an event frame")
+    events:Fire("OnEvent", "ADDON_LOADED", "Bagnon")
+    eq(#chat, 0, "not for another addon")
+    events:Fire("OnEvent", "ADDON_LOADED", "GuildAssistantDatabase")
+    eq(said("8 recipes from Wowhead, 2026-11-11. Type /gadb to search them."), true, "says what it has")
+end)
+
+it("opens and closes with /gadb, and reads no profession before it opens", function()
+    local ns = loadAddon()
+    for _, entry in ipairs(ns.Data.professions) do eq(entry.loaded, nil, entry.name .. " read at load") end
+    SlashCmdList.GADB("")
+    eq(ns.UI.isShown(), true, "open")
+    eq(shownRows(ns), "Enchant Bracer - Minor Health, Copper Chain Pants, Rough Sharpening Stone, Runed Copper Breastplate, "
+        .. "Greater Magic Wand, Golden Scale Coif, The Shatterer, Ornate Mithril Breastplate")
+    eq(ns.UI.parts().statusText:GetText(), "8 recipes")
+    eq(sidebar(ns), "All professions | Blacksmithing 6 | Enchanting 2")
+    eq(_G.GuildAssistantDatabaseFrame.TitleText:GetText(), "GuildAssistant Database")
+    SlashCmdList.GADB("")
+    eq(ns.UI.isShown(), false, "closed")
+end)
+
+it("opens searching for what follows /gadb, and lists its commands on help", function()
+    local ns = loadAddon()
+    SlashCmdList.GADB("Mithril")
+    eq(ns.UI.parts().searchBox:GetText(), "Mithril")
+    eq(shownRows(ns), "Ornate Mithril Breastplate, The Shatterer")
+    SlashCmdList.GADB("help")
+    eq(said("/gadb <words>"), true)
+end)
+
+-- Searching and filtering -------------------------------------------------------------------------
+
+it("searches as you type, and by the item's type the game knows", function()
+    local ns = loadAddon()
+    SlashCmdList.GADB("")
+    local parts = ns.UI.parts()
+    parts.searchBox:SetText("breastplate")
+    eq(shownRows(ns), "Runed Copper Breastplate, Ornate Mithril Breastplate")
+    parts.searchBox:SetText("plate chest")
+    eq(shownRows(ns), "Runed Copper Breastplate, Ornate Mithril Breastplate")
+    parts.searchBox:SetText("maces")
+    eq(shownRows(ns), "The Shatterer")
+    parts.searchBox:SetText("nothing like this")
+    eq(shownRows(ns), "")
+    eq(parts.statusText:GetText(), "No recipes match.")
+end)
+
+it("keeps the level and skill within the boxes' limits", function()
+    local ns = loadAddon()
+    SlashCmdList.GADB("")
+    local parts = ns.UI.parts()
+    parts.minLevelBox:SetText("30")
+    parts.maxLevelBox:SetText("42")
+    eq(shownRows(ns), "Golden Scale Coif, The Shatterer")
+    parts.minLevelBox:SetText("")
+    parts.maxLevelBox:SetText("")
+    parts.minSkillBox:SetText("200")
+    eq(shownRows(ns), "The Shatterer, Ornate Mithril Breastplate")
+end)
+
+it("shows one profession when it's picked on the left, and Reset clears it all", function()
+    local ns = loadAddon()
+    SlashCmdList.GADB("")
+    local parts = ns.UI.parts()
+    parts.sidebarButtons[3]:Click() -- Enchanting
+    eq(shownRows(ns), "Enchant Bracer - Minor Health, Greater Magic Wand")
+    eq(parts.sidebarButtons[3].selected:IsShown(), true, "marked as picked")
+    parts.searchBox:SetText("wand")
+    eq(shownRows(ns), "Greater Magic Wand")
+    parts.sidebarButtons[1]:Click() -- All
+    eq(shownRows(ns), "Greater Magic Wand")
+    parts.sidebarButtons[3]:Click()
+    parts.maxLevelBox:SetText("5")
+    parts.unknownCheck:Click()
+    parts.resetButton:Click()
+    eq(parts.searchBox:GetText(), ""); eq(parts.maxLevelBox:GetText(), "")
+    eq(parts.unknownCheck:GetChecked(), false)
+    eq(parts.state.profession, nil)
+    eq(#parts.state.results, 8)
+end)
+
+it("reads one profession per frame when the game has timers, saying so meanwhile", function()
+    local ns = loadAddon({ timers = true })
+    SlashCmdList.GADB("")
+    local parts = ns.UI.parts()
+    eq(parts.statusText:GetText(), "Reading recipes... 0 of 2 professions")
+    eq(#timers, 1, "one profession at a time")
+    table.remove(timers, 1)()
+    eq(parts.statusText:GetText(), "Reading recipes... 1 of 2 professions")
+    eq(shownRows(ns), "Copper Chain Pants, Rough Sharpening Stone, Runed Copper Breastplate, Golden Scale Coif, The Shatterer, Ornate Mithril Breastplate")
+    runTimers()
+    eq(parts.statusText:GetText(), "8 recipes")
+    -- Typing waits for a pause before searching.
+    parts.searchBox:SetText("wand")
+    eq(shownRows(ns):find("Copper") ~= nil, true, "not yet")
+    runTimers()
+    eq(shownRows(ns), "Greater Magic Wand")
+end)
+
+-- The details -------------------------------------------------------------------------------------
+
+it("shows a recipe's details: the item, reagents, how to learn it and who can craft it", function()
+    local ns = loadAddon({ professionsAddon = true })
+    SlashCmdList.GADB("breastplate")
+    local d = ns.UI.parts().details
+    eq(d.hint:IsShown(), true, "a hint before picking one")
+    rowNamed(ns, "Runed Copper Breastplate"):Click()
+    eq(d.hint:IsShown(), false)
+    has(d.name.text:GetText(), "Runed Copper Breastplate")
+    has(d.info:GetText(), "Blacksmithing, skill 55, requires level 13")
+    has(d.info:GetText(), "Chest (Plate), 160 Armor, +3 Strength, +2 Spirit")
+    eq(d.reagents[1].text:GetText(), "12 x |cffffffffCopper Bar|r")
+    eq(d.reagents[3]:IsShown(), true); eq(d.reagents[4]:IsShown(), false)
+    eq(d.learn:GetText(), "Drop: Defias Renegade Mage (Westfall)\nPickpocketing")
+    has(d.recipeItems[1].text:GetText(), "Plans: Runed Copper Breastplate")
+    has(d.recipeItems[1].text:GetText(), "(skill 55)")
+    eq(d.recipeItems[2]:IsShown(), false)
+    eq(d.crafters:GetText(), "|cff3fc7ebLuna|r (you), |cffffffffAna|r")
+    eq(ns.UI.parts().rows[1].selected:IsShown(), true, "the row is marked")
+end)
+
+it("says who can craft it only with GuildAssistant Professions", function()
+    local ns = loadAddon()
+    SlashCmdList.GADB("breastplate")
+    rowNamed(ns, "Ornate Mithril Breastplate"):Click()
+    has(ns.UI.parts().details.crafters:GetText(), "Install GuildAssistant Professions")
+    local ns2 = loadAddon({ professionsAddon = true })
+    SlashCmdList.GADB("coif")
+    rowNamed(ns2, "Golden Scale Coif"):Click()
+    has(ns2.UI.parts().details.crafters:GetText(), "Nobody you know of yet.")
+    has(ns2.UI.parts().details.learn:GetText(), "Vendor: Krinkle Goodsteel (Tanaris)")
+end)
+
+it("shows an enchant (no item) by its spell", function()
+    local ns = loadAddon()
+    SlashCmdList.GADB("bracer")
+    local row = rowNamed(ns, "Enchant Bracer - Minor Health")
+    eq(row.hyperlink, "spell:7418")
+    eq(row.icon._texture, 135913)
+    row:Click()
+    has(ns.UI.parts().details.learn:GetText(), "Trainer (10c)")
+end)
+
+it("links a recipe or item in the chat on shift-click, and shows its tooltip on hover", function()
+    local ns = loadAddon({ shift = true })
+    SlashCmdList.GADB("pants")
+    local row = rowNamed(ns, "Copper Chain Pants")
+    row:Fire("OnEnter")
+    eq(GameTooltip.last[1], "Show")
+    row:Click()
+    eq(linked[1], "|cff1eff00|Hitem:2852::::::::4:::::::|h[Copper Chain Pants]|h|r")
+    eq(ns.UI.parts().state.selected, nil, "shift-click links, doesn't pick")
+    -- An item the game doesn't have yet: said, nothing linked.
+    SlashCmdList.GADB("breastplate")
+    rowNamed(ns, "Runed Copper Breastplate"):Click()
+    eq(#linked, 1)
+    eq(said("doesn't have that item yet"), true)
+end)
+
+-- Not known yet -----------------------------------------------------------------------------------
+
+it("lists your professions' recipes you don't know yet, from GuildAssistant Professions", function()
+    local ns = loadAddon({ professionsAddon = true })
+    SlashCmdList.GADB("")
+    local parts = ns.UI.parts()
+    parts.unknownCheck:Click()
+    -- Luna knows Copper Chain Pants and Runed Copper Breastplate; Cooking has no data here.
+    eq(shownRows(ns), "Rough Sharpening Stone, Golden Scale Coif, The Shatterer, Ornate Mithril Breastplate")
+    eq(sidebar(ns), "All my professions | Blacksmithing 120/150")
+    -- Learnable at 120 skill (green), or not yet (red).
+    eq(rowNamed(ns, "Rough Sharpening Stone").skill:GetText(), "|cff40ff4015|r")
+    eq(rowNamed(ns, "The Shatterer").skill:GetText(), "|cffff5050235|r")
+    eq(parts.statusText:GetText(), "4 recipes")
+    parts.unknownCheck:Click()
+    eq(#parts.state.results, 8, "all of them again")
+end)
+
+it("asks to open a profession's window when GuildAssistant Professions hasn't recorded it", function()
+    local ns = loadAddon({ professionsAddon = true })
+    GuildAssistantProfessionsDB.characters["Luna-Test Realm"].professions.Blacksmithing.recipes = {}
+    SlashCmdList.GADB("")
+    ns.UI.parts().unknownCheck:Click()
+    has(ns.UI.parts().statusText:GetText(), "Blacksmithing: open its window once to record what you know.")
+    eq(#ns.UI.parts().state.results, 6, "nothing known")
+end)
+
+it("without GuildAssistant Professions, goes by what the game says you know", function()
+    local ns = loadAddon({ knownSpells = { [2660] = true } })
+    SlashCmdList.GADB("")
+    ns.UI.parts().unknownCheck:Click()
+    eq(shownRows(ns), "Copper Chain Pants, Runed Copper Breastplate, Golden Scale Coif, The Shatterer, Ornate Mithril Breastplate")
+    has(ns.UI.parts().statusText:GetText(), "known ones are what the game says")
+end)
+
+it("a profession picked before isn't kept when only yours are listed", function()
+    local ns = loadAddon({ professionsAddon = true })
+    SlashCmdList.GADB("")
+    local parts = ns.UI.parts()
+    parts.sidebarButtons[3]:Click() -- Enchanting
+    parts.unknownCheck:Click()
+    eq(parts.state.profession, nil)
+    eq(sidebar(ns), "All my professions | Blacksmithing 120/150")
+end)
+
+it("works with Classic Era's skill list instead of GetProfessions", function()
+    local ns = loadAddon({ professionsAddon = true })
+    _G.GetProfessions, _G.GetProfessionInfo = nil, nil
+    local lines = { { "Professions", true }, { "Enchanting", false, nil, 80, nil, nil, 150 }, { "Weapon Skills", true }, { "Swords", false, nil, 5, nil, nil, 300 } }
+    _G.GetNumSkillLines = function() return #lines end
+    _G.GetSkillLineInfo = function(i) return (table.unpack or unpack)(lines[i], 1, 7) end
+    SlashCmdList.GADB("")
+    ns.UI.parts().unknownCheck:Click()
+    eq(sidebar(ns), "All my professions | Enchanting 80/150")
+    eq(shownRows(ns), "Enchant Bracer - Minor Health, Greater Magic Wand")
+end)
+
+print(("%d passed, %d failed"):format(passed, failed))
+if failed > 0 then error(failed .. " failed") end

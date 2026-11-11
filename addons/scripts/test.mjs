@@ -1,9 +1,11 @@
 // Runs the addons' Lua tests (dev/**/*.spec.lua) in fengari, Lua written in JavaScript, so no Lua
 // needs installing. The specs are plain Lua and also run with a real one (lua dev/…spec.lua, from
-// addons/). Tests live in dev/, outside the addon folders, so they are never packaged.
+// addons/). Tests live in dev/, outside the addon folders, so they are never packaged. Then the
+// scripts' own tests (scripts/**/*.test.mjs, node:test), e.g. the database job's.
 //
-//   npm test                 every spec
-//   npm test -- raid         only specs whose path contains "raid"
+//   npm test                 every spec and test
+//   npm test -- raid         only those whose path contains "raid"
+import { spawnSync } from 'node:child_process';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -40,5 +42,17 @@ for (const spec of specs) {
     console.log(`  error: ${to_jsstring(lua.lua_tostring(L, -1))}`);
   }
 }
-if (specs.length === 0) console.log('No specs found.');
+
+const scriptTests = readdirSync(join(root, 'scripts'), { recursive: true })
+  .filter((path) => path.endsWith('.test.mjs'))
+  .map((path) => join('scripts', path))
+  .filter((path) => process.argv.slice(2).every((filter) => path.includes(filter)))
+  .sort();
+if (scriptTests.length > 0) {
+  console.log(`\n${scriptTests.join(', ')}`);
+  const run = spawnSync(process.execPath, ['--test', '--test-reporter=dot', ...scriptTests], { stdio: 'inherit' });
+  if (run.status !== 0) failed++;
+}
+
+if (specs.length === 0 && scriptTests.length === 0) console.log('No specs found.');
 process.exitCode = failed > 0 ? 1 : 0;

@@ -2,11 +2,13 @@
   "name": "sf-wow-addons",
   "private": true,
   "type": "module",
-  "description": "The WoW addons (Raidsort): tests, packaging and publishing to CurseForge.",
+  "description": "The WoW addons (Raidsort, GuildAssistantProfessions, GuildAssistantDatabase): tests, packaging, publishing to CurseForge, and the database job.",
   "scripts": {
     "test": "node scripts/test.mjs",
     "package": "node scripts/package.mjs",
-    "publish:curseforge": "node scripts/publish-curseforge.mjs"
+    "publish:curseforge": "node scripts/publish-curseforge.mjs",
+    "database": "node scripts/database/build.mjs",
+    "database:snippet": "node scripts/database/snippet.mjs"
   },
   "engines": {
     "node": ">=22"
