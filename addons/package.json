@@ -7,8 +7,7 @@
     "test": "node scripts/test.mjs",
     "package": "node scripts/package.mjs",
     "publish:curseforge": "node scripts/publish-curseforge.mjs",
-    "database": "node scripts/database/build.mjs",
-    "database:snippet": "node scripts/database/snippet.mjs"
+    "database": "node scripts/database/build.mjs"
   },
   "engines": {
     "node": ">=22"

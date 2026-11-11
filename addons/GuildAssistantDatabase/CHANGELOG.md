@@ -1,5 +1,19 @@
 # GuildAssistant Database
 
+## 1.1.0
+
+- The recipes now come from the game's own data files for WoW Forever, not from Wowhead, and are
+  updated with each new build of the game. Every recipe the game has is listed, with its reagents,
+  skill and skill-up colours, the item it makes (slot, type and stats) and the plans, pattern or
+  formula that teach it.
+- How to learn a recipe says what the game knows: learned with the profession, automatically at a
+  skill, or from the item listed below it. Where plans drop, who sells them and trainer costs aren't
+  in the game's files, so they're no longer shown; an addon that knows them can add them (a
+  "sources companion").
+- With a sources companion installed, recipes it doesn't know are hidden unless you tick **Recipes
+  with no known source** in the Filter.
+- Items the game's data lacks are named as the game names them in play.
+
 ## 1.0.0
 
 - The first full release: no longer experimental. Everything from 0.1.0 to 0.3.1: every

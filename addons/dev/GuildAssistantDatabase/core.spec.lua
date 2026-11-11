@@ -1,5 +1,6 @@
 -- Tests of GuildAssistantDatabase's Core.lua, outside WoW, on Data.fixture.lua (what the database
--- job builds from wowhead.fixture.mjs; scripts/database/database.test.mjs keeps the two in step).
+-- job builds from gamedata.fixture.mjs; scripts/database/database.test.mjs keeps the two in step)
+-- and, for what a sources companion adds, Sources.fixture.lua.
 -- Run with `npm test` in addons/ (or any Lua 5.1+ from addons/: lua dev/GuildAssistantDatabase/core.spec.lua).
 
 local function loadData()
@@ -9,6 +10,16 @@ local function loadData()
     return ns.Core, ns.Data
 end
 local Core, Data = loadData()
+
+-- A sources companion, as GuildAssistantDatabaseSources holds it once loaded.
+local function loadSources()
+    local saved = _G.GuildAssistantDatabaseSources
+    _G.GuildAssistantDatabaseSources = nil
+    assert(loadfile("dev/GuildAssistantDatabase/Sources.fixture.lua"))()
+    local list = _G.GuildAssistantDatabaseSources
+    _G.GuildAssistantDatabaseSources = saved
+    return list
+end
 
 local passed, failed = 0, 0
 local function it(name, fn)
@@ -55,9 +66,9 @@ end)
 it("reads a profession only when first asked, then keeps it", function()
     local entry = profession("Blacksmithing")
     eq(entry.loaded, nil, "not read at load")
-    eq(entry.count, 6)
+    eq(entry.count, 7)
     local loaded = Core.load(entry)
-    eq(#loaded.recipes, 6)
+    eq(#loaded.recipes, 7)
     eq(Core.load(entry), loaded, "read once")
     eq(profession("Enchanting").loaded, nil, "the others still not read")
 end)
@@ -77,10 +88,15 @@ it("reads a recipe: what it makes, its reagents, skill, colours and how it's lea
     eq(breastplate.reagents[1].item.name, "Copper Bar"); eq(breastplate.reagents[1].count, 12)
     eq(breastplate.recipeItems[1].name, "Plans: Runed Copper Breastplate")
     eq(breastplate.recipeItems[1].skill, 55)
-    eq(breastplate.recipeItems[1].sources[1].kind, "drop")
-    eq(breastplate.recipeItems[1].sources[1].zone, 40)
-    eq(breastplate.recipeItems[1].sources[1].name, "Defias Renegade Mage")
-    eq(recipeNamed(loaded, "The Shatterer").trainingCost, 13500)
+    eq(#breastplate.recipeItems[1].sources, 0, "where it drops isn't in the game's data")
+    eq(breastplate.creates.icon, 132738)
+    eq(breastplate.creates.summary, "Chest (Plate), Strength, Spirit")
+    eq(breastplate.creates.classID, 4); eq(breastplate.creates.subclassID, 4)
+    eq(breastplate.acquire, 0)
+    eq(breastplate.vouched, nil, "no companion to vouch for it")
+    eq(recipeNamed(loaded, "The Shatterer").trainingCost, 0)
+    eq(recipeNamed(loaded, "Rough Sharpening Stone").acquire, 1)
+    eq(recipeNamed(loaded, "Rough Sharpening Stone").acquireSkill, 15)
 end)
 
 it("reads an enchant, which makes no item", function()
@@ -91,17 +107,16 @@ it("reads an enchant, which makes no item", function()
     eq(enchant.reagents[1].item.name, "Strange Dust")
 end)
 
-it("adds what the game knows of an item made: words searched, and its class", function()
-    local entry = { name = "Test", recipes = "1\tThing\t5\t1,2,3\t99,1,1\t\t\t\t", items = "99\tThing\t2\t10\t5\t\tChest\t\t" }
-    local asked = 0
-    local loaded = Core.load(entry, function(id)
-        asked = asked + 1
-        if id == 99 then return "Armor Plate", 4, 4 end
-    end)
-    eq(loaded.recipes[1].search:find("plate", 1, true) ~= nil, true, "its type is searched")
-    eq(loaded.recipes[1].creates.summary, "Chest")
-    eq(loaded.recipes[1].creates.classID, 4); eq(loaded.recipes[1].creates.subclassID, 4)
-    eq(asked, 1)
+it("marks an item the game's tables lack, to be named in game", function()
+    local wand = recipeNamed(Core.load(profession("Enchanting")), "Greater Magic Wand")
+    local soulDust = wand.reagents[2].item
+    eq(soulDust.id, 11083)
+    eq(soulDust.missing, true)
+    eq(soulDust.name, "Item 11083")
+    eq(wand.creates.missing, false)
+    -- An item made but lacking: named after its recipe by the job.
+    local gauntlets = recipeNamed(Core.load(profession("Blacksmithing")), "Ironforge Gauntlets")
+    eq(gauntlets.creates.name, "Ironforge Gauntlets"); eq(gauntlets.creates.summary, "Hands (Plate)")
 end)
 
 -- Searching ----------------------------------------------------------------------------------------
@@ -120,7 +135,8 @@ it("finds recipes by name, stat, slot and reagent, every word", function()
     eq(names(Core.search(all(), { terms = Core.terms("breastplate") })), "Runed Copper Breastplate, Ornate Mithril Breastplate")
     eq(names(Core.search(all(), { terms = Core.terms("critical") })), "Ornate Mithril Breastplate")
     eq(names(Core.search(all(), { terms = Core.terms("head stamina") })), "Golden Scale Coif")
-    eq(names(Core.search(all(), { terms = Core.terms("fire resistance") })), "Golden Scale Coif")
+    eq(names(Core.search(all(), { terms = Core.terms("agility") })), "Golden Scale Coif")
+    eq(names(Core.search(all(), { terms = Core.terms("maces") })), "The Shatterer")
     eq(names(Core.search(all(), { terms = Core.terms("strange dust") })), "Enchant Bracer - Minor Health")
     eq(names(Core.search(all(), { terms = Core.terms("enchanting") })), "Enchant Bracer - Minor Health, Greater Magic Wand")
     eq(#Core.search(all(), { terms = Core.terms("breastplate stamina") }), 0, "every word must match")
@@ -129,36 +145,31 @@ end)
 it("lists those whose name matches first, then by skill", function()
     -- "copper" is in two names, and is a reagent of others.
     eq(names(Core.search(all(), { terms = Core.terms("copper") })), "Copper Chain Pants, Runed Copper Breastplate")
-    eq(names(Core.search(all(), { terms = Core.terms("mithril") })), "Ornate Mithril Breastplate, The Shatterer")
+    eq(names(Core.search(all(), { terms = Core.terms("mithril") })), "Ornate Mithril Breastplate, Ironforge Gauntlets, The Shatterer")
     -- No words: everything, by skill.
     eq(names(Core.search({ Core.load(profession("Blacksmithing")) }, { terms = {} })),
-        "Copper Chain Pants, Rough Sharpening Stone, Runed Copper Breastplate, Golden Scale Coif, The Shatterer, Ornate Mithril Breastplate")
+        "Copper Chain Pants, Rough Sharpening Stone, Runed Copper Breastplate, Golden Scale Coif, Ironforge Gauntlets, The Shatterer, Ornate Mithril Breastplate")
 end)
 
 it("keeps the level and skill within the limits given", function()
     eq(names(Core.search(all(), { minLevel = 30, maxLevel = 42 })), "Golden Scale Coif, The Shatterer")
     -- Something that needs no level counts as level 1.
-    eq(names(Core.search(all(), { maxLevel = 1 })), "Enchant Bracer - Minor Health, Rough Sharpening Stone")
-    eq(names(Core.search(all(), { minSkill = 200, maxSkill = 239 })), "The Shatterer")
+    eq(names(Core.search(all(), { maxLevel = 1 })), "Enchant Bracer - Minor Health, Rough Sharpening Stone, Ironforge Gauntlets")
+    eq(names(Core.search(all(), { minSkill = 200, maxSkill = 239 })), "Ironforge Gauntlets, The Shatterer")
     eq(names(Core.search(all(), { minSkill = 1, maxSkill = 15, minLevel = 2 })), "Copper Chain Pants")
 end)
 
 it("keeps to the slots and armor types picked", function()
-    -- What the game would say: Runed Copper Breastplate and Ornate Mithril Breastplate are plate,
-    -- Golden Scale Coif and Copper Chain Pants mail.
-    local classes = { [2864] = 4, [7935] = 4, [3837] = 3, [2852] = 3 }
-    for _, profession in ipairs(all()) do
-        for _, item in pairs(profession.items) do
-            if classes[item.id] then item.classID, item.subclassID = 4, classes[item.id] end
-        end
-    end
+    -- The game's data: Runed Copper Breastplate, Ornate Mithril Breastplate and Ironforge Gauntlets
+    -- are plate, Golden Scale Coif and Copper Chain Pants mail.
     local function filtered(slotNames, armorNames)
         local slots, armor = Core.filterSets(slotNames, armorNames)
         return names(Core.search(all(), { slots = slots, armor = armor }))
     end
     eq(filtered({ Chest = true }, {}), "Runed Copper Breastplate, Ornate Mithril Breastplate")
-    eq(filtered({}, { Plate = true }), "Runed Copper Breastplate, Ornate Mithril Breastplate")
-    eq(filtered({}, { Mail = true, Plate = true }), "Copper Chain Pants, Runed Copper Breastplate, Golden Scale Coif, Ornate Mithril Breastplate")
+    eq(filtered({}, { Plate = true }), "Runed Copper Breastplate, Ironforge Gauntlets, Ornate Mithril Breastplate")
+    eq(filtered({}, { Mail = true, Plate = true }),
+        "Copper Chain Pants, Runed Copper Breastplate, Golden Scale Coif, Ironforge Gauntlets, Ornate Mithril Breastplate")
     eq(filtered({ Head = true }, { Plate = true }), "")
     eq(filtered({ Head = true, Legs = true }, { Mail = true }), "Copper Chain Pants, Golden Scale Coif")
     -- One-Hand takes main-hand weapons too; Ranged takes wands.
@@ -173,8 +184,9 @@ it("tells a search from listing everything, and counts matches per profession", 
     eq(Core.isQuery({ terms = { "x" } }), true)
     eq(Core.isQuery({ terms = {}, maxLevel = 10 }), true)
     eq(Core.isQuery({ terms = {}, slots = { [1] = true } }), true)
+    -- Strange Dust; Soul Dust has no name in the game's tables (named in game).
     local counts = Core.countByProfession(Core.search(all(), { terms = Core.terms("dust") }))
-    eq(counts.Enchanting, 2); eq(counts.Blacksmithing, nil)
+    eq(counts.Enchanting, 1); eq(counts.Blacksmithing, nil)
 end)
 
 it("leaves out what `include` says no to", function()
@@ -191,18 +203,71 @@ end)
 local zones = { [40] = "Westfall", [440] = "Tanaris" }
 local function zoneName(id) return zones[id] end
 
-it("says how a recipe is learned: trainer, drop, vendor, quest", function()
-    local loaded = Core.load(profession("Blacksmithing"))
-    eq(table.concat(Core.howToLearn(recipeNamed(loaded, "Copper Chain Pants"), zoneName), " | "), "Trainer (50c)")
-    eq(table.concat(Core.howToLearn(recipeNamed(loaded, "The Shatterer"), zoneName), " | "), "Trainer (1g 35s)")
-    -- Wowhead says drop and pickpocketing; the plans' drop says where.
-    eq(table.concat(Core.howToLearn(recipeNamed(loaded, "Runed Copper Breastplate"), zoneName), " | "),
-        "Drop: Defias Renegade Mage (Westfall) | Pickpocketing")
-    eq(table.concat(Core.howToLearn(recipeNamed(loaded, "Golden Scale Coif"), zoneName), " | "), "Vendor: Krinkle Goodsteel (Tanaris)")
-    eq(table.concat(Core.howToLearn(recipeNamed(loaded, "Ornate Mithril Breastplate"), zoneName), " | "), "Quest: Ornate Mithril Armor")
-    eq(table.concat(Core.howToLearn(recipeNamed(loaded, "Rough Sharpening Stone"), zoneName), " | "), "Not listed on Wowhead")
+local function learn(loaded, name) return table.concat(Core.howToLearn(recipeNamed(loaded, name), zoneName), " | ") end
+
+it("says how a recipe is learned from what the game's data says", function()
+    local blacksmithing, enchanting = Core.load(profession("Blacksmithing")), Core.load(profession("Enchanting"))
+    eq(learn(blacksmithing, "Rough Sharpening Stone"), "Learned automatically at skill 15")
+    eq(learn(enchanting, "Enchant Bracer - Minor Health"), "Learned with the profession")
+    eq(learn(blacksmithing, "Runed Copper Breastplate"), "From the item below")
+    eq(learn(blacksmithing, "Copper Chain Pants"), "A trainer or a quest: the game's files don't say which")
+end)
+
+-- A fresh copy of the data, read with a sources companion.
+local function withSources()
+    local ns = {}
+    assert(loadfile("GuildAssistantDatabase/Core.lua"))("GuildAssistantDatabase", ns)
+    assert(loadfile("dev/GuildAssistantDatabase/Data.fixture.lua"))("GuildAssistantDatabase", ns)
+    local providers = loadSources()
+    local loaded = {}
+    for _, entry in ipairs(ns.Data.professions) do loaded[entry.name] = ns.Core.load(entry, providers) end
+    return loaded, providers, ns.Core
+end
+
+it("adds what a sources companion says: trainer, drop, vendor, quest", function()
+    local loaded = withSources()
+    local blacksmithing, enchanting = loaded.Blacksmithing, loaded.Enchanting
+    eq(learn(blacksmithing, "Copper Chain Pants"), "Trainer (50c)")
+    eq(learn(blacksmithing, "The Shatterer"), "Trainer (1g 35s)")
+    -- The companion says drop and pickpocketing; the plans' drop says where.
+    eq(learn(blacksmithing, "Runed Copper Breastplate"), "Drop: Defias Renegade Mage (Westfall) | Pickpocketing")
+    eq(learn(blacksmithing, "Golden Scale Coif"), "Vendor: Krinkle Goodsteel (Tanaris)")
+    eq(learn(blacksmithing, "Ornate Mithril Breastplate"), "Quest: Ornate Mithril Armor")
+    -- The game's own word wins over a companion's.
+    eq(learn(enchanting, "Enchant Bracer - Minor Health"), "Learned with the profession")
+    -- One no companion lists.
+    eq(learn(blacksmithing, "Ironforge Gauntlets"), "No known source: unreleased, removed, or not recorded yet")
     -- Without zone names, the zone is left out.
-    eq(Core.howToLearn(recipeNamed(loaded, "Golden Scale Coif"))[1], "Vendor: Krinkle Goodsteel")
+    eq(Core.howToLearn(recipeNamed(blacksmithing, "Golden Scale Coif"))[1], "Vendor: Krinkle Goodsteel")
+end)
+
+it("vouches for the recipes a companion lists, and hides the others when asked", function()
+    local loaded = withSources()
+    local blacksmithing = loaded.Blacksmithing
+    eq(recipeNamed(blacksmithing, "Copper Chain Pants").vouched, true)
+    eq(recipeNamed(blacksmithing, "Ironforge Gauntlets").vouched, false)
+    eq(blacksmithing.vouchedCount, 6)
+    eq(names(Core.search({ blacksmithing }, { terms = Core.terms("mithril"), vouchedOnly = true })), "Ornate Mithril Breastplate, The Shatterer")
+    eq(names(Core.search({ blacksmithing }, { terms = Core.terms("gauntlets") })), "Ironforge Gauntlets", "shown when not asked to hide")
+end)
+
+it("takes a companion's stats with values and the names the game's tables lack", function()
+    local loaded = withSources()
+    local ornate = recipeNamed(loaded.Blacksmithing, "Ornate Mithril Breastplate")
+    eq(ornate.creates.summary, "Chest (Plate), 463 Armor, +14 Critical Strike Rating, +12 Dodge Rating")
+    eq(ornate.search:find("463 armor", 1, true) ~= nil, true, "values are searched")
+    local soulDust = recipeNamed(loaded.Enchanting, "Greater Magic Wand").reagents[2].item
+    eq(soulDust.name, "Soul Dust"); eq(soulDust.missing, false)
+end)
+
+it("merges the companions installed, once, and names them", function()
+    local _, providers, core = withSources()
+    local merged = core.sources(providers)
+    eq(merged.names[1], "Test notes (2026-11-11)")
+    eq(core.sources(providers), merged, "read once")
+    eq(merged.recipes[10003].cost, 13500)
+    eq(core.sources({}), nil, "none installed")
+    eq(core.sources(nil), nil)
 end)
 
 it("caps the sources it lists", function()
@@ -271,7 +336,7 @@ it("places the minimap button by its angle, and finds the angle of a point", fun
 end)
 
 it("counts the data's recipes", function()
-    eq(Core.describe(Data), "8 recipes")
+    eq(Core.describe(Data), "9 recipes")
     eq(Core.thousands(1234567), "1,234,567"); eq(Core.thousands(12), "12")
     eq(Core.describe({ professions = { { count = 1 } } }), "1 recipe")
 end)

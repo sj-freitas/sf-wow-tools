@@ -1,0 +1,52 @@
+# GuildAssistant Database's recipe data (addons/GuildAssistantDatabase/Data.lua), from the game's own
+# data tables for WoW Forever (wago.tools). Every Monday, and by hand (Actions, "Database", "Run
+# workflow"): builds the data for the game's latest build; when it changed, bumps the addon's patch
+# version (with a CHANGELOG line), runs the addons' tests, and opens a pull request with it. Nothing
+# changed: no pull request. Publishing the new version stays a person's step (npm run
+# publish:curseforge). Needs "Allow GitHub Actions to create and approve pull requests" on (repo
+# Settings, Actions, General).
+name: Database
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: addons
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: addons/package-lock.json
+      - run: npm ci
+      - run: npm run database -- --bump
+      - run: npm test
+      - id: data
+        run: |
+          echo "version=$(sed -n 's/^## Version: //p' GuildAssistantDatabase/GuildAssistantDatabase.toc)" >> "$GITHUB_OUTPUT"
+          echo "build=$(sed -n 's/^ *build = "\(.*\)",$/\1/p' GuildAssistantDatabase/Data.lua)" >> "$GITHUB_OUTPUT"
+      - uses: peter-evans/create-pull-request@v7
+        with:
+          branch: database/update
+          delete-branch: true
+          add-paths: |
+            addons/GuildAssistantDatabase/Data.lua
+            addons/GuildAssistantDatabase/GuildAssistantDatabase.toc
+            addons/GuildAssistantDatabase/CHANGELOG.md
+          commit-message: 'GuildAssistant Database ${{ steps.data.outputs.version }}: recipe data from the game''s build ${{ steps.data.outputs.build }}'
+          title: 'GuildAssistant Database ${{ steps.data.outputs.version }}: recipe data from build ${{ steps.data.outputs.build }}'
+          body: |
+            The game's data tables for WoW Forever changed (build ${{ steps.data.outputs.build }}), so `Data.lua` was rebuilt (`npm run database -- --bump`), the addon's version bumped to ${{ steps.data.outputs.version }} with a CHANGELOG line, and the addons' tests run.
+
+            To ship it: merge, then from `addons/`: `npm run publish:curseforge -- GuildAssistantDatabase`.

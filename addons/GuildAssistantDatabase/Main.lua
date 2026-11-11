@@ -1,6 +1,7 @@
 -- GuildAssistant Database: the slash command and the game events. The data is the addon's own
--- (Data.lua), and who knows what comes from GuildAssistant Professions' saved data when that addon
--- is installed. Only the minimap button's place is saved (GuildAssistantDatabaseDB).
+-- (Data.lua, the game's), plus what sources companions add; who knows what comes from GuildAssistant
+-- Professions' saved data when that addon is installed. Only the minimap button's place is saved
+-- (GuildAssistantDatabaseDB).
 
 local addonName, ns = ...
 local Core, Game, UI, MinimapButton = ns.Core, ns.Game, ns.UI, ns.MinimapButton
@@ -36,8 +37,8 @@ local function onEvent(self, event, arg)
             return
         end
         MinimapButton.create()
-        Game.say("%s from Wowhead, %s. Type /gadb (or click the clip on the minimap) to search them.",
-            Core.describe(data), data.fetched or "?")
+        Game.say("%s from the game's data (%s). Type /gadb (or click the clip on the minimap) to search them.",
+            Core.describe(data), data.build or data.fetched or "?")
     end
 end
 

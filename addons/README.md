@@ -8,8 +8,7 @@ GuildAssistantDatabase. `npm install` once, then:
 | `npm test`                                | Runs the Lua tests (`dev/**/*.spec.lua`) and the scripts' (`scripts/**/*.test.mjs`) |
 | `npm run package`                         | Zips each addon to `dist/<Name>-<version>.zip`            |
 | `npm run publish:curseforge -- Raidsort`  | Packages and uploads to CurseForge (`--beta`, `--alpha`, `--dry-run`) |
-| `npm run -s database:snippet \| pbcopy`   | Copies the browser snippet that saves Wowhead's profession pages |
-| `npm run database`                        | Builds GuildAssistantDatabase's `Data.lua` from what the snippet saved |
+| `npm run database`                        | Builds GuildAssistantDatabase's `Data.lua` from the game's data tables (`--bump`, `--build`) |
 
 ## Trying an addon in game
 
@@ -72,24 +71,31 @@ them (from GuildAssistantProfessions' saved data). Its CurseForge project is
 
 ### GuildAssistant Database's data
 
-`GuildAssistantDatabase/Data.lua` is built from Wowhead's pages, never edited by hand. Wowhead
-answers 403 to scripts, so the pages are read by your own browser, then built here:
+`GuildAssistantDatabase/Data.lua` is built from the game's own data tables (its DB2 files) for WoW
+Forever, as [wago.tools](https://wago.tools) exports them as CSV for each build (`wowf`), never
+edited by hand:
 
-1. `npm run -s database:snippet | pbcopy` (Mac; without `pbcopy` it prints it). `-- classic` for
-   Classic Era's data instead of Forever's (the addon is made for Forever's).
-2. Open any www.wowhead.com page in your browser, open its console (Chrome: Cmd+Option+J), paste
-   and press Enter. It reads each profession's recipes page and recipe items page, one at a time
-   with a pause between them (17 pages, under a minute), and downloads `wowhead-forever.json`.
-3. `npm run database` (it takes the newest `~/Downloads/wowhead-forever*.json`, or a path after
-   `--`). It writes `Data.lua` and says what it found per profession and what didn't match (a
-   recipe item whose recipe isn't listed, an item with no data).
-4. Bump the addon's version, `npm test`, and commit `Data.lua`.
+```sh
+npm run database                         # the latest build; tables kept in addons/.cache
+npm run database -- --build 1.60.1.70888 # a given build
+npm run database -- --bump               # and, if Data.lua changed, a patch version and CHANGELOG line
+```
 
-The professions and their pages are in `scripts/database/professions.mjs`. How the data is read
-(`wowhead.mjs`), written (`lua.mjs`, one text line per recipe and item, read by the addon's
-`Core.lua` the first time a profession is needed) and tested (`database.test.mjs`, on the snapshot
-`dev/GuildAssistantDatabase/wowhead.fixture.mjs`, which builds `Data.fixture.lua`, what the addon's
-specs load: `UPDATE_FIXTURES=1 npm test -- database` rewrites it after a format change).
+It says what it built per profession, leaves `Data.lua` alone when nothing changed but the date,
+and counts the items the tables lack (named in game). **Every Monday a GitHub Action** (`Database`,
+`.github/workflows/database.yml`) runs it with `--bump`, runs the tests, and opens a pull request
+when the data changed (a new build of the game). Merge it, then publish the new version.
+
+The game's data doesn't say where recipes drop, who sells them or what trainers charge (the
+servers know that): a sources companion addon can add it (the format is in
+`GuildAssistantDatabase/Core.lua`, "Sources companions").
+
+The professions are in `scripts/database/professions.mjs`. How the data is read (`gamedata.mjs`,
+`csv.mjs`), written (`lua.mjs`, one text line per recipe and item, read by the addon's `Core.lua` the
+first time a profession is needed) and tested (`database.test.mjs`, on a slice of the tables,
+`dev/GuildAssistantDatabase/gamedata.fixture.mjs`, which builds `Data.fixture.lua`, what the addon's
+specs load: `UPDATE_FIXTURES=1 npm test -- database` rewrites it after a format change;
+`Sources.fixture.lua` is a sources companion written by hand for the specs).
 
 ## Backlog
 

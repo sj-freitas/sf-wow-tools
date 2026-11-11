@@ -134,7 +134,8 @@ end
 
 -- `options`: professionsAddon (GuildAssistant Professions installed), timers (C_Timer: run with
 -- runTimers()), knownSpells (what IsPlayerSpell says yes to), saved (GuildAssistantDatabaseDB as
--- the game loaded it).
+-- the game loaded it), noSources (no sources companion installed; by default the test one is,
+-- Sources.fixture.lua), itemNames (what GetItemInfo knows beyond Copper Chain Pants).
 local function loadAddon(options)
     options = options or {}
     chat, linked, timers, created = {}, {}, {}, {}
@@ -166,15 +167,11 @@ local function loadAddon(options)
     _G.GetNumSkillLines, _G.GetSkillLineInfo = nil, nil
     _G.IsPlayerSpell = function(id) return (options.knownSpells or {})[id] == true end
     -- itemID, type, subtype, equip location, icon, class id, subclass id.
-    _G.GetItemInfoInstant = function(id)
-        if id == 7935 or id == 2864 then return id, "Armor", "Plate", "INVTYPE_CHEST", 1, 4, 4 end
-        if id == 3837 then return id, "Armor", "Mail", "INVTYPE_HEAD", 1, 4, 3 end
-        if id == 2852 then return id, "Armor", "Mail", "INVTYPE_LEGS", 1, 4, 3 end
-        if id == 7954 then return id, "Weapon", "One-Handed Maces", "INVTYPE_WEAPON", 1, 2, 4 end
-        return id, "Trade Goods", "Trade Goods", "", 1, 7, 0
-    end
+    _G.GetItemInfoInstant = function(id) return id, "Trade Goods", "Trade Goods", "", 136000 + id % 1000, 7, 0 end
     _G.GetItemInfo = function(id)
-        if id == 2852 then return "Copper Chain Pants", "|cff1eff00|Hitem:2852::::::::4:::::::|h[Copper Chain Pants]|h|r" end
+        if id == 2852 then return "Copper Chain Pants", "|cff1eff00|Hitem:2852::::::::4:::::::|h[Copper Chain Pants]|h|r", 2 end
+        local name = (options.itemNames or {})[id]
+        if name then return name, "|cffffffff|Hitem:" .. id .. "|h[" .. name .. "]|h|r", 1 end
     end
     _G.GetSpellTexture = function() return 135913 end
     _G.GetSpellLink = function(id) return "|cff71d5ff|Hspell:" .. id .. "|h[Enchant]|h|r" end
@@ -188,6 +185,8 @@ local function loadAddon(options)
     _G.GuildAssistantDatabaseMinimapButton = nil
     _G.Minimap = region("Frame")
     _G.GetCursorPosition = function() return 1100, 500 end -- right of the minimap's centre
+    _G.GuildAssistantDatabaseSources = nil
+    if not options.noSources then assert(loadfile("dev/GuildAssistantDatabase/Sources.fixture.lua"))() end
 
     local ns = {}
     for _, file in ipairs({ "GuildAssistantDatabase/Core.lua", "dev/GuildAssistantDatabase/Data.fixture.lua",
@@ -232,7 +231,7 @@ it("says what it has once loaded, and nothing for another addon", function()
     events:Fire("OnEvent", "ADDON_LOADED", "Bagnon")
     eq(#chat, 0, "not for another addon")
     events:Fire("OnEvent", "ADDON_LOADED", "GuildAssistantDatabase")
-    eq(said("8 recipes from Wowhead, 2026-11-11. Type /gadb (or click the clip on the minimap) to search them."), true, "says what it has")
+    eq(said("9 recipes from the game's data (1.60.1.70888). Type /gadb (or click the clip on the minimap) to search them."), true, "says what it has")
 end)
 
 local function loaded(options)
@@ -508,10 +507,10 @@ it("shows a recipe's details: the item, reagents, how to learn it and who can cr
     eq(d.hint:IsShown(), false)
     has(d.name.text:GetText(), "Runed Copper Breastplate")
     has(d.info:GetText(), "Blacksmithing, skill 55, requires level 13")
-    has(d.info:GetText(), "Chest (Plate), 160 Armor, +3 Strength, +2 Spirit")
+    has(d.info:GetText(), "Chest (Plate), Strength, Spirit")
     eq(d.reagents[1].text:GetText(), "12 x |cffffffffCopper Bar|r")
     eq(d.reagents[3]:IsShown(), true); eq(d.reagents[4]:IsShown(), false)
-    eq(d.learn:GetText(), "Drop: Defias Renegade Mage (Westfall)\nPickpocketing")
+    eq(d.learn:GetText(), "Drop: Defias Renegade Mage (Westfall)\nPickpocketing\n|cff808080Sources: Test notes (2026-11-11)|r")
     has(d.recipeItems[1].text:GetText(), "Plans: Runed Copper Breastplate")
     has(d.recipeItems[1].text:GetText(), "(skill 55)")
     eq(d.recipeItems[2]:IsShown(), false)
@@ -538,7 +537,7 @@ it("shows an enchant (no item) by its spell", function()
     eq(row.hyperlink, "spell:7418")
     eq(row.icon._texture, 135913)
     row:Click()
-    has(ns.UI.parts().details.learn:GetText(), "Trainer (10c)")
+    has(ns.UI.parts().details.learn:GetText(), "Learned with the profession")
 end)
 
 it("links a recipe or item in the chat on shift-click, and shows its tooltip on hover", function()
@@ -612,6 +611,67 @@ it("works with Classic Era's skill list instead of GetProfessions", function()
     ns.UI.parts().unknownCheck:Click()
     eq(sidebar(ns), "All my professions | Enchanting 80/150")
     eq(shownRows(ns), "Enchant Bracer - Minor Health, Greater Magic Wand")
+end)
+
+-- Sources companions -------------------------------------------------------------------------------
+
+it("without a sources companion, lists every recipe the game has, and says what it can of each", function()
+    local ns = loadAddon({ noSources = true })
+    SlashCmdList.GADB("")
+    local parts = ns.UI.parts()
+    eq(#parts.state.results, 9)
+    eq(sidebar(ns), "All professions 9 | Blacksmithing 7 | Enchanting 2")
+    eq(_G.GuildAssistantDatabaseFrame ~= nil, true)
+    parts.searchBox:SetText("pants")
+    rowNamed(ns, "Copper Chain Pants"):Click()
+    eq(parts.details.learn:GetText(), "A trainer or a quest: the game's files don't say which", "no Sources line")
+    parts.searchBox:SetText("gauntlets")
+    eq(shownRows(ns), "Ironforge Gauntlets")
+    parts.filterButton:Click()
+    eq(parts.filterPopup.unvouched:IsShown(), false, "nothing to tick without a companion")
+end)
+
+it("with a companion, hides the recipes none lists until they're ticked in the Filter", function()
+    local ns = loadAddon()
+    SlashCmdList.GADB("gauntlets")
+    local parts = ns.UI.parts()
+    eq(shownRows(ns), "")
+    parts.filterButton:Click()
+    eq(parts.filterPopup.unvouched:IsShown(), true)
+    parts.filterPopup.unvouched:Click()
+    eq(shownRows(ns), "Ironforge Gauntlets")
+    rowNamed(ns, "Ironforge Gauntlets"):Click()
+    has(parts.details.learn:GetText(), "No known source: unreleased, removed, or not recorded yet")
+    parts.searchBox:SetText("")
+    eq(sidebar(ns), "All professions 9 | Blacksmithing 7 | Enchanting 2", "counted too")
+    -- Clear (and Reset) hide them again.
+    parts.filterPopup.clear:Click()
+    eq(parts.filterPopup.unvouched:GetChecked(), false)
+    eq(sidebar(ns), "All professions 8 | Blacksmithing 6 | Enchanting 2")
+end)
+
+it("names an item the game's tables lack: the game's name in play, or the companion's", function()
+    local ns = loadAddon({ noSources = true, itemNames = { [11083] = "Soul Dust" } })
+    SlashCmdList.GADB("wand")
+    rowNamed(ns, "Greater Magic Wand"):Click()
+    eq(ns.UI.parts().details.reagents[2].text:GetText(), "1 x |cffffffffSoul Dust|r")
+    local unknown = loadAddon({ noSources = true })
+    SlashCmdList.GADB("wand")
+    rowNamed(unknown, "Greater Magic Wand"):Click()
+    eq(unknown.UI.parts().details.reagents[2].text:GetText(), "1 x |cffffffffItem 11083|r", "until the game knows it")
+    local withCompanion = loadAddon()
+    SlashCmdList.GADB("wand")
+    rowNamed(withCompanion, "Greater Magic Wand"):Click()
+    eq(withCompanion.UI.parts().details.reagents[2].text:GetText(), "1 x |cffffffffSoul Dust|r")
+end)
+
+it("shows the companion's stat values, and the icons from the game's data", function()
+    local ns = loadAddon()
+    SlashCmdList.GADB("ornate")
+    local row = rowNamed(ns, "Ornate Mithril Breastplate")
+    eq(row.icon._texture, 132745)
+    row:Click()
+    has(ns.UI.parts().details.info:GetText(), "Chest (Plate), 463 Armor, +14 Critical Strike Rating, +12 Dodge Rating")
 end)
 
 print(("%d passed, %d failed"):format(passed, failed))

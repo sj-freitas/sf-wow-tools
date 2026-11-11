@@ -25,6 +25,8 @@ prisma/migrations/dev.db*
 .luarc.json.bak
 /addons/**/.release/
 /addons/**/*.zip
+# The game's data tables the database job downloads (npm run database).
+/addons/.cache/
 
 # WoW addon manager caches
 .wowup/

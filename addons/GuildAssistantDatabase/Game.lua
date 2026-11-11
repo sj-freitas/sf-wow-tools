@@ -93,7 +93,7 @@ function Game.myProfessions()
     return mine
 end
 
---- A zone's name from its id (Wowhead's zone ids are the game's areas), or nil.
+--- A zone's name from its id (the game's area id, as sources give it), or nil.
 function Game.zoneName(id)
     if C_Map and C_Map.GetAreaInfo then
         local ok, name = pcall(C_Map.GetAreaInfo, id)
@@ -102,28 +102,22 @@ function Game.zoneName(id)
     return nil
 end
 
---- What the client knows of an item without asking the server (Core.load's `describe`): its type
---- and subtype as words ("Armor Plate", "Weapon One-Handed Maces"), and its class and subclass ids
---- (4 and 4 for plate armor). Nils when it can't say.
-function Game.describeItem(id)
-    local instant = (C_Item and C_Item.GetItemInfoInstant) or GetItemInfoInstant
-    if not instant then return nil end
-    local ok, _, itemType, subType, _, _, classID, subclassID = pcall(instant, id)
-    if not ok then return nil end
-    local words = {}
-    if type(itemType) == "string" then words[#words + 1] = itemType end
-    if type(subType) == "string" and subType ~= itemType then words[#words + 1] = subType end
-    return #words > 0 and table.concat(words, " ") or nil, tonumber(classID), tonumber(subclassID)
+--- The sources companions installed (GuildAssistantDatabaseSources): a list, empty without any.
+function Game.sourceProviders()
+    local list = rawget(_G, "GuildAssistantDatabaseSources")
+    return type(list) == "table" and list or {}
 end
 
---- The item's subtype alone ("Plate"), for showing next to its slot; nil when unknown or the same
---- as its type.
-function Game.itemSubtype(id)
-    local instant = (C_Item and C_Item.GetItemInfoInstant) or GetItemInfoInstant
-    if not instant then return nil end
-    local ok, _, itemType, subType = pcall(instant, id)
-    if ok and type(subType) == "string" and subType ~= itemType and subType ~= "Miscellaneous" then return subType end
-    return nil
+--- An item's name and quality: the data's, or, for one the game's tables lacked, what the game says
+--- in play (asked for when it doesn't know yet, so it does next time).
+function Game.itemName(item)
+    if not item.missing then return item.name, item.quality end
+    local info = (C_Item and C_Item.GetItemInfo) or GetItemInfo
+    local name, _, quality = nil, nil, nil
+    if info then name, _, quality = info(item.id) end
+    if name then return name, quality or item.quality end
+    if C_Item and C_Item.RequestLoadItemDataByID then C_Item.RequestLoadItemDataByID(item.id) end
+    return item.name, item.quality
 end
 
 local QUALITY_HEX = { [0] = "ff9d9d9d", [1] = "ffffffff", [2] = "ff1eff00", [3] = "ff0070dd", [4] = "ffa335ee", [5] = "ffff8000" }
@@ -139,12 +133,14 @@ end
 --- The recipe's name as shown: the item's colour when it makes one, the spell colour when not.
 function Game.coloredName(recipe)
     local item = recipe.creates
-    local hex = item and Game.qualityHex(item.quality) or SPELL_HEX
-    return ("|c%s%s|r"):format(hex, item and item.name or recipe.name)
+    if not item then return ("|c%s%s|r"):format(SPELL_HEX, recipe.name) end
+    local name, quality = Game.itemName(item)
+    return ("|c%s%s|r"):format(Game.qualityHex(quality), name)
 end
 
 function Game.coloredItem(item)
-    return ("|c%s%s|r"):format(Game.qualityHex(item.quality), item.name)
+    local name, quality = Game.itemName(item)
+    return ("|c%s%s|r"):format(Game.qualityHex(quality), name)
 end
 
 --- What a tooltip shows for: the item, or the recipe's spell (an enchant).

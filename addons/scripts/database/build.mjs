@@ -1,75 +1,69 @@
-// The database job: builds GuildAssistantDatabase's data (GuildAssistantDatabase/Data.lua) from
-// Wowhead's profession pages, as saved by the browser snippet (snippet.mjs).
+// The database job: builds GuildAssistantDatabase's data (GuildAssistantDatabase/Data.lua) from the
+// game's own data tables, as wago.tools exports them for the latest build of WoW Forever. Plain
+// downloads, no browser needed: the weekly GitHub Action runs it (.github/workflows/database.yml).
 //
-//   npm run database                         the newest ~/Downloads/wowhead-forever*.json
-//   npm run database -- path/to/file.json    that file
-//   npm run database -- --verbose            and list each recipe item left out
+//   npm run database                   the latest build (tables kept in addons/.cache)
+//   npm run database -- --build 1.60.1.70888
+//   npm run database -- --bump         when Data.lua changed: a patch version and a CHANGELOG line
 //
-// Says what it built per profession, and what didn't match: recipe items whose recipe Wowhead
-// doesn't list for the version (unused ones, cookbooks, sets not out yet), counted per profession,
-// and anything else.
-import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
-import { homedir } from 'node:os';
+// Says what it built per profession. Where recipes come from (drops, vendors, trainers) isn't in
+// the game's tables: a sources companion addon can add it (Core.lua, "Sources companions").
+import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { root } from '../addons.mjs';
+import { buildDatabase, fetchTables, latestBuild, PRODUCTS } from './gamedata.mjs';
 import { toLua } from './lua.mjs';
 import { DEFAULT_VERSION } from './professions.mjs';
-import { buildDatabase } from './wowhead.mjs';
 
-const OUTPUT = join(root, 'GuildAssistantDatabase', 'Data.lua');
-
-/** The most recent download of the snippet's file (browsers add " (1)" to a second one). */
-function newestDownload(version) {
-  const folder = join(homedir(), 'Downloads');
-  if (!existsSync(folder)) return null;
-  const pattern = new RegExp(`^wowhead-${version}( \\(\\d+\\))?\\.json$`);
-  const files = readdirSync(folder)
-    .filter((name) => pattern.test(name))
-    .map((name) => join(folder, name))
-    .sort((a, b) => statSync(b).mtimeMs - statSync(a).mtimeMs);
-  return files[0] ?? null;
-}
-
+const ADDON = join(root, 'GuildAssistantDatabase');
+const OUTPUT = join(ADDON, 'Data.lua');
 const args = process.argv.slice(2);
-const verbose = args.includes('--verbose');
-const input = args.find((arg) => !arg.startsWith('--')) ?? newestDownload(DEFAULT_VERSION);
-if (!input || !existsSync(input)) {
-  console.error(
-    `No snapshot of Wowhead's pages${input ? ` at ${input}` : ` (~/Downloads/wowhead-${DEFAULT_VERSION}.json)`}.\n` +
-      'Get one: npm run -s database:snippet | pbcopy, then paste it in the console of a www.wowhead.com page.',
-  );
-  process.exit(1);
-}
+const option = (name) => {
+  const at = args.indexOf(name);
+  return at >= 0 ? args[at + 1] : undefined;
+};
 
-const snapshot = JSON.parse(readFileSync(input, 'utf8'));
-const database = buildDatabase(snapshot);
+const version = DEFAULT_VERSION;
+const product = PRODUCTS[version];
+const build = option('--build') ?? (await latestBuild(product));
+const tables = await fetchTables(product, build, join(root, '.cache', 'wago'));
+const database = buildDatabase(tables, { version, build, fetched: new Date().toISOString().slice(0, 10) });
 if (database.professions.length === 0) {
-  console.error(`${input}: no recipes in it.`);
+  console.error(`No recipes in ${product} ${build}'s tables.`);
   process.exit(1);
 }
-writeFileSync(OUTPUT, toLua(database));
 
-console.log(`From ${input} (Wowhead ${database.version}, ${database.fetched}):`);
+// The same data as before (only the date it was fetched differs): Data.lua is left as it is.
+const before = existsSync(OUTPUT) ? readFileSync(OUTPUT, 'utf8') : '';
+const withoutDate = (lua) => lua.replace(/fetched[ =]+[^\n]*\n/g, '');
+const lua = toLua(database);
+const changed = withoutDate(before) !== withoutDate(lua);
+if (changed) writeFileSync(OUTPUT, lua);
+
+console.log(`From the game's tables (${product} ${build}):`);
 for (const profession of database.professions) {
   const taught = profession.recipes.filter((r) => r.recipeItems.length > 0).length;
-  console.log(
-    `  ${profession.name}: ${profession.recipes.length} recipes (${taught} from recipe items), ${profession.items.length} items`,
-  );
+  console.log(`  ${profession.name}: ${profession.recipes.length} recipes (${taught} taught by a recipe item), ${profession.items.length} items`);
 }
-const leftOut = database.warnings.filter((warning) => warning.includes(': no recipe for '));
-const others = database.warnings.filter((warning) => !leftOut.includes(warning));
-if (leftOut.length > 0) {
-  const counts = new Map();
-  for (const warning of leftOut) {
-    const profession = warning.split(':')[0];
-    counts.set(profession, (counts.get(profession) ?? 0) + 1);
-  }
-  const perProfession = [...counts].map(([name, count]) => `${name} ${count}`).join(', ');
-  console.log(`Recipe items left out, their recipe isn't on Wowhead's list: ${perProfession}${verbose ? '' : ' (--verbose lists them)'}`);
-  if (verbose) for (const warning of leftOut) console.log(`  ${warning}`);
-}
-if (others.length > 0) {
-  console.log(`${others.length} warnings:`);
-  for (const warning of others) console.log(`  ${warning}`);
+for (const warning of database.warnings) console.log(`  ${warning}`);
+if (!changed) {
+  console.log(`${relative(root, OUTPUT)} is up to date.`);
+  process.exit(0);
 }
 console.log(`Wrote ${relative(root, OUTPUT)} (${Math.round(statSync(OUTPUT).size / 1024)} KB).`);
+
+if (args.includes('--bump')) {
+  // A new patch version, with a CHANGELOG line saying which build the data is from.
+  const tocPath = join(ADDON, 'GuildAssistantDatabase.toc');
+  const toc = readFileSync(tocPath, 'utf8');
+  const [, major, minor, patch] = toc.match(/^## Version: (\d+)\.(\d+)\.(\d+)/m);
+  const next = `${major}.${minor}.${Number(patch) + 1}`;
+  writeFileSync(tocPath, toc.replace(/^## Version: .*$/m, `## Version: ${next}`));
+  const changelogPath = join(ADDON, 'CHANGELOG.md');
+  const changelog = readFileSync(changelogPath, 'utf8');
+  writeFileSync(
+    changelogPath,
+    changelog.replace(/^(# .*\n\n)/, `$1## ${next}\n\n- Recipe data from the game's build ${build}.\n\n`),
+  );
+  console.log(`Version ${next}.`);
+}

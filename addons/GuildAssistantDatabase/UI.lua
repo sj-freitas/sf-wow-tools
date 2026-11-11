@@ -34,6 +34,7 @@ local state = {
     loadingScheduled = false,
     mine = {}, -- Game.myProfessions() at the last refresh
     slots = {}, armor = {}, -- the Filter's choices, by name (Core.SLOTS, Core.ARMOR_TYPES)
+    showUnvouched = false, -- with a sources companion: also recipes none of them lists
     counts = nil, -- with a search: how many recipes of each profession match ({ [name] = n })
     total = 0, -- how many match in all the listed professions
 }
@@ -99,14 +100,18 @@ local function linkClicked(self)
     return false
 end
 
-local function iconOf(recipe)
-    if recipe.creates and recipe.creates.icon then return "Interface\\Icons\\" .. recipe.creates.icon end
-    local texture = (C_Spell and C_Spell.GetSpellTexture) or GetSpellTexture
-    return texture and texture(recipe.id) or QUESTION_MARK
+-- An item's icon: its file id (the game's data), else what the game says, else a question mark.
+local function itemIcon(item)
+    if item.icon and item.icon > 0 then return item.icon end
+    local instant = (C_Item and C_Item.GetItemInfoInstant) or GetItemInfoInstant
+    local icon = instant and select(5, instant(item.id))
+    return icon or QUESTION_MARK
 end
 
-local function itemIcon(item)
-    return item.icon and ("Interface\\Icons\\" .. item.icon) or QUESTION_MARK
+local function iconOf(recipe)
+    if recipe.creates then return itemIcon(recipe.creates) end
+    local texture = (C_Spell and C_Spell.GetSpellTexture) or GetSpellTexture
+    return texture and texture(recipe.id) or QUESTION_MARK
 end
 
 -- What to search ----------------------------------------------------------------------------------
@@ -137,7 +142,7 @@ local function loadPending(entries)
     for _, entry in ipairs(entries) do
         if not entry.loaded then
             if not (C_Timer and C_Timer.After) then
-                Core.load(entry, Game.describeItem)
+                Core.load(entry, Game.sourceProviders())
             else
                 pending = pending + 1
                 if not state.loadingScheduled then
@@ -147,7 +152,7 @@ local function loadPending(entries)
                         -- What's needed by then: another profession may have been picked meanwhile.
                         for _, wanted in ipairs(state.wanted) do
                             if not wanted.loaded then
-                                ns.safely(Core.load, wanted, Game.describeItem)
+                                ns.safely(Core.load, wanted, Game.sourceProviders())
                                 break
                             end
                         end
@@ -174,6 +179,7 @@ local function query()
         minLevel = Core.limit(minLevelBox:GetText()), maxLevel = Core.limit(maxLevelBox:GetText()),
         minSkill = Core.limit(minSkillBox:GetText()), maxSkill = Core.limit(maxSkillBox:GetText()),
         slots = slots, armor = armor, include = include,
+        vouchedOnly = #Game.sourceProviders() > 0 and not state.showUnvouched,
     }
 end
 
@@ -185,6 +191,13 @@ local function matchCount(n)
     return (n or 0) > 0 and ("|cffffd100%s|r"):format(Core.thousands(n)) or ""
 end
 
+-- A profession's recipes: with a sources companion, those it vouches for (once read), unless
+-- recipes with no known source are shown too.
+local function total(entry)
+    if entry.loaded and #Game.sourceProviders() > 0 and not state.showUnvouched then return entry.loaded.vouchedCount end
+    return entry.count or 0
+end
+
 local function drawSidebar()
     local entries = listedEntries()
     local all = ""
@@ -192,7 +205,7 @@ local function drawSidebar()
         all = matchCount(state.total)
     elseif not state.unknownOnly then
         local count = 0
-        for _, entry in ipairs(entries) do count = count + (entry.count or 0) end
+        for _, entry in ipairs(entries) do count = count + total(entry) end
         all = Core.thousands(count)
     end
     local items = { { name = nil, text = state.unknownOnly and "All my professions" or "All professions", right = all } }
@@ -204,7 +217,7 @@ local function drawSidebar()
         elseif mine and state.unknownOnly then
             right = ("%d/%d"):format(mine.rank, mine.max)
         else
-            right = Core.thousands(entry.count or 0)
+            right = Core.thousands(total(entry))
         end
         items[#items + 1] = { name = entry.name, text = entry.name, right = right }
     end
@@ -282,14 +295,9 @@ local function infoLines(recipe)
     lines[#lines + 1] = skill
     local item = recipe.creates
     if item then
-        -- "Chest (Plate), 463 Armor, …": the slot (which the summary starts with) and the type.
-        local summary, subtype = item.summary, Game.itemSubtype(item.id)
-        if subtype and item.slot > 0 and summary ~= "" then
-            summary = summary:gsub("^([^,]+)", "%1 (" .. subtype .. ")", 1)
-        elseif subtype then
-            summary = summary ~= "" and (subtype .. ", " .. summary) or subtype
-        end
-        if summary ~= "" then lines[#lines + 1] = summary end
+        -- "Chest (Plate), 463 Armor, …": slot and type, then its stats (with values when a sources
+        -- companion knows them).
+        if item.summary ~= "" then lines[#lines + 1] = item.summary end
         local min, max = recipe.makes[1], recipe.makes[2]
         if max > 1 then lines[#lines + 1] = min == max and ("Makes %d"):format(min) or ("Makes %d to %d"):format(min, max) end
     end
@@ -348,7 +356,10 @@ local function drawDetails()
     end
 
     d.learnHeader:Show()
-    d.learn:SetText(table.concat(Core.howToLearn(recipe, Game.zoneName), "\n"))
+    local learn = Core.howToLearn(recipe, Game.zoneName)
+    local sources = Core.sources(Game.sourceProviders())
+    if sources then learn[#learn + 1] = ("|cff808080Sources: %s|r"):format(table.concat(sources.names, ", ")) end
+    d.learn:SetText(table.concat(learn, "\n"))
     d.learn:Show()
     for i, button in ipairs(d.recipeItems) do
         local item = recipe.recipeItems[i]
@@ -537,10 +548,11 @@ local function updateFilterButton()
     filterButton:SetText(picked > 0 and ("Filter (%d)"):format(picked) or "Filter")
 end
 
---- Unticks every armor type and slot.
+--- Unticks every armor type and slot, and hides recipes with no known source again.
 function UI.clearFilter()
-    state.slots, state.armor = {}, {}
+    state.slots, state.armor, state.showUnvouched = {}, {}, false
     for _, check in pairs(filterChecks) do check:SetChecked(false) end
+    if filterPopup and filterPopup.unvouched then filterPopup.unvouched:SetChecked(false) end
     updateFilterButton()
 end
 
@@ -576,7 +588,7 @@ local function buildFilterPopup()
     local slotColumns, slotRows = 3, math.ceil(#Core.SLOTS / 3)
     filterPopup = CreateFrame("Frame", nil, frame)
     filterPopup:SetFrameStrata("DIALOG")
-    filterPopup:SetSize(20 + (1 + slotColumns) * FILTER_COLUMN, 30 + slotRows * FILTER_ROW + 36)
+    filterPopup:SetSize(20 + (1 + slotColumns) * FILTER_COLUMN, 30 + slotRows * FILTER_ROW + 36 + FILTER_ROW + 6)
     filterPopup:SetPoint("TOPRIGHT", filterButton, "BOTTOMRIGHT", 0, -2)
     filterPopup:EnableMouse(true) -- clicks on it don't reach the list below
     local edge = filterPopup:CreateTexture(nil, "BACKGROUND")
@@ -599,6 +611,24 @@ local function buildFilterPopup()
     for i, choice in ipairs(Core.SLOTS) do
         filterCheck("slots", choice.name, 1 + math.floor((i - 1) / slotRows), (i - 1) % slotRows)
     end
+
+    -- With a sources companion installed: also the recipes none of them lists (unreleased, removed,
+    -- or not recorded yet), hidden otherwise.
+    local unvouched = CreateFrame("CheckButton", nil, filterPopup, "UICheckButtonTemplate")
+    unvouched:SetSize(20, 20)
+    unvouched:SetPoint("TOPLEFT", filterPopup, "TOPLEFT", 10, -30 - slotRows * FILTER_ROW - 6)
+    local unvouchedText = unvouched.text or unvouched.Text or fontString(unvouched, "GameFontHighlightSmall")
+    unvouchedText:ClearAllPoints()
+    unvouchedText:SetPoint("LEFT", unvouched, "RIGHT", 1, 0)
+    unvouchedText:SetText("Recipes with no known source (unreleased, removed, or not recorded yet)")
+    unvouched:SetScript("OnClick", function(self)
+        state.showUnvouched, state.offset = self:GetChecked() and true or false, 0
+        UI.refresh()
+    end)
+    filterPopup.unvouched = unvouched
+    filterPopup:SetScript("OnShow", function(self)
+        self.unvouched:SetShown(#Game.sourceProviders() > 0)
+    end)
 
     local clear = CreateFrame("Button", nil, filterPopup, "UIPanelButtonTemplate")
     clear:SetSize(70, 20)
@@ -803,7 +833,9 @@ local function build()
     dataText = fontString(frame, "GameFontDisableSmall", "RIGHT")
     dataText:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -16, 13)
     local data = ns.Data or {}
-    dataText:SetText(("%s from Wowhead (%s), %s"):format(Core.describe(data), data.version or "?", data.fetched or "?"))
+    local sources = Core.sources(Game.sourceProviders())
+    dataText:SetText(("%s from the game's data (%s)%s"):format(Core.describe(data), data.build or data.fetched or "?",
+        sources and (", sources: " .. table.concat(sources.names, ", ")) or ""))
 end
 
 --- Opens the window (built the first time), with `search` typed in when given.

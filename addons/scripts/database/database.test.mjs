@@ -1,197 +1,126 @@
-// Tests of the database job (node:test; `npm test` runs them with the Lua specs). The snapshot
-// fixture is dev/GuildAssistantDatabase/wowhead.fixture.mjs; Data.fixture.lua next to it is what
-// it builds, which the addon's specs load. UPDATE_FIXTURES=1 rewrites it.
+// Tests of the database job (node:test; `npm test` runs them with the Lua specs). The fixture is a
+// slice of the game's tables (dev/GuildAssistantDatabase/gamedata.fixture.mjs); Data.fixture.lua
+// next to it is what it builds, which the addon's specs load. UPDATE_FIXTURES=1 rewrites it.
 import assert from 'node:assert/strict';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
-import vm from 'node:vm';
-import { snapshot } from '../../dev/GuildAssistantDatabase/wowhead.fixture.mjs';
+import { meta, tables } from '../../dev/GuildAssistantDatabase/gamedata.fixture.mjs';
 import { root } from '../addons.mjs';
-import { parseLiteral } from './literal.mjs';
+import { parseCsv } from './csv.mjs';
+import { buildDatabase, fetchTables, itemKind, itemStats, latestBuild, TABLES } from './gamedata.mjs';
 import { itemLine, longString, recipeLine, toLua } from './lua.mjs';
-import { PROFESSIONS } from './professions.mjs';
-import { snippet } from './snippet.mjs';
-import { buildDatabase, buildProfession, gatherer, itemSummary, listview, nameKey, taughtName } from './wowhead.mjs';
 
 const FIXTURE_LUA = join(root, 'dev', 'GuildAssistantDatabase', 'Data.fixture.lua');
-const blacksmithing = PROFESSIONS.find((p) => p.name === 'Blacksmithing');
-const scriptsOf = (profession, kind) =>
-  snapshot.pages.filter((p) => p.profession === profession && p.kind === kind).flatMap((p) => p.scripts);
 
-test('reads literals the way Wowhead writes them', () => {
-  const text = `[{"a":1,b:'two',"c":[1,-2.5,.5,1e3],d:{"e":null,f:true,g:false,h:undefined}},"x\\"y\\u00e9\\n"]; rest`;
-  const { value, end } = parseLiteral(text);
-  assert.deepEqual(value, [{ a: 1, b: 'two', c: [1, -2.5, 0.5, 1000], d: { e: null, f: true, g: false, h: undefined } }, 'x"yé\n']);
-  assert.equal(text.slice(end), '; rest');
-  assert.throws(() => parseLiteral('{a: someFunction()}'), /Not a literal/);
-  assert.throws(() => parseLiteral('"open'), /Unterminated string/);
-});
-
-test('finds the listview and the gatherer data in a page', () => {
-  const scripts = scriptsOf('Blacksmithing', 'spells');
-  const spells = listview(scripts, 'listviewspells');
-  assert.equal(spells.length, 8);
-  assert.equal(spells[2].popularity, 650); // an unquoted key
-  assert.equal(listview(scripts, 'listviewitems'), null);
-  const data = gatherer(scripts);
-  assert.equal(data[3][2852].name_enus, 'Copper Chain Pants');
-  assert.equal(data[6][2660].name_enus, 'Rough Sharpening Stone');
-});
-
-test('sums an item up as a search reads it: slot, damage, armor, stats', () => {
-  assert.equal(itemSummary({ slotbak: 5, armor: 463, critstrkrtng: 14, dodgertng: 12, reqlevel: 43 }),
-    'Chest, 463 Armor, +14 Critical Strike Rating, +12 Dodge Rating');
-  assert.equal(itemSummary({ slotbak: 13, dmgmin1: 53, dmgmax1: 99, speed: 2.4, dps: 31.67 }),
-    'One-Hand, 53 - 99 Damage, Speed 2.40, 31.7 DPS');
-  assert.equal(itemSummary({ mlecritstrkpct: 1, sta: -5 }), '-5 Stamina, +1% Melee Critical Strike');
-  assert.equal(itemSummary({ sellprice: 10 }), '');
-  assert.equal(itemSummary(undefined), '');
-});
-
-test('matches a recipe item to the recipe it teaches by name, however it is punctuated', () => {
-  assert.equal(taughtName('Plans: Runed Copper Breastplate'), 'runed copper breastplate');
-  assert.equal(taughtName('Formula: Enchant Bracer - Minor Health'), 'enchant bracer minor health');
-  assert.equal(taughtName('Recipe: Transmute Arcanite'), nameKey('Transmute: Arcanite'));
-  assert.equal(taughtName("Recipe: Elixir of Ogre's Strength"), nameKey('Elixir of Ogre Strength'));
-  assert.equal(taughtName("Pattern: Skulker's Leather Shoulder"), nameKey("Skulker's Leather Shoulders"));
-  assert.notEqual(taughtName('Recipe: Elixir of Giants'), nameKey('Elixir of Giant Growth'));
-});
-
-test('a recipe item teaches the one recipe whose name starts with its own, never a guess among several', () => {
-  const spells = (names) => [`var listviewspells = ${JSON.stringify(names.map((name, i) => ({
-    id: i + 1, name, learnedat: 10, skill: [171], reagents: [[1, 1]], creates: [100 + i, 1, 1] })))};`];
-  const items = (names) => [`var listviewitems = ${JSON.stringify(names.map((name, i) => ({ id: 900 + i, name, skill: 10 })))};`];
-  const alchemy = { name: 'Alchemy', skill: 171 };
-  const one = buildProfession(alchemy, spells(['Greater Dreamless Sleep Potion', 'Dreamless Sleep Potion']),
-    items(['Recipe: Greater Dreamless Sleep']));
-  assert.deepEqual(one.recipes.find((r) => r.id === 1).recipeItems, [900]);
-  const two = buildProfession(alchemy, spells(['Elixir of Giant Growth', 'Elixir of Giant Strength']), items(['Recipe: Elixir of Giant']));
-  assert.deepEqual(two.recipes.flatMap((r) => r.recipeItems), []);
-  assert.equal(two.warnings.filter((w) => w.includes('no recipe for')).length, 1);
-});
-
-test('builds a profession: its crafts, their reagents and how each is learned', () => {
-  const result = buildProfession(blacksmithing, scriptsOf('Blacksmithing', 'spells'), scriptsOf('Blacksmithing', 'recipes'));
-  const byName = Object.fromEntries(result.recipes.map((r) => [r.name, r]));
-  // Ranks and specializations have no reagents: not recipes.
-  assert.deepEqual(result.recipes.map((r) => r.name), [
-    'Copper Chain Pants', 'Rough Sharpening Stone', 'Runed Copper Breastplate', 'Golden Scale Coif',
-    'The Shatterer', 'Ornate Mithril Breastplate',
+test('reads CSV as wago.tools writes it: quoted commas, doubled quotes, line breaks', () => {
+  const rows = parseCsv('ID,Name,Note\r\n1,"A, B","say ""hi"""\n2,C,"two\nlines"\n');
+  assert.deepEqual(rows, [
+    { ID: '1', Name: 'A, B', Note: 'say "hi"' },
+    { ID: '2', Name: 'C', Note: 'two\nlines' },
   ]);
-  // A recipe item's skill wins when it's how the recipe is learned (Forever lowered this one).
-  assert.equal(byName['Runed Copper Breastplate'].skill, 55);
-  assert.deepEqual(byName['Runed Copper Breastplate'].recipeItems, [2881]);
-  assert.deepEqual(byName['Runed Copper Breastplate'].reagents, [{ id: 2840, count: 12 }, { id: 1210, count: 1 }, { id: 3470, count: 2 }]);
-  assert.deepEqual(byName['Runed Copper Breastplate'].colors, [95, 115, 135]);
-  assert.deepEqual(byName['Copper Chain Pants'].creates, { id: 2852, min: 1, max: 1 });
-  // A trainer's cost alone says it's taught by a trainer.
-  assert.deepEqual(byName['The Shatterer'].sources, [6]);
-  assert.equal(byName['The Shatterer'].trainingCost, 13500);
-  assert.deepEqual(byName['Rough Sharpening Stone'].sources, []);
-
-  const items = Object.fromEntries(result.items.map((i) => [i.id, i]));
-  assert.deepEqual(items[7935], {
-    id: 7935, name: 'Ornate Mithril Breastplate', quality: 2, icon: 'inv_chest_plate10', level: 43, slot: 5,
-    summary: 'Chest, 463 Armor, +14 Critical Strike Rating, +12 Dodge Rating', skill: 0, sources: [],
-  });
-  assert.equal(items[2840].name, 'Copper Bar');
-  assert.deepEqual(items[2881].sources, [{ kind: 'drop', name: 'Defias Renegade Mage', zone: 40 }]);
-  assert.deepEqual(items[6047].sources, [{ kind: 'vendor', name: 'Krinkle Goodsteel', zone: 440 }]);
-  assert.deepEqual(items[7975].sources, [{ kind: 'quest', name: 'Ornate Mithril Armor', zone: 0 }]);
-  assert.equal(items[2881].skill, 55);
-  assert.deepEqual(result.warnings, ['Blacksmithing: no recipe for Plans: Something Wowhead Lists Alone (12345)']);
+  assert.deepEqual(parseCsv(''), []);
+  assert.deepEqual(parseCsv('ID,Name\n3'), [{ ID: '3', Name: '' }]);
 });
 
-test("says when a page isn't the profession's (Wowhead's default list)", () => {
-  const mining = { name: 'Mining', skill: 186 };
-  const result = buildProfession(mining, scriptsOf('Blacksmithing', 'spells'));
-  assert.equal(result.recipes.length, 0);
-  assert.match(result.warnings[0], /no recipes of skill 186/);
+test("names an item's slot and type, and its stats, as the game does", () => {
+  assert.equal(itemKind({ InventoryType: '5' }, { ClassID: '4', SubclassID: '4' }), 'Chest (Plate)');
+  assert.equal(itemKind({ InventoryType: '13' }, { ClassID: '2', SubclassID: '4' }), 'One-Hand (One-Handed Maces)');
+  assert.equal(itemKind({ InventoryType: '0' }, { ClassID: '0', SubclassID: '1' }), 'Potion');
+  assert.equal(itemKind(undefined, { InventoryType: '10', ClassID: '4', SubclassID: '4' }), 'Hands (Plate)', 'from Item alone');
+  assert.equal(itemKind(undefined, undefined), '');
+  assert.equal(itemStats({ StatModifier_bonusStat_0: '32', StatModifier_bonusStat_1: '13', StatModifier_bonusStat_2: '-1' }, { ClassID: '4' }),
+    'Critical Strike Rating, Dodge Rating');
+  assert.equal(itemStats({ ItemDelay: '2400', StatModifier_bonusStat_0: '-1' }, { ClassID: '2' }), 'Speed 2.40');
+  assert.equal(itemStats({ ItemDelay: '2400' }, { ClassID: '4' }), '', 'only weapons have a speed');
 });
 
-test('builds the database from a snapshot, leaving out professions it lacks', () => {
-  const database = buildDatabase(snapshot);
-  assert.equal(database.version, 'forever');
-  assert.equal(database.fetched, '2026-11-11');
+test('builds each profession from the game tables: recipes, reagents, items, how they are learned', () => {
+  const database = buildDatabase(tables, meta);
   assert.deepEqual(database.professions.map((p) => p.name), ['Blacksmithing', 'Enchanting']);
-  assert.ok(database.warnings.includes('Alchemy: not in the snapshot'));
-  const enchant = database.professions[1].recipes.find((r) => r.id === 7418);
+  const blacksmithing = database.professions[0];
+  const byName = Object.fromEntries(blacksmithing.recipes.map((r) => [r.name, r]));
+  // A rank (no reagents) isn't a recipe.
+  assert.deepEqual(blacksmithing.recipes.map((r) => r.name), [
+    'Copper Chain Pants', 'Rough Sharpening Stone', 'Runed Copper Breastplate', 'Golden Scale Coif',
+    'Ironforge Gauntlets', 'The Shatterer', 'Ornate Mithril Breastplate',
+  ]);
+  // Skill: the recipe item's, else the game's minimum, else when it turns yellow.
+  assert.equal(byName['Runed Copper Breastplate'].skill, 55);
+  assert.equal(byName['The Shatterer'].skill, 235);
+  assert.equal(byName['Copper Chain Pants'].skill, 15);
+  assert.deepEqual(byName['Copper Chain Pants'].colors, [50, 70, 90]);
+  assert.deepEqual(byName['Runed Copper Breastplate'].recipeItems, [2881], 'the plans that teach it, not "Learning"');
+  assert.deepEqual(byName['Runed Copper Breastplate'].reagents, [{ id: 2840, count: 12 }, { id: 1210, count: 1 }, { id: 3470, count: 2 }]);
+  assert.deepEqual(byName['Copper Chain Pants'].creates, { id: 2852, min: 1, max: 1 });
+  assert.equal(byName['Rough Sharpening Stone'].acquire, 1);
+  assert.equal(byName['Rough Sharpening Stone'].acquireSkill, 15);
+
+  const items = Object.fromEntries(blacksmithing.items.map((i) => [i.id, i]));
+  assert.deepEqual(items[7935], {
+    id: 7935, name: 'Ornate Mithril Breastplate', quality: 2, level: 43, slot: 5, icon: 132745,
+    kind: 'Chest (Plate)', stats: 'Critical Strike Rating, Dodge Rating', skill: 0, classID: 4, subclassID: 4,
+  });
+  assert.equal(items[2881].skill, 55);
+  // Made, but no row in ItemSparse: named after its recipe; its slot and type from Item.
+  assert.equal(items[99002].name, 'Ironforge Gauntlets');
+  assert.equal(items[99002].kind, 'Hands (Plate)');
+
+  const enchanting = database.professions[1];
+  const enchant = enchanting.recipes.find((r) => r.id === 7418);
   assert.equal(enchant.creates, null);
+  assert.equal(enchant.acquire, 2);
+  // A reagent with no row in ItemSparse: no name (the game names it in play).
+  assert.equal(enchanting.items.find((i) => i.id === 11083).name, '');
+  assert.match(database.warnings.join('\n'), /2 items have no row/);
 });
 
 test('writes lines the addon reads, with nothing in a field that would break them', () => {
   assert.equal(
     recipeLine({ id: 1, name: 'A\tB;C', skill: 5, colors: [6, 7, 8], creates: null, reagents: [{ id: 2, count: 3 }],
-      sources: [2, 6], trainingCost: 0, recipeItems: [] }),
-    '1\tA B C\t5\t6,7,8\t\t2:3\t2;6\t\t',
+      acquire: 0, acquireSkill: 1, recipeItems: [9] }),
+    '1\tA B C\t5\t6,7,8\t\t2:3\t0\t1\t9',
   );
   assert.equal(
-    itemLine({ id: 9, name: 'Plans: X', quality: 2, icon: 'inv_scroll_03', level: 0, slot: 0, summary: '', skill: 55,
-      sources: [{ kind: 'drop', name: 'Some; Mob', zone: 40 }, { kind: 'quest', name: 'A = B', zone: 0 }] }),
-    '9\tPlans: X\t2\t\t\tinv_scroll_03\t\t55\tD40=Some Mob;Q0=A = B',
+    itemLine({ id: 9, name: 'Plans: X', quality: 2, level: 0, slot: 0, icon: 134942, kind: 'Blacksmithing', stats: '',
+      skill: 55, classID: 9, subclassID: 4 }),
+    '9\tPlans: X\t2\t\t\t134942\tBlacksmithing\t\t55\t9\t4',
   );
   assert.equal(longString('a'), '[[\na]]');
   assert.equal(longString('a]]b]=]'), '[==[\na]]b]=]]==]');
 });
 
-test('Data.fixture.lua is what the fixture snapshot builds (UPDATE_FIXTURES=1 rewrites it)', () => {
-  const lua = toLua(buildDatabase(snapshot));
+test('Data.fixture.lua is what the fixture tables build (UPDATE_FIXTURES=1 rewrites it)', () => {
+  const lua = toLua(buildDatabase(tables, meta));
   if (process.env.UPDATE_FIXTURES) writeFileSync(FIXTURE_LUA, lua);
   assert.equal(readFileSync(FIXTURE_LUA, 'utf8'), lua);
 });
 
-test('the browser snippet reads each page once, keeps its data scripts and downloads them', async () => {
-  const fetched = [];
-  let downloaded;
-  const pageFor = (url) => {
-    const page = snapshot.pages.find((p) => p.url === url);
-    return page ? `<html><script>var other = 1;</script><script>${page.scripts[0]}</script></html>` : '<html></html>';
+test("asks wago.tools for the latest build and downloads a build's tables once", async () => {
+  const asked = [];
+  const fetcher = async (url) => {
+    asked.push(url);
+    if (url.endsWith('/api/builds/latest')) {
+      return { ok: true, json: async () => ({ wowf: { version: '1.60.1.70888' } }) };
+    }
+    const table = url.match(/db2\/(\w+)\/csv/)[1];
+    return { ok: true, text: async () => tables[table] ?? 'ID\n' };
   };
-  const context = {
-    location: { hostname: 'www.wowhead.com', origin: 'https://www.wowhead.com' },
-    console: { log() {} },
-    setTimeout: (fn) => fn(),
-    fetch: async (url) => {
-      fetched.push(url);
-      return { ok: true, status: 200, text: async () => pageFor(url) };
-    },
-    // Just enough of the browser: the page's scripts, and a link that "downloads" when clicked.
-    DOMParser: class {
-      parseFromString(html) {
-        return { scripts: [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(([, textContent]) => ({ textContent })) };
-      }
-    },
-    Blob: class {
-      constructor(parts) { this.text = parts.join(''); }
-    },
-    URL: { createObjectURL: (blob) => blob },
-    document: {
-      body: { appendChild() {} },
-      createElement: () => ({ click() { downloaded = { name: this.download, data: this.href.text }; }, remove() {} }),
-    },
-  };
-  context.window = context;
-  await vm.runInNewContext(`${snippet({ professions: PROFESSIONS.filter((p) => ['Blacksmithing', 'Enchanting', 'Mining'].includes(p.name)) })}`, context);
-  await new Promise((done) => setImmediate(done));
+  assert.equal(await latestBuild('wowf', fetcher), '1.60.1.70888');
+  await assert.rejects(latestBuild('nope', fetcher), /no build of nope/);
 
-  assert.deepEqual(fetched, [
-    'https://www.wowhead.com/forever/spells/professions/blacksmithing',
-    'https://www.wowhead.com/forever/items/recipes/blacksmithing',
-    'https://www.wowhead.com/forever/spells/professions/enchanting',
-    'https://www.wowhead.com/forever/items/recipes/enchanting',
-    'https://www.wowhead.com/forever/spells/professions/mining',
-  ]);
-  assert.equal(downloaded.name, 'wowhead-forever.json');
-  const saved = JSON.parse(downloaded.data);
-  assert.equal(saved.pages[0].scripts.length, 1); // "var other" isn't data
-  assert.deepEqual(
-    buildDatabase(saved).professions.map((p) => [p.name, p.recipes.length]),
-    buildDatabase(snapshot).professions.map((p) => [p.name, p.recipes.length]),
-  );
-});
-
-test('the snippet only runs on Wowhead', async () => {
-  const context = { location: { hostname: 'example.com' }, console, window: {} };
-  await assert.rejects(vm.runInNewContext(snippet(), context), /www\.wowhead\.com/);
+  const cache = mkdtempSync(join(tmpdir(), 'gadb-'));
+  try {
+    const first = await fetchTables('wowf', '1.60.1.70888', cache, fetcher);
+    assert.equal(first.SpellName, tables.SpellName);
+    assert.equal(asked.filter((url) => url.includes('/db2/')).length, TABLES.length);
+    assert.ok(asked.includes('https://wago.tools/db2/SpellName/csv?product=wowf&build=1.60.1.70888'));
+    await fetchTables('wowf', '1.60.1.70888', cache, fetcher);
+    assert.equal(asked.filter((url) => url.includes('/db2/')).length, TABLES.length, 'kept: not downloaded again');
+  } finally {
+    rmSync(cache, { recursive: true, force: true });
+  }
+  const failing = async () => ({ ok: false, status: 503 });
+  await assert.rejects(latestBuild('wowf', failing), /HTTP 503/);
 });

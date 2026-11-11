@@ -1,7 +1,8 @@
 -- GuildAssistant Database: everything that doesn't touch the game. Reads the recipe data (Data.lua,
--- built from Wowhead by `npm run database`), searches it, says how a recipe is learned, and who
--- can craft it from what GuildAssistant Professions saved. Kept apart from the game API so it can
--- be tested outside WoW (addons/dev/GuildAssistantDatabase).
+-- built from the game's own data tables by `npm run database`) and what sources companions add
+-- (GuildAssistantDatabaseSources), searches it, says how a recipe is learned, and who can craft it
+-- from what GuildAssistant Professions saved. Kept apart from the game API so it can be tested
+-- outside WoW (addons/dev/GuildAssistantDatabase).
 
 local _, ns = ...
 local Core = {}
@@ -32,35 +33,101 @@ local SOURCE_KINDS = { D = "drop", V = "vendor", Q = "quest", O = "object" }
 local function number(text) return tonumber(text) or 0 end
 local function text(value) return value ~= nil and value ~= "" and value or nil end
 
+local function joined(...)
+    local parts = {}
+    for i = 1, select("#", ...) do
+        local part = select(i, ...)
+        if part and part ~= "" then parts[#parts + 1] = part end
+    end
+    return table.concat(parts, ", ")
+end
+
+-- An item: id, name, quality, level, slot, icon (file id), kind, stats, skill, class, subclass. One
+-- the game's tables have no row for has no name: `missing`, named "Item <id>" until the game (or a
+-- sources companion) says better.
 local function decodeItem(line)
     local f = Core.split(line, "\t")
+    local id = number(f[1])
     local item = {
-        id = number(f[1]), name = f[2] or "", quality = tonumber(f[3]) or 1, level = number(f[4]),
-        slot = number(f[5]), icon = text(f[6]), summary = f[7] or "", skill = number(f[8]), sources = {},
+        id = id, name = text(f[2]) or ("Item " .. id), missing = text(f[2]) == nil,
+        quality = tonumber(f[3]) or 1, level = number(f[4]), slot = number(f[5]), icon = tonumber(f[6]),
+        kind = f[7] or "", stats = f[8] or "", skill = number(f[9]), classID = tonumber(f[10]),
+        subclassID = tonumber(f[11]), sources = {},
     }
-    for source in (f[9] or ""):gmatch("[^;]+") do
-        local kind, zone, name = source:match("^(%a)(%d+)=(.*)$")
-        if kind and SOURCE_KINDS[kind] then
-            item.sources[#item.sources + 1] = { kind = SOURCE_KINDS[kind], zone = tonumber(zone), name = name }
-        end
-    end
+    item.summary = joined(item.kind, item.stats)
     return item
 end
 
 local function unknownItem(id)
-    return { id = id, name = "Item " .. id, quality = 1, level = 0, slot = 0, summary = "", skill = 0, sources = {} }
+    return { id = id, name = "Item " .. id, missing = true, quality = 1, level = 0, slot = 0, kind = "", stats = "",
+        summary = "", skill = 0, sources = {} }
 end
 
---- The profession's recipes and items as tables, decoded from its text the first time (then kept).
---- `describe(itemId)`, when given, says what the game knows of an item made, without asking the
---- server: words for its search text (its type, "Armor Plate", "Weapon One-Handed Maces"), and its
---- class and subclass ids (what the armor type filter reads: Core.ARMOR_TYPES).
---- Returns { name, skill, recipes = { recipe… }, items = { [id] = item } }; a recipe is
---- { id, name, profession, skill, colors = { yellow, green, grey }, creates (item or nil),
---- makes = { min, max }, reagents = { { item, count } }, sources = { code… }, trainingCost,
---- recipeItems = { item… }, level (of the item it makes, 0 when none), search (lowercase text) }.
-function Core.load(entry, describe)
+-- Sources companions ---------------------------------------------------------------------------------
+-- The game's data doesn't say how a recipe is obtained (its servers know, not its files), nor how
+-- much of a stat an item has. A sources companion addon adds that: it puts itself in
+-- GuildAssistantDatabaseSources as { name, fetched, recipes = text, items = text }:
+--   recipe lines: spell id, source codes (SOURCE_WORDS below: 2 drop, 4 quest, 5 vendor, 6 trainer…),
+--     trainer's cost in copper. Listing a recipe vouches that it can be learned; with any companion
+--     installed, recipes none lists are "unvouched".
+--   item lines: id, name, quality, stats with values, sources ("D40=Mob;V440=Vendor;Q0=Quest").
+
+local SOURCE_CODES_EMPTY = {}
+
+--- What the companions say, merged: { names = { "Guild (2026-11-11)" }, recipes = { [id] = { codes, cost } },
+--- items = { [id] = { name, quality, stats, sources } } }, nil without any. Read once per list.
+function Core.sources(providers)
+    if type(providers) ~= "table" or #providers == 0 then return nil end
+    if providers.merged and providers.mergedCount == #providers then return providers.merged end
+    local merged = { names = {}, recipes = {}, items = {} }
+    for _, provider in ipairs(providers) do
+        if type(provider) == "table" then
+            merged.names[#merged.names + 1] = provider.fetched and ("%s (%s)"):format(provider.name or "?", provider.fetched)
+                or (provider.name or "?")
+            for line in (type(provider.recipes) == "string" and provider.recipes or ""):gmatch("[^\n]+") do
+                local f = Core.split(line, "\t")
+                local id = tonumber(f[1])
+                if id then
+                    local recipe = merged.recipes[id] or { codes = {}, cost = 0 }
+                    merged.recipes[id] = recipe
+                    for code in (f[2] or ""):gmatch("%d+") do recipe.codes[#recipe.codes + 1] = tonumber(code) end
+                    recipe.cost = math.max(recipe.cost, number(f[3]))
+                end
+            end
+            for line in (type(provider.items) == "string" and provider.items or ""):gmatch("[^\n]+") do
+                local f = Core.split(line, "\t")
+                local id = tonumber(f[1])
+                if id then
+                    local item = merged.items[id] or { sources = {} }
+                    merged.items[id] = item
+                    item.name = item.name or text(f[2])
+                    item.quality = item.quality or tonumber(f[3])
+                    item.stats = item.stats or text(f[4])
+                    for source in (f[5] or ""):gmatch("[^;]+") do
+                        local kind, zone, name = source:match("^(%a)(%d+)=(.*)$")
+                        if kind and SOURCE_KINDS[kind] then
+                            item.sources[#item.sources + 1] = { kind = SOURCE_KINDS[kind], zone = tonumber(zone), name = name }
+                        end
+                    end
+                end
+            end
+        end
+    end
+    providers.merged, providers.mergedCount = merged, #providers
+    return merged
+end
+
+--- The profession's recipes and items as tables, decoded from its text the first time (then kept),
+--- with what the sources companions (`providers`, GuildAssistantDatabaseSources) add.
+--- Returns { name, skill, recipes = { recipe… }, items = { [id] = item }, vouchedCount }; a recipe
+--- is { id, name, profession, skill, colors = { yellow, green, grey }, creates (item or nil),
+--- makes = { min, max }, reagents = { { item, count } }, acquire (0 trainer or recipe item, 1 at a
+--- skill, 2 with the profession), acquireSkill, recipeItems = { item… }, sources = { code… } and
+--- trainingCost (from companions), vouched (a companion lists it; nil without companions), level (of
+--- the item it makes, 0 when none), search (lowercase text) }.
+function Core.load(entry, providers)
     if entry.loaded then return entry.loaded end
+    local sources = Core.sources(providers)
     local items = {}
     for line in (entry.items or ""):gmatch("[^\n]+") do
         local item = decodeItem(line)
@@ -71,14 +138,30 @@ function Core.load(entry, describe)
         items[id] = items[id] or unknownItem(id)
         return items[id]
     end
-    local recipes = {}
+    -- What the companions know of the items: names the game's tables lack, stats with values, and
+    -- where recipe items come from.
+    if sources then
+        for id, known in pairs(items) do
+            local extra = sources.items[id]
+            if extra then
+                if known.missing and extra.name then
+                    known.name, known.missing = extra.name, false
+                    known.quality = extra.quality or known.quality
+                end
+                if extra.stats then known.summary = joined(known.kind, extra.stats) end
+                known.sources = extra.sources
+            end
+        end
+    end
+    local recipes, vouched = {}, 0
     for line in (entry.recipes or ""):gmatch("[^\n]+") do
         local f = Core.split(line, "\t")
         local yellow, green, grey = (f[4] or ""):match("^(%d+),(%d+),(%d+)$")
+        local id = number(f[1])
         local recipe = {
-            id = number(f[1]), name = f[2] or "", profession = entry.name, skill = number(f[3]),
-            colors = { number(yellow), number(green), number(grey) }, reagents = {}, sources = {},
-            trainingCost = number(f[8]), recipeItems = {}, level = 0,
+            id = id, name = f[2] or "", profession = entry.name, skill = number(f[3]),
+            colors = { number(yellow), number(green), number(grey) }, reagents = {}, recipeItems = {}, level = 0,
+            acquire = number(f[7]), acquireSkill = number(f[8]), sources = SOURCE_CODES_EMPTY, trainingCost = 0,
         }
         local created, min, max = (f[5] or ""):match("^(%d+),(%d+),(%d+)$")
         if created then
@@ -86,29 +169,31 @@ function Core.load(entry, describe)
             recipe.makes = { tonumber(min), tonumber(max) }
             recipe.level = recipe.creates.level
         end
-        for id, count in (f[6] or ""):gmatch("(%d+):(%d+)") do
-            recipe.reagents[#recipe.reagents + 1] = { item = item(id), count = tonumber(count) }
+        for reagentId, count in (f[6] or ""):gmatch("(%d+):(%d+)") do
+            recipe.reagents[#recipe.reagents + 1] = { item = item(reagentId), count = tonumber(count) }
         end
-        for code in (f[7] or ""):gmatch("%d+") do recipe.sources[#recipe.sources + 1] = tonumber(code) end
-        for id in (f[9] or ""):gmatch("%d+") do recipe.recipeItems[#recipe.recipeItems + 1] = item(id) end
+        for itemId in (f[9] or ""):gmatch("%d+") do recipe.recipeItems[#recipe.recipeItems + 1] = item(itemId) end
+        if sources then
+            local known = sources.recipes[id]
+            recipe.vouched = known ~= nil
+            if known then
+                recipe.sources, recipe.trainingCost = known.codes, known.cost
+                vouched = vouched + 1
+            end
+        end
 
         local words = { recipe.name, entry.name }
         if recipe.creates then
             words[#words + 1] = recipe.creates.name
             words[#words + 1] = recipe.creates.summary
-            local made = recipe.creates
-            if describe and not made.described then
-                made.described = true
-                made.words, made.classID, made.subclassID = describe(made.id)
-            end
-            words[#words + 1] = made.words
         end
         for _, reagent in ipairs(recipe.reagents) do words[#words + 1] = reagent.item.name end
         recipe.search = table.concat(words, " "):lower()
         recipe.nameSearch = (recipe.name .. " " .. (recipe.creates and recipe.creates.name or "")):lower()
         recipes[#recipes + 1] = recipe
     end
-    entry.loaded = { name = entry.name, skill = entry.skill, recipes = recipes, items = items }
+    entry.loaded = { name = entry.name, skill = entry.skill, recipes = recipes, items = items,
+        vouchedCount = sources and vouched or #recipes }
     return entry.loaded
 end
 
@@ -129,7 +214,7 @@ local function hasAll(haystack, terms)
 end
 
 -- The Filter button's choices. Slots are the game's inventory types (the data's `slot`, from
--- Wowhead); armor types the game's armor subclasses (Core.load's `describe`).
+-- the game's data); armor types the game's armor subclasses (the item's class and subclass).
 Core.SLOTS = {
     { name = "Head", slots = { 1 } }, { name = "Neck", slots = { 2 } }, { name = "Shoulder", slots = { 3 } },
     { name = "Back", slots = { 16 } }, { name = "Chest", slots = { 5, 20 } }, { name = "Wrist", slots = { 9 } },
@@ -168,8 +253,8 @@ end
 --- its stats and slot, its reagents, the profession), the level the item needs within
 --- minLevel..maxLevel (an item with none counts as level 1, a recipe that makes no item too), its
 --- skill within minSkill..maxSkill (any of them nil: no limit), the item's slot in `query.slots` and
---- its armor type in `query.armor` (sets; nil: any), and, when `query.include` is given, that it
---- says yes.
+--- its armor type in `query.armor` (sets; nil: any), not unvouched when `query.vouchedOnly` (no
+--- sources companion lists it), and, when `query.include` is given, that it says yes.
 function Core.matches(recipe, query)
     local level = math.max(recipe.level or 0, 1)
     if query.minLevel and level < query.minLevel then return false end
@@ -181,6 +266,7 @@ function Core.matches(recipe, query)
     if query.armor and not (item and item.classID == Core.ARMOR_CLASS and query.armor[item.subclassID]) then
         return false
     end
+    if query.vouchedOnly and recipe.vouched == false then return false end
     if query.include and not query.include(recipe) then return false end
     return hasAll(recipe.search, query.terms or {})
 end
@@ -231,7 +317,7 @@ end
 
 -- How a recipe is learned --------------------------------------------------------------------------
 
--- Wowhead's source codes, those a recipe can have.
+-- The source codes a companion gives a recipe (the numbering WoW databases commonly use).
 local SOURCE_WORDS = {
     [1] = "Crafted", [2] = "World drop", [3] = "PvP", [4] = "Quest", [5] = "Vendor", [6] = "Trainer",
     [7] = "Discovery", [8] = "Redemption", [9] = "Talent", [10] = "Learned with the profession",
@@ -256,9 +342,12 @@ end
 
 local MAX_SOURCES = 6
 
---- How the recipe is learned, as lines to show: "Trainer (1g 35s)", "Drop: Defias Renegade Mage
---- (Westfall)", "Vendor: Krinkle Goodsteel (Tanaris)", "Quest: Ornate Mithril Armor", "Fishing".
---- `zoneName(id)` names a zone (in game, the client does; nil leaves it out).
+--- How the recipe is learned, as lines to show. From the game's data: "Learned with the
+--- profession", "Learned automatically at skill 125". From the sources companions: "Trainer
+--- (1g 35s)", "Drop: Defias Renegade Mage (Westfall)", "Vendor: Krinkle Goodsteel (Tanaris)",
+--- "Quest: Ornate Mithril Armor", "Fishing". When nothing says: what can be told (its recipe item,
+--- shown below it; a trainer or a quest; not known to any companion). `zoneName(id)` names a zone
+--- (in game, the client does; nil leaves it out).
 function Core.howToLearn(recipe, zoneName)
     local lines, seen, explained = {}, {}, {}
     local function add(line)
@@ -266,6 +355,15 @@ function Core.howToLearn(recipe, zoneName)
             seen[line] = true
             lines[#lines + 1] = line
         end
+    end
+    if recipe.vouched == false then add("No known source: unreleased, removed, or not recorded yet") end
+    -- The game's own word wins: learned with the profession, or at a skill.
+    if recipe.acquire == 2 or (recipe.acquire == 1 and recipe.acquireSkill <= 1) then
+        add("Learned with the profession")
+        return lines
+    elseif recipe.acquire == 1 then
+        add(("Learned automatically at skill %d"):format(recipe.acquireSkill))
+        return lines
     end
     local hasCode = {}
     for _, code in ipairs(recipe.sources) do hasCode[code] = true end
@@ -286,7 +384,13 @@ function Core.howToLearn(recipe, zoneName)
         if not explained[code] and SOURCE_WORDS[code] then add(SOURCE_WORDS[code]) end
     end
     if more > 0 then add(("and %d more"):format(more)) end
-    if #lines == 0 then add("Not listed on Wowhead") end
+    if #lines == 0 or (#lines == 1 and recipe.vouched == false) then
+        if #recipe.recipeItems > 0 then
+            add(#recipe.recipeItems == 1 and "From the item below" or "From the items below")
+        elseif recipe.vouched == nil then
+            add("A trainer or a quest: the game's files don't say which")
+        end
+    end
     return lines
 end
 
