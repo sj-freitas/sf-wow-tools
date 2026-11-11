@@ -1,5 +1,10 @@
 # GuildAssistant Database
 
+## 1.4.5
+
+- **Click a name** under Who can craft it to whisper them: the chat box opens as the game's own
+  Whisper does, with the whole name ("Shivan Nightpath" too).
+
 ## 1.4.4
 
 - **Shift-click** a recipe in the list to link the recipe in the chat (to craft it), as the game's

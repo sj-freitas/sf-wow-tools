@@ -554,6 +554,16 @@ function Core.crafters(db, recipe, you)
     return found
 end
 
+--- Who to whisper to reach a crafter: the name, with the realm (as the game writes it in a name,
+--- no spaces or dashes) when it isn't `realm`, this character's as the game names it ("Realm 12
+--- Grim" is "Grim", as GuildAssistant Professions saves it). Nil for this character.
+function Core.whisperTarget(crafter, realm)
+    if crafter.you then return nil end
+    local own = realm and realm:match("Realm %d+ (.+)$") or realm
+    if not crafter.realm or crafter.realm == "" or crafter.realm == own then return crafter.name end
+    return crafter.name .. "-" .. (crafter.realm:gsub("[%s%-]", ""))
+end
+
 -- The minimap button ------------------------------------------------------------------------------
 
 --- Where the minimap button sits from the minimap's centre: `angle` degrees counter-clockwise from

@@ -47,6 +47,10 @@ With GuildAssistant Professions installed, the details list every character it k
 recipe: you, your other characters (alt), your guildmates (received from their addon), and
 characters whose profession link you opened (link). Without it, the window says to install it.
 
+**Click a name** to whisper them: the chat box opens as the game's own "Whisper" does, with the
+whole name (WoW Forever's "Shivan Nightpath" too) and, for another realm's, the realm. Hovering a
+name says so; your own does nothing.
+
 ## Performance
 
 The data (a few thousand recipes) is kept as text and a profession is only read the first time

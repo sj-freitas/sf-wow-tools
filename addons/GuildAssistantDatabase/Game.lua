@@ -201,6 +201,21 @@ function Game.dressUp(item)
     if DressUpItemLink then DressUpItemLink(Game.chatLink(item, false) or ("item:" .. item.id)) end
 end
 
+--- Who to whisper to reach someone who can craft a recipe (Core.crafters), nil for this character.
+function Game.whisperTarget(crafter)
+    return Core.whisperTarget(crafter, GetRealmName and GetRealmName() or nil)
+end
+
+--- Opens the chat box whispering `target`, as the game's own "Whisper" does. It takes the name
+--- whole: WoW Forever's "Shivan Nightpath" too, which "/w" typed by hand would cut at the space.
+function Game.whisper(target)
+    if ChatFrame_SendTell then
+        ChatFrame_SendTell(target)
+    elseif ChatFrame_OpenChat then
+        ChatFrame_OpenChat("/w " .. target .. " ")
+    end
+end
+
 function Game.showTooltip(owner, hyperlink)
     if not GameTooltip then return end
     GameTooltip:SetOwner(owner, "ANCHOR_RIGHT")

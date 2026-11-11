@@ -321,22 +321,51 @@ local function infoLines(recipe)
     return table.concat(lines, "\n")
 end
 
-local function craftersText(recipe)
+-- Who can craft it: a line of names that wraps ("Luna (you), Ana, Brom (alt), and 3 more"), each
+-- name a button that whispers them on a click (not yours). `d.crafters` says why there are none.
+local CRAFTER_LINE, CRAFTER_SPACE = 14, 4
+
+local function drawCrafters(d, recipe)
+    local box = d.crafterNames
+    for _, button in ipairs(box.names) do button:Hide() end
+    box.more:Hide()
     local db = Game.professionsDB()
-    if not db then return "|cff808080Install GuildAssistant Professions to see who in your guild can craft it.|r" end
-    local crafters = Core.crafters(db, recipe, Game.playerKey())
-    if #crafters == 0 then return "|cff808080Nobody you know of yet.|r" end
-    local names = {}
-    for i, crafter in ipairs(crafters) do
-        if i > MAX_CRAFTERS then
-            names[#names + 1] = ("and %d more"):format(#crafters - MAX_CRAFTERS)
-            break
-        end
+    local crafters = db and Core.crafters(db, recipe, Game.playerKey()) or {}
+    if #crafters == 0 then
+        d.crafters:SetText(db and "|cff808080Nobody you know of yet.|r"
+            or "|cff808080Install GuildAssistant Professions to see who in your guild can craft it.|r")
+        d.crafters:Show()
+        box:Hide()
+        return
+    end
+    d.crafters:Hide()
+    local x, line = 0, 0
+    local function place(region, width)
+        if x > 0 and x + width > box.width then x, line = 0, line + 1 end
+        region:ClearAllPoints()
+        region:SetPoint("TOPLEFT", box, "TOPLEFT", x, -line * CRAFTER_LINE)
+        x = x + width + CRAFTER_SPACE
+    end
+    for i = 1, math.min(#crafters, MAX_CRAFTERS) do
+        local crafter, button = crafters[i], box.names[i]
         local suffix = crafter.you and " (you)" or crafter.source == "own" and " (alt)"
             or crafter.source == "link" and " (link)" or ""
-        names[#names + 1] = ("|c%s%s|r%s"):format(Game.classHex(crafter.class), crafter.name, suffix)
+        local comma = i < #crafters and "," or ""
+        button.text:SetText(("|c%s%s|r%s%s"):format(Game.classHex(crafter.class), crafter.name, suffix, comma))
+        button.whisper = Game.whisperTarget(crafter)
+        button:EnableMouse(button.whisper ~= nil)
+        local width = button.text:GetStringWidth()
+        button:SetSize(width, CRAFTER_LINE - 2)
+        place(button, width)
+        button:Show()
     end
-    return table.concat(names, ", ")
+    if #crafters > MAX_CRAFTERS then
+        box.more:SetText(("and %d more"):format(#crafters - MAX_CRAFTERS))
+        place(box.more, box.more:GetStringWidth())
+        box.more:Show()
+    end
+    box:SetHeight((line + 1) * CRAFTER_LINE)
+    box:Show()
 end
 
 local function drawDetails()
@@ -388,8 +417,7 @@ local function drawDetails()
     end
 
     d.craftersHeader:Show()
-    d.crafters:SetText(craftersText(recipe))
-    d.crafters:Show()
+    drawCrafters(d, recipe)
     stack(d.regions)
 end
 
@@ -808,7 +836,7 @@ local function buildDetails()
     d.hint = fontString(d, "GameFontDisable")
     d.hint:SetPoint("TOPLEFT", d, "TOPLEFT", 10, -10)
     d.hint:SetWidth(width)
-    d.hint:SetText("Pick a recipe to see its reagents, how to learn it and who can craft it.\n\nShift-click a recipe to link it in the chat, or the item at the top of its details for the item's link; ctrl-click to try it on.")
+    d.hint:SetText("Pick a recipe to see its reagents, how to learn it and who can craft it.\n\nShift-click a recipe to link it in the chat, or the item at the top of its details for the item's link; ctrl-click to try it on. Click a name under Who can craft it to whisper them.")
 
     d.name = linkButton(d, 32)
     d.info = fontString(d, "GameFontHighlightSmall")
@@ -843,6 +871,26 @@ local function buildDetails()
     d.crafters = fontString(d, "GameFontHighlightSmall")
     d.crafters:SetWidth(width)
     d.crafters:SetSpacing(2)
+    d.crafterNames = CreateFrame("Frame", nil, d)
+    d.crafterNames:SetSize(width, CRAFTER_LINE)
+    d.crafterNames.width = width
+    d.crafterNames.names = {}
+    for i = 1, MAX_CRAFTERS do
+        local button = CreateFrame("Button", nil, d.crafterNames)
+        button:SetHighlightTexture(HIGHLIGHT, "ADD")
+        button.text = fontString(button, "GameFontHighlightSmall")
+        button.text:SetPoint("LEFT", button, "LEFT", 0, 0)
+        button:SetScript("OnClick", function(self)
+            if self.whisper then Game.whisper(self.whisper) end
+        end)
+        button:SetScript("OnEnter", function(self)
+            if self.whisper then Game.showTextTooltip(self, self.whisper, { "Click to whisper" }) end
+        end)
+        button:SetScript("OnLeave", Game.hideTooltip)
+        button:Hide()
+        d.crafterNames.names[i] = button
+    end
+    d.crafterNames.more = fontString(d.crafterNames, "GameFontHighlightSmall")
 
     d.regions = { { d.name }, { d.info, 6 }, { d.reagentsHeader, 12 } }
     for _, button in ipairs(d.reagents) do d.regions[#d.regions + 1] = { button, 2 } end
@@ -851,6 +899,7 @@ local function buildDetails()
     for _, button in ipairs(d.recipeItems) do d.regions[#d.regions + 1] = { button, 2 } end
     d.regions[#d.regions + 1] = { d.craftersHeader, 12 }
     d.regions[#d.regions + 1] = { d.crafters, 4 }
+    d.regions[#d.regions + 1] = { d.crafterNames, 4 }
 end
 
 local function build()

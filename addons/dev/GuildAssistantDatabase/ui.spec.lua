@@ -5,7 +5,7 @@
 
 local specPrint = print
 local passed, failed = 0, 0
-local chat, linked, timers, created, dressed
+local chat, linked, timers, created, dressed, told
 local function it(name, fn)
     local ok, err = pcall(fn)
     _G.print = specPrint
@@ -87,6 +87,8 @@ function Region:SetText(text)
     if self._kind == "EditBox" then self:Fire("OnTextChanged", false) end
 end
 function Region:GetText() return self._text end
+-- 6 pixels a letter, colour codes left out.
+function Region:GetStringWidth() return #self._text:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "") * 6 end
 function Region:SetTexture(texture) self._texture = texture end
 -- One box has the focus at a time, as in the game: focusing one takes it from the other.
 local focused
@@ -147,7 +149,7 @@ end
 -- Sources.fixture.lua), itemNames (what GetItemInfo knows beyond Copper Chain Pants).
 local function loadAddon(options)
     options = options or {}
-    chat, linked, timers, created, dressed = {}, {}, {}, {}, {}
+    chat, linked, timers, created, dressed, told = {}, {}, {}, {}, {}, {}
     focused = nil
     _G.print = function(text) chat[#chat + 1] = tostring(text) end
     _G.SlashCmdList = {}
@@ -197,6 +199,8 @@ local function loadAddon(options)
     _G.ChatEdit_InsertLink = function(link) linked[#linked + 1] = link end
     _G.IsControlKeyDown = function() return options.ctrl == true end
     _G.DressUpItemLink = function(link) dressed[#dressed + 1] = link end
+    _G.ChatFrame_SendTell = function(name) told[#told + 1] = name end
+    _G.ChatFrame_OpenChat = nil
     _G.GuildAssistantProfessionsDB = options.professionsAddon and professionsDB() or nil
     _G.GuildAssistantDatabaseDB = options.saved
     _G.GuildAssistantDatabaseMinimapButton = nil
@@ -228,6 +232,16 @@ local function sidebar(ns)
         if button:IsShown() then out[#out + 1] = button.text:GetText() .. (button.right:GetText() ~= "" and (" " .. button.right:GetText()) or "") end
     end
     return table.concat(out, " | ")
+end
+
+-- Who can craft it, as it reads: the names shown, then how many more.
+local function crafterLine(d)
+    local out = {}
+    for _, button in ipairs(d.crafterNames.names) do
+        if button:IsShown() then out[#out + 1] = button.text:GetText() end
+    end
+    if d.crafterNames.more:IsShown() then out[#out + 1] = d.crafterNames.more:GetText() end
+    return table.concat(out, " ")
 end
 
 local function rowNamed(ns, name)
@@ -569,8 +583,46 @@ it("shows a recipe's details: the item, reagents, how to learn it and who can cr
     has(d.recipeItems[1].text:GetText(), "Plans: Runed Copper Breastplate")
     has(d.recipeItems[1].text:GetText(), "(skill 55)")
     eq(d.recipeItems[2]:IsShown(), false)
-    eq(d.crafters:GetText(), "|cff3fc7ebLuna|r (you), |cffffffffAna|r")
+    eq(crafterLine(d), "|cff3fc7ebLuna|r (you), |cffffffffAna|r")
+    eq(d.crafters:IsShown(), false, "no message")
     eq(ns.UI.parts().rows[1].selected:IsShown(), true, "the row is marked")
+end)
+
+it("whispers someone who can craft it on a click on their name, all of it", function()
+    local ns = loadAddon({ professionsAddon = true })
+    local characters = GuildAssistantProfessionsDB.characters
+    local smithing = { rank = 300, max = 300, recipes = { ["spell:2667"] = true } }
+    characters["Shivan Nightpath-Test Realm"] = { name = "Shivan Nightpath", realm = "Test Realm", class = "MAGE", source = "guild", professions = { Blacksmithing = smithing } }
+    characters["Bromwellington-Argent Dawn"] = { name = "Bromwellington", realm = "Argent Dawn", source = "link", professions = { Blacksmithing = smithing } }
+    SlashCmdList.GADB("breastplate")
+    rowNamed(ns, "Runed Copper Breastplate"):Click()
+    local d = ns.UI.parts().details
+    eq(crafterLine(d), "|cff3fc7ebLuna|r (you), |cffffffffAna|r, |cff3fc7ebShivan Nightpath|r, |cffffffffBromwellington|r (link)")
+    local names = d.crafterNames.names
+    -- Yours: nothing to click.
+    eq(names[1].whisper, nil)
+    names[1]:Click()
+    eq(#told, 0)
+    names[2]:Fire("OnEnter")
+    eq(table.concat(GameTooltip.lines, " | "), "Ana | Click to whisper")
+    names[2]:Click()
+    eq(told[1], "Ana")
+    names[3]:Click()
+    eq(told[2], "Shivan Nightpath", "the whole name")
+    names[4]:Click()
+    eq(told[3], "Bromwellington-ArgentDawn", "another realm's, with it")
+    -- The names wrap: at 6 pixels a letter, the fourth doesn't fit in the 300 after the others.
+    eq(d.crafterNames.width, 300)
+    eq(names[3]._point[4], 6 * #"Luna (you)," + 4 + 6 * #"Ana," + 4)
+    eq(names[4]._point[4], 0); eq(names[4]._point[5], -14, "on the next line")
+    -- Past 15, how many more.
+    for i = 1, 20 do
+        characters["Alt" .. i .. "-Test Realm"] = { name = "Alt" .. i, realm = "Test Realm", source = "own", professions = { Blacksmithing = smithing } }
+    end
+    SlashCmdList.GADB("breastplate")
+    rowNamed(ns, "Runed Copper Breastplate"):Click()
+    eq(d.crafterNames.more:IsShown(), true)
+    has(crafterLine(d), "(alt), and 9 more")
 end)
 
 it("says who can craft it only with GuildAssistant Professions", function()

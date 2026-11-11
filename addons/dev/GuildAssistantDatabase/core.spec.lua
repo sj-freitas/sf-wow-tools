@@ -325,6 +325,16 @@ it("finds who knows a recipe: you first, then your alts, the guild, links", func
     eq(#Core.crafters(nil, breastplate, "Luna-RP"), 0, "no saved data, nobody")
 end)
 
+it("whispers a crafter by name, with the realm only when it isn't this one", function()
+    local realm = "CAMWOW EU4 Realm 10 RP"
+    eq(Core.whisperTarget({ name = "Shivan Darkwhisp", realm = "RP" }, realm), "Shivan Darkwhisp", "the whole name")
+    eq(Core.whisperTarget({ name = "Ana", realm = "Test Realm" }, "Test Realm"), "Ana")
+    eq(Core.whisperTarget({ name = "Ana" }, realm), "Ana", "no realm saved")
+    eq(Core.whisperTarget({ name = "Brom", realm = "Argent Dawn" }, realm), "Brom-ArgentDawn", "another realm")
+    eq(Core.whisperTarget({ name = "Brom", realm = "Azjol-Nerub" }, realm), "Brom-AzjolNerub")
+    eq(Core.whisperTarget({ name = "Luna", realm = "RP", you = true }, realm), nil, "not yourself")
+end)
+
 it("keys this player as GuildAssistant Professions does", function()
     eq(Core.playerKey("Shivan", "Darkwhisp", "CAMWOW EU4 Realm 10 RP"), "Shivan Darkwhisp-RP")
     eq(Core.playerKey("Luna", nil, "Test Realm"), "Luna-Test Realm")
