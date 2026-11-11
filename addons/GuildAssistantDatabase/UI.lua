@@ -13,6 +13,8 @@ ns.UI = UI
 local WIDTH, HEIGHT = 900, 540
 local TOP, BOTTOM = -92, 34 -- the content area, below the filters and above the status line
 local SIDEBAR_WIDTH, LIST_WIDTH = 168, 372
+-- The status line at the bottom left, leaving room for the version on the right.
+local STATUS_WIDTH = WIDTH - 32 - 80
 local ROW_HEIGHT, ROWS = 22, 18
 local SIDEBAR_ROWS = 14
 local MAX_REAGENTS, MAX_RECIPE_ITEMS, MAX_CRAFTERS = 8, 3, 15
@@ -22,7 +24,7 @@ local HIGHLIGHT = "Interface\\QuestFrame\\UI-QuestTitleHighlight"
 local frame
 local searchBox, placeholder, clearButton, minLevelBox, maxLevelBox, minSkillBox, maxSkillBox, unknownCheck, resetButton
 local filterButton, filterPopup, filterChecks
-local sidebarButtons, rows, slider, statusText, dataText, columnSkill
+local sidebarButtons, rows, slider, statusText, statusHover, versionText, columnSkill
 local details
 
 local state = {
@@ -301,6 +303,15 @@ local function stack(regions)
     end
 end
 
+-- The sources' names as tooltips list them ("Known as of November 2026", "Found by players"), or nil.
+local function sourceNames()
+    local sources = Core.sources(Game.sourceProviders())
+    if not sources then return nil end
+    local names = {}
+    for i, name in ipairs(sources.names) do names[i] = (name:gsub("^%l", string.upper)) end
+    return names
+end
+
 local function infoLines(recipe)
     local lines = {}
     local skill = ("%s, skill %d"):format(recipe.profession, recipe.skill)
@@ -485,6 +496,7 @@ function UI.refresh()
     drawRows()
     drawDetails()
     statusText:SetText(statusLine(pending, #entries))
+    statusHover:SetWidth(math.min(statusText:GetStringWidth(), STATUS_WIDTH))
 end
 
 local refreshToken = 0
@@ -853,11 +865,8 @@ local function buildDetails()
     d.learnHover:SetAllPoints(d.learnHeader)
     d.learnHover:EnableMouse(true)
     d.learnHover:SetScript("OnEnter", function(self)
-        local sources = Core.sources(Game.sourceProviders())
-        if not sources then return end
-        local names = {}
-        for i, name in ipairs(sources.names) do names[i] = name:gsub("^%l", string.upper) end
-        Game.showTextTooltip(self, "Sources", names)
+        local names = sourceNames()
+        if names then Game.showTextTooltip(self, "Sources", names) end
     end)
     d.learnHover:SetScript("OnLeave", Game.hideTooltip)
     d.learnHover:Hide()
@@ -930,14 +939,29 @@ local function build()
 
     statusText = fontString(frame, "GameFontHighlightSmall")
     statusText:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 16, 13)
-    statusText:SetWidth(560)
+    statusText:SetWidth(STATUS_WIDTH)
     statusText:SetWordWrap(false)
-    dataText = fontString(frame, "GameFontDisableSmall", "RIGHT")
-    dataText:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -16, 13)
-    local data = ns.Data or {}
-    local sources = Core.sources(Game.sourceProviders())
-    dataText:SetText(("%s from the game's data (%s)%s"):format(Core.describe(data), data.build or data.fetched or "?",
-        sources and (", sources: " .. table.concat(sources.names, ", ")) or ""))
+    -- Hovering it (as wide as its text) says where the recipes come from: the game's data, its
+    -- build, and the sources of how they're obtained.
+    statusHover = CreateFrame("Frame", nil, frame)
+    statusHover:SetPoint("BOTTOMLEFT", statusText, "BOTTOMLEFT", 0, -2)
+    statusHover:SetSize(1, 16)
+    statusHover:EnableMouse(true)
+    statusHover:SetScript("OnEnter", function(self)
+        local data = ns.Data or {}
+        local lines = { "Build " .. (data.build or data.fetched or "?") }
+        local names = sourceNames()
+        if names then
+            lines[#lines + 1] = "|cffffd100Sources|r"
+            for _, name in ipairs(names) do lines[#lines + 1] = name end
+        end
+        Game.showTextTooltip(self, Core.describe(data) .. " from the game's data", lines)
+    end)
+    statusHover:SetScript("OnLeave", Game.hideTooltip)
+    versionText = fontString(frame, "GameFontDisableSmall", "RIGHT")
+    versionText:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -16, 13)
+    local version = Game.version()
+    versionText:SetText(version and ("v" .. version) or "")
 end
 
 --- Opens the window (built the first time), with `search` typed in when given.
@@ -966,6 +990,7 @@ function UI.parts()
         minSkillBox = minSkillBox, maxSkillBox = maxSkillBox, unknownCheck = unknownCheck, resetButton = resetButton,
         clearButton = clearButton, filterButton = filterButton, filterPopup = filterPopup, filterChecks = filterChecks,
         sidebarButtons = sidebarButtons, rows = rows, details = details, statusText = statusText,
+        statusHover = statusHover, versionText = versionText,
         state = state,
     }
 end

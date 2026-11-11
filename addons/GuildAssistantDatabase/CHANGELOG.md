@@ -1,5 +1,11 @@
 # GuildAssistant Database
 
+## 1.4.7
+
+- The window's bottom line is shorter: where the recipes come from (the game's data, its build and
+  the sources) is now a tooltip on the recipe count, and the addon's version shows in grey on the
+  right.
+
 ## 1.4.6
 
 - **Found by players**, the first ones: what players' GuildAssistant Professions saw, gathered by

@@ -3,7 +3,7 @@
 -- the game's IsPlayerSpell), zone names, item types, links and tooltips. Everything is checked
 -- before it's called: WoW Forever's client and Classic Era's don't have the same functions.
 
-local _, ns = ...
+local addonName, ns = ...
 local Core = ns.Core
 local Game = {}
 ns.Game = Game
@@ -22,6 +22,12 @@ function ns.safely(fn, ...)
         print("|cff7c5cffGuildAssistant Database|r: |cffff5050something went wrong:|r " .. tostring(err))
     end
     return ok
+end
+
+--- This addon's version, as its .toc says ("1.4.7"), or nil.
+function Game.version()
+    local metadata = (C_AddOns and C_AddOns.GetAddOnMetadata) or GetAddOnMetadata
+    return metadata and metadata(addonName, "Version") or nil
 end
 
 --- GuildAssistant Professions' saved data, when that addon is installed and loaded.

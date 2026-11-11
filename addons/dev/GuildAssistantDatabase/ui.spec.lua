@@ -200,6 +200,10 @@ local function loadAddon(options)
     _G.IsControlKeyDown = function() return options.ctrl == true end
     _G.DressUpItemLink = function(link) dressed[#dressed + 1] = link end
     _G.ChatFrame_SendTell = function(name) told[#told + 1] = name end
+    _G.C_AddOns = nil
+    _G.GetAddOnMetadata = function(name, field)
+        if name == "GuildAssistantDatabase" and field == "Version" and not options.noVersion then return "9.9.9" end
+    end
     _G.ChatFrame_OpenChat = nil
     _G.GuildAssistantProfessionsDB = options.professionsAddon and professionsDB() or nil
     _G.GuildAssistantDatabaseDB = options.saved
@@ -554,6 +558,26 @@ it("Reset clears the Filter too, and closes its panel", function()
     eq(parts.filterButton:GetText(), "Filter")
     eq(parts.filterChecks.Plate:GetChecked(), false)
     eq(#parts.state.results, 8)
+end)
+
+it("says where the recipes come from on hovering the count, and its version in the corner", function()
+    local ns = loadAddon({ professionsAddon = true })
+    SlashCmdList.GADB("")
+    local parts = ns.UI.parts()
+    eq(parts.statusText:GetText(), "8 recipes", "just the count")
+    eq(parts.versionText:GetText(), "v9.9.9")
+    parts.statusHover:Fire("OnEnter")
+    eq(table.concat(GameTooltip.lines, " | "), "9 recipes from the game's data | Build 1.60.1.70888 | |cffffd100Sources|r"
+        .. " | Test notes (2026-11-11) | Seen by GuildAssistant Professions")
+    eq(GameTooltip.last[1], "Show")
+    parts.statusHover:Fire("OnLeave")
+    eq(GameTooltip.last[1], "Hide")
+    -- No sources: the data alone. A game without the version: nothing in the corner.
+    local ns2 = loadAddon({ noSources = true, noVersion = true })
+    SlashCmdList.GADB("")
+    ns2.UI.parts().statusHover:Fire("OnEnter")
+    eq(table.concat(GameTooltip.lines, " | "), "9 recipes from the game's data | Build 1.60.1.70888")
+    eq(ns2.UI.parts().versionText:GetText(), "")
 end)
 
 -- The details -------------------------------------------------------------------------------------
