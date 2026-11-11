@@ -1,5 +1,13 @@
 # GuildAssistant Database
 
+## 1.4.6
+
+- **Found by players**, the first ones: what players' GuildAssistant Professions saw, gathered by
+  Guild Assistant from their uploads. Trainers' names and costs for 48 recipes (Alphonse Dumas,
+  Nissa Firestone, Tally Berryfizz, Vosur Brakthel) and where 14 recipe items come from (vendors in
+  Ironforge, Hillsbrad Foothills, Loch Modan, Tanaris and Riverglades, and Mangeclaw's drop in
+  Dun Morogh).
+
 ## 1.4.5
 
 - **Click a name** under Who can craft it to whisper them: the chat box opens as the game's own
