@@ -1016,10 +1016,10 @@ local function build()
     versionText:SetText(version and ("v" .. version) or "")
 end
 
---- Opens the window (built the first time), with `search` typed in when given.
+--- Opens the window (built the first time), with `search` typed in when given ("" clears it).
 function UI.show(search)
     if not frame then build() end
-    if search and search ~= "" then
+    if search then
         searchBox:SetText(search)
         state.offset = 0
     end

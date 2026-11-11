@@ -9,8 +9,9 @@ Made for WoW Forever: its data is the game's own, from Forever's data files.
 
 ## Using it
 
-Type `/gadb` (or `/ga-db`), or click the clip on the minimap, to open or close the window;
-`/gadb mithril` opens it searching for "mithril". Drag the clip to move it around the minimap;
+Type `/gadb` (or `/ga-db`), or click the clip on the minimap, to open or close the window (it keeps
+your last search); `/gadb mithril` opens it searching for "mithril", and `/gadb *` opens it with the
+search cleared. Drag the clip to move it around the minimap;
 `/gadb minimap` hides it (and brings it back).
 
 - **Search** (top left): words that must all be somewhere in the recipe: its name, the item it

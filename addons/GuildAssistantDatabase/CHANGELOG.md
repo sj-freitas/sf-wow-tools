@@ -1,5 +1,9 @@
 # GuildAssistant Database
 
+## 1.4.10
+
+- **`/gadb *`** opens the window with the search cleared (`/gadb` keeps your last search, as before).
+
 ## 1.4.9
 
 - **Craft**: a button above the item of a recipe this character knows crafts one, as the profession

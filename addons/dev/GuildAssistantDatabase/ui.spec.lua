@@ -590,6 +590,26 @@ it("says where the recipes come from on hovering the count, and its version in t
     eq(ns2.UI.parts().versionText:GetText(), "")
 end)
 
+it("keeps the last search on /gadb, and clears it on /gadb *", function()
+    local ns = loadAddon()
+    SlashCmdList.GADB("mithril")
+    local parts = ns.UI.parts()
+    eq(parts.searchBox:GetText(), "mithril")
+    SlashCmdList.GADB("")
+    eq(ns.UI.isShown(), false)
+    SlashCmdList.GADB("")
+    eq(parts.searchBox:GetText(), "mithril", "opened again: the same search")
+    SlashCmdList.GADB("")
+    SlashCmdList.GADB("*")
+    eq(ns.UI.isShown(), true)
+    eq(parts.searchBox:GetText(), "", "cleared")
+    eq(parts.statusText:GetText(), "8 recipes")
+    SlashCmdList.GADB("mithril")
+    SlashCmdList.GADB("*")
+    eq(ns.UI.isShown(), true, "already open: stays open")
+    eq(parts.searchBox:GetText(), "")
+end)
+
 -- The details -------------------------------------------------------------------------------------
 
 it("shows a recipe's details: the item, reagents, how to learn it and who can craft it", function()

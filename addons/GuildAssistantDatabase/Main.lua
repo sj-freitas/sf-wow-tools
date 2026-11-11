@@ -13,6 +13,7 @@ local function runCommand(message)
         Game.say("commands:")
         print("  /gadb - open or close the window")
         print("  /gadb <words> - open it searching for them (a name, a stat, a slot, a reagent)")
+        print("  /gadb * - open it with the search cleared")
         print("  /gadb minimap - hide or show the minimap button")
         return
     end
@@ -21,7 +22,8 @@ local function runCommand(message)
         Game.say(shown and "the minimap button is back." or "the minimap button is hidden; /gadb minimap brings it back.")
         return
     end
-    if text == "" then UI.toggle() else UI.show(text) end
+    -- Plain /gadb keeps the last search; /gadb * clears it.
+    if text == "" then UI.toggle() elseif text == "*" then UI.show("") else UI.show(text) end
 end
 
 SLASH_GADB1 = "/gadb"
