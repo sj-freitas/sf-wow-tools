@@ -332,6 +332,7 @@ local function drawDetails()
     if not recipe then
         d.hint:Show()
         for _, region in ipairs(d.regions) do region[1]:Hide() end
+        d.learnHover:Hide()
         return
     end
     d.hint:Hide()
@@ -356,10 +357,8 @@ local function drawDetails()
     end
 
     d.learnHeader:Show()
-    local learn = Core.howToLearn(recipe, Game.zoneName)
-    local sources = Core.sources(Game.sourceProviders())
-    if sources then learn[#learn + 1] = ("|cff808080Sources: %s|r"):format(table.concat(sources.names, ", ")) end
-    d.learn:SetText(table.concat(learn, "\n"))
+    d.learnHover:SetShown(Core.sources(Game.sourceProviders()) ~= nil)
+    d.learn:SetText(table.concat(Core.howToLearn(recipe, Game.zoneName), "\n"))
     d.learn:Show()
     for i, button in ipairs(d.recipeItems) do
         local item = recipe.recipeItems[i]
@@ -795,6 +794,19 @@ local function buildDetails()
     for i = 1, MAX_REAGENTS do d.reagents[i] = linkButton(d, 18) end
     d.learnHeader = fontString(d, "GameFontNormal")
     d.learnHeader:SetText("How to learn it")
+    -- Hovering the heading names the sources it comes from (the window's last line does too).
+    d.learnHover = CreateFrame("Frame", nil, d)
+    d.learnHover:SetAllPoints(d.learnHeader)
+    d.learnHover:EnableMouse(true)
+    d.learnHover:SetScript("OnEnter", function(self)
+        local sources = Core.sources(Game.sourceProviders())
+        if not sources then return end
+        local names = {}
+        for i, name in ipairs(sources.names) do names[i] = name:gsub("^%l", string.upper) end
+        Game.showTextTooltip(self, "Sources", names)
+    end)
+    d.learnHover:SetScript("OnLeave", Game.hideTooltip)
+    d.learnHover:Hide()
     d.learn = fontString(d, "GameFontHighlightSmall")
     d.learn:SetWidth(width)
     d.learn:SetSpacing(2)

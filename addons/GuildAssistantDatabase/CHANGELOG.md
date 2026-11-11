@@ -1,5 +1,10 @@
 # GuildAssistant Database
 
+## 1.4.1
+
+- A recipe's details no longer end with a grey "Sources: …" line: hover **How to learn it** to see
+  where it comes from.
+
 ## 1.4.0
 
 - **Show unknown recipes** has its own section in the Filter: recipes no one knows how to get

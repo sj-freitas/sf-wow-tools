@@ -153,8 +153,13 @@ local function loadAddon(options)
         if name then _G[name] = frame end
         return frame
     end
-    _G.GameTooltip = setmetatable({}, { __index = function(t, key)
-        return function(_, ...) t.last = { key, ... } end
+    -- The last call, and the lines added since it was last owned.
+    _G.GameTooltip = setmetatable({ lines = {} }, { __index = function(t, key)
+        return function(_, ...)
+            t.last = { key, ... }
+            if key == "SetOwner" then t.lines = {} end
+            if key == "AddLine" then t.lines[#t.lines + 1] = (...) end
+        end
     end })
     _G.C_Timer = options.timers and { After = function(_, fn) timers[#timers + 1] = fn end } or nil
     _G.UnitName = function() return "Luna" end
@@ -503,6 +508,7 @@ it("shows a recipe's details: the item, reagents, how to learn it and who can cr
     SlashCmdList.GADB("breastplate")
     local d = ns.UI.parts().details
     eq(d.hint:IsShown(), true, "a hint before picking one")
+    eq(d.learnHover:IsShown(), false, "nothing to hover")
     rowNamed(ns, "Runed Copper Breastplate"):Click()
     eq(d.hint:IsShown(), false)
     has(d.name.text:GetText(), "Runed Copper Breastplate")
@@ -510,8 +516,15 @@ it("shows a recipe's details: the item, reagents, how to learn it and who can cr
     has(d.info:GetText(), "Chest (Plate), Strength, Spirit")
     eq(d.reagents[1].text:GetText(), "12 x |cffffffffCopper Bar|r")
     eq(d.reagents[3]:IsShown(), true); eq(d.reagents[4]:IsShown(), false)
-    -- GuildAssistant Professions is installed: what it knows is a source too.
-    eq(d.learn:GetText(), "Drop: Defias Renegade Mage (Westfall)\nPickpocketing\n|cff808080Sources: Test notes (2026-11-11), seen by GuildAssistant Professions|r")
+    eq(d.learn:GetText(), "Drop: Defias Renegade Mage (Westfall)\nPickpocketing")
+    -- The sources, on hovering "How to learn it". GuildAssistant Professions is installed: what it
+    -- knows is a source too.
+    eq(d.learnHover:IsShown(), true)
+    d.learnHover:Fire("OnEnter")
+    eq(table.concat(GameTooltip.lines, " | "), "Sources | Test notes (2026-11-11) | Seen by GuildAssistant Professions")
+    eq(GameTooltip.last[1], "Show")
+    d.learnHover:Fire("OnLeave")
+    eq(GameTooltip.last[1], "Hide")
     has(d.recipeItems[1].text:GetText(), "Plans: Runed Copper Breastplate")
     has(d.recipeItems[1].text:GetText(), "(skill 55)")
     eq(d.recipeItems[2]:IsShown(), false)
@@ -625,7 +638,8 @@ it("without a sources companion, lists every recipe the game has, and says what 
     eq(_G.GuildAssistantDatabaseFrame ~= nil, true)
     parts.searchBox:SetText("pants")
     rowNamed(ns, "Copper Chain Pants"):Click()
-    eq(parts.details.learn:GetText(), "A trainer or a quest: the game's files don't say which", "no Sources line")
+    eq(parts.details.learn:GetText(), "A trainer or a quest: the game's files don't say which")
+    eq(parts.details.learnHover:IsShown(), false, "no sources to hover")
     parts.searchBox:SetText("gauntlets")
     eq(shownRows(ns), "Ironforge Gauntlets")
     parts.filterButton:Click()

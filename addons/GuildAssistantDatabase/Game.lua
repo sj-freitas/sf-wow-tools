@@ -201,6 +201,15 @@ function Game.showTooltip(owner, hyperlink)
     GameTooltip:Show()
 end
 
+--- A tooltip of plain text: `title`, then each of `lines` in white.
+function Game.showTextTooltip(owner, title, lines)
+    if not GameTooltip then return end
+    GameTooltip:SetOwner(owner, "ANCHOR_RIGHT")
+    GameTooltip:AddLine(title)
+    for _, line in ipairs(lines) do GameTooltip:AddLine(line, 1, 1, 1) end
+    GameTooltip:Show()
+end
+
 function Game.hideTooltip()
     if GameTooltip then GameTooltip:Hide() end
 end

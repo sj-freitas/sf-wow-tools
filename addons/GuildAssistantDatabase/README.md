@@ -55,7 +55,8 @@ logging in nor opening the window stalls the game. Only the visible rows of the 
 The game's own data says whether a recipe is learned with the profession or automatically at a
 skill, and which plans, pattern or formula teach it (with the skill they need). Where those drop,
 who sells them, and which trainer teaches what for how much is known by the game's servers, not its
-data files. It comes from **sources**, listed under the details ("Sources: …"):
+data files. It comes from **sources**: hover **How to learn it** to see them (the window's last line
+names them too):
 
 - **What is known as of November 2026** (`Seed.lua`): trainers and costs, drops, vendors, quests,
   items' stat values, and which recipes can be learned at all. Compiled once, not updated.
