@@ -78,7 +78,7 @@ local function player(name, guild, last, saved)
         end,
     }
     local ns = {}
-    for _, file in ipairs({ "Core", "Scan", "Sync", "Main" }) do
+    for _, file in ipairs({ "Core", "Scan", "Sync", "Sources", "Main" }) do
         local chunk = assert(loadfile("GuildAssistantProfessions/" .. file .. ".lua", "t", env))
         chunk("GuildAssistantProfessions", ns)
     end

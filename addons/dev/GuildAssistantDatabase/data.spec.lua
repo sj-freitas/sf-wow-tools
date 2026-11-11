@@ -69,5 +69,29 @@ it("finds well-known recipes", function()
     end
 end)
 
+it("ships the seed of known sources, complete, and it matches the data", function()
+    _G.GuildAssistantDatabaseSources = nil
+    assert(loadfile("GuildAssistantDatabase/Seed.lua"))("GuildAssistantDatabase", {})
+    local providers = _G.GuildAssistantDatabaseSources
+    check(type(providers) == "table" and #providers == 1, "the seed registers itself")
+    check(providers[1].complete == true, "the seed is complete")
+    local fresh = {}
+    assert(loadfile("GuildAssistantDatabase/Core.lua"))("GuildAssistantDatabase", fresh)
+    assert(loadfile("GuildAssistantDatabase/Data.lua"))("GuildAssistantDatabase", fresh)
+    local vouched, withSources = 0, 0
+    for _, entry in ipairs(fresh.Data.professions) do
+        local loaded = fresh.Core.load(entry, providers)
+        vouched = vouched + loaded.vouchedCount
+        for _, recipe in ipairs(loaded.recipes) do
+            for _, recipeItem in ipairs(recipe.recipeItems) do
+                if #recipeItem.sources > 0 then withSources = withSources + 1 end
+            end
+        end
+    end
+    check(vouched > 2000, vouched .. " recipes vouched for")
+    check(withSources > 400, withSources .. " recipe items with sources")
+    _G.GuildAssistantDatabaseSources = nil
+end)
+
 print(("%d passed, %d failed"):format(passed, failed))
 if failed > 0 then error(failed .. " failed") end

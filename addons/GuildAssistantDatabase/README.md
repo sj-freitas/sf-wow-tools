@@ -51,19 +51,23 @@ logging in nor opening the window stalls the game. Only the visible rows of the 
 
 ## How to learn it
 
-What the game's own data says: a recipe learned with the profession, or automatically at a skill,
-and the plans, pattern or formula that teach it (with the skill they need). Where those drop, who
-sells them, which trainer teaches what and for how much: the game's servers know that, not its
-data files, so the window says what it can ("From the item below", "A trainer or a quest").
+The game's own data says whether a recipe is learned with the profession or automatically at a
+skill, and which plans, pattern or formula teach it (with the skill they need). Where those drop,
+who sells them, and which trainer teaches what for how much is known by the game's servers, not its
+data files. It comes from **sources**, listed under the details ("Sources: …"):
 
-### Sources companions
+- **What is known as of November 2026** (`Seed.lua`): trainers and costs, drops, vendors, quests,
+  items' stat values, and which recipes can be learned at all. Compiled once, not updated.
+- **What GuildAssistant Professions saw** (1.2.0 and later): it records, as you play, the recipes
+  vendors sell, what profession trainers teach and for how much, plans looted from creatures,
+  objects or fishing, and plans quests give. And every recipe a character it knows has learned can
+  be learned. What it records shows after a `/reload`.
+- Any other addon that adds itself to `GuildAssistantDatabaseSources` (the format is in `Core.lua`,
+  "Sources companions").
 
-Another addon can add that knowledge: a **sources companion** puts what it knows in
-`GuildAssistantDatabaseSources` (the format is in `Core.lua`, "Sources companions"): which recipes
-can be learned, how (trainer and cost, drops, vendors, quests), items' stat values, and the names of
-items the game's data lacks. With one installed, the details list its sources (and say whose), and
-recipes it doesn't vouch for (unreleased, removed, or not recorded yet) are hidden unless ticked in
-the Filter. None is published yet; one built from what players see in game could be.
+Recipes no source vouches for (unreleased, removed, or not found yet) are hidden unless you tick
+**Recipes with no known source** in the Filter; one a guildmate has learned shows. When nothing
+says how, the window says what it can ("From the item below", "A trainer or a quest").
 
 ## Where the data comes from
 

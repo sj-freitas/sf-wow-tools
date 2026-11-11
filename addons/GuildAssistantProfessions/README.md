@@ -49,6 +49,16 @@ the chat):
 
 `/ga-prof status` says how many guild characters your addon has and what was sent and received.
 
+## For GuildAssistant Database
+
+With [GuildAssistant Database](../GuildAssistantDatabase/README.md) installed too, it shows who you
+know that can craft each recipe (from what this addon saved). This addon also records, quietly, how
+recipes are obtained, which GuildAssistant Database shows with each recipe: the recipes a vendor
+sells (when you open its window), what a profession trainer teaches and for how much, plans and
+patterns you loot (from a creature, an object, or fishing), and those a quest gives. It's kept in
+the saved data (`sources`), not in the export, and not shared with the guild yet. `/ga-prof status`
+says how many it has.
+
 ## Commands
 
 | Command           | What it does                                                               |

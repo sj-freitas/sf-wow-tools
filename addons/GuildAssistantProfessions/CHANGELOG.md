@@ -1,5 +1,13 @@
 # GuildAssistant Professions
 
+## 1.2.0
+
+- Records, quietly, how recipes are obtained, for GuildAssistant Database: the recipes a vendor
+  sells (when you open its window), what a profession trainer teaches and for how much, plans and
+  patterns you loot from a creature, an object or fishing, and those a quest gives. GuildAssistant
+  Database shows them with each recipe.
+- `/ga-prof status` says how many it has recorded.
+
 ## 1.1.0
 
 - What is saved no longer grows forever. A guildmate's character not heard of for 90 days is

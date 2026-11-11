@@ -1,5 +1,17 @@
 # GuildAssistant Database
 
+## 1.2.0
+
+- How to learn a recipe is back: trainers and their costs, where plans and patterns drop, who sells
+  them, which quests give them, from what is known as of November 2026. Items show their stat values
+  again, and recipes no one knows how to get (unreleased, removed) are hidden unless you tick
+  **Recipes with no known source** in the Filter.
+- What is found from now on comes from GuildAssistant Professions 1.2.0, which records it as you
+  play: the recipes vendors sell, what trainers teach and for how much, plans you loot or fish, and
+  plans quests give. It shows here after a /reload.
+- A recipe someone you know has learned (through GuildAssistant Professions) is shown even if it
+  wasn't known before.
+
 ## 1.1.0
 
 - The recipes now come from the game's own data files for WoW Forever, not from Wowhead, and are

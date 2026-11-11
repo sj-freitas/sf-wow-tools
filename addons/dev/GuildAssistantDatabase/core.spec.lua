@@ -335,6 +335,60 @@ it("places the minimap button by its angle, and finds the angle of a point", fun
     eq(Core.angleTo(0, -10), 270, "never negative")
 end)
 
+it("reads where a source says an item comes from: area ids, zone names, nothing", function()
+    local source = Core.parseSource("V440=Krinkle Goodsteel")
+    eq(source.kind, "vendor"); eq(source.zone, 440); eq(source.name, "Krinkle Goodsteel")
+    source = Core.parseSource("D:Westfall=Defias Pillager")
+    eq(source.kind, "drop"); eq(source.zoneName, "Westfall"); eq(source.zone, nil)
+    source = Core.parseSource("F:Stranglethorn Vale=")
+    eq(source.kind, "fishing"); eq(source.name, "")
+    eq(Core.parseSource("X1=Nope"), nil); eq(Core.parseSource("Vnope=Nope"), nil); eq(Core.parseSource("garbage"), nil)
+end)
+
+it("turns what GuildAssistant Professions knows into a source that only adds", function()
+    local db = {
+        characters = {
+            ["Luna-RP"] = { professions = { Blacksmithing = { recipes = { ["spell:2662"] = true, ["item:2864"] = true } } } },
+            ["Ana-RP"] = { professions = { Blacksmithing = { recipes = { ["spell:2662"] = true } } } },
+        },
+        sources = {
+            items = { [6047] = { ["V:Booty Bay=Narkk"] = 100, ["V440=Krinkle Goodsteel"] = 90 } },
+            recipes = { ["item:7954"] = { cost = 20000, trainers = { ["Ironforge=Bengus Deepforge"] = 100 } },
+                ["name:enchant bracer - minor health"] = { cost = 10, trainers = { ["=Somebody"] = 1 } } },
+        },
+    }
+    local provider = Core.professionsSources(db)
+    eq(provider.complete, nil, "it only adds")
+    eq(provider.recipes, "2662\t\t\nitem:2864\t\t\nitem:7954\t6\t20000\tIronforge=Bengus Deepforge\nname:enchant bracer - minor health\t6\t10\t=Somebody")
+    eq(provider.items, "6047\t\t\t\tV440=Krinkle Goodsteel;V:Booty Bay=Narkk")
+    eq(Core.professionsSources({ characters = {} }), nil, "nothing known")
+    eq(Core.professionsSources(nil), nil)
+
+    -- Read with the data: the trainer matches by the item made, and by the recipe's name.
+    local ns = {}
+    assert(loadfile("GuildAssistantDatabase/Core.lua"))("GuildAssistantDatabase", ns)
+    assert(loadfile("dev/GuildAssistantDatabase/Data.fixture.lua"))("GuildAssistantDatabase", ns)
+    local loaded = {}
+    for _, entry in ipairs(ns.Data.professions) do loaded[entry.name] = ns.Core.load(entry, { provider }) end
+    local shatterer = recipeNamed(loaded.Blacksmithing, "The Shatterer")
+    eq(table.concat(ns.Core.howToLearn(shatterer), " | "), "Trainer (2g): Bengus Deepforge (Ironforge)")
+    eq(shatterer.vouched, true)
+    eq(recipeNamed(loaded.Blacksmithing, "Ironforge Gauntlets").vouched, nil, "not hidden: no complete source")
+    eq(recipeNamed(loaded.Enchanting, "Enchant Bracer - Minor Health").vouched, true, "matched by name")
+    eq(recipeNamed(loaded.Blacksmithing, "Runed Copper Breastplate").vouched, true, "known by the item it makes")
+end)
+
+it("adds what several sources say of one recipe together", function()
+    local complete = { name = "Seed", complete = true, recipes = "10003\t6\t13500", items = "" }
+    local seen = { name = "Seen", recipes = "item:7954\t6\t\tIronforge=Bengus Deepforge", items = "" }
+    local ns = {}
+    assert(loadfile("GuildAssistantDatabase/Core.lua"))("GuildAssistantDatabase", ns)
+    assert(loadfile("dev/GuildAssistantDatabase/Data.fixture.lua"))("GuildAssistantDatabase", ns)
+    local blacksmithing = ns.Core.load(ns.Data.professions[1], { complete, seen })
+    eq(table.concat(ns.Core.howToLearn(recipeNamed(blacksmithing, "The Shatterer")), " | "), "Trainer (1g 35s): Bengus Deepforge (Ironforge)")
+    eq(recipeNamed(blacksmithing, "Copper Chain Pants").vouched, false, "the complete one doesn't list it")
+end)
+
 it("counts the data's recipes", function()
     eq(Core.describe(Data), "9 recipes")
     eq(Core.thousands(1234567), "1,234,567"); eq(Core.thousands(12), "12")

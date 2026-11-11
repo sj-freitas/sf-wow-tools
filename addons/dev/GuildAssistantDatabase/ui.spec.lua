@@ -510,7 +510,8 @@ it("shows a recipe's details: the item, reagents, how to learn it and who can cr
     has(d.info:GetText(), "Chest (Plate), Strength, Spirit")
     eq(d.reagents[1].text:GetText(), "12 x |cffffffffCopper Bar|r")
     eq(d.reagents[3]:IsShown(), true); eq(d.reagents[4]:IsShown(), false)
-    eq(d.learn:GetText(), "Drop: Defias Renegade Mage (Westfall)\nPickpocketing\n|cff808080Sources: Test notes (2026-11-11)|r")
+    -- GuildAssistant Professions is installed: what it knows is a source too.
+    eq(d.learn:GetText(), "Drop: Defias Renegade Mage (Westfall)\nPickpocketing\n|cff808080Sources: Test notes (2026-11-11), seen by GuildAssistant Professions|r")
     has(d.recipeItems[1].text:GetText(), "Plans: Runed Copper Breastplate")
     has(d.recipeItems[1].text:GetText(), "(skill 55)")
     eq(d.recipeItems[2]:IsShown(), false)
@@ -672,6 +673,33 @@ it("shows the companion's stat values, and the icons from the game's data", func
     eq(row.icon._texture, 132745)
     row:Click()
     has(ns.UI.parts().details.info:GetText(), "Chest (Plate), 463 Armor, +14 Critical Strike Rating, +12 Dodge Rating")
+end)
+
+it("shows what GuildAssistant Professions saw: a vendor, a trainer, and a recipe the seed lacks", function()
+    local ns = loadAddon({ professionsAddon = true })
+    local db = GuildAssistantProfessionsDB
+    -- A guildmate knows Ironforge Gauntlets, which the complete source doesn't list.
+    db.characters["Ana-Test Realm"].professions.Blacksmithing.recipes["spell:99001"] = true
+    db.sources = {
+        items = { [6047] = { ["V:Booty Bay=Narkk"] = 1 } },
+        recipes = { ["item:7954"] = { cost = 20000, trainers = { ["Ironforge=Bengus Deepforge"] = 1 } } },
+    }
+    SlashCmdList.GADB("gauntlets")
+    eq(shownRows(ns), "Ironforge Gauntlets", "known by a guildmate: shown")
+    ns.UI.parts().searchBox:SetText("coif")
+    rowNamed(ns, "Golden Scale Coif"):Click()
+    eq(ns.UI.parts().details.learn:GetText():match("^[^\n]*\n[^\n]*"), "Vendor: Krinkle Goodsteel (Tanaris)\nVendor: Narkk (Booty Bay)")
+    ns.UI.parts().searchBox:SetText("shatterer")
+    rowNamed(ns, "The Shatterer"):Click()
+    has(ns.UI.parts().details.learn:GetText(), "Trainer (2g): Bengus Deepforge (Ironforge)")
+end)
+
+it("doesn't hide anything because of GuildAssistant Professions alone", function()
+    local ns = loadAddon({ noSources = true, professionsAddon = true })
+    SlashCmdList.GADB("")
+    eq(#ns.UI.parts().state.results, 9, "only a complete source hides recipes")
+    ns.UI.parts().filterButton:Click()
+    eq(ns.UI.parts().filterPopup.unvouched:IsShown(), false)
 end)
 
 print(("%d passed, %d failed"):format(passed, failed))

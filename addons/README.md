@@ -87,8 +87,13 @@ and counts the items the tables lack (named in game). **Every Monday a GitHub Ac
 when the data changed (a new build of the game). Merge it, then publish the new version.
 
 The game's data doesn't say where recipes drop, who sells them or what trainers charge (the
-servers know that): a sources companion addon can add it (the format is in
-`GuildAssistantDatabase/Core.lua`, "Sources companions").
+servers know that). Two sources add it (the format is in `GuildAssistantDatabase/Core.lua`,
+"Sources companions"):
+
+- `GuildAssistantDatabase/Seed.lua`: what was known as of November 2026, compiled once and not
+  regenerated (no script for it in the repo). Edit it only to fix a mistake.
+- GuildAssistantProfessions (1.2.0 and later): what players see from then on (vendors, trainers,
+  loot, quest rewards; `Sources.lua` there), read from its saved data.
 
 The professions are in `scripts/database/professions.mjs`. How the data is read (`gamedata.mjs`,
 `csv.mjs`), written (`lua.mjs`, one text line per recipe and item, read by the addon's `Core.lua` the

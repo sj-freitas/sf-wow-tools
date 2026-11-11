@@ -4,7 +4,7 @@
 -- gets uploaded. Addons can't write files themselves.
 
 local addonName, ns = ...
-local Core, Scan, Sync = ns.Core, ns.Scan, ns.Sync
+local Core, Scan, Sync, Sources = ns.Core, ns.Scan, ns.Sync, ns.Sources
 
 -- Where the game writes the saved data, from the game's folder (the account folder's name can't be
 -- known from inside the game).
@@ -85,6 +85,7 @@ local function status()
     end
     print("  Last update: " .. when(last) .. ".")
     print("  " .. Sync.describe(db(), when))
+    print("  Seen for GuildAssistant Database: " .. Core.describeSources(db()) .. ".")
     print("  File: " .. FILE .. " in the game's folder, written by /ga-prof save (or logging out).")
     print("  On Guild Assistant: Roster, Import professions, and drop it there.")
 end
@@ -150,6 +151,14 @@ local function onEvent(self, event, arg, ...)
         scanSoon()
     elseif event == "CRAFT_SHOW" or event == "CRAFT_UPDATE" then
         if Scan.crafts() then ownChanged() end
+    elseif event == "MERCHANT_SHOW" or event == "MERCHANT_UPDATE" then
+        Sources.merchant()
+    elseif event == "TRAINER_SHOW" or event == "TRAINER_UPDATE" then
+        Sources.trainer()
+    elseif event == "LOOT_OPENED" then
+        Sources.loot()
+    elseif event == "QUEST_COMPLETE" then
+        Sources.questRewards()
     end
 end
 
@@ -161,7 +170,9 @@ events:SetScript("OnEvent", function(...) safely(onEvent, ...) end)
 events.missing = {}
 for _, event in ipairs({ "ADDON_LOADED", "PLAYER_LOGIN", "PLAYER_LOGOUT", "SKILL_LINES_CHANGED", "CHAT_MSG_ADDON",
     "TRADE_SKILL_SHOW", "TRADE_SKILL_UPDATE", "TRADE_SKILL_LIST_UPDATE",
-    "TRADE_SKILL_DATA_SOURCE_CHANGED", "CRAFT_SHOW", "CRAFT_UPDATE" }) do
+    "TRADE_SKILL_DATA_SOURCE_CHANGED", "CRAFT_SHOW", "CRAFT_UPDATE",
+    -- How recipes are obtained, for GuildAssistant Database (Sources.lua).
+    "MERCHANT_SHOW", "MERCHANT_UPDATE", "TRAINER_SHOW", "TRAINER_UPDATE", "LOOT_OPENED", "QUEST_COMPLETE" }) do
     if not pcall(events.RegisterEvent, events, event) then
         events.missing[#events.missing + 1] = event
     end

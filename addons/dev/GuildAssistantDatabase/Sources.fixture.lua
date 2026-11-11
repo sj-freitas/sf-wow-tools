@@ -1,11 +1,13 @@
 -- A sources companion, as an addon that adds where recipes come from would load it (the format is in
 -- GuildAssistantDatabase/Core.lua, "Sources companions"). Written by hand for the specs, for the
--- recipes of Data.fixture.lua; it vouches for all of them but Ironforge Gauntlets.
+-- recipes of Data.fixture.lua; complete, like the seed: it vouches for all of them but Ironforge
+-- Gauntlets, which is hidden then.
 
 GuildAssistantDatabaseSources = GuildAssistantDatabaseSources or {}
 table.insert(GuildAssistantDatabaseSources, {
     name = "Test notes",
     fetched = "2026-11-11",
+    complete = true,
     recipes = [[
 2660
 2662	6	50

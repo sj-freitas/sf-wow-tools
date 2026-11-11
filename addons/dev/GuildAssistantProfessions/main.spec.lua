@@ -54,7 +54,7 @@ local function loadAddon(unknownEvents)
     _G.GetNumSkillLines = function() return 0 end
     _G.GetSkillLineInfo = function() end
     local ns = {}
-    for _, file in ipairs({ "Core", "Scan", "Sync", "Main" }) do
+    for _, file in ipairs({ "Core", "Scan", "Sync", "Sources", "Main" }) do
         assert(loadfile("GuildAssistantProfessions/" .. file .. ".lua"))("GuildAssistantProfessions", ns)
     end
     return ns
@@ -103,6 +103,25 @@ it("keeps the export in the saved data up to date, and says when it was updated"
     db.export = nil
     fire("PLAYER_LOGOUT")
     assert(db.export, "export at logout")
+end)
+
+it("records the recipe items a vendor sells, quietly, and says so in the status", function()
+    loadAddon()
+    fire("ADDON_LOADED", "GuildAssistantProfessions")
+    _G.GetItemInfoInstant = function(id) return id, "", "", "", 0, id == 6047 and 9 or 7, 0 end
+    _G.GetRealZoneText = function() return "Tanaris" end
+    _G.GetMerchantNumItems = function() return 2 end
+    _G.GetMerchantItemLink = function(i) return ("|Hitem:%d|h[x]|h"):format(i == 1 and 6047 or 2840) end
+    local unitName = _G.UnitName
+    _G.UnitName = function(unit) return unit == "npc" and "Krinkle Goodsteel" or unitName(unit) end
+    local before = #chat
+    fire("MERCHANT_SHOW")
+    eq(#chat, before, "nothing said")
+    assert(GuildAssistantProfessionsDB.sources.items[6047]["V:Tanaris=Krinkle Goodsteel"], "recorded")
+    SlashCmdList.GAPROF("status")
+    eq(said("Seen for GuildAssistant Database: 1 recipe item's sources, 0 trainer recipes."), true, "status")
+    _G.UnitName = unitName
+    _G.GetMerchantNumItems, _G.GetMerchantItemLink, _G.GetItemInfoInstant, _G.GetRealZoneText = nil, nil, nil, nil
 end)
 
 it("reports an error in the chat, once, instead of failing silently", function()

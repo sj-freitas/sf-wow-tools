@@ -179,7 +179,7 @@ local function query()
         minLevel = Core.limit(minLevelBox:GetText()), maxLevel = Core.limit(maxLevelBox:GetText()),
         minSkill = Core.limit(minSkillBox:GetText()), maxSkill = Core.limit(maxSkillBox:GetText()),
         slots = slots, armor = armor, include = include,
-        vouchedOnly = #Game.sourceProviders() > 0 and not state.showUnvouched,
+        vouchedOnly = Game.hidesUnvouched() and not state.showUnvouched,
     }
 end
 
@@ -194,7 +194,7 @@ end
 -- A profession's recipes: with a sources companion, those it vouches for (once read), unless
 -- recipes with no known source are shown too.
 local function total(entry)
-    if entry.loaded and #Game.sourceProviders() > 0 and not state.showUnvouched then return entry.loaded.vouchedCount end
+    if entry.loaded and Game.hidesUnvouched() and not state.showUnvouched then return entry.loaded.vouchedCount end
     return entry.count or 0
 end
 
@@ -627,7 +627,7 @@ local function buildFilterPopup()
     end)
     filterPopup.unvouched = unvouched
     filterPopup:SetScript("OnShow", function(self)
-        self.unvouched:SetShown(#Game.sourceProviders() > 0)
+        self.unvouched:SetShown(Game.hidesUnvouched())
     end)
 
     local clear = CreateFrame("Button", nil, filterPopup, "UIPanelButtonTemplate")

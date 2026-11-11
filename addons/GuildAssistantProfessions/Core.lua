@@ -514,6 +514,65 @@ function Core.newAssembler(clock)
     return assembler
 end
 
+-- Recipe sources ---------------------------------------------------------------------------------
+-- What the game shows of how recipes are obtained, kept for GuildAssistant Database (which reads it
+-- from the saved data, Core.professionsSources there): where recipe items (plans, patterns,
+-- formulas…) are sold, dropped, fished or given by quests, and which trainers teach which recipes
+-- and for how much. db.sources = { items = { [item id] = { [entry] = last seen } }, recipes = {
+-- [recipe] = { cost, trainers = { ["<zone>=<trainer>"] = last seen } } } }; an entry is
+-- "<kind>[:<zone>]=<who>" (V vendor, D drop, O object, F fishing, Q quest), a recipe "item:<id>"
+-- (the item it makes) or "name:<recipe name>". Not exported, not shared with the guild (yet).
+
+--- At most this many places per recipe item, and trainers per recipe: enough to say where to go.
+Core.MAX_SOURCES = 12
+
+local function clean(text) return (tostring(text or ""):gsub("[\t\n\r;=]", " ")) end
+
+local function countKeys(map)
+    local n = 0
+    for _ in pairs(map) do n = n + 1 end
+    return n
+end
+
+--- Records that recipe item `itemId` comes from `kind` ("V", "D", "O", "F", "Q") in `zone`, by
+--- `who` (a vendor, a creature, a quest's title; "" when not known), seen `now`. Returns whether it
+--- was new.
+function Core.recordItemSource(db, itemId, kind, zone, who, now)
+    db.sources = db.sources or {}
+    db.sources.items = db.sources.items or {}
+    local entries = db.sources.items[itemId] or {}
+    zone = clean(zone)
+    local entry = kind .. (zone ~= "" and (":" .. zone) or "") .. "=" .. clean(who)
+    local new = entries[entry] == nil
+    if new and countKeys(entries) >= Core.MAX_SOURCES then return false end
+    entries[entry] = now
+    db.sources.items[itemId] = entries
+    return new
+end
+
+--- Records that trainer `who` in `zone` teaches `recipe` ("item:<id>" or "name:<name>") for `cost`
+--- (copper), seen `now`. Returns whether it was new.
+function Core.recordTrainer(db, recipe, cost, zone, who, now)
+    db.sources = db.sources or {}
+    db.sources.recipes = db.sources.recipes or {}
+    local known = db.sources.recipes[recipe] or { trainers = {} }
+    local entry = clean(zone) .. "=" .. clean(who)
+    local new = known.trainers[entry] == nil
+    if new and countKeys(known.trainers) >= Core.MAX_SOURCES then return false end
+    known.trainers[entry] = now
+    known.cost = cost and cost > 0 and cost or known.cost
+    db.sources.recipes[recipe] = known
+    return new
+end
+
+--- "12 recipe items' sources, 30 trainer recipes": what is recorded, for /ga-prof status.
+function Core.describeSources(db)
+    local sources = db.sources or {}
+    local items, recipes = countKeys(sources.items or {}), countKeys(sources.recipes or {})
+    return ("%d recipe %s sources, %d trainer recipe%s"):format(items, items == 1 and "item's" or "items'",
+        recipes, recipes == 1 and "" or "s")
+end
+
 -- JSON --------------------------------------------------------------------------------------------
 
 local ESCAPES = { ['"'] = '\\"', ["\\"] = "\\\\", ["\n"] = "\\n", ["\r"] = "\\r", ["\t"] = "\\t" }

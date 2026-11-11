@@ -102,10 +102,25 @@ function Game.zoneName(id)
     return nil
 end
 
---- The sources companions installed (GuildAssistantDatabaseSources): a list, empty without any.
+local providers
+--- The sources: those in GuildAssistantDatabaseSources (the seed, Seed.lua, and any companion), and
+--- what GuildAssistant Professions saw, as it was the first time they were asked for (what it sees
+--- later shows after a /reload). A list, empty without any.
 function Game.sourceProviders()
+    if providers then return providers end
+    providers = {}
     local list = rawget(_G, "GuildAssistantDatabaseSources")
-    return type(list) == "table" and list or {}
+    for _, provider in ipairs(type(list) == "table" and list or {}) do providers[#providers + 1] = provider end
+    local professions = Core.professionsSources(Game.professionsDB())
+    if professions then providers[#providers + 1] = professions end
+    return providers
+end
+
+--- Whether a complete source is installed (the seed is): then recipes no source lists are hidden
+--- unless asked for.
+function Game.hidesUnvouched()
+    local merged = Core.sources(Game.sourceProviders())
+    return merged ~= nil and merged.complete
 end
 
 --- An item's name and quality: the data's, or, for one the game's tables lacked, what the game says
