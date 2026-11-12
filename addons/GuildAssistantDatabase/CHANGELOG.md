@@ -1,5 +1,12 @@
 # GuildAssistant Database
 
+## 1.5.1
+
+- **Shift-click an item** anywhere while the window is open (your bags, a link in the chat, a
+  reagent in the details) with the chat box closed: it's searched for. With the chat box open, it's
+  linked in the chat as before.
+- The search also finds a recipe by its plans or pattern (`plans: runed copper breastplate`).
+
 ## 1.5.0
 
 - **Only guild**, in the Filter while you're in a guild: only the recipes someone in your guild can

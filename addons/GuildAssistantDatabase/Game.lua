@@ -207,6 +207,22 @@ function Game.insertLink(link)
     if ChatEdit_InsertLink then ChatEdit_InsertLink(link) end
 end
 
+--- Calls `fn(name)` with an item's name when one is shift-clicked anywhere (bags, the character
+--- window, a link in the chat, this window) and nothing else takes its link: the chat box isn't open
+--- and no box but `ownBox` is being typed in. The game's shift-click puts a link in through
+--- ChatEdit_InsertLink: it's hooked after it (hooksecurefunc), so what the game does is untouched.
+function Game.onItemLinked(ownBox, fn)
+    if not (hooksecurefunc and ChatEdit_InsertLink) then return end
+    hooksecurefunc("ChatEdit_InsertLink", function(link)
+        if type(link) ~= "string" or not link:find("|Hitem:", 1, true) then return end
+        if ChatEdit_GetActiveWindow and ChatEdit_GetActiveWindow() then return end
+        local focus = GetCurrentKeyBoardFocus and GetCurrentKeyBoardFocus()
+        if focus and focus ~= ownBox then return end
+        local name = link:match("|h%[(.-)%]|h")
+        if name and name ~= "" then ns.safely(fn, name) end
+    end)
+end
+
 --- Tries the item on in the dressing room (ctrl-click), as the game's own windows do: the game
 --- opens it only for what can be worn, not a potion or a bag.
 function Game.dressUp(item)

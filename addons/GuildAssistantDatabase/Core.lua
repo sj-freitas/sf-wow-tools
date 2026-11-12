@@ -292,6 +292,8 @@ function Core.load(entry, providers)
             words[#words + 1] = recipe.creates.summary
         end
         for _, reagent in ipairs(recipe.reagents) do words[#words + 1] = reagent.item.name end
+        -- Its plans (pattern, formula…), so searching for them finds what they teach.
+        for _, recipeItem in ipairs(recipe.recipeItems) do words[#words + 1] = recipeItem.name end
         recipe.search = table.concat(words, " "):lower()
         recipe.nameSearch = (recipe.name .. " " .. (recipe.creates and recipe.creates.name or "")):lower()
         recipes[#recipes + 1] = recipe

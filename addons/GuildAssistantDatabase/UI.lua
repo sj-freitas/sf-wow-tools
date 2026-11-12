@@ -909,7 +909,7 @@ local function buildDetails()
     d.hint = fontString(d, "GameFontDisable")
     d.hint:SetPoint("TOPLEFT", d, "TOPLEFT", 10, -10)
     d.hint:SetWidth(width)
-    d.hint:SetText("Pick a recipe to see its reagents, how to learn it and who can craft it.\n\nShift-click a recipe to link it in the chat, or the item at the top of its details for the item's link; ctrl-click to try it on. Click a name under Who can craft it to whisper them.")
+    d.hint:SetText("Pick a recipe to see its reagents, how to learn it and who can craft it.\n\nShift-click a recipe to link it in the chat, or the item at the top of its details for the item's link; ctrl-click to try it on. Click a name under Who can craft it to whisper them.\n\nShift-click an item anywhere (your bags, a link in the chat) with the chat box closed to search for it.")
 
     d.craft = CreateFrame("Button", nil, d, "UIPanelButtonTemplate")
     d.craft:SetSize(90, 22)
@@ -1018,6 +1018,14 @@ local function build()
     state.showUnvouched = Game.savedSettings().showUnknown == true
     buildFilters()
     buildFilterPopup()
+    -- An item shift-clicked while the window is open (and the chat box isn't): its name is searched.
+    Game.onItemLinked(searchBox, function(name)
+        if not frame:IsShown() then return end
+        searchBox:SetText(name)
+        searchBox:ClearFocus()
+        state.offset = 0
+        UI.refresh()
+    end)
     buildSidebar()
     buildList()
     buildDetails()

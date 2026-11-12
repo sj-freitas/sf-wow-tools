@@ -16,8 +16,12 @@ search cleared. Drag the clip to move it around the minimap;
 
 - **Search** (top left): words that must all be somewhere in the recipe: its name, the item it
   makes (its slot, type and stats: `plate chest`, `stamina`, `critical strike`, `maces`), its
-  reagents (`thorium bar`: what uses them), or the profession. Recipes whose own name matches come
-  first. The cross at its end clears it.
+  reagents (`thorium bar`: what uses them), its plans or pattern, or the profession. Recipes whose
+  own name matches come first. The cross at its end clears it.
+- **Shift-click an item** anywhere while the window is open (your bags, the character window, a
+  link in the chat, a reagent here) with the chat box closed: its name is searched (what uses it,
+  what makes it, or the recipe its plans teach). With the chat box open, it's linked there as
+  usual.
 - **Level**: the level the item it makes requires (an item that needs none counts as level 1).
   **Skill**: the profession skill it takes to learn. Leave a box empty for no limit.
 - **Tab** moves from one box to the next (search, then the level and skill boxes), **Shift-Tab**
@@ -41,8 +45,8 @@ search cleared. Drag the clip to move it around the minimap;
   with your skill).
 - Click a recipe for its details: the item (its slot, type and stats), how many it makes, the
   skill-up colours, the reagents, how to learn it and who can craft it.
-- Hover a recipe, a reagent or a recipe item for the game's tooltip; **shift-click** to link it in
-  the chat (a recipe in the list: the recipe, to craft it; the item at the top of its details: the
+- Hover a recipe, a reagent or a recipe item for the game's tooltip; **shift-click** with the chat
+  box open to link it in the chat (a recipe in the list: the recipe, to craft it; the item at the top of its details: the
   item); **ctrl-click** to try it on in the dressing room (a recipe: the item it makes).
 - **Click the item** at the top of the details to open your profession window at that recipe, when
   this character knows it (its tooltip says so). It takes what the game allows an addon:
