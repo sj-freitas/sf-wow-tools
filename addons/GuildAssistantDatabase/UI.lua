@@ -1018,9 +1018,11 @@ local function build()
     state.showUnvouched = Game.savedSettings().showUnknown == true
     buildFilters()
     buildFilterPopup()
-    -- An item shift-clicked while the window is open (and the chat box isn't): its name is searched.
+    -- An item shift-clicked while the window is open (and the chat box isn't): its name is searched,
+    -- and a stack's split box doesn't open.
     Game.onItemLinked(searchBox, function(name)
         if not frame:IsShown() then return end
+        Game.closeStackSplit()
         searchBox:SetText(name)
         searchBox:ClearFocus()
         state.offset = 0

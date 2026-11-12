@@ -20,8 +20,8 @@ search cleared. Drag the clip to move it around the minimap;
   own name matches come first. The cross at its end clears it.
 - **Shift-click an item** anywhere while the window is open (your bags, the character window, a
   link in the chat, a reagent here) with the chat box closed: its name is searched (what uses it,
-  what makes it, or the recipe its plans teach). With the chat box open, it's linked there as
-  usual.
+  what makes it, or the recipe its plans teach), and a stack's split box doesn't open. With the
+  chat box open, it's linked there as usual.
 - **Level**: the level the item it makes requires (an item that needs none counts as level 1).
   **Skill**: the profession skill it takes to learn. Leave a box empty for no limit.
 - **Tab** moves from one box to the next (search, then the level and skill boxes), **Shift-Tab**

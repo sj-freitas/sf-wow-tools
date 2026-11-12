@@ -198,28 +198,57 @@ function Game.chatLink(itemOrRecipe, isRecipe)
     return link
 end
 
+-- Where the game's shift-click puts a link in (the chat box being typed in, or a window that takes
+-- it): the newer client's ChatFrameUtil.InsertLink (WoW Forever's), else ChatEdit_InsertLink.
+local function linkInserter()
+    if ChatFrameUtil and ChatFrameUtil.InsertLink then return ChatFrameUtil, "InsertLink" end
+    if ChatEdit_InsertLink then return _G, "ChatEdit_InsertLink" end
+    return nil
+end
+
 --- Puts a link in the chat box being typed in (shift-click), as the game's own windows do.
 function Game.insertLink(link)
     if not link then
         Game.say("the game doesn't have that item yet: shift-click it again in a moment.")
         return
     end
-    if ChatEdit_InsertLink then ChatEdit_InsertLink(link) end
+    -- The newer client forbids links in the chat at times (an encounter's lockdown).
+    if C_ChatInfo and C_ChatInfo.InChatMessagingLockdown and C_ChatInfo.InChatMessagingLockdown() then return end
+    local owner, name = linkInserter()
+    if owner then owner[name](link) end
+end
+
+-- An item link's name, as the game has it (a link's text can hold a quality icon), else its text.
+local function linkedName(link)
+    local info = (C_Item and C_Item.GetItemInfo) or GetItemInfo
+    local name = info and info(link)
+    if type(name) == "string" and name ~= "" then return name end
+    name = link:match("|h%[(.-)%]|h")
+    name = name and name:gsub("|A.-|a", ""):gsub("|T.-|t", "")
+    return name ~= "" and name or nil
 end
 
 --- Calls `fn(name)` with an item's name when one is shift-clicked anywhere (bags, the character
---- window, a link in the chat, this window) and nothing else takes its link: the chat box isn't open
---- and no box but `ownBox` is being typed in. The game's shift-click puts a link in through
---- ChatEdit_InsertLink: it's hooked after it (hooksecurefunc), so what the game does is untouched.
+--- window, a link in the chat, this window) and nothing else takes its link: no box but `ownBox` is
+--- being typed in (the chat box, open, is). The game's shift-click puts a link in through
+--- linkInserter's function: it's hooked after it (hooksecurefunc), so what the game does is untouched.
 function Game.onItemLinked(ownBox, fn)
-    if not (hooksecurefunc and ChatEdit_InsertLink) then return end
-    hooksecurefunc("ChatEdit_InsertLink", function(link)
+    local owner, inserter = linkInserter()
+    if not (owner and hooksecurefunc) then return end
+    hooksecurefunc(owner, inserter, function(link)
         if type(link) ~= "string" or not link:find("|Hitem:", 1, true) then return end
-        if ChatEdit_GetActiveWindow and ChatEdit_GetActiveWindow() then return end
         local focus = GetCurrentKeyBoardFocus and GetCurrentKeyBoardFocus()
         if focus and focus ~= ownBox then return end
-        local name = link:match("|h%[(.-)%]|h")
-        if name and name ~= "" then ns.safely(fn, name) end
+        local name = linkedName(link)
+        if name then ns.safely(fn, name) end
+    end)
+end
+
+--- Closes the game's box for splitting a stack, which a shift-click on a stack in the bags opens
+--- right after its link is put in: on the next frame, once it's open.
+function Game.closeStackSplit()
+    Game.soon(function()
+        if StackSplitFrame and StackSplitFrame:IsShown() then StackSplitFrame:Hide() end
     end)
 end
 

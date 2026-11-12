@@ -149,8 +149,8 @@ end
 -- runTimers()), knownSpells (what IsPlayerSpell says yes to), saved (GuildAssistantDatabaseDB as
 -- the game loaded it), noSources (no sources companion installed; by default the test one is,
 -- Sources.fixture.lua), itemNames (what GetItemInfo knows beyond Copper Chain Pants), guild (the
--- guild this character is in; none by default), chatClosed (the chat box isn't open; it is by
--- default, as linking in the chat needs).
+-- guild this character is in; none by default), oldChat (the older client's ChatEdit_InsertLink
+-- instead of WoW Forever's ChatFrameUtil.InsertLink).
 local function loadAddon(options)
     options = options or {}
     chat, linked, timers, created, dressed, told, opened, bags = {}, {}, {}, {}, {}, {}, {}, {}
@@ -204,14 +204,19 @@ local function loadAddon(options)
     _G.RAID_CLASS_COLORS = { MAGE = { r = 0.25, g = 0.78, b = 0.92, colorStr = "ff3fc7eb" }, PRIEST = { r = 1, g = 1, b = 1 } }
     _G.IsShiftKeyDown = function() return options.shift == true end
     _G.IsModifiedClick = nil
-    _G.ChatEdit_InsertLink = function(link) linked[#linked + 1] = link end
-    local chatBox = region("EditBox")
-    _G.ChatEdit_GetActiveWindow = function() return not options.chatClosed and chatBox or nil end
+    -- Where a shift-click puts a link in (the chat box, when it's open): WoW Forever's, or the older one.
+    local function insertLink(link) linked[#linked + 1] = link end
+    _G.ChatFrameUtil = not options.oldChat and { InsertLink = insertLink } or nil
+    _G.ChatEdit_InsertLink = options.oldChat and insertLink or nil
+    _G.C_ChatInfo = { InChatMessagingLockdown = function() return false end }
     _G.GetCurrentKeyBoardFocus = function() return focused end
-    -- The game's: `fn` runs after the function, with its arguments.
-    _G.hooksecurefunc = function(name, fn)
-        local original = _G[name]
-        _G[name] = function(...)
+    _G.StackSplitFrame = region("Frame")
+    StackSplitFrame:Hide()
+    -- The game's: `fn` runs after the function (a global's, or a table's), with its arguments.
+    _G.hooksecurefunc = function(owner, name, fn)
+        if type(owner) == "string" then owner, name, fn = _G, owner, name end
+        local original = owner[name]
+        owner[name] = function(...)
             local result = original(...)
             fn(...)
             return result
@@ -828,28 +833,43 @@ end)
 
 local COPPER_BAR = "|cffffffff|Hitem:2840::::::::20:::::::|h[Copper Bar]|h|r"
 
+-- A shift-click outside the window (the bags, a link in the chat): the game puts its link in.
+local function gameLinks(link)
+    if ChatFrameUtil then ChatFrameUtil.InsertLink(link) else ChatEdit_InsertLink(link) end
+end
+
 it("searches for an item shift-clicked anywhere while the window is open and the chat box isn't", function()
-    local ns = loadAddon({ chatClosed = true })
+    local ns = loadAddon()
     SlashCmdList.GADB("")
     local parts = ns.UI.parts()
-    -- From the bags (the game puts its link in through ChatEdit_InsertLink): what uses it.
-    ChatEdit_InsertLink(COPPER_BAR)
+    -- From the bags (the game puts its link in through ChatFrameUtil.InsertLink): what uses it.
+    gameLinks(COPPER_BAR)
     eq(parts.searchBox:GetText(), "Copper Bar")
     eq(shownRows(ns), "Copper Chain Pants, Runed Copper Breastplate")
+    -- A stack's: the game's split box, opened after the link, is closed.
+    StackSplitFrame:Show()
+    gameLinks(COPPER_BAR)
+    eq(StackSplitFrame:IsShown(), false, "split box closed")
+    -- A quality icon in its text (the game's newer links): the game's name for it.
+    gameLinks("|cffffffff|Hitem:2836::::::::20:::::::|h[Coarse Stone |A:Professions-ChatIcon-Quality-Tier1:17:15::1|a]|h|r")
+    eq(parts.searchBox:GetText(), "Coarse Stone ")
+    _G.GetItemInfo = function(link) if tostring(link):find("item:2836", 1, true) then return "Coarse Stone" end end
+    gameLinks("|cffffffff|Hitem:2836::::::::20:::::::|h[Coarse Stone |A:Professions-ChatIcon-Quality-Tier1:17:15::1|a]|h|r")
+    eq(parts.searchBox:GetText(), "Coarse Stone")
     -- Plans: the recipe they teach.
-    ChatEdit_InsertLink("|cff1eff00|Hitem:2881::::::::20:::::::|h[Plans: Runed Copper Breastplate]|h|r")
+    gameLinks("|cff1eff00|Hitem:2881::::::::20:::::::|h[Plans: Runed Copper Breastplate]|h|r")
     eq(shownRows(ns), "Runed Copper Breastplate")
     -- A recipe's link is a spell's, not an item's: the search stays.
-    ChatEdit_InsertLink("|cff71d5ff|Hspell:7418|h[Enchant]|h|r")
+    gameLinks("|cff71d5ff|Hspell:7418|h[Enchant]|h|r")
     eq(parts.searchBox:GetText(), "Plans: Runed Copper Breastplate")
     -- While typing in the search box: it takes the item's name, and leaves the box.
     parts.searchBox:SetFocus()
-    ChatEdit_InsertLink(COPPER_BAR)
+    gameLinks(COPPER_BAR)
     eq(parts.searchBox:GetText(), "Copper Bar")
     eq(parts.searchBox:HasFocus(), false)
     -- While typing in another box: nothing (it's not this window's).
     parts.minLevelBox:SetFocus()
-    ChatEdit_InsertLink("|cff1eff00|Hitem:2881::::::::20:::::::|h[Plans: Runed Copper Breastplate]|h|r")
+    gameLinks("|cff1eff00|Hitem:2881::::::::20:::::::|h[Plans: Runed Copper Breastplate]|h|r")
     eq(parts.searchBox:GetText(), "Copper Bar")
     parts.minLevelBox:ClearFocus()
     -- A reagent in the details, shift-clicked: searched too.
@@ -865,16 +885,38 @@ it("searches for an item shift-clicked anywhere while the window is open and the
     -- The window closed: nothing.
     SlashCmdList.GADB("")
     eq(ns.UI.isShown(), false)
-    ChatEdit_InsertLink(COPPER_BAR)
+    gameLinks(COPPER_BAR)
     eq(parts.searchBox:GetText(), "Rough Grinding Stone")
 end)
 
 it("links a shift-clicked item in the chat when the chat box is open, and searches nothing", function()
     local ns = loadAddon()
     SlashCmdList.GADB("pants")
-    ChatEdit_InsertLink(COPPER_BAR)
+    local chatBox = region("EditBox")
+    chatBox:SetFocus() -- the chat box, open, is being typed in
+    gameLinks(COPPER_BAR)
     eq(linked[1], COPPER_BAR)
     eq(ns.UI.parts().searchBox:GetText(), "pants")
+    -- And from the window: its link too, not a search.
+    rowNamed(ns, "Copper Chain Pants"):Click()
+    _G.IsShiftKeyDown = function() return true end
+    ns.UI.parts().details.name:Click()
+    _G.IsShiftKeyDown = function() return false end
+    eq(linked[2], "|cff1eff00|Hitem:2852::::::::4:::::::|h[Copper Chain Pants]|h|r")
+    eq(ns.UI.parts().searchBox:GetText(), "pants")
+end)
+
+it("on an older client, links and searches through ChatEdit_InsertLink", function()
+    local ns = loadAddon({ oldChat = true })
+    SlashCmdList.GADB("")
+    gameLinks(COPPER_BAR)
+    eq(ns.UI.parts().searchBox:GetText(), "Copper Bar")
+    rowNamed(ns, "Copper Chain Pants"):Click()
+    _G.IsShiftKeyDown = function() return true end
+    ns.UI.parts().details.name:Click()
+    _G.IsShiftKeyDown = function() return false end
+    eq(linked[#linked], "|cff1eff00|Hitem:2852::::::::4:::::::|h[Copper Chain Pants]|h|r")
+    eq(ns.UI.parts().searchBox:GetText(), "Copper Chain Pants", "nothing typed in: searched too")
 end)
 
 it("opens your profession at a recipe you know on a click on the item at the top of its details", function()

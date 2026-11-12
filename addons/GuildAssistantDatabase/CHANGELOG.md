@@ -1,5 +1,12 @@
 # GuildAssistant Database
 
+## 1.5.2
+
+- Shift-click to search works on WoW Forever: 1.5.1 listened where older clients put a shift-click,
+  not where this one does. Shift-clicking a stack in your bags no longer opens the split box while
+  the window takes it.
+- Shift-click links in the chat the same way the game does on this client.
+
 ## 1.5.1
 
 - **Shift-click an item** anywhere while the window is open (your bags, a link in the chat, a
