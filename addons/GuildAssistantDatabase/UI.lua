@@ -1,5 +1,5 @@
 -- GuildAssistant Database: the window. A search box, level/skill limits and a Filter button (slots,
--- armor types) along the top; the professions on the left, with how many recipes of each match
+-- armor types, only your guild's) along the top; the professions on the left, with how many recipes of each match
 -- the search; the matching recipes in the middle (only the visible rows exist, reused as the list
 -- scrolls); the chosen recipe's details on the right: what it makes, its reagents, how to learn it
 -- and who can craft it. A profession's data is only read the first time it's needed, one
@@ -19,6 +19,7 @@ local ROW_HEIGHT, ROWS = 22, 18
 local SIDEBAR_ROWS = 14
 local MAX_REAGENTS, MAX_RECIPE_ITEMS, MAX_CRAFTERS = 8, 3, 15
 local QUESTION_MARK = "Interface\\Icons\\INV_Misc_QuestionMark"
+local GUILD_CHOICE = "Only guild"
 local HIGHLIGHT = "Interface\\QuestFrame\\UI-QuestTitleHighlight"
 
 local frame
@@ -36,6 +37,7 @@ local state = {
     loadingScheduled = false,
     mine = {}, -- Game.myProfessions() at the last refresh
     slots = {}, armor = {}, -- the Filter's choices, by name (Core.SLOTS, Core.ARMOR_TYPES)
+    guild = {}, -- the Filter's "Only guild" ({ [GUILD_CHOICE] = true } when ticked)
     showUnvouched = false, -- "Show unknown recipes": also those no source knows (saved: showUnknown)
     counts = nil, -- with a search: how many recipes of each profession match ({ [name] = n })
     total = 0, -- how many match in all the listed professions
@@ -180,7 +182,13 @@ local function loadPending(entries)
     return pending
 end
 
+--- The guild whose recipes only are listed: yours, when "Only guild" is ticked and you're in one.
+local function onlyGuild()
+    return state.guild[GUILD_CHOICE] and Game.guildName() or nil
+end
+
 local function query()
+    local guild = onlyGuild()
     local include
     if state.unknownOnly then
         include = function(recipe)
@@ -194,6 +202,7 @@ local function query()
         minLevel = Core.limit(minLevelBox:GetText()), maxLevel = Core.limit(maxLevelBox:GetText()),
         minSkill = Core.limit(minSkillBox:GetText()), maxSkill = Core.limit(maxSkillBox:GetText()),
         slots = slots, armor = armor, include = include,
+        known = guild and Core.guildRecipes(Game.professionsDB(), guild) or nil,
         vouchedOnly = Game.hidesUnvouched() and not state.showUnvouched,
     }
 end
@@ -472,6 +481,12 @@ local function statusLine(pending, total)
         -- The others have some: their counts are on the left.
         line = ("None in %s; %s in other professions."):format(state.profession, Core.thousands(state.total))
     end
+    if state.total == 0 and onlyGuild() then
+        -- What the guild can craft comes from GuildAssistant Professions, theirs and yours.
+        line = ("%s  |cffffd100%s|r"):format(line, Game.professionsDB()
+            and "Only guildmates who use GuildAssistant Professions are known."
+            or "Install GuildAssistant Professions to know what your guild can craft.")
+    end
     if state.unknownOnly then
         if next(state.mine) == nil then return "You have no professions with recipes." end
         -- Your professions whose recipes GuildAssistant Professions hasn't recorded yet.
@@ -633,17 +648,19 @@ local function buildFilters()
 end
 
 -- The Filter button and its panel: armor types and slots to tick (any of those ticked in a group;
--- both groups when both have some).
+-- both groups when both have some), and only what your guild can craft.
 local function updateFilterButton()
     local picked = 0
     for _ in pairs(state.slots) do picked = picked + 1 end
     for _ in pairs(state.armor) do picked = picked + 1 end
+    for _ in pairs(state.guild) do picked = picked + 1 end
     filterButton:SetText(picked > 0 and ("Filter (%d)"):format(picked) or "Filter")
 end
 
---- Unticks every armor type and slot. "Show unknown recipes" is a saved preference: it stays.
+--- Unticks every armor type and slot, and Only guild. "Show unknown recipes" is a saved preference:
+--- it stays.
 function UI.clearFilter()
-    state.slots, state.armor = {}, {}
+    state.slots, state.armor, state.guild = {}, {}, {}
     for _, check in pairs(filterChecks) do check:SetChecked(false) end
     updateFilterButton()
 end
@@ -704,6 +721,18 @@ local function buildFilterPopup()
         filterCheck("slots", choice.name, 1 + math.floor((i - 1) / slotRows), (i - 1) % slotRows)
     end
 
+    -- Under the armor types, while you're in a guild: Only guild, the recipes someone in it can craft
+    -- (GuildAssistant Professions knows who: your characters there and the guildmates it heard from).
+    local guildTitle = fontString(filterPopup, "GameFontNormal")
+    guildTitle:SetPoint("TOPLEFT", filterPopup, "TOPLEFT", 12, -30 - #Core.ARMOR_TYPES * FILTER_ROW - 4)
+    guildTitle:SetText("Who can craft")
+    local guildCheck = filterCheck("guild", GUILD_CHOICE, 0, #Core.ARMOR_TYPES + 1)
+    guildCheck:SetScript("OnEnter", function(self)
+        Game.showTextTooltip(self, GUILD_CHOICE, { ("Recipes someone in %s can craft."):format(Game.guildName() or "your guild"),
+            "Your characters there, and guildmates who use GuildAssistant Professions." })
+    end)
+    guildCheck:SetScript("OnLeave", Game.hideTooltip)
+
     -- Its own section, under a line: "Show unknown recipes", those no source knows (unreleased,
     -- removed, or not found yet), hidden otherwise. A saved preference (showUnknown): it stays ticked
     -- across sessions, and Clear and Reset leave it. Only there when a complete source is (the seed).
@@ -733,8 +762,12 @@ local function buildFilterPopup()
         UI.refresh()
     end)
     filterPopup.unvouched, filterPopup.unknownSection = unvouched, section
+    filterPopup.guildTitle, filterPopup.guildCheck = guildTitle, guildCheck
     filterPopup:SetScript("OnShow", function(self)
         self.unknownSection:SetShown(Game.hidesUnvouched())
+        local inGuild = Game.guildName() ~= nil
+        self.guildTitle:SetShown(inGuild)
+        self.guildCheck:SetShown(inGuild)
     end)
 
     local clear = CreateFrame("Button", nil, filterPopup, "UIPanelButtonTemplate")

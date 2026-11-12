@@ -358,7 +358,8 @@ end
 --- minLevel..maxLevel (an item with none counts as level 1, a recipe that makes no item too), its
 --- skill within minSkill..maxSkill (any of them nil: no limit), the item's slot in `query.slots` and
 --- its armor type in `query.armor` (sets; nil: any), not unvouched when `query.vouchedOnly` (no
---- sources companion lists it), and, when `query.include` is given, that it says yes.
+--- sources companion lists it), known by `query.known` when given (Core.guildRecipes: someone in
+--- your guild can craft it), and, when `query.include` is given, that it says yes.
 function Core.matches(recipe, query)
     local level = math.max(recipe.level or 0, 1)
     if query.minLevel and level < query.minLevel then return false end
@@ -371,6 +372,7 @@ function Core.matches(recipe, query)
         return false
     end
     if query.vouchedOnly and recipe.vouched == false then return false end
+    if query.known and not Core.knows(query.known[recipe.profession], recipe) then return false end
     if query.include and not query.include(recipe) then return false end
     return hasAll(recipe.search, query.terms or {})
 end
@@ -380,6 +382,7 @@ end
 function Core.isQuery(query)
     return #(query.terms or {}) > 0 or query.minLevel ~= nil or query.maxLevel ~= nil
         or query.minSkill ~= nil or query.maxSkill ~= nil or query.slots ~= nil or query.armor ~= nil
+        or query.known ~= nil
 end
 
 --- How many of `recipes` each profession has: { [profession] = n }.
@@ -552,6 +555,25 @@ function Core.crafters(db, recipe, you)
         return (a.realm or "") < (b.realm or "")
     end)
     return found
+end
+
+--- What the characters in `guild` know, from GuildAssistant Professions' saved data: this account's
+--- there and the guildmates' it heard from (not those seen through a link: who knows their guild).
+--- By profession, as Core.knows reads one: { [profession] = { recipes = { ["spell:<id>"] = true } } }.
+--- Empty without the data.
+function Core.guildRecipes(db, guild)
+    local known = {}
+    for _, character in pairs(db and db.characters or {}) do
+        if character.guild == guild and (character.source == "own" or character.source == "guild") then
+            for name, profession in pairs(character.professions or {}) do
+                known[name] = known[name] or { recipes = {} }
+                for key, has in pairs(profession.recipes or {}) do
+                    if has then known[name].recipes[key] = true end
+                end
+            end
+        end
+    end
+    return known
 end
 
 --- How many times the recipe can be made from what you carry (`countOf(itemId)`), and the reagents

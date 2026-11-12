@@ -325,6 +325,39 @@ it("finds who knows a recipe: you first, then your alts, the guild, links", func
     eq(#Core.crafters(nil, breastplate, "Luna-RP"), 0, "no saved data, nobody")
 end)
 
+it("knows what a guild can craft: its characters on this account and the guildmates heard from", function()
+    local db = { characters = {
+        ["Luna-RP"] = { name = "Luna", source = "own", guild = "Order",
+            professions = { Blacksmithing = { recipes = { ["spell:2662"] = true } } } },
+        ["Ana-RP"] = { name = "Ana", source = "guild", guild = "Order",
+            professions = { Blacksmithing = { recipes = { ["spell:2667"] = true } }, Cooking = { recipes = { ["item:1"] = true } } } },
+        ["Bo-RP"] = { name = "Bo", source = "own", -- an alt in no guild
+            professions = { Blacksmithing = { recipes = { ["spell:3503"] = true } } } },
+        ["Zed-RP"] = { name = "Zed", source = "link", guild = "Order",
+            professions = { Blacksmithing = { recipes = { ["spell:9972"] = true } } } },
+        ["Cid-RP"] = { name = "Cid", source = "guild", guild = "Other",
+            professions = { Blacksmithing = { recipes = { ["spell:10003"] = true } } } },
+    } }
+    local known = Core.guildRecipes(db, "Order")
+    local keys = {}
+    for key in pairs(known.Blacksmithing.recipes) do keys[#keys + 1] = key end
+    table.sort(keys)
+    eq(table.concat(keys, ", "), "spell:2662, spell:2667")
+    eq(known.Cooking.recipes["item:1"], true)
+    eq(next(Core.guildRecipes(nil, "Order")), nil, "no saved data, nothing")
+
+    local recipes = Core.load(profession("Blacksmithing")).recipes
+    local function names(query)
+        local out = {}
+        for _, recipe in ipairs(Core.search({ { recipes = recipes } }, query)) do out[#out + 1] = recipe.name end
+        return table.concat(out, ", ")
+    end
+    eq(names({ terms = {}, known = known }), "Copper Chain Pants, Runed Copper Breastplate")
+    eq(names({ terms = { "breastplate" }, known = known }), "Runed Copper Breastplate")
+    eq(names({ terms = {}, known = {} }), "", "a guild that knows nothing")
+    eq(Core.isQuery({ terms = {}, known = known }), true, "it narrows the list")
+end)
+
 it("counts how many times a recipe can be made from your bags, and what's short", function()
     local bar, stone = { id = 2840 }, { id = 2836 }
     local recipe = { reagents = { { item = bar, count = 12 }, { item = stone, count = 2 } } }

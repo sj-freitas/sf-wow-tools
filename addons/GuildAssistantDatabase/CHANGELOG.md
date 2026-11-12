@@ -1,5 +1,11 @@
 # GuildAssistant Database
 
+## 1.5.0
+
+- **Only guild**, in the Filter while you're in a guild: only the recipes someone in your guild can
+  craft (your characters there, and guildmates who use GuildAssistant Professions). It works with
+  the rest: a search, Not known yet (what you don't know but a guildmate does), armor and slots.
+
 ## 1.4.10
 
 - **`/gadb *`** opens the window with the search cleared (`/gadb` keeps your last search, as before).

@@ -50,6 +50,12 @@ local PROFESSION_HEADERS = {
     ["Secondary Skills"] = true,
 }
 
+--- The guild this character is in ("The Order"), or nil.
+function Game.guildName()
+    if not (IsInGuild and IsInGuild()) then return nil end
+    return GetGuildInfo and GetGuildInfo("player") or nil
+end
+
 --- This character's professions: { [name] = { rank, max } }, read from the game.
 function Game.liveProfessions()
     local skills = {}

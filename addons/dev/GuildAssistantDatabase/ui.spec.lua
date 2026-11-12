@@ -148,7 +148,8 @@ end
 -- `options`: professionsAddon (GuildAssistant Professions installed), timers (C_Timer: run with
 -- runTimers()), knownSpells (what IsPlayerSpell says yes to), saved (GuildAssistantDatabaseDB as
 -- the game loaded it), noSources (no sources companion installed; by default the test one is,
--- Sources.fixture.lua), itemNames (what GetItemInfo knows beyond Copper Chain Pants).
+-- Sources.fixture.lua), itemNames (what GetItemInfo knows beyond Copper Chain Pants), guild (the
+-- guild this character is in; none by default).
 local function loadAddon(options)
     options = options or {}
     chat, linked, timers, created, dressed, told, opened, bags = {}, {}, {}, {}, {}, {}, {}, {}
@@ -177,6 +178,10 @@ local function loadAddon(options)
     end })
     _G.C_Timer = options.timers and { After = function(_, fn) timers[#timers + 1] = fn end } or nil
     _G.UnitName = function() return "Luna" end
+    _G.IsInGuild = function() return options.guild ~= nil end
+    _G.GetGuildInfo = function(unit)
+        if unit == "player" and options.guild then return options.guild, "Member", 3 end
+    end
     _G.GetRealmName = function() return "Test Realm" end
     _G.GetProfessions = function() return 1, nil, 3 end
     _G.GetProfessionInfo = function(index)
@@ -555,6 +560,80 @@ it("filters by armor type and slot from the Filter panel", function()
     parts.filterPopup.done:Click()
     eq(parts.filterPopup:IsShown(), false, "Done closes it")
     eq(parts.filterButton:GetText(), "Filter (2)", "and keeps the filter")
+end)
+
+-- Luna and Ana in Test Guild, as GuildAssistant Professions saves them; Di, Luna's alt there, knows
+-- the wand by the item it makes; Bo (a link) and Cy (another guild) don't count.
+local function guildDB()
+    local db = GuildAssistantProfessionsDB
+    db.characters["Luna-Test Realm"].guild = "Test Guild"
+    db.characters["Ana-Test Realm"].guild = "Test Guild"
+    db.characters["Ana-Test Realm"].professions.Blacksmithing.recipes["spell:9972"] = true
+    db.characters["Di-Test Realm"] = { name = "Di", realm = "Test Realm", source = "own", guild = "Test Guild",
+        professions = { Enchanting = { recipes = { ["item:11288"] = true } } } }
+    db.characters["Bo-Test Realm"] = { name = "Bo", realm = "Test Realm", source = "link",
+        professions = { Blacksmithing = { recipes = { ["spell:3503"] = true } } } }
+    db.characters["Cy-Test Realm"] = { name = "Cy", realm = "Test Realm", source = "guild", guild = "Other Guild",
+        professions = { Enchanting = { recipes = { ["spell:7418"] = true } } } }
+end
+
+it("lists only what your guild can craft with Only guild in the Filter, while you're in one", function()
+    local ns = loadAddon({ professionsAddon = true, guild = "Test Guild" })
+    guildDB()
+    SlashCmdList.GADB("")
+    local parts = ns.UI.parts()
+    parts.filterButton:Click()
+    local only = parts.filterChecks["Only guild"]
+    eq(only:IsShown(), true, "in a guild")
+    eq(parts.filterPopup.guildTitle:GetText(), "Who can craft")
+    only:Fire("OnEnter")
+    eq(GameTooltip.lines[1], "Only guild")
+    eq(GameTooltip.lines[2], "Recipes someone in Test Guild can craft.")
+    only:Click()
+    eq(shownRows(ns), "Copper Chain Pants, Runed Copper Breastplate, Greater Magic Wand, Ornate Mithril Breastplate")
+    eq(parts.filterButton:GetText(), "Filter (1)")
+    eq(sidebar(ns), "All professions " .. GOLD .. "4|r | Blacksmithing " .. GOLD .. "3|r | Enchanting " .. GOLD .. "1|r", "it counts")
+    -- With the rest: plate, then only your professions' recipes you don't know.
+    parts.filterChecks.Plate:Click()
+    eq(shownRows(ns), "Runed Copper Breastplate, Ornate Mithril Breastplate")
+    parts.filterChecks.Plate:Click()
+    parts.unknownCheck:Click()
+    eq(shownRows(ns), "Ornate Mithril Breastplate", "Ana knows it, Luna doesn't")
+    parts.unknownCheck:Click()
+    -- Clear unticks it, and so does Reset.
+    parts.filterPopup.clear:Click()
+    eq(only:GetChecked(), false)
+    eq(parts.filterButton:GetText(), "Filter")
+    eq(#parts.state.results, 8)
+    only:Click()
+    parts.resetButton:Click()
+    eq(only:GetChecked(), false, "Reset")
+    eq(#parts.state.results, 8)
+end)
+
+it("doesn't offer Only guild outside a guild, and says why the guild has none", function()
+    local ns = loadAddon({ professionsAddon = true })
+    SlashCmdList.GADB("")
+    local parts = ns.UI.parts()
+    parts.filterButton:Click()
+    eq(parts.filterChecks["Only guild"]:IsShown(), false, "not in a guild")
+    eq(parts.filterPopup.guildTitle:IsShown(), false)
+    -- In a guild no one shared anything with: nothing, and why.
+    ns = loadAddon({ professionsAddon = true, guild = "Test Guild" })
+    SlashCmdList.GADB("")
+    parts = ns.UI.parts()
+    parts.filterButton:Click()
+    parts.filterChecks["Only guild"]:Click()
+    eq(shownRows(ns), "")
+    has(parts.statusText:GetText(), "Only guildmates who use GuildAssistant Professions are known.")
+    -- Without GuildAssistant Professions.
+    ns = loadAddon({ guild = "Test Guild" })
+    SlashCmdList.GADB("")
+    parts = ns.UI.parts()
+    parts.filterButton:Click()
+    parts.filterChecks["Only guild"]:Click()
+    eq(shownRows(ns), "")
+    has(parts.statusText:GetText(), "Install GuildAssistant Professions to know what your guild can craft.")
 end)
 
 it("Reset clears the Filter too, and closes its panel", function()

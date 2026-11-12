@@ -24,16 +24,19 @@ search cleared. Drag the clip to move it around the minimap;
   back.
 - **Filter**: tick armor types (Cloth, Leather, Mail, Plate) and slots (Head, Chest, One-Hand,
   Ranged…). Any of the armor types ticked, and any of the slots; both when both have some. The
-  button says how many are ticked. Under a line, **Show unknown recipes** also lists the recipes
-  no source knows (unreleased, removed, or not found yet): unticked at first, and once ticked it
-  stays ticked (saved for the account; Clear and Reset leave it).
+  button says how many are ticked. While you're in a guild, **Only guild** (under the armor types)
+  lists only the recipes someone in your guild can craft: your characters there, and the
+  guildmates who use GuildAssistant Professions (it shares what they know). Under a line, **Show
+  unknown recipes** also lists the recipes no source knows (unreleased, removed, or not found
+  yet): unticked at first, and once ticked it stays ticked (saved for the account; Clear and Reset
+  leave it).
 - While searching (words, limits or a filter), each profession on the left says in gold how many
   of its recipes match, and nothing when none do; without a search, how many it has.
 - **Not known yet**: only your professions' recipes this character doesn't know yet. The skill
   shows green when you can learn it now, red when not yet. What you know comes from
   GuildAssistant Professions (open each profession's window once so it records it); without it,
   from what the game says, which can miss some.
-- **Reset** clears it all, the Filter too.
+- **Reset** clears it all, the Filter too (Only guild as well).
 - On the left, a profession shows only its recipes (with Not known yet, only yours are listed,
   with your skill).
 - Click a recipe for its details: the item (its slot, type and stats), how many it makes, the
