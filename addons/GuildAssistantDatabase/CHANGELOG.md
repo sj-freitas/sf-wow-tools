@@ -1,18 +1,12 @@
 # GuildAssistant Database
 
-## 1.5.2
-
-- Shift-click to search works on WoW Forever: 1.5.1 listened where older clients put a shift-click,
-  not where this one does. Shift-clicking a stack in your bags no longer opens the split box while
-  the window takes it.
-- Shift-click links in the chat the same way the game does on this client.
-
 ## 1.5.1
 
 - **Shift-click an item** anywhere while the window is open (your bags, a link in the chat, a
-  reagent in the details) with the chat box closed: it's searched for. With the chat box open, it's
-  linked in the chat as before.
+  reagent in the details) with the chat box closed: it's searched for, and a stack's split box
+  doesn't open. With the chat box open, it's linked in the chat as before.
 - The search also finds a recipe by its plans or pattern (`plans: runed copper breastplate`).
+- Shift-click links in the chat the same way the game does on WoW Forever's client.
 
 ## 1.5.0
 

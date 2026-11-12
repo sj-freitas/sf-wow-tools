@@ -34,6 +34,10 @@ CurseForge project and its id is in the `.toc`.
    - **minor**: something new (a feature, a command, a new export field read);
    - **patch**: a fix or polish, nothing new to learn.
    One bump per change (task), even if several files changed; don't bump twice in one task.
+   **Only bump past a released version**: one uploaded to CurseForge. While the current version
+   hasn't been uploaded yet (a fix to it, or more for it, before Sérgio says to upload), keep its
+   number and add to its CHANGELOG section instead: a fix to something players never got isn't a
+   change for them.
 
 3. **CHANGELOG.md**: a section `## <new version>` at the top, a few short bullets in plain
    language (what players notice). The upload sends this section as the release notes.
