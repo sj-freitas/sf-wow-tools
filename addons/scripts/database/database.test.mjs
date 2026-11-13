@@ -11,9 +11,10 @@ import { root } from '../addons.mjs';
 import { parseCsv } from './csv.mjs';
 import { buildDatabase, fetchTables, itemKind, itemStats, latestBuild, TABLES } from './gamedata.mjs';
 import { EMPTY_FOUND, fetchFound, toFoundLua } from './found.mjs';
-import { itemLine, longString, recipeLine, toLua } from './lua.mjs';
+import { itemLine, longString, recipeLine, toLua, toRecipesLua } from './lua.mjs';
 
 const FIXTURE_LUA = join(root, 'dev', 'GuildAssistantDatabase', 'Data.fixture.lua');
+const RECIPES_FIXTURE_LUA = join(root, 'dev', 'GuildAssistantProfessions', 'Recipes.fixture.lua');
 
 test('reads CSV as wago.tools writes it: quoted commas, doubled quotes, line breaks', () => {
   const rows = parseCsv('ID,Name,Note\r\n1,"A, B","say ""hi"""\n2,C,"two\nlines"\n');
@@ -90,6 +91,24 @@ test('writes lines the addon reads, with nothing in a field that would break the
   );
   assert.equal(longString('a'), '[[\na]]');
   assert.equal(longString('a]]b]=]'), '[==[\na]]b]=]]==]');
+});
+
+test("lists each profession's recipe ids for GuildAssistant Professions, in order, a line every 20", () => {
+  const database = {
+    version: 'forever', build: '1.2.3',
+    professions: [{ name: 'Mining', recipes: Array.from({ length: 22 }, (_, i) => ({ id: 100 - i })) }],
+  };
+  const lua = toRecipesLua(database);
+  assert.match(lua, /^-- GuildAssistant Professions: .*\(forever 1\.2\.3\)\./);
+  assert.match(lua, /ns\.Recipes = \{\n    version = "forever",\n    build = "1\.2\.3",/);
+  const ids = Array.from({ length: 22 }, (_, i) => 79 + i);
+  assert.ok(lua.includes(`["Mining"] = [[\n${ids.slice(0, 20).join(',')},\n${ids.slice(20).join(',')}]],`), lua);
+});
+
+test('Recipes.fixture.lua is what the fixture tables build (UPDATE_FIXTURES=1 rewrites it)', () => {
+  const lua = toRecipesLua(buildDatabase(tables, meta));
+  if (process.env.UPDATE_FIXTURES) writeFileSync(RECIPES_FIXTURE_LUA, lua);
+  assert.equal(readFileSync(RECIPES_FIXTURE_LUA, 'utf8'), lua);
 });
 
 test('Data.fixture.lua is what the fixture tables build (UPDATE_FIXTURES=1 rewrites it)', () => {

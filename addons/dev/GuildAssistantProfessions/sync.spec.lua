@@ -39,8 +39,8 @@ local function run(seconds)
 end
 
 --- A player logged in with the addon: `guild` nil for none; `last` a last name (WoW Forever's);
---- `saved` the saved data it logs in with.
-local function player(name, guild, last, saved)
+--- `saved` the saved data it logs in with; `setup(env)` changes its game before the addon loads.
+local function player(name, guild, last, saved, setup)
     local env = setmetatable({}, { __index = _G })
     env.GuildAssistantProfessionsDB = saved
     local me = { name = name, guild = guild, env = env, chat = {} }
@@ -77,9 +77,12 @@ local function player(name, guild, last, saved)
             end
         end,
     }
+    if setup then setup(env) end
     local ns = {}
-    for _, file in ipairs({ "Core", "Scan", "Sync", "Sources", "Main" }) do
-        local chunk = assert(loadfile("GuildAssistantProfessions/" .. file .. ".lua", "t", env))
+    for _, file in ipairs({ "Core", "Recipes", "Scan", "Sync", "Sources", "Main" }) do
+        local path = file == "Recipes" and "dev/GuildAssistantProfessions/Recipes.fixture.lua"
+            or "GuildAssistantProfessions/" .. file .. ".lua"
+        local chunk = assert(loadfile(path, "t", env))
         chunk("GuildAssistantProfessions", ns)
     end
     me.ns, me.online = ns, true
@@ -128,6 +131,30 @@ it("sends a character's professions to the guild, quietly", function()
     for _, line in ipairs(kael.chat) do
         assert(not line:find("Luna", 1, true), "nothing said in Kael's chat: " .. line)
     end
+end)
+
+it("sends what it records at login once, with its hello, and a recipe learned later on its own", function()
+    reset()
+    local kael = player("Kael", "Relic Hunters")
+    run(60)
+    -- Luna on WoW Forever: her recipes are recorded at login without a window (IsPlayerSpell).
+    local known = { [2660] = true, [2667] = true }
+    local luna = player("Luna", "Relic Hunters", nil, nil, function(env)
+        env.GetNumSkillLines, env.GetSkillLineInfo = nil, nil
+        env.GetProfessions = function() return 1 end
+        env.GetProfessionInfo = function() return "Blacksmithing", "icon", 120, 150 end
+        env.C_TradeSkillUI = { GetAllRecipeIDs = function() return {} end }
+        env.IsPlayerSpell = function(id) return known[id] == true end
+    end)
+    luna.frame.onEvent(luna.frame, "PLAYER_LOGIN")
+    run(60)
+    eq(knows(kael, "Luna", "Blacksmithing", 2667), true, "Kael has what Luna's login recorded")
+    eq(sentBy("Luna", "Luna"), 1, "sent once: with the hello, not before it too")
+    known[3503] = true
+    luna.frame.onEvent(luna.frame, "NEW_RECIPE_LEARNED", 3503)
+    run(30)
+    eq(knows(kael, "Luna", "Blacksmithing", 3503), true, "and the recipe she learned")
+    eq(sentBy("Luna", "Luna"), 2, "on its own")
 end)
 
 it("catches up a guildmate who logs in later, through anyone who has it", function()

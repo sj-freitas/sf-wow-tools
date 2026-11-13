@@ -1,8 +1,10 @@
 # GuildAssistant Database's recipe data (addons/GuildAssistantDatabase/Data.lua), from the game's own
 # data tables for WoW Forever (wago.tools), and what players found of how recipes are obtained
-# (Found.lua, gathered by Guild Assistant from their GuildAssistant Professions). Every Monday, and by
-# hand (Actions, "Database", "Run workflow"): builds both; when either changed, bumps the addon's patch
-# version (with a CHANGELOG line), runs the addons' tests, and opens a pull request with it. Nothing
+# (Found.lua, gathered by Guild Assistant from their GuildAssistant Professions), and GuildAssistant
+# Professions' list of every recipe's id (addons/GuildAssistantProfessions/Recipes.lua, from the same
+# tables). Every Monday, and by hand (Actions, "Database", "Run workflow"): builds them; when any
+# changed, bumps that addon's patch version (with a CHANGELOG line), runs the addons' tests, and opens
+# a pull request with it. Nothing
 # changed: no pull request. Publishing the new version stays a person's step (npm run
 # publish:curseforge). Needs "Allow GitHub Actions to create and approve pull requests" on (repo
 # Settings, Actions, General).
@@ -46,6 +48,9 @@ jobs:
             addons/GuildAssistantDatabase/Found.lua
             addons/GuildAssistantDatabase/GuildAssistantDatabase.toc
             addons/GuildAssistantDatabase/CHANGELOG.md
+            addons/GuildAssistantProfessions/Recipes.lua
+            addons/GuildAssistantProfessions/GuildAssistantProfessions.toc
+            addons/GuildAssistantProfessions/CHANGELOG.md
           commit-message: 'GuildAssistant Database ${{ steps.data.outputs.version }}: recipe data (game build ${{ steps.data.outputs.build }}) and what players found'
           title: 'GuildAssistant Database ${{ steps.data.outputs.version }}: recipe data and what players found'
           body: |
@@ -53,4 +58,6 @@ jobs:
 
             **Review `Found.lua`'s changes before merging**: they come from players' files (vendors, trainers, zones as their game named them).
 
-            To ship it: merge, then from `addons/`: `npm run publish:curseforge -- GuildAssistantDatabase`.
+            When the game's build changed, GuildAssistant Professions' `Recipes.lua` was rebuilt too, with its own patch version.
+
+            To ship it: merge, then from `addons/`: `npm run publish:curseforge -- GuildAssistantDatabase` (and `-- GuildAssistantProfessions` when it changed).

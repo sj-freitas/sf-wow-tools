@@ -8,7 +8,7 @@ GuildAssistantDatabase. `npm install` once, then:
 | `npm test`                                | Runs the Lua tests (`dev/**/*.spec.lua`) and the scripts' (`scripts/**/*.test.mjs`) |
 | `npm run package`                         | Zips each addon to `dist/<Name>-<version>.zip`            |
 | `npm run publish:curseforge -- Raidsort`  | Packages and uploads to CurseForge (`--beta`, `--alpha`, `--dry-run`) |
-| `npm run database`                        | Builds GuildAssistantDatabase's `Data.lua` from the game's data tables (`--bump`, `--build`) |
+| `npm run database`                        | Builds GuildAssistantDatabase's `Data.lua` (and GuildAssistantProfessions' `Recipes.lua`) from the game's data tables (`--bump`, `--build`) |
 
 ## Trying an addon in game
 
@@ -73,12 +73,14 @@ them (from GuildAssistantProfessions' saved data). Its CurseForge project is
 
 `GuildAssistantDatabase/Data.lua` is built from the game's own data tables (its DB2 files) for WoW
 Forever, as [wago.tools](https://wago.tools) exports them as CSV for each build (`wowf`), never
-edited by hand:
+edited by hand. So is `GuildAssistantProfessions/Recipes.lua`, every recipe's spell id per
+profession, which that addon asks the game about to record what a character knows without its
+window:
 
 ```sh
 npm run database                         # the latest build; tables kept in addons/.cache
 npm run database -- --build 1.60.1.70888 # a given build
-npm run database -- --bump               # and, if Data.lua changed, a patch version and CHANGELOG line
+npm run database -- --bump               # and, for each addon whose files changed, a patch version and CHANGELOG line
 ```
 
 It says what it built per profession, leaves `Data.lua` alone when nothing changed but the date,

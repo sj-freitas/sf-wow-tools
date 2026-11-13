@@ -75,6 +75,15 @@ it("only ever adds recipes, and counts the new ones", function()
     eq(count, 3)
 end)
 
+it("picks the recipes a character knows from a profession's list of ids", function()
+    local known = { [2660] = true, [2667] = true }
+    local recipes = Core.knownRecipes("2660,2662,\n2667,3503", function(id) return known[id] == true end)
+    eq(#recipes, 2)
+    eq(recipes[1].kind, "spell"); eq(recipes[1].id, 2660)
+    eq(recipes[2].id, 2667)
+    eq(#Core.knownRecipes(nil, function() return true end), 0, "no list, none")
+end)
+
 it("replaces a profession's recipes with a full list, saying whether it changed", function()
     local luna = Core.character(Core.newDB(), "Luna", "Test Realm", "MAGE")
     -- Recorded wrongly before: Cooking's 2538 under Blacksmithing.

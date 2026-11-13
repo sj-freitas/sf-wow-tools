@@ -143,13 +143,15 @@ function Sync.sourceChanged(record)
     if guild() then sendSourceRecord(record) end
 end
 
---- This character's professions changed: send them to the guild (once things settle).
+--- This character's professions changed: send them to the guild (once things settle). While the
+--- login hello is still to come they wait for it: it sends this character too (what was recorded at
+--- login, with it).
 local ownPending = 0
 function Sync.ownChanged()
     ownPending = ownPending + 1
     local this = ownPending
     after(OWN_DELAY, function()
-        if this ~= ownPending or not ns.Scan then return end
+        if this ~= ownPending or not ns.Scan or Sync.helloPending then return end
         local character = ns.Scan.current()
         if guild() then sendCharacter(character.name .. "-" .. character.realm) end
     end)
@@ -267,8 +269,16 @@ end
 function Sync.start()
     local register = (C_ChatInfo and C_ChatInfo.RegisterAddonMessagePrefix) or RegisterAddonMessagePrefix
     if register then register(PREFIX) end
+    Sync.helloPending = true
     after(HELLO_DELAY, function()
-        if not Sync.hello() then after(HELLO_DELAY, Sync.hello) end
+        if Sync.hello() then
+            Sync.helloPending = false
+        else
+            after(HELLO_DELAY, function()
+                Sync.helloPending = false
+                Sync.hello()
+            end)
+        end
     end)
 end
 

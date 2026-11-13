@@ -11,7 +11,9 @@ Made for WoW Forever; works on Classic Era too.
 1. Install the addon ([CurseForge](https://www.curseforge.com/wow/addons/guild-assistant-professions))
    and log in (or `/reload`). The chat says "GuildAssistant Professions:
    Loaded." when it's on.
-2. **Open each profession's window once** (and Enchanting's): the game only shows an addon the
+2. **On WoW Forever, log in**: your characters' recipes are recorded as you log in, and as you
+   learn new ones, without opening any window (the chat says what it recorded). **On Classic Era,
+   open each profession's window once** (and Enchanting's): the game only shows an addon the
    recipes while that window is open. Do this on every character you want to share. It is recorded
    by itself; there is nothing to export.
 3. Type `/ga-prof save` (the chat suggests it after recording): it writes what the addon recorded
@@ -81,10 +83,14 @@ What you find reaches everyone:
 ## What it saves
 
 Per account (`GuildAssistantProfessionsDB`): each character you log in with, its professions and
-skill (read at login), and the recipes seen in its profession windows, as WoW spell ids (the
-crafted item's id when the game gives no spell). On WoW Forever a profession's window lists all its
-recipes, so what it shows replaces what was saved. On Classic Era a window with a filter on shows
-fewer, so recipes are only added there. Each character keeps when something new was last recorded
+skill (read at login), and its recipes, as WoW spell ids (the crafted item's id when the game gives
+no spell). On WoW Forever they're recorded at login and whenever a recipe is learned, no window
+needed: each recipe the game's tables have of the character's professions (`Recipes.lua`, built
+with GuildAssistant Database's data, `npm run database`) is asked of the game (`IsPlayerSpell`,
+which answers with the window closed), and the known ones are added. A profession's window there
+lists all its recipes, so what it shows replaces what was saved (and catches one the tables lack).
+On Classic Era recipes come from the windows only, and a window with a filter on shows fewer, so
+they're only added there. Each character keeps when something new was last recorded
 for it, and each profession when it was learned (first seen; again after unlearning it) and last
 changed, by the game server's clock.
 

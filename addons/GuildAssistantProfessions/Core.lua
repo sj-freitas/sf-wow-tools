@@ -122,6 +122,17 @@ function Core.addRecipes(character, professionName, rank, max, recipes, now)
     return added
 end
 
+--- The recipes of `ids` (a profession's list in Recipes.lua: spell ids, in any separators) that
+--- `knows(id)` says this character has, as a window's scan gives them: { { kind = "spell", id } }.
+function Core.knownRecipes(ids, knows)
+    local recipes = {}
+    for text in (ids or ""):gmatch("%d+") do
+        local id = tonumber(text)
+        if knows(id) then recipes[#recipes + 1] = { kind = "spell", id = id } end
+    end
+    return recipes
+end
+
 --- Replaces the profession's recipes with `recipes`: for a window that lists every recipe whatever
 --- its filters (the modern API), so wrong ones recorded before go too. Returns whether anything
 --- changed; `now` (time()) marks the character updated when it did.

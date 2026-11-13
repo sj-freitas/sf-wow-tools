@@ -1,5 +1,12 @@
 # GuildAssistant Professions
 
+## 1.4.0
+
+- **WoW Forever: no more opening each profession's window.** Your recipes are recorded as you log
+  in, and when you learn one, from what the game says your character knows; the chat says what it
+  recorded. They're shared with your guild as before. (Classic Era still needs the windows.)
+- At login, your character goes to the guild once, with what was just recorded.
+
 ## 1.3.0
 
 - What you find of how recipes are obtained (vendors, trainers, loot, quest rewards) is shared with

@@ -1,5 +1,6 @@
 // The database job: builds GuildAssistantDatabase's data from the game's own data tables, as
-// wago.tools exports them for the latest build of WoW Forever (Data.lua), and what players found of
+// wago.tools exports them for the latest build of WoW Forever (Data.lua; and GuildAssistant
+// Professions' list of every recipe's id, Recipes.lua, from the same tables), and what players found of
 // how recipes are obtained, as Guild Assistant gathered it from their GuildAssistant Professions
 // (Found.lua, found.mjs). Plain downloads, no browser needed: the weekly GitHub Action runs it
 // (.github/workflows/database.yml) and opens a pull request when either changed.
@@ -7,6 +8,7 @@
 //   npm run database                   the latest build (tables kept in addons/.cache)
 //   npm run database -- --build 1.60.1.70888
 //   npm run database -- --bump         when anything changed: a patch version and a CHANGELOG line
+//                                      (each addon whose files changed)
 //
 // Says what it built per profession, and how much was found. What was known before (trainers,
 // drops, vendors, quests) is the seed, Seed.lua: compiled once, not rebuilt here.
@@ -15,12 +17,14 @@ import { join, relative } from 'node:path';
 import { root } from '../addons.mjs';
 import { EMPTY_FOUND, fetchFound, GUILD_ASSISTANT, toFoundLua } from './found.mjs';
 import { buildDatabase, fetchTables, latestBuild, PRODUCTS } from './gamedata.mjs';
-import { toLua } from './lua.mjs';
+import { toLua, toRecipesLua } from './lua.mjs';
 import { DEFAULT_VERSION } from './professions.mjs';
 
 const ADDON = join(root, 'GuildAssistantDatabase');
 const DATA = join(ADDON, 'Data.lua');
 const FOUND = join(ADDON, 'Found.lua');
+const PROFESSIONS_ADDON = join(root, 'GuildAssistantProfessions');
+const RECIPES = join(PROFESSIONS_ADDON, 'Recipes.lua');
 const args = process.argv.slice(2);
 const option = (name) => {
   const at = args.indexOf(name);
@@ -54,6 +58,8 @@ for (const profession of database.professions) {
 }
 for (const warning of database.warnings) console.log(`  ${warning}`);
 console.log(dataChanged ? `Wrote ${relative(root, DATA)} (${Math.round(statSync(DATA).size / 1024)} KB).` : `${relative(root, DATA)} is up to date.`);
+const recipesChanged = update(RECIPES, toRecipesLua(database));
+console.log(recipesChanged ? `Wrote ${relative(root, RECIPES)} (${Math.round(statSync(RECIPES).size / 1024)} KB).` : `${relative(root, RECIPES)} is up to date.`);
 
 // What players found. Guild Assistant out of reach: Found.lua stays as it is.
 let foundChanged = false;
@@ -69,19 +75,26 @@ try {
   console.log(`Found by players: not fetched (${error.message}); ${relative(root, FOUND)} left as it is.`);
 }
 
-if ((dataChanged || foundChanged) && args.includes('--bump')) {
-  // A new patch version, with a CHANGELOG line saying what changed.
-  const tocPath = join(ADDON, 'GuildAssistantDatabase.toc');
+/** A new patch version of the addon in `dir`, with CHANGELOG lines saying what changed. */
+function bump(dir, lines) {
+  const name = dir.split(/[\\/]/).pop();
+  const tocPath = join(dir, `${name}.toc`);
   const toc = readFileSync(tocPath, 'utf8');
   const [, major, minor, patch] = toc.match(/^## Version: (\d+)\.(\d+)\.(\d+)/m);
   const next = `${major}.${minor}.${Number(patch) + 1}`;
   writeFileSync(tocPath, toc.replace(/^## Version: .*$/m, `## Version: ${next}`));
-  const lines = [
-    ...(dataChanged ? [`- Recipe data from the game's build ${build}.`] : []),
-    ...(foundChanged ? ['- What players found of how recipes are obtained, up to date.'] : []),
-  ];
-  const changelogPath = join(ADDON, 'CHANGELOG.md');
+  const changelogPath = join(dir, 'CHANGELOG.md');
   const changelog = readFileSync(changelogPath, 'utf8');
   writeFileSync(changelogPath, changelog.replace(/^(# .*\n\n)/, `$1## ${next}\n\n${lines.join('\n')}\n\n`));
-  console.log(`Version ${next}.`);
+  console.log(`${name} ${next}.`);
+}
+
+if (args.includes('--bump')) {
+  if (dataChanged || foundChanged) {
+    bump(ADDON, [
+      ...(dataChanged ? [`- Recipe data from the game's build ${build}.`] : []),
+      ...(foundChanged ? ['- What players found of how recipes are obtained, up to date.'] : []),
+    ]);
+  }
+  if (recipesChanged) bump(PROFESSIONS_ADDON, [`- The recipes it checks at login, from the game's build ${build}.`]);
 }

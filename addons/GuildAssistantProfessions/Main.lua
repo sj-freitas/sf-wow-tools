@@ -102,7 +102,11 @@ local function runCommand(message)
         Scan.say("commands:")
         print("  /ga-prof save - write what is recorded to the file (reloads the screen)")
         print("  /ga-prof status - what is saved, when it was last updated, and where the file is")
-        print("  Open each profession's window (yours, or a profession link) and it is recorded.")
+        if Scan.knowsWithoutWindow() then
+            print("  Your recipes are recorded as you log in and learn them; open someone's profession link to record theirs.")
+        else
+            print("  Open each profession's window (yours, or a profession link) and it is recorded.")
+        end
     end
 end
 
@@ -124,6 +128,21 @@ local function scanSoon()
     end)
 end
 
+-- What this character knows, asked of the game (Scan.knownRecipes, no window needed): a moment
+-- after the last of a burst of events (logging in, skill-ups, a recipe learned), once.
+local knownPending = 0
+local function checkKnown()
+    if Scan.knownRecipes() then ownChanged() end
+end
+local function checkKnownSoon()
+    if not (C_Timer and C_Timer.After) then return checkKnown() end
+    knownPending = knownPending + 1
+    local this = knownPending
+    C_Timer.After(2, function()
+        if this == knownPending then safely(checkKnown) end
+    end)
+end
+
 local function onEvent(self, event, arg, ...)
     if event == "ADDON_LOADED" and arg == addonName then
         self:UnregisterEvent("ADDON_LOADED")
@@ -137,7 +156,11 @@ local function onEvent(self, event, arg, ...)
         }
         refreshExport()
         Sync.start()
-        Scan.say("Loaded. Open your professions' windows (or someone's profession link) to record them.")
+        if Scan.knowsWithoutWindow() then
+            Scan.say("Loaded. Your recipes are recorded as you log in, no window needed (open someone's profession link to record theirs).")
+        else
+            Scan.say("Loaded. Open your professions' windows (or someone's profession link) to record them.")
+        end
     elseif not ns.db then
         return
     elseif event == "PLAYER_LOGOUT" then
@@ -146,6 +169,9 @@ local function onEvent(self, event, arg, ...)
         Sync.onMessage(arg, ...)
     elseif event == "PLAYER_LOGIN" or event == "SKILL_LINES_CHANGED" then
         if Scan.skills() then ownChanged() end
+        checkKnownSoon()
+    elseif event == "NEW_RECIPE_LEARNED" or event == "LEARNED_SPELL_IN_TAB" or event == "SPELLS_CHANGED" then
+        checkKnownSoon()
     elseif event:find("^TRADE_SKILL_") then
         -- Several fire while a window opens or switches profession: read once it has settled.
         scanSoon()
@@ -169,6 +195,8 @@ events:SetScript("OnEvent", function(...) safely(onEvent, ...) end)
 -- Era has TRADE_SKILL_UPDATE and the CRAFT_ ones; the modern client the TRADE_SKILL_LIST_ ones.
 events.missing = {}
 for _, event in ipairs({ "ADDON_LOADED", "PLAYER_LOGIN", "PLAYER_LOGOUT", "SKILL_LINES_CHANGED", "CHAT_MSG_ADDON",
+    -- A recipe learned (the modern client's event, Classic Era's, and either's spells changing).
+    "NEW_RECIPE_LEARNED", "LEARNED_SPELL_IN_TAB", "SPELLS_CHANGED",
     "TRADE_SKILL_SHOW", "TRADE_SKILL_UPDATE", "TRADE_SKILL_LIST_UPDATE",
     "TRADE_SKILL_DATA_SOURCE_CHANGED", "CRAFT_SHOW", "CRAFT_UPDATE",
     -- How recipes are obtained, for GuildAssistant Database (Sources.lua).

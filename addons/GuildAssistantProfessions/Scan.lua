@@ -69,7 +69,7 @@ end
 function Scan.client()
     local found = {}
     for _, name in ipairs({ "GetNumSkillLines", "GetProfessions", "GetProfessionInfo",
-        "GetNumTradeSkills", "GetNumCrafts" }) do
+        "GetNumTradeSkills", "GetNumCrafts", "IsPlayerSpell" }) do
         if _G[name] then found[#found + 1] = name end
     end
     for _, name in ipairs({ "GetAllRecipeIDs", "GetRecipeInfo", "GetBaseProfessionInfo",
@@ -119,6 +119,39 @@ function Scan.skills()
         Scan.say("%s was unlearned: dropped from what is saved. Type /ga-prof save to write it to the file (it reloads the screen).", name)
     end
     return changed
+end
+
+--- Whether this client tells which recipes a character knows without their windows open: WoW
+--- Forever's does (its window lists recipes by spell, as Recipes.lua does, and IsPlayerSpell answers
+--- for a recipe's spell with the window closed: tried against what the window recorded).
+function Scan.knowsWithoutWindow()
+    return ns.Recipes ~= nil and IsPlayerSpell ~= nil and C_TradeSkillUI ~= nil
+        and C_TradeSkillUI.GetAllRecipeIDs ~= nil
+end
+
+--- Records the recipes this character knows of each of its professions, no window needed: each
+--- recipe the game's tables have of it (Recipes.lua), asked of the game (IsPlayerSpell). Only ever
+--- added, as a window's are (one the tables lack still comes from its window). Says what was new;
+--- returns whether anything was.
+function Scan.knownRecipes()
+    if not Scan.knowsWithoutWindow() then return false end
+    local character = Scan.current()
+    local names = {}
+    for name in pairs(character.professions) do names[#names + 1] = name end
+    table.sort(names)
+    local news = {}
+    for _, name in ipairs(names) do
+        local ids = ns.Recipes.professions[name]
+        if ids then
+            local recipes = Core.knownRecipes(ids, function(id) return IsPlayerSpell(id) == true end)
+            local added = #recipes > 0 and Core.addRecipes(character, name, nil, nil, recipes, ns.now()) or 0
+            if added > 0 then news[#news + 1] = ("%s (%d new)"):format(name, added) end
+        end
+    end
+    if #news == 0 then return false end
+    Scan.say("recorded your recipes without opening their windows: %s. Type /ga-prof save to write them to the file (it reloads the screen).",
+        table.concat(news, ", "))
+    return true
 end
 
 local announced = {}
