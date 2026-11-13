@@ -131,27 +131,22 @@ end
 
 --- Records the recipes this character knows of each of its professions, no window needed: each
 --- recipe the game's tables have of it (Recipes.lua), asked of the game (IsPlayerSpell). Only ever
---- added, as a window's are (one the tables lack still comes from its window). Says what was new;
---- returns whether anything was.
+--- added, as a window's are (one the tables lack still comes from its window). Quietly: it happens
+--- at every login (/ga-prof status shows what is recorded). Returns whether anything was new.
 function Scan.knownRecipes()
     if not Scan.knowsWithoutWindow() then return false end
     local character = Scan.current()
-    local names = {}
-    for name in pairs(character.professions) do names[#names + 1] = name end
-    table.sort(names)
-    local news = {}
-    for _, name in ipairs(names) do
+    local changed = false
+    for name in pairs(character.professions) do
         local ids = ns.Recipes.professions[name]
         if ids then
             local recipes = Core.knownRecipes(ids, function(id) return IsPlayerSpell(id) == true end)
-            local added = #recipes > 0 and Core.addRecipes(character, name, nil, nil, recipes, ns.now()) or 0
-            if added > 0 then news[#news + 1] = ("%s (%d new)"):format(name, added) end
+            if #recipes > 0 and Core.addRecipes(character, name, nil, nil, recipes, ns.now()) > 0 then
+                changed = true
+            end
         end
     end
-    if #news == 0 then return false end
-    Scan.say("recorded your recipes without opening their windows: %s. Type /ga-prof save to write them to the file (it reloads the screen).",
-        table.concat(news, ", "))
-    return true
+    return changed
 end
 
 local announced = {}

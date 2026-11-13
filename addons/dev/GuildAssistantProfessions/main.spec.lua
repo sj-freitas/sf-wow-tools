@@ -217,35 +217,30 @@ end
 local function unforever()
     _G.GetProfessions, _G.GetProfessionInfo, _G.C_TradeSkillUI, _G.IsPlayerSpell, _G.C_Timer = nil, nil, nil, nil, nil
 end
-local function count(text)
-    local n = 0
-    for _, line in ipairs(chat) do if line:find(text, 1, true) then n = n + 1 end end
-    return n
-end
 
-it("records the recipes you know at login on WoW Forever, no window needed, and those you learn", function()
+it("records the recipes you know at login on WoW Forever, quietly, no window needed, and those you learn", function()
     loadAddon()
     local known = { [2660] = true, [2667] = true, [7418] = true }
     forever(known)
     fire("ADDON_LOADED", "GuildAssistantProfessions")
-    eq(said("Loaded. Your recipes are recorded as you log in, no window needed"), true, "loaded message")
+    eq(chat[#chat], "|cff7c5cffGuildAssistant Professions|r: Loaded.", "loaded, and nothing more")
     fire("PLAYER_LOGIN")
-    eq(said("recorded your recipes without opening their windows: Blacksmithing (2 new), Enchanting (1 new)."), true,
-        "says what was recorded")
+    eq(#chat, 1, "nothing said as it records")
     local db = GuildAssistantProfessionsDB
     local blacksmithing = db.characters["Luna-Test Realm"].professions.Blacksmithing
     eq(blacksmithing.recipes["spell:2660"], true); eq(blacksmithing.recipes["spell:2667"], true)
     eq(blacksmithing.recipes["spell:2662"], nil, "not one it doesn't know")
     eq(blacksmithing.rank, 120, "the skill as the game says")
+    eq(db.characters["Luna-Test Realm"].professions.Enchanting.recipes["spell:7418"], true, "and Enchanting's")
     assert(db.export:find("2667", 1, true), "in the export: " .. db.export)
-    -- Logging in again: nothing new, nothing said.
-    fire("PLAYER_LOGIN")
-    eq(count("recorded your recipes"), 1, "said once")
-    -- A recipe learned (from a trainer or plans): recorded, without a window.
+    SlashCmdList.GAPROF("status")
+    eq(said("Blacksmithing 120 (2 recipes), Enchanting 50 (1 recipes)"), true, "the status shows them")
+    -- A recipe learned (from a trainer or plans): recorded, without a window, quietly.
+    local before = #chat
     known[3503] = true
     fire("NEW_RECIPE_LEARNED", 3503)
-    eq(said("recorded your recipes without opening their windows: Blacksmithing (1 new)."), true, "the new one")
-    eq(blacksmithing.recipes["spell:3503"], true)
+    eq(blacksmithing.recipes["spell:3503"], true, "the new one")
+    eq(#chat, before, "nothing said")
     SlashCmdList.GAPROF("")
     eq(said("Your recipes are recorded as you log in and learn them"), true, "the help says so")
     local functions = table.concat(db.client.functions, ",")

@@ -157,7 +157,7 @@ local function onEvent(self, event, arg, ...)
         refreshExport()
         Sync.start()
         if Scan.knowsWithoutWindow() then
-            Scan.say("Loaded. Your recipes are recorded as you log in, no window needed (open someone's profession link to record theirs).")
+            Scan.say("Loaded.") -- your recipes are recorded quietly, nothing to do
         else
             Scan.say("Loaded. Open your professions' windows (or someone's profession link) to record them.")
         end

@@ -11,8 +11,8 @@ Made for WoW Forever; works on Classic Era too.
 1. Install the addon ([CurseForge](https://www.curseforge.com/wow/addons/guild-assistant-professions))
    and log in (or `/reload`). The chat says "GuildAssistant Professions:
    Loaded." when it's on.
-2. **On WoW Forever, log in**: your characters' recipes are recorded as you log in, and as you
-   learn new ones, without opening any window (the chat says what it recorded). **On Classic Era,
+2. **On WoW Forever, log in**: your characters' recipes are recorded, quietly, as you log in and
+   as you learn new ones, without opening any window (`/ga-prof status` shows them). **On Classic Era,
    open each profession's window once** (and Enchanting's): the game only shows an addon the
    recipes while that window is open. Do this on every character you want to share. It is recorded
    by itself; there is nothing to export.
