@@ -1,7 +1,8 @@
 # Working on this repo
 
 Guild Assistant (a Discord bot, its API and backoffice in `discord/`) and WoW addons (`addons/`).
-Each part's README explains it; tasks are on the Botlog board (project GA), not in TODO.md.
+Each part's README explains it; `MAINTAINING.md` is how each kind of change goes from start to
+finish. Tasks are on the Botlog board (project GA), not in TODO.md.
 
 ## Always
 

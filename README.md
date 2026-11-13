@@ -1,6 +1,7 @@
 # sf-wow-tools
 
-Tools for World of Warcraft: a Discord bot and a collection of in-game addons.
+Tools for World of Warcraft: a Discord bot and a collection of in-game addons. How the repository
+is worked on (each kind of change, start to finish): [`MAINTAINING.md`](MAINTAINING.md).
 
 ## Layout
 
