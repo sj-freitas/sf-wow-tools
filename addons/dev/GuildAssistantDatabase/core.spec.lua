@@ -187,8 +187,27 @@ it("keeps to the slots and armor types picked", function()
     eq(filtered({ Head = true, Legs = true }, { Mail = true }), "Copper Chain Pants, Golden Scale Coif")
     -- One-Hand takes main-hand weapons too; Ranged takes wands.
     eq(filtered({ ["One-Hand"] = true, Ranged = true }, {}), "Greater Magic Wand, The Shatterer")
-    local slots, armor = Core.filterSets({}, {})
-    eq(slots, nil); eq(armor, nil)
+    local slots, armor, binding = Core.filterSets({}, {})
+    eq(slots, nil); eq(armor, nil); eq(binding, nil)
+end)
+
+it("keeps to the recipes whose item binds when picked up, when that's picked", function()
+    -- The game's data: Stonevault Greatsword binds when picked up; the others when equipped, or not at
+    -- all (Rough Sharpening Stone), and an enchant makes no item.
+    local function filtered(slotNames, armorNames, bindingNames)
+        local slots, armor, binding = Core.filterSets(slotNames, armorNames, bindingNames)
+        return names(Core.search(all(), { slots = slots, armor = armor, binding = binding }))
+    end
+    local pickup = { ["On pickup"] = true }
+    eq(filtered({}, {}, pickup), "Stonevault Greatsword")
+    eq(filtered({ ["Two-Hand"] = true }, {}, pickup), "Stonevault Greatsword", "and a slot")
+    eq(filtered({}, { Plate = true }, pickup), "", "and an armor type")
+    eq(select(3, Core.filterSets({}, {}, pickup))[Core.BIND_ON_PICKUP], true)
+    local loaded = Core.load(profession("Blacksmithing"))
+    eq(recipeNamed(loaded, "Stonevault Greatsword").creates.bonding, Core.BIND_ON_PICKUP)
+    eq(recipeNamed(loaded, "Ornate Mithril Breastplate").creates.bonding, 2, "when equipped")
+    eq(recipeNamed(loaded, "Rough Sharpening Stone").creates.bonding, 0, "it doesn't")
+    eq(Core.isQuery({ terms = {}, binding = { [Core.BIND_ON_PICKUP] = true } }), true)
 end)
 
 it("tells a search from listing everything, and counts matches per profession", function()

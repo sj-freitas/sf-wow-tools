@@ -2,7 +2,7 @@
 // for each build of each game version (`wowf` is WoW Forever). Everything here is what the game
 // client itself knows: each profession's recipes (SkillLineAbility), their names (SpellName),
 // reagents (SpellReagents), the item they make (SpellEffect), the items' name, quality, level,
-// slot, type and stats (ItemSparse, Item), which recipe item teaches which recipe (ItemEffect,
+// slot, type, stats and binding (ItemSparse, Item), which recipe item teaches which recipe (ItemEffect,
 // ItemXItemEffect), and the specialization a recipe item requires (its RequiredAbility, when that's
 // one of the profession's own abilities: "Requires Armorsmith"). Not in it, because the game's servers keep it: where a recipe item drops or is
 // sold, trainers and their costs, and stat values (the client works those out from the item's
@@ -169,6 +169,8 @@ export function buildDatabase(csv, { version, build, fetched }, professions = PR
         skill: num(row?.RequiredSkillRank),
         classID: num(item?.ClassID),
         subclassID: num(item?.SubclassID),
+        // How it binds, as the game numbers it (1 when picked up, 2 when equipped, 3 when used).
+        bonding: num(row?.Bonding),
       });
     };
 

@@ -12,7 +12,8 @@
 //     the field is left out when there are none)
 //   item: id, name (empty when the game's tables lack it), quality, required level, inventory type,
 //     icon (file id), kind ("Chest (Plate)"), stats ("Strength, Stamina"), skill to use (recipe
-//     items), class id, subclass id
+//     items), class id, subclass id, how it binds (the game's number: 1 when picked up, 2 when
+//     equipped, 3 when used; empty when it doesn't)
 //   specializations (a profession's field, only when it has some): the spells some recipe requires,
 //     "<spell id>=<name>[><parent's spell id>];…" ("9787=Weaponsmith;17039=Master Swordsmith>9787"):
 //     a character who knows the spell has it (GuildAssistant Professions records them).
@@ -52,6 +53,7 @@ export function itemLine(item) {
     item.skill || '',
     item.classID || '',
     item.subclassID || '',
+    item.bonding || '',
   ].join('\t');
 }
 

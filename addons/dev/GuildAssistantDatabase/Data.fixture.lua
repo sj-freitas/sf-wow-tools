@@ -21,30 +21,30 @@ ns.Data = {
 9972	Ornate Mithril Breastplate	240	260,275,290	7935,1,1	3860:16;6037:6;7909:1;7971:1	0	1	7975
 99003	Stonevault Greatsword	300	300,310,320	99004,1,1	11371:20	0	1	99005	Weaponsmith;Master Swordsmith]],
             items = [[
-1210	Shadowgem	2			134087	Trade Goods			7	
-2835	Rough Stone	1			135232	Metal & Stone			7	7
-2840	Copper Bar	1			133217	Metal & Stone			7	7
-2852	Copper Chain Pants	2	4	7	134583	Legs (Mail)	Stamina		4	3
-2862	Rough Sharpening Stone	1			135248	Consumable				8
-2864	Runed Copper Breastplate	2	13	5	132738	Chest (Plate)	Strength, Spirit		4	4
-2881	Plans: Runed Copper Breastplate	2			134942	Blacksmithing		55	9	4
-3470	Rough Grinding Stone	1			135241	Metal & Stone			7	7
-3577	Gold Bar	2			133218	Metal & Stone			7	7
-3837	Golden Scale Coif	2	33	1	133138	Head (Mail)	Agility, Stamina		4	3
-3859	Steel Bar	1			133219	Metal & Stone			7	7
-3860	Mithril Bar	1			133221	Metal & Stone			7	7
-6037	Truesilver Bar	2			133222	Metal & Stone			7	7
-6047	Plans: Golden Scale Coif	2			134942	Blacksmithing		190	9	4
-7075	Core of Earth	1			136102	Elemental			7	10
-7909	Aquamarine	2			134133	Trade Goods			7	
-7935	Ornate Mithril Breastplate	2	43	5	132745	Chest (Plate)	Critical Strike Rating, Dodge Rating		4	4
-7954	The Shatterer	3	42	13	133055	One-Hand (One-Handed Maces)	Speed 2.40		2	4
-7971	Black Pearl	2			134124	Trade Goods			7	
-7975	Plans: Ornate Mithril Breastplate	2			134942	Blacksmithing		240	9	4
-11371	Dark Iron Bar	2			133216	Metal & Stone			7	7
-99002	Ironforge Gauntlets	1		10	132963	Hands (Plate)			4	4
-99004	Stonevault Greatsword	3	55	17	135321	Two-Hand (Two-Handed Swords)	Speed 3.60, Strength		2	8
-99005	Plans: Stonevault Greatsword	3			134942	Blacksmithing		300	9	4]],
+1210	Shadowgem	2			134087	Trade Goods			7		
+2835	Rough Stone	1			135232	Metal & Stone			7	7	
+2840	Copper Bar	1			133217	Metal & Stone			7	7	
+2852	Copper Chain Pants	2	4	7	134583	Legs (Mail)	Stamina		4	3	2
+2862	Rough Sharpening Stone	1			135248	Consumable				8	
+2864	Runed Copper Breastplate	2	13	5	132738	Chest (Plate)	Strength, Spirit		4	4	2
+2881	Plans: Runed Copper Breastplate	2			134942	Blacksmithing		55	9	4	
+3470	Rough Grinding Stone	1			135241	Metal & Stone			7	7	
+3577	Gold Bar	2			133218	Metal & Stone			7	7	
+3837	Golden Scale Coif	2	33	1	133138	Head (Mail)	Agility, Stamina		4	3	2
+3859	Steel Bar	1			133219	Metal & Stone			7	7	
+3860	Mithril Bar	1			133221	Metal & Stone			7	7	
+6037	Truesilver Bar	2			133222	Metal & Stone			7	7	
+6047	Plans: Golden Scale Coif	2			134942	Blacksmithing		190	9	4	1
+7075	Core of Earth	1			136102	Elemental			7	10	
+7909	Aquamarine	2			134133	Trade Goods			7		
+7935	Ornate Mithril Breastplate	2	43	5	132745	Chest (Plate)	Critical Strike Rating, Dodge Rating		4	4	2
+7954	The Shatterer	3	42	13	133055	One-Hand (One-Handed Maces)	Speed 2.40		2	4	2
+7971	Black Pearl	2			134124	Trade Goods			7		
+7975	Plans: Ornate Mithril Breastplate	2			134942	Blacksmithing		240	9	4	
+11371	Dark Iron Bar	2			133216	Metal & Stone			7	7	
+99002	Ironforge Gauntlets	1		10	132963	Hands (Plate)			4	4	
+99004	Stonevault Greatsword	3	55	17	135321	Two-Hand (Two-Handed Swords)	Speed 3.60, Strength		2	8	1
+99005	Plans: Stonevault Greatsword	3			134942	Blacksmithing		300	9	4	1]],
         },
         {
             name = "Enchanting", skill = 333, count = 2,
@@ -52,10 +52,10 @@ ns.Data = {
 7418	Enchant Bracer - Minor Health	1	70,90,110		10940:1	2	1	
 14807	Greater Magic Wand	70	110,130,150	11288,1,1	4470:1;11083:1	0	70	]],
             items = [[
-4470	Simple Wood	1			135435	Trade Goods			7	
-10940	Strange Dust	1			132858	Enchanting			7	12
-11083		1			132857	Enchanting			7	12
-11288	Greater Magic Wand	2	8	26	135144	Ranged (Wands)	Speed 1.50, Spell Power		2	19]],
+4470	Simple Wood	1			135435	Trade Goods			7		
+10940	Strange Dust	1			132858	Enchanting			7	12	
+11083		1			132857	Enchanting			7	12	
+11288	Greater Magic Wand	2	8	26	135144	Ranged (Wands)	Speed 1.50, Spell Power		2	19	2]],
         },
     },
 }

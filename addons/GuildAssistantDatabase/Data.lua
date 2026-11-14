@@ -208,424 +208,424 @@ ns.Data = {
 24266	Gurubashi Mojo Madness	315	315,322,330	19931,3,3	12938:1;19943:1;12804:6;13468:1	0	1	
 22430	Refined Scale of Onyxia	315	315,322,330	17967,1,1	15410:1	0	1	]],
             items = [[
-730	Murloc Eye	1			133884	Cooking			7	8
-765	Silverleaf	1			134190	Herb			7	9
-785	Mageroyal	1			133436	Herb			7	9
-1288	Large Venom Sac	1			134338				7	11
-2447	Peacebloom	1			133939	Herb			7	9
-2449	Earthroot	1			134187	Herb			7	9
-2450	Briarthorn	1			134412	Herb			7	9
-2452	Swiftthistle	1			134184	Herb			7	9
-2453	Bruiseweed	1			134181	Herb			7	9
-2454	Elixir of Minor Strength	1	1		134836	Elixir				2
-2455	Minor Mana Potion	1	5		134850	Potion				1
-2456	Minor Rejuvenation Potion	1	5		134713	Potion				1
-2457	Elixir of Minor Agility	1	2		134871	Elixir				2
-2458	Elixir of Minor Fortitude	1	2		134822	Elixir				2
-2459	Swiftness Potion	1	5		134875	Potion				1
-2460	Draught of Tongues	1			134743	Elixir				2
-2553	Recipe: Elixir of Minor Agility	2			134942	Alchemy		50	9	6
-2554	Deprecated Recipe: Elixir of Fortitude	1			134941	Alchemy		50	9	6
-2555	Recipe: Swiftness Potion	2			134942	Alchemy		60	9	6
-3355	Wild Steelbloom	1			133938	Herb			7	9
-3356	Kingsblood	1			134183	Herb			7	9
-3357	Liferoot	1			134413	Herb			7	9
-3358	Khadgar's Whisker	1			134188	Herb			7	9
-3369	Grave Moss	1			133849	Herb			7	9
-3371	Empty Vial	1			134864				7	11
-3372	Leaded Vial	1			134865				7	11
-3382	Minor Troll's Blood Elixir	1	1		134858	Elixir				2
-3383	Elixir of Wisdom	1	10		134717	Elixir				2
-3384	Minor Magic Resistance Potion	1	12		134719	Potion				1
-3385	Lesser Mana Potion	1	14		134851	Potion				1
-3386	Potion of Poison Cleansing	1	14		134743	Elixir				2
-3387	Limited Invulnerability Potion	1	45		134842	Potion				1
-3388	Lesser Troll's Blood Elixir	1	15		134859	Elixir				2
-3389	Elixir of Lesser Defense	1	16		134844	Elixir				2
-3390	Elixir of Lesser Agility	1	18		134872	Elixir				2
-3391	Elixir of Ogre Strength	1	20		134837	Elixir				2
-3393	Recipe: Minor Magic Resistance Potion	1			134939	Alchemy		110	9	6
-3394	Recipe: Potion of Poison Cleansing	1			134939	Alchemy		120	9	6
-3395	Recipe: Limited Invulnerability Potion	2			134939	Alchemy		250	9	6
-3396	Recipe: Elixir of Lesser Agility	2			134939	Alchemy		140	9	6
-3575	Iron Bar	1			133232	Metal & Stone			7	7
-3577	Gold Bar	2			133217	Metal & Stone			7	7
-3818	Fadeleaf	1			134193	Herb			7	9
-3819	Wintersbite	1			133940	Herb			7	9
-3820	Stranglekelp	1			134191	Herb			7	9
-3821	Goldthorn	1			134196	Herb			7	9
-3823	Lesser Invisibility Potion	1	23		134798	Potion				1
-3824	Shadow Oil	1	24		134803	Consumable				8
-3825	Elixir of Lesser Fortitude	1	25		134823	Elixir				2
-3826	Troll's Blood Elixir	1	26		134860	Elixir				2
-3827	Mana Potion	1	22		134852	Potion				1
-3828	Draught of Detect Lesser Invisibility	1	29		134712	Elixir				2
-3829	Frost Oil	1	30		134800	Consumable				8
-3830	Recipe: Elixir of Lesser Fortitude	1			134939	Alchemy		175	9	6
-3831	Recipe: Troll's Blood Elixir	1			134939	Alchemy		180	9	6
-3832	Recipe: Elixir of Detect Lesser Invisibility	2			134942	Alchemy		195	9	6
-3858	Mithril Ore	1			134576	Metal & Stone			7	7
-3860	Mithril Bar	1			133220	Metal & Stone			7	7
-4342	Purple Dye	1			134713				7	11
-4402	Small Flame Sac	1			134343				7	11
-4596	Minor Discolored Healing Potion	1	5		134815	Potion				1
-4597	Recipe: Minor Discolored Healing Potion	2			134942	Alchemy		50	9	6
-4623	Lesser Stoneshield Potion	1	33		134847	Potion				1
-4624	Recipe: Lesser Stoneshield Potion	1			134939	Alchemy		215	9	6
-4625	Firebloom	1			134200	Herb			7	9
-5631	Rage Potion	1	4		134804	Potion				1
-5633	Great Rage Potion	1	25		134801	Potion				1
-5634	Free Action Potion	1	20		134715	Potion				1
-5635	Sharp Claw	1			134296				7	11
-5637	Large Fang	1			133725				7	11
-5640	Recipe: Rage Potion	1			134939	Alchemy		60	9	6
-5642	Recipe: Free Action Potion	1			134939	Alchemy		150	9	6
-5643	Recipe: Great Rage Potion	1			134939	Alchemy		175	9	6
-5996	Draught of Water Breathing	1	8		134797	Elixir				2
-5997	Elixir of Minor Defense	1	1		134843	Elixir				2
-6037	Truesilver Bar	2			133222	Metal & Stone			7	7
-6048	Shadow Protection Potion	1	17		134824	Potion				1
-6049	Fire Protection Potion	1	23		134787	Potion				1
-6050	Frost Protection Potion	1	28		134754	Potion				1
-6051	Holy Protection Potion	1	10		134720	Potion				1
-6052	Nature Protection Potion	1	28		134717	Potion				1
-6053	Recipe: Holy Protection Potion	1			134939	Alchemy		100	9	6
-6054	Recipe: Shadow Protection Potion	1			134939	Alchemy		135	9	6
-6055	Recipe: Fire Protection Potion	1			134939	Alchemy		165	9	6
-6056	Recipe: Frost Protection Potion	1			134939	Alchemy		190	9	6
-6057	Recipe: Nature Protection Potion	1			134939	Alchemy		190	9	6
-6068	Recipe: Shadow Oil	1			134939	Alchemy		165	9	6
-6149	Greater Mana Potion	1	31		134853	Potion				1
-6211	Recipe: Elixir of Ogre's Strength	1			134939	Alchemy		150	9	6
-6358	Oily Blackmouth	1			134302				7	11
-6359	Firefin Snapper	1			134299				7	11
-6370	Blackmouth Oil	1			132799				7	11
-6371	Fire Oil	1			134818				7	11
-6372	Swim Speed Potion	1	10		134754	Potion				1
-6373	Elixir of Fire Power	1	18		134835	Elixir				2
-6522	Deviate Fish	1			134299	Food & Drink				5
-6662	Elixir of Giant Growth	1	8		134721	Elixir				2
-6663	Recipe: Elixir of Giant Growth	2			134942	Alchemy		90	9	6
-7067	Elemental Earth	1			134572	Elemental			7	10
-7068	Elemental Fire	1			135805	Elemental			7	10
-7069	Elemental Air	1			136107	Elemental			7	10
-7070	Elemental Water	1			134714	Elemental			7	10
-7076	Essence of Earth	2			136102	Elemental			7	10
-7077	Heart of Fire	1			135819	Elemental			7	10
-7078	Essence of Fire	2			135830	Elemental			7	10
-7080	Essence of Water	2			136007	Elemental			7	10
-7082	Essence of Air	2			136022	Elemental			7	10
-7972	Ichor of Undeath	1			134437	Elemental			7	10
-8153	Wildvine	1			134183	Herb			7	9
-8827	Draught of Water Walking	1	24		134776	Elixir				2
-8831	Purple Lotus	1			134198	Herb			7	9
-8836	Arthas' Tears	1			134194	Herb			7	9
-8838	Sungrass	1			134199	Herb			7	9
-8839	Blindweed	1			134195	Herb			7	9
-8845	Ghost Mushroom	1			134529	Herb			7	9
-8846	Gromsblood	1			134197	Herb			7	9
-8925	Crystal Vial	1			134866				7	11
-8949	Elixir of Agility	1	27		134873	Elixir				2
-8951	Elixir of Defense	1	29		134845	Elixir				2
-8956	Oil of Immolation	1	31		134732	Consumable				8
-9030	Restorative Potion	1	32		134712	Potion				1
-9036	Magic Resistance Potion	1	32		134744	Potion				1
-9061	Goblin Rocket Fuel	1			132621	Parts			7	1
-9088	Gift of Arthas	1	38		134808	Elixir				2
-9144	Wildvine Potion	1	35		134814	Potion				1
-9149	Philosopher's Stone	1			134333				4	
-9154	Draught of Detect Undead	1	36		134833	Elixir				2
-9155	Arcane Elixir	1	37		134810	Elixir				2
-9172	Invisibility Potion	1	37		134805	Potion				1
-9179	Elixir of Greater Intellect	1	37		134721	Elixir				2
-9187	Elixir of Greater Agility	1	38		134874	Elixir				2
-9197	Draught of Dream Vision	1	38		134765	Elixir				2
-9206	Elixir of Greater Strength	1	48		134839	Elixir				2
-9210	Ghost Dye	1			134711				7	11
-9224	Potion of Demon Slaying	1	40		134807	Elixir				2
-9233	Draught of Detect Demon	1	40		134833	Elixir				2
-9260	Volatile Rum	1			132788	Potion				1
-9262	Black Vitriol	1			134133				7	11
-9264	Elixir of Shadow Power	1	40		134828	Elixir				2
-9293	Recipe: Magic Resistance Potion	2			134942	Alchemy		210	9	6
-9294	Recipe: Wildvine Potion	2			134942	Alchemy		225	9	6
-9295	Recipe: Invisibility Potion	2			134942	Alchemy		235	9	6
-9296	Recipe: Gift of Arthas	2			134941	Alchemy		240	9	6
-9297	Recipe: Draught of Dream Vision	2			134942	Alchemy		240	9	6
-9298	Recipe: Elixir of Giants	2			134942	Alchemy		245	9	6
-9300	Recipe: Potion of Demon Slaying	1			134939	Alchemy		250	9	6
-9301	Recipe: Elixir of Shadow Power	2			134942	Alchemy		250	9	6
-9302	Recipe: Ghost Dye	1			134941	Alchemy		245	9	6
-9303	Recipe: Philosopher's Stone	1			134939	Alchemy		225	9	6
-9304	Recipe: Transmute Iron to Gold	1			134939	Alchemy		225	9	6
-9305	Recipe: Transmute Mithril to Truesilver	1			134939	Alchemy		225	9	6
-10286	Heart of the Wild	1			134188	Elemental			7	10
-10592	Catseye Draught	1	30		134816	Elixir				2
-10620	Thorium Ore	1			134578	Metal & Stone			7	7
-10644	Recipe: Goblin Rocket Fuel	1			134939	Alchemy		210	9	6
-11083	Soul Dust	1			132857	Enchanting			7	12
-11176	Dream Dust	1			132855	Enchanting			7	12
-12190	Dreamless Sleep Potion	1	35		134863	Potion				1
-12359	Thorium Bar	1			133221	Metal & Stone			7	7
-12360	Arcanite Bar	2			134459	Metal & Stone			7	7
-12363	Arcane Crystal	2			134135				7	11
-12803	Living Essence	2			136006	Elemental			7	10
-12804	Powerful Mojo	1			136011				7	11
-12808	Essence of Undeath	2			136195	Elemental			7	10
-12938	Blood of Heroes	1			134813				12	
-12958	Recipe: Transmute Arcanite	1			134939	Alchemy		275	9	6
-13422	Stonescale Eel	1			133897				7	11
-13423	Stonescale Oil	1			134848				7	11
-13442	Mighty Rage Potion	1	46		134821	Potion				1
-13443	Superior Mana Potion	1	41		134854	Potion				1
-13444	Major Mana Potion	1	49		134856	Potion				1
-13445	Elixir of Greater Defense	1	43		134846	Elixir				2
-13447	Elixir of the Sages	1	38		134809	Elixir				2
-13452	Elixir of the Mongoose	1	46		134812	Elixir				2
-13453	Elixir of Brute Force	1	45		134820	Elixir				2
-13454	Greater Arcane Elixir	1	47		134731	Elixir				2
-13455	Greater Stoneshield Potion	1	46		134849	Potion				1
-13456	Greater Frost Protection Potion	1	48		134800	Potion				1
-13457	Greater Fire Protection Potion	1	48		134804	Potion				1
-13458	Greater Nature Protection Potion	1	48		134802	Potion				1
-13459	Greater Shadow Protection Potion	1	48		134803	Potion				1
-13460	Greater Holy Protection Potion	1	48		134720	Potion				1
-13461	Greater Arcane Protection Potion	1	48		134863	Potion				1
-13462	Purification Potion	1	47		134811	Potion				1
-13463	Dreamfoil	1			134204	Herb			7	9
-13464	Golden Sansam	1			134221	Herb			7	9
-13465	Mountain Silversage	1			134215	Herb			7	9
-13466	Plaguebloom	1			134219	Herb			7	9
-13467	Icecap	1			134212	Herb			7	9
-13468	Black Lotus	2			134202	Herb			7	9
-13476	Recipe: Mighty Rage Potion	2			134942	Alchemy		255	9	6
-13477	Recipe: Superior Mana Potion	1			134939	Alchemy		260	9	6
-13478	Recipe: Elixir of Superior Defense	1			134939	Alchemy		265	9	6
-13479	Recipe: Elixir of the Sages	2			134942	Alchemy		270	9	6
-13481	Recipe: Elixir of Brute Force	2			134942	Alchemy		275	9	6
-13482	Recipe: Transmute Air to Fire	2			134942	Alchemy		275	9	6
-13483	Recipe: Transmute Fire to Earth	2			134942	Alchemy		275	9	6
-13484	Recipe: Transmute Earth to Water	2			134942	Alchemy		275	9	6
-13485	Recipe: Transmute Water to Air	2			134942	Alchemy		275	9	6
-13486	Recipe: Transmute Undeath to Water	2			134942	Alchemy		275	9	6
-13487	Recipe: Transmute Water to Undeath	2			134942	Alchemy		275	9	6
-13488	Recipe: Transmute Life to Earth	2			134942	Alchemy		275	9	6
-13489	Recipe: Transmute Earth to Life	2			134942	Alchemy		275	9	6
-13490	Recipe: Greater Stoneshield Potion	2			134942	Alchemy		280	9	6
-13491	Recipe: Elixir of the Mongoose	2			134942	Alchemy		280	9	6
-13492	Recipe: Purification Potion	2			134942	Alchemy		285	9	6
-13493	Recipe: Greater Arcane Elixir	2			134942	Alchemy		285	9	6
-13494	Recipe: Greater Fire Protection Potion	2			134942	Alchemy		290	9	6
-13495	Recipe: Greater Frost Protection Potion	2			134942	Alchemy		290	9	6
-13496	Recipe: Greater Nature Protection Potion	2			134942	Alchemy		290	9	6
-13497	Recipe: Greater Arcane Protection Potion	2			134942	Alchemy		290	9	6
-13499	Recipe: Greater Shadow Protection Potion	2			134942	Alchemy		290	9	6
-13500	Recipe: Greater Holy Protection Potion	2			134942	Alchemy		290	9	6
-13501	Recipe: Major Mana Potion	2			134942	Alchemy		295	9	6
-13503	Alchemist's Stone	2	45	12	134334	Trinket	Spirit	275	4	
-13506	Flask of Petrification	1	50		134806	Flask				3
-13510	Flask of the Titans	1	50		134842	Flask				3
-13511	Flask of Distilled Wisdom	1	50		134877	Flask				3
-13512	Flask of Supreme Power	1	50		134821	Flask				3
-13513	Flask of Chromatic Resistance	1	50		134828	Flask				3
-13517	Recipe: Alchemist's Stone	1			134939	Alchemy		275	9	6
-13518	Recipe: Flask of Petrification	2			134942	Alchemy		300	9	6
-13519	Recipe: Flask of the Titans	2			134942	Alchemy		300	9	6
-13520	Recipe: Flask of Distilled Wisdom	2			134942	Alchemy		300	9	6
-13521	Recipe: Flask of Supreme Power	2			134942	Alchemy		300	9	6
-13522	Recipe: Flask of Chromatic Resistance	2			134942	Alchemy		300	9	6
-14634	Recipe: Frost Oil	2			134942	Alchemy		200	9	6
-15410	Scale of Onyxia	3			134309	Leather			7	6
-16203	Greater Eternal Essence	2			132864	Enchanting			7	12
-17708	Elixir of Frost Power	1	28		134856	Elixir				2
-17709	Recipe: Elixir of Frost Power	1			134939	Alchemy		190	9	6
-17967	Refined Scale of Onyxia	3			134309	Leather			7	6
-18253	Major Rejuvenation Potion	1	50		134827	Potion				1
-18256	Imbued Vial	1			134867				7	11
-18257	Recipe: Major Rejuvenation Potion	3			134941	Alchemy		300	9	6
-18294	Draught of Greater Water Breathing	1	35		134716	Elixir				2
-19931	Gurubashi Mojo Madness	3			134711				12	
-19943	Massive Mojo	1			136101				7	11
-20002	Greater Dreamless Sleep Potion	1	55		134863	Potion				1
-20004	Major Troll's Blood Elixir	1	53		134862	Elixir				2
-20007	Mageblood Elixir	1	40		134762	Elixir				2
-20008	Living Action Potion	1	47		134718	Potion				1
-20011	Recipe: Mageblood Elixir	1			134939	Alchemy		275	9	6
-20012	Recipe: Greater Dreamless Sleep	1			134939	Alchemy		275	9	6
-20013	Recipe: Living Action Potion	1			134939	Alchemy		285	9	6
-20014	Recipe: Major Troll's Blood Elixir	1			134939	Alchemy		290	9	6
-20761	Recipe: Transmute Elemental Fire	1			134939	Alchemy		300	9	6
-21546	Elixir of Holy Power	1	40		134842	Elixir				2
-21547	Recipe: Elixir of Greater Firepower	2			134942	Alchemy		250	9	6
-210708	Elixir of Coalesced Regret	1	20		134799	Consumable				8
-210709	Recipe: Elixir of Coalesced Regret	2			134942	Alchemy		90	9	6
-213371	Crate of Tainted Gniodine Solution	2			132597				7	11
-213372	Insulating Gniodine	1			134792				7	11
-215162	Mildly Irradiated Rejuvenation Potion	1			236870	Consumable				8
-215163	Recipe: Mildly-Irradiated Rejuvenation Potion	4			134939	Alchemy		225	9	6
-215430	Gnomeregan Fallout	1			134383	Parts			7	1
-215433	Recipe: Insulating Gniodine	3			134939	Alchemy		200	9	6
-215434	UNUSED	4			134939	Alchemy		200	9	6
-217398	Lesser Arcane Elixir	1	28		134730	Elixir				2
-217399	Recipe: Lesser Arcane Elixir	2			134942	Alchemy		190	9	6
-220688		1			135084				5	
-221021		1			134217				7	11
-221024	Flask of Everlasting Nightmares	1			236875	Consumable				8
-221312		1			132814				12	
-221313	Jar of Nightmarish Mojo	1			236870				7	11
-222952	Flask of Restless Dreams	1			236876	Consumable				8
-233962	Flask of Madness	1			236880	Consumable				8
-233964	Flask of Ancient Knowledge	1			236878	Consumable				8
-233965	Flask of the Old Gods	1			236879	Consumable				8
-233966	Flask of Unyielding Sorrow	1			236877	Consumable				8
-233967	Elixir of the Honey Badger	1			134731	Consumable				8
-233968	Elixir of the Mage-Lord	1			134733	Consumable				8
-233969	Elixir of the Ironside	1			134730	Consumable				8
-233977	Elixir of Alacrity	1			134735	Consumable				8
-234006		1			134262	Leather			7	6
-234010		1			237414				7	11
-234011		1			132106				7	11
-234012	Hive Thistle	1			134439	Herb			7	9
-236754	Recipe: Distilled Firewater	2			134942	Alchemy		250	9	6
-241650	Major Discolored Healing Potion	1	60		134820	Potion				1
-241651	Recipe: Major Discolored Healing Potion	2			134942	Alchemy		250	9	6
-246948	Distilled Firewater	1	45		134872	Elixir				2
-247239	Lesser Discolored Healing Potion	1	3		134816	Potion				1
-247240	Discolored Healing Potion	1	12		134817	Potion				1
-247241	Greater Discolored Healing Potion	1	21		134818	Potion				1
-247242	Superior Discolored Healing Potion	1	35		134819	Potion				1
-247754	Minor Arcane Elixir	1	1		134728	Elixir				2
-247755	Elixir of Minor Force	1	1		134857	Elixir				2
-248819	Fel Crystal	2			463889				7	11
-248821	Demonsage	1			458175	Herb			7	9
-248822	Death Lotus	2			5976935	Herb			7	9
-248823	Marefoil	1			348547	Herb			7	9
-249274	Stranglevine	2			1387617	Herb			7	9
-249391	Pyrite	2			961627	Metal & Stone			7	7
-249399	Frilled Lichen	2			133963	Herb			7	9
-249409	Cerulean Dye	2			1021860				7	11
-249410	Sulfuric Acid	2			136240				7	11
-249424	Rosecap	2			134222	Herb			7	9
-249430	Magenta Dye	2			237071				7	11
-249431	Viridian Dye	2			237062				7	11
-250326	Revealing Draught	1			967559	Elixir				2
-250327	Potion of Predatory Senses	1	45		967555	Elixir				2
-250328	Elixir of Cunning	1	55		134794	Elixir				2
-250329	Elixir of the Phalanx	1	55		967529	Elixir				2
-250330	Minor Cleric's Elixir	1	5		967524	Elixir				2
-250331	Lesser Cleric's Elixir	1	25		134752	Elixir				2
-250332	Cleric's Elixir	1	45		134764	Elixir				2
-250333	Greater Cleric's Elixir	1	55		134777	Elixir				2
-250334	Elixir of Fortitude	1	45		134824	Elixir				2
-250335	Elixir of Greater Fortitude	1	55		134825	Elixir				2
-250336	Elixir of Wicked Regeneration	1	55		967526	Elixir				2
-250337	Elixir of the Owl	1	55		134792	Elixir				2
-250338	Elixir of Sages	1	55		134793	Elixir				2
-250339	Minor Mageblood Elixir	1	5		967519	Elixir				2
-250340	Lesser Mageblood Elixir	1	25		134750	Elixir				2
-250341	Greater Mageblood Elixir	1	55		134796	Elixir				2
-250342	Lesser Arcane Elixir	1	25		134729	Elixir				2
-250343	Elixir of Nature Power	1	55		134877	Elixir				2
-250344	Elixir of Minor Spirit	1	5		134736	Elixir				2
-250345	Elixir of Lesser Spirit	1	25		134737	Elixir				2
-250346	Elixir of Spirit	1	45		134738	Elixir				2
-250347	Elixir of Greater Spirit	1	55		134739	Elixir				2
-250348	Elixir of the Whale	1	55		134791	Elixir				2
-250349	Elixir of Strength	1	45		134838	Elixir				2
-250350	Elixir of Ferocity	1	55		134789	Elixir				2
-250351	Elixir of the Grizzly	1	55		134788	Elixir				2
-250353	Elixir of Lesser Intellect	1	25		134823	Elixir				2
-250354	Elixir of Intellect	1	45		134824	Elixir				2
-250363	Recipe: Potion of Predatory Senses	1	1		134939	Alchemy		195	9	6
-250364	Recipe: Elixir of Cunning	1	1		134939	Alchemy		275	9	6
-250365	Recipe: Elixir of the Phalanx	1	1		134939	Alchemy		250	9	6
-250366	Recipe: Minor Cleric's Elixir	1	1		134939	Alchemy		45	9	6
-250367	Recipe: Lesser Cleric's Elixir	1	1		134939	Alchemy		95	9	6
-250368	Recipe: Cleric's Elixir	1	1		134939	Alchemy		145	9	6
-250369	Recipe: Greater Cleric's Elixir	1	1		134939	Alchemy		195	9	6
-250370	Recipe: Elixir of Fortitude	1	1		134939	Alchemy		150	9	6
-250371	Recipe: Elixir of Greater Fortitude	1	1		134939	Alchemy		200	9	6
-250372	Recipe: Elixir of Wicked Regeneration	1	1		134939	Alchemy		285	9	6
-250373	Recipe: Elixir of the Owl	1	1		134939	Alchemy		280	9	6
-250374	Recipe: Elixir of Sages	1	1		134939	Alchemy		275	9	6
-250375	Recipe: Minor Mageblood Elixir	1	1		134939	Alchemy		25	9	6
-250376	Recipe: Lesser Mageblood Elixir	1	1		134939	Alchemy		75	9	6
-250377	Recipe: Greater Mageblood Elixir	1	1		134939	Alchemy		175	9	6
-250378	Recipe: Lesser Arcane Elixir	1	1		134939	Alchemy		120	9	6
-250379	Recipe: Elixir of Nature Power	1	1		134939	Alchemy		285	9	6
-250380	Recipe: Elixir of Minor Spirit	1	1		134939	Alchemy		15	9	6
-250381	Recipe: Elixir of Lesser Spirit	1	1		134939	Alchemy		65	9	6
-250382	Recipe: Elixir of Spirit	1	1		134939	Alchemy		115	9	6
-250383	Recipe: Elixir of Greater Spirit	1	1		134939	Alchemy		165	9	6
-250384	Recipe: Elixir of the Whale	1	1		134939	Alchemy		275	9	6
-250385	Recipe: Elixir of Strength	1	1		134939	Alchemy		150	9	6
-250386	Recipe: Elixir of Ferocity	1	1		134939	Alchemy		275	9	6
-250387	Recipe: Elixir of the Grizzly	1	1		134939	Alchemy		300	9	6
-250388	Recipe: Elixir of Lesser Intellect	1	1		134939	Alchemy		95	9	6
-250389	Recipe: Elixir of Intellect	1	1		134939	Alchemy		135	9	6
-250932	Minor Spellblasting Potion	1	5		967557	Potion				1
-250933	Lesser Spellblasting Potion	1	15		463545	Potion				1
-250934	Spellblasting Potion	1	25		463921	Potion				1
-250935	Greater Spellblasting Potion	1	35		464027	Potion				1
-250936	Superior Spellblasting Potion	1	45		463859	Potion				1
-250937	Major Spellblasting Potion	1	55		463929	Potion				1
-250938	Minor Frenzy Potion	1	5		967555	Potion				1
-250939	Lesser Frenzy Potion	1	15		463548	Potion				1
-250940	Frenzy Potion	1	25		463922	Potion				1
-250941	Greater Frenzy Potion	1	35		464024	Potion				1
-250942	Superior Frenzy Potion	1	45		463863	Potion				1
-250943	Major Frenzy Potion	1	55		463931	Potion				1
-250944	Minor Mender's Potion	1	5		967556	Potion				1
-250945	Lesser Mender's Potion	1	15		463547	Potion				1
-250946	Mender's Potion	1	25		463925	Potion				1
-250947	Greater Mender's Potion	1	35		464026	Potion				1
-250948	Superior Mender's Potion	1	45		463860	Potion				1
-250949	Major Mender's Potion	1	55		463927	Potion				1
-250950	Potion of Venomous Blood	1	30		134799	Potion				1
-250951	Caustic Smog Potion	1	45		967550	Potion				1
-250953	Dragonfire Potion	1	35		134813	Potion				1
-250954	Potion of Elemental Purging	1	40		2057575	Potion				1
-250955	Potion of Beast Slaying	1	40		2057578	Potion				1
-250976	Recipe: Minor Spellblasting Potion	1	1		134939	Alchemy		35	9	6
-250977	Recipe: Lesser Spellblasting Potion	1	1		134939	Alchemy		85	9	6
-250978	Recipe: Spellblasting Potion	1	1		134939	Alchemy		135	9	6
-250979	Recipe: Greater Spellblasting Potion	2	1		134939	Alchemy		185	9	6
-250980	Recipe: Superior Spellblasting Potion	1	1		134939	Alchemy		235	9	6
-250981	Recipe: Major Spellblasting Potion	1	1		134939	Alchemy		285	9	6
-250982	Recipe: Minor Frenzy Potion	1	1		134939	Alchemy		40	9	6
-250983	Recipe: Lesser Frenzy Potion	1	1		134939	Alchemy		90	9	6
-250984	Recipe: Frenzy Potion	1	1		134939	Alchemy		140	9	6
-250985	Recipe: Greater Frenzy Potion	2	1		134939	Alchemy		190	9	6
-250986	Recipe: Superior Frenzy Potion	1	1		134939	Alchemy		240	9	6
-250987	Recipe: Major Frenzy Potion	1	1		134939	Alchemy		290	9	6
-250988	Recipe: Minor Mender's Potion	1	1		134939	Alchemy		30	9	6
-250989	Recipe: Lesser Mender's Potion	1	1		134939	Alchemy		80	9	6
-250990	Recipe: Mender's Potion	1	1		134939	Alchemy		130	9	6
-250991	Recipe: Greater Mender's Potion	1	1		134939	Alchemy		180	9	6
-250992	Recipe: Superior Mender's Potion	1	1		134939	Alchemy		230	9	6
-250993	Recipe: Major Mender's Potion	1	1		134939	Alchemy		280	9	6
-250994	Recipe: Potion of Venomous Blood	1	1		134939	Alchemy		275	9	6
-250995	Recipe: Caustic Smog Potion	1	1		134939	Alchemy		265	9	6
-250997	Recipe: Dragonfire Potion	1	1		134939	Alchemy		245	9	6
-250998	Recipe: Potion of Elemental Purging	1	1		134939	Alchemy		280	9	6
-250999	Recipe: Potion of Beast Slaying	1	1		134939	Alchemy		280	9	6
-251290	Legionite Bar	2			1416159	Metal & Stone			7	7
-251291	Heavy Thorium Bar	2			348540	Metal & Stone			7	7
-273085	Blueprint: Fermenter	2			1001491	Alchemy		140	9	6
-273112	Blueprint: Alchemy Laboratory	2			1001491	Alchemy		300	9	6
-273125	Lich's Index Finger	2			133727				15	1
-274273	Flask of Natural Accuracy	2	55		463902	Flask				3
-274274	Flask of Natural Aggression	2	55		463898	Flask				3
-274275	Flask of Natural Precision	2	55		463900	Flask				3
-274276	Flask of Natural Swiftness	2	55		463901	Flask				3
-274277	Recipe: Flask of Natural Accuracy	3	1		134940	Alchemy		300	9	6
-274278	Recipe: Flask of Natural Aggression	3	1		134940	Alchemy		300	9	6
-274279	Recipe: Flask of Natural Precision	3	1		134940	Alchemy		300	9	6
-274280	Recipe: Flask of Natural Swiftness	3	1		134940	Alchemy		300	9	6
-279956	Mana Well	1			135738	Consumable		20		8
-279970	Fermenter	1			3566827	Consumable		140		8
-279990	Alchemy Laboratory	1			4777830	Consumable		300		8
-284871	Recipe: Transmute Legionite	1			134939	Alchemy		275	9	6]],
+730	Murloc Eye	1			133884	Cooking			7	8	
+765	Silverleaf	1			134190	Herb			7	9	
+785	Mageroyal	1			133436	Herb			7	9	
+1288	Large Venom Sac	1			134338				7	11	
+2447	Peacebloom	1			133939	Herb			7	9	
+2449	Earthroot	1			134187	Herb			7	9	
+2450	Briarthorn	1			134412	Herb			7	9	
+2452	Swiftthistle	1			134184	Herb			7	9	
+2453	Bruiseweed	1			134181	Herb			7	9	
+2454	Elixir of Minor Strength	1	1		134836	Elixir				2	
+2455	Minor Mana Potion	1	5		134850	Potion				1	
+2456	Minor Rejuvenation Potion	1	5		134713	Potion				1	
+2457	Elixir of Minor Agility	1	2		134871	Elixir				2	
+2458	Elixir of Minor Fortitude	1	2		134822	Elixir				2	
+2459	Swiftness Potion	1	5		134875	Potion				1	
+2460	Draught of Tongues	1			134743	Elixir				2	
+2553	Recipe: Elixir of Minor Agility	2			134942	Alchemy		50	9	6	
+2554	Deprecated Recipe: Elixir of Fortitude	1			134941	Alchemy		50	9	6	
+2555	Recipe: Swiftness Potion	2			134942	Alchemy		60	9	6	
+3355	Wild Steelbloom	1			133938	Herb			7	9	
+3356	Kingsblood	1			134183	Herb			7	9	
+3357	Liferoot	1			134413	Herb			7	9	
+3358	Khadgar's Whisker	1			134188	Herb			7	9	
+3369	Grave Moss	1			133849	Herb			7	9	
+3371	Empty Vial	1			134864				7	11	
+3372	Leaded Vial	1			134865				7	11	
+3382	Minor Troll's Blood Elixir	1	1		134858	Elixir				2	
+3383	Elixir of Wisdom	1	10		134717	Elixir				2	
+3384	Minor Magic Resistance Potion	1	12		134719	Potion				1	
+3385	Lesser Mana Potion	1	14		134851	Potion				1	
+3386	Potion of Poison Cleansing	1	14		134743	Elixir				2	
+3387	Limited Invulnerability Potion	1	45		134842	Potion				1	
+3388	Lesser Troll's Blood Elixir	1	15		134859	Elixir				2	
+3389	Elixir of Lesser Defense	1	16		134844	Elixir				2	
+3390	Elixir of Lesser Agility	1	18		134872	Elixir				2	
+3391	Elixir of Ogre Strength	1	20		134837	Elixir				2	
+3393	Recipe: Minor Magic Resistance Potion	1			134939	Alchemy		110	9	6	
+3394	Recipe: Potion of Poison Cleansing	1			134939	Alchemy		120	9	6	
+3395	Recipe: Limited Invulnerability Potion	2			134939	Alchemy		250	9	6	
+3396	Recipe: Elixir of Lesser Agility	2			134939	Alchemy		140	9	6	
+3575	Iron Bar	1			133232	Metal & Stone			7	7	
+3577	Gold Bar	2			133217	Metal & Stone			7	7	
+3818	Fadeleaf	1			134193	Herb			7	9	
+3819	Wintersbite	1			133940	Herb			7	9	
+3820	Stranglekelp	1			134191	Herb			7	9	
+3821	Goldthorn	1			134196	Herb			7	9	
+3823	Lesser Invisibility Potion	1	23		134798	Potion				1	
+3824	Shadow Oil	1	24		134803	Consumable				8	
+3825	Elixir of Lesser Fortitude	1	25		134823	Elixir				2	
+3826	Troll's Blood Elixir	1	26		134860	Elixir				2	
+3827	Mana Potion	1	22		134852	Potion				1	
+3828	Draught of Detect Lesser Invisibility	1	29		134712	Elixir				2	
+3829	Frost Oil	1	30		134800	Consumable				8	
+3830	Recipe: Elixir of Lesser Fortitude	1			134939	Alchemy		175	9	6	
+3831	Recipe: Troll's Blood Elixir	1			134939	Alchemy		180	9	6	
+3832	Recipe: Elixir of Detect Lesser Invisibility	2			134942	Alchemy		195	9	6	
+3858	Mithril Ore	1			134576	Metal & Stone			7	7	
+3860	Mithril Bar	1			133220	Metal & Stone			7	7	
+4342	Purple Dye	1			134713				7	11	
+4402	Small Flame Sac	1			134343				7	11	
+4596	Minor Discolored Healing Potion	1	5		134815	Potion				1	
+4597	Recipe: Minor Discolored Healing Potion	2			134942	Alchemy		50	9	6	1
+4623	Lesser Stoneshield Potion	1	33		134847	Potion				1	
+4624	Recipe: Lesser Stoneshield Potion	1			134939	Alchemy		215	9	6	
+4625	Firebloom	1			134200	Herb			7	9	
+5631	Rage Potion	1	4		134804	Potion				1	
+5633	Great Rage Potion	1	25		134801	Potion				1	
+5634	Free Action Potion	1	20		134715	Potion				1	
+5635	Sharp Claw	1			134296				7	11	
+5637	Large Fang	1			133725				7	11	
+5640	Recipe: Rage Potion	1			134939	Alchemy		60	9	6	
+5642	Recipe: Free Action Potion	1			134939	Alchemy		150	9	6	
+5643	Recipe: Great Rage Potion	1			134939	Alchemy		175	9	6	
+5996	Draught of Water Breathing	1	8		134797	Elixir				2	
+5997	Elixir of Minor Defense	1	1		134843	Elixir				2	
+6037	Truesilver Bar	2			133222	Metal & Stone			7	7	
+6048	Shadow Protection Potion	1	17		134824	Potion				1	
+6049	Fire Protection Potion	1	23		134787	Potion				1	
+6050	Frost Protection Potion	1	28		134754	Potion				1	
+6051	Holy Protection Potion	1	10		134720	Potion				1	
+6052	Nature Protection Potion	1	28		134717	Potion				1	
+6053	Recipe: Holy Protection Potion	1			134939	Alchemy		100	9	6	1
+6054	Recipe: Shadow Protection Potion	1			134939	Alchemy		135	9	6	1
+6055	Recipe: Fire Protection Potion	1			134939	Alchemy		165	9	6	1
+6056	Recipe: Frost Protection Potion	1			134939	Alchemy		190	9	6	1
+6057	Recipe: Nature Protection Potion	1			134939	Alchemy		190	9	6	1
+6068	Recipe: Shadow Oil	1			134939	Alchemy		165	9	6	1
+6149	Greater Mana Potion	1	31		134853	Potion				1	
+6211	Recipe: Elixir of Ogre's Strength	1			134939	Alchemy		150	9	6	
+6358	Oily Blackmouth	1			134302				7	11	
+6359	Firefin Snapper	1			134299				7	11	
+6370	Blackmouth Oil	1			132799				7	11	
+6371	Fire Oil	1			134818				7	11	
+6372	Swim Speed Potion	1	10		134754	Potion				1	
+6373	Elixir of Fire Power	1	18		134835	Elixir				2	
+6522	Deviate Fish	1			134299	Food & Drink				5	
+6662	Elixir of Giant Growth	1	8		134721	Elixir				2	
+6663	Recipe: Elixir of Giant Growth	2			134942	Alchemy		90	9	6	
+7067	Elemental Earth	1			134572	Elemental			7	10	
+7068	Elemental Fire	1			135805	Elemental			7	10	
+7069	Elemental Air	1			136107	Elemental			7	10	
+7070	Elemental Water	1			134714	Elemental			7	10	
+7076	Essence of Earth	2			136102	Elemental			7	10	
+7077	Heart of Fire	1			135819	Elemental			7	10	
+7078	Essence of Fire	2			135830	Elemental			7	10	
+7080	Essence of Water	2			136007	Elemental			7	10	
+7082	Essence of Air	2			136022	Elemental			7	10	
+7972	Ichor of Undeath	1			134437	Elemental			7	10	
+8153	Wildvine	1			134183	Herb			7	9	
+8827	Draught of Water Walking	1	24		134776	Elixir				2	
+8831	Purple Lotus	1			134198	Herb			7	9	
+8836	Arthas' Tears	1			134194	Herb			7	9	
+8838	Sungrass	1			134199	Herb			7	9	
+8839	Blindweed	1			134195	Herb			7	9	
+8845	Ghost Mushroom	1			134529	Herb			7	9	
+8846	Gromsblood	1			134197	Herb			7	9	
+8925	Crystal Vial	1			134866				7	11	
+8949	Elixir of Agility	1	27		134873	Elixir				2	
+8951	Elixir of Defense	1	29		134845	Elixir				2	
+8956	Oil of Immolation	1	31		134732	Consumable				8	
+9030	Restorative Potion	1	32		134712	Potion				1	
+9036	Magic Resistance Potion	1	32		134744	Potion				1	
+9061	Goblin Rocket Fuel	1			132621	Parts			7	1	
+9088	Gift of Arthas	1	38		134808	Elixir				2	
+9144	Wildvine Potion	1	35		134814	Potion				1	
+9149	Philosopher's Stone	1			134333				4		1
+9154	Draught of Detect Undead	1	36		134833	Elixir				2	
+9155	Arcane Elixir	1	37		134810	Elixir				2	
+9172	Invisibility Potion	1	37		134805	Potion				1	
+9179	Elixir of Greater Intellect	1	37		134721	Elixir				2	
+9187	Elixir of Greater Agility	1	38		134874	Elixir				2	
+9197	Draught of Dream Vision	1	38		134765	Elixir				2	
+9206	Elixir of Greater Strength	1	48		134839	Elixir				2	
+9210	Ghost Dye	1			134711				7	11	
+9224	Potion of Demon Slaying	1	40		134807	Elixir				2	
+9233	Draught of Detect Demon	1	40		134833	Elixir				2	
+9260	Volatile Rum	1			132788	Potion				1	
+9262	Black Vitriol	1			134133				7	11	
+9264	Elixir of Shadow Power	1	40		134828	Elixir				2	
+9293	Recipe: Magic Resistance Potion	2			134942	Alchemy		210	9	6	
+9294	Recipe: Wildvine Potion	2			134942	Alchemy		225	9	6	
+9295	Recipe: Invisibility Potion	2			134942	Alchemy		235	9	6	
+9296	Recipe: Gift of Arthas	2			134941	Alchemy		240	9	6	
+9297	Recipe: Draught of Dream Vision	2			134942	Alchemy		240	9	6	
+9298	Recipe: Elixir of Giants	2			134942	Alchemy		245	9	6	
+9300	Recipe: Potion of Demon Slaying	1			134939	Alchemy		250	9	6	1
+9301	Recipe: Elixir of Shadow Power	2			134942	Alchemy		250	9	6	
+9302	Recipe: Ghost Dye	1			134941	Alchemy		245	9	6	1
+9303	Recipe: Philosopher's Stone	1			134939	Alchemy		225	9	6	
+9304	Recipe: Transmute Iron to Gold	1			134939	Alchemy		225	9	6	
+9305	Recipe: Transmute Mithril to Truesilver	1			134939	Alchemy		225	9	6	1
+10286	Heart of the Wild	1			134188	Elemental			7	10	
+10592	Catseye Draught	1	30		134816	Elixir				2	
+10620	Thorium Ore	1			134578	Metal & Stone			7	7	
+10644	Recipe: Goblin Rocket Fuel	1			134939	Alchemy		210	9	6	
+11083	Soul Dust	1			132857	Enchanting			7	12	
+11176	Dream Dust	1			132855	Enchanting			7	12	
+12190	Dreamless Sleep Potion	1	35		134863	Potion				1	
+12359	Thorium Bar	1			133221	Metal & Stone			7	7	
+12360	Arcanite Bar	2			134459	Metal & Stone			7	7	
+12363	Arcane Crystal	2			134135				7	11	
+12803	Living Essence	2			136006	Elemental			7	10	
+12804	Powerful Mojo	1			136011				7	11	
+12808	Essence of Undeath	2			136195	Elemental			7	10	
+12938	Blood of Heroes	1			134813				12		1
+12958	Recipe: Transmute Arcanite	1			134939	Alchemy		275	9	6	
+13422	Stonescale Eel	1			133897				7	11	
+13423	Stonescale Oil	1			134848				7	11	
+13442	Mighty Rage Potion	1	46		134821	Potion				1	
+13443	Superior Mana Potion	1	41		134854	Potion				1	
+13444	Major Mana Potion	1	49		134856	Potion				1	
+13445	Elixir of Greater Defense	1	43		134846	Elixir				2	
+13447	Elixir of the Sages	1	38		134809	Elixir				2	
+13452	Elixir of the Mongoose	1	46		134812	Elixir				2	
+13453	Elixir of Brute Force	1	45		134820	Elixir				2	
+13454	Greater Arcane Elixir	1	47		134731	Elixir				2	
+13455	Greater Stoneshield Potion	1	46		134849	Potion				1	
+13456	Greater Frost Protection Potion	1	48		134800	Potion				1	
+13457	Greater Fire Protection Potion	1	48		134804	Potion				1	
+13458	Greater Nature Protection Potion	1	48		134802	Potion				1	
+13459	Greater Shadow Protection Potion	1	48		134803	Potion				1	
+13460	Greater Holy Protection Potion	1	48		134720	Potion				1	
+13461	Greater Arcane Protection Potion	1	48		134863	Potion				1	
+13462	Purification Potion	1	47		134811	Potion				1	
+13463	Dreamfoil	1			134204	Herb			7	9	
+13464	Golden Sansam	1			134221	Herb			7	9	
+13465	Mountain Silversage	1			134215	Herb			7	9	
+13466	Plaguebloom	1			134219	Herb			7	9	
+13467	Icecap	1			134212	Herb			7	9	
+13468	Black Lotus	2			134202	Herb			7	9	
+13476	Recipe: Mighty Rage Potion	2			134942	Alchemy		255	9	6	
+13477	Recipe: Superior Mana Potion	1			134939	Alchemy		260	9	6	
+13478	Recipe: Elixir of Superior Defense	1			134939	Alchemy		265	9	6	
+13479	Recipe: Elixir of the Sages	2			134942	Alchemy		270	9	6	
+13481	Recipe: Elixir of Brute Force	2			134942	Alchemy		275	9	6	
+13482	Recipe: Transmute Air to Fire	2			134942	Alchemy		275	9	6	1
+13483	Recipe: Transmute Fire to Earth	2			134942	Alchemy		275	9	6	1
+13484	Recipe: Transmute Earth to Water	2			134942	Alchemy		275	9	6	1
+13485	Recipe: Transmute Water to Air	2			134942	Alchemy		275	9	6	1
+13486	Recipe: Transmute Undeath to Water	2			134942	Alchemy		275	9	6	
+13487	Recipe: Transmute Water to Undeath	2			134942	Alchemy		275	9	6	
+13488	Recipe: Transmute Life to Earth	2			134942	Alchemy		275	9	6	
+13489	Recipe: Transmute Earth to Life	2			134942	Alchemy		275	9	6	
+13490	Recipe: Greater Stoneshield Potion	2			134942	Alchemy		280	9	6	
+13491	Recipe: Elixir of the Mongoose	2			134942	Alchemy		280	9	6	
+13492	Recipe: Purification Potion	2			134942	Alchemy		285	9	6	
+13493	Recipe: Greater Arcane Elixir	2			134942	Alchemy		285	9	6	
+13494	Recipe: Greater Fire Protection Potion	2			134942	Alchemy		290	9	6	
+13495	Recipe: Greater Frost Protection Potion	2			134942	Alchemy		290	9	6	
+13496	Recipe: Greater Nature Protection Potion	2			134942	Alchemy		290	9	6	
+13497	Recipe: Greater Arcane Protection Potion	2			134942	Alchemy		290	9	6	
+13499	Recipe: Greater Shadow Protection Potion	2			134942	Alchemy		290	9	6	
+13500	Recipe: Greater Holy Protection Potion	2			134942	Alchemy		290	9	6	
+13501	Recipe: Major Mana Potion	2			134942	Alchemy		295	9	6	1
+13503	Alchemist's Stone	2	45	12	134334	Trinket	Spirit	275	4		1
+13506	Flask of Petrification	1	50		134806	Flask				3	
+13510	Flask of the Titans	1	50		134842	Flask				3	
+13511	Flask of Distilled Wisdom	1	50		134877	Flask				3	
+13512	Flask of Supreme Power	1	50		134821	Flask				3	
+13513	Flask of Chromatic Resistance	1	50		134828	Flask				3	
+13517	Recipe: Alchemist's Stone	1			134939	Alchemy		275	9	6	1
+13518	Recipe: Flask of Petrification	2			134942	Alchemy		300	9	6	
+13519	Recipe: Flask of the Titans	2			134942	Alchemy		300	9	6	
+13520	Recipe: Flask of Distilled Wisdom	2			134942	Alchemy		300	9	6	
+13521	Recipe: Flask of Supreme Power	2			134942	Alchemy		300	9	6	
+13522	Recipe: Flask of Chromatic Resistance	2			134942	Alchemy		300	9	6	
+14634	Recipe: Frost Oil	2			134942	Alchemy		200	9	6	1
+15410	Scale of Onyxia	3			134309	Leather			7	6	
+16203	Greater Eternal Essence	2			132864	Enchanting			7	12	
+17708	Elixir of Frost Power	1	28		134856	Elixir				2	
+17709	Recipe: Elixir of Frost Power	1			134939	Alchemy		190	9	6	
+17967	Refined Scale of Onyxia	3			134309	Leather			7	6	
+18253	Major Rejuvenation Potion	1	50		134827	Potion				1	
+18256	Imbued Vial	1			134867				7	11	
+18257	Recipe: Major Rejuvenation Potion	3			134941	Alchemy		300	9	6	
+18294	Draught of Greater Water Breathing	1	35		134716	Elixir				2	
+19931	Gurubashi Mojo Madness	3			134711				12		
+19943	Massive Mojo	1			136101				7	11	
+20002	Greater Dreamless Sleep Potion	1	55		134863	Potion				1	
+20004	Major Troll's Blood Elixir	1	53		134862	Elixir				2	
+20007	Mageblood Elixir	1	40		134762	Elixir				2	
+20008	Living Action Potion	1	47		134718	Potion				1	
+20011	Recipe: Mageblood Elixir	1			134939	Alchemy		275	9	6	1
+20012	Recipe: Greater Dreamless Sleep	1			134939	Alchemy		275	9	6	1
+20013	Recipe: Living Action Potion	1			134939	Alchemy		285	9	6	1
+20014	Recipe: Major Troll's Blood Elixir	1			134939	Alchemy		290	9	6	1
+20761	Recipe: Transmute Elemental Fire	1			134939	Alchemy		300	9	6	1
+21546	Elixir of Holy Power	1	40		134842	Elixir				2	
+21547	Recipe: Elixir of Greater Firepower	2			134942	Alchemy		250	9	6	
+210708	Elixir of Coalesced Regret	1	20		134799	Consumable				8	
+210709	Recipe: Elixir of Coalesced Regret	2			134942	Alchemy		90	9	6	
+213371	Crate of Tainted Gniodine Solution	2			132597				7	11	1
+213372	Insulating Gniodine	1			134792				7	11	
+215162	Mildly Irradiated Rejuvenation Potion	1			236870	Consumable				8	
+215163	Recipe: Mildly-Irradiated Rejuvenation Potion	4			134939	Alchemy		225	9	6	1
+215430	Gnomeregan Fallout	1			134383	Parts			7	1	
+215433	Recipe: Insulating Gniodine	3			134939	Alchemy		200	9	6	1
+215434	UNUSED	4			134939	Alchemy		200	9	6	1
+217398	Lesser Arcane Elixir	1	28		134730	Elixir				2	
+217399	Recipe: Lesser Arcane Elixir	2			134942	Alchemy		190	9	6	1
+220688		1			135084				5		
+221021		1			134217				7	11	
+221024	Flask of Everlasting Nightmares	1			236875	Consumable				8	
+221312		1			132814				12		
+221313	Jar of Nightmarish Mojo	1			236870				7	11	
+222952	Flask of Restless Dreams	1			236876	Consumable				8	
+233962	Flask of Madness	1			236880	Consumable				8	
+233964	Flask of Ancient Knowledge	1			236878	Consumable				8	
+233965	Flask of the Old Gods	1			236879	Consumable				8	
+233966	Flask of Unyielding Sorrow	1			236877	Consumable				8	
+233967	Elixir of the Honey Badger	1			134731	Consumable				8	
+233968	Elixir of the Mage-Lord	1			134733	Consumable				8	
+233969	Elixir of the Ironside	1			134730	Consumable				8	
+233977	Elixir of Alacrity	1			134735	Consumable				8	
+234006		1			134262	Leather			7	6	
+234010		1			237414				7	11	
+234011		1			132106				7	11	
+234012	Hive Thistle	1			134439	Herb			7	9	
+236754	Recipe: Distilled Firewater	2			134942	Alchemy		250	9	6	1
+241650	Major Discolored Healing Potion	1	60		134820	Potion				1	
+241651	Recipe: Major Discolored Healing Potion	2			134942	Alchemy		250	9	6	1
+246948	Distilled Firewater	1	45		134872	Elixir				2	
+247239	Lesser Discolored Healing Potion	1	3		134816	Potion				1	
+247240	Discolored Healing Potion	1	12		134817	Potion				1	
+247241	Greater Discolored Healing Potion	1	21		134818	Potion				1	
+247242	Superior Discolored Healing Potion	1	35		134819	Potion				1	
+247754	Minor Arcane Elixir	1	1		134728	Elixir				2	
+247755	Elixir of Minor Force	1	1		134857	Elixir				2	
+248819	Fel Crystal	2			463889				7	11	
+248821	Demonsage	1			458175	Herb			7	9	
+248822	Death Lotus	2			5976935	Herb			7	9	
+248823	Marefoil	1			348547	Herb			7	9	
+249274	Stranglevine	2			1387617	Herb			7	9	
+249391	Pyrite	2			961627	Metal & Stone			7	7	
+249399	Frilled Lichen	2			133963	Herb			7	9	
+249409	Cerulean Dye	2			1021860				7	11	
+249410	Sulfuric Acid	2			136240				7	11	
+249424	Rosecap	2			134222	Herb			7	9	
+249430	Magenta Dye	2			237071				7	11	
+249431	Viridian Dye	2			237062				7	11	
+250326	Revealing Draught	1			967559	Elixir				2	
+250327	Potion of Predatory Senses	1	45		967555	Elixir				2	
+250328	Elixir of Cunning	1	55		134794	Elixir				2	
+250329	Elixir of the Phalanx	1	55		967529	Elixir				2	
+250330	Minor Cleric's Elixir	1	5		967524	Elixir				2	
+250331	Lesser Cleric's Elixir	1	25		134752	Elixir				2	
+250332	Cleric's Elixir	1	45		134764	Elixir				2	
+250333	Greater Cleric's Elixir	1	55		134777	Elixir				2	
+250334	Elixir of Fortitude	1	45		134824	Elixir				2	
+250335	Elixir of Greater Fortitude	1	55		134825	Elixir				2	
+250336	Elixir of Wicked Regeneration	1	55		967526	Elixir				2	
+250337	Elixir of the Owl	1	55		134792	Elixir				2	
+250338	Elixir of Sages	1	55		134793	Elixir				2	
+250339	Minor Mageblood Elixir	1	5		967519	Elixir				2	
+250340	Lesser Mageblood Elixir	1	25		134750	Elixir				2	
+250341	Greater Mageblood Elixir	1	55		134796	Elixir				2	
+250342	Lesser Arcane Elixir	1	25		134729	Elixir				2	
+250343	Elixir of Nature Power	1	55		134877	Elixir				2	
+250344	Elixir of Minor Spirit	1	5		134736	Elixir				2	
+250345	Elixir of Lesser Spirit	1	25		134737	Elixir				2	
+250346	Elixir of Spirit	1	45		134738	Elixir				2	
+250347	Elixir of Greater Spirit	1	55		134739	Elixir				2	
+250348	Elixir of the Whale	1	55		134791	Elixir				2	
+250349	Elixir of Strength	1	45		134838	Elixir				2	
+250350	Elixir of Ferocity	1	55		134789	Elixir				2	
+250351	Elixir of the Grizzly	1	55		134788	Elixir				2	
+250353	Elixir of Lesser Intellect	1	25		134823	Elixir				2	
+250354	Elixir of Intellect	1	45		134824	Elixir				2	
+250363	Recipe: Potion of Predatory Senses	1	1		134939	Alchemy		195	9	6	
+250364	Recipe: Elixir of Cunning	1	1		134939	Alchemy		275	9	6	1
+250365	Recipe: Elixir of the Phalanx	1	1		134939	Alchemy		250	9	6	1
+250366	Recipe: Minor Cleric's Elixir	1	1		134939	Alchemy		45	9	6	
+250367	Recipe: Lesser Cleric's Elixir	1	1		134939	Alchemy		95	9	6	1
+250368	Recipe: Cleric's Elixir	1	1		134939	Alchemy		145	9	6	
+250369	Recipe: Greater Cleric's Elixir	1	1		134939	Alchemy		195	9	6	1
+250370	Recipe: Elixir of Fortitude	1	1		134939	Alchemy		150	9	6	
+250371	Recipe: Elixir of Greater Fortitude	1	1		134939	Alchemy		200	9	6	1
+250372	Recipe: Elixir of Wicked Regeneration	1	1		134939	Alchemy		285	9	6	1
+250373	Recipe: Elixir of the Owl	1	1		134939	Alchemy		280	9	6	1
+250374	Recipe: Elixir of Sages	1	1		134939	Alchemy		275	9	6	1
+250375	Recipe: Minor Mageblood Elixir	1	1		134939	Alchemy		25	9	6	
+250376	Recipe: Lesser Mageblood Elixir	1	1		134939	Alchemy		75	9	6	1
+250377	Recipe: Greater Mageblood Elixir	1	1		134939	Alchemy		175	9	6	1
+250378	Recipe: Lesser Arcane Elixir	1	1		134939	Alchemy		120	9	6	1
+250379	Recipe: Elixir of Nature Power	1	1		134939	Alchemy		285	9	6	1
+250380	Recipe: Elixir of Minor Spirit	1	1		134939	Alchemy		15	9	6	
+250381	Recipe: Elixir of Lesser Spirit	1	1		134939	Alchemy		65	9	6	1
+250382	Recipe: Elixir of Spirit	1	1		134939	Alchemy		115	9	6	
+250383	Recipe: Elixir of Greater Spirit	1	1		134939	Alchemy		165	9	6	1
+250384	Recipe: Elixir of the Whale	1	1		134939	Alchemy		275	9	6	1
+250385	Recipe: Elixir of Strength	1	1		134939	Alchemy		150	9	6	
+250386	Recipe: Elixir of Ferocity	1	1		134939	Alchemy		275	9	6	1
+250387	Recipe: Elixir of the Grizzly	1	1		134939	Alchemy		300	9	6	1
+250388	Recipe: Elixir of Lesser Intellect	1	1		134939	Alchemy		95	9	6	1
+250389	Recipe: Elixir of Intellect	1	1		134939	Alchemy		135	9	6	
+250932	Minor Spellblasting Potion	1	5		967557	Potion				1	
+250933	Lesser Spellblasting Potion	1	15		463545	Potion				1	
+250934	Spellblasting Potion	1	25		463921	Potion				1	
+250935	Greater Spellblasting Potion	1	35		464027	Potion				1	
+250936	Superior Spellblasting Potion	1	45		463859	Potion				1	
+250937	Major Spellblasting Potion	1	55		463929	Potion				1	
+250938	Minor Frenzy Potion	1	5		967555	Potion				1	
+250939	Lesser Frenzy Potion	1	15		463548	Potion				1	
+250940	Frenzy Potion	1	25		463922	Potion				1	
+250941	Greater Frenzy Potion	1	35		464024	Potion				1	
+250942	Superior Frenzy Potion	1	45		463863	Potion				1	
+250943	Major Frenzy Potion	1	55		463931	Potion				1	
+250944	Minor Mender's Potion	1	5		967556	Potion				1	
+250945	Lesser Mender's Potion	1	15		463547	Potion				1	
+250946	Mender's Potion	1	25		463925	Potion				1	
+250947	Greater Mender's Potion	1	35		464026	Potion				1	
+250948	Superior Mender's Potion	1	45		463860	Potion				1	
+250949	Major Mender's Potion	1	55		463927	Potion				1	
+250950	Potion of Venomous Blood	1	30		134799	Potion				1	
+250951	Caustic Smog Potion	1	45		967550	Potion				1	
+250953	Dragonfire Potion	1	35		134813	Potion				1	
+250954	Potion of Elemental Purging	1	40		2057575	Potion				1	
+250955	Potion of Beast Slaying	1	40		2057578	Potion				1	
+250976	Recipe: Minor Spellblasting Potion	1	1		134939	Alchemy		35	9	6	
+250977	Recipe: Lesser Spellblasting Potion	1	1		134939	Alchemy		85	9	6	
+250978	Recipe: Spellblasting Potion	1	1		134939	Alchemy		135	9	6	1
+250979	Recipe: Greater Spellblasting Potion	2	1		134939	Alchemy		185	9	6	1
+250980	Recipe: Superior Spellblasting Potion	1	1		134939	Alchemy		235	9	6	
+250981	Recipe: Major Spellblasting Potion	1	1		134939	Alchemy		285	9	6	1
+250982	Recipe: Minor Frenzy Potion	1	1		134939	Alchemy		40	9	6	
+250983	Recipe: Lesser Frenzy Potion	1	1		134939	Alchemy		90	9	6	
+250984	Recipe: Frenzy Potion	1	1		134939	Alchemy		140	9	6	1
+250985	Recipe: Greater Frenzy Potion	2	1		134939	Alchemy		190	9	6	1
+250986	Recipe: Superior Frenzy Potion	1	1		134939	Alchemy		240	9	6	
+250987	Recipe: Major Frenzy Potion	1	1		134939	Alchemy		290	9	6	1
+250988	Recipe: Minor Mender's Potion	1	1		134939	Alchemy		30	9	6	
+250989	Recipe: Lesser Mender's Potion	1	1		134939	Alchemy		80	9	6	
+250990	Recipe: Mender's Potion	1	1		134939	Alchemy		130	9	6	1
+250991	Recipe: Greater Mender's Potion	1	1		134939	Alchemy		180	9	6	1
+250992	Recipe: Superior Mender's Potion	1	1		134939	Alchemy		230	9	6	
+250993	Recipe: Major Mender's Potion	1	1		134939	Alchemy		280	9	6	1
+250994	Recipe: Potion of Venomous Blood	1	1		134939	Alchemy		275	9	6	1
+250995	Recipe: Caustic Smog Potion	1	1		134939	Alchemy		265	9	6	1
+250997	Recipe: Dragonfire Potion	1	1		134939	Alchemy		245	9	6	1
+250998	Recipe: Potion of Elemental Purging	1	1		134939	Alchemy		280	9	6	1
+250999	Recipe: Potion of Beast Slaying	1	1		134939	Alchemy		280	9	6	1
+251290	Legionite Bar	2			1416159	Metal & Stone			7	7	
+251291	Heavy Thorium Bar	2			348540	Metal & Stone			7	7	
+273085	Blueprint: Fermenter	2			1001491	Alchemy		140	9	6	
+273112	Blueprint: Alchemy Laboratory	2			1001491	Alchemy		300	9	6	
+273125	Lich's Index Finger	2			133727				15	1	
+274273	Flask of Natural Accuracy	2	55		463902	Flask				3	
+274274	Flask of Natural Aggression	2	55		463898	Flask				3	
+274275	Flask of Natural Precision	2	55		463900	Flask				3	
+274276	Flask of Natural Swiftness	2	55		463901	Flask				3	
+274277	Recipe: Flask of Natural Accuracy	3	1		134940	Alchemy		300	9	6	1
+274278	Recipe: Flask of Natural Aggression	3	1		134940	Alchemy		300	9	6	1
+274279	Recipe: Flask of Natural Precision	3	1		134940	Alchemy		300	9	6	1
+274280	Recipe: Flask of Natural Swiftness	3	1		134940	Alchemy		300	9	6	1
+279956	Mana Well	1			135738	Consumable		20		8	
+279970	Fermenter	1			3566827	Consumable		140		8	
+279990	Alchemy Laboratory	1			4777830	Consumable		300		8	
+284871	Recipe: Transmute Legionite	1			134939	Alchemy		275	9	6	]],
         },
         {
             name = "Blacksmithing", skill = 164, count = 506,
@@ -1138,1021 +1138,1021 @@ ns.Data = {
 16986	Blood Talon	325	325,337,350	12795,1,1	12655:10;12360:10;12662:8;7910:10;12644:2	0	1	
 16987	Darkspear	325	325,337,350	12802,1,1	12655:20;12804:20;12364:2;12800:2;12644:2	0	1	]],
             items = [[
-774	Malachite	2			134106				7	11
-818	Tigerseye	2			134118				7	11
-1206	Moss Agate	2			134105				7	11
-1210	Shadowgem	2			134074				7	11
-1529	Jade	2			134134				7	11
-1705	Lesser Moonstone	2			134087				7	11
-2318	Light Leather	1			134252	Leather			7	6
-2319	Medium Leather	1			134254	Leather			7	6
-2320	Coarse Thread	1			132891	Cloth			7	5
-2459	Swiftness Potion	1	5		134875	Potion				1
-2589	Linen Cloth	1			132889	Cloth			7	5
-2605	Green Dye	1			134743				7	11
-2835	Rough Stone	1			135232	Metal & Stone			7	7
-2836	Coarse Stone	1			135235	Metal & Stone			7	7
-2838	Heavy Stone	1			135238	Metal & Stone			7	7
-2840	Copper Bar	1			133216	Metal & Stone			7	7
-2841	Bronze Bar	1			133227	Metal & Stone			7	7
-2842	Silver Bar	2			133215	Metal & Stone			7	7
-2844	Copper Mace	1	4	13	133476	One-Hand (One-Handed Maces)	Speed 2.60		2	4
-2845	Copper Axe	1	4	13	132417	One-Hand (One-Handed Axes)	Speed 2.40		2	
-2847	Copper Shortsword	2	4	13	135327	One-Hand (One-Handed Swords)	Speed 2.50, Strength		2	7
-2848	Bronze Mace	2	17	13	133483	One-Hand (One-Handed Maces)	Speed 2.60, Stamina		2	4
-2849	Bronze Axe	2	18	13	132408	One-Hand (One-Handed Axes)	Speed 2.50, Strength		2	
-2850	Bronze Shortsword	2	19	13	135274	One-Hand (One-Handed Swords)	Speed 2.50, Agility		2	7
-2851	Copper Chain Belt	2	6	6	132491	Waist (Mail)	Stamina		4	3
-2852	Copper Chain Pants	2	4	7	134583	Legs (Mail)	Stamina		4	3
-2853	Copper Bracers	1	2	9	132602	Wrist (Mail)			4	3
-2854	Runed Copper Bracers	2	14	9	132602	Wrist (Mail)	Strength, Stamina		4	3
-2857	Runed Copper Belt	2	13	6	132492	Waist (Mail)	Strength, Stamina		4	3
-2862	Rough Sharpening Stone	1	1		135248	Consumable				8
-2863	Coarse Sharpening Stone	1	5		135249	Consumable				8
-2864	Runed Copper Breastplate	2	13	5	132738	Chest (Mail)	Strength, Stamina		4	3
-2865	Rough Bronze Leggings	2	16	7	134583	Legs (Mail)	Stamina, Spirit		4	3
-2866	Rough Bronze Cuirass	2	18	5	132630	Chest (Mail)	Stamina		4	3
-2867	Rough Bronze Bracers	2	18	9	132604	Wrist (Mail)	Stamina		4	3
-2868	Patterned Bronze Bracers	2	20	9	132606	Wrist (Mail)	Strength		4	3
-2869	Silvered Bronze Breastplate	2	21	5	132631	Chest (Mail)	Strength, Stamina, Spirit		4	3
-2870	Shining Silver Breastplate	3	24	5	132750	Chest (Mail)	Strength, Stamina		4	3
-2871	Heavy Sharpening Stone	1	15		135250	Consumable				8
-2880	Weak Flux	1			133588				7	11
-2881	Plans: Runed Copper Breastplate	2			134942	Blacksmithing		55	9	4
-2882	Plans: Silvered Bronze Shoulders	2			134942	Blacksmithing		100	9	4
-2883	Plans: Deadly Bronze Poniard	2			134942	Blacksmithing		100	9	4
-3239	Rough Weightstone	1	1		135255	Consumable				8
-3240	Coarse Weightstone	1	5		135256	Consumable				8
-3241	Heavy Weightstone	1	15		135257	Consumable				8
-3391	Elixir of Ogre Strength	1	20		134837	Elixir				2
-3466	Strong Flux	1			133587				7	11
-3469	Copper Chain Boots	2	4	8		Feet (Mail)	Stamina		4	3
-3470	Rough Grinding Stone	1			135243	Metal & Stone			7	7
-3471	Copper Chain Vest	2	5	5	132624	Chest (Mail)	Strength		4	3
-3472	Runed Copper Gauntlets	2	7	10	132938	Hands (Mail)	Strength, Stamina		4	3
-3473	Runed Copper Pants	2	8	7	134583	Legs (Mail)	Strength, Stamina		4	3
-3474	Gemmed Copper Gauntlets	2	10	10	132939	Hands (Mail)			4	3
-3478	Coarse Grinding Stone	1			135244	Metal & Stone			7	7
-3480	Rough Bronze Shoulders	2	17	3	135036	Shoulder (Mail)	Stamina, Strength		4	3
-3481	Silvered Bronze Shoulders	2	20	3	135040	Shoulder (Mail)	Strength, Stamina, Spirit		4	3
-3482	Silvered Bronze Boots	2	21	8	132535	Feet (Mail)	Strength, Stamina, Spirit		4	3
-3483	Silvered Bronze Gauntlets	2	22	10	132939	Hands (Mail)	Strength, Stamina, Spirit		4	3
-3484	Green Iron Boots	2	24	8	132535	Feet (Mail)	Stamina, Strength		4	3
-3485	Green Iron Gauntlets	2	25	10	132939	Hands (Mail)	Stamina, Strength		4	3
-3486	Heavy Grinding Stone	1			135245	Metal & Stone			7	7
-3487	Heavy Copper Broadsword	2	14	17	135312	Two-Hand (Two-Handed Swords)	Speed 3.30, Stamina		2	8
-3488	Copper Battle Axe	2	8	17	135420	Two-Hand (Two-Handed Axes)	Speed 3.50, Stamina		2	1
-3489	Thick War Axe	2	12	13	135419	One-Hand (One-Handed Axes)	Speed 2.50, Stamina, Strength		2	
-3490	Deadly Bronze Poniard	2	20	13	135641	One-Hand (Daggers)	Speed 1.80, Agility		2	15
-3491	Heavy Bronze Mace	2	20	13	133483	One-Hand (One-Handed Maces)	Speed 2.80, Strength		2	4
-3492	Mighty Iron Hammer	2	25	13	133041	One-Hand (One-Handed Maces)	Speed 2.80, Strength		2	4
-3575	Iron Bar	1			133232	Metal & Stone			7	7
-3577	Gold Bar	2			133217	Metal & Stone			7	7
-3608	Plans: Mighty Iron Hammer	2			134942	Blacksmithing		120	9	4
-3609	Plans: Copper Chain Vest	2			134942	Blacksmithing		30	9	4
-3610	Plans: Gemmed Copper Gauntlets	2			134942	Blacksmithing		35	9	4
-3611	Plans: Green Iron Boots	2			134942	Blacksmithing		120	9	4
-3612	Plans: Green Iron Gauntlets	2			134942	Blacksmithing		125	9	4
-3823	Lesser Invisibility Potion	1	23		134798	Potion				1
-3824	Shadow Oil	1	24		134803	Consumable				8
-3829	Frost Oil	1	30		134800	Consumable				8
-3835	Green Iron Bracers	2	28	9	132605	Wrist (Mail)	Stamina, Strength		4	3
-3836	Green Iron Helm	2	29	1	133071	Head (Mail)	Stamina, Strength		4	3
-3837	Golden Scale Coif	2	33	1	133138	Head (Mail)	Strength, Stamina		4	3
-3840	Green Iron Shoulders	2	27	3	135040	Shoulder (Mail)	Stamina, Strength		4	3
-3841	Golden Scale Shoulders	2	30	3	135040	Shoulder (Mail)	Strength, Stamina		4	3
-3842	Green Iron Leggings	2	26	7	134585	Legs (Mail)	Stamina, Strength		4	3
-3843	Golden Scale Leggings	2	29	7	134584	Legs (Mail)	Strength, Stamina		4	3
-3844	Green Iron Hauberk	3	31	5	132624	Chest (Mail)	Stamina, Strength, Bonus Armor		4	3
-3845	Golden Scale Cuirass	2	35	5	132628	Chest (Mail)	Strength, Stamina		4	3
-3846	Polished Steel Boots	2	32	8	132535	Feet (Mail)	Stamina		4	3
-3847	Golden Scale Boots	2	35	8	132535	Feet (Mail)	Strength, Stamina		4	3
-3848	Big Bronze Knife	2	15	13	135640	One-Hand (Daggers)	Speed 1.90, Stamina		2	15
-3849	Hardened Iron Shortsword	2	27	13	135321	One-Hand (One-Handed Swords)	Speed 1.80, Stamina		2	7
-3850	Jade Serpentblade	2	30	13	135346	One-Hand (One-Handed Swords)	Speed 2.80, Attack Power, Agility		2	7
-3851	Solid Iron Maul	2	26	17	133044	Two-Hand (Two-Handed Maces)	Speed 3.50, Stamina		2	5
-3852	Golden Iron Destroyer	2	29	17	133041	Two-Hand (Two-Handed Maces)	Speed 3.30, Strength, Spell Power		2	5
-3853	Moonsteel Broadsword	2	31	17	135326	Two-Hand (Two-Handed Swords)	Speed 3.50, Strength, Spell Power		2	8
-3854	Frost Tiger Blade	2	35	17	135275	Two-Hand (Two-Handed Swords)	Speed 3.40, Critical Strike Rating		2	8
-3855	Massive Iron Axe	2	32	17	135423	Two-Hand (Two-Handed Axes)	Speed 3.50, Strength, Stamina		2	1
-3856	Shadow Crescent Axe	2	35	17	132408	Two-Hand (Two-Handed Axes)	Speed 3.30, Strength, Spell Power		2	1
-3859	Steel Bar	1			133234	Metal & Stone			7	7
-3860	Mithril Bar	1			133220	Metal & Stone			7	7
-3864	Citrine	2			134117				7	11
-3866	Plans: Jade Serpentblade	2			134942	Blacksmithing		150	9	4
-3867	Plans: Golden Iron Destroyer	2			134942	Blacksmithing		145	9	4
-3868	Plans: Frost Tiger Blade	2			134942	Blacksmithing		175	9	4
-3869	Plans: Shadow Crescent Axe	2			134942	Blacksmithing		175	9	4
-3870	Plans: Green Iron Shoulders	2			134942	Blacksmithing		135	9	4
-3871	Plans: Golden Scale Shoulders	3			134939	Blacksmithing		150	9	4
-3872	Plans: Golden Scale Leggings	2			134942	Blacksmithing		145	9	4
-3873	Plans: Golden Scale Cuirass	2			134942	Blacksmithing		170	9	4
-3874	Plans: Polished Steel Boots	2			134942	Blacksmithing		160	9	4
-3875	Plans: Golden Scale Boots	3			134939	Blacksmithing		175	9	4
-4234	Heavy Leather	1			134256	Leather			7	6
-4255	Green Leather Armor	2	26	5	132723	Chest (Leather)	Agility, Intellect		4	2
-4304	Thick Leather	1			134257	Leather			7	6
-4338	Mageweave Cloth	1			132892	Cloth			7	5
-5498	Small Lustrous Pearl	2			134122				7	11
-5500	Iridescent Pearl	2			134121				7	11
-5540	Pearl-handled Dagger	2	18	13	135641	One-Hand (Daggers)	Speed 1.70, Agility, Stamina		2	15
-5541	Iridescent Hammer	2	23	13	133042	One-Hand (One-Handed Maces)	Speed 2.40, Strength, Stamina		2	4
-5543	Plans: Iridescent Hammer	2			134942	Blacksmithing		115	9	4
-5578	Plans: Silvered Bronze Breastplate	2			134942	Blacksmithing		105	9	4
-5635	Sharp Claw	1			134296				7	11
-5637	Large Fang	1			133725				7	11
-5966	Guardian Gloves	2	33	10	132939	Hands (Leather)	Intellect, Spell Power		4	2
-6037	Truesilver Bar	2			133222	Metal & Stone			7	7
-6040	Golden Scale Bracers	2	32	9	132609	Wrist (Mail)	Stamina, Strength		4	3
-6041	Steel Weapon Chain	1			135834	Item Enhancement		190		6
-6042	Iron Shield Spike	1			133596	Item Enhancement		150		6
-6043	Iron Counterweight	1			134333	Item Enhancement		165		6
-6044	Plans: Iron Shield Spike	2			134942	Blacksmithing		125	9	4
-6045	Plans: Iron Counterweight	2			134942	Blacksmithing		140	9	4
-6046	Plans: Steel Weapon Chain	2			134942	Blacksmithing		165	9	4
-6047	Plans: Golden Scale Coif	1			134939	Blacksmithing		165	9	4
-6214	Heavy Copper Maul	2	11	17	133055	Two-Hand (Two-Handed Maces)	Speed 3.30, Strength		2	5
-6217	Copper Rod	1			133942	Enchanting			7	12
-6338	Silver Rod	1			135138	Enchanting			7	12
-6350	Rough Bronze Boots	2	13	8	132535	Feet (Mail)	Strength, Stamina		4	3
-6730	Ironforge Chain	2	11	5	132624	Chest (Mail)	Stamina		4	3
-6731	Ironforge Breastplate	2	15	5	132740	Chest (Mail)	Strength, Stamina, Bonus Armor		4	3
-6733	Ironforge Gauntlets	2	23	10	132939	Hands (Mail)	Bonus Armor, Attack Power		4	3
-6735	Plans: Ironforge Breastplate	2			134942	Blacksmithing		100	9	4
-7067	Elemental Earth	1			134572	Elemental			7	10
-7068	Elemental Fire	1			135805	Elemental			7	10
-7069	Elemental Air	1			136107	Elemental			7	10
-7070	Elemental Water	1			134714	Elemental			7	10
-7071	Iron Buckle	1			133607	Parts			7	1
-7075	Core of Earth	1			135231	Elemental			7	10
-7076	Essence of Earth	2			136102	Elemental			7	10
-7077	Heart of Fire	1			135819	Elemental			7	10
-7078	Essence of Fire	2			135830	Elemental			7	10
-7079	Globe of Water	1			134333	Elemental			7	10
-7080	Essence of Water	2			136007	Elemental			7	10
-7081	Breath of Wind	1			136018	Elemental			7	10
-7082	Essence of Air	2			136022	Elemental			7	10
-7166	Copper Dagger	2	6	13	135650	One-Hand (Daggers)	Speed 1.70, Agility		2	15
-7909	Aquamarine	2			134088				7	11
-7910	Star Ruby	2			134129				7	11
-7912	Solid Stone	1			135236	Metal & Stone			7	7
-7913	Barbaric Iron Shoulders	2	27	3	135054	Shoulder (Mail)	Strength, Agility		4	3
-7914	Barbaric Iron Breastplate	2	27	5	132636	Chest (Mail)	Strength		4	3
-7915	Barbaric Iron Helm	2	30	1	133127	Head (Mail)	Agility, Strength		4	3
-7916	Barbaric Iron Boots	2	31	8	132582	Feet (Mail)	Strength, Agility		4	3
-7917	Barbaric Iron Gloves	2	32	10	132965	Hands (Mail)	Strength		4	3
-7918	Heavy Mithril Shoulder	2	40	3	135053	Shoulder (Plate)	Stamina		4	4
-7919	Heavy Mithril Gauntlet	2	40	10	132961	Hands (Plate)	Stamina, Bonus Armor		4	4
-7920	Mithril Plate Pants	2	40	7	134584	Legs (Mail)	Spirit, Dodge Rating		4	3
-7921	Heavy Mithril Pants	2	40	7	134583	Legs (Plate)	Stamina, Bonus Armor		4	4
-7922	Steel Plate Helm	2	40	1	133071	Head (Plate)	Stamina, Strength		4	4
-7924	Mithril Plate Bracers	2	40	9	132606	Wrist (Mail)	Spirit, Stamina		4	3
-7925	Mithril Plate Gloves	2	40	10	132965	Hands (Mail)	Spirit, Stamina		4	3
-7926	Ornate Mithril Pants	2	40	7	134584	Legs (Plate)	Strength, Dodge Rating		4	4
-7927	Ornate Mithril Gloves	2	40	10	132965	Hands (Plate)	Critical Strike Rating		4	4
-7928	Ornate Mithril Shoulders	2	40	3	135040	Shoulder (Plate)	Strength, Dodge Rating		4	4
-7929	Orcish War Leggings	2	40	7	134583	Legs (Mail)	Strength		4	3
-7930	Heavy Mithril Breastplate	2	41	5	132745	Chest (Plate)	Stamina, Bonus Armor		4	4
-7931	Mithril Coif	2	41	1	133137	Head (Mail)	Spirit, Stamina		4	3
-7932	Mithril Plate Shoulders	2	42	3	135043	Shoulder (Mail)	Spirit, Stamina		4	3
-7933	Heavy Mithril Boots	2	42	8	132582	Feet (Plate)	Stamina, Bonus Armor		4	4
-7934	Heavy Mithril Helm	2	42	1	133078	Head (Plate)	Stamina, Bonus Armor		4	4
-7935	Ornate Mithril Breastplate	2	43	5	132745	Chest (Plate)	Critical Strike Rating, Dodge Rating		4	4
-7936	Ornate Mithril Boots	2	44	8	132535	Feet (Plate)	Dodge Rating		4	4
-7937	Ornate Mithril Helm	2	44	1	133078	Head (Plate)	Strength, Critical Strike Rating		4	4
-7938	Truesilver Gauntlets	3	40	10	132963	Hands (Plate)	Strength, Stamina		4	4
-7939	Truesilver Breastplate	3	44	5	132739	Chest (Plate)	Stamina		4	4
-7941	Heavy Mithril Axe	2	37	13	132405	One-Hand (One-Handed Axes)	Speed 2.70, Stamina		2	
-7942	Blue Glittering Axe	2	39	13	132394	One-Hand (One-Handed Axes)	Speed 2.40, Agility		2	
-7943	Wicked Mithril Blade	2	40	13	135280	One-Hand (One-Handed Swords)	Speed 2.50, Strength, Agility		2	7
-7944	Dazzling Mithril Rapier	2	43	13	135340	One-Hand (One-Handed Swords)	Speed 1.70, Agility		2	7
-7945	Big Black Mace	2	41	13	133490	One-Hand (One-Handed Maces)	Speed 2.60, Strength		2	4
-7946	Runed Mithril Hammer	2	44	13	133054	One-Hand (One-Handed Maces)	Speed 1.60, Stamina, Defense Rating		2	4
-7947	Ebon Shiv	2	46	13	135650	One-Hand (Daggers)	Speed 1.70, Agility		2	15
-7954	The Shatterer	3	42	13	133055	One-Hand (One-Handed Maces)	Speed 2.40		2	4
-7955	Copper Claymore	2	6	17	135322	Two-Hand (Two-Handed Swords)	Speed 3.30, Strength, Stamina		2	8
-7956	Bronze Warhammer	2	20	17	133055	Two-Hand (Two-Handed Maces)	Speed 3.50, Stamina, Strength		2	5
-7957	Bronze Greatsword	2	21	17	135321	Two-Hand (Two-Handed Swords)	Speed 3.40, Spell Power, Stamina		2	8
-7958	Bronze Battle Axe	2	22	17	132415	Two-Hand (Two-Handed Axes)	Speed 3.30, Strength		2	1
-7959	Blight	3	45	17	135130	Two-Hand (Polearms)	Speed 3.70		2	6
-7960	Truesilver Champion	3	47	17	135317	Two-Hand (Two-Handed Swords)	Speed 3.40		2	8
-7961	Phantom Blade	3	44	13	135350	One-Hand (One-Handed Swords)	Speed 1.60		2	7
-7963	Steel Breastplate	2	35	5	132740	Chest (Mail)	Stamina, Block Rating		4	3
-7964	Solid Sharpening Stone	1	25		135251	Consumable				8
-7965	Solid Weightstone	1	25		135258	Consumable				8
-7966	Solid Grinding Stone	1			135246	Metal & Stone			7	7
-7967	Mithril Shield Spike	2			133597	Item Enhancement		215		6
-7969	Mithril Spurs	2			132307	Item Enhancement		215		6
-7971	Black Pearl	2			134120				7	11
-7972	Ichor of Undeath	1			134437	Elemental			7	10
-7975	Plans: Heavy Mithril Pants	2			134942	Blacksmithing		185	9	4
-7976	Plans: Mithril Shield Spike	3			134939	Blacksmithing		190	9	4
-7978	Plans: Barbaric Iron Shoulders	2			134942	Blacksmithing		135	9	4
-7979	Plans: Barbaric Iron Breastplate	2			134942	Blacksmithing		135	9	4
-7980	Plans: Barbaric Iron Helm	2			134942	Blacksmithing		150	9	4
-7981	Plans: Barbaric Iron Boots	2			134942	Blacksmithing		155	9	4
-7982	Plans: Barbaric Iron Gloves	2			134942	Blacksmithing		160	9	4
-7983	Plans: Ornate Mithril Pants	2			134942	Blacksmithing		195	9	4
-7984	Plans: Ornate Mithril Gloves	2			134942	Blacksmithing		195	9	4
-7985	Plans: Ornate Mithril Shoulders	2			134942	Blacksmithing		200	9	4
-7989	Plans: Mithril Spurs	2			134942	Blacksmithing		210	9	4
-7990	Plans: Heavy Mithril Helm	2			134942	Blacksmithing		220	9	4
-7991	Plans: Mithril Plate Shoulders	3			134939	Blacksmithing		210	9	4
-7992	Plans: Blue Glittering Axe	2			134942	Blacksmithing		195	9	4
-7993	Plans: Dazzling Mithril Rapier	2			134942	Blacksmithing		215	9	4
-7995	Plans: Mithril Plate Bracers	1			134939	Blacksmithing		190	9	4
-8028	Plans: Runed Mithril Hammer	3			134939	Blacksmithing		220	9	4
-8029	Plans: Wicked Mithril Blade	2			134942	Blacksmithing		200	9	4
-8030	Plans: Ebon Shiv	1			134939	Blacksmithing		230	9	4
-8146	Wicked Claw	1			134294				7	11
-8153	Wildvine	1			134183	Herb			7	9
-8168	Jet Black Feather	1			132915	Leather			7	6
-8170	Rugged Leather	1			134251	Leather			7	6
-8831	Purple Lotus	1			134198	Herb			7	9
-9060	Inlaid Mithril Cylinder	1			134535	Parts			7	1
-9366	Golden Scale Gauntlets	2	36	10	132963	Hands (Mail)	Strength, Stamina		4	3
-9367	Plans: Golden Scale Gauntlets	2			134942	Blacksmithing		180	9	4
-10421	Rough Copper Vest	2	2	5	132624	Chest (Mail)	Stamina		4	3
-10423	Silvered Bronze Leggings	2	26	7	134584	Legs (Mail)	Strength, Stamina, Spirit		4	3
-10424	Plans: Silvered Bronze Leggings	2			134942	Blacksmithing		130	9	4
-10713	Plans: Inlaid Mithril Cylinder	1			134941	Blacksmithing		200	9	4
-10858	Plans: Solid Iron Maul	1			134939	Blacksmithing		130	9	4
-10938	Lesser Magic Essence	2			132867	Enchanting			7	12
-10940	Strange Dust	1			132858	Enchanting			7	12
-11128	Golden Rod	1			135147	Enchanting			7	12
-11139	Large Glowing Shard	3			132878	Enchanting			7	12
-11144	Truesilver Rod	1			135148	Enchanting			7	12
-11184	Blue Power Crystal	1			134133				12	
-11185	Green Power Crystal	1			134105				12	
-11186	Red Power Crystal	1			134130				12	
-11188	Yellow Power Crystal	1			134136				12	
-11371	Dark Iron Bar	1			133233	Metal & Stone			7	7
-11382	Blood of the Mountain	2			134086				7	11
-11604	Dark Iron Plate	3	54	5	132743	Chest (Plate)	Stamina, Bonus Armor		4	4
-11605	Dark Iron Shoulders	2	53	3	135040	Shoulder (Plate)	Stamina, Bonus Armor		4	4
-11606	Dark Iron Mail	2	51	5	132638	Chest (Mail)	Stamina, Bonus Armor		4	3
-11607	Dark Iron Sunderer	3	52	17	135572	Two-Hand (Two-Handed Axes)	Speed 2.60		2	1
-11608	Dark Iron Pulverizer	3	50	17	133046	Two-Hand (Two-Handed Maces)	Speed 3.70		2	5
-11610	Plans: Dark Iron Pulverizer	3			134939	Blacksmithing		240	9	4
-11611	Plans: Dark Iron Sunderer	3			134939	Blacksmithing		250	9	4
-11612	Plans: Dark Iron Plate	3			134939	Blacksmithing		260	9	4
-11614	Plans: Dark Iron Mail	2			134942	Blacksmithing		245	9	4
-11615	Plans: Dark Iron Shoulders	2			134942	Blacksmithing		255	9	4
-11754	Black Diamond	2			134071				12	
-12162	Plans: Hardened Iron Shortsword	1			134939	Blacksmithing		135	9	4
-12163	Plans: Moonsteel Broadsword	1			134939	Blacksmithing		155	9	4
-12164	Plans: Massive Iron Axe	1			134939	Blacksmithing		160	9	4
-12259	Glinting Steel Dagger	2	31	13	135641	One-Hand (Daggers)	Speed 1.70, Attack Power		2	15
-12260	Searing Golden Blade	2	34	13	135641	One-Hand (Daggers)	Speed 1.40, Intellect		2	15
-12261	Plans: Searing Golden Blade	2			134942	Blacksmithing		165	9	4
-12359	Thorium Bar	1			133221	Metal & Stone			7	7
-12360	Arcanite Bar	2			134459	Metal & Stone			7	7
-12361	Blue Sapphire	2			134132				7	11
-12364	Huge Emerald	2			134104				7	11
-12365	Dense Stone	1			134461	Metal & Stone			7	7
-12404	Dense Sharpening Stone	1	35		135252	Consumable				8
-12405	Thorium Armor	2	45	5	132743	Chest (Plate)	Stamina		4	4
-12406	Thorium Belt	2	45	6	132519	Waist (Plate)	Stamina		4	4
-12408	Thorium Bracers	2	46	9	132612	Wrist (Plate)	Stamina		4	4
-12409	Thorium Boots	2	51	8	132589	Feet (Plate)			4	4
-12410	Thorium Helm	2	51	1	133125	Head (Plate)	Stamina		4	4
-12414	Thorium Leggings	2	55	7	134584	Legs (Plate)	Stamina		4	4
-12415	Radiant Breastplate	2	49	5	132751	Chest (Mail)			4	3
-12416	Radiant Belt	2	47	6	132500	Waist (Mail)	Stamina		4	3
-12417	Radiant Circlet	2	54	1	132767	Head (Mail)	Stamina		4	3
-12418	Radiant Gloves	2	52	10	132960	Hands (Mail)	Stamina		4	3
-12419	Radiant Boots	2	53	8	132584	Feet (Mail)	Stamina		4	3
-12420	Radiant Leggings	2	56	7	134583	Legs (Mail)	Stamina		4	3
-12422	Imperial Plate Chest	2	55	5	132745	Chest (Plate)	Strength, Stamina		4	4
-12424	Imperial Plate Belt	2	47	6	132490	Waist (Plate)	Strength, Stamina		4	4
-12425	Imperial Plate Bracers	2	49	9	132618	Wrist (Plate)	Strength, Stamina		4	4
-12426	Imperial Plate Boots	2	54	8	132582	Feet (Plate)	Strength, Stamina		4	4
-12427	Imperial Plate Helm	2	54	1	133124	Head (Plate)	Strength, Stamina		4	4
-12428	Imperial Plate Shoulders	2	47	3	135033	Shoulder (Plate)	Strength, Stamina		4	4
-12429	Imperial Plate Leggings	2	56	7	134584	Legs (Plate)	Strength, Stamina		4	4
-12610	Runic Plate Shoulders	2	55	3	135054	Shoulder (Plate)	Stamina		4	4
-12611	Runic Plate Boots	2	55	8	132582	Feet (Plate)	Stamina		4	4
-12612	Runic Plate Helm	2	56	1	133071	Head (Plate)	Stamina		4	4
-12613	Runic Breastplate	2	57	5	132746	Chest (Plate)	Stamina		4	4
-12614	Runic Plate Leggings	2	57	7	134584	Legs (Plate)	Stamina		4	4
-12618	Enchanted Thorium Breastplate	3	58	5	132745	Chest (Plate)	Stamina, Strength, Defense Rating		4	4
-12619	Enchanted Thorium Leggings	3	58	7	134584	Legs (Plate)	Stamina, Strength, Defense Rating		4	4
-12620	Enchanted Thorium Helm	3	57	1	133070	Head (Plate)	Stamina, Strength, Defense Rating		4	4
-12625	Dawnbringer Shoulders	3	53	3	135051	Shoulder (Plate)	Spirit, Healing, Spell Damage		4	4
-12628	Demon Forged Breastplate	1		5	132741	Chest (Plate)			4	4
-12631	Fiery Plate Gauntlets	3	53	10	132937	Hands (Plate)			4	4
-12633	Whitesoul Helm	3	55	1	133111	Head (Plate)	Spirit, Intellect, Bonus Armor, Healing, Spell Damage		4	4
-12639	Stronghold Gauntlets	4	57	10	132964	Hands (Plate)	Stamina, Parry Rating, Critical Strike Rating		4	4
-12640	Lionheart Helm	4	56	1	133138	Head (Plate)	Strength, Critical Strike Rating, Hit Rating		4	4
-12643	Dense Weightstone	1	35		135259	Consumable				8
-12644	Dense Grinding Stone	1			135247	Metal & Stone			7	7
-12645	Thorium Shield Spike	2			133614	Item Enhancement		250		6
-12655	Enchanted Thorium Bar	1			133229	Metal & Stone			7	7
-12662	Demonic Rune	2			134417				7	11
-12682	Plans: Thorium Armor	2			134942	Blacksmithing		225	9	4
-12683	Plans: Thorium Belt	2			134942	Blacksmithing		225	9	4
-12684	Plans: Thorium Bracers	2			134942	Blacksmithing		230	9	4
-12685	Plans: Radiant Belt	2			134942	Blacksmithing		235	9	4
-12687	Plans: Imperial Plate Shoulders	2			134939	Blacksmithing		240	9	4
-12688	Plans: Imperial Plate Belt	2			134939	Blacksmithing		240	9	4
-12689	Plans: Radiant Breastplate	2			134942	Blacksmithing		245	9	4
-12690	Plans: Imperial Plate Bracers	2			134939	Blacksmithing		245	9	4
-12692	Plans: Thorium Shield Spike	2			134942	Blacksmithing		250	9	4
-12693	Plans: Thorium Boots	2			134942	Blacksmithing		255	9	4
-12694	Plans: Thorium Helm	2			134942	Blacksmithing		255	9	4
-12695	Plans: Radiant Gloves	2			134942	Blacksmithing		260	9	4
-12696	Plans: Demon Forged Breastplate	3			134939	Blacksmithing		260	9	4
-12697	Plans: Radiant Boots	2			134942	Blacksmithing		265	9	4
-12698	Plans: Dawnbringer Shoulders	3			134939	Blacksmithing		265	9	4
-12699	Plans: Fiery Plate Gauntlets	3			134939	Blacksmithing		265	9	4
-12700	Plans: Imperial Plate Boots	2			134939	Blacksmithing		270	9	4
-12701	Plans: Imperial Plate Helm	2			134939	Blacksmithing		270	9	4
-12702	Plans: Radiant Circlet	2			134942	Blacksmithing		270	9	4
-12704	Plans: Thorium Leggings	2			134942	Blacksmithing		275	9	4
-12705	Plans: Imperial Plate Chest	2			134939	Blacksmithing		275	9	4
-12706	Plans: Runic Plate Shoulders	2			134939	Blacksmithing		275	9	4
-12707	Plans: Runic Plate Boots	2			134939	Blacksmithing		275	9	4
-12711	Plans: Whitesoul Helm	3			134939	Blacksmithing		290	9	4
-12713	Plans: Radiant Leggings	2			134942	Blacksmithing		280	9	4
-12714	Plans: Runic Plate Helm	2			134939	Blacksmithing		280	9	4
-12715	Plans: Imperial Plate Leggings	2			134939	Blacksmithing		280	9	4
-12717	Plans: Lionheart Helm	4			134941	Blacksmithing		300	9	4
-12718	Plans: Runic Breastplate	2			134939	Blacksmithing		285	9	4
-12719	Plans: Runic Plate Leggings	2			134939	Blacksmithing		285	9	4
-12720	Plans: Stronghold Gauntlets	4			134939	Blacksmithing		300	9	4
-12725	Plans: Enchanted Thorium Helm	3			134941	Blacksmithing		300	9	4
-12726	Plans: Enchanted Thorium Leggings	3			134941	Blacksmithing		300	9	4
-12727	Plans: Enchanted Thorium Breastplate	3			134941	Blacksmithing		300	9	4
-12753	Skin of Shadow	2			134430				12	
-12764	Thorium Greatsword	2	47	17	135323	Two-Hand (Two-Handed Swords)	Speed 3.60, Strength		2	8
-12769	Bleakwood Hew	3	49	17	132418	Two-Hand (Two-Handed Axes)	Speed 2.70, Strength, Stamina		2	1
-12772	Inlaid Thorium Hammer	2	49	17	133046	Two-Hand (Two-Handed Maces)	Speed 3.00, Strength		2	5
-12773	Ornate Thorium Handaxe	2	50	13	132403	One-Hand (One-Handed Axes)	Speed 1.90, Strength		2	
-12774	Dawn's Edge	3	50	13	132396	One-Hand (One-Handed Axes)	Speed 2.10, Critical Strike Rating		2	
-12775	Huge Thorium Battleaxe	2	51	17	135581	Two-Hand (Two-Handed Axes)	Speed 3.50		2	1
-12776	Enchanted Battlehammer	3	51	17	133042	Two-Hand (Two-Handed Maces)	Speed 3.50, Parry Rating, Hit Rating		2	5
-12777	Blazing Rapier	3	51	13	135340	One-Hand (One-Handed Swords)	Speed 2.40		2	7
-12779	Rune Edge	1		13	132408	One-Hand (One-Handed Axes)			2	
-12781	Serenity	3	52	13	133477	One-Hand (One-Handed Maces)	Speed 2.50		2	4
-12782	Corruption	3	53	17	135277	Two-Hand (Two-Handed Swords)	Speed 3.30, Strength, Stamina		2	8
-12783	Heartseeker	3	58	13	135315	One-Hand (Daggers)	Speed 1.90, Agility, Critical Strike Rating		2	15
-12784	Arcanite Reaper	3	58	17	132400	Two-Hand (Two-Handed Axes)	Speed 3.80, Stamina, Attack Power		2	1
-12790	Arcanite Champion	3	58	17	135349	Two-Hand (Two-Handed Swords)	Speed 3.40		2	8
-12792	Volcanic Hammer	2	53	13	133043	One-Hand (One-Handed Maces)	Speed 2.50		2	4
-12794	Masterwork Stormhammer	3	57	13	133041	One-Hand (One-Handed Maces)	Speed 1.60		2	4
-12795	Blood Talon	3	55	21	135663	Main Hand (Fist Weapons)	Speed 1.30		2	13
-12796	Hammer of the Titans	3	58	17	133046	Two-Hand (Two-Handed Maces)	Speed 3.80, Strength		2	5
-12797	Frostguard	3	58	13	135291	One-Hand (One-Handed Swords)	Speed 2.80		2	7
-12798	Annihilator	3	58	13	132403	One-Hand (One-Handed Axes)	Speed 2.40, Attack Power		2	
-12799	Large Opal	2			134116				7	11
-12800	Azerothian Diamond	2			134094				7	11
-12802	Darkspear	3	55	17	135131	Two-Hand (Polearms)	Speed 3.20		2	6
-12803	Living Essence	2			136006	Elemental			7	10
-12804	Powerful Mojo	1			136011				7	11
-12808	Essence of Undeath	2			136195	Elemental			7	10
-12809	Guardian Stone	2			135228	Metal & Stone			7	7
-12810	Enchanted Leather	1			134418	Leather			7	6
-12811	Righteous Orb	2			134122				7	11
-12819	Plans: Ornate Thorium Handaxe	2			134939	Blacksmithing		250	9	4
-12821	Plans: Dawn's Edge	3			134939	Blacksmithing		250	9	4
-12823	Plans: Huge Thorium Battleaxe	1			134939	Blacksmithing		255	9	4
-12824	Plans: Enchanted Battlehammer	2			134942	Blacksmithing		255	9	4
-12825	Plans: Blazing Rapier	2			134942	Blacksmithing		255	9	4
-12827	Plans: Serenity	2			134942	Blacksmithing		260	9	4
-12828	Plans: Volcanic Hammer	2			134942	Blacksmithing		265	9	4
-12830	Plans: Corruption	1			134939	Blacksmithing		265	9	4
-12833	Plans: Hammer of the Titans	3			134939	Blacksmithing		300	9	4
-12834	Plans: Arcanite Champion	3			134939	Blacksmithing		300	9	4
-12835	Plans: Annihilator	3			134939	Blacksmithing		300	9	4
-12836	Plans: Frostguard	3			134939	Blacksmithing		300	9	4
-12837	Plans: Masterwork Stormhammer	3			134939	Blacksmithing		300	9	4
-12838	Plans: Arcanite Reaper	3			134939	Blacksmithing		300	9	4
-12839	Plans: Heartseeker	3			134939	Blacksmithing		300	9	4
-12938	Blood of Heroes	1			134813				12	
-13510	Flask of the Titans	1	50		134842	Flask				3
-13511	Flask of Distilled Wisdom	1	50		134877	Flask				3
-13512	Flask of Supreme Power	1	50		134821	Flask				3
-13926	Golden Pearl	2			134123				7	11
-15417	Devilsaur Leather	1			134347	Leather			7	6
-15869	Silver Skeleton Key	2			134237	Consumable		75		8
-15870	Golden Skeleton Key	2			134247	Consumable		125		8
-15871	Truesilver Skeleton Key	2			134245	Consumable		175		8
-15872	Arcanite Skeleton Key	2			134242	Consumable		250		8
-16206	Arcanite Rod	1			135156	Enchanting			7	12
-16988	Fiery Chain Shoulders	4	57	3	135054	Shoulder (Mail)	Intellect, Stamina		4	3
-16989	Fiery Chain Girdle	4	54	6	132502	Waist (Mail)	Stamina, Intellect, Spirit		4	3
-17010	Fiery Core	3			135812				7	11
-17011	Lava Core	3			136025				7	11
-17012	Core Leather	1			132386	Leather			7	6
-17013	Dark Iron Leggings	4	55	7	134584	Legs (Plate)	Stamina, Bonus Armor		4	4
-17014	Dark Iron Bracers	4	54	9	132606	Wrist (Plate)	Stamina, Bonus Armor		4	4
-17015	Dark Iron Reaver	3	60	13	135358	One-Hand (One-Handed Swords)	Speed 2.40, Stamina		2	7
-17016	Dark Iron Destroyer	3	60	13	132403	One-Hand (One-Handed Axes)	Speed 2.40, Strength		2	
-17049	Plans: Fiery Chain Girdle	3			134941	Blacksmithing		270	9	4
-17051	Plans: Dark Iron Bracers	3			134941	Blacksmithing		270	9	4
-17052	Plans: Dark Iron Leggings	3			134941	Blacksmithing		300	9	4
-17053	Plans: Fiery Chain Shoulders	3			134941	Blacksmithing		300	9	4
-17059	Plans: Dark Iron Reaver	3			134941	Blacksmithing		300	9	4
-17060	Plans: Dark Iron Destroyer	3			134941	Blacksmithing		300	9	4
-17193	Sulfuron Hammer	4	60	17	133066	Two-Hand (Two-Handed Maces)	Speed 3.70		2	5
-17203	Sulfuron Ingot	4			135824	Metal & Stone			7	7
-17704	Edge of Winter	2	33	13	132397	One-Hand (One-Handed Axes)	Speed 2.80, Stamina		2	
-17706	Plans: Edge of Winter	2			134942	Blacksmithing		165	9	4
-18262	Elemental Sharpening Stone	2	50		135228	Consumable				8
-18264	Plans: Elemental Sharpening Stone	3			134941	Blacksmithing		300	9	4
-18567	Elemental Flux	1			135839	Metal & Stone			7	7
-18592	Plans: Sulfuron Hammer	4			134939	Blacksmithing		300	9	4
-19051	Girdle of the Dawn	3	53	6	132500	Waist (Plate)	Strength, Stamina		4	4
-19057	Gloves of the Dawn	3	56	10	132963	Hands (Plate)	Strength, Stamina		4	4
-19148	Dark Iron Helm	4	60	1	133124	Head (Plate)	Stamina, Bonus Armor		4	4
-19164	Dark Iron Gauntlets	4	60	10	132956	Hands (Plate)	Stamina, Agility		4	4
-19166	Black Amnesty	4	60	13	135648	One-Hand (Daggers)	Speed 1.60		2	15
-19167	Blackfury	4	60	17	135131	Two-Hand (Polearms)	Speed 2.10, Strength, Stamina, Critical Strike Rating		2	6
-19168	Blackguard	4	60	13	135349	One-Hand (One-Handed Swords)	Speed 1.80, Stamina, Parry Rating		2	7
-19169	Nightfall	4	60	17	132403	Two-Hand (Two-Handed Axes)	Speed 3.50		2	1
-19170	Ebon Hand	4	60	13	133056	One-Hand (One-Handed Maces)	Speed 2.50, Stamina		2	4
-19203	Plans: Girdle of the Dawn	1			134939	Blacksmithing		265	9	4
-19205	Plans: Gloves of the Dawn	1			134939	Blacksmithing		300	9	4
-19206	Plans: Dark Iron Helm	1			134939	Blacksmithing		300	9	4
-19207	Plans: Dark Iron Gauntlets	1			134939	Blacksmithing		300	9	4
-19208	Plans: Black Amnesty	1			134939	Blacksmithing		300	9	4
-19209	Plans: Blackfury	1			134939	Blacksmithing		300	9	4
-19210	Plans: Ebon Hand	1			134939	Blacksmithing		300	9	4
-19211	Plans: Blackguard	1			134939	Blacksmithing		300	9	4
-19212	Plans: Nightfall	1			134939	Blacksmithing		300	9	4
-19690	Bloodsoul Breastplate	3	60	5	132636	Chest (Mail)	Stamina, Agility, Critical Strike Rating		4	3
-19691	Bloodsoul Shoulders	3	60	3	135046	Shoulder (Mail)	Agility, Stamina		4	3
-19692	Bloodsoul Gauntlets	3	60	10	132965	Hands (Mail)	Stamina, Agility, Critical Strike Rating		4	3
-19693	Darksoul Breastplate	3	60	5	132743	Chest (Plate)	Stamina, Bonus Armor, Hit Rating		4	4
-19694	Darksoul Leggings	3	60	7	134697	Legs (Plate)	Stamina, Bonus Armor, Hit Rating		4	4
-19695	Darksoul Shoulders	3	60	3	135032	Shoulder (Plate)	Stamina, Hit Rating		4	4
-19726	Bloodvine	2			134189	Herb			7	9
-19774	Souldarite	2			134071				7	11
-19776	Plans: Bloodsoul Breastplate	1			134939	Blacksmithing		300	9	4
-19777	Plans: Bloodsoul Shoulders	1			134939	Blacksmithing		300	9	4
-19778	Plans: Bloodsoul Gauntlets	1			134939	Blacksmithing		300	9	4
-19779	Plans: Darksoul Breastplate	1			134939	Blacksmithing		300	9	4
-19780	Plans: Darksoul Leggings	1			134939	Blacksmithing		300	9	4
-19781	Plans: Darksoul Shoulders	1			134939	Blacksmithing		300	9	4
-20039	Dark Iron Boots	4	60	8	132551	Feet (Plate)	Bonus Armor		4	4
-20040	Plans: Dark Iron Boots	1			134939	Blacksmithing		300	9	4
-20381	Dreamscale	2			134313	Leather			7	6
-20520	Dark Rune	2			136192				7	11
-20549	Darkrune Gauntlets	3	58	10	132961	Hands (Plate)	Stamina, Block Rating		4	4
-20550	Darkrune Breastplate	3	58	5	132741	Chest (Plate)	Stamina, Dodge Rating		4	4
-20551	Darkrune Helm	3	58	1	133078	Head (Plate)	Stamina, Critical Strike Rating		4	4
-20553	Plans: Darkrune Gauntlets	3			134941	Blacksmithing		300	9	4
-20554	Plans: Darkrune Breastplate	3			134941	Blacksmithing		300	9	4
-20555	Plans: Darkrune Helm	3			134941	Blacksmithing		300	9	4
-20725	Nexus Crystal	4			132880	Enchanting			7	12
-20867	Onyx Idol	3			134905				12	
-20871	Obsidian Idol	3			134904				12	
-20872	Vermillion Idol	3			134910				12	
-20873	Alabaster Idol	3			134896				12	
-20874	Idol of the Sun	3			134909				12	
-20875	Idol of Night	3			134903				12	
-20876	Idol of Death	3			134899				12	
-20877	Idol of the Sage	3			134907				12	
-20878	Idol of Rebirth	3			134906				12	
-20879	Idol of Life	3			134902				12	
-20882	Idol of War	3			134911				12	
-22191	Obsidian Mail Tunic	4	60	5	132639	Chest (Mail)	Attack Power, Critical Strike Rating		4	3
-22194	Black Grasp of the Destroyer	4	60	10	132965	Hands (Mail)	Attack Power, Critical Strike Rating		4	3
-22195	Light Obsidian Belt	3	60	6	132505	Waist (Mail)	Attack Power, Critical Strike Rating		4	3
-22196	Thick Obsidian Breastplate	4	60	5	132639	Chest (Plate)	Strength, Stamina		4	4
-22197	Heavy Obsidian Belt	3	60	6	132505	Waist (Plate)	Strength		4	4
-22198	Jagged Obsidian Shield	4	60	14	134968	Off Hand (Shield)	Block Rating		4	6
-22202	Small Obsidian Shard	1			134455	Metal & Stone			7	7
-22203	Large Obsidian Shard	1			135241	Metal & Stone			7	7
-22219	Plans: Jagged Obsidian Shield	1			134939	Blacksmithing		300	9	4
-22220	Plans: Black Grasp of the Destroyer	3			134941	Blacksmithing		300	9	4
-22221	Plans: Obsidian Mail Tunic	1			134939	Blacksmithing		300	9	4
-22222	Plans: Thick Obsidian Breastplate	3			134941	Blacksmithing		300	9	4
-22383	Sageblade	4	59	21	135361	Main Hand (One-Handed Swords)	Speed 1.80, Stamina, Intellect, Hit Rating		2	7
-22384	Persuader	4	58	13	133045	One-Hand (One-Handed Maces)	Speed 2.80, Hit Rating, Critical Strike Rating		2	4
-22385	Titanic Leggings	4	55	7	134584	Legs (Plate)	Strength, Hit Rating, Critical Strike Rating		4	4
-22388	Plans: Titanic Leggings	4			134941	Blacksmithing		300	9	4
-22389	Plans: Sageblade	4			134941	Blacksmithing		300	9	4
-22390	Plans: Persuader	4			134941	Blacksmithing		300	9	4
-22669	Icebane Breastplate	4	60	5	132633	Chest (Plate)	Stamina, Strength, Defense Rating		4	4
-22670	Icebane Gauntlets	4	60	10	132962	Hands (Plate)	Stamina, Strength, Defense Rating		4	4
-22671	Icebane Bracers	4	60	9	132606	Wrist (Plate)	Stamina, Strength, Defense Rating		4	4
-22682	Frozen Rune	3	60		134422				7	11
-22703	Plans: Icebane Breastplate	1			134939	Blacksmithing		300	9	4
-22704	Plans: Icebane Gauntlets	1			134939	Blacksmithing		300	9	4
-22705	Plans: Icebane Bracers	1			134939	Blacksmithing		300	9	4
-22762	Ironvine Breastplate	1		5	132742	Chest (Plate)			4	4
-22763	Ironvine Gloves	1		10	132963	Hands (Plate)			4	4
-22764	Ironvine Belt	1		6	132510	Waist (Plate)			4	4
-210773	Mantle of the Second War	1		3	135059	Shoulder (Mail)			4	3
-210779	Plans: Mantle of the Second War	2			134942	Blacksmithing		150	9	4
-210794	Shifting Silver Breastplate	1		5	133831	Chest (Mail)			4	3
-211422		1			133449				5	
-211845	Blackfathom Sharpening Stone	2			134417				7	11
-213369	Faintly Glowing Leather	3			237420	Leather			7	6
-213373	Reflective Scrapmetal	2			134518	Metal & Stone			7	7
-213376	Low-Background Truesilver Plates	3			133022	Metal & Stone			7	7
-213379	Hyperconductive Arcano-Filament	3			237428	Cloth			7	5
-213383	Polished Truesilver Gears	3			305162	Parts			7	1
-215155	Plans: Tempered Interference-Negating Helmet	4			134942	Blacksmithing		225	9	4
-215161	Tempered Interference-Negating Helmet	1		1	133151	Head (Plate)			4	4
-215167	Reflective Truesilver Braincage	1		1	133151	Head (Plate)			4	4
-215383	Plans: Reflective Truesilver Braincage	4			134942	Blacksmithing		225	9	4
-215384	Plans: Low-Background Truesilver Plates	3			134942	Blacksmithing		200	9	4
-217273	Golden Scale Gauntlets	2	36	10	132963	Hands (Mail)	Strength, Spell Power		4	3
-217274	Plans: Golden Scale Gauntlets	2			134942	Blacksmithing		205	9	4
-217275	Golden Scale Boots	1		8	132535	Feet (Mail)			4	3
-217276	Plans: Golden Scale Boots	3			134939	Blacksmithing		200	9	4
-217277	Golden Scale Cuirass	1		5	132628	Chest (Mail)			4	3
-217278	Plans: Golden Scale Cuirass	2			134942	Blacksmithing		195	9	4
-217279	Golden Scale Coif	1		1	133138	Head (Mail)			4	3
-217280	Plans: Golden Scale Coif	1			134939	Blacksmithing		190	9	4
-217281	Moonsteel Broadsword	1		17	135326	Two-Hand (Two-Handed Swords)			2	8
-217282	Plans: Moonsteel Broadsword	1			134939	Blacksmithing		180	9	4
-217283	Golden Scale Shoulders	1		3	135040	Shoulder (Mail)			4	3
-217284	Plans: Golden Scale Shoulders	3			134939	Blacksmithing		175	9	4
-217285	Golden Scale Leggings	1		7	134584	Legs (Mail)			4	3
-217286	Plans: Golden Scale Leggings	2			134942	Blacksmithing		170	9	4
-220688		1			135084				5	
-220738	Shoulderplates of Dread	1		3	135055	Shoulder (Plate)			4	4
-220739	Baleful Pauldrons	1		3	135055	Shoulder (Plate)			4	4
-220740	Fearmonger's Shoulderguards	1		3	135055	Shoulder (Plate)			4	4
-221021		1			134217				7	11
-227684	Sulfuron Hammer	1		17	133066	Two-Hand (Two-Handed Maces)			2	5
-227727	Plans: Sulfuron Hammer	4			134939	Blacksmithing		300	9	4
-227845	Refined Arcanite Reaper	1		17	132400	Two-Hand (Two-Handed Axes)			2	1
-227850	Sageblade of the Archmagus	1		21	135361	Main Hand (One-Handed Swords)			2	7
-227857	Desecration	1		17	135277	Two-Hand (Two-Handed Swords)			2	8
-227865	Fiery Plate Gauntlets of the Hidden Technique	1		10	132937	Hands (Plate)			4	4
-227870	Tempest Gauntlets	1		10	132964	Hands (Mail)			4	3
-227871	Tempered Dark Iron Plate	1		5	132743	Chest (Plate)			4	4
-227872	Warcrest of the Great Chief	1		1	133126	Head (Mail)			4	3
-227876	Invincible Mail	1		5	132629	Chest (Mail)			4	3
-227880	Finely-Enchanted Battlehammer	1		17	133042	Two-Hand (Two-Handed Maces)			2	5
-227881	Tranquility	1		21	133477	Main Hand (One-Handed Maces)			2	4
-227884	Deadly Heartseeker	1		13	135315	One-Hand (Daggers)			2	15
-227885	Stronger-hold Gauntlets	1		10	132964	Hands (Plate)			4	4
-227886	Skyrider's Masterwork Stormhammer	1		21	133041	Main Hand (One-Handed Maces)			2	4
-227887	Hardened Frostguard	1		21	135291	Main Hand (One-Handed Swords)			2	7
-227901	Plans: Tempered Dark Iron Plate	3			134939	Blacksmithing		285	9	4
-227905	Plans: Skyrider's Masterwork Stormhammer	3			134939	Blacksmithing		300	9	4
-227909	Plans: Fiery Plate Gauntlets of the Hidden Technique	3			134939	Blacksmithing		290	9	4
-228114	Plans: Refined Arcanite Reaper	3			134939	Blacksmithing		300	9	4
-228117	Plans: Refined Arcanite Champion	3			134939	Blacksmithing		300	9	4
-228118	Plans: Stronger-hold Gauntlets	4			134939	Blacksmithing		300	9	4
-228125	Refined Arcanite Champion	1		17	135349	Two-Hand (Two-Handed Swords)			2	8
-228230	Refined Hammer of the Titans	1		17	133046	Two-Hand (Two-Handed Maces)			2	5
-228250	Plans: Stronger-hold Gauntlets	4			134939	Blacksmithing		300	9	4
-228310	Plans: Hardened Frostguard	3			134939	Blacksmithing		300	9	4
-228311	Plans: Finely-Enchanted Battlehammer	2			134942	Blacksmithing		280	9	4
-228312	Plans: Invincible Mail	4			134939	Blacksmithing		300	9	4
-228313	Plans: Tempest Gauntlets	3			134939	Blacksmithing		295	9	4
-228314	Plans: Warcrest of the Great Chief	3			134939	Blacksmithing		300	9	4
-228315	Plans: Sageblade of the Archmagus	4			134941	Blacksmithing		300	9	4
-233490	Obsidian Champion	1		17	135349	Two-Hand (Two-Handed Swords)			2	8
-233491	Obsidian Reaver	1		17	132400	Two-Hand (Two-Handed Axes)			2	1
-233492	Razorspike Battleplate	1		5	132636	Chest (Plate)			4	4
-233793	Razorspike Shoulderplate	1		3	135047	Shoulder (Plate)			4	4
-233795	Razorspike Headcage	1		1	133074	Head (Plate)			4	4
-233796	Obsidian Destroyer	1		17	133062	Two-Hand (Two-Handed Maces)			2	5
-233797	Obsidian Stormhammer	1		21	133041	Main Hand (One-Handed Maces)			2	4
-233798	Obsidian Sageblade	1		21	135361	Main Hand (One-Handed Swords)			2	7
-233801	Obsidian Defender	1		21	132403	Main Hand (One-Handed Axes)			2	
-234003		1			237047	Metal & Stone			7	7
-234004	Obsidian Grinding Stone	1			135254	Metal & Stone			7	7
-234006		1			134262	Leather			7	6
-234086	Black Grasp of the Destroyer	1		10	132965	Hands (Mail)			4	3
-234288	Ironvine Belt	1		6	132510	Waist (Plate)			4	4
-234290	Ironvine Gloves	1		10	132963	Hands (Plate)			4	4
-234292	Ironvine Breastplate	1		5	132742	Chest (Plate)			4	4
-234319	Heavy Obsidian Belt	1		6	132505	Waist (Plate)			4	4
-234321	Light Obsidian Belt	1		6	132505	Waist (Mail)			4	3
-234428	Obsidian Heartseeker	1		13	135315	One-Hand (Daggers)			2	15
-234459	Jagged Obsidian Shield	1		14	134968	Off Hand (Shield)			4	6
-234460	Obsidian Mail Tunic	1		5	132639	Chest (Mail)			4	3
-234487	Dreamscale Visor	1		1	133069	Head (Plate)			4	4
-235040	Thick Obsidian Breastplate	1		5	132639	Chest (Plate)			4	4
-236656		1			134422				7	11
-236695	Icebane Breastplate	1		5	132633	Chest (Plate)			4	4
-236696	Icebane Bracers	1		9	132606	Wrist (Plate)			4	4
-236697	Icebane Gauntlets	1		10	132962	Hands (Plate)			4	4
-238288	Scarlet Soldier's Helmet	1		1	133101	Head (Plate)			4	4
-238289	Scarlet Soldier's Spaulders	1		3	135060	Shoulder (Plate)			4	4
-238290	Scarlet Soldier's Chestplate	1		5	132743	Chest (Plate)			4	4
-238291	Scarlet Soldier's Protectors	1		9	236972	Wrist (Plate)			4	4
-238292	Scarlet Soldier's Grips	1		10	132960	Hands (Plate)			4	4
-238293	Scarlet Soldier's Waistguard	1		6	132502	Waist (Plate)			4	4
-238294	Scarlet Soldier's Legplates	1		7	134678	Legs (Plate)			4	4
-238295	Scarlet Soldier's Stompers	1		8	132589	Feet (Plate)			4	4
-238322	Plans: Scarlet Soldier's Helmet	3	1		134940	Blacksmithing		280	9	4
-238323	Plans: Scarlet Soldier's Spaulders	3	1		134940	Blacksmithing		280	9	4
-238324	Plans: Scarlet Soldier's Chestplate	3	1		134940	Blacksmithing		280	9	4
-238325	Plans: Scarlet Soldier's Protectors	3	1		134940	Blacksmithing		250	9	4
-238326	Plans: Scarlet Soldier's Grips	3	1		134940	Blacksmithing		260	9	4
-238327	Plans: Scarlet Soldier's Waistguard	3	1		134940	Blacksmithing		250	9	4
-238328	Plans: Scarlet Soldier's Legplates	3	1		134940	Blacksmithing		270	9	4
-238329	Plans: Scarlet Soldier's Stompers	3	1		134940	Blacksmithing		260	9	4
-248820	Torbernite	2			237222				7	11
-248822	Death Lotus	2			5976935	Herb			7	9
-249410	Sulfuric Acid	2			136240				7	11
-249427	Pristine Leather	2			348551	Leather			7	6
-249432	Sandpaper	2			237132	Parts			7	1
-249726	Azerothium Bar	2			612100	Metal & Stone			7	7
-250482	Glowing Copper Boots	3	10	8		Feet (Mail)	Intellect, Healing, Spell Damage		4	3
-250483	Sterling Silver Boots	2	20	8		Feet (Mail)	Spell Power, Stamina, Strength		4	3
-250484	Sterling Silver Leggings	2	21	7		Legs (Mail)	Spell Power, Stamina, Strength		4	3
-250485	Sterling Silver Gauntlet	2	21	10		Hands (Mail)	Spell Power, Stamina, Strength		4	3
-250486	Sterling Silver Shoulders	2	22	3		Shoulder (Mail)	Spell Power, Stamina, Strength		4	3
-250487	Sterling Silver Breastplate	2	25	5		Chest (Mail)	Spell Power, Stamina, Strength		4	3
-250488	Veteran's Chain Shirt	3	15	5		Chest (Mail)	Agility, Stamina, Strength		4	3
-250489	Guard's Chain Shirt	3	15	5		Chest (Mail)	Defense Rating, Stamina, Strength		4	3
-250490	Protector's Chain Shirt	3	15	5		Chest (Mail)	Defense Rating, Spell Power, Stamina		4	3
-250491	Acolyte's Chain Shirt	3	15	5		Chest (Mail)	Intellect, Spell Damage, Healing, Stamina		4	3
-250492	Crusader's Chain Shirt	3	15	5		Chest (Mail)	Spell Power, Stamina, Strength		4	3
-250493	Veteran's Chain Leggings	3	20	7		Legs (Mail)	Agility, Stamina, Strength		4	3
-250494	Guard's Chain Leggings	3	20	7		Legs (Mail)	Defense Rating, Stamina, Strength		4	3
-250495	Protector's Chain Leggings	3	20	7		Legs (Mail)	Defense Rating, Spell Power, Stamina		4	3
-250496	Acolyte's Chain Leggings	3	20	7	134669	Legs (Mail)	Intellect, Spell Damage, Healing, Stamina		4	3
-250497	Crusader's Chain Leggings	3	20	7		Legs (Mail)	Spell Power, Stamina, Strength		4	3
-250498	Veteran's Chain Helm	3	25	1		Head (Mail)	Stamina, Strength		4	3
-250499	Guard's Chain Helm	3	25	1		Head (Mail)	Agility, Stamina		4	3
-250500	Protector's Chain Helm	3	25	1		Head (Mail)	Defense Rating, Stamina		4	3
-250501	Acolyte's Chain Helm	3	25	1		Head (Mail)	Spell Damage, Healing, Stamina		4	3
-250502	Crusader's Chain Helm	3	25	1		Head (Mail)	Spell Power, Strength		4	3
-250503	Veteran's Boots	3	17	8		Feet (Mail)	Agility, Stamina, Strength		4	3
-250504	Guard's Boots	3	17	8		Feet (Mail)	Defense Rating, Stamina, Strength		4	3
-250505	Protector's Boots	3	17	8		Feet (Mail)	Defense Rating, Spell Power, Stamina		4	3
-250506	Acolyte's Boots	3	17	8		Feet (Mail)	Intellect, Spell Damage, Healing, Stamina		4	3
-250507	Crusader's Boots	3	17	8		Feet (Mail)	Spell Power, Stamina, Strength		4	3
-250508	Veteran's Gloves	3	15	10		Hands (Mail)	Agility, Stamina, Strength		4	3
-250509	Guard's Gloves	3	15	10		Hands (Mail)	Defense Rating, Stamina, Strength		4	3
-250510	Protector's Gloves	3	15	10		Hands (Mail)	Defense Rating, Spell Power, Stamina		4	3
-250511	Acolyte's Gloves	3	15	10		Hands (Mail)	Intellect, Spell Damage, Healing, Stamina		4	3
-250512	Crusader's Gloves	3	15	10		Hands (Mail)	Spell Power, Stamina, Strength		4	3
-250513	Veteran's Chain Belt	3	12	6		Waist (Mail)	Agility, Stamina, Strength		4	3
-250514	Guard's Chain Belt	3	12	6		Waist (Mail)	Defense Rating, Stamina, Strength		4	3
-250515	Protector's Chain Belt	3	12	6		Waist (Mail)	Defense Rating, Spell Power, Stamina		4	3
-250516	Acolyte's Chain Belt	3	12	6		Waist (Mail)	Intellect, Spell Damage, Healing, Stamina		4	3
-250517	Crusader's Chain Belt	3	12	6		Waist (Mail)	Spell Power, Stamina, Strength		4	3
-250518	Veteran's Silvered Chain Shirt	3	22	5		Chest (Mail)	Agility, Stamina, Strength		4	3
-250519	Guard's Silvered Chain Shirt	3	22	5		Chest (Mail)	Defense Rating, Stamina, Strength		4	3
-250520	Protector's Silvered Chain Shirt	3	22	5		Chest (Mail)	Defense Rating, Spell Power, Stamina		4	3
-250521	Acolyte's Silvered Chain Shirt	3	22	5		Chest (Mail)	Intellect, Spell Damage, Healing, Stamina		4	3
-250522	Crusader's Silvered Chain Shirt	3	22	5		Chest (Mail)	Spell Power, Stamina, Strength		4	3
-250523	Veteran's Silvered Chain Leggings	3	25	7		Legs (Mail)	Agility, Stamina, Strength		4	3
-250524	Guard's Silvered Chain Leggings	3	25	7		Legs (Mail)	Defense Rating, Stamina, Strength		4	3
-250525	Protector's Silvered Chain Leggings	3	25	7		Legs (Mail)	Defense Rating, Spell Power, Stamina		4	3
-250526	Acolyte's Silvered Chain Leggings	3	25	7		Legs (Mail)	Intellect, Spell Damage, Healing, Stamina		4	3
-250527	Crusader's Silvered Chain Leggings	3	25	7		Legs (Mail)	Spell Power, Stamina, Strength		4	3
-250528	Veteran's Silvered Chain Helm	3	20	1		Head (Mail)	Stamina, Strength		4	3
-250529	Guard's Silvered Chain Helm	3	20	1		Head (Mail)	Stamina, Agility		4	3
-250530	Protector's Silvered Chain Helm	3	20	1		Head (Mail)	Defense Rating, Stamina		4	3
-250531	Acolyte's Silvered Chain Helm	3	20	1		Head (Mail)	Spell Damage, Healing, Stamina		4	3
-250532	Crusader's Silvered Chain Helm	3	20	1		Head (Mail)	Spell Power, Stamina		4	3
-250533	Hard Gold Cuirass	2	29	5		Chest (Mail)	Spell Power, Strength		4	3
-250534	Hard Gold Boots	2	30	8		Feet (Mail)	Spell Power, Strength		4	3
-250535	Hard Gold Bracers	2	32	9		Wrist (Mail)	Spell Power, Strength		4	3
-250536	Hard Gold Leggings	2	33	7		Legs (Mail)	Spell Power, Strength		4	3
-250537	Hard Gold Coif	2	35	1		Head (Mail)	Spell Power, Strength		4	3
-250538	Hard Gold Gauntlet	2	35	10		Hands (Mail)	Spell Power, Strength		4	3
-250539	Hard Gold Pauldrons	2	35	3		Shoulder (Mail)	Spell Power, Strength		4	3
-250540	Shining Mithril Breastplate	2	40	5		Chest (Plate)	Spell Power, Strength		4	4
-250541	Shining Mithril Pauldrons	2	40	3		Shoulder (Plate)	Spell Power, Strength		4	4
-250542	Shining Mithril Boots	2	40	8		Feet (Plate)	Spell Power, Strength		4	4
-250543	Shining Mithril Helm	2	43	1		Head (Plate)	Spell Power, Strength		4	4
-250544	Shining Mithril Pants	2	44	7		Legs (Plate)	Spell Power, Strength		4	4
-250545	Shining Mithril Gauntlet	2	44	10		Hands (Plate)	Spell Power, Strength		4	4
-250546	Officer's Boots	3	40	8		Feet (Plate)	Agility, Stamina, Strength		4	4
-250547	Sentinel's Boots	3	40	8		Feet (Plate)	Defense Rating, Stamina, Strength		4	4
-250548	Warder's Boots	3	40	8		Feet (Plate)	Defense Rating, Spell Power, Stamina		4	4
-250549	Prefect's Boots	3	40	8		Feet (Plate)	Intellect, Spell Damage, Healing, Stamina		4	4
-250550	Justicar's Boots	3	40	8		Feet (Plate)	Spell Power, Stamina, Strength		4	4
-250551	Officer's Gloves	3	50	10		Hands (Plate)	Agility, Stamina, Strength		4	4
-250552	Sentinel's Gloves	3	50	10		Hands (Plate)	Defense Rating, Stamina, Strength		4	4
-250553	Warder's Gloves	3	50	10		Hands (Plate)	Defense Rating, Spell Power, Stamina		4	4
-250554	Prefect's Gloves	3	50	10		Hands (Plate)	Intellect, Spell Damage, Healing, Stamina		4	4
-250555	Justicar's Gloves	3	50	10		Hands (Plate)	Spell Power, Stamina, Strength		4	4
-250556	Officer's Belt	3	30	6		Waist (Mail)	Agility, Spirit, Stamina, Strength		4	3
-250557	Sentinel's Belt	3	30	6		Waist (Mail)	Agility, Defense Rating, Stamina, Strength		4	3
-250558	Warder's Belt	3	30	6		Waist (Mail)	Defense Rating, Spell Power, Stamina, Strength		4	3
-250559	Prefect's Belt	3	30	6		Waist (Mail)	Intellect, Spell Damage, Healing, Spirit, Stamina		4	3
-250560	Justicar's Belt	3	30	6		Waist (Mail)	Intellect, Spell Power, Stamina, Strength		4	3
-250561	Officer's Sabatons	3	47	8		Feet (Plate)	Agility, Stamina, Strength		4	4
-250562	Sentinel's Sabatons	3	47	8		Feet (Plate)	Defense Rating, Stamina, Strength		4	4
-250563	Warder's Sabatons	3	47	8		Feet (Plate)	Defense Rating, Spell Power, Stamina		4	4
-250564	Prefect's Sabatons	3	47	8		Feet (Plate)	Intellect, Spell Damage, Healing, Stamina		4	4
-250565	Justicar's Sabatons	3	47	8		Feet (Plate)	Spell Power, Stamina, Strength		4	4
-250566	Officer's Gauntlet	3	35	10		Hands (Mail)	Agility, Stamina, Strength		4	3
-250567	Sentinel's Gauntlet	3	35	10		Hands (Mail)	Defense Rating, Stamina, Strength		4	3
-250568	Warder's Gauntlet	3	35	10		Hands (Mail)	Defense Rating, Spell Power, Stamina		4	3
-250569	Prefect's Gauntlet	3	35	10		Hands (Mail)	Intellect, Spell Damage, Healing, Stamina		4	3
-250570	Justicar's Gauntlet	3	35	10		Hands (Mail)	Spell Power, Stamina, Strength		4	3
-250571	Officer's Waistguard	3	50	6		Waist (Plate)	Agility, Stamina, Strength		4	4
-250572	Sentinel's Waistguard	3	50	6		Waist (Plate)	Defense Rating, Stamina, Strength		4	4
-250573	Warder's Waistguard	3	50	6		Waist (Plate)	Defense Rating, Spell Power, Stamina		4	4
-250574	Prefect's Waistguard	3	50	6		Waist (Plate)	Intellect, Spell Damage, Healing, Stamina		4	4
-250575	Justicar's Waistguard	3	50	6		Waist (Plate)	Spell Power, Stamina, Strength		4	4
-250576	Officer's Pauldrons	3	42	3		Shoulder (Plate)	Agility, Stamina, Strength		4	4
-250577	Sentinel's Pauldrons	3	42	3		Shoulder (Plate)	Defense Rating, Stamina, Strength		4	4
-250578	Warder's Pauldrons	3	42	3		Shoulder (Plate)	Defense Rating, Spell Power, Stamina		4	4
-250579	Prefect's Pauldrons	3	42	3		Shoulder (Plate)	Intellect, Spell Damage, Healing, Stamina		4	4
-250580	Justicar's Pauldrons	3	42	3		Shoulder (Plate)	Spell Power, Stamina, Strength		4	4
-250581	Officer's Wristguards	3	45	9		Wrist (Plate)	Agility, Stamina, Strength		4	4
-250582	Sentinel's Wristguards	3	45	9		Wrist (Plate)	Defense Rating, Stamina, Strength		4	4
-250583	Warder's Wristguards	3	45	9		Wrist (Plate)	Defense Rating, Spell Power, Stamina		4	4
-250584	Prefect's Wristguards	3	45	9		Wrist (Plate)	Intellect, Spell Damage, Healing, Stamina		4	4
-250585	Justicar's Wristguards	3	45	9		Wrist (Plate)	Spell Power, Stamina, Strength		4	4
-250586	Blessed Plate Pauldrons	2	47	3	135041	Shoulder (Plate)	Spell Power, Stamina, Strength		4	4
-250587	Blessed Plate Boots	2	47	8	132584	Feet (Plate)	Spell Power, Stamina, Strength		4	4
-250588	Blessed Plate Gauntlet	2	49	10	132963	Hands (Plate)	Spell Power, Stamina, Strength		4	4
-250589	Imperial Plate Gauntlets	2	52	10		Hands (Plate)	Stamina, Strength		4	4
-250590	Blessed Plate Bracers	2	52	9	132618	Wrist (Plate)	Spell Power, Stamina, Strength		4	4
-250591	Blessed Plate Leggings	2	54	7	134680	Legs (Plate)	Spell Power, Stamina, Strength		4	4
-250592	Blessed Plate Belt	2	54	6		Waist (Plate)	Spell Power, Stamina, Strength		4	4
-250593	Blessed Plate Helm	2	55	1		Head (Plate)	Spell Power, Stamina, Strength		4	4
-250594	Blessed Plate Chest	2	56	5	132738	Chest (Plate)	Spell Power, Stamina, Strength		4	4
-250595	Enriched Thorium Breastplate	3	57	5		Chest (Plate)	Defense Rating, Spell Power, Stamina		4	4
-250596	Enriched Thorium Leggings	3	58	7		Legs (Plate)	Defense Rating, Spell Power, Stamina		4	4
-250597	Enriched Thorium Helm	3	58	1		Head (Plate)	Defense Rating, Spell Power, Stamina		4	4
-250598	Champion's Legplates	4	56	7		Legs (Plate)	Critical Strike Rating, Spell Power, Strength		4	4
-250599	Stalwart Helm	4	56	1		Head (Plate)	Hit Rating, Spell Power, Strength		4	4
-250600	Martyr's Legplates	4	56	7		Legs (Plate)	Intellect, Spell Damage, Healing, Spirit		4	4
-250601	Breastplate of Salvation	4	56	5		Chest (Plate)	Intellect, Spell Damage, Healing, Spirit		4	4
-250602	Brass Knuckles	2	16	13	132938	One-Hand (Fist Weapons)	Speed 2.40, Agility, Stamina		2	13
-250603	Bronze Dory	2	20	17		Two-Hand (Polearms)	Speed 3.40, Agility, Attack Power		2	6
-250604	Iron Fists	2	26	13		One-Hand (Fist Weapons)	Speed 2.40, Agility		2	13
-250605	Steel Spear	2	32	17		Two-Hand (Polearms)	Speed 3.30, Agility, Attack Power		2	6
-250606	Iron Morningstar	2	33	21		Main Hand (One-Handed Maces)	Speed 2.50, Spell Power, Strength		2	4
-250607	Mithril Shortsword	2	36	13		One-Hand (Daggers)	Speed 1.70, Attack Power		2	15
-250608	Mithril Warhammer	2	38	17		Two-Hand (Two-Handed Maces)	Speed 3.50, Agility, Strength		2	5
-250609	Mithril Claws	2	40	13	134295	One-Hand (Fist Weapons)	Speed 2.60, Agility, Strength		2	13
-250610	Mithril Claymore	2	40	17		Two-Hand (Two-Handed Swords)	Speed 3.80, Stamina, Strength		2	8
-250611	Mithril Stiletto	2	42	13		One-Hand (Daggers)	Speed 1.80, Agility		2	15
-250612	Charged Mithril Battleaxe	2	43	17		Two-Hand (Two-Handed Axes)	Speed 3.30, Spell Power, Strength		2	1
-250613	Thorium Greatmace	3	50	17		Two-Hand (Two-Handed Maces)	Speed 3.60, Spell Power, Strength		2	5
-250614	Thorium Cestus	3	50	13		One-Hand (Fist Weapons)	Speed 2.40, Attack Power, Stamina		2	13
-250615	Thorium Poleaxe	3	52	17		Two-Hand (Polearms)	Speed 3.40, Agility, Stamina, Strength		2	6
-250616	Bold Dirk	2	52	13		One-Hand (Daggers)	Speed 1.80, Agility, Attack Power		2	15
-250617	Stormcarver	3	58	17		Two-Hand (Two-Handed Axes)	Speed 3.60, Spell Power, Stamina, Strength		2	1
-250618	Bagh Nakh	3	58	13	134296	One-Hand (Fist Weapons)	Speed 2.70, Agility, Stamina		2	13
-250619	Legionite Glaive	3	58	17		Two-Hand (Polearms)	Speed 3.20, Agility, Attack Power, Hit Rating		2	6
-250620	Gemmed Copper Boots	3	10	8		Feet (Mail)	Strength, Stamina		4	3
-250621	Strange Copper Boots	3	10	8		Feet (Mail)	Spell Power, Stamina		4	3
-251290	Legionite Bar	2			1416159	Metal & Stone			7	7
-251291	Heavy Thorium Bar	2			348540	Metal & Stone			7	7
-251332	Plans: Gemmed Copper Boots	3			134939	Blacksmithing		35	9	4
-251333	Plans: Strange Copper Boots	3			134939	Blacksmithing		35	9	4
-251334	Plans: Glowing Copper Boots	3			134939	Blacksmithing		35	9	4
-251335	Plans: Sterling Silver Boots	2			134939	Blacksmithing		100	9	4
-251336	Plans: Sterling Silver Leggings	2			134939	Blacksmithing		105	9	4
-251337	Plans: Sterling Silver Gauntlet	2			134939	Blacksmithing		105	9	4
-251338	Plans: Sterling Silver Shoulders	2			134939	Blacksmithing		110	9	4
-251339	Plans: Sterling Silver Breastplate	2			134939	Blacksmithing		125	9	4
-251340	Plans: Veteran's Chain Shirt	3			134939	Blacksmithing		80	9	4
-251341	Plans: Guard's Chain Shirt	3			134939	Blacksmithing		80	9	4
-251342	Plans: Protector's Chain Shirt	3			134939	Blacksmithing		80	9	4
-251343	Plans: Acolyte's Chain Shirt	3			134939	Blacksmithing		80	9	4
-251344	Plans: Crusader's Chain Shirt	3			134939	Blacksmithing		80	9	4
-251345	Plans: Veteran's Chain Leggings	3			134939	Blacksmithing		95	9	4
-251346	Plans: Guard's Chain Leggings	3			134939	Blacksmithing		95	9	4
-251347	Plans: Protector's Chain Leggings	3			134939	Blacksmithing		95	9	4
-251348	Plans: Acolyte's Chain Leggings	3			134939	Blacksmithing		95	9	4
-251349	Plans: Crusader's Chain Leggings	3			134939	Blacksmithing		95	9	4
-251350	Plans: Veteran's Chain Helm	3			134939	Blacksmithing		125	9	4
-251351	Plans: Guard's Chain Helm	3			134939	Blacksmithing		125	9	4
-251352	Plans: Protector's Chain Helm	3			134939	Blacksmithing		125	9	4
-251353	Plans: Acolyte's Chain Helm	3			134939	Blacksmithing		125	9	4
-251354	Plans: Crusader's Chain Helm	3			134939	Blacksmithing		125	9	4
-251355	Plans: Veteran's Boots	3			134939	Blacksmithing		85	9	4
-251356	Plans: Guard's Boots	3			134939	Blacksmithing		85	9	4
-251357	Plans: Protector's Boots	3			134939	Blacksmithing		85	9	4
-251358	Plans: Acolyte's Boots	3			134939	Blacksmithing		85	9	4
-251359	Plans: Crusader's Boots	3			134939	Blacksmithing		85	9	4
-251360	Plans: Veteran's Gloves	3			134939	Blacksmithing		80	9	4
-251361	Plans: Guard's Gloves	3			134939	Blacksmithing		80	9	4
-251362	Plans: Protector's Gloves	3			134939	Blacksmithing		80	9	4
-251363	Plans: Acolyte's Gloves	3			134939	Blacksmithing		80	9	4
-251364	Plans: Crusader's Gloves	3			134939	Blacksmithing		80	9	4
-251365	Plans: Veteran's Chain Belt	3			134939	Blacksmithing		45	9	4
-251366	Plans: Guard's Chain Belt	3			134939	Blacksmithing		45	9	4
-251367	Plans: Protector's Chain Belt	3			134939	Blacksmithing		45	9	4
-251368	Plans: Acolyte's Chain Belt	3			134939	Blacksmithing		45	9	4
-251369	Plans: Crusader's Chain Belt	3			134939	Blacksmithing		45	9	4
-251370	Plans: Veteran's Silvered Chain Shirt	3			134939	Blacksmithing		110	9	4
-251371	Plans: Guard's Silvered Chain Shirt	3			134939	Blacksmithing		110	9	4
-251372	Plans: Protector's Silvered Chain Shirt	3			134939	Blacksmithing		110	9	4
-251373	Plans: Acolyte's Silvered Chain Shirt	3			134939	Blacksmithing		110	9	4
-251374	Plans: Crusader's Silvered Chain Shirt	3			134939	Blacksmithing		110	9	4
-251375	Plans: Veteran's Silvered Chain Leggings	3			134939	Blacksmithing		125	9	4
-251376	Plans: Guard's Silvered Chain Leggings	3			134939	Blacksmithing		125	9	4
-251377	Plans: Protector's Silvered Chain Leggings	3			134939	Blacksmithing		125	9	4
-251378	Plans: Acolyte's Silvered Chain Leggings	3			134939	Blacksmithing		125	9	4
-251379	Plans: Crusader's Silvered Chain Leggings	3			134939	Blacksmithing		125	9	4
-251380	Plans: Veteran's Silvered Chain Helm	3			134939	Blacksmithing		95	9	4
-251381	Plans: Guard's Silvered Chain Helm	3			134939	Blacksmithing		95	9	4
-251382	Plans: Protector's Silvered Chain Helm	3			134939	Blacksmithing		95	9	4
-251383	Plans: Acolyte's Silvered Chain Helm	3			134939	Blacksmithing		95	9	4
-251384	Plans: Crusader's Silvered Chain Helm	3			134939	Blacksmithing		95	9	4
-251385	Plans: Hard Gold Cuirass	2			134939	Blacksmithing		145	9	4
-251386	Plans: Hard Gold Boots	2			134939	Blacksmithing		150	9	4
-251387	Plans: Hard Gold Bracers	2			134939	Blacksmithing		160	9	4
-251388	Plans: Hard Gold Leggings	2			134939	Blacksmithing		165	9	4
-251389	Plans: Hard Gold Coif	2			134939	Blacksmithing		170	9	4
-251390	Plans: Hard Gold Gauntlet	2			134939	Blacksmithing		175	9	4
-251391	Plans: Hard Gold Pauldrons	2			134939	Blacksmithing		175	9	4
-251392	Plans: Shining Mithril Breastplate	2			134939	Blacksmithing		195	9	4
-251393	Plans: Shining Mithril Pauldrons	2			134939	Blacksmithing		195	9	4
-251394	Plans: Shining Mithril Boots	2			134939	Blacksmithing		200	9	4
-251395	Plans: Shining Mithril Helm	3			134939	Blacksmithing		215	9	4
-251396	Plans: Shining Mithril Pants	2			134939	Blacksmithing		220	9	4
-251397	Plans: Shining Mithril Gauntlet	2			134939	Blacksmithing		220	9	4
-251398	Plans: Officer's Boots	3			134939	Blacksmithing		200	9	4
-251399	Plans: Sentinel's Boots	3			134939	Blacksmithing		200	9	4
-251400	Plans: Warder's Boots	3			134939	Blacksmithing		200	9	4
-251401	Plans: Prefect's Boots	3			134939	Blacksmithing		200	9	4
-251402	Plans: Justicar's Boots	3			134939	Blacksmithing		200	9	4
-251403	Plans: Officer's Gloves	3			134939	Blacksmithing		250	9	4
-251404	Plans: Sentinel's Gloves	3			134939	Blacksmithing		250	9	4
-251405	Plans: Warder's Gloves	3			134939	Blacksmithing		250	9	4
-251406	Plans: Prefect's Gloves	3			134939	Blacksmithing		250	9	4
-251407	Plans: Justicar's Gloves	3			134939	Blacksmithing		250	9	4
-251408	Plans: Officer's Belt	3			134939	Blacksmithing		150	9	4
-251409	Plans: Sentinel's Belt	3			134939	Blacksmithing		150	9	4
-251410	Plans: Warder's Belt	3			134939	Blacksmithing		150	9	4
-251411	Plans: Prefect's Belt	3			134939	Blacksmithing		150	9	4
-251412	Plans: Justicar's Belt	3			134939	Blacksmithing		150	9	4
-251413	Plans: Officer's Sabatons	3			134939	Blacksmithing		240	9	4
-251414	Plans: Sentinel's Sabatons	3			134939	Blacksmithing		240	9	4
-251415	Plans: Warder's Sabatons	3			134939	Blacksmithing		240	9	4
-251416	Plans: Prefect's Sabatons	3			134939	Blacksmithing		240	9	4
-251417	Plans: Justicar's Sabatons	3			134939	Blacksmithing		240	9	4
-251418	Plans: Officer's Gauntlet	3			134939	Blacksmithing		175	9	4
-251419	Plans: Sentinel's Gauntlet	3			134939	Blacksmithing		175	9	4
-251420	Plans: Warder's Gauntlet	3			134939	Blacksmithing		175	9	4
-251421	Plans: Prefect's Gauntlet	3			134939	Blacksmithing		175	9	4
-251422	Plans: Justicar's Gauntlet	3			134939	Blacksmithing		175	9	4
-251423	Plans: Officer's Waistguard	3			134939	Blacksmithing		250	9	4
-251424	Plans: Sentinel's Waistguard	3			134939	Blacksmithing		250	9	4
-251425	Plans: Warder's Waistguard	3			134939	Blacksmithing		250	9	4
-251426	Plans: Prefect's Waistguard	3			134939	Blacksmithing		250	9	4
-251427	Plans: Justicar's Waistguard	3			134939	Blacksmithing		250	9	4
-251428	Plans: Officer's Pauldrons	3			134939	Blacksmithing		210	9	4
-251429	Plans: Sentinel's Pauldrons	3			134939	Blacksmithing		210	9	4
-251430	Plans: Warder's Pauldrons	3			134939	Blacksmithing		210	9	4
-251431	Plans: Prefect's Pauldrons	3			134939	Blacksmithing		210	9	4
-251432	Plans: Justicar's Pauldrons	3			134939	Blacksmithing		210	9	4
-251433	Plans: Officer's Wristguard	3			134939	Blacksmithing		225	9	4
-251434	Plans: Sentinel's Wristguard	3			134939	Blacksmithing		225	9	4
-251435	Plans: Warder's Wristguard	3			134939	Blacksmithing		225	9	4
-251436	Plans: Prefect's Wristguard	3			134939	Blacksmithing		225	9	4
-251437	Plans: Justicar's Wristguards	3			134939	Blacksmithing		225	9	4
-251438	Plans: Blessed Plate Pauldrons	2			134939	Blacksmithing		240	9	4
-251439	Plans: Blessed Plate Boots	2			134939	Blacksmithing		240	9	4
-251440	Plans: Blessed Plate Gauntlet	2			134939	Blacksmithing		245	9	4
-251441	Plans: Imperial Plate Gauntlets	2			134939	Blacksmithing		255	9	4
-251442	Plans: Blessed Plate Bracers	2			134939	Blacksmithing		255	9	4
-251443	Plans: Blessed Plate Leggings	2			134939	Blacksmithing		270	9	4
-251444	Plans: Blessed Plate Belt	2			134939	Blacksmithing		270	9	4
-251445	Plans: Blessed Plate Helm	2			134939	Blacksmithing		275	9	4
-251446	Plans: Blessed Plate Chest	2			134939	Blacksmithing		280	9	4
-251447	Plans: Enriched Thorium Breastplate	3			134939	Blacksmithing		300	9	4
-251448	Plans: Enriched Thorium Leggings	3			134939	Blacksmithing		300	9	4
-251449	Plans: Enriched Thorium Helm	3			134939	Blacksmithing		300	9	4
-251450	Plans: Champion's Legplates	4			134939	Blacksmithing		300	9	4
-251451	Plans: Stalwart Helm	4			134939	Blacksmithing		300	9	4
-251452	Plans: Martyr's Legplates	4			134939	Blacksmithing		300	9	4
-251453	Plans: Breastplate of Salvation	4			134939	Blacksmithing		300	9	4
-251454	Plans: Brass Knuckles	2			134939	Blacksmithing		80	9	4
-251455	Plans: Bronze Dory	2			134939	Blacksmithing		95	9	4
-251456	Plans: Iron Fists	2			134939	Blacksmithing		130	9	4
-251457	Plans: Steel Spear	2			134939	Blacksmithing		160	9	4
-251458	Plans: Iron Morningstar	2			134939	Blacksmithing		165	9	4
-251459	Plans: Mithril Shortsword	2			134939	Blacksmithing		180	9	4
-251460	Plans: Mithril Warhammer	2			134939	Blacksmithing		190	9	4
-251461	Plans: Mithril Claws	2			134939	Blacksmithing		195	9	4
-251462	Plans: Mithril Claymore	2			134939	Blacksmithing		195	9	4
-251463	Plans: Mithril Stiletto	2			134939	Blacksmithing		210	9	4
-251464	Plans: Charged Mithril Battleaxe	2			134939	Blacksmithing		215	9	4
-251465	Plans: Thorium Greatmace	3			134939	Blacksmithing		250	9	4
-251466	Plans: Thorium Cestus	3			134939	Blacksmithing		250	9	4
-251467	Plans: Thorium Poleaxe	3			134939	Blacksmithing		260	9	4
-251468	Plans: Bold Dirk	3			134939	Blacksmithing		270	9	4
-251469	Plans: Stormcarver	3			134939	Blacksmithing		300	9	4
-251470	Plans: Bagh Nakh	3			134939	Blacksmithing		300	9	4
-251471	Plans: Legionite Glaive	3			134939	Blacksmithing		300	9	4
-273086	Blueprint: Anvil	2			1001491	Blacksmithing		140	9	4
-273113	Blueprint: Master Forge	2			1001491	Blacksmithing		300	9	4
-273127	Golem Heart	2			962047				15	1
-273908	Justice Leggings	1		7		Legs (Plate)			4	4
-273909	Justice Gauntlets	1		10		Hands (Plate)			4	4
-273910	Justice Spaulders	1		3		Shoulder (Plate)			4	4
-273911	Justice Greaves	1		8		Feet (Plate)			4	4
-273912	Justice Legplates	1		7		Legs (Plate)			4	4
-273913	Justice Gloves	1		10		Hands (Plate)			4	4
-273914	Justice Epaulets	1		3		Shoulder (Plate)			4	4
-273915	Justice Treads	1		8		Feet (Plate)			4	4
-273916	Justice Legguards	1		7		Legs (Plate)			4	4
-273917	Justice Handguards	1		10		Hands (Plate)			4	4
-273918	Justice Pauldrons	1		3		Shoulder (Plate)			4	4
-273919	Justice Sabatons	1		8		Feet (Plate)			4	4
-273944	Legplates of Glory	1		7		Legs (Plate)			4	4
-273945	Gauntlets of Glory	1		10		Hands (Plate)			4	4
-273946	Shoulders of Glory	1		3		Shoulder (Plate)			4	4
-273947	Greaves of Glory	1		8		Feet (Plate)			4	4
-273948	Legguards of Glory	1		7		Legs (Plate)			4	4
-273949	Handguards of Glory	1		10		Hands (Plate)			4	4
-273950	Pauldrons of Glory	1		3		Shoulder (Plate)			4	4
-273951	Sabatons of Glory	1		8		Feet (Plate)			4	4
-273976	Plans: Justice Leggings	4	1		134940	Blacksmithing		300	9	4
-273977	Plans: Justice Gauntlets	4	1		134940	Blacksmithing		300	9	4
-273978	Plans: Justice Spaulders	4	1		134940	Blacksmithing		300	9	4
-273979	Plans: Justice Greaves	4	1		134940	Blacksmithing		300	9	4
-273980	Plans: Justice Legplates	4	1		134940	Blacksmithing		300	9	4
-273981	Plans: Justice Gloves	4	1		134940	Blacksmithing		300	9	4
-273982	Plans: Justice Epaulets	4	1		134940	Blacksmithing		300	9	4
-273983	Plans: Justice Treads	4	1		134940	Blacksmithing		300	9	4
-273984	Plans: Justice Legguards	4	1		134940	Blacksmithing		300	9	4
-273985	Plans: Justice Handguards	4	1		134940	Blacksmithing		300	9	4
-273986	Plans: Justice Pauldrons	4	1		134940	Blacksmithing		300	9	4
-273987	Plans: Justice Sabatons	4	1		134940	Blacksmithing		300	9	4
-274012	Plans: Legplates of Glory	4	1		134940	Blacksmithing		300	9	4
-274013	Plans: Gauntlets of Glory	4	1		134940	Blacksmithing		300	9	4
-274014	Plans: Shoulders of Glory	4	1		134940	Blacksmithing		300	9	4
-274015	Plans: Greaves of Glory	4	1		134940	Blacksmithing		300	9	4
-274016	Plans: Legguards of Glory	4	1		134940	Blacksmithing		300	9	4
-274017	Plans: Handguards of Glory	4	1		134940	Blacksmithing		300	9	4
-274018	Plans: Pauldrons of Glory	4	1		134940	Blacksmithing		300	9	4
-274019	Plans: Sabatons of Glory	4	1		134940	Blacksmithing		300	9	4
-274030	Malleable Essence of Nature	4	1		132119	Enchanting			7	12
-275598	Plans: Goregasher Grips	3	1		134940	Leatherworking		285	9	1
-275599	Plans: Goregasher Support	3	1		134940	Leatherworking		290	9	1
-275600	Plans: Goregasher Stompers	3	1		134940	Leatherworking		295	9	1
-275601	Plans: Clutchlord's Grips	3	1		134940	Leatherworking		285	9	1
-275602	Plans: Clutchlord's Support	3	1		134940	Leatherworking		290	9	1
-275603	Plans: Clutchlord's Stompers	3	1		134940	Leatherworking		295	9	1
-275622	Goregasher Grips	3	53	10		Hands (Plate)	Stamina, Strength		4	4
-275623	Goregasher Support	3	53	6		Waist (Plate)	Stamina, Strength		4	4
-275624	Goregasher Stompers	3	53	8		Feet (Plate)	Stamina, Attack Power		4	4
-275625	Clutchlord's Grips	3	53	10		Hands (Plate)	Stamina, Strength		4	4
-275626	Clutchlord's Support	3	53	6		Waist (Plate)	Stamina, Strength		4	4
-275627	Clutchlord's Stompers	3	53	8		Feet (Plate)	Stamina, Strength		4	4
-276928	Plans: Cloudy Skyforged Chainmail	2			134942	Blacksmithing		60	9	4
-276929	Plans: Cloudy Skyforged Wristguards	2			134942	Blacksmithing		50	9	4
-276930	Plans: Cloudy Skyforged Gauntlets	2			134942	Blacksmithing		55	9	4
-276931	Plans: Cloudy Skyforged Chain	2			134942	Blacksmithing		50	9	4
-276932	Plans: Cloudy Skyforged Legguards	2			134942	Blacksmithing		60	9	4
-276933	Plans: Cloudy Skyforged Greaves	2			134942	Blacksmithing		55	9	4
-276952	Plans: Azure Skyforged Chainmail	2			134942	Blacksmithing		60	9	4
-276953	Plans: Azure Skyforged Wristguards	2			134942	Blacksmithing		50	9	4
-276954	Plans: Azure Skyforged Gauntlets	2			134942	Blacksmithing		55	9	4
-276955	Plans: Azure Skyforged Chain	2			134942	Blacksmithing		50	9	4
-276956	Plans: Azure Skyforged Legguards	2			134942	Blacksmithing		60	9	4
-276957	Plans: Azure Skyforged Greaves	2			134942	Blacksmithing		55	9	4
-276976	Plans: Cloudy Skyforged Helm	2			134942	Blacksmithing		175	9	4
-276977	Plans: Cloudy Skyforged Pauldrons	2			134942	Blacksmithing		175	9	4
-276984	Plans: Azure Skyforged Helm	2			134942	Blacksmithing		175	9	4
-276985	Plans: Azure Skyforged Pauldrons	2			134942	Blacksmithing		175	9	4
-276992	Cloudy Skyforged Chainmail	2	7	5		Chest (Mail)	Strength		4	3
-276993	Cloudy Skyforged Wristguards	2	5	9		Wrist (Mail)	Strength		4	3
-276994	Cloudy Skyforged Gauntlets	2	6	10		Hands (Mail)	Agility		4	3
-276995	Cloudy Skyforged Chain	2	5	6		Waist (Mail)	Stamina		4	3
-276996	Cloudy Skyforged Legguards	2	7	7		Legs (Mail)	Stamina		4	3
-276997	Cloudy Skyforged Greaves	2	6	8		Feet (Mail)	Agility		4	3
-277016	Azure Skyforged Chainmail	2	7	5		Chest (Mail)	Strength		4	3
-277017	Azure Skyforged Wristguards	2	5	9		Wrist (Mail)	Strength		4	3
-277018	Azure Skyforged Gauntlets	2	6	10		Hands (Mail)	Agility		4	3
-277019	Azure Skyforged Chain	2	5	6		Waist (Mail)	Stamina		4	3
-277020	Azure Skyforged Legguards	2	7	7		Legs (Mail)	Stamina		4	3
-277021	Azure Skyforged Greaves	2	6	8		Feet (Mail)	Agility		4	3
-277040	Cloudy Skyforged Helm	2	30	1		Head (Mail)	Strength, Stamina		4	3
-277041	Cloudy Skyforged Pauldrons	2	30	3		Shoulder (Mail)	Agility, Stamina		4	3
-277048	Azure Skyforged Helm	2	30	1		Head (Mail)	Strength, Stamina		4	3
-277049	Azure Skyforged Pauldrons	2	30	3		Shoulder (Mail)	Agility, Stamina		4	3
-277672	Rough Copper Chain Boots	2	4	8		Feet (Mail)	Strength		4	3
-277673	Plans: Rough Copper Chain Boots	2			134942	Blacksmithing		50	9	4
-279259	Ironwood Blade	4	60	13	135277	One-Hand (One-Handed Swords)	Speed 2.40, Strength, Stamina, Hit Rating		2	7
-279260	Forest Defender's Axe	4	60	17	7957675	Two-Hand (Two-Handed Axes)	Speed 3.30, Stamina, Strength, Spell Power		2	1
-279261	Greenhammer	4	60	13	7957558	One-Hand (One-Handed Maces)	Speed 2.30, Agility, Stamina, Hit Rating		2	4
-279262	Evergreen Shield	4	60	14	7956963	Off Hand (Shield)	Stamina, Critical Strike Rating, Healing, Spell Damage		4	6
-279263	Depleted Thorium Sabatons	4	60	8	132583	Feet (Plate)	Strength, Stamina, Spell Damage		4	4
-279264	Heavy Thorium Gauntlets	4	60	10	132962	Hands (Plate)	Stamina, Strength, Defense Rating		4	4
-279265	Azerothium Legplates	4	60	7	134691	Legs (Plate)	Strength, Agility, Stamina		4	4
-279308	Plans: Ironwood Blade	4			134942	Blacksmithing		300	9	4
-279309	Plans: Forest Defender's Axe	4			134942	Blacksmithing		300	9	4
-279310	Plans: Greenhammer	4			134942	Blacksmithing		300	9	4
-279311	Plans: Evergreen Shield	4			134942	Blacksmithing		300	9	4
-279312	Plans: Depleted Thorium Sabatons	4			134942	Blacksmithing		300	9	4
-279313	Plans: Heavy Thorium Gauntlets	4			134942	Blacksmithing		300	9	4
-279314	Plans: Azerothium Legplates	4			134942	Blacksmithing		300	9	4
-279944	Sharpening Wheel	1			135243	Consumable		20		8
-279955	Master Forge	1			4374708	Consumable		300		8
-279988	Anvil	1			1020356	Consumable		140		8
-285279	Cracked Blacksmith Hammer	2	17	25	133057	Thrown (Thrown)	Speed 2.20, Strength		2	16
-285280	Mithril Blacksmith Hammer	2	34	25	133057	Thrown (Thrown)	Speed 2.10, Strength	195	2	16
-285281	Arcanite Blacksmith Hammer	3	49	25	133057	Thrown (Thrown)	Speed 2.20, Spirit, Strength	270	2	16
-285289	Plans: Cracked Blacksmith Hammer	2	1		134942	Blacksmithing		110	9	4
-285290	Plans: Mithril Blacksmith Hammer	2	1		134942	Blacksmithing		195	9	4
-285291	Plans: Arcanite Blacksmith Hammer	3	1		134942	Blacksmithing		270	9	4]],
+774	Malachite	2			134106				7	11	
+818	Tigerseye	2			134118				7	11	
+1206	Moss Agate	2			134105				7	11	
+1210	Shadowgem	2			134074				7	11	
+1529	Jade	2			134134				7	11	
+1705	Lesser Moonstone	2			134087				7	11	
+2318	Light Leather	1			134252	Leather			7	6	
+2319	Medium Leather	1			134254	Leather			7	6	
+2320	Coarse Thread	1			132891	Cloth			7	5	
+2459	Swiftness Potion	1	5		134875	Potion				1	
+2589	Linen Cloth	1			132889	Cloth			7	5	
+2605	Green Dye	1			134743				7	11	
+2835	Rough Stone	1			135232	Metal & Stone			7	7	
+2836	Coarse Stone	1			135235	Metal & Stone			7	7	
+2838	Heavy Stone	1			135238	Metal & Stone			7	7	
+2840	Copper Bar	1			133216	Metal & Stone			7	7	
+2841	Bronze Bar	1			133227	Metal & Stone			7	7	
+2842	Silver Bar	2			133215	Metal & Stone			7	7	
+2844	Copper Mace	1	4	13	133476	One-Hand (One-Handed Maces)	Speed 2.60		2	4	
+2845	Copper Axe	1	4	13	132417	One-Hand (One-Handed Axes)	Speed 2.40		2		
+2847	Copper Shortsword	2	4	13	135327	One-Hand (One-Handed Swords)	Speed 2.50, Strength		2	7	2
+2848	Bronze Mace	2	17	13	133483	One-Hand (One-Handed Maces)	Speed 2.60, Stamina		2	4	
+2849	Bronze Axe	2	18	13	132408	One-Hand (One-Handed Axes)	Speed 2.50, Strength		2		2
+2850	Bronze Shortsword	2	19	13	135274	One-Hand (One-Handed Swords)	Speed 2.50, Agility		2	7	2
+2851	Copper Chain Belt	2	6	6	132491	Waist (Mail)	Stamina		4	3	2
+2852	Copper Chain Pants	2	4	7	134583	Legs (Mail)	Stamina		4	3	2
+2853	Copper Bracers	1	2	9	132602	Wrist (Mail)			4	3	
+2854	Runed Copper Bracers	2	14	9	132602	Wrist (Mail)	Strength, Stamina		4	3	2
+2857	Runed Copper Belt	2	13	6	132492	Waist (Mail)	Strength, Stamina		4	3	2
+2862	Rough Sharpening Stone	1	1		135248	Consumable				8	
+2863	Coarse Sharpening Stone	1	5		135249	Consumable				8	
+2864	Runed Copper Breastplate	2	13	5	132738	Chest (Mail)	Strength, Stamina		4	3	2
+2865	Rough Bronze Leggings	2	16	7	134583	Legs (Mail)	Stamina, Spirit		4	3	2
+2866	Rough Bronze Cuirass	2	18	5	132630	Chest (Mail)	Stamina		4	3	2
+2867	Rough Bronze Bracers	2	18	9	132604	Wrist (Mail)	Stamina		4	3	2
+2868	Patterned Bronze Bracers	2	20	9	132606	Wrist (Mail)	Strength		4	3	2
+2869	Silvered Bronze Breastplate	2	21	5	132631	Chest (Mail)	Strength, Stamina, Spirit		4	3	2
+2870	Shining Silver Breastplate	3	24	5	132750	Chest (Mail)	Strength, Stamina		4	3	2
+2871	Heavy Sharpening Stone	1	15		135250	Consumable				8	
+2880	Weak Flux	1			133588				7	11	
+2881	Plans: Runed Copper Breastplate	2			134942	Blacksmithing		55	9	4	
+2882	Plans: Silvered Bronze Shoulders	2			134942	Blacksmithing		100	9	4	
+2883	Plans: Deadly Bronze Poniard	2			134942	Blacksmithing		100	9	4	
+3239	Rough Weightstone	1	1		135255	Consumable				8	
+3240	Coarse Weightstone	1	5		135256	Consumable				8	
+3241	Heavy Weightstone	1	15		135257	Consumable				8	
+3391	Elixir of Ogre Strength	1	20		134837	Elixir				2	
+3466	Strong Flux	1			133587				7	11	
+3469	Copper Chain Boots	2	4	8		Feet (Mail)	Stamina		4	3	2
+3470	Rough Grinding Stone	1			135243	Metal & Stone			7	7	
+3471	Copper Chain Vest	2	5	5	132624	Chest (Mail)	Strength		4	3	2
+3472	Runed Copper Gauntlets	2	7	10	132938	Hands (Mail)	Strength, Stamina		4	3	2
+3473	Runed Copper Pants	2	8	7	134583	Legs (Mail)	Strength, Stamina		4	3	2
+3474	Gemmed Copper Gauntlets	2	10	10	132939	Hands (Mail)			4	3	2
+3478	Coarse Grinding Stone	1			135244	Metal & Stone			7	7	
+3480	Rough Bronze Shoulders	2	17	3	135036	Shoulder (Mail)	Stamina, Strength		4	3	2
+3481	Silvered Bronze Shoulders	2	20	3	135040	Shoulder (Mail)	Strength, Stamina, Spirit		4	3	2
+3482	Silvered Bronze Boots	2	21	8	132535	Feet (Mail)	Strength, Stamina, Spirit		4	3	2
+3483	Silvered Bronze Gauntlets	2	22	10	132939	Hands (Mail)	Strength, Stamina, Spirit		4	3	2
+3484	Green Iron Boots	2	24	8	132535	Feet (Mail)	Stamina, Strength		4	3	2
+3485	Green Iron Gauntlets	2	25	10	132939	Hands (Mail)	Stamina, Strength		4	3	2
+3486	Heavy Grinding Stone	1			135245	Metal & Stone			7	7	
+3487	Heavy Copper Broadsword	2	14	17	135312	Two-Hand (Two-Handed Swords)	Speed 3.30, Stamina		2	8	2
+3488	Copper Battle Axe	2	8	17	135420	Two-Hand (Two-Handed Axes)	Speed 3.50, Stamina		2	1	2
+3489	Thick War Axe	2	12	13	135419	One-Hand (One-Handed Axes)	Speed 2.50, Stamina, Strength		2		2
+3490	Deadly Bronze Poniard	2	20	13	135641	One-Hand (Daggers)	Speed 1.80, Agility		2	15	2
+3491	Heavy Bronze Mace	2	20	13	133483	One-Hand (One-Handed Maces)	Speed 2.80, Strength		2	4	2
+3492	Mighty Iron Hammer	2	25	13	133041	One-Hand (One-Handed Maces)	Speed 2.80, Strength		2	4	2
+3575	Iron Bar	1			133232	Metal & Stone			7	7	
+3577	Gold Bar	2			133217	Metal & Stone			7	7	
+3608	Plans: Mighty Iron Hammer	2			134942	Blacksmithing		120	9	4	
+3609	Plans: Copper Chain Vest	2			134942	Blacksmithing		30	9	4	
+3610	Plans: Gemmed Copper Gauntlets	2			134942	Blacksmithing		35	9	4	
+3611	Plans: Green Iron Boots	2			134942	Blacksmithing		120	9	4	
+3612	Plans: Green Iron Gauntlets	2			134942	Blacksmithing		125	9	4	
+3823	Lesser Invisibility Potion	1	23		134798	Potion				1	
+3824	Shadow Oil	1	24		134803	Consumable				8	
+3829	Frost Oil	1	30		134800	Consumable				8	
+3835	Green Iron Bracers	2	28	9	132605	Wrist (Mail)	Stamina, Strength		4	3	2
+3836	Green Iron Helm	2	29	1	133071	Head (Mail)	Stamina, Strength		4	3	2
+3837	Golden Scale Coif	2	33	1	133138	Head (Mail)	Strength, Stamina		4	3	2
+3840	Green Iron Shoulders	2	27	3	135040	Shoulder (Mail)	Stamina, Strength		4	3	2
+3841	Golden Scale Shoulders	2	30	3	135040	Shoulder (Mail)	Strength, Stamina		4	3	2
+3842	Green Iron Leggings	2	26	7	134585	Legs (Mail)	Stamina, Strength		4	3	2
+3843	Golden Scale Leggings	2	29	7	134584	Legs (Mail)	Strength, Stamina		4	3	2
+3844	Green Iron Hauberk	3	31	5	132624	Chest (Mail)	Stamina, Strength, Bonus Armor		4	3	2
+3845	Golden Scale Cuirass	2	35	5	132628	Chest (Mail)	Strength, Stamina		4	3	2
+3846	Polished Steel Boots	2	32	8	132535	Feet (Mail)	Stamina		4	3	2
+3847	Golden Scale Boots	2	35	8	132535	Feet (Mail)	Strength, Stamina		4	3	2
+3848	Big Bronze Knife	2	15	13	135640	One-Hand (Daggers)	Speed 1.90, Stamina		2	15	2
+3849	Hardened Iron Shortsword	2	27	13	135321	One-Hand (One-Handed Swords)	Speed 1.80, Stamina		2	7	2
+3850	Jade Serpentblade	2	30	13	135346	One-Hand (One-Handed Swords)	Speed 2.80, Attack Power, Agility		2	7	2
+3851	Solid Iron Maul	2	26	17	133044	Two-Hand (Two-Handed Maces)	Speed 3.50, Stamina		2	5	2
+3852	Golden Iron Destroyer	2	29	17	133041	Two-Hand (Two-Handed Maces)	Speed 3.30, Strength, Spell Power		2	5	2
+3853	Moonsteel Broadsword	2	31	17	135326	Two-Hand (Two-Handed Swords)	Speed 3.50, Strength, Spell Power		2	8	2
+3854	Frost Tiger Blade	2	35	17	135275	Two-Hand (Two-Handed Swords)	Speed 3.40, Critical Strike Rating		2	8	2
+3855	Massive Iron Axe	2	32	17	135423	Two-Hand (Two-Handed Axes)	Speed 3.50, Strength, Stamina		2	1	2
+3856	Shadow Crescent Axe	2	35	17	132408	Two-Hand (Two-Handed Axes)	Speed 3.30, Strength, Spell Power		2	1	2
+3859	Steel Bar	1			133234	Metal & Stone			7	7	
+3860	Mithril Bar	1			133220	Metal & Stone			7	7	
+3864	Citrine	2			134117				7	11	
+3866	Plans: Jade Serpentblade	2			134942	Blacksmithing		150	9	4	
+3867	Plans: Golden Iron Destroyer	2			134942	Blacksmithing		145	9	4	
+3868	Plans: Frost Tiger Blade	2			134942	Blacksmithing		175	9	4	
+3869	Plans: Shadow Crescent Axe	2			134942	Blacksmithing		175	9	4	
+3870	Plans: Green Iron Shoulders	2			134942	Blacksmithing		135	9	4	
+3871	Plans: Golden Scale Shoulders	3			134939	Blacksmithing		150	9	4	
+3872	Plans: Golden Scale Leggings	2			134942	Blacksmithing		145	9	4	
+3873	Plans: Golden Scale Cuirass	2			134942	Blacksmithing		170	9	4	
+3874	Plans: Polished Steel Boots	2			134942	Blacksmithing		160	9	4	
+3875	Plans: Golden Scale Boots	3			134939	Blacksmithing		175	9	4	
+4234	Heavy Leather	1			134256	Leather			7	6	
+4255	Green Leather Armor	2	26	5	132723	Chest (Leather)	Agility, Intellect		4	2	2
+4304	Thick Leather	1			134257	Leather			7	6	
+4338	Mageweave Cloth	1			132892	Cloth			7	5	
+5498	Small Lustrous Pearl	2			134122				7	11	
+5500	Iridescent Pearl	2			134121				7	11	
+5540	Pearl-handled Dagger	2	18	13	135641	One-Hand (Daggers)	Speed 1.70, Agility, Stamina		2	15	2
+5541	Iridescent Hammer	2	23	13	133042	One-Hand (One-Handed Maces)	Speed 2.40, Strength, Stamina		2	4	2
+5543	Plans: Iridescent Hammer	2			134942	Blacksmithing		115	9	4	
+5578	Plans: Silvered Bronze Breastplate	2			134942	Blacksmithing		105	9	4	
+5635	Sharp Claw	1			134296				7	11	
+5637	Large Fang	1			133725				7	11	
+5966	Guardian Gloves	2	33	10	132939	Hands (Leather)	Intellect, Spell Power		4	2	2
+6037	Truesilver Bar	2			133222	Metal & Stone			7	7	
+6040	Golden Scale Bracers	2	32	9	132609	Wrist (Mail)	Stamina, Strength		4	3	2
+6041	Steel Weapon Chain	1			135834	Item Enhancement		190		6	
+6042	Iron Shield Spike	1			133596	Item Enhancement		150		6	
+6043	Iron Counterweight	1			134333	Item Enhancement		165		6	
+6044	Plans: Iron Shield Spike	2			134942	Blacksmithing		125	9	4	
+6045	Plans: Iron Counterweight	2			134942	Blacksmithing		140	9	4	
+6046	Plans: Steel Weapon Chain	2			134942	Blacksmithing		165	9	4	
+6047	Plans: Golden Scale Coif	1			134939	Blacksmithing		165	9	4	1
+6214	Heavy Copper Maul	2	11	17	133055	Two-Hand (Two-Handed Maces)	Speed 3.30, Strength		2	5	2
+6217	Copper Rod	1			133942	Enchanting			7	12	
+6338	Silver Rod	1			135138	Enchanting			7	12	
+6350	Rough Bronze Boots	2	13	8	132535	Feet (Mail)	Strength, Stamina		4	3	2
+6730	Ironforge Chain	2	11	5	132624	Chest (Mail)	Stamina		4	3	2
+6731	Ironforge Breastplate	2	15	5	132740	Chest (Mail)	Strength, Stamina, Bonus Armor		4	3	2
+6733	Ironforge Gauntlets	2	23	10	132939	Hands (Mail)	Bonus Armor, Attack Power		4	3	2
+6735	Plans: Ironforge Breastplate	2			134942	Blacksmithing		100	9	4	
+7067	Elemental Earth	1			134572	Elemental			7	10	
+7068	Elemental Fire	1			135805	Elemental			7	10	
+7069	Elemental Air	1			136107	Elemental			7	10	
+7070	Elemental Water	1			134714	Elemental			7	10	
+7071	Iron Buckle	1			133607	Parts			7	1	
+7075	Core of Earth	1			135231	Elemental			7	10	
+7076	Essence of Earth	2			136102	Elemental			7	10	
+7077	Heart of Fire	1			135819	Elemental			7	10	
+7078	Essence of Fire	2			135830	Elemental			7	10	
+7079	Globe of Water	1			134333	Elemental			7	10	
+7080	Essence of Water	2			136007	Elemental			7	10	
+7081	Breath of Wind	1			136018	Elemental			7	10	
+7082	Essence of Air	2			136022	Elemental			7	10	
+7166	Copper Dagger	2	6	13	135650	One-Hand (Daggers)	Speed 1.70, Agility		2	15	2
+7909	Aquamarine	2			134088				7	11	
+7910	Star Ruby	2			134129				7	11	
+7912	Solid Stone	1			135236	Metal & Stone			7	7	
+7913	Barbaric Iron Shoulders	2	27	3	135054	Shoulder (Mail)	Strength, Agility		4	3	2
+7914	Barbaric Iron Breastplate	2	27	5	132636	Chest (Mail)	Strength		4	3	2
+7915	Barbaric Iron Helm	2	30	1	133127	Head (Mail)	Agility, Strength		4	3	2
+7916	Barbaric Iron Boots	2	31	8	132582	Feet (Mail)	Strength, Agility		4	3	2
+7917	Barbaric Iron Gloves	2	32	10	132965	Hands (Mail)	Strength		4	3	2
+7918	Heavy Mithril Shoulder	2	40	3	135053	Shoulder (Plate)	Stamina		4	4	2
+7919	Heavy Mithril Gauntlet	2	40	10	132961	Hands (Plate)	Stamina, Bonus Armor		4	4	2
+7920	Mithril Plate Pants	2	40	7	134584	Legs (Mail)	Spirit, Dodge Rating		4	3	2
+7921	Heavy Mithril Pants	2	40	7	134583	Legs (Plate)	Stamina, Bonus Armor		4	4	2
+7922	Steel Plate Helm	2	40	1	133071	Head (Plate)	Stamina, Strength		4	4	2
+7924	Mithril Plate Bracers	2	40	9	132606	Wrist (Mail)	Spirit, Stamina		4	3	2
+7925	Mithril Plate Gloves	2	40	10	132965	Hands (Mail)	Spirit, Stamina		4	3	2
+7926	Ornate Mithril Pants	2	40	7	134584	Legs (Plate)	Strength, Dodge Rating		4	4	2
+7927	Ornate Mithril Gloves	2	40	10	132965	Hands (Plate)	Critical Strike Rating		4	4	2
+7928	Ornate Mithril Shoulders	2	40	3	135040	Shoulder (Plate)	Strength, Dodge Rating		4	4	2
+7929	Orcish War Leggings	2	40	7	134583	Legs (Mail)	Strength		4	3	2
+7930	Heavy Mithril Breastplate	2	41	5	132745	Chest (Plate)	Stamina, Bonus Armor		4	4	2
+7931	Mithril Coif	2	41	1	133137	Head (Mail)	Spirit, Stamina		4	3	2
+7932	Mithril Plate Shoulders	2	42	3	135043	Shoulder (Mail)	Spirit, Stamina		4	3	2
+7933	Heavy Mithril Boots	2	42	8	132582	Feet (Plate)	Stamina, Bonus Armor		4	4	2
+7934	Heavy Mithril Helm	2	42	1	133078	Head (Plate)	Stamina, Bonus Armor		4	4	2
+7935	Ornate Mithril Breastplate	2	43	5	132745	Chest (Plate)	Critical Strike Rating, Dodge Rating		4	4	2
+7936	Ornate Mithril Boots	2	44	8	132535	Feet (Plate)	Dodge Rating		4	4	2
+7937	Ornate Mithril Helm	2	44	1	133078	Head (Plate)	Strength, Critical Strike Rating		4	4	2
+7938	Truesilver Gauntlets	3	40	10	132963	Hands (Plate)	Strength, Stamina		4	4	2
+7939	Truesilver Breastplate	3	44	5	132739	Chest (Plate)	Stamina		4	4	2
+7941	Heavy Mithril Axe	2	37	13	132405	One-Hand (One-Handed Axes)	Speed 2.70, Stamina		2		2
+7942	Blue Glittering Axe	2	39	13	132394	One-Hand (One-Handed Axes)	Speed 2.40, Agility		2		2
+7943	Wicked Mithril Blade	2	40	13	135280	One-Hand (One-Handed Swords)	Speed 2.50, Strength, Agility		2	7	2
+7944	Dazzling Mithril Rapier	2	43	13	135340	One-Hand (One-Handed Swords)	Speed 1.70, Agility		2	7	2
+7945	Big Black Mace	2	41	13	133490	One-Hand (One-Handed Maces)	Speed 2.60, Strength		2	4	2
+7946	Runed Mithril Hammer	2	44	13	133054	One-Hand (One-Handed Maces)	Speed 1.60, Stamina, Defense Rating		2	4	2
+7947	Ebon Shiv	2	46	13	135650	One-Hand (Daggers)	Speed 1.70, Agility		2	15	2
+7954	The Shatterer	3	42	13	133055	One-Hand (One-Handed Maces)	Speed 2.40		2	4	2
+7955	Copper Claymore	2	6	17	135322	Two-Hand (Two-Handed Swords)	Speed 3.30, Strength, Stamina		2	8	2
+7956	Bronze Warhammer	2	20	17	133055	Two-Hand (Two-Handed Maces)	Speed 3.50, Stamina, Strength		2	5	2
+7957	Bronze Greatsword	2	21	17	135321	Two-Hand (Two-Handed Swords)	Speed 3.40, Spell Power, Stamina		2	8	2
+7958	Bronze Battle Axe	2	22	17	132415	Two-Hand (Two-Handed Axes)	Speed 3.30, Strength		2	1	2
+7959	Blight	3	45	17	135130	Two-Hand (Polearms)	Speed 3.70		2	6	2
+7960	Truesilver Champion	3	47	17	135317	Two-Hand (Two-Handed Swords)	Speed 3.40		2	8	2
+7961	Phantom Blade	3	44	13	135350	One-Hand (One-Handed Swords)	Speed 1.60		2	7	2
+7963	Steel Breastplate	2	35	5	132740	Chest (Mail)	Stamina, Block Rating		4	3	2
+7964	Solid Sharpening Stone	1	25		135251	Consumable				8	
+7965	Solid Weightstone	1	25		135258	Consumable				8	
+7966	Solid Grinding Stone	1			135246	Metal & Stone			7	7	
+7967	Mithril Shield Spike	2			133597	Item Enhancement		215		6	
+7969	Mithril Spurs	2			132307	Item Enhancement		215		6	
+7971	Black Pearl	2			134120				7	11	
+7972	Ichor of Undeath	1			134437	Elemental			7	10	
+7975	Plans: Heavy Mithril Pants	2			134942	Blacksmithing		185	9	4	
+7976	Plans: Mithril Shield Spike	3			134939	Blacksmithing		190	9	4	
+7978	Plans: Barbaric Iron Shoulders	2			134942	Blacksmithing		135	9	4	
+7979	Plans: Barbaric Iron Breastplate	2			134942	Blacksmithing		135	9	4	
+7980	Plans: Barbaric Iron Helm	2			134942	Blacksmithing		150	9	4	
+7981	Plans: Barbaric Iron Boots	2			134942	Blacksmithing		155	9	4	
+7982	Plans: Barbaric Iron Gloves	2			134942	Blacksmithing		160	9	4	
+7983	Plans: Ornate Mithril Pants	2			134942	Blacksmithing		195	9	4	1
+7984	Plans: Ornate Mithril Gloves	2			134942	Blacksmithing		195	9	4	1
+7985	Plans: Ornate Mithril Shoulders	2			134942	Blacksmithing		200	9	4	1
+7989	Plans: Mithril Spurs	2			134942	Blacksmithing		210	9	4	
+7990	Plans: Heavy Mithril Helm	2			134942	Blacksmithing		220	9	4	
+7991	Plans: Mithril Plate Shoulders	3			134939	Blacksmithing		210	9	4	
+7992	Plans: Blue Glittering Axe	2			134942	Blacksmithing		195	9	4	
+7993	Plans: Dazzling Mithril Rapier	2			134942	Blacksmithing		215	9	4	
+7995	Plans: Mithril Plate Bracers	1			134939	Blacksmithing		190	9	4	1
+8028	Plans: Runed Mithril Hammer	3			134939	Blacksmithing		220	9	4	
+8029	Plans: Wicked Mithril Blade	2			134942	Blacksmithing		200	9	4	1
+8030	Plans: Ebon Shiv	1			134939	Blacksmithing		230	9	4	1
+8146	Wicked Claw	1			134294				7	11	
+8153	Wildvine	1			134183	Herb			7	9	
+8168	Jet Black Feather	1			132915	Leather			7	6	
+8170	Rugged Leather	1			134251	Leather			7	6	
+8831	Purple Lotus	1			134198	Herb			7	9	
+9060	Inlaid Mithril Cylinder	1			134535	Parts			7	1	
+9366	Golden Scale Gauntlets	2	36	10	132963	Hands (Mail)	Strength, Stamina		4	3	2
+9367	Plans: Golden Scale Gauntlets	2			134942	Blacksmithing		180	9	4	
+10421	Rough Copper Vest	2	2	5	132624	Chest (Mail)	Stamina		4	3	2
+10423	Silvered Bronze Leggings	2	26	7	134584	Legs (Mail)	Strength, Stamina, Spirit		4	3	2
+10424	Plans: Silvered Bronze Leggings	2			134942	Blacksmithing		130	9	4	
+10713	Plans: Inlaid Mithril Cylinder	1			134941	Blacksmithing		200	9	4	
+10858	Plans: Solid Iron Maul	1			134939	Blacksmithing		130	9	4	1
+10938	Lesser Magic Essence	2			132867	Enchanting			7	12	
+10940	Strange Dust	1			132858	Enchanting			7	12	
+11128	Golden Rod	1			135147	Enchanting			7	12	
+11139	Large Glowing Shard	3			132878	Enchanting			7	12	
+11144	Truesilver Rod	1			135148	Enchanting			7	12	
+11184	Blue Power Crystal	1			134133				12		
+11185	Green Power Crystal	1			134105				12		
+11186	Red Power Crystal	1			134130				12		
+11188	Yellow Power Crystal	1			134136				12		
+11371	Dark Iron Bar	1			133233	Metal & Stone			7	7	
+11382	Blood of the Mountain	2			134086				7	11	
+11604	Dark Iron Plate	3	54	5	132743	Chest (Plate)	Stamina, Bonus Armor		4	4	1
+11605	Dark Iron Shoulders	2	53	3	135040	Shoulder (Plate)	Stamina, Bonus Armor		4	4	2
+11606	Dark Iron Mail	2	51	5	132638	Chest (Mail)	Stamina, Bonus Armor		4	3	2
+11607	Dark Iron Sunderer	3	52	17	135572	Two-Hand (Two-Handed Axes)	Speed 2.60		2	1	2
+11608	Dark Iron Pulverizer	3	50	17	133046	Two-Hand (Two-Handed Maces)	Speed 3.70		2	5	2
+11610	Plans: Dark Iron Pulverizer	3			134939	Blacksmithing		240	9	4	
+11611	Plans: Dark Iron Sunderer	3			134939	Blacksmithing		250	9	4	
+11612	Plans: Dark Iron Plate	3			134939	Blacksmithing		260	9	4	
+11614	Plans: Dark Iron Mail	2			134942	Blacksmithing		245	9	4	1
+11615	Plans: Dark Iron Shoulders	2			134942	Blacksmithing		255	9	4	1
+11754	Black Diamond	2			134071				12		
+12162	Plans: Hardened Iron Shortsword	1			134939	Blacksmithing		135	9	4	
+12163	Plans: Moonsteel Broadsword	1			134939	Blacksmithing		155	9	4	1
+12164	Plans: Massive Iron Axe	1			134939	Blacksmithing		160	9	4	1
+12259	Glinting Steel Dagger	2	31	13	135641	One-Hand (Daggers)	Speed 1.70, Attack Power		2	15	2
+12260	Searing Golden Blade	2	34	13	135641	One-Hand (Daggers)	Speed 1.40, Intellect		2	15	2
+12261	Plans: Searing Golden Blade	2			134942	Blacksmithing		165	9	4	
+12359	Thorium Bar	1			133221	Metal & Stone			7	7	
+12360	Arcanite Bar	2			134459	Metal & Stone			7	7	
+12361	Blue Sapphire	2			134132				7	11	
+12364	Huge Emerald	2			134104				7	11	
+12365	Dense Stone	1			134461	Metal & Stone			7	7	
+12404	Dense Sharpening Stone	1	35		135252	Consumable				8	
+12405	Thorium Armor	2	45	5	132743	Chest (Plate)	Stamina		4	4	2
+12406	Thorium Belt	2	45	6	132519	Waist (Plate)	Stamina		4	4	2
+12408	Thorium Bracers	2	46	9	132612	Wrist (Plate)	Stamina		4	4	2
+12409	Thorium Boots	2	51	8	132589	Feet (Plate)			4	4	2
+12410	Thorium Helm	2	51	1	133125	Head (Plate)	Stamina		4	4	2
+12414	Thorium Leggings	2	55	7	134584	Legs (Plate)	Stamina		4	4	2
+12415	Radiant Breastplate	2	49	5	132751	Chest (Mail)			4	3	2
+12416	Radiant Belt	2	47	6	132500	Waist (Mail)	Stamina		4	3	2
+12417	Radiant Circlet	2	54	1	132767	Head (Mail)	Stamina		4	3	2
+12418	Radiant Gloves	2	52	10	132960	Hands (Mail)	Stamina		4	3	2
+12419	Radiant Boots	2	53	8	132584	Feet (Mail)	Stamina		4	3	2
+12420	Radiant Leggings	2	56	7	134583	Legs (Mail)	Stamina		4	3	2
+12422	Imperial Plate Chest	2	55	5	132745	Chest (Plate)	Strength, Stamina		4	4	2
+12424	Imperial Plate Belt	2	47	6	132490	Waist (Plate)	Strength, Stamina		4	4	2
+12425	Imperial Plate Bracers	2	49	9	132618	Wrist (Plate)	Strength, Stamina		4	4	2
+12426	Imperial Plate Boots	2	54	8	132582	Feet (Plate)	Strength, Stamina		4	4	2
+12427	Imperial Plate Helm	2	54	1	133124	Head (Plate)	Strength, Stamina		4	4	2
+12428	Imperial Plate Shoulders	2	47	3	135033	Shoulder (Plate)	Strength, Stamina		4	4	2
+12429	Imperial Plate Leggings	2	56	7	134584	Legs (Plate)	Strength, Stamina		4	4	2
+12610	Runic Plate Shoulders	2	55	3	135054	Shoulder (Plate)	Stamina		4	4	2
+12611	Runic Plate Boots	2	55	8	132582	Feet (Plate)	Stamina		4	4	2
+12612	Runic Plate Helm	2	56	1	133071	Head (Plate)	Stamina		4	4	2
+12613	Runic Breastplate	2	57	5	132746	Chest (Plate)	Stamina		4	4	2
+12614	Runic Plate Leggings	2	57	7	134584	Legs (Plate)	Stamina		4	4	2
+12618	Enchanted Thorium Breastplate	3	58	5	132745	Chest (Plate)	Stamina, Strength, Defense Rating		4	4	2
+12619	Enchanted Thorium Leggings	3	58	7	134584	Legs (Plate)	Stamina, Strength, Defense Rating		4	4	2
+12620	Enchanted Thorium Helm	3	57	1	133070	Head (Plate)	Stamina, Strength, Defense Rating		4	4	2
+12625	Dawnbringer Shoulders	3	53	3	135051	Shoulder (Plate)	Spirit, Healing, Spell Damage		4	4	2
+12628	Demon Forged Breastplate	1		5	132741	Chest (Plate)			4	4	
+12631	Fiery Plate Gauntlets	3	53	10	132937	Hands (Plate)			4	4	2
+12633	Whitesoul Helm	3	55	1	133111	Head (Plate)	Spirit, Intellect, Bonus Armor, Healing, Spell Damage		4	4	2
+12639	Stronghold Gauntlets	4	57	10	132964	Hands (Plate)	Stamina, Parry Rating, Critical Strike Rating		4	4	2
+12640	Lionheart Helm	4	56	1	133138	Head (Plate)	Strength, Critical Strike Rating, Hit Rating		4	4	2
+12643	Dense Weightstone	1	35		135259	Consumable				8	
+12644	Dense Grinding Stone	1			135247	Metal & Stone			7	7	
+12645	Thorium Shield Spike	2			133614	Item Enhancement		250		6	
+12655	Enchanted Thorium Bar	1			133229	Metal & Stone			7	7	
+12662	Demonic Rune	2			134417				7	11	1
+12682	Plans: Thorium Armor	2			134942	Blacksmithing		225	9	4	
+12683	Plans: Thorium Belt	2			134942	Blacksmithing		225	9	4	
+12684	Plans: Thorium Bracers	2			134942	Blacksmithing		230	9	4	
+12685	Plans: Radiant Belt	2			134942	Blacksmithing		235	9	4	
+12687	Plans: Imperial Plate Shoulders	2			134939	Blacksmithing		240	9	4	1
+12688	Plans: Imperial Plate Belt	2			134939	Blacksmithing		240	9	4	1
+12689	Plans: Radiant Breastplate	2			134942	Blacksmithing		245	9	4	
+12690	Plans: Imperial Plate Bracers	2			134939	Blacksmithing		245	9	4	1
+12692	Plans: Thorium Shield Spike	2			134942	Blacksmithing		250	9	4	
+12693	Plans: Thorium Boots	2			134942	Blacksmithing		255	9	4	
+12694	Plans: Thorium Helm	2			134942	Blacksmithing		255	9	4	
+12695	Plans: Radiant Gloves	2			134942	Blacksmithing		260	9	4	
+12696	Plans: Demon Forged Breastplate	3			134939	Blacksmithing		260	9	4	1
+12697	Plans: Radiant Boots	2			134942	Blacksmithing		265	9	4	
+12698	Plans: Dawnbringer Shoulders	3			134939	Blacksmithing		265	9	4	
+12699	Plans: Fiery Plate Gauntlets	3			134939	Blacksmithing		265	9	4	1
+12700	Plans: Imperial Plate Boots	2			134939	Blacksmithing		270	9	4	1
+12701	Plans: Imperial Plate Helm	2			134939	Blacksmithing		270	9	4	1
+12702	Plans: Radiant Circlet	2			134942	Blacksmithing		270	9	4	
+12704	Plans: Thorium Leggings	2			134942	Blacksmithing		275	9	4	
+12705	Plans: Imperial Plate Chest	2			134939	Blacksmithing		275	9	4	1
+12706	Plans: Runic Plate Shoulders	2			134939	Blacksmithing		275	9	4	1
+12707	Plans: Runic Plate Boots	2			134939	Blacksmithing		275	9	4	1
+12711	Plans: Whitesoul Helm	3			134939	Blacksmithing		290	9	4	
+12713	Plans: Radiant Leggings	2			134942	Blacksmithing		280	9	4	
+12714	Plans: Runic Plate Helm	2			134939	Blacksmithing		280	9	4	1
+12715	Plans: Imperial Plate Leggings	2			134939	Blacksmithing		280	9	4	1
+12717	Plans: Lionheart Helm	4			134941	Blacksmithing		300	9	4	
+12718	Plans: Runic Breastplate	2			134939	Blacksmithing		285	9	4	1
+12719	Plans: Runic Plate Leggings	2			134939	Blacksmithing		285	9	4	1
+12720	Plans: Stronghold Gauntlets	4			134939	Blacksmithing		300	9	4	
+12725	Plans: Enchanted Thorium Helm	3			134941	Blacksmithing		300	9	4	1
+12726	Plans: Enchanted Thorium Leggings	3			134941	Blacksmithing		300	9	4	1
+12727	Plans: Enchanted Thorium Breastplate	3			134941	Blacksmithing		300	9	4	1
+12753	Skin of Shadow	2			134430				12		1
+12764	Thorium Greatsword	2	47	17	135323	Two-Hand (Two-Handed Swords)	Speed 3.60, Strength		2	8	2
+12769	Bleakwood Hew	3	49	17	132418	Two-Hand (Two-Handed Axes)	Speed 2.70, Strength, Stamina		2	1	2
+12772	Inlaid Thorium Hammer	2	49	17	133046	Two-Hand (Two-Handed Maces)	Speed 3.00, Strength		2	5	2
+12773	Ornate Thorium Handaxe	2	50	13	132403	One-Hand (One-Handed Axes)	Speed 1.90, Strength		2		1
+12774	Dawn's Edge	3	50	13	132396	One-Hand (One-Handed Axes)	Speed 2.10, Critical Strike Rating		2		2
+12775	Huge Thorium Battleaxe	2	51	17	135581	Two-Hand (Two-Handed Axes)	Speed 3.50		2	1	2
+12776	Enchanted Battlehammer	3	51	17	133042	Two-Hand (Two-Handed Maces)	Speed 3.50, Parry Rating, Hit Rating		2	5	2
+12777	Blazing Rapier	3	51	13	135340	One-Hand (One-Handed Swords)	Speed 2.40		2	7	2
+12779	Rune Edge	1		13	132408	One-Hand (One-Handed Axes)			2		
+12781	Serenity	3	52	13	133477	One-Hand (One-Handed Maces)	Speed 2.50		2	4	2
+12782	Corruption	3	53	17	135277	Two-Hand (Two-Handed Swords)	Speed 3.30, Strength, Stamina		2	8	1
+12783	Heartseeker	3	58	13	135315	One-Hand (Daggers)	Speed 1.90, Agility, Critical Strike Rating		2	15	2
+12784	Arcanite Reaper	3	58	17	132400	Two-Hand (Two-Handed Axes)	Speed 3.80, Stamina, Attack Power		2	1	2
+12790	Arcanite Champion	3	58	17	135349	Two-Hand (Two-Handed Swords)	Speed 3.40		2	8	2
+12792	Volcanic Hammer	2	53	13	133043	One-Hand (One-Handed Maces)	Speed 2.50		2	4	2
+12794	Masterwork Stormhammer	3	57	13	133041	One-Hand (One-Handed Maces)	Speed 1.60		2	4	2
+12795	Blood Talon	3	55	21	135663	Main Hand (Fist Weapons)	Speed 1.30		2	13	1
+12796	Hammer of the Titans	3	58	17	133046	Two-Hand (Two-Handed Maces)	Speed 3.80, Strength		2	5	2
+12797	Frostguard	3	58	13	135291	One-Hand (One-Handed Swords)	Speed 2.80		2	7	2
+12798	Annihilator	3	58	13	132403	One-Hand (One-Handed Axes)	Speed 2.40, Attack Power		2		2
+12799	Large Opal	2			134116				7	11	
+12800	Azerothian Diamond	2			134094				7	11	
+12802	Darkspear	3	55	17	135131	Two-Hand (Polearms)	Speed 3.20		2	6	2
+12803	Living Essence	2			136006	Elemental			7	10	
+12804	Powerful Mojo	1			136011				7	11	
+12808	Essence of Undeath	2			136195	Elemental			7	10	
+12809	Guardian Stone	2			135228	Metal & Stone			7	7	
+12810	Enchanted Leather	1			134418	Leather			7	6	
+12811	Righteous Orb	2			134122				7	11	
+12819	Plans: Ornate Thorium Handaxe	2			134939	Blacksmithing		250	9	4	1
+12821	Plans: Dawn's Edge	3			134939	Blacksmithing		250	9	4	
+12823	Plans: Huge Thorium Battleaxe	1			134939	Blacksmithing		255	9	4	1
+12824	Plans: Enchanted Battlehammer	2			134942	Blacksmithing		255	9	4	
+12825	Plans: Blazing Rapier	2			134942	Blacksmithing		255	9	4	
+12827	Plans: Serenity	2			134942	Blacksmithing		260	9	4	
+12828	Plans: Volcanic Hammer	2			134942	Blacksmithing		265	9	4	
+12830	Plans: Corruption	1			134939	Blacksmithing		265	9	4	
+12833	Plans: Hammer of the Titans	3			134939	Blacksmithing		300	9	4	
+12834	Plans: Arcanite Champion	3			134939	Blacksmithing		300	9	4	
+12835	Plans: Annihilator	3			134939	Blacksmithing		300	9	4	
+12836	Plans: Frostguard	3			134939	Blacksmithing		300	9	4	
+12837	Plans: Masterwork Stormhammer	3			134939	Blacksmithing		300	9	4	
+12838	Plans: Arcanite Reaper	3			134939	Blacksmithing		300	9	4	
+12839	Plans: Heartseeker	3			134939	Blacksmithing		300	9	4	
+12938	Blood of Heroes	1			134813				12		1
+13510	Flask of the Titans	1	50		134842	Flask				3	
+13511	Flask of Distilled Wisdom	1	50		134877	Flask				3	
+13512	Flask of Supreme Power	1	50		134821	Flask				3	
+13926	Golden Pearl	2			134123				7	11	
+15417	Devilsaur Leather	1			134347	Leather			7	6	
+15869	Silver Skeleton Key	2			134237	Consumable		75		8	
+15870	Golden Skeleton Key	2			134247	Consumable		125		8	
+15871	Truesilver Skeleton Key	2			134245	Consumable		175		8	
+15872	Arcanite Skeleton Key	2			134242	Consumable		250		8	
+16206	Arcanite Rod	1			135156	Enchanting			7	12	
+16988	Fiery Chain Shoulders	4	57	3	135054	Shoulder (Mail)	Intellect, Stamina		4	3	2
+16989	Fiery Chain Girdle	4	54	6	132502	Waist (Mail)	Stamina, Intellect, Spirit		4	3	2
+17010	Fiery Core	3			135812				7	11	
+17011	Lava Core	3			136025				7	11	
+17012	Core Leather	1			132386	Leather			7	6	
+17013	Dark Iron Leggings	4	55	7	134584	Legs (Plate)	Stamina, Bonus Armor		4	4	2
+17014	Dark Iron Bracers	4	54	9	132606	Wrist (Plate)	Stamina, Bonus Armor		4	4	2
+17015	Dark Iron Reaver	3	60	13	135358	One-Hand (One-Handed Swords)	Speed 2.40, Stamina		2	7	2
+17016	Dark Iron Destroyer	3	60	13	132403	One-Hand (One-Handed Axes)	Speed 2.40, Strength		2		2
+17049	Plans: Fiery Chain Girdle	3			134941	Blacksmithing		270	9	4	1
+17051	Plans: Dark Iron Bracers	3			134941	Blacksmithing		270	9	4	1
+17052	Plans: Dark Iron Leggings	3			134941	Blacksmithing		300	9	4	1
+17053	Plans: Fiery Chain Shoulders	3			134941	Blacksmithing		300	9	4	1
+17059	Plans: Dark Iron Reaver	3			134941	Blacksmithing		300	9	4	1
+17060	Plans: Dark Iron Destroyer	3			134941	Blacksmithing		300	9	4	1
+17193	Sulfuron Hammer	4	60	17	133066	Two-Hand (Two-Handed Maces)	Speed 3.70		2	5	2
+17203	Sulfuron Ingot	4			135824	Metal & Stone			7	7	
+17704	Edge of Winter	2	33	13	132397	One-Hand (One-Handed Axes)	Speed 2.80, Stamina		2		2
+17706	Plans: Edge of Winter	2			134942	Blacksmithing		165	9	4	
+18262	Elemental Sharpening Stone	2	50		135228	Consumable				8	
+18264	Plans: Elemental Sharpening Stone	3			134941	Blacksmithing		300	9	4	1
+18567	Elemental Flux	1			135839	Metal & Stone			7	7	
+18592	Plans: Sulfuron Hammer	4			134939	Blacksmithing		300	9	4	
+19051	Girdle of the Dawn	3	53	6	132500	Waist (Plate)	Strength, Stamina		4	4	2
+19057	Gloves of the Dawn	3	56	10	132963	Hands (Plate)	Strength, Stamina		4	4	2
+19148	Dark Iron Helm	4	60	1	133124	Head (Plate)	Stamina, Bonus Armor		4	4	2
+19164	Dark Iron Gauntlets	4	60	10	132956	Hands (Plate)	Stamina, Agility		4	4	2
+19166	Black Amnesty	4	60	13	135648	One-Hand (Daggers)	Speed 1.60		2	15	2
+19167	Blackfury	4	60	17	135131	Two-Hand (Polearms)	Speed 2.10, Strength, Stamina, Critical Strike Rating		2	6	2
+19168	Blackguard	4	60	13	135349	One-Hand (One-Handed Swords)	Speed 1.80, Stamina, Parry Rating		2	7	2
+19169	Nightfall	4	60	17	132403	Two-Hand (Two-Handed Axes)	Speed 3.50		2	1	2
+19170	Ebon Hand	4	60	13	133056	One-Hand (One-Handed Maces)	Speed 2.50, Stamina		2	4	2
+19203	Plans: Girdle of the Dawn	1			134939	Blacksmithing		265	9	4	1
+19205	Plans: Gloves of the Dawn	1			134939	Blacksmithing		300	9	4	1
+19206	Plans: Dark Iron Helm	1			134939	Blacksmithing		300	9	4	1
+19207	Plans: Dark Iron Gauntlets	1			134939	Blacksmithing		300	9	4	1
+19208	Plans: Black Amnesty	1			134939	Blacksmithing		300	9	4	1
+19209	Plans: Blackfury	1			134939	Blacksmithing		300	9	4	1
+19210	Plans: Ebon Hand	1			134939	Blacksmithing		300	9	4	1
+19211	Plans: Blackguard	1			134939	Blacksmithing		300	9	4	1
+19212	Plans: Nightfall	1			134939	Blacksmithing		300	9	4	1
+19690	Bloodsoul Breastplate	3	60	5	132636	Chest (Mail)	Stamina, Agility, Critical Strike Rating		4	3	2
+19691	Bloodsoul Shoulders	3	60	3	135046	Shoulder (Mail)	Agility, Stamina		4	3	2
+19692	Bloodsoul Gauntlets	3	60	10	132965	Hands (Mail)	Stamina, Agility, Critical Strike Rating		4	3	2
+19693	Darksoul Breastplate	3	60	5	132743	Chest (Plate)	Stamina, Bonus Armor, Hit Rating		4	4	2
+19694	Darksoul Leggings	3	60	7	134697	Legs (Plate)	Stamina, Bonus Armor, Hit Rating		4	4	2
+19695	Darksoul Shoulders	3	60	3	135032	Shoulder (Plate)	Stamina, Hit Rating		4	4	2
+19726	Bloodvine	2			134189	Herb			7	9	
+19774	Souldarite	2			134071				7	11	
+19776	Plans: Bloodsoul Breastplate	1			134939	Blacksmithing		300	9	4	1
+19777	Plans: Bloodsoul Shoulders	1			134939	Blacksmithing		300	9	4	1
+19778	Plans: Bloodsoul Gauntlets	1			134939	Blacksmithing		300	9	4	1
+19779	Plans: Darksoul Breastplate	1			134939	Blacksmithing		300	9	4	1
+19780	Plans: Darksoul Leggings	1			134939	Blacksmithing		300	9	4	1
+19781	Plans: Darksoul Shoulders	1			134939	Blacksmithing		300	9	4	1
+20039	Dark Iron Boots	4	60	8	132551	Feet (Plate)	Bonus Armor		4	4	2
+20040	Plans: Dark Iron Boots	1			134939	Blacksmithing		300	9	4	1
+20381	Dreamscale	2			134313	Leather			7	6	
+20520	Dark Rune	2			136192				7	11	
+20549	Darkrune Gauntlets	3	58	10	132961	Hands (Plate)	Stamina, Block Rating		4	4	2
+20550	Darkrune Breastplate	3	58	5	132741	Chest (Plate)	Stamina, Dodge Rating		4	4	2
+20551	Darkrune Helm	3	58	1	133078	Head (Plate)	Stamina, Critical Strike Rating		4	4	2
+20553	Plans: Darkrune Gauntlets	3			134941	Blacksmithing		300	9	4	
+20554	Plans: Darkrune Breastplate	3			134941	Blacksmithing		300	9	4	
+20555	Plans: Darkrune Helm	3			134941	Blacksmithing		300	9	4	
+20725	Nexus Crystal	4			132880	Enchanting			7	12	
+20867	Onyx Idol	3			134905				12		
+20871	Obsidian Idol	3			134904				12		
+20872	Vermillion Idol	3			134910				12		
+20873	Alabaster Idol	3			134896				12		
+20874	Idol of the Sun	3			134909				12		
+20875	Idol of Night	3			134903				12		
+20876	Idol of Death	3			134899				12		
+20877	Idol of the Sage	3			134907				12		
+20878	Idol of Rebirth	3			134906				12		
+20879	Idol of Life	3			134902				12		
+20882	Idol of War	3			134911				12		
+22191	Obsidian Mail Tunic	4	60	5	132639	Chest (Mail)	Attack Power, Critical Strike Rating		4	3	2
+22194	Black Grasp of the Destroyer	4	60	10	132965	Hands (Mail)	Attack Power, Critical Strike Rating		4	3	2
+22195	Light Obsidian Belt	3	60	6	132505	Waist (Mail)	Attack Power, Critical Strike Rating		4	3	2
+22196	Thick Obsidian Breastplate	4	60	5	132639	Chest (Plate)	Strength, Stamina		4	4	2
+22197	Heavy Obsidian Belt	3	60	6	132505	Waist (Plate)	Strength		4	4	2
+22198	Jagged Obsidian Shield	4	60	14	134968	Off Hand (Shield)	Block Rating		4	6	2
+22202	Small Obsidian Shard	1			134455	Metal & Stone			7	7	
+22203	Large Obsidian Shard	1			135241	Metal & Stone			7	7	
+22219	Plans: Jagged Obsidian Shield	1			134939	Blacksmithing		300	9	4	1
+22220	Plans: Black Grasp of the Destroyer	3			134941	Blacksmithing		300	9	4	
+22221	Plans: Obsidian Mail Tunic	1			134939	Blacksmithing		300	9	4	1
+22222	Plans: Thick Obsidian Breastplate	3			134941	Blacksmithing		300	9	4	
+22383	Sageblade	4	59	21	135361	Main Hand (One-Handed Swords)	Speed 1.80, Stamina, Intellect, Hit Rating		2	7	2
+22384	Persuader	4	58	13	133045	One-Hand (One-Handed Maces)	Speed 2.80, Hit Rating, Critical Strike Rating		2	4	2
+22385	Titanic Leggings	4	55	7	134584	Legs (Plate)	Strength, Hit Rating, Critical Strike Rating		4	4	2
+22388	Plans: Titanic Leggings	4			134941	Blacksmithing		300	9	4	
+22389	Plans: Sageblade	4			134941	Blacksmithing		300	9	4	
+22390	Plans: Persuader	4			134941	Blacksmithing		300	9	4	
+22669	Icebane Breastplate	4	60	5	132633	Chest (Plate)	Stamina, Strength, Defense Rating		4	4	2
+22670	Icebane Gauntlets	4	60	10	132962	Hands (Plate)	Stamina, Strength, Defense Rating		4	4	2
+22671	Icebane Bracers	4	60	9	132606	Wrist (Plate)	Stamina, Strength, Defense Rating		4	4	2
+22682	Frozen Rune	3	60		134422				7	11	
+22703	Plans: Icebane Breastplate	1			134939	Blacksmithing		300	9	4	1
+22704	Plans: Icebane Gauntlets	1			134939	Blacksmithing		300	9	4	1
+22705	Plans: Icebane Bracers	1			134939	Blacksmithing		300	9	4	1
+22762	Ironvine Breastplate	1		5	132742	Chest (Plate)			4	4	
+22763	Ironvine Gloves	1		10	132963	Hands (Plate)			4	4	
+22764	Ironvine Belt	1		6	132510	Waist (Plate)			4	4	
+210773	Mantle of the Second War	1		3	135059	Shoulder (Mail)			4	3	
+210779	Plans: Mantle of the Second War	2			134942	Blacksmithing		150	9	4	1
+210794	Shifting Silver Breastplate	1		5	133831	Chest (Mail)			4	3	
+211422		1			133449				5		
+211845	Blackfathom Sharpening Stone	2			134417				7	11	
+213369	Faintly Glowing Leather	3			237420	Leather			7	6	
+213373	Reflective Scrapmetal	2			134518	Metal & Stone			7	7	1
+213376	Low-Background Truesilver Plates	3			133022	Metal & Stone			7	7	
+213379	Hyperconductive Arcano-Filament	3			237428	Cloth			7	5	
+213383	Polished Truesilver Gears	3			305162	Parts			7	1	
+215155	Plans: Tempered Interference-Negating Helmet	4			134942	Blacksmithing		225	9	4	1
+215161	Tempered Interference-Negating Helmet	1		1	133151	Head (Plate)			4	4	
+215167	Reflective Truesilver Braincage	1		1	133151	Head (Plate)			4	4	
+215383	Plans: Reflective Truesilver Braincage	4			134942	Blacksmithing		225	9	4	1
+215384	Plans: Low-Background Truesilver Plates	3			134942	Blacksmithing		200	9	4	1
+217273	Golden Scale Gauntlets	2	36	10	132963	Hands (Mail)	Strength, Spell Power		4	3	2
+217274	Plans: Golden Scale Gauntlets	2			134942	Blacksmithing		205	9	4	
+217275	Golden Scale Boots	1		8	132535	Feet (Mail)			4	3	
+217276	Plans: Golden Scale Boots	3			134939	Blacksmithing		200	9	4	
+217277	Golden Scale Cuirass	1		5	132628	Chest (Mail)			4	3	
+217278	Plans: Golden Scale Cuirass	2			134942	Blacksmithing		195	9	4	
+217279	Golden Scale Coif	1		1	133138	Head (Mail)			4	3	
+217280	Plans: Golden Scale Coif	1			134939	Blacksmithing		190	9	4	
+217281	Moonsteel Broadsword	1		17	135326	Two-Hand (Two-Handed Swords)			2	8	
+217282	Plans: Moonsteel Broadsword	1			134939	Blacksmithing		180	9	4	
+217283	Golden Scale Shoulders	1		3	135040	Shoulder (Mail)			4	3	
+217284	Plans: Golden Scale Shoulders	3			134939	Blacksmithing		175	9	4	
+217285	Golden Scale Leggings	1		7	134584	Legs (Mail)			4	3	
+217286	Plans: Golden Scale Leggings	2			134942	Blacksmithing		170	9	4	
+220688		1			135084				5		
+220738	Shoulderplates of Dread	1		3	135055	Shoulder (Plate)			4	4	
+220739	Baleful Pauldrons	1		3	135055	Shoulder (Plate)			4	4	
+220740	Fearmonger's Shoulderguards	1		3	135055	Shoulder (Plate)			4	4	
+221021		1			134217				7	11	
+227684	Sulfuron Hammer	1		17	133066	Two-Hand (Two-Handed Maces)			2	5	
+227727	Plans: Sulfuron Hammer	4			134939	Blacksmithing		300	9	4	
+227845	Refined Arcanite Reaper	1		17	132400	Two-Hand (Two-Handed Axes)			2	1	
+227850	Sageblade of the Archmagus	1		21	135361	Main Hand (One-Handed Swords)			2	7	
+227857	Desecration	1		17	135277	Two-Hand (Two-Handed Swords)			2	8	
+227865	Fiery Plate Gauntlets of the Hidden Technique	1		10	132937	Hands (Plate)			4	4	
+227870	Tempest Gauntlets	1		10	132964	Hands (Mail)			4	3	
+227871	Tempered Dark Iron Plate	1		5	132743	Chest (Plate)			4	4	
+227872	Warcrest of the Great Chief	1		1	133126	Head (Mail)			4	3	
+227876	Invincible Mail	1		5	132629	Chest (Mail)			4	3	
+227880	Finely-Enchanted Battlehammer	1		17	133042	Two-Hand (Two-Handed Maces)			2	5	
+227881	Tranquility	1		21	133477	Main Hand (One-Handed Maces)			2	4	
+227884	Deadly Heartseeker	1		13	135315	One-Hand (Daggers)			2	15	
+227885	Stronger-hold Gauntlets	1		10	132964	Hands (Plate)			4	4	
+227886	Skyrider's Masterwork Stormhammer	1		21	133041	Main Hand (One-Handed Maces)			2	4	
+227887	Hardened Frostguard	1		21	135291	Main Hand (One-Handed Swords)			2	7	
+227901	Plans: Tempered Dark Iron Plate	3			134939	Blacksmithing		285	9	4	
+227905	Plans: Skyrider's Masterwork Stormhammer	3			134939	Blacksmithing		300	9	4	
+227909	Plans: Fiery Plate Gauntlets of the Hidden Technique	3			134939	Blacksmithing		290	9	4	1
+228114	Plans: Refined Arcanite Reaper	3			134939	Blacksmithing		300	9	4	
+228117	Plans: Refined Arcanite Champion	3			134939	Blacksmithing		300	9	4	
+228118	Plans: Stronger-hold Gauntlets	4			134939	Blacksmithing		300	9	4	
+228125	Refined Arcanite Champion	1		17	135349	Two-Hand (Two-Handed Swords)			2	8	
+228230	Refined Hammer of the Titans	1		17	133046	Two-Hand (Two-Handed Maces)			2	5	
+228250	Plans: Stronger-hold Gauntlets	4			134939	Blacksmithing		300	9	4	
+228310	Plans: Hardened Frostguard	3			134939	Blacksmithing		300	9	4	
+228311	Plans: Finely-Enchanted Battlehammer	2			134942	Blacksmithing		280	9	4	
+228312	Plans: Invincible Mail	4			134939	Blacksmithing		300	9	4	
+228313	Plans: Tempest Gauntlets	3			134939	Blacksmithing		295	9	4	
+228314	Plans: Warcrest of the Great Chief	3			134939	Blacksmithing		300	9	4	
+228315	Plans: Sageblade of the Archmagus	4			134941	Blacksmithing		300	9	4	
+233490	Obsidian Champion	1		17	135349	Two-Hand (Two-Handed Swords)			2	8	
+233491	Obsidian Reaver	1		17	132400	Two-Hand (Two-Handed Axes)			2	1	
+233492	Razorspike Battleplate	1		5	132636	Chest (Plate)			4	4	
+233793	Razorspike Shoulderplate	1		3	135047	Shoulder (Plate)			4	4	
+233795	Razorspike Headcage	1		1	133074	Head (Plate)			4	4	
+233796	Obsidian Destroyer	1		17	133062	Two-Hand (Two-Handed Maces)			2	5	
+233797	Obsidian Stormhammer	1		21	133041	Main Hand (One-Handed Maces)			2	4	
+233798	Obsidian Sageblade	1		21	135361	Main Hand (One-Handed Swords)			2	7	
+233801	Obsidian Defender	1		21	132403	Main Hand (One-Handed Axes)			2		
+234003		1			237047	Metal & Stone			7	7	
+234004	Obsidian Grinding Stone	1			135254	Metal & Stone			7	7	
+234006		1			134262	Leather			7	6	
+234086	Black Grasp of the Destroyer	1		10	132965	Hands (Mail)			4	3	
+234288	Ironvine Belt	1		6	132510	Waist (Plate)			4	4	
+234290	Ironvine Gloves	1		10	132963	Hands (Plate)			4	4	
+234292	Ironvine Breastplate	1		5	132742	Chest (Plate)			4	4	
+234319	Heavy Obsidian Belt	1		6	132505	Waist (Plate)			4	4	
+234321	Light Obsidian Belt	1		6	132505	Waist (Mail)			4	3	
+234428	Obsidian Heartseeker	1		13	135315	One-Hand (Daggers)			2	15	
+234459	Jagged Obsidian Shield	1		14	134968	Off Hand (Shield)			4	6	
+234460	Obsidian Mail Tunic	1		5	132639	Chest (Mail)			4	3	
+234487	Dreamscale Visor	1		1	133069	Head (Plate)			4	4	
+235040	Thick Obsidian Breastplate	1		5	132639	Chest (Plate)			4	4	
+236656		1			134422				7	11	
+236695	Icebane Breastplate	1		5	132633	Chest (Plate)			4	4	
+236696	Icebane Bracers	1		9	132606	Wrist (Plate)			4	4	
+236697	Icebane Gauntlets	1		10	132962	Hands (Plate)			4	4	
+238288	Scarlet Soldier's Helmet	1		1	133101	Head (Plate)			4	4	
+238289	Scarlet Soldier's Spaulders	1		3	135060	Shoulder (Plate)			4	4	
+238290	Scarlet Soldier's Chestplate	1		5	132743	Chest (Plate)			4	4	
+238291	Scarlet Soldier's Protectors	1		9	236972	Wrist (Plate)			4	4	
+238292	Scarlet Soldier's Grips	1		10	132960	Hands (Plate)			4	4	
+238293	Scarlet Soldier's Waistguard	1		6	132502	Waist (Plate)			4	4	
+238294	Scarlet Soldier's Legplates	1		7	134678	Legs (Plate)			4	4	
+238295	Scarlet Soldier's Stompers	1		8	132589	Feet (Plate)			4	4	
+238322	Plans: Scarlet Soldier's Helmet	3	1		134940	Blacksmithing		280	9	4	
+238323	Plans: Scarlet Soldier's Spaulders	3	1		134940	Blacksmithing		280	9	4	
+238324	Plans: Scarlet Soldier's Chestplate	3	1		134940	Blacksmithing		280	9	4	
+238325	Plans: Scarlet Soldier's Protectors	3	1		134940	Blacksmithing		250	9	4	
+238326	Plans: Scarlet Soldier's Grips	3	1		134940	Blacksmithing		260	9	4	
+238327	Plans: Scarlet Soldier's Waistguard	3	1		134940	Blacksmithing		250	9	4	
+238328	Plans: Scarlet Soldier's Legplates	3	1		134940	Blacksmithing		270	9	4	
+238329	Plans: Scarlet Soldier's Stompers	3	1		134940	Blacksmithing		260	9	4	
+248820	Torbernite	2			237222				7	11	
+248822	Death Lotus	2			5976935	Herb			7	9	
+249410	Sulfuric Acid	2			136240				7	11	
+249427	Pristine Leather	2			348551	Leather			7	6	
+249432	Sandpaper	2			237132	Parts			7	1	
+249726	Azerothium Bar	2			612100	Metal & Stone			7	7	
+250482	Glowing Copper Boots	3	10	8		Feet (Mail)	Intellect, Healing, Spell Damage		4	3	1
+250483	Sterling Silver Boots	2	20	8		Feet (Mail)	Spell Power, Stamina, Strength		4	3	2
+250484	Sterling Silver Leggings	2	21	7		Legs (Mail)	Spell Power, Stamina, Strength		4	3	2
+250485	Sterling Silver Gauntlet	2	21	10		Hands (Mail)	Spell Power, Stamina, Strength		4	3	2
+250486	Sterling Silver Shoulders	2	22	3		Shoulder (Mail)	Spell Power, Stamina, Strength		4	3	2
+250487	Sterling Silver Breastplate	2	25	5		Chest (Mail)	Spell Power, Stamina, Strength		4	3	2
+250488	Veteran's Chain Shirt	3	15	5		Chest (Mail)	Agility, Stamina, Strength		4	3	1
+250489	Guard's Chain Shirt	3	15	5		Chest (Mail)	Defense Rating, Stamina, Strength		4	3	1
+250490	Protector's Chain Shirt	3	15	5		Chest (Mail)	Defense Rating, Spell Power, Stamina		4	3	1
+250491	Acolyte's Chain Shirt	3	15	5		Chest (Mail)	Intellect, Spell Damage, Healing, Stamina		4	3	1
+250492	Crusader's Chain Shirt	3	15	5		Chest (Mail)	Spell Power, Stamina, Strength		4	3	1
+250493	Veteran's Chain Leggings	3	20	7		Legs (Mail)	Agility, Stamina, Strength		4	3	1
+250494	Guard's Chain Leggings	3	20	7		Legs (Mail)	Defense Rating, Stamina, Strength		4	3	1
+250495	Protector's Chain Leggings	3	20	7		Legs (Mail)	Defense Rating, Spell Power, Stamina		4	3	1
+250496	Acolyte's Chain Leggings	3	20	7	134669	Legs (Mail)	Intellect, Spell Damage, Healing, Stamina		4	3	1
+250497	Crusader's Chain Leggings	3	20	7		Legs (Mail)	Spell Power, Stamina, Strength		4	3	1
+250498	Veteran's Chain Helm	3	25	1		Head (Mail)	Stamina, Strength		4	3	1
+250499	Guard's Chain Helm	3	25	1		Head (Mail)	Agility, Stamina		4	3	1
+250500	Protector's Chain Helm	3	25	1		Head (Mail)	Defense Rating, Stamina		4	3	1
+250501	Acolyte's Chain Helm	3	25	1		Head (Mail)	Spell Damage, Healing, Stamina		4	3	1
+250502	Crusader's Chain Helm	3	25	1		Head (Mail)	Spell Power, Strength		4	3	1
+250503	Veteran's Boots	3	17	8		Feet (Mail)	Agility, Stamina, Strength		4	3	1
+250504	Guard's Boots	3	17	8		Feet (Mail)	Defense Rating, Stamina, Strength		4	3	1
+250505	Protector's Boots	3	17	8		Feet (Mail)	Defense Rating, Spell Power, Stamina		4	3	1
+250506	Acolyte's Boots	3	17	8		Feet (Mail)	Intellect, Spell Damage, Healing, Stamina		4	3	1
+250507	Crusader's Boots	3	17	8		Feet (Mail)	Spell Power, Stamina, Strength		4	3	1
+250508	Veteran's Gloves	3	15	10		Hands (Mail)	Agility, Stamina, Strength		4	3	1
+250509	Guard's Gloves	3	15	10		Hands (Mail)	Defense Rating, Stamina, Strength		4	3	1
+250510	Protector's Gloves	3	15	10		Hands (Mail)	Defense Rating, Spell Power, Stamina		4	3	1
+250511	Acolyte's Gloves	3	15	10		Hands (Mail)	Intellect, Spell Damage, Healing, Stamina		4	3	1
+250512	Crusader's Gloves	3	15	10		Hands (Mail)	Spell Power, Stamina, Strength		4	3	1
+250513	Veteran's Chain Belt	3	12	6		Waist (Mail)	Agility, Stamina, Strength		4	3	1
+250514	Guard's Chain Belt	3	12	6		Waist (Mail)	Defense Rating, Stamina, Strength		4	3	1
+250515	Protector's Chain Belt	3	12	6		Waist (Mail)	Defense Rating, Spell Power, Stamina		4	3	1
+250516	Acolyte's Chain Belt	3	12	6		Waist (Mail)	Intellect, Spell Damage, Healing, Stamina		4	3	1
+250517	Crusader's Chain Belt	3	12	6		Waist (Mail)	Spell Power, Stamina, Strength		4	3	1
+250518	Veteran's Silvered Chain Shirt	3	22	5		Chest (Mail)	Agility, Stamina, Strength		4	3	1
+250519	Guard's Silvered Chain Shirt	3	22	5		Chest (Mail)	Defense Rating, Stamina, Strength		4	3	1
+250520	Protector's Silvered Chain Shirt	3	22	5		Chest (Mail)	Defense Rating, Spell Power, Stamina		4	3	1
+250521	Acolyte's Silvered Chain Shirt	3	22	5		Chest (Mail)	Intellect, Spell Damage, Healing, Stamina		4	3	1
+250522	Crusader's Silvered Chain Shirt	3	22	5		Chest (Mail)	Spell Power, Stamina, Strength		4	3	1
+250523	Veteran's Silvered Chain Leggings	3	25	7		Legs (Mail)	Agility, Stamina, Strength		4	3	1
+250524	Guard's Silvered Chain Leggings	3	25	7		Legs (Mail)	Defense Rating, Stamina, Strength		4	3	1
+250525	Protector's Silvered Chain Leggings	3	25	7		Legs (Mail)	Defense Rating, Spell Power, Stamina		4	3	1
+250526	Acolyte's Silvered Chain Leggings	3	25	7		Legs (Mail)	Intellect, Spell Damage, Healing, Stamina		4	3	1
+250527	Crusader's Silvered Chain Leggings	3	25	7		Legs (Mail)	Spell Power, Stamina, Strength		4	3	1
+250528	Veteran's Silvered Chain Helm	3	20	1		Head (Mail)	Stamina, Strength		4	3	1
+250529	Guard's Silvered Chain Helm	3	20	1		Head (Mail)	Stamina, Agility		4	3	1
+250530	Protector's Silvered Chain Helm	3	20	1		Head (Mail)	Defense Rating, Stamina		4	3	1
+250531	Acolyte's Silvered Chain Helm	3	20	1		Head (Mail)	Spell Damage, Healing, Stamina		4	3	1
+250532	Crusader's Silvered Chain Helm	3	20	1		Head (Mail)	Spell Power, Stamina		4	3	1
+250533	Hard Gold Cuirass	2	29	5		Chest (Mail)	Spell Power, Strength		4	3	2
+250534	Hard Gold Boots	2	30	8		Feet (Mail)	Spell Power, Strength		4	3	2
+250535	Hard Gold Bracers	2	32	9		Wrist (Mail)	Spell Power, Strength		4	3	2
+250536	Hard Gold Leggings	2	33	7		Legs (Mail)	Spell Power, Strength		4	3	2
+250537	Hard Gold Coif	2	35	1		Head (Mail)	Spell Power, Strength		4	3	2
+250538	Hard Gold Gauntlet	2	35	10		Hands (Mail)	Spell Power, Strength		4	3	2
+250539	Hard Gold Pauldrons	2	35	3		Shoulder (Mail)	Spell Power, Strength		4	3	2
+250540	Shining Mithril Breastplate	2	40	5		Chest (Plate)	Spell Power, Strength		4	4	2
+250541	Shining Mithril Pauldrons	2	40	3		Shoulder (Plate)	Spell Power, Strength		4	4	2
+250542	Shining Mithril Boots	2	40	8		Feet (Plate)	Spell Power, Strength		4	4	2
+250543	Shining Mithril Helm	2	43	1		Head (Plate)	Spell Power, Strength		4	4	2
+250544	Shining Mithril Pants	2	44	7		Legs (Plate)	Spell Power, Strength		4	4	2
+250545	Shining Mithril Gauntlet	2	44	10		Hands (Plate)	Spell Power, Strength		4	4	2
+250546	Officer's Boots	3	40	8		Feet (Plate)	Agility, Stamina, Strength		4	4	1
+250547	Sentinel's Boots	3	40	8		Feet (Plate)	Defense Rating, Stamina, Strength		4	4	1
+250548	Warder's Boots	3	40	8		Feet (Plate)	Defense Rating, Spell Power, Stamina		4	4	1
+250549	Prefect's Boots	3	40	8		Feet (Plate)	Intellect, Spell Damage, Healing, Stamina		4	4	1
+250550	Justicar's Boots	3	40	8		Feet (Plate)	Spell Power, Stamina, Strength		4	4	1
+250551	Officer's Gloves	3	50	10		Hands (Plate)	Agility, Stamina, Strength		4	4	1
+250552	Sentinel's Gloves	3	50	10		Hands (Plate)	Defense Rating, Stamina, Strength		4	4	1
+250553	Warder's Gloves	3	50	10		Hands (Plate)	Defense Rating, Spell Power, Stamina		4	4	1
+250554	Prefect's Gloves	3	50	10		Hands (Plate)	Intellect, Spell Damage, Healing, Stamina		4	4	1
+250555	Justicar's Gloves	3	50	10		Hands (Plate)	Spell Power, Stamina, Strength		4	4	1
+250556	Officer's Belt	3	30	6		Waist (Mail)	Agility, Spirit, Stamina, Strength		4	3	1
+250557	Sentinel's Belt	3	30	6		Waist (Mail)	Agility, Defense Rating, Stamina, Strength		4	3	1
+250558	Warder's Belt	3	30	6		Waist (Mail)	Defense Rating, Spell Power, Stamina, Strength		4	3	1
+250559	Prefect's Belt	3	30	6		Waist (Mail)	Intellect, Spell Damage, Healing, Spirit, Stamina		4	3	1
+250560	Justicar's Belt	3	30	6		Waist (Mail)	Intellect, Spell Power, Stamina, Strength		4	3	1
+250561	Officer's Sabatons	3	47	8		Feet (Plate)	Agility, Stamina, Strength		4	4	1
+250562	Sentinel's Sabatons	3	47	8		Feet (Plate)	Defense Rating, Stamina, Strength		4	4	1
+250563	Warder's Sabatons	3	47	8		Feet (Plate)	Defense Rating, Spell Power, Stamina		4	4	1
+250564	Prefect's Sabatons	3	47	8		Feet (Plate)	Intellect, Spell Damage, Healing, Stamina		4	4	1
+250565	Justicar's Sabatons	3	47	8		Feet (Plate)	Spell Power, Stamina, Strength		4	4	1
+250566	Officer's Gauntlet	3	35	10		Hands (Mail)	Agility, Stamina, Strength		4	3	1
+250567	Sentinel's Gauntlet	3	35	10		Hands (Mail)	Defense Rating, Stamina, Strength		4	3	1
+250568	Warder's Gauntlet	3	35	10		Hands (Mail)	Defense Rating, Spell Power, Stamina		4	3	1
+250569	Prefect's Gauntlet	3	35	10		Hands (Mail)	Intellect, Spell Damage, Healing, Stamina		4	3	1
+250570	Justicar's Gauntlet	3	35	10		Hands (Mail)	Spell Power, Stamina, Strength		4	3	1
+250571	Officer's Waistguard	3	50	6		Waist (Plate)	Agility, Stamina, Strength		4	4	1
+250572	Sentinel's Waistguard	3	50	6		Waist (Plate)	Defense Rating, Stamina, Strength		4	4	1
+250573	Warder's Waistguard	3	50	6		Waist (Plate)	Defense Rating, Spell Power, Stamina		4	4	1
+250574	Prefect's Waistguard	3	50	6		Waist (Plate)	Intellect, Spell Damage, Healing, Stamina		4	4	1
+250575	Justicar's Waistguard	3	50	6		Waist (Plate)	Spell Power, Stamina, Strength		4	4	1
+250576	Officer's Pauldrons	3	42	3		Shoulder (Plate)	Agility, Stamina, Strength		4	4	1
+250577	Sentinel's Pauldrons	3	42	3		Shoulder (Plate)	Defense Rating, Stamina, Strength		4	4	1
+250578	Warder's Pauldrons	3	42	3		Shoulder (Plate)	Defense Rating, Spell Power, Stamina		4	4	1
+250579	Prefect's Pauldrons	3	42	3		Shoulder (Plate)	Intellect, Spell Damage, Healing, Stamina		4	4	1
+250580	Justicar's Pauldrons	3	42	3		Shoulder (Plate)	Spell Power, Stamina, Strength		4	4	1
+250581	Officer's Wristguards	3	45	9		Wrist (Plate)	Agility, Stamina, Strength		4	4	1
+250582	Sentinel's Wristguards	3	45	9		Wrist (Plate)	Defense Rating, Stamina, Strength		4	4	1
+250583	Warder's Wristguards	3	45	9		Wrist (Plate)	Defense Rating, Spell Power, Stamina		4	4	1
+250584	Prefect's Wristguards	3	45	9		Wrist (Plate)	Intellect, Spell Damage, Healing, Stamina		4	4	1
+250585	Justicar's Wristguards	3	45	9		Wrist (Plate)	Spell Power, Stamina, Strength		4	4	1
+250586	Blessed Plate Pauldrons	2	47	3	135041	Shoulder (Plate)	Spell Power, Stamina, Strength		4	4	2
+250587	Blessed Plate Boots	2	47	8	132584	Feet (Plate)	Spell Power, Stamina, Strength		4	4	2
+250588	Blessed Plate Gauntlet	2	49	10	132963	Hands (Plate)	Spell Power, Stamina, Strength		4	4	2
+250589	Imperial Plate Gauntlets	2	52	10		Hands (Plate)	Stamina, Strength		4	4	2
+250590	Blessed Plate Bracers	2	52	9	132618	Wrist (Plate)	Spell Power, Stamina, Strength		4	4	2
+250591	Blessed Plate Leggings	2	54	7	134680	Legs (Plate)	Spell Power, Stamina, Strength		4	4	2
+250592	Blessed Plate Belt	2	54	6		Waist (Plate)	Spell Power, Stamina, Strength		4	4	2
+250593	Blessed Plate Helm	2	55	1		Head (Plate)	Spell Power, Stamina, Strength		4	4	2
+250594	Blessed Plate Chest	2	56	5	132738	Chest (Plate)	Spell Power, Stamina, Strength		4	4	2
+250595	Enriched Thorium Breastplate	3	57	5		Chest (Plate)	Defense Rating, Spell Power, Stamina		4	4	1
+250596	Enriched Thorium Leggings	3	58	7		Legs (Plate)	Defense Rating, Spell Power, Stamina		4	4	1
+250597	Enriched Thorium Helm	3	58	1		Head (Plate)	Defense Rating, Spell Power, Stamina		4	4	1
+250598	Champion's Legplates	4	56	7		Legs (Plate)	Critical Strike Rating, Spell Power, Strength		4	4	2
+250599	Stalwart Helm	4	56	1		Head (Plate)	Hit Rating, Spell Power, Strength		4	4	2
+250600	Martyr's Legplates	4	56	7		Legs (Plate)	Intellect, Spell Damage, Healing, Spirit		4	4	2
+250601	Breastplate of Salvation	4	56	5		Chest (Plate)	Intellect, Spell Damage, Healing, Spirit		4	4	2
+250602	Brass Knuckles	2	16	13	132938	One-Hand (Fist Weapons)	Speed 2.40, Agility, Stamina		2	13	2
+250603	Bronze Dory	2	20	17		Two-Hand (Polearms)	Speed 3.40, Agility, Attack Power		2	6	2
+250604	Iron Fists	2	26	13		One-Hand (Fist Weapons)	Speed 2.40, Agility		2	13	2
+250605	Steel Spear	2	32	17		Two-Hand (Polearms)	Speed 3.30, Agility, Attack Power		2	6	2
+250606	Iron Morningstar	2	33	21		Main Hand (One-Handed Maces)	Speed 2.50, Spell Power, Strength		2	4	2
+250607	Mithril Shortsword	2	36	13		One-Hand (Daggers)	Speed 1.70, Attack Power		2	15	2
+250608	Mithril Warhammer	2	38	17		Two-Hand (Two-Handed Maces)	Speed 3.50, Agility, Strength		2	5	2
+250609	Mithril Claws	2	40	13	134295	One-Hand (Fist Weapons)	Speed 2.60, Agility, Strength		2	13	2
+250610	Mithril Claymore	2	40	17		Two-Hand (Two-Handed Swords)	Speed 3.80, Stamina, Strength		2	8	2
+250611	Mithril Stiletto	2	42	13		One-Hand (Daggers)	Speed 1.80, Agility		2	15	2
+250612	Charged Mithril Battleaxe	2	43	17		Two-Hand (Two-Handed Axes)	Speed 3.30, Spell Power, Strength		2	1	2
+250613	Thorium Greatmace	3	50	17		Two-Hand (Two-Handed Maces)	Speed 3.60, Spell Power, Strength		2	5	1
+250614	Thorium Cestus	3	50	13		One-Hand (Fist Weapons)	Speed 2.40, Attack Power, Stamina		2	13	1
+250615	Thorium Poleaxe	3	52	17		Two-Hand (Polearms)	Speed 3.40, Agility, Stamina, Strength		2	6	2
+250616	Bold Dirk	2	52	13		One-Hand (Daggers)	Speed 1.80, Agility, Attack Power		2	15	2
+250617	Stormcarver	3	58	17		Two-Hand (Two-Handed Axes)	Speed 3.60, Spell Power, Stamina, Strength		2	1	2
+250618	Bagh Nakh	3	58	13	134296	One-Hand (Fist Weapons)	Speed 2.70, Agility, Stamina		2	13	2
+250619	Legionite Glaive	3	58	17		Two-Hand (Polearms)	Speed 3.20, Agility, Attack Power, Hit Rating		2	6	1
+250620	Gemmed Copper Boots	3	10	8		Feet (Mail)	Strength, Stamina		4	3	1
+250621	Strange Copper Boots	3	10	8		Feet (Mail)	Spell Power, Stamina		4	3	1
+251290	Legionite Bar	2			1416159	Metal & Stone			7	7	
+251291	Heavy Thorium Bar	2			348540	Metal & Stone			7	7	
+251332	Plans: Gemmed Copper Boots	3			134939	Blacksmithing		35	9	4	1
+251333	Plans: Strange Copper Boots	3			134939	Blacksmithing		35	9	4	1
+251334	Plans: Glowing Copper Boots	3			134939	Blacksmithing		35	9	4	1
+251335	Plans: Sterling Silver Boots	2			134939	Blacksmithing		100	9	4	1
+251336	Plans: Sterling Silver Leggings	2			134939	Blacksmithing		105	9	4	1
+251337	Plans: Sterling Silver Gauntlet	2			134939	Blacksmithing		105	9	4	1
+251338	Plans: Sterling Silver Shoulders	2			134939	Blacksmithing		110	9	4	1
+251339	Plans: Sterling Silver Breastplate	2			134939	Blacksmithing		125	9	4	1
+251340	Plans: Veteran's Chain Shirt	3			134939	Blacksmithing		80	9	4	1
+251341	Plans: Guard's Chain Shirt	3			134939	Blacksmithing		80	9	4	1
+251342	Plans: Protector's Chain Shirt	3			134939	Blacksmithing		80	9	4	1
+251343	Plans: Acolyte's Chain Shirt	3			134939	Blacksmithing		80	9	4	1
+251344	Plans: Crusader's Chain Shirt	3			134939	Blacksmithing		80	9	4	1
+251345	Plans: Veteran's Chain Leggings	3			134939	Blacksmithing		95	9	4	1
+251346	Plans: Guard's Chain Leggings	3			134939	Blacksmithing		95	9	4	1
+251347	Plans: Protector's Chain Leggings	3			134939	Blacksmithing		95	9	4	1
+251348	Plans: Acolyte's Chain Leggings	3			134939	Blacksmithing		95	9	4	1
+251349	Plans: Crusader's Chain Leggings	3			134939	Blacksmithing		95	9	4	1
+251350	Plans: Veteran's Chain Helm	3			134939	Blacksmithing		125	9	4	1
+251351	Plans: Guard's Chain Helm	3			134939	Blacksmithing		125	9	4	1
+251352	Plans: Protector's Chain Helm	3			134939	Blacksmithing		125	9	4	1
+251353	Plans: Acolyte's Chain Helm	3			134939	Blacksmithing		125	9	4	1
+251354	Plans: Crusader's Chain Helm	3			134939	Blacksmithing		125	9	4	1
+251355	Plans: Veteran's Boots	3			134939	Blacksmithing		85	9	4	1
+251356	Plans: Guard's Boots	3			134939	Blacksmithing		85	9	4	1
+251357	Plans: Protector's Boots	3			134939	Blacksmithing		85	9	4	1
+251358	Plans: Acolyte's Boots	3			134939	Blacksmithing		85	9	4	1
+251359	Plans: Crusader's Boots	3			134939	Blacksmithing		85	9	4	1
+251360	Plans: Veteran's Gloves	3			134939	Blacksmithing		80	9	4	1
+251361	Plans: Guard's Gloves	3			134939	Blacksmithing		80	9	4	1
+251362	Plans: Protector's Gloves	3			134939	Blacksmithing		80	9	4	1
+251363	Plans: Acolyte's Gloves	3			134939	Blacksmithing		80	9	4	1
+251364	Plans: Crusader's Gloves	3			134939	Blacksmithing		80	9	4	1
+251365	Plans: Veteran's Chain Belt	3			134939	Blacksmithing		45	9	4	1
+251366	Plans: Guard's Chain Belt	3			134939	Blacksmithing		45	9	4	1
+251367	Plans: Protector's Chain Belt	3			134939	Blacksmithing		45	9	4	1
+251368	Plans: Acolyte's Chain Belt	3			134939	Blacksmithing		45	9	4	1
+251369	Plans: Crusader's Chain Belt	3			134939	Blacksmithing		45	9	4	1
+251370	Plans: Veteran's Silvered Chain Shirt	3			134939	Blacksmithing		110	9	4	1
+251371	Plans: Guard's Silvered Chain Shirt	3			134939	Blacksmithing		110	9	4	1
+251372	Plans: Protector's Silvered Chain Shirt	3			134939	Blacksmithing		110	9	4	1
+251373	Plans: Acolyte's Silvered Chain Shirt	3			134939	Blacksmithing		110	9	4	1
+251374	Plans: Crusader's Silvered Chain Shirt	3			134939	Blacksmithing		110	9	4	1
+251375	Plans: Veteran's Silvered Chain Leggings	3			134939	Blacksmithing		125	9	4	1
+251376	Plans: Guard's Silvered Chain Leggings	3			134939	Blacksmithing		125	9	4	1
+251377	Plans: Protector's Silvered Chain Leggings	3			134939	Blacksmithing		125	9	4	1
+251378	Plans: Acolyte's Silvered Chain Leggings	3			134939	Blacksmithing		125	9	4	1
+251379	Plans: Crusader's Silvered Chain Leggings	3			134939	Blacksmithing		125	9	4	1
+251380	Plans: Veteran's Silvered Chain Helm	3			134939	Blacksmithing		95	9	4	1
+251381	Plans: Guard's Silvered Chain Helm	3			134939	Blacksmithing		95	9	4	1
+251382	Plans: Protector's Silvered Chain Helm	3			134939	Blacksmithing		95	9	4	1
+251383	Plans: Acolyte's Silvered Chain Helm	3			134939	Blacksmithing		95	9	4	1
+251384	Plans: Crusader's Silvered Chain Helm	3			134939	Blacksmithing		95	9	4	1
+251385	Plans: Hard Gold Cuirass	2			134939	Blacksmithing		145	9	4	1
+251386	Plans: Hard Gold Boots	2			134939	Blacksmithing		150	9	4	1
+251387	Plans: Hard Gold Bracers	2			134939	Blacksmithing		160	9	4	1
+251388	Plans: Hard Gold Leggings	2			134939	Blacksmithing		165	9	4	1
+251389	Plans: Hard Gold Coif	2			134939	Blacksmithing		170	9	4	1
+251390	Plans: Hard Gold Gauntlet	2			134939	Blacksmithing		175	9	4	1
+251391	Plans: Hard Gold Pauldrons	2			134939	Blacksmithing		175	9	4	1
+251392	Plans: Shining Mithril Breastplate	2			134939	Blacksmithing		195	9	4	1
+251393	Plans: Shining Mithril Pauldrons	2			134939	Blacksmithing		195	9	4	1
+251394	Plans: Shining Mithril Boots	2			134939	Blacksmithing		200	9	4	1
+251395	Plans: Shining Mithril Helm	3			134939	Blacksmithing		215	9	4	1
+251396	Plans: Shining Mithril Pants	2			134939	Blacksmithing		220	9	4	1
+251397	Plans: Shining Mithril Gauntlet	2			134939	Blacksmithing		220	9	4	1
+251398	Plans: Officer's Boots	3			134939	Blacksmithing		200	9	4	1
+251399	Plans: Sentinel's Boots	3			134939	Blacksmithing		200	9	4	1
+251400	Plans: Warder's Boots	3			134939	Blacksmithing		200	9	4	1
+251401	Plans: Prefect's Boots	3			134939	Blacksmithing		200	9	4	1
+251402	Plans: Justicar's Boots	3			134939	Blacksmithing		200	9	4	1
+251403	Plans: Officer's Gloves	3			134939	Blacksmithing		250	9	4	1
+251404	Plans: Sentinel's Gloves	3			134939	Blacksmithing		250	9	4	1
+251405	Plans: Warder's Gloves	3			134939	Blacksmithing		250	9	4	1
+251406	Plans: Prefect's Gloves	3			134939	Blacksmithing		250	9	4	1
+251407	Plans: Justicar's Gloves	3			134939	Blacksmithing		250	9	4	1
+251408	Plans: Officer's Belt	3			134939	Blacksmithing		150	9	4	1
+251409	Plans: Sentinel's Belt	3			134939	Blacksmithing		150	9	4	1
+251410	Plans: Warder's Belt	3			134939	Blacksmithing		150	9	4	1
+251411	Plans: Prefect's Belt	3			134939	Blacksmithing		150	9	4	1
+251412	Plans: Justicar's Belt	3			134939	Blacksmithing		150	9	4	1
+251413	Plans: Officer's Sabatons	3			134939	Blacksmithing		240	9	4	1
+251414	Plans: Sentinel's Sabatons	3			134939	Blacksmithing		240	9	4	1
+251415	Plans: Warder's Sabatons	3			134939	Blacksmithing		240	9	4	1
+251416	Plans: Prefect's Sabatons	3			134939	Blacksmithing		240	9	4	1
+251417	Plans: Justicar's Sabatons	3			134939	Blacksmithing		240	9	4	1
+251418	Plans: Officer's Gauntlet	3			134939	Blacksmithing		175	9	4	1
+251419	Plans: Sentinel's Gauntlet	3			134939	Blacksmithing		175	9	4	1
+251420	Plans: Warder's Gauntlet	3			134939	Blacksmithing		175	9	4	1
+251421	Plans: Prefect's Gauntlet	3			134939	Blacksmithing		175	9	4	1
+251422	Plans: Justicar's Gauntlet	3			134939	Blacksmithing		175	9	4	1
+251423	Plans: Officer's Waistguard	3			134939	Blacksmithing		250	9	4	1
+251424	Plans: Sentinel's Waistguard	3			134939	Blacksmithing		250	9	4	1
+251425	Plans: Warder's Waistguard	3			134939	Blacksmithing		250	9	4	1
+251426	Plans: Prefect's Waistguard	3			134939	Blacksmithing		250	9	4	1
+251427	Plans: Justicar's Waistguard	3			134939	Blacksmithing		250	9	4	1
+251428	Plans: Officer's Pauldrons	3			134939	Blacksmithing		210	9	4	1
+251429	Plans: Sentinel's Pauldrons	3			134939	Blacksmithing		210	9	4	1
+251430	Plans: Warder's Pauldrons	3			134939	Blacksmithing		210	9	4	1
+251431	Plans: Prefect's Pauldrons	3			134939	Blacksmithing		210	9	4	1
+251432	Plans: Justicar's Pauldrons	3			134939	Blacksmithing		210	9	4	1
+251433	Plans: Officer's Wristguard	3			134939	Blacksmithing		225	9	4	1
+251434	Plans: Sentinel's Wristguard	3			134939	Blacksmithing		225	9	4	1
+251435	Plans: Warder's Wristguard	3			134939	Blacksmithing		225	9	4	1
+251436	Plans: Prefect's Wristguard	3			134939	Blacksmithing		225	9	4	1
+251437	Plans: Justicar's Wristguards	3			134939	Blacksmithing		225	9	4	1
+251438	Plans: Blessed Plate Pauldrons	2			134939	Blacksmithing		240	9	4	1
+251439	Plans: Blessed Plate Boots	2			134939	Blacksmithing		240	9	4	1
+251440	Plans: Blessed Plate Gauntlet	2			134939	Blacksmithing		245	9	4	1
+251441	Plans: Imperial Plate Gauntlets	2			134939	Blacksmithing		255	9	4	1
+251442	Plans: Blessed Plate Bracers	2			134939	Blacksmithing		255	9	4	1
+251443	Plans: Blessed Plate Leggings	2			134939	Blacksmithing		270	9	4	1
+251444	Plans: Blessed Plate Belt	2			134939	Blacksmithing		270	9	4	1
+251445	Plans: Blessed Plate Helm	2			134939	Blacksmithing		275	9	4	1
+251446	Plans: Blessed Plate Chest	2			134939	Blacksmithing		280	9	4	1
+251447	Plans: Enriched Thorium Breastplate	3			134939	Blacksmithing		300	9	4	1
+251448	Plans: Enriched Thorium Leggings	3			134939	Blacksmithing		300	9	4	1
+251449	Plans: Enriched Thorium Helm	3			134939	Blacksmithing		300	9	4	1
+251450	Plans: Champion's Legplates	4			134939	Blacksmithing		300	9	4	1
+251451	Plans: Stalwart Helm	4			134939	Blacksmithing		300	9	4	1
+251452	Plans: Martyr's Legplates	4			134939	Blacksmithing		300	9	4	1
+251453	Plans: Breastplate of Salvation	4			134939	Blacksmithing		300	9	4	1
+251454	Plans: Brass Knuckles	2			134939	Blacksmithing		80	9	4	1
+251455	Plans: Bronze Dory	2			134939	Blacksmithing		95	9	4	1
+251456	Plans: Iron Fists	2			134939	Blacksmithing		130	9	4	1
+251457	Plans: Steel Spear	2			134939	Blacksmithing		160	9	4	1
+251458	Plans: Iron Morningstar	2			134939	Blacksmithing		165	9	4	1
+251459	Plans: Mithril Shortsword	2			134939	Blacksmithing		180	9	4	1
+251460	Plans: Mithril Warhammer	2			134939	Blacksmithing		190	9	4	1
+251461	Plans: Mithril Claws	2			134939	Blacksmithing		195	9	4	1
+251462	Plans: Mithril Claymore	2			134939	Blacksmithing		195	9	4	1
+251463	Plans: Mithril Stiletto	2			134939	Blacksmithing		210	9	4	1
+251464	Plans: Charged Mithril Battleaxe	2			134939	Blacksmithing		215	9	4	1
+251465	Plans: Thorium Greatmace	3			134939	Blacksmithing		250	9	4	1
+251466	Plans: Thorium Cestus	3			134939	Blacksmithing		250	9	4	1
+251467	Plans: Thorium Poleaxe	3			134939	Blacksmithing		260	9	4	1
+251468	Plans: Bold Dirk	3			134939	Blacksmithing		270	9	4	1
+251469	Plans: Stormcarver	3			134939	Blacksmithing		300	9	4	1
+251470	Plans: Bagh Nakh	3			134939	Blacksmithing		300	9	4	1
+251471	Plans: Legionite Glaive	3			134939	Blacksmithing		300	9	4	1
+273086	Blueprint: Anvil	2			1001491	Blacksmithing		140	9	4	
+273113	Blueprint: Master Forge	2			1001491	Blacksmithing		300	9	4	
+273127	Golem Heart	2			962047				15	1	
+273908	Justice Leggings	1		7		Legs (Plate)			4	4	
+273909	Justice Gauntlets	1		10		Hands (Plate)			4	4	
+273910	Justice Spaulders	1		3		Shoulder (Plate)			4	4	
+273911	Justice Greaves	1		8		Feet (Plate)			4	4	
+273912	Justice Legplates	1		7		Legs (Plate)			4	4	
+273913	Justice Gloves	1		10		Hands (Plate)			4	4	
+273914	Justice Epaulets	1		3		Shoulder (Plate)			4	4	
+273915	Justice Treads	1		8		Feet (Plate)			4	4	
+273916	Justice Legguards	1		7		Legs (Plate)			4	4	
+273917	Justice Handguards	1		10		Hands (Plate)			4	4	
+273918	Justice Pauldrons	1		3		Shoulder (Plate)			4	4	
+273919	Justice Sabatons	1		8		Feet (Plate)			4	4	
+273944	Legplates of Glory	1		7		Legs (Plate)			4	4	
+273945	Gauntlets of Glory	1		10		Hands (Plate)			4	4	
+273946	Shoulders of Glory	1		3		Shoulder (Plate)			4	4	
+273947	Greaves of Glory	1		8		Feet (Plate)			4	4	
+273948	Legguards of Glory	1		7		Legs (Plate)			4	4	
+273949	Handguards of Glory	1		10		Hands (Plate)			4	4	
+273950	Pauldrons of Glory	1		3		Shoulder (Plate)			4	4	
+273951	Sabatons of Glory	1		8		Feet (Plate)			4	4	
+273976	Plans: Justice Leggings	4	1		134940	Blacksmithing		300	9	4	1
+273977	Plans: Justice Gauntlets	4	1		134940	Blacksmithing		300	9	4	1
+273978	Plans: Justice Spaulders	4	1		134940	Blacksmithing		300	9	4	1
+273979	Plans: Justice Greaves	4	1		134940	Blacksmithing		300	9	4	1
+273980	Plans: Justice Legplates	4	1		134940	Blacksmithing		300	9	4	1
+273981	Plans: Justice Gloves	4	1		134940	Blacksmithing		300	9	4	1
+273982	Plans: Justice Epaulets	4	1		134940	Blacksmithing		300	9	4	1
+273983	Plans: Justice Treads	4	1		134940	Blacksmithing		300	9	4	1
+273984	Plans: Justice Legguards	4	1		134940	Blacksmithing		300	9	4	1
+273985	Plans: Justice Handguards	4	1		134940	Blacksmithing		300	9	4	1
+273986	Plans: Justice Pauldrons	4	1		134940	Blacksmithing		300	9	4	1
+273987	Plans: Justice Sabatons	4	1		134940	Blacksmithing		300	9	4	1
+274012	Plans: Legplates of Glory	4	1		134940	Blacksmithing		300	9	4	1
+274013	Plans: Gauntlets of Glory	4	1		134940	Blacksmithing		300	9	4	1
+274014	Plans: Shoulders of Glory	4	1		134940	Blacksmithing		300	9	4	1
+274015	Plans: Greaves of Glory	4	1		134940	Blacksmithing		300	9	4	1
+274016	Plans: Legguards of Glory	4	1		134940	Blacksmithing		300	9	4	1
+274017	Plans: Handguards of Glory	4	1		134940	Blacksmithing		300	9	4	1
+274018	Plans: Pauldrons of Glory	4	1		134940	Blacksmithing		300	9	4	1
+274019	Plans: Sabatons of Glory	4	1		134940	Blacksmithing		300	9	4	1
+274030	Malleable Essence of Nature	4	1		132119	Enchanting			7	12	
+275598	Plans: Goregasher Grips	3	1		134940	Leatherworking		285	9	1	1
+275599	Plans: Goregasher Support	3	1		134940	Leatherworking		290	9	1	1
+275600	Plans: Goregasher Stompers	3	1		134940	Leatherworking		295	9	1	1
+275601	Plans: Clutchlord's Grips	3	1		134940	Leatherworking		285	9	1	1
+275602	Plans: Clutchlord's Support	3	1		134940	Leatherworking		290	9	1	1
+275603	Plans: Clutchlord's Stompers	3	1		134940	Leatherworking		295	9	1	1
+275622	Goregasher Grips	3	53	10		Hands (Plate)	Stamina, Strength		4	4	2
+275623	Goregasher Support	3	53	6		Waist (Plate)	Stamina, Strength		4	4	2
+275624	Goregasher Stompers	3	53	8		Feet (Plate)	Stamina, Attack Power		4	4	2
+275625	Clutchlord's Grips	3	53	10		Hands (Plate)	Stamina, Strength		4	4	2
+275626	Clutchlord's Support	3	53	6		Waist (Plate)	Stamina, Strength		4	4	2
+275627	Clutchlord's Stompers	3	53	8		Feet (Plate)	Stamina, Strength		4	4	2
+276928	Plans: Cloudy Skyforged Chainmail	2			134942	Blacksmithing		60	9	4	1
+276929	Plans: Cloudy Skyforged Wristguards	2			134942	Blacksmithing		50	9	4	1
+276930	Plans: Cloudy Skyforged Gauntlets	2			134942	Blacksmithing		55	9	4	1
+276931	Plans: Cloudy Skyforged Chain	2			134942	Blacksmithing		50	9	4	1
+276932	Plans: Cloudy Skyforged Legguards	2			134942	Blacksmithing		60	9	4	1
+276933	Plans: Cloudy Skyforged Greaves	2			134942	Blacksmithing		55	9	4	1
+276952	Plans: Azure Skyforged Chainmail	2			134942	Blacksmithing		60	9	4	1
+276953	Plans: Azure Skyforged Wristguards	2			134942	Blacksmithing		50	9	4	1
+276954	Plans: Azure Skyforged Gauntlets	2			134942	Blacksmithing		55	9	4	1
+276955	Plans: Azure Skyforged Chain	2			134942	Blacksmithing		50	9	4	1
+276956	Plans: Azure Skyforged Legguards	2			134942	Blacksmithing		60	9	4	1
+276957	Plans: Azure Skyforged Greaves	2			134942	Blacksmithing		55	9	4	1
+276976	Plans: Cloudy Skyforged Helm	2			134942	Blacksmithing		175	9	4	1
+276977	Plans: Cloudy Skyforged Pauldrons	2			134942	Blacksmithing		175	9	4	1
+276984	Plans: Azure Skyforged Helm	2			134942	Blacksmithing		175	9	4	1
+276985	Plans: Azure Skyforged Pauldrons	2			134942	Blacksmithing		175	9	4	1
+276992	Cloudy Skyforged Chainmail	2	7	5		Chest (Mail)	Strength		4	3	2
+276993	Cloudy Skyforged Wristguards	2	5	9		Wrist (Mail)	Strength		4	3	2
+276994	Cloudy Skyforged Gauntlets	2	6	10		Hands (Mail)	Agility		4	3	2
+276995	Cloudy Skyforged Chain	2	5	6		Waist (Mail)	Stamina		4	3	2
+276996	Cloudy Skyforged Legguards	2	7	7		Legs (Mail)	Stamina		4	3	2
+276997	Cloudy Skyforged Greaves	2	6	8		Feet (Mail)	Agility		4	3	2
+277016	Azure Skyforged Chainmail	2	7	5		Chest (Mail)	Strength		4	3	2
+277017	Azure Skyforged Wristguards	2	5	9		Wrist (Mail)	Strength		4	3	2
+277018	Azure Skyforged Gauntlets	2	6	10		Hands (Mail)	Agility		4	3	2
+277019	Azure Skyforged Chain	2	5	6		Waist (Mail)	Stamina		4	3	2
+277020	Azure Skyforged Legguards	2	7	7		Legs (Mail)	Stamina		4	3	2
+277021	Azure Skyforged Greaves	2	6	8		Feet (Mail)	Agility		4	3	2
+277040	Cloudy Skyforged Helm	2	30	1		Head (Mail)	Strength, Stamina		4	3	2
+277041	Cloudy Skyforged Pauldrons	2	30	3		Shoulder (Mail)	Agility, Stamina		4	3	2
+277048	Azure Skyforged Helm	2	30	1		Head (Mail)	Strength, Stamina		4	3	2
+277049	Azure Skyforged Pauldrons	2	30	3		Shoulder (Mail)	Agility, Stamina		4	3	2
+277672	Rough Copper Chain Boots	2	4	8		Feet (Mail)	Strength		4	3	2
+277673	Plans: Rough Copper Chain Boots	2			134942	Blacksmithing		50	9	4	1
+279259	Ironwood Blade	4	60	13	135277	One-Hand (One-Handed Swords)	Speed 2.40, Strength, Stamina, Hit Rating		2	7	2
+279260	Forest Defender's Axe	4	60	17	7957675	Two-Hand (Two-Handed Axes)	Speed 3.30, Stamina, Strength, Spell Power		2	1	2
+279261	Greenhammer	4	60	13	7957558	One-Hand (One-Handed Maces)	Speed 2.30, Agility, Stamina, Hit Rating		2	4	2
+279262	Evergreen Shield	4	60	14	7956963	Off Hand (Shield)	Stamina, Critical Strike Rating, Healing, Spell Damage		4	6	2
+279263	Depleted Thorium Sabatons	4	60	8	132583	Feet (Plate)	Strength, Stamina, Spell Damage		4	4	2
+279264	Heavy Thorium Gauntlets	4	60	10	132962	Hands (Plate)	Stamina, Strength, Defense Rating		4	4	2
+279265	Azerothium Legplates	4	60	7	134691	Legs (Plate)	Strength, Agility, Stamina		4	4	2
+279308	Plans: Ironwood Blade	4			134942	Blacksmithing		300	9	4	1
+279309	Plans: Forest Defender's Axe	4			134942	Blacksmithing		300	9	4	1
+279310	Plans: Greenhammer	4			134942	Blacksmithing		300	9	4	1
+279311	Plans: Evergreen Shield	4			134942	Blacksmithing		300	9	4	1
+279312	Plans: Depleted Thorium Sabatons	4			134942	Blacksmithing		300	9	4	1
+279313	Plans: Heavy Thorium Gauntlets	4			134942	Blacksmithing		300	9	4	1
+279314	Plans: Azerothium Legplates	4			134942	Blacksmithing		300	9	4	1
+279944	Sharpening Wheel	1			135243	Consumable		20		8	
+279955	Master Forge	1			4374708	Consumable		300		8	
+279988	Anvil	1			1020356	Consumable		140		8	
+285279	Cracked Blacksmith Hammer	2	17	25	133057	Thrown (Thrown)	Speed 2.20, Strength		2	16	1
+285280	Mithril Blacksmith Hammer	2	34	25	133057	Thrown (Thrown)	Speed 2.10, Strength	195	2	16	1
+285281	Arcanite Blacksmith Hammer	3	49	25	133057	Thrown (Thrown)	Speed 2.20, Spirit, Strength	270	2	16	1
+285289	Plans: Cracked Blacksmith Hammer	2	1		134942	Blacksmithing		110	9	4	1
+285290	Plans: Mithril Blacksmith Hammer	2	1		134942	Blacksmithing		195	9	4	1
+285291	Plans: Arcanite Blacksmith Hammer	3	1		134942	Blacksmithing		270	9	4	1]],
         },
         {
             name = "Enchanting", skill = 333, count = 262,
@@ -2420,383 +2420,383 @@ ns.Data = {
 1216014	Totem of Pyroclastic Thunder	320	320,340,360	234480,1,1	20725:3;234012:10;234003:2;12810:3	0	1	
 1216016	Totem of Thunderous Strikes	320	320,340,360	234478,1,1	20725:3;234012:10;234003:2;12810:3	0	1	]],
             items = [[
-1210	Shadowgem	2			134074				7	11
-2289	Scroll of Strength II	1	25		134938	Scroll				4
-2452	Swiftthistle	1			134184	Herb			7	9
-2459	Swiftness Potion	1	5		134875	Potion				1
-2772	Iron Ore	1			134572	Metal & Stone			7	7
-2775	Silver Ore	2			135242	Metal & Stone			7	7
-3013	Scroll of Protection	1	1		134943	Scroll				4
-3356	Kingsblood	1			134183	Herb			7	9
-3371	Empty Vial	1			134864				7	11
-3372	Leaded Vial	1			134865				7	11
-3819	Wintersbite	1			133940	Herb			7	9
-3829	Frost Oil	1	30		134800	Consumable				8
-4470	Simple Wood	1			135435				7	11
-4605	Red-speckled Mushroom	1	5		134532	Food & Drink				5
-4625	Firebloom	1			134200	Herb			7	9
-5500	Iridescent Pearl	2			134121				7	11
-5637	Large Fang	1			133725				7	11
-6037	Truesilver Bar	2			133222	Metal & Stone			7	7
-6048	Shadow Protection Potion	1	17		134824	Potion				1
-6217	Copper Rod	1			133942	Enchanting			7	12
-6218	Runed Copper Rod	1	1		135225	Enchanting			7	12
-6338	Silver Rod	1			135138	Enchanting			7	12
-6339	Runed Silver Rod	1	1		135138	Enchanting			7	12
-6342	Formula: Enchant Chest - Minor Intellect	2			134327	Enchanting		20	9	8
-6344	Formula: Enchant Bracer - Minor Spirit	2			134327	Enchanting		60	9	8
-6345	Formula: Imbue Cloak - Protection	2			134327	Enchanting		90	9	8
-6346	Formula: Enchant Chest - Lesser Intellect	2			134327	Enchanting		80	9	8
-6347	Formula: Enchant Bracer - Minor Strength	2			134327	Enchanting		80	9	8
-6348	Formula: Enchant Weapon - Minor Beastslayer	2			134327	Enchanting		90	9	8
-6349	Formula: Enchant 2H Weapon - Lesser Intellect	1			134327	Enchanting		100	9	8
-6370	Blackmouth Oil	1			132799				7	11
-6371	Fire Oil	1			134818				7	11
-6375	Formula: Enchant Bracer - Lesser Spirit	2			134327	Enchanting		120	9	8
-6376	Formula: Enchant Boots - Minor Stamina	2			134327	Enchanting		125	9	8
-6377	Formula: Enchant Boots - Minor Agility	2			134327	Enchanting		125	9	8
-7067	Elemental Earth	1			134572	Elemental			7	10
-7068	Elemental Fire	1			135805	Elemental			7	10
-7075	Core of Earth	1			135231	Elemental			7	10
-7076	Essence of Earth	2			136102	Elemental			7	10
-7077	Heart of Fire	1			135819	Elemental			7	10
-7078	Essence of Fire	2			135830	Elemental			7	10
-7079	Globe of Water	1			134333	Elemental			7	10
-7080	Essence of Water	2			136007	Elemental			7	10
-7081	Breath of Wind	1			136018	Elemental			7	10
-7082	Essence of Air	2			136022	Elemental			7	10
-7392	Green Whelp Scale	1			134314	Leather			7	6
-7909	Aquamarine	2			134088				7	11
-7971	Black Pearl	2			134120				7	11
-7972	Ichor of Undeath	1			134437	Elemental			7	10
-8151	Flask of Mojo	1			134776				7	11
-8152	Flask of Big Mojo	1			134743				7	11
-8153	Wildvine	1			134183	Herb			7	9
-8170	Rugged Leather	1			134251	Leather			7	6
-8831	Purple Lotus	1			134198	Herb			7	9
-8838	Sungrass	1			134199	Herb			7	9
-8925	Crystal Vial	1			134866				7	11
-9224	Potion of Demon Slaying	1	40		134807	Elixir				2
-10308	Scroll of Intellect IV	1	50		134937	Scroll				4
-10938	Lesser Magic Essence	2			132867	Enchanting			7	12
-10939	Greater Magic Essence	2			132866	Enchanting			7	12
-10940	Strange Dust	1			132858	Enchanting			7	12
-10978	Small Glimmering Shard	3			132877	Enchanting			7	12
-10998	Lesser Astral Essence	2			132863	Enchanting			7	12
-11038	Formula: Enchant 2H Weapon - Lesser Spirit	2			134327	Enchanting		110	9	8
-11039	Formula: Enchant Cloak - Minor Agility	2			134327	Enchanting		110	9	8
-11081	Formula: Enchant Shield - Lesser Protection	2			134327	Enchanting		115	9	8
-11082	Greater Astral Essence	2			132862	Enchanting			7	12
-11083	Soul Dust	1			132857	Enchanting			7	12
-11084	Large Glimmering Shard	3			132876	Enchanting			7	12
-11098	Formula: Enchant Cloak - Lesser Shadow Resistance	2			134327	Enchanting		135	9	8
-11101	Formula: Enchant Bracer - Lesser Strength	2			134327	Enchanting		140	9	8
-11128	Golden Rod	1			135147	Enchanting			7	12
-11130	Runed Golden Rod	1			135147	Enchanting			7	12
-11134	Lesser Mystic Essence	2			132869	Enchanting			7	12
-11135	Greater Mystic Essence	2			132868	Enchanting			7	12
-11137	Vision Dust	1			132859	Enchanting			7	12
-11138	Small Glowing Shard	3			132879	Enchanting			7	12
-11139	Large Glowing Shard	3			132878	Enchanting			7	12
-11144	Truesilver Rod	1			135148	Enchanting			7	12
-11145	Runed Truesilver Rod	1			135148	Enchanting			7	12
-11150	Formula: Enchant Gloves - Mining	2			134327	Enchanting		145	9	8
-11151	Formula: Enchant Gloves - Herbalism	2			134327	Enchanting		145	9	8
-11152	Formula: Enchant Gloves - Fishing	2			134327	Enchanting		145	9	8
-11163	Formula: Enchant Bracer - Lesser Deflection	2			134327	Enchanting		170	9	8
-11164	Formula: Enchant Weapon - Lesser Beastslayer	2			134327	Enchanting		175	9	8
-11165	Formula: Enchant Weapon - Lesser Elemental Slayer	2			134327	Enchanting		175	9	8
-11166	Formula: Enchant Gloves - Skinning	2			134327	Enchanting		200	9	8
-11167	Formula: Enchant Boots - Lesser Spirit	2			134327	Enchanting		190	9	8
-11168	Formula: Enchant Shield - Lesser Block	2			134327	Enchanting		195	9	8
-11174	Lesser Nether Essence	2			132871	Enchanting			7	12
-11175	Greater Nether Essence	2			132870	Enchanting			7	12
-11176	Dream Dust	1			132855	Enchanting			7	12
-11177	Small Radiant Shard	3			132884	Enchanting			7	12
-11178	Large Radiant Shard	3			132883	Enchanting			7	12
-11202	Formula: Enchant Shield - Stamina	2			134327	Enchanting		210	9	8
-11203	Formula: Enchant Gloves - Advanced Mining	2			134327	Enchanting		215	9	8
-11204	Formula: Enchant Bracer - Greater Spirit	2			134327	Enchanting		220	9	8
-11205	Formula: Enchant Gloves - Advanced Herbalism	2			134327	Enchanting		225	9	8
-11206	Formula: Enchant Cloak - Lesser Agility	2			134327	Enchanting		225	9	8
-11207	Formula: Enchant Weapon - Fiery Weapon	2			134327	Enchanting		265	9	8
-11208	Formula: Enchant Weapon - Demonslaying	2			134327	Enchanting		230	9	8
-11223	Formula: Enchant Bracer - Deflection	2			134327	Enchanting		235	9	8
-11224	Formula: Enchant Shield - Frost Resistance	2			134327	Enchanting		235	9	8
-11225	Formula: Enchant Bracer - Greater Stamina	2			134327	Enchanting		245	9	8
-11226	Formula: Enchant Gloves - Riding Skill	2			134327	Enchanting		250	9	8
-11287	Lesser Magic Wand	2	5	26	135139	Ranged (Wands)	Speed 1.50, Spell Power		2	19
-11288	Greater Magic Wand	2	13	26	135144	Ranged (Wands)	Speed 1.80, Spell Power		2	19
-11289	Lesser Mystic Wand	2	26	26	135139	Ranged (Wands)	Speed 1.30, Intellect		2	19
-11291	Star Wood	1			135437				7	11
-11382	Blood of the Mountain	2			134086				7	11
-11754	Black Diamond	2			134071				12	
-11811	Smoking Heart of the Mountain	1		12	134084	Trinket			4	
-11813	Formula: Smoking Heart of the Mountain	2			134327	Enchanting		265	9	8
-12359	Thorium Bar	1			133221	Metal & Stone			7	7
-12361	Blue Sapphire	2			134132				7	11
-12363	Arcane Crystal	2			134135				7	11
-12655	Enchanted Thorium Bar	1			133229	Metal & Stone			7	7
-12735	Frayed Abomination Stitching	2			134365				12	
-12753	Skin of Shadow	2			134430				12	
-12803	Living Essence	2			136006	Elemental			7	10
-12808	Essence of Undeath	2			136195	Elemental			7	10
-12809	Guardian Stone	2			135228	Metal & Stone			7	7
-12810	Enchanted Leather	1			134418	Leather			7	6
-12811	Righteous Orb	2			134122				7	11
-12938	Blood of Heroes	1			134813				12	
-13180	Stratholme Holy Water	1			134855				12	
-13458	Greater Nature Protection Potion	1	48		134802	Potion				1
-13467	Icecap	1			134212	Herb			7	9
-13468	Black Lotus	2			134202	Herb			7	9
-13926	Golden Pearl	2			134123				7	11
-14047	Runecloth	1			132903	Cloth			7	5
-14343	Small Brilliant Shard	3			132874	Enchanting			7	12
-14344	Large Brilliant Shard	3			132873	Enchanting			7	12
-15407	Cured Rugged Hide	1			134355	Leather			7	6
-16202	Lesser Eternal Essence	2			132865	Enchanting			7	12
-16203	Greater Eternal Essence	2			132864	Enchanting			7	12
-16204	Illusion Dust	1			132856	Enchanting			7	12
-16206	Arcanite Rod	1			135156	Enchanting			7	12
-16207	Runed Arcanite Rod	1			135471	Enchanting			7	12
-16214	Formula: Enchant Bracer - Greater Intellect	2			134327	Enchanting		255	9	8
-16215	Formula: Enchant Boots - Greater Stamina	2			134327	Enchanting		260	9	8
-16216	Formula: Enchant Cloak - Greater Resistance	2			134327	Enchanting		265	9	8
-16217	Formula: Enchant Shield - Greater Stamina	1			134327	Enchanting		265	9	8
-16218	Formula: Enchant Bracer - Superior Spirit	2			134327	Enchanting		270	9	8
-16219	Formula: Enchant Gloves - Greater Agility	2			134327	Enchanting		270	9	8
-16220	Formula: Enchant Boots - Spirit	2			134327	Enchanting		275	9	8
-16221	Formula: Enchant Chest - Major Stamina	1			134327	Enchanting		275	9	8
-16222	Formula: Enchant Shield - Superior Spirit	2			134327	Enchanting		280	9	8
-16223	Formula: Enchant Weapon - Icy Chill	2			134327	Enchanting		285	9	8
-16224	Formula: Enchant Cloak - Superior Defense	1			134327	Enchanting		285	9	8
-16242	Formula: Enchant Chest - Major Intellect	2			134327	Enchanting		290	9	8
-16243	Formula: Runed Arcanite Rod	1			134327	Enchanting		290	9	8
-16244	Formula: Enchant Gloves - Greater Strength	2			134327	Enchanting		295	9	8
-16245	Formula: Enchant Boots - Greater Agility	2			134327	Enchanting		295	9	8
-16246	Formula: Enchant Bracer - Superior Strength	2			134327	Enchanting		295	9	8
-16247	Formula: Enchant 2H Weapon - Superior Impact	2			134327	Enchanting		295	9	8
-16248	Formula: Enchant Weapon - Unholy Weapon	2			134327	Enchanting		295	9	8
-16249	Formula: Enchant 2H Weapon - Major Intellect	2			134327	Enchanting		300	9	8
-16250	Formula: Enchant Weapon - Superior Striking	2			134327	Enchanting		300	9	8
-16251	Formula: Enchant Bracer - Superior Stamina	2			134327	Enchanting		300	9	8
-16252	Formula: Enchant Weapon - Crusader	2			134327	Enchanting		300	9	8
-16253	Formula: Enchant Chest - Greater Stats	2			134327	Enchanting		300	9	8
-16254	Formula: Enchant Weapon - Lifestealing	3			134327	Enchanting		300	9	8
-16255	Formula: Enchant 2H Weapon - Major Spirit	2			134327	Enchanting		300	9	8
-17034	Maple Seed	1			133944				15	1
-17035	Stranglethorn Seed	1			133944				15	1
-17725	Formula: Enchant Weapon - Winter's Might	2			134327	Enchanting		190	9	8
-18256	Imbued Vial	1			134867				7	11
-18259	Formula: Enchant Weapon - Spell Power	3			134327	Enchanting		300	9	8
-18260	Formula: Enchant Weapon - Healing Power	3			134327	Enchanting		300	9	8
-18512	Larval Acid	1			134802				7	11
-19444	Formula: Enchant Weapon - Strength	1			134327	Enchanting		290	9	8
-19445	Formula: Enchant Weapon - Agility	1			134327	Enchanting		290	9	8
-19446	Formula: Enchant Bracer - Mana Regeneration	1			134327	Enchanting		290	9	8
-19447	Formula: Enchant Bracer - Healing	1			134327	Enchanting		300	9	8
-19448	Formula: Enchant Weapon - Mighty Spirit	1			134327	Enchanting		300	9	8
-19449	Formula: Enchant Weapon - Mighty Intellect	1			134327	Enchanting		300	9	8
-20725	Nexus Crystal	4			132880	Enchanting			7	12
-20726	Formula: Enchant Gloves - Threat	3			134327	Enchanting		300	9	8
-20727	Formula: Enchant Gloves - Shadow Power	3			134327	Enchanting		300	9	8
-20728	Formula: Enchant Gloves - Frost Power	3			134327	Enchanting		300	9	8
-20729	Formula: Enchant Gloves - Fire Power	3			134327	Enchanting		300	9	8
-20730	Formula: Enchant Gloves - Healing Power	3			134327	Enchanting		300	9	8
-20731	Formula: Enchant Gloves - Superior Agility	3			134327	Enchanting		300	9	8
-20732	Formula: Enchant Cloak - Greater Fire Resistance	1			134327	Enchanting		300	9	8
-20733	Formula: Enchant Cloak - Greater Nature Resistance	1			134327	Enchanting		300	9	8
-20734	Formula: Enchant Cloak - Stealth	3			134327	Enchanting		300	9	8
-20735	Formula: Enchant Cloak - Subtlety	3			134327	Enchanting		300	9	8
-20736	Formula: Enchant Cloak - Dodge	3			134327	Enchanting		300	9	8
-20744	Minor Wizard Oil	1	5		134711	Consumable				8
-20745	Minor Mana Oil	1	20		134878	Consumable				8
-20746	Lesser Wizard Oil	1	30		134725	Enchanting			7	12
-20747	Lesser Mana Oil	1	40		134879	Enchanting			7	12
-20748	Brilliant Mana Oil	1	45		134722	Consumable				8
-20749	Brilliant Wizard Oil	1	45		134727	Consumable				8
-20750	Wizard Oil	1	40		134726	Consumable				8
-20752	Formula: Minor Mana Oil	1			134327	Enchanting		150	9	8
-20753	Formula: Lesser Wizard Oil	1			134327	Enchanting		200	9	8
-20754	Formula: Lesser Mana Oil	1			134327	Enchanting		250	9	8
-20755	Formula: Wizard Oil	1			134327	Enchanting		275	9	8
-20756	Formula: Brilliant Wizard Oil	1			134327	Enchanting		300	9	8
-20757	Formula: Brilliant Mana Oil	1			134327	Enchanting		300	9	8
-20758	Formula: Minor Wizard Oil	1			134327	Enchanting		5	9	8
-22392	Formula: Enchant 2H Weapon - Agility	1			134327	Enchanting		290	9	8
-211848	Blackfathom Mana Oil	1			134879				7	11
-215129	Formula: Enchant Weapon - Dismantle	4			134327	Enchanting		225	9	8
-215138	Formula: Enchant Chest - Retricutioner	4			134327	Enchanting		225	9	8
-215141	Enchanted Sigil: Innovation	4			134327	Enchanting		225	9	8
-217287	Greater Mystic Wand	2	30	26	135469	Ranged (Wands)	Speed 2.00, Spell Power		2	19
-217308	Enchanted Sigil: Innovation	2	40		254884	Consumable		225		8
-220606	Idol of the Dream	3	55	28	134912	Relic			4	8
-220792	Scroll of Spatial Mending	2	1		134945	Consumable				8
-221028	Sigil of Living Dreams	1			254882	Consumable				8
-223163	Formula: Scroll of Spatial Mending	2			134327	Enchanting		120	9	8
-228175	Libram of Holy Alacrity	3	55	28	134916	Relic			4	7
-228176	Totem of Thunder	3	60	28	134920	Relic			4	9
-228978	Enchanted Sigil: Flowing Waters	3	60		254883	Consumable		290		8
-228979	Enchanted Sigil: Flowing Waters	4			134327	Enchanting		290	9	8
-228980	Conductive Shield Coating	1	40		134722					15
-228981	Formula: Conductive Shield Coating	1			134327	Enchanting		275	9	8
-228982	Formula: Enchant Shield - Law of Nature	3			134327	Enchanting		300	9	8
-229008	Formula: Enchant Cloak - Greater Fire Resistance	1			134327	Enchanting		300	9	8
-229009	Formula: Enchant Cloak - Greater Nature Resistance	1			134327	Enchanting		300	9	8
-232610	Formula: Magnificent Trollshine	1			134327	Enchanting		300	9	8
-232611	Magnificent Trollshine	1	45		134876					15
-233990	Speedstone	1		12	294481	Trinket			4	
-233991	Tear of the Dreamer	1		12	237004	Trinket			4	
-233992	Lodestone of Retaliation	1		12	135234	Trinket			4	
-233993	Enchanted Stopwatch	1		12	134377	Trinket			4	
-233994	Ruby-Encrusted Broach	1		12	133302	Trinket			4	
-233995	Scroll: Wrath of the Swarm	1			237449	Consumable				8
-233996	Enchanted Repellent	1			134723					15
-234000	Enchanted Prayer Tome	1		28	134917	Relic			4	7
-234001	Enchanted Totem	1		28	134918	Relic			4	9
-234002	Enchanted Mushroom	1		28	132371	Relic			4	8
-234003		1			237047	Metal & Stone			7	7
-234004		1			135254	Metal & Stone			7	7
-234005		1			133592	Parts			7	1
-234006		1			134262	Leather			7	6
-234007		1			134260	Leather			7	6
-234008		1			132901	Cloth			7	5
-234010		1			237414				7	11
-234011		1			132106				7	11
-234012	Hive Thistle	1			134439	Herb			7	9
-234468	Idol of Ursin Power	1		28	134912	Relic			4	8
-234469	Idol of Feline Ferocity	1		28	134912	Relic			4	8
-234474	Idol of Sidereal Wrath	1		28	134914	Relic			4	8
-234475	Libram of the Exorcist	1		28	134917	Relic			4	7
-234476	Libram of Sanctity	1		28	134915	Relic			4	7
-234477	Libram of Righteousness	1		28	134916	Relic			4	7
-234478	Totem of Thunderous Strikes	1		28	134919	Relic			4	9
-234479	Totem of Flowing Magma	1		28	134919	Relic			4	9
-234480	Totem of Pyroclastic Thunder	1		28	134920	Relic			4	9
-241191	Formula: Enchant Weapon - Grand Crusader	3			134327	Enchanting		280	9	8
-241195	Formula: Enchant 2H Weapon - Grand Arcanist	3			134327	Enchanting		280	9	8
-241201	Formula: Enchant Weapon - Grand Sorcerer	3			134327	Enchanting		280	9	8
-242361	Formula: Enchant 2H Weapon - Grand Inquisitor	3			134327	Enchanting		280	9	8
-247786	Mote of Magic	1			132841	Enchanting			7	12
-247789	Novice's Practice Wand	1	1	26	135645	Ranged (Wands)	Speed 1.50		2	19
-248819	Fel Crystal	2			463889				7	11
-248820	Torbernite	2			237222				7	11
-248822	Death Lotus	2			5976935	Herb			7	9
-249144	Twisted Nether Wand	2	37	26	135465	Ranged (Wands)	Speed 1.50, Spell Power		2	19
-249232	Lesser Eternal Wand	2	49	26	135467	Ranged (Wands)	Speed 2.00, Spell Power		2	19
-249234	Dreambough Wand	2	43	26	135466	Ranged (Wands)	Speed 1.80, Spell Power		2	19
-249237	Greater Eternal Wand	2	55	26	135475	Ranged (Wands)	Speed 1.50, Spell Power		2	19
-249274	Stranglevine	2			1387617	Herb			7	9
-249385	Brilliant Wand	3	55	26	135469	Ranged (Wands)	Speed 1.20, Intellect, Spell Power		2	19
-249391	Pyrite	2			961627	Metal & Stone			7	7
-249392	Glimmering Staff	3	25	17	135156	Two-Hand (Staves)	Speed 2.20, Intellect, Stamina		2	10
-249393	Soulstaff	3	25	17	135168	Two-Hand (Staves)	Speed 1.80, Stamina, Spirit		2	10
-249394	Orb of Mystic Insight	3	25	23	1769010	Held In Off-hand	Intellect, Spell Power		4	
-249395	Orb of Souls	3	25	23	134336	Held In Off-hand	Spirit, Healing, Spell Damage		4	
-249396	Mystic Mushroom	3	20	28	134532	Relic			4	8
-249397	Tenets of the Silver Hand	3	20	28	133745	Relic			4	7
-249398	Polished Driftwood Icon	3	20	28	310733	Relic			4	9
-249399	Frilled Lichen	2			133963	Herb			7	9
-249409	Cerulean Dye	2			1021860				7	11
-249410	Sulfuric Acid	2			136240				7	11
-249424	Rosecap	2			134222	Herb			7	9
-249425	Bauxite	2			876372	Metal & Stone			7	7
-249430	Magenta Dye	2			237071				7	11
-249431	Viridian Dye	2			237062				7	11
-249432	Sandpaper	2			237132	Parts			7	1
-249441	Talons of Wrath	3	40	28	136063	Relic			4	8
-249442	Libram of Invocation	3	40	28	134916	Relic			4	7
-249443	Totem of Ancestral Protection	3	40	28	134919	Relic			4	9
-249453	Radiant Staff	3	45	17	135150	Two-Hand (Staves)	Speed 2.40, Intellect, Stamina		2	10
-249454	Dreamstaff	3	45	17	135151	Two-Hand (Staves)	Speed 2.40, Spirit, Stamina		2	10
-249455	Truesilver Conduit	3	45	23	134922	Held In Off-hand	Intellect, Stamina, Spell Power		4	
-249456	Twisting Essence Jar	3	45	23	4638472	Held In Off-hand	Spirit, Stamina, Healing, Spell Damage		4	
-249469	Frozen Heart of the Mountain	3	50	12	134131	Trinket	Hit Rating		4	
-249470	Molten Heart of the Mountain	3	50	12	134128	Trinket			4	
-249473	Dormant Heart of the Mountain	3	50	12	134094	Trinket			4	
-249474	Formula: Enchant Bracer - Minor Intellect	2			134327	Enchanting		70	9	8
-249475	Formula: Enchant Bracer - Minor Healing Power	2			134327	Enchanting		90	9	8
-249476	Formula: Mystic Mushroom	3			134327	Enchanting		130	9	8
-249477	Formula: Tenets of the Silver Hand	3			134327	Enchanting		130	9	8
-249478	Formula: Polished Driftwood Icon	3			134327	Enchanting		130	9	8
-249479	Formula: Enchant Weapon - Insight	2			134327	Enchanting		140	9	8
-249480	Formula: Enchant Weapon - Recovery	2			134327	Enchanting		140	9	8
-249481	Formula: Enchant Weapon - Revelation	2			134327	Enchanting		140	9	8
-249482	Formula: Glimmering Staff	3			134327	Enchanting		140	9	8
-249483	Formula: Soulstaff	3			134327	Enchanting		140	9	8
-249484	Formula: Orb of Mystic Insight	3			134327	Enchanting		140	9	8
-249485	Formula: Orb of Souls	3			134327	Enchanting		140	9	8
-249486	Formula: Enchant Bracer - Lesser Agility	2			134327	Enchanting		140	9	8
-249487	Formula: Twisted Nether Wand	2			134327	Enchanting		185	9	8
-249488	Formula: Enchant Bracer - Agility	2			134327	Enchanting		190	9	8
-249489	Formula: Enchant Bracer - Lesser Healing Power	2			134327	Enchanting		205	9	8
-249493	Formula: Talons of Wrath	3			134327	Enchanting		210	9	8
-249494	Formula: Libram of Invocation	3			134327	Enchanting		210	9	8
-249495	Formula: Totem of Ancestral Protection	3			134327	Enchanting		210	9	8
-249496	Formula: Enchant Necklace - Strength	2			134327	Enchanting		210	9	8
-249502	Formula: Enchant Necklace - Spell Power	2			134327	Enchanting		210	9	8
-249503	Formula: Enchant Necklace - Healing Power	2			134327	Enchanting		210	9	8
-249504	Formula: Enchant Necklace - Agility	2			134327	Enchanting		210	9	8
-249505	Formula: Enchant Necklace - Deflection	2			134327	Enchanting		210	9	8
-249506	Formula: Radiant Staff	3			134327	Enchanting		220	9	8
-249507	Formula: Dreamstaff	3			134327	Enchanting		220	9	8
-249508	Formula: Truesilver Conduit	3			134327	Enchanting		220	9	8
-249509	Formula: Twisting Essence Jar	3			134327	Enchanting		220	9	8
-249510	Formula: Enchant Chest - Absorption	2			134327	Enchanting		220	9	8
-249511	Formula: Enchant 2H Weapon - Lesser Agility	2			134327	Enchanting		210	9	8
-249512	Formula: Dreambough Wand	2			134327	Enchanting		215	9	8
-249513	Formula: Enchant 2H Weapon - Lesser Strength	2			134327	Enchanting		220	9	8
-249514	Formula: Enchant Bracer - Greater Agility	2			134327	Enchanting		240	9	8
-249515	Formula: Lesser Eternal Wand	2			134327	Enchanting		245	9	8
-249516	Formula: Enchant Gloves - Advanced Skinning	2			134327	Enchanting		250	9	8
-249519	Formula: Frozen Heart of the Mountain	3			134327	Enchanting		265	9	8
-249520	Formula: Molten Heart of the Mountain	3			134327	Enchanting		265	9	8
-249521	Formula: Dormant Heart of the Mountain	3			134327	Enchanting		265	9	8
-249522	Formula: Greater Eternal Wand	2			134327	Enchanting		275	9	8
-249523	Formula: Enchant 2H Weapon - Strength	2			134327	Enchanting		290	9	8
-249524	Formula: Enchant Bracer - Superior Agility	2			134327	Enchanting		295	9	8
-249525	Formula: Enchant 2H Weapon - Mighty Spell Power	2			134327	Enchanting		300	9	8
-249526	Formula: Enchant 2H Weapon - Mighty Healing Power	2			134327	Enchanting		300	9	8
-249529	Formula: Idol of the Dream	3			134327	Enchanting		300	9	8
-249530	Formula: Libram of Holy Alacrity	3			134327	Enchanting		300	9	8
-249532	Formula: Totem of Thunder	3			134327	Enchanting		300	9	8
-249534	Formula: Enchant Gloves - Arcane Power	2			134327	Enchanting		300	9	8
-249535	Formula: Enchant Gloves - Natural Power	2			134327	Enchanting		300	9	8
-249536	Formula: Enchant Gloves - Holy Power	2			134327	Enchanting		300	9	8
-249537	Formula: Brilliant Wand	3			134327	Enchanting		275	9	8
-249538	Formula: Enchant Bracer - Superior Intellect	2			134327	Enchanting		300	9	8
-249539	Formula: Enchant Bracer - Superior Deflection	2			134327	Enchanting		300	9	8
-249726	Azerothium Bar	2			612100	Metal & Stone			7	7
-273103	Blueprint: Arcane Salvager	2			1001491	Enchanting		140	9	8
-273116	Blueprint: Arcane Forge	2			1001491	Enchanting		300	9	8
-273128	Maker's Spark	2			237016				15	1
-274030	Malleable Essence of Nature	4	1		132119	Enchanting			7	12
-274391	Formula: Enchant Off Hand - Superior Intellect	3	1		237020	Enchanting		300	9	8
-274392	Formula: Enchant Off Hand - Excellent Spirit	3	1		237020	Enchanting		300	9	8
-274393	Formula: Enchant Off Hand - Wisdom	3	1		237020	Enchanting		300	9	8
-274394	Formula: Enchant 2H Weapon - Spellblasting	3	1		237020	Enchanting		300	9	8
-274395	Formula: Enchant Shield - Excellent Stamina	3	1		237020	Enchanting		300	9	8
-274398	Formula: Enchant Gloves - Superior Strength	3	1		237020	Enchanting		300	9	8
-274399	Formula: Enchant Cloak - Agility	3	1		237020	Enchanting		300	9	8
-274400	Formula: Enchant Shield - Critical Strike	3	1		237020	Enchanting		300	9	8
-274401	Formula: Enchant Bracer - Greater Spellpower	3	1		237020	Enchanting		300	9	8
-274424	Formula: Enchant Gloves - Lotus Claw	2			134327	Enchanting		295	9	8
-279246	Torch of Light	4	60	26	135432	Ranged (Wands)	Speed 1.70, Healing, Spell Damage, Spirit		2	19
-279247	Steadfast Libram	4	60	28	134915	Relic			4	7
-279248	Libram of Infusion	4	60	28	133745	Relic			4	7
-279249	Totem of Urgency	4	60	28	5927655	Relic			4	9
-279250	Idol of Swiftness	4	60	28	236162	Relic			4	8
-279251	Idol of the Ursine Twins	4	60	28	134233	Relic			4	8
-279295	Formula: Torch of Light	4			134942	Enchanting		300	9	8
-279296	Formula: Steadfast Libram	4			134942	Enchanting		300	9	8
-279297	Formula: Libram of Infusion	4			134942	Enchanting		300	9	8
-279298	Formula: Totem of Urgency	4			134942	Enchanting		300	9	8
-279299	Formula: Idol of Swiftness	4			134942	Enchanting		300	9	8
-279300	Formula: Idol of the Ursine Twins	4			134942	Enchanting		300	9	8
-279976	Enchanted Lute	1			4631367	Consumable		20		8
-279985	Arcane Salvager	1			986482	Consumable		140		8
-279987	Arcane Forge	1			3622205	Consumable		300		8
-289560	Formula: Enchant Boots - Speed	2			134327	Enchanting		280	9	8]],
+1210	Shadowgem	2			134074				7	11	
+2289	Scroll of Strength II	1	25		134938	Scroll				4	
+2452	Swiftthistle	1			134184	Herb			7	9	
+2459	Swiftness Potion	1	5		134875	Potion				1	
+2772	Iron Ore	1			134572	Metal & Stone			7	7	
+2775	Silver Ore	2			135242	Metal & Stone			7	7	
+3013	Scroll of Protection	1	1		134943	Scroll				4	
+3356	Kingsblood	1			134183	Herb			7	9	
+3371	Empty Vial	1			134864				7	11	
+3372	Leaded Vial	1			134865				7	11	
+3819	Wintersbite	1			133940	Herb			7	9	
+3829	Frost Oil	1	30		134800	Consumable				8	
+4470	Simple Wood	1			135435				7	11	
+4605	Red-speckled Mushroom	1	5		134532	Food & Drink				5	
+4625	Firebloom	1			134200	Herb			7	9	
+5500	Iridescent Pearl	2			134121				7	11	
+5637	Large Fang	1			133725				7	11	
+6037	Truesilver Bar	2			133222	Metal & Stone			7	7	
+6048	Shadow Protection Potion	1	17		134824	Potion				1	
+6217	Copper Rod	1			133942	Enchanting			7	12	
+6218	Runed Copper Rod	1	1		135225	Enchanting			7	12	1
+6338	Silver Rod	1			135138	Enchanting			7	12	
+6339	Runed Silver Rod	1	1		135138	Enchanting			7	12	1
+6342	Formula: Enchant Chest - Minor Intellect	2			134327	Enchanting		20	9	8	
+6344	Formula: Enchant Bracer - Minor Spirit	2			134327	Enchanting		60	9	8	
+6345	Formula: Imbue Cloak - Protection	2			134327	Enchanting		90	9	8	
+6346	Formula: Enchant Chest - Lesser Intellect	2			134327	Enchanting		80	9	8	
+6347	Formula: Enchant Bracer - Minor Strength	2			134327	Enchanting		80	9	8	
+6348	Formula: Enchant Weapon - Minor Beastslayer	2			134327	Enchanting		90	9	8	
+6349	Formula: Enchant 2H Weapon - Lesser Intellect	1			134327	Enchanting		100	9	8	
+6370	Blackmouth Oil	1			132799				7	11	
+6371	Fire Oil	1			134818				7	11	
+6375	Formula: Enchant Bracer - Lesser Spirit	2			134327	Enchanting		120	9	8	
+6376	Formula: Enchant Boots - Minor Stamina	2			134327	Enchanting		125	9	8	
+6377	Formula: Enchant Boots - Minor Agility	2			134327	Enchanting		125	9	8	
+7067	Elemental Earth	1			134572	Elemental			7	10	
+7068	Elemental Fire	1			135805	Elemental			7	10	
+7075	Core of Earth	1			135231	Elemental			7	10	
+7076	Essence of Earth	2			136102	Elemental			7	10	
+7077	Heart of Fire	1			135819	Elemental			7	10	
+7078	Essence of Fire	2			135830	Elemental			7	10	
+7079	Globe of Water	1			134333	Elemental			7	10	
+7080	Essence of Water	2			136007	Elemental			7	10	
+7081	Breath of Wind	1			136018	Elemental			7	10	
+7082	Essence of Air	2			136022	Elemental			7	10	
+7392	Green Whelp Scale	1			134314	Leather			7	6	
+7909	Aquamarine	2			134088				7	11	
+7971	Black Pearl	2			134120				7	11	
+7972	Ichor of Undeath	1			134437	Elemental			7	10	
+8151	Flask of Mojo	1			134776				7	11	
+8152	Flask of Big Mojo	1			134743				7	11	
+8153	Wildvine	1			134183	Herb			7	9	
+8170	Rugged Leather	1			134251	Leather			7	6	
+8831	Purple Lotus	1			134198	Herb			7	9	
+8838	Sungrass	1			134199	Herb			7	9	
+8925	Crystal Vial	1			134866				7	11	
+9224	Potion of Demon Slaying	1	40		134807	Elixir				2	
+10308	Scroll of Intellect IV	1	50		134937	Scroll				4	
+10938	Lesser Magic Essence	2			132867	Enchanting			7	12	
+10939	Greater Magic Essence	2			132866	Enchanting			7	12	
+10940	Strange Dust	1			132858	Enchanting			7	12	
+10978	Small Glimmering Shard	3			132877	Enchanting			7	12	
+10998	Lesser Astral Essence	2			132863	Enchanting			7	12	
+11038	Formula: Enchant 2H Weapon - Lesser Spirit	2			134327	Enchanting		110	9	8	
+11039	Formula: Enchant Cloak - Minor Agility	2			134327	Enchanting		110	9	8	1
+11081	Formula: Enchant Shield - Lesser Protection	2			134327	Enchanting		115	9	8	
+11082	Greater Astral Essence	2			132862	Enchanting			7	12	
+11083	Soul Dust	1			132857	Enchanting			7	12	
+11084	Large Glimmering Shard	3			132876	Enchanting			7	12	
+11098	Formula: Enchant Cloak - Lesser Shadow Resistance	2			134327	Enchanting		135	9	8	
+11101	Formula: Enchant Bracer - Lesser Strength	2			134327	Enchanting		140	9	8	
+11128	Golden Rod	1			135147	Enchanting			7	12	
+11130	Runed Golden Rod	1			135147	Enchanting			7	12	1
+11134	Lesser Mystic Essence	2			132869	Enchanting			7	12	
+11135	Greater Mystic Essence	2			132868	Enchanting			7	12	
+11137	Vision Dust	1			132859	Enchanting			7	12	
+11138	Small Glowing Shard	3			132879	Enchanting			7	12	
+11139	Large Glowing Shard	3			132878	Enchanting			7	12	
+11144	Truesilver Rod	1			135148	Enchanting			7	12	
+11145	Runed Truesilver Rod	1			135148	Enchanting			7	12	1
+11150	Formula: Enchant Gloves - Mining	2			134327	Enchanting		145	9	8	
+11151	Formula: Enchant Gloves - Herbalism	2			134327	Enchanting		145	9	8	
+11152	Formula: Enchant Gloves - Fishing	2			134327	Enchanting		145	9	8	
+11163	Formula: Enchant Bracer - Lesser Deflection	2			134327	Enchanting		170	9	8	1
+11164	Formula: Enchant Weapon - Lesser Beastslayer	2			134327	Enchanting		175	9	8	
+11165	Formula: Enchant Weapon - Lesser Elemental Slayer	2			134327	Enchanting		175	9	8	
+11166	Formula: Enchant Gloves - Skinning	2			134327	Enchanting		200	9	8	
+11167	Formula: Enchant Boots - Lesser Spirit	2			134327	Enchanting		190	9	8	
+11168	Formula: Enchant Shield - Lesser Block	2			134327	Enchanting		195	9	8	
+11174	Lesser Nether Essence	2			132871	Enchanting			7	12	
+11175	Greater Nether Essence	2			132870	Enchanting			7	12	
+11176	Dream Dust	1			132855	Enchanting			7	12	
+11177	Small Radiant Shard	3			132884	Enchanting			7	12	
+11178	Large Radiant Shard	3			132883	Enchanting			7	12	
+11202	Formula: Enchant Shield - Stamina	2			134327	Enchanting		210	9	8	
+11203	Formula: Enchant Gloves - Advanced Mining	2			134327	Enchanting		215	9	8	
+11204	Formula: Enchant Bracer - Greater Spirit	2			134327	Enchanting		220	9	8	
+11205	Formula: Enchant Gloves - Advanced Herbalism	2			134327	Enchanting		225	9	8	
+11206	Formula: Enchant Cloak - Lesser Agility	2			134327	Enchanting		225	9	8	
+11207	Formula: Enchant Weapon - Fiery Weapon	2			134327	Enchanting		265	9	8	
+11208	Formula: Enchant Weapon - Demonslaying	2			134327	Enchanting		230	9	8	
+11223	Formula: Enchant Bracer - Deflection	2			134327	Enchanting		235	9	8	
+11224	Formula: Enchant Shield - Frost Resistance	2			134327	Enchanting		235	9	8	
+11225	Formula: Enchant Bracer - Greater Stamina	2			134327	Enchanting		245	9	8	
+11226	Formula: Enchant Gloves - Riding Skill	2			134327	Enchanting		250	9	8	
+11287	Lesser Magic Wand	2	5	26	135139	Ranged (Wands)	Speed 1.50, Spell Power		2	19	2
+11288	Greater Magic Wand	2	13	26	135144	Ranged (Wands)	Speed 1.80, Spell Power		2	19	2
+11289	Lesser Mystic Wand	2	26	26	135139	Ranged (Wands)	Speed 1.30, Intellect		2	19	2
+11291	Star Wood	1			135437				7	11	
+11382	Blood of the Mountain	2			134086				7	11	
+11754	Black Diamond	2			134071				12		
+11811	Smoking Heart of the Mountain	1		12	134084	Trinket			4		
+11813	Formula: Smoking Heart of the Mountain	2			134327	Enchanting		265	9	8	
+12359	Thorium Bar	1			133221	Metal & Stone			7	7	
+12361	Blue Sapphire	2			134132				7	11	
+12363	Arcane Crystal	2			134135				7	11	
+12655	Enchanted Thorium Bar	1			133229	Metal & Stone			7	7	
+12735	Frayed Abomination Stitching	2			134365				12		1
+12753	Skin of Shadow	2			134430				12		1
+12803	Living Essence	2			136006	Elemental			7	10	
+12808	Essence of Undeath	2			136195	Elemental			7	10	
+12809	Guardian Stone	2			135228	Metal & Stone			7	7	
+12810	Enchanted Leather	1			134418	Leather			7	6	
+12811	Righteous Orb	2			134122				7	11	
+12938	Blood of Heroes	1			134813				12		1
+13180	Stratholme Holy Water	1			134855				12		1
+13458	Greater Nature Protection Potion	1	48		134802	Potion				1	
+13467	Icecap	1			134212	Herb			7	9	
+13468	Black Lotus	2			134202	Herb			7	9	
+13926	Golden Pearl	2			134123				7	11	
+14047	Runecloth	1			132903	Cloth			7	5	
+14343	Small Brilliant Shard	3			132874	Enchanting			7	12	
+14344	Large Brilliant Shard	3			132873	Enchanting			7	12	
+15407	Cured Rugged Hide	1			134355	Leather			7	6	
+16202	Lesser Eternal Essence	2			132865	Enchanting			7	12	
+16203	Greater Eternal Essence	2			132864	Enchanting			7	12	
+16204	Illusion Dust	1			132856	Enchanting			7	12	
+16206	Arcanite Rod	1			135156	Enchanting			7	12	
+16207	Runed Arcanite Rod	1			135471	Enchanting			7	12	1
+16214	Formula: Enchant Bracer - Greater Intellect	2			134327	Enchanting		255	9	8	
+16215	Formula: Enchant Boots - Greater Stamina	2			134327	Enchanting		260	9	8	
+16216	Formula: Enchant Cloak - Greater Resistance	2			134327	Enchanting		265	9	8	
+16217	Formula: Enchant Shield - Greater Stamina	1			134327	Enchanting		265	9	8	1
+16218	Formula: Enchant Bracer - Superior Spirit	2			134327	Enchanting		270	9	8	
+16219	Formula: Enchant Gloves - Greater Agility	2			134327	Enchanting		270	9	8	
+16220	Formula: Enchant Boots - Spirit	2			134327	Enchanting		275	9	8	
+16221	Formula: Enchant Chest - Major Stamina	1			134327	Enchanting		275	9	8	
+16222	Formula: Enchant Shield - Superior Spirit	2			134327	Enchanting		280	9	8	
+16223	Formula: Enchant Weapon - Icy Chill	2			134327	Enchanting		285	9	8	
+16224	Formula: Enchant Cloak - Superior Defense	1			134327	Enchanting		285	9	8	
+16242	Formula: Enchant Chest - Major Intellect	2			134327	Enchanting		290	9	8	
+16243	Formula: Runed Arcanite Rod	1			134327	Enchanting		290	9	8	1
+16244	Formula: Enchant Gloves - Greater Strength	2			134327	Enchanting		295	9	8	
+16245	Formula: Enchant Boots - Greater Agility	2			134327	Enchanting		295	9	8	
+16246	Formula: Enchant Bracer - Superior Strength	2			134327	Enchanting		295	9	8	
+16247	Formula: Enchant 2H Weapon - Superior Impact	2			134327	Enchanting		295	9	8	
+16248	Formula: Enchant Weapon - Unholy Weapon	2			134327	Enchanting		295	9	8	
+16249	Formula: Enchant 2H Weapon - Major Intellect	2			134327	Enchanting		300	9	8	
+16250	Formula: Enchant Weapon - Superior Striking	2			134327	Enchanting		300	9	8	
+16251	Formula: Enchant Bracer - Superior Stamina	2			134327	Enchanting		300	9	8	
+16252	Formula: Enchant Weapon - Crusader	2			134327	Enchanting		300	9	8	
+16253	Formula: Enchant Chest - Greater Stats	2			134327	Enchanting		300	9	8	
+16254	Formula: Enchant Weapon - Lifestealing	3			134327	Enchanting		300	9	8	
+16255	Formula: Enchant 2H Weapon - Major Spirit	2			134327	Enchanting		300	9	8	
+17034	Maple Seed	1			133944				15	1	
+17035	Stranglethorn Seed	1			133944				15	1	
+17725	Formula: Enchant Weapon - Winter's Might	2			134327	Enchanting		190	9	8	
+18256	Imbued Vial	1			134867				7	11	
+18259	Formula: Enchant Weapon - Spell Power	3			134327	Enchanting		300	9	8	1
+18260	Formula: Enchant Weapon - Healing Power	3			134327	Enchanting		300	9	8	1
+18512	Larval Acid	1			134802				7	11	
+19444	Formula: Enchant Weapon - Strength	1			134327	Enchanting		290	9	8	1
+19445	Formula: Enchant Weapon - Agility	1			134327	Enchanting		290	9	8	1
+19446	Formula: Enchant Bracer - Mana Regeneration	1			134327	Enchanting		290	9	8	1
+19447	Formula: Enchant Bracer - Healing	1			134327	Enchanting		300	9	8	1
+19448	Formula: Enchant Weapon - Mighty Spirit	1			134327	Enchanting		300	9	8	1
+19449	Formula: Enchant Weapon - Mighty Intellect	1			134327	Enchanting		300	9	8	1
+20725	Nexus Crystal	4			132880	Enchanting			7	12	
+20726	Formula: Enchant Gloves - Threat	3			134327	Enchanting		300	9	8	1
+20727	Formula: Enchant Gloves - Shadow Power	3			134327	Enchanting		300	9	8	1
+20728	Formula: Enchant Gloves - Frost Power	3			134327	Enchanting		300	9	8	1
+20729	Formula: Enchant Gloves - Fire Power	3			134327	Enchanting		300	9	8	1
+20730	Formula: Enchant Gloves - Healing Power	3			134327	Enchanting		300	9	8	1
+20731	Formula: Enchant Gloves - Superior Agility	3			134327	Enchanting		300	9	8	1
+20732	Formula: Enchant Cloak - Greater Fire Resistance	1			134327	Enchanting		300	9	8	1
+20733	Formula: Enchant Cloak - Greater Nature Resistance	1			134327	Enchanting		300	9	8	1
+20734	Formula: Enchant Cloak - Stealth	3			134327	Enchanting		300	9	8	1
+20735	Formula: Enchant Cloak - Subtlety	3			134327	Enchanting		300	9	8	1
+20736	Formula: Enchant Cloak - Dodge	3			134327	Enchanting		300	9	8	1
+20744	Minor Wizard Oil	1	5		134711	Consumable				8	
+20745	Minor Mana Oil	1	20		134878	Consumable				8	
+20746	Lesser Wizard Oil	1	30		134725	Enchanting			7	12	
+20747	Lesser Mana Oil	1	40		134879	Enchanting			7	12	
+20748	Brilliant Mana Oil	1	45		134722	Consumable				8	
+20749	Brilliant Wizard Oil	1	45		134727	Consumable				8	
+20750	Wizard Oil	1	40		134726	Consumable				8	
+20752	Formula: Minor Mana Oil	1			134327	Enchanting		150	9	8	
+20753	Formula: Lesser Wizard Oil	1			134327	Enchanting		200	9	8	
+20754	Formula: Lesser Mana Oil	1			134327	Enchanting		250	9	8	
+20755	Formula: Wizard Oil	1			134327	Enchanting		275	9	8	
+20756	Formula: Brilliant Wizard Oil	1			134327	Enchanting		300	9	8	1
+20757	Formula: Brilliant Mana Oil	1			134327	Enchanting		300	9	8	1
+20758	Formula: Minor Wizard Oil	1			134327	Enchanting		5	9	8	
+22392	Formula: Enchant 2H Weapon - Agility	1			134327	Enchanting		290	9	8	1
+211848	Blackfathom Mana Oil	1			134879				7	11	
+215129	Formula: Enchant Weapon - Dismantle	4			134327	Enchanting		225	9	8	1
+215138	Formula: Enchant Chest - Retricutioner	4			134327	Enchanting		225	9	8	1
+215141	Enchanted Sigil: Innovation	4			134327	Enchanting		225	9	8	1
+217287	Greater Mystic Wand	2	30	26	135469	Ranged (Wands)	Speed 2.00, Spell Power		2	19	2
+217308	Enchanted Sigil: Innovation	2	40		254884	Consumable		225		8	1
+220606	Idol of the Dream	3	55	28	134912	Relic			4	8	1
+220792	Scroll of Spatial Mending	2	1		134945	Consumable				8	
+221028	Sigil of Living Dreams	1			254882	Consumable				8	
+223163	Formula: Scroll of Spatial Mending	2			134327	Enchanting		120	9	8	3
+228175	Libram of Holy Alacrity	3	55	28	134916	Relic			4	7	1
+228176	Totem of Thunder	3	60	28	134920	Relic			4	9	1
+228978	Enchanted Sigil: Flowing Waters	3	60		254883	Consumable		290		8	1
+228979	Enchanted Sigil: Flowing Waters	4			134327	Enchanting		290	9	8	1
+228980	Conductive Shield Coating	1	40		134722					15	
+228981	Formula: Conductive Shield Coating	1			134327	Enchanting		275	9	8	1
+228982	Formula: Enchant Shield - Law of Nature	3			134327	Enchanting		300	9	8	1
+229008	Formula: Enchant Cloak - Greater Fire Resistance	1			134327	Enchanting		300	9	8	1
+229009	Formula: Enchant Cloak - Greater Nature Resistance	1			134327	Enchanting		300	9	8	1
+232610	Formula: Magnificent Trollshine	1			134327	Enchanting		300	9	8	1
+232611	Magnificent Trollshine	1	45		134876					15	
+233990	Speedstone	1		12	294481	Trinket			4		
+233991	Tear of the Dreamer	1		12	237004	Trinket			4		
+233992	Lodestone of Retaliation	1		12	135234	Trinket			4		
+233993	Enchanted Stopwatch	1		12	134377	Trinket			4		
+233994	Ruby-Encrusted Broach	1		12	133302	Trinket			4		
+233995	Scroll: Wrath of the Swarm	1			237449	Consumable				8	
+233996	Enchanted Repellent	1			134723					15	
+234000	Enchanted Prayer Tome	1		28	134917	Relic			4	7	
+234001	Enchanted Totem	1		28	134918	Relic			4	9	
+234002	Enchanted Mushroom	1		28	132371	Relic			4	8	
+234003		1			237047	Metal & Stone			7	7	
+234004		1			135254	Metal & Stone			7	7	
+234005		1			133592	Parts			7	1	
+234006		1			134262	Leather			7	6	
+234007		1			134260	Leather			7	6	
+234008		1			132901	Cloth			7	5	
+234010		1			237414				7	11	
+234011		1			132106				7	11	
+234012	Hive Thistle	1			134439	Herb			7	9	
+234468	Idol of Ursin Power	1		28	134912	Relic			4	8	
+234469	Idol of Feline Ferocity	1		28	134912	Relic			4	8	
+234474	Idol of Sidereal Wrath	1		28	134914	Relic			4	8	
+234475	Libram of the Exorcist	1		28	134917	Relic			4	7	
+234476	Libram of Sanctity	1		28	134915	Relic			4	7	
+234477	Libram of Righteousness	1		28	134916	Relic			4	7	
+234478	Totem of Thunderous Strikes	1		28	134919	Relic			4	9	
+234479	Totem of Flowing Magma	1		28	134919	Relic			4	9	
+234480	Totem of Pyroclastic Thunder	1		28	134920	Relic			4	9	
+241191	Formula: Enchant Weapon - Grand Crusader	3			134327	Enchanting		280	9	8	1
+241195	Formula: Enchant 2H Weapon - Grand Arcanist	3			134327	Enchanting		280	9	8	1
+241201	Formula: Enchant Weapon - Grand Sorcerer	3			134327	Enchanting		280	9	8	1
+242361	Formula: Enchant 2H Weapon - Grand Inquisitor	3			134327	Enchanting		280	9	8	1
+247786	Mote of Magic	1			132841	Enchanting			7	12	
+247789	Novice's Practice Wand	1	1	26	135645	Ranged (Wands)	Speed 1.50		2	19	2
+248819	Fel Crystal	2			463889				7	11	
+248820	Torbernite	2			237222				7	11	
+248822	Death Lotus	2			5976935	Herb			7	9	
+249144	Twisted Nether Wand	2	37	26	135465	Ranged (Wands)	Speed 1.50, Spell Power		2	19	2
+249232	Lesser Eternal Wand	2	49	26	135467	Ranged (Wands)	Speed 2.00, Spell Power		2	19	2
+249234	Dreambough Wand	2	43	26	135466	Ranged (Wands)	Speed 1.80, Spell Power		2	19	2
+249237	Greater Eternal Wand	2	55	26	135475	Ranged (Wands)	Speed 1.50, Spell Power		2	19	2
+249274	Stranglevine	2			1387617	Herb			7	9	
+249385	Brilliant Wand	3	55	26	135469	Ranged (Wands)	Speed 1.20, Intellect, Spell Power		2	19	1
+249391	Pyrite	2			961627	Metal & Stone			7	7	
+249392	Glimmering Staff	3	25	17	135156	Two-Hand (Staves)	Speed 2.20, Intellect, Stamina		2	10	1
+249393	Soulstaff	3	25	17	135168	Two-Hand (Staves)	Speed 1.80, Stamina, Spirit		2	10	1
+249394	Orb of Mystic Insight	3	25	23	1769010	Held In Off-hand	Intellect, Spell Power		4		1
+249395	Orb of Souls	3	25	23	134336	Held In Off-hand	Spirit, Healing, Spell Damage		4		1
+249396	Mystic Mushroom	3	20	28	134532	Relic			4	8	1
+249397	Tenets of the Silver Hand	3	20	28	133745	Relic			4	7	1
+249398	Polished Driftwood Icon	3	20	28	310733	Relic			4	9	1
+249399	Frilled Lichen	2			133963	Herb			7	9	
+249409	Cerulean Dye	2			1021860				7	11	
+249410	Sulfuric Acid	2			136240				7	11	
+249424	Rosecap	2			134222	Herb			7	9	
+249425	Bauxite	2			876372	Metal & Stone			7	7	
+249430	Magenta Dye	2			237071				7	11	
+249431	Viridian Dye	2			237062				7	11	
+249432	Sandpaper	2			237132	Parts			7	1	
+249441	Talons of Wrath	3	40	28	136063	Relic			4	8	1
+249442	Libram of Invocation	3	40	28	134916	Relic			4	7	1
+249443	Totem of Ancestral Protection	3	40	28	134919	Relic			4	9	1
+249453	Radiant Staff	3	45	17	135150	Two-Hand (Staves)	Speed 2.40, Intellect, Stamina		2	10	1
+249454	Dreamstaff	3	45	17	135151	Two-Hand (Staves)	Speed 2.40, Spirit, Stamina		2	10	1
+249455	Truesilver Conduit	3	45	23	134922	Held In Off-hand	Intellect, Stamina, Spell Power		4		1
+249456	Twisting Essence Jar	3	45	23	4638472	Held In Off-hand	Spirit, Stamina, Healing, Spell Damage		4		1
+249469	Frozen Heart of the Mountain	3	50	12	134131	Trinket	Hit Rating		4		1
+249470	Molten Heart of the Mountain	3	50	12	134128	Trinket			4		1
+249473	Dormant Heart of the Mountain	3	50	12	134094	Trinket			4		1
+249474	Formula: Enchant Bracer - Minor Intellect	2			134327	Enchanting		70	9	8	1
+249475	Formula: Enchant Bracer - Minor Healing Power	2			134327	Enchanting		90	9	8	1
+249476	Formula: Mystic Mushroom	3			134327	Enchanting		130	9	8	1
+249477	Formula: Tenets of the Silver Hand	3			134327	Enchanting		130	9	8	1
+249478	Formula: Polished Driftwood Icon	3			134327	Enchanting		130	9	8	1
+249479	Formula: Enchant Weapon - Insight	2			134327	Enchanting		140	9	8	1
+249480	Formula: Enchant Weapon - Recovery	2			134327	Enchanting		140	9	8	1
+249481	Formula: Enchant Weapon - Revelation	2			134327	Enchanting		140	9	8	1
+249482	Formula: Glimmering Staff	3			134327	Enchanting		140	9	8	1
+249483	Formula: Soulstaff	3			134327	Enchanting		140	9	8	1
+249484	Formula: Orb of Mystic Insight	3			134327	Enchanting		140	9	8	1
+249485	Formula: Orb of Souls	3			134327	Enchanting		140	9	8	1
+249486	Formula: Enchant Bracer - Lesser Agility	2			134327	Enchanting		140	9	8	1
+249487	Formula: Twisted Nether Wand	2			134327	Enchanting		185	9	8	1
+249488	Formula: Enchant Bracer - Agility	2			134327	Enchanting		190	9	8	1
+249489	Formula: Enchant Bracer - Lesser Healing Power	2			134327	Enchanting		205	9	8	1
+249493	Formula: Talons of Wrath	3			134327	Enchanting		210	9	8	1
+249494	Formula: Libram of Invocation	3			134327	Enchanting		210	9	8	1
+249495	Formula: Totem of Ancestral Protection	3			134327	Enchanting		210	9	8	1
+249496	Formula: Enchant Necklace - Strength	2			134327	Enchanting		210	9	8	1
+249502	Formula: Enchant Necklace - Spell Power	2			134327	Enchanting		210	9	8	1
+249503	Formula: Enchant Necklace - Healing Power	2			134327	Enchanting		210	9	8	1
+249504	Formula: Enchant Necklace - Agility	2			134327	Enchanting		210	9	8	1
+249505	Formula: Enchant Necklace - Deflection	2			134327	Enchanting		210	9	8	1
+249506	Formula: Radiant Staff	3			134327	Enchanting		220	9	8	1
+249507	Formula: Dreamstaff	3			134327	Enchanting		220	9	8	1
+249508	Formula: Truesilver Conduit	3			134327	Enchanting		220	9	8	1
+249509	Formula: Twisting Essence Jar	3			134327	Enchanting		220	9	8	1
+249510	Formula: Enchant Chest - Absorption	2			134327	Enchanting		220	9	8	1
+249511	Formula: Enchant 2H Weapon - Lesser Agility	2			134327	Enchanting		210	9	8	1
+249512	Formula: Dreambough Wand	2			134327	Enchanting		215	9	8	1
+249513	Formula: Enchant 2H Weapon - Lesser Strength	2			134327	Enchanting		220	9	8	1
+249514	Formula: Enchant Bracer - Greater Agility	2			134327	Enchanting		240	9	8	1
+249515	Formula: Lesser Eternal Wand	2			134327	Enchanting		245	9	8	1
+249516	Formula: Enchant Gloves - Advanced Skinning	2			134327	Enchanting		250	9	8	1
+249519	Formula: Frozen Heart of the Mountain	3			134327	Enchanting		265	9	8	1
+249520	Formula: Molten Heart of the Mountain	3			134327	Enchanting		265	9	8	1
+249521	Formula: Dormant Heart of the Mountain	3			134327	Enchanting		265	9	8	1
+249522	Formula: Greater Eternal Wand	2			134327	Enchanting		275	9	8	1
+249523	Formula: Enchant 2H Weapon - Strength	2			134327	Enchanting		290	9	8	1
+249524	Formula: Enchant Bracer - Superior Agility	2			134327	Enchanting		295	9	8	1
+249525	Formula: Enchant 2H Weapon - Mighty Spell Power	2			134327	Enchanting		300	9	8	1
+249526	Formula: Enchant 2H Weapon - Mighty Healing Power	2			134327	Enchanting		300	9	8	1
+249529	Formula: Idol of the Dream	3			134327	Enchanting		300	9	8	1
+249530	Formula: Libram of Holy Alacrity	3			134327	Enchanting		300	9	8	1
+249532	Formula: Totem of Thunder	3			134327	Enchanting		300	9	8	1
+249534	Formula: Enchant Gloves - Arcane Power	2			134327	Enchanting		300	9	8	1
+249535	Formula: Enchant Gloves - Natural Power	2			134327	Enchanting		300	9	8	1
+249536	Formula: Enchant Gloves - Holy Power	2			134327	Enchanting		300	9	8	1
+249537	Formula: Brilliant Wand	3			134327	Enchanting		275	9	8	1
+249538	Formula: Enchant Bracer - Superior Intellect	2			134327	Enchanting		300	9	8	1
+249539	Formula: Enchant Bracer - Superior Deflection	2			134327	Enchanting		300	9	8	1
+249726	Azerothium Bar	2			612100	Metal & Stone			7	7	
+273103	Blueprint: Arcane Salvager	2			1001491	Enchanting		140	9	8	
+273116	Blueprint: Arcane Forge	2			1001491	Enchanting		300	9	8	
+273128	Maker's Spark	2			237016				15	1	
+274030	Malleable Essence of Nature	4	1		132119	Enchanting			7	12	
+274391	Formula: Enchant Off Hand - Superior Intellect	3	1		237020	Enchanting		300	9	8	1
+274392	Formula: Enchant Off Hand - Excellent Spirit	3	1		237020	Enchanting		300	9	8	1
+274393	Formula: Enchant Off Hand - Wisdom	3	1		237020	Enchanting		300	9	8	1
+274394	Formula: Enchant 2H Weapon - Spellblasting	3	1		237020	Enchanting		300	9	8	1
+274395	Formula: Enchant Shield - Excellent Stamina	3	1		237020	Enchanting		300	9	8	1
+274398	Formula: Enchant Gloves - Superior Strength	3	1		237020	Enchanting		300	9	8	1
+274399	Formula: Enchant Cloak - Agility	3	1		237020	Enchanting		300	9	8	1
+274400	Formula: Enchant Shield - Critical Strike	3	1		237020	Enchanting		300	9	8	1
+274401	Formula: Enchant Bracer - Greater Spellpower	3	1		237020	Enchanting		300	9	8	1
+274424	Formula: Enchant Gloves - Lotus Claw	2			134327	Enchanting		295	9	8	1
+279246	Torch of Light	4	60	26	135432	Ranged (Wands)	Speed 1.70, Healing, Spell Damage, Spirit		2	19	2
+279247	Steadfast Libram	4	60	28	134915	Relic			4	7	2
+279248	Libram of Infusion	4	60	28	133745	Relic			4	7	2
+279249	Totem of Urgency	4	60	28	5927655	Relic			4	9	2
+279250	Idol of Swiftness	4	60	28	236162	Relic			4	8	2
+279251	Idol of the Ursine Twins	4	60	28	134233	Relic			4	8	2
+279295	Formula: Torch of Light	4			134942	Enchanting		300	9	8	1
+279296	Formula: Steadfast Libram	4			134942	Enchanting		300	9	8	1
+279297	Formula: Libram of Infusion	4			134942	Enchanting		300	9	8	1
+279298	Formula: Totem of Urgency	4			134942	Enchanting		300	9	8	1
+279299	Formula: Idol of Swiftness	4			134942	Enchanting		300	9	8	1
+279300	Formula: Idol of the Ursine Twins	4			134942	Enchanting		300	9	8	1
+279976	Enchanted Lute	1			4631367	Consumable		20		8	
+279985	Arcane Salvager	1			986482	Consumable		140		8	
+279987	Arcane Forge	1			3622205	Consumable		300		8	
+289560	Formula: Enchant Boots - Speed	2			134327	Enchanting		280	9	8	]],
         },
         {
             name = "Engineering", skill = 202, count = 275,
@@ -3078,587 +3078,587 @@ ns.Data = {
 1214145	Obsidian Shotgun	320	320,330,340	234434,1,1	12360:30;234003:8;20725:3;20868:3;20870:3;20881:2	0	1	
 26011	Tranquil Mechanical Yeti	320	320,330,340	21277,1,1	15407:1;15994:4;7079:2;18631:2;10558:1	0	1	]],
             items = [[
-159	Refreshing Spring Water	1	1		132794	Food & Drink				5
-774	Malachite	2			134106				7	11
-814	Flask of Oil	1			132794	Parts			7	1
-818	Tigerseye	2			134118				7	11
-1206	Moss Agate	2			134105				7	11
-1210	Shadowgem	2			134074				7	11
-1529	Jade	2			134134				7	11
-1705	Lesser Moonstone	2			134087				7	11
-2318	Light Leather	1			134252	Leather			7	6
-2319	Medium Leather	1			134254	Leather			7	6
-2570	Linen Cloak	1	1	16	133766	Back (Cloth)			4	1
-2589	Linen Cloth	1			132889	Cloth			7	5
-2592	Wool Cloth	1			132911	Cloth			7	5
-2835	Rough Stone	1			135232	Metal & Stone			7	7
-2836	Coarse Stone	1			135235	Metal & Stone			7	7
-2838	Heavy Stone	1			135238	Metal & Stone			7	7
-2840	Copper Bar	1			133216	Metal & Stone			7	7
-2841	Bronze Bar	1			133227	Metal & Stone			7	7
-2842	Silver Bar	2			133215	Metal & Stone			7	7
-2880	Weak Flux	1			133588				7	11
-2996	Bolt of Linen Cloth	1			132890	Cloth			7	5
-3030	Razor Arrow	1	25	24	132382	Projectile (Arrow)			6	2
-3575	Iron Bar	1			133232	Metal & Stone			7	7
-3577	Gold Bar	2			133217	Metal & Stone			7	7
-3829	Frost Oil	1	30		134800	Consumable				8
-3859	Steel Bar	1			133234	Metal & Stone			7	7
-3860	Mithril Bar	1			133220	Metal & Stone			7	7
-3864	Citrine	2			134117				7	11
-4234	Heavy Leather	1			134256	Leather			7	6
-4304	Thick Leather	1			134257	Leather			7	6
-4305	Bolt of Silk Cloth	1			132907	Cloth			7	5
-4306	Silk Cloth	1			132905	Cloth			7	5
-4337	Thick Spider's Silk	1			136113	Cloth			7	5
-4338	Mageweave Cloth	1			132892	Cloth			7	5
-4339	Bolt of Mageweave	1			132894	Cloth			7	5
-4357	Rough Blasting Powder	1			133848	Parts			7	1
-4358	Rough Dynamite	1			133714			1		
-4359	Handful of Copper Bolts	1			134068	Parts			7	1
-4360	Rough Copper Bomb	1			133717			30		
-4361	Copper Tube	1			133025	Parts			7	1
-4362	Rough Boomstick	2	5	26	135612	Ranged (Guns)	Speed 2.30, Stamina		2	3
-4363	Copper Modulator	1			132997	Parts			7	1
-4364	Coarse Blasting Powder	1			133849	Parts			7	1
-4365	Coarse Dynamite	1			133714			75		
-4366	Target Dummy	1			132766			85		14
-4367	Small Seaforium Charge	1			134514			100		
-4368	Flying Tiger Goggles	2		1	133149	Head (Cloth)	Stamina, Spirit	100	4	1
-4369	Deadly Blunderbuss	2	16	26	135616	Ranged (Guns)	Speed 2.60, Agility		2	3
-4370	Large Copper Bomb	1			133709			105		
-4371	Bronze Tube	1			133024	Parts			7	1
-4372	Lovingly Crafted Boomstick	2	19	26	135616	Ranged (Guns)	Speed 1.80, Spirit		2	3
-4373	Shadow Goggles	2		1	133149	Head (Cloth)	Spirit, Intellect	120	4	1
-4374	Small Bronze Bomb	1			133717			120		
-4375	Whirring Bronze Gizmo	1			132996	Parts			7	1
-4376	Flame Deflector	1	15		132995					14
-4377	Heavy Blasting Powder	1			133853	Parts			7	1
-4378	Heavy Dynamite	1			133714			125		
-4379	Silver-plated Shotgun	2	21	26	135616	Ranged (Guns)	Speed 2.70, Stamina		2	3
-4380	Big Bronze Bomb	1			133713			140		
-4381	Minor Recombobulator	2		12	133001	Trinket		140	4	
-4382	Bronze Framework	1			133006	Parts			7	1
-4383	Moonsight Rifle	2	24	26	135615	Ranged (Guns)	Speed 1.70, Hit Rating		2	3
-4384	Explosive Sheep	1			136071			150		
-4385	Green Tinted Goggles	2		1	133149	Head (Cloth)	Stamina, Spirit	150	4	1
-4386	Ice Deflector	1	21		132995					14
-4387	Iron Strut	1			135128	Parts			7	1
-4388	Discombobulator Ray	1			134441			160		14
-4389	Gyrochronatom	1			134377	Parts			7	1
-4390	Iron Grenade	1			133716			175		
-4391	Compact Harvest Reaper Kit	1	30		133076			175		14
-4392	Advanced Target Dummy	1			132765			185		14
-4393	Craftsman's Monocle	2	32	1	133146	Head (Cloth)	Intellect	185	4	1
-4394	Big Iron Bomb	1			133709			190		
-4395	Goblin Land Mine	1			134954			195		
-4396	Mechanical Dragonling	1	30	12	134153	Trinket		200	4	
-4397	Gnomish Cloaking Device	1		12	132995	Trinket		200	4	
-4398	Large Seaforium Charge	1			134514			200		
-4399	Wooden Stock	1			133486	Parts			7	1
-4400	Heavy Stock	1			133486	Parts			7	1
-4401	Mechanical Squirrel Box	1			132761				15	2
-4402	Small Flame Sac	1			134343				7	11
-4403	Portable Bronze Mortar	1			134535			165		14
-4404	Silver Contact	1			133218	Parts			7	1
-4405	Crude Scope	1	5		134441					14
-4406	Standard Scope	1	10		134441					14
-4407	Accurate Scope	1	20		134441					14
-4408	Schematic: Mechanical Squirrel	2			134942	Engineering		75	9	3
-4409	Schematic: Small Seaforium Charge	2			134942	Engineering		100	9	3
-4410	Schematic: Shadow Goggles	2			134942	Engineering		120	9	3
-4411	Schematic: Flame Deflector	2			134939	Engineering		125	9	3
-4412	Schematic: Moonsight Rifle	2			134942	Engineering		145	9	3
-4413	Schematic: Discombobulator Ray	2			134942	Engineering		160	9	3
-4414	Schematic: Portable Bronze Mortar	2			134942	Engineering		165	9	3
-4415	Schematic: Craftsman's Monocle	3			134939	Engineering		185	9	3
-4416	Schematic: Goblin Land Mine	2			134942	Engineering		195	9	3
-4417	Schematic: Large Seaforium Charge	2			134942	Engineering		200	9	3
-4611	Blue Pearl	1			134564				7	11
-4852	Flash Bomb	1	27		133581					
-5507	Ornate Spyglass	1			134440					14
-6037	Truesilver Bar	2			133222	Metal & Stone			7	7
-6219	Arclight Spanner	1		21	134520	Main Hand (Miscellaneous)	Speed 2.40	50	2	14
-6530	Nightcrawlers	1			134324	Consumable		50		8
-6533	Aquadynamic Fish Attractor	1			133982			100		14
-6672	Schematic: Flash Bomb	2			134942	Engineering		185	9	3
-6712	Practice Lock	1			132594				15	
-6714	Ez-Thro Dynamite	1	10		133714					
-6716	Schematic: EZ-Thro Dynamite	2			134942	Engineering		100	9	3
-7067	Elemental Earth	1			134572	Elemental			7	10
-7068	Elemental Fire	1			135805	Elemental			7	10
-7069	Elemental Air	1			136107	Elemental			7	10
-7075	Core of Earth	1			135231	Elemental			7	10
-7076	Essence of Earth	2			136102	Elemental			7	10
-7077	Heart of Fire	1			135819	Elemental			7	10
-7078	Essence of Fire	2			135830	Elemental			7	10
-7079	Globe of Water	1			134333	Elemental			7	10
-7080	Essence of Water	2			136007	Elemental			7	10
-7082	Essence of Air	2			136022	Elemental			7	10
-7148	Goblin Jumper Cables	1		12	133868	Trinket		165	4	
-7189	Goblin Rocket Boots	2		8	133029	Feet (Cloth)		225	4	1
-7191	Fused Wiring	1			134065	Parts			7	1
-7192	Schematic: Goblin Rocket Boots	2			134939	Engineering		130	9	3
-7387	Dusky Belt	2	34	6	132495	Waist (Leather)	Agility, Stamina		4	2
-7506	Gnomish Universal Remote	2		12	134376	Trinket		125	4	
-7560	Schematic: Gnomish Universal Remote	1			134939	Engineering		125	9	3
-7561	Schematic: Goblin Jumper Cables	1			134939	Engineering		165	9	3
-7742	Schematic: Gnomish Cloaking Device	1			134939	Engineering		200	9	3
-7909	Aquamarine	2			134088				7	11
-7910	Star Ruby	2			134129				7	11
-7912	Solid Stone	1			135236	Metal & Stone			7	7
-7972	Ichor of Undeath	1			134437	Elemental			7	10
-8067	Crafted Light Shot	1	5	24	132384	Projectile (Bullet)			6	3
-8068	Crafted Heavy Shot	1	15	24	132384	Projectile (Bullet)			6	3
-8069	Crafted Solid Shot	1	30	24	132384	Projectile (Bullet)			6	3
-8150	Deeprock Salt	1			133849	Leather			7	6
-8151	Flask of Mojo	1			134776				7	11
-8153	Wildvine	1			134183	Herb			7	9
-8170	Rugged Leather	1			134251	Leather			7	6
-9060	Inlaid Mithril Cylinder	1			134535	Parts			7	1
-9061	Goblin Rocket Fuel	1			132621	Parts			7	1
-9262	Black Vitriol	1			134133				7	11
-9312	Blue Firework	1			135989	Consumable				8
-9313	Green Firework	1			136006	Consumable				8
-9318	Red Firework	1			135808	Consumable				8
-10026	Black Mageweave Boots	2	41	8	132539	Feet (Cloth)	Spell Power, Intellect		4	1
-10285	Shadow Silk	1			136113	Cloth			7	5
-10286	Heart of the Wild	1			134188	Elemental			7	10
-10498	Gyromatic Micro-Adjustor	1	1		134429	Parts			7	1
-10499	Bright-Eye Goggles	2		1	133149	Head (Cloth)	Spirit, Stamina	175	4	1
-10500	Fire Goggles	2		1	133149	Head (Cloth)		205	4	1
-10501	Catseye Ultra Goggles	2		1	133149	Head (Cloth)		220	4	1
-10502	Spellpower Goggles Xtreme	2		1	133149	Head (Cloth)	Spell Power	215	4	1
-10503	Rose Colored Goggles	2		1	133149	Head (Cloth)	Spirit, Intellect	230	4	1
-10504	Green Lens	3		1	133146	Head (Cloth)	Stamina	245	4	1
-10505	Solid Blasting Powder	1			134380	Parts			7	1
-10506	Deepdive Helmet	2		1	133151	Head (Cloth)	Stamina	230	4	1
-10507	Solid Dynamite	1			133714			175		
-10508	Mithril Blunderbuss	2	36	26	135616	Ranged (Guns)	Speed 2.90, Agility		2	3
-10510	Mithril Heavy-bore Rifle	2	39	26	135616	Ranged (Guns)	Speed 2.90, Ranged Attack Power		2	3
-10512	Hi-Impact Mithril Slugs	2	37	24	132383	Projectile (Bullet)			6	3
-10513	Mithril Gyro-Shot	2	44	24	132383	Projectile (Bullet)			6	3
-10514	Mithril Frag Bomb	1			133710			205		
-10518	Parachute Cloak	2		16	133763	Back (Cloth)	Agility	225	4	1
-10542	Goblin Mining Helmet	2		1	133127	Head (Mail)	Stamina	205	4	3
-10543	Goblin Construction Helmet	2		1	133162	Head (Cloth)		205	4	1
-10545	Gnomish Goggles	2		1	133149	Head (Cloth)	Agility, Stamina, Spirit	210	4	1
-10546	Deadly Scope	1	30		134441					14
-10548	Sniper Scope	1	40		134441					14
-10558	Gold Power Core	1			132489	Parts			7	1
-10559	Mithril Tube	1			134535	Parts			7	1
-10560	Unstable Trigger	1			132488	Parts			7	1
-10561	Mithril Casing	1			133021	Parts			7	1
-10562	Hi-Explosive Bomb	1			133715			235		
-10576	Mithril Mechanical Dragonling	1	40	12	134153	Trinket		250	4	
-10577	Goblin Mortar	1		12	134535	Trinket		205	4	
-10579	Explosive Arrow	3	37	24	132382	Projectile (Arrow)			6	2
-10580	Goblin "Boom" Box	1			132594					
-10585	Goblin Radio	1		12	135899	Trinket			4	
-10586	The Big One	1			133712			225		
-10587	Goblin Bomb Dispenser	1		12	133000	Trinket		230	4	
-10588	Goblin Rocket Helmet	2		1	133151	Head (Cloth)	Stamina	235	4	1
-10592	Catseye Draught	1	30		134816	Elixir				2
-10601	Schematic: Bright-Eye Goggles	2			134942	Engineering		175	9	3
-10602	Schematic: Deadly Scope	1			134939	Engineering		210	9	3
-10603	Schematic: Catseye Ultra Goggles	2			134942	Engineering		220	9	3
-10604	Schematic: Mithril Heavy-bore Rifle	2			134942	Engineering		220	9	3
-10605	Schematic: Spellpower Goggles Xtreme	3			134939	Engineering		225	9	3
-10606	Schematic: Parachute Cloak	2			134942	Engineering		225	9	3
-10607	Schematic: Deepdive Helmet	1			134939	Engineering		230	9	3
-10608	Schematic: Sniper Scope	3			134939	Engineering		240	9	3
-10609	Schematic: Mithril Mechanical Dragonling	1			134939	Engineering		250	9	3
-10644	Recipe: Goblin Rocket Fuel	1			134939	Alchemy		210	9	6
-10645	Gnomish Death Ray	1		12	133002	Trinket		240	4	
-10646	Goblin Sapper Charge	1			135826			205		
-10647	Engineer's Ink	1			134845	Parts			7	1
-10648	Blank Parchment	1			134328				7	11
-10713	Plans: Inlaid Mithril Cylinder	1			134941	Blacksmithing		200	9	4
-10716	Gnomish Shrink Ray	1		12	133003	Trinket		205	4	
-10719	Mobile Alarm	1			132761			205		14
-10720	Gnomish Net-o-Matic Projector	1		12	134325	Trinket		210	4	
-10721	Gnomish Harm Prevention Belt	2		6	132495	Waist (Leather)	Stamina	215	4	2
-10723	Gnomish Ham Radio	1		12	135899	Trinket			4	
-10724	Gnomish Rocket Boots	2		8	132536	Feet (Cloth)		225	4	1
-10725	Gnomish Battle Chicken	1		12	135996	Trinket		230	4	
-10726	Gnomish Mind Control Cap	2		1	133151	Head (Cloth)	Spirit	215	4	1
-10727	Goblin Dragon Gun	1		12	135812	Trinket		240	4	
-11175	Greater Nether Essence	2			132870	Enchanting			7	12
-11371	Dark Iron Bar	1			133233	Metal & Stone			7	7
-11590	Mechanical Repair Kit	1			132997			200		14
-11825	Pet Bombling	1			133712					14
-11826	Lil' Smoky	1			2915723					14
-11827	Schematic: Lil' Smoky	2			134942	Engineering		205	9	3
-11828	Schematic: Pet Bombling	2			134942	Engineering		205	9	3
-12359	Thorium Bar	1			133221	Metal & Stone			7	7
-12360	Arcanite Bar	2			134459	Metal & Stone			7	7
-12361	Blue Sapphire	2			134132				7	11
-12363	Arcane Crystal	2			134135				7	11
-12364	Huge Emerald	2			134104				7	11
-12365	Dense Stone	1			134461	Metal & Stone			7	7
-12655	Enchanted Thorium Bar	1			133229	Metal & Stone			7	7
-12799	Large Opal	2			134116				7	11
-12800	Azerothian Diamond	2			134094				7	11
-12803	Living Essence	2			136006	Elemental			7	10
-12804	Powerful Mojo	1			136011				7	11
-12808	Essence of Undeath	2			136195	Elemental			7	10
-12810	Enchanted Leather	1			134418	Leather			7	6
-12811	Righteous Orb	2			134122				7	11
-13308	Schematic: Ice Deflector	1			134939	Engineering		155	9	3
-13309	Schematic: Lovingly Crafted Boomstick	1			134939	Engineering		120	9	3
-13310	Schematic: Accurate Scope	1			134939	Engineering		180	9	3
-13311	Schematic: Mechanical Dragonling	1			134939	Engineering		200	9	3
-13467	Icecap	1			134212	Herb			7	9
-14047	Runecloth	1			132903	Cloth			7	5
-14227	Ironweb Spider Silk	1			136113	Cloth			7	5
-14344	Large Brilliant Shard	3			132873	Enchanting			7	12
-14639	Schematic: Minor Recombobulator	1			134939	Engineering		140	9	3
-15407	Cured Rugged Hide	1			134355	Leather			7	6
-15846	Salt Shaker	1			132836			250		14
-15992	Dense Blasting Powder	1			133587	Parts			7	1
-15993	Thorium Grenade	1			133716			260		
-15994	Thorium Widget	1			132998	Parts			7	1
-15995	Thorium Rifle	2	47	26	135616	Ranged (Guns)	Speed 2.50, Ranged Attack Power		2	3
-15996	Lifelike Mechanical Toad	1			134301				15	2
-15997	Thorium Shells	2	52	24	132385	Projectile (Bullet)			6	3
-15999	Spellpower Goggles Xtreme Plus	2		1	133149	Head (Cloth)	Spell Power	270	4	1
-16000	Thorium Tube	1			133027	Parts			7	1
-16004	Dark Iron Rifle	3	50	26	135617	Ranged (Guns)	Speed 2.70		2	3
-16005	Dark Iron Bomb	1			133713			285		
-16006	Delicate Arcanite Converter	1			133001	Parts			7	1
-16007	Flawless Arcanite Rifle	3	56	26	135612	Ranged (Guns)	Speed 3.00, Stamina, Ranged Attack Power		2	3
-16008	Master Engineer's Goggles	2		1	133149	Head (Cloth)	Spirit, Stamina	280	4	1
-16009	Voice Amplification Modulator	2		2	133282	Neck			4	
-16022	Arcanite Dragonling	3	50	12	134153	Trinket		300	4	
-16023	Masterwork Target Dummy	1			132762			275		14
-16040	Arcane Bomb	1			136173			300		
-16041	Schematic: Thorium Grenade	1			134939	Engineering		260	9	3
-16042	Schematic: Thorium Widget	1			134939	Engineering		260	9	3
-16043	Schematic: Thorium Rifle	2			134942	Engineering		260	9	3
-16044	Schematic: Lifelike Mechanical Toad	2			134942	Engineering		265	9	3
-16045	Schematic: Spellpower Goggles Xtreme Plus	2			134942	Engineering		270	9	3
-16046	Schematic: Masterwork Target Dummy	1			134939	Engineering		275	9	3
-16047	Schematic: Thorium Tube	1			134939	Engineering		275	9	3
-16048	Schematic: Dark Iron Rifle	2			134942	Engineering		275	9	3
-16049	Schematic: Dark Iron Bomb	2			134942	Engineering		285	9	3
-16050	Schematic: Delicate Arcanite Converter	1			134939	Engineering		285	9	3
-16051	Schematic: Thorium Shells	2			134942	Engineering		285	9	3
-16052	Schematic: Voice Amplification Modulator	2			134942	Engineering		290	9	3
-16053	Schematic: Master Engineer's Goggles	2			134942	Engineering		290	9	3
-16054	Schematic: Arcanite Dragonling	2			134942	Engineering		300	9	3
-16055	Schematic: Arcane Bomb	2			134942	Engineering		300	9	3
-16056	Schematic: Flawless Arcanite Rifle	2			134942	Engineering		300	9	3
-16203	Greater Eternal Essence	2			132864	Enchanting			7	12
-16204	Illusion Dust	1			132856	Enchanting			7	12
-16583	Demonic Figurine	1			134337				15	1
-17010	Fiery Core	3			135812				7	11
-17011	Lava Core	3			136025				7	11
-17056	Light Feather	1			132917				15	1
-17202	Snowball	1			132387				15	3
-17716	Snowmaster 9000	1			135863			190		14
-17720	Schematic: Snowmaster 9000	2			134942	Engineering		190	9	3
-18168	Force Reactive Disk	4	60	14	135741	Off Hand (Shield)	Stamina, Bonus Armor	300	4	6
-18232	Field Repair Bot 74A	1			132836			300		14
-18235	Schematic: Field Repair Bot 74A	1			134939	Engineering		300	9	3
-18282	Core Marksman Rifle	4	60	26	135614	Ranged (Guns)	Speed 2.50, Ranged Attack Power, Hit Rating		2	3
-18283	Biznicks 247x128 Accurascope	3	50		134441					14
-18290	Schematic: Biznicks 247x128 Accurascope	3			134941	Engineering		300	9	3
-18291	Schematic: Force Reactive Disk	3			134941	Engineering		300	9	3
-18292	Schematic: Core Marksman Rifle	3			134941	Engineering		300	9	3
-18587	Goblin Jumper Cables XL	1		12	133869	Trinket		265	4	
-18588	Ez-Thro Dynamite II	1	30		133711					
-18594	Powerful Seaforium Charge	1			136152			275		
-18631	Truesilver Transformer	1			135155	Parts			7	1
-18634	Gyrofreeze Ice Reflector	3	47	12	133860	Trinket		260	4	
-18637	Major Recombobulator	2		12	133867	Trinket		275	4	
-18638	Hyper-Radiant Flame Reflector	3	53	12	133862	Trinket		290	4	
-18639	Ultra-Flash Shadow Reflector	3	55	12	133874	Trinket		300	4	
-18641	Dense Dynamite	1			133714			250		
-18645	Gnomish Alarm-O-Bot	1			133871			265		14
-18647	Schematic: Red Firework	1			134939	Engineering		150	9	3
-18648	Schematic: Green Firework	1			134939	Engineering		150	9	3
-18649	Schematic: Blue Firework	1			134939	Engineering		150	9	3
-18650	Schematic: EZ-Thro Dynamite II	1			134939	Engineering		200	9	3
-18651	Schematic: Truesilver Transformer	1			134939	Engineering		260	9	3
-18652	Schematic: Gyrofreeze Ice Reflector	1			134939	Engineering		260	9	3
-18653	Schematic: Goblin Jumper Cables XL	2			134942	Engineering		265	9	3
-18654	Schematic: Gnomish Alarm-O-Bot	2			134942	Engineering		265	9	3
-18655	Schematic: Major Recombobulator	2			134942	Engineering		275	9	3
-18656	Schematic: Powerful Seaforium Charge	1			134939	Engineering		275	9	3
-18657	Schematic: Hyper-Radiant Flame Reflector	2			134942	Engineering		290	9	3
-18658	Schematic: Ultra-Flash Shadow Reflector	2			134942	Engineering		300	9	3
-18660	World Enlarger	2			133866			250		14
-18661	Schematic: World Enlarger	2			134942	Engineering		260	9	3
-18984	Dimensional Ripper - Everlook	2			133865			260	15	4
-18986	Ultrasafe Transporter: Gadgetzan	2			133870			260	15	4
-19026	Snake Burst Firework	1			135920	Consumable				8
-19027	Schematic: Snake Burst Firework	1			134939	Engineering		250	9	3
-19726	Bloodvine	2			134189	Herb			7	9
-19774	Souldarite	2			134071				7	11
-19998	Bloodvine Lens	3	60	1	133146	Head (Leather)	Stamina, Critical Strike Rating	300	4	2
-19999	Bloodvine Goggles	3	60	1	133149	Head (Cloth)	Hit Rating, Critical Strike Rating, Mana every 5 sec.	300	4	1
-20000	Schematic: Bloodvine Goggles	1			134939	Engineering		300	9	3
-20001	Schematic: Bloodvine Lens	1			134939	Engineering		300	9	3
-20725	Nexus Crystal	4			132880	Enchanting			7	12
-20868	Lambent Idol	3			134901				12	
-20870	Jasper Idol	3			134900				12	
-20881	Idol of Strife	3			134908				12	
-21277	Tranquil Mechanical Yeti	1			132189				15	2
-21557	Small Red Rocket	1			134285				15	3
-21558	Small Blue Rocket	1			134282				15	3
-21559	Small Green Rocket	1			134283				15	3
-21560	Small Purple Rocket	1			134284				15	3
-21561	Small White Rocket	1			134286				15	3
-21562	Small Yellow Rocket	1			134287				15	3
-21569	Firework Launcher	1			134538				15	3
-21570	Cluster Launcher	1			133861				15	3
-21571	Blue Rocket Cluster	1			134288				15	3
-21574	Green Rocket Cluster	1			134289				15	3
-21575	Purple Rocket Cluster	1			134290				15	3
-21576	Red Rocket Cluster	1			134291				15	3
-21577	White Rocket Cluster	1			134292				15	3
-21578	Yellow Rocket Cluster	1			134293				15	3
-21589	Large Blue Rocket	1			134270				15	3
-21590	Large Green Rocket	1			134271				15	3
-21591	Large Purple Rocket	1			134272				15	3
-21592	Large Red Rocket	1			134273				15	3
-21593	Large White Rocket	1			134274				15	3
-21595	Large Yellow Rocket	1			134275				15	3
-21714	Large Blue Rocket Cluster	1			134276				15	3
-21716	Large Green Rocket Cluster	1			134277				15	3
-21717	Large Purple Rocket Cluster	1			134278				15	3
-21718	Large Red Rocket Cluster	1			134279				15	3
-21719	Large White Rocket Cluster	1			134280				15	3
-21720	Large Yellow Rocket Cluster	1			134281				15	3
-21724	Schematic: Small Blue Rocket	2			134939	Engineering		125	9	3
-21725	Schematic: Small Green Rocket	2			134939	Engineering		125	9	3
-21726	Schematic: Small Red Rocket	2			134939	Engineering		125	9	3
-21727	Schematic: Large Blue Rocket	2			134939	Engineering		175	9	3
-21728	Schematic: Large Green Rocket	2			134939	Engineering		175	9	3
-21729	Schematic: Large Red Rocket	2			134939	Engineering		175	9	3
-21730	Schematic: Blue Rocket Cluster	2			134939	Engineering		225	9	3
-21731	Schematic: Green Rocket Cluster	2			134939	Engineering		225	9	3
-21732	Schematic: Red Rocket Cluster	2			134939	Engineering		225	9	3
-21733	Schematic: Large Blue Rocket Cluster	2			134939	Engineering		275	9	3
-21734	Schematic: Large Green Rocket Cluster	2			134939	Engineering		275	9	3
-21735	Schematic: Large Red Rocket Cluster	2			134939	Engineering		275	9	3
-21737	Schematic: Cluster Launcher	2			134940	Engineering		275	9	3
-21738	Schematic: Firework Launcher	2			134940	Engineering		225	9	3
-22202	Small Obsidian Shard	1			134455	Metal & Stone			7	7
-22728	Steam Tonk Controller	2			133878				15	4
-22729	Schematic: Steam Tonk Controller	1			134939	Engineering		275	9	3
-210147	Shredder Autosalvage Unit	1	1		133870	Consumable				8
-210178	Schematic: Shredder Autosalvage Unit	2			134939	Engineering		135	9	3
-211427	Soul Vessel	3			133254				12	
-212230	Schematic: Soul Vessel	3			134942	Engineering		205	9	3
-213369	Faintly Glowing Leather	3			237420	Leather			7	6
-213376	Low-Background Truesilver Plates	3			133022	Metal & Stone			7	7
-213379	Hyperconductive Arcano-Filament	3			237428	Cloth			7	5
-213381	Pile of Tarnished Gears	2			134067	Parts			7	1
-213383	Polished Truesilver Gears	3			305162	Parts			7	1
-213390	Whirling Truesilver Gearwall	1		14	236307	Off Hand (Shield)			4	6
-215115	Hyperconductive Goldwap	1		6	132521	Waist (Cloth)			4	1
-215127	High-Yield Radiation Bomb	1			133009	Explosives			7	2
-215153	Schematic: Whirling Truesilver Gearwall	4			134942	Blacksmithing		225	9	4
-215156	Schematic: Hyperconductive Goldwrap	4			134942	Engineering		225	9	3
-215168	Ez-Thro Radiation Bomb	1			133009	Explosives			7	2
-215429	Schematic: Polished Truesilver Gears	3			134942	Blacksmithing		200	9	4
-215430	Gnomeregan Fallout	1			134383	Parts			7	1
-215431	Schematic: High-Yield Radiation Bomb	4			134942	Blacksmithing		225	9	4
-215432	Schematic: Ez-Thro Radiation Bomb	4			134942	Blacksmithing		225	9	4
-220688		1			135084				5	
-220689		1		9	133878	Wrist (Cloth)			4	1
-221021		1			134217				7	11
-221025	Void-Powered Invoker's Vambraces	1		9	133878	Wrist (Cloth)			4	1
-221026	Void-Powered Slayer's Vambraces	1		9	133878	Wrist (Leather)			4	2
-221027	Void-Powered Protector's Vambraces	1		9	133878	Wrist (Plate)			4	4
-221336	Schematic: Goblin Mining Helmet	2			134942	Engineering		205	9	3
-227849	Fiery Core Sharpshooter Rifle	1		26	135614	Ranged (Guns)			2	3
-233984	Arcane Megabomb	1			254118				7	11
-233985	The Fumigator	1			135800	Explosives			7	2
-233986	Obsidian Bomb	1			252172	Explosives			7	2
-233987	G00 DV-1B3 Generator	1			134519				13	
-233988	Tuned Force Reactive Disk	1		14	237508	Off Hand (Shield)			4	6
-234003		1			237047	Metal & Stone			7	7
-234005	Obsidian Blasting Powder	1			133592	Parts			7	1
-234007		1			134260	Leather			7	6
-234008		1			132901	Cloth			7	5
-234009		1			132902	Cloth			7	5
-234010		1			237414				7	11
-234011		1			132106				7	11
-234012	Hive Thistle	1			134439	Herb			7	9
-234434	Obsidian Shotgun	1		26	135618	Ranged (Guns)			2	3
-235529	Obsidian Scope	1			134442	Item Enhancement				6
-236871	Creepy Censor Sensors	1		1	133023	Head (Cloth)			4	1
-236872	Schematic: Creepy Censor Sensors	2			134942	Engineering		250	9	3
-237023	Pop-Up Shrub	1	10		237425	Consumable				8
-238734	Tinkerbox: Teleport	1			133874	Consumable				8
-238735	Tinkerbox: Nitro Boosts	1			133861	Consumable				8
-238736	Tinkerbox: Magnetic Displacement	1			133016	Consumable				8
-238737	Tinkerbox	1			133015	Parts			7	1
-238781	Semisafe Transporter: New Avalon	1		12	133878	Trinket			4	
-238786		1			134942	Engineering			9	3
-238787		1			134942	Engineering			9	3
-238788		1			134942	Engineering			9	3
-238789	Schematic: Semisafe Transporter: New Avalon	3	1		134942	Engineering		300	9	3
-239222	Schematic: Pop-Up Shrub	3	1		134942	Engineering		250	9	3
-248820	Torbernite	2			237222				7	11
-248822	Death Lotus	2			5976935	Herb			7	9
-248823	Marefoil	1			348547	Herb			7	9
-249391	Pyrite	2			961627	Metal & Stone			7	7
-249409	Cerulean Dye	2			1021860				7	11
-249410	Sulfuric Acid	2			136240				7	11
-249425	Bauxite	2			876372	Metal & Stone			7	7
-249426	Pitchblende	2			3749975	Metal & Stone			7	7
-249428	Pristine Hide	2			3586020	Leather			7	6
-249429	Pristine Scale	2			134311	Leather			7	6
-249430	Magenta Dye	2			237071				7	11
-249431	Viridian Dye	2			237062				7	11
-249432	Sandpaper	2			237132	Parts			7	1
-249726	Azerothium Bar	2			612100	Metal & Stone			7	7
-251290	Legionite Bar	2			1416159	Metal & Stone			7	7
-251291	Heavy Thorium Bar	2			348540	Metal & Stone			7	7
-255007	Golem Isospring	1			4548890	Parts			7	1
-260784	SAF-T Tabs	1	1		134393	Parts			7	1
-260792	SAF-T Dynamite	1	1		133714					
-260793	SAF-T Copper Bomb	1	1		133717					
-260794	EZ-Thro Wrap	1	1		134147	Parts			7	1
-260795	EZ-Thro Copper Bomb XL	1	1		133709					
-260796	No Slip SAF-T Padding	1	1		134260	Parts			7	1
-260797	SAF-T Bronze Bomb	1	1		133717					
-260798	SAF-T Jumbo Dynamite	1	1		133714					
-260799	SAF-T Bell	1	1		133706	Parts			7	1
-260800	Shafety Sheep	1	1		538563					
-260801	EZ-Thro Fireproof Fuse	1	1		133243	Parts			7	1
-260802	EZ-Thro Bronze Mortar	1	1	12	134535	Trinket			4	
-260803	EZ-Thro Grenade	1	1		133714					
-260804	SAF-T Casing	1	1		133022	Parts			7	1
-260805	SAF-T Bomb	1	1		133709					
-260806	Emergency Field Cloak	1	1	12	133872	Trinket			4	
-260807	Compact Critter Carrier	1	40		132598	Consumable		225		8
-260808	EZ-Thro Tru-Trigger	1	1		1405812	Parts			7	1
-260809	Tru-Trigger Frag Bomb	1	1		133710					
-260810	SAF-T Disposable Parachute	1	1	16	133763	Back (Cloth)			4	1
-260811	Gnomish Army Knife	1	45		237296	Parts			7	1
-260812	Loot-A-Rang	3	50		986490			250	15	4
-260813	SAF-T Tube	1	1		133016	Parts			7	1
-260814	SAF-T Clever Dynamite	1	1		133714					
-260815	EZ-Thro Shell	1	1		134882	Parts			7	1
-260816	EZ-Thro Thorium Grenade	1	1		133716					
-260817	EZ-Thro Dark Bomb	1	1		133713					
-260818	EZ-Thro Mana Bomb	1	1		136173					
-260819	EZ-Thro Field Transporter: Gadgetzan	2	55	12	133860	Trinket			4	
-260820	SAF-T Emergency Ripper: Everlook	2	55	12	133859	Trinket			4	
-260821	EZ and SAF Field Transporter: Mt. Hyjal	2	60	12	133868	Trinket			4	
-260822	Ultrasafe Rechargeable Battery	2	60		465875					14
-260823	Dimensional Transporter - Mt. Hyjal	2	60		133864			300	15	4
-260824	Gnomish Poultryizer	3	60	12	133864	Trinket			4	
-260825	Ultralight Goblin Glider	2			237276			250	15	4
-260826	Gnomish Weather Machine NYI	2	60		133001	Parts		300	7	1
-260827	Stealthman 52	2	55		133862			250		14
-260828	SAF-T Nitro Boosts	2	55	6	133031	Waist (Cloth)			4	1
-260829	EZ-Thro Magnetic Displacer	2	55	6	3694922	Waist (Cloth)			4	1
-260830	SAF-T Teleport	2	55		133874					
-264201	Schematic: SAF-T Tabs	1			134939	Engineering		25	9	3
-264202	Schematic: SAF-T Dynamite	1			134939	Engineering		25	9	3
-264203	Schematic: SAF-T Copper Bomb	1			134939	Engineering		55	9	3
-264204	Schematic: EZ-Thro Wrap	1			134939	Engineering		100	9	3
-264205	Schematic: EZ-Thro Copper Bomb XL	1			134939	Engineering		130	9	3
-264206	Schematic: No Slip SAF-T Padding	1			134939	Engineering		145	9	3
-264207	Schematic: SAF-T Bronze Bomb	1			134939	Engineering		145	9	3
-264208	Schematic: SAF-T Jumbo Dynamite	1			134939	Engineering		150	9	3
-264209	Schematic: SAF-T Bell	1			134939	Engineering		175	9	3
-264210	Schematic: Shafety Sheep	1			134939	Engineering		175	9	3
-264211	Schematic: EZ-Thro Fireproof Fuse	1			134939	Engineering		190	9	3
-264212	Schematic: EZ-Thro Bronze Mortar	1			134939	Engineering		190	9	3
-264213	Schematic: EZ-Thro Grenade	1			134939	Engineering		200	9	3
-264214	Schematic: SAF-T Casing	1			134939	Engineering		215	9	3
-264215	Schematic: SAF-T Bomb	1			134939	Engineering		215	9	3
-264216	Schematic: Emergency Field Cloak	1			134939	Engineering		225	9	3
-264217	Schematic: Compact Critter Carrier	1			134939	Engineering		225	9	3
-264218	Schematic: EZ-Thro Tru-Trigger	1			134939	Engineering		240	9	3
-264219	Schematic: Tru-Trigger Frag Bomb	1			134939	Engineering		240	9	3
-264220	Schematic: SAF-T Disposable Parachute	1			134939	Engineering		250	9	3
-264221	Schematic: Gnomish Army Knife	1			134939	Engineering		250	9	3
-264222	Schematic: Loot-A-Rang	1			134939	Engineering		275	9	3
-264223	Schematic: SAF-T Tube	1			134939	Engineering		275	9	3
-264224	Schematic: SAF-T Clever Dynamite	1			134939	Engineering		275	9	3
-264225	Schematic: EZ-Thro Shell	1			134939	Engineering		285	9	3
-264226	Schematic: EZ-Thro Thorium Grenade	1			134939	Engineering		285	9	3
-264227	Schematic: EZ-Thro Dark Bomb	1			134939	Engineering		300	9	3
-264228	Schematic: EZ-Thro Mana Bomb	1			134939	Engineering		300	9	3
-264229	Schematic: EZ-Thro Field Transporter: Gadgetzan	1			134939	Engineering		300	9	3
-264230	Schematic: SAF-T Emergency Ripper: Everlook	1			134939	Engineering		300	9	3
-264231	Schematic: EZ and SAF Field Transporter: Mt. Hyjal	1			134939	Engineering		300	9	3
-264232	Schematic: Ultrasafe Rechargeable Battery	1			134939	Engineering		300	9	3
-264233	Schematic: Dimensional Transporter: Mt. Hyjal	1			134939	Engineering		300	9	3
-264234	Schematic: Gnomish Poultryizer	1			134939	Engineering		300	9	3
-264235	Schematic: Ultralight Goblin Glider	1			134939	Engineering		300	9	3
-264236	Schematic: Gnomish Weather Machine	1			134939	Engineering		300	9	3
-264237	Schematic: Stealthman 52	1			134939	Engineering		300	9	3
-264238	Schematic: SAF-T Nitro Boosts	1			134939	Engineering		300	9	3
-264239	Schematic: EZ-Thro Magnetic Displacer	1			134939	Engineering		300	9	3
-264240	Schematic: SAF-T Teleport	1			134939	Engineering		300	9	3
-269900	Centaur Banner Deployment Device	2	1		236362				15	4
-269901	Schematic: Centaur Banner Deployment Device	2			134939	Engineering		190	9	3
-269902	Hoof-Shaped Foot Pedal	1	1		1534178					14
-269903	Schematic: Hoof-Shaped Foot Pedal	2			134939	Engineering		140	9	3
-273092	Blueprint: Repair Bot	2			1001491	Engineering		140	9	3
-273117	Blueprint: Anarchist's Workbench	2			1001491	Engineering		300	9	3
-273129	Essence of Anarchy	2			133712				15	1
-274030	Malleable Essence of Nature	4	1		132119	Enchanting			7	12
-274048	9-60 Battery Pack	1			132489	Consumable				8
-274387	Swiftfeather Arrow	4	60	24	249173	Projectile (Arrow)			6	2
-274388	Swiftstrike Shot	4	60	24	249176	Projectile (Bullet)			6	3
-274389	Schematic: Swiftfeather Arrow	4	1		134940	Engineering		300	9	3
-274390	Schematic: Swiftstrike Shot	4	1		134940	Engineering		300	9	3
-277132	Harvester Override Signalcaster	2			133015			65		14
-277470	Schematic: Harvester Override Signalcaster	1			134939	Engineering		65	9	3
-279272	SAF-T Ultra Precision Scope	3	60		3610512					14
-279273	Hyper Deluxe Sniper Rifle Mk XVII	4	60	26	135614	Ranged (Guns)	Speed 2.50, Ranged Attack Power, Stamina, Spirit		2	3
-279321	Schematic: SAF-T Ultra Precision Scope	4			134942	Engineering		300	9	3
-279322	Schematic: Hyper Deluxe Sniper Rifle Mk XVII	4			134942	Engineering		300	9	3
-279949	Repair Bot	1			1336885	Consumable		140		8
-279950	Reagent Bot	1			133871	Consumable		20		8
-279989	Anarchist's Workbench	1			4624728	Consumable		300		8
-280306	Whimsical Waistwrap	2	30	6		Waist (Cloth)		175	4	1
-280307	Gizmo Girdle	2	30	6		Waist (Leather)		175	4	2
-280308	Clanking Cord	2	30	6		Waist (Mail)		175	4	3
-280309	Serrated Strap	1		6		Waist (Cloth)			4	1
-280310	Floppy Goggles	2	40	1		Head (Cloth)		200	4	1
-280311	Bent Goggles	2	40	1		Head (Leather)		200	4	2
-280312	Stuckbutton Goggles	2	40	1		Head (Mail)		200	4	3
-280313	Dented Goggles	2	40	1		Head (Plate)		200	4	4
-280321	Schematic: Whimsical Waistwrap	2	1		134942	Engineering		175	9	3
-280322	Schematic: Gizmo Girdle	2	1		134942	Engineering		175	9	3
-280323	Schematic: Clanking Cord	2	1		134942	Engineering		175	9	3
-280324	Schematic: Serrated Strap	2	1		134942	Engineering		175	9	3
-280325	Schematic: Floppy Goggles	2	1		134942	Engineering		200	9	3
-280326	Schematic: Bent Goggles	2	1		134942	Engineering		200	9	3
-280327	Schematic: Stuckbutton Goggles	2	1		134942	Engineering		200	9	3
-280328	Schematic: Dented Goggles	2	1		134942	Engineering		200	9	3
-284869	Unsanctified Grenade	1			133709					
-284870	Schematic: Unsanctified Grenade	1			134939	Engineering		260	9	3
-285275	Satchel of Copper Bombs	2	13	25	133626	Thrown (Thrown)	Speed 2.00, Stamina	85	2	16
-285276	Satchel of Bronze Bombs	2	28	25	133635	Thrown (Thrown)	Speed 2.00, Stamina	165	2	16
-285277	Satchel of Iron Bombs	2	41	25	133640	Thrown (Thrown)	Speed 2.00, Stamina	230	2	16
-285278	Satchel of Dark Iron Bombs	2	52	25	133629	Thrown (Thrown)	Speed 2.00, Stamina	285	2	16
-285285	Schematic: Satchel of Copper Bombs	2	1		134942	Engineering		85	9	3
-285286	Schematic: Satchel of Bronze Bombs	2	1		134942	Engineering		165	9	3
-285287	Schematic: Satchel of Iron Bombs	2	1		134942	Engineering		230	9	3
-285288	Schematic: Satchel of Dark Iron Bombs	2	1		134942	Engineering		285	9	3
-286076	Schematic: Small Purple Rocket	2			134939	Engineering		125	9	3
-286077	Schematic: Small White Rocket	2			134939	Engineering		125	9	3
-286078	Schematic: Small Yellow Rocket	2			134939	Engineering		125	9	3
-286079	Schematic: Large Purple Rocket	2			134939	Engineering		175	9	3
-286080	Schematic: Large White Rocket	2			134939	Engineering		175	9	3
-286081	Schematic: Large Yellow Rocket	2			134939	Engineering		175	9	3
-286082	Schematic: Purple Rocket Cluster	2			134939	Engineering		225	9	3
-286083	Schematic: White Rocket Cluster	2			134939	Engineering		225	9	3
-286084	Schematic: Yellow Rocket Cluster	2			134939	Engineering		225	9	3
-286085	Schematic: Large Purple Rocket Cluster	2			134939	Engineering		275	9	3
-286086	Schematic: Large White Rocket Cluster	2			134939	Engineering		275	9	3
-286087	Schematic: Large Yellow Rocket Cluster	2			134939	Engineering		275	9	3]],
+159	Refreshing Spring Water	1	1		132794	Food & Drink				5	
+774	Malachite	2			134106				7	11	
+814	Flask of Oil	1			132794	Parts			7	1	
+818	Tigerseye	2			134118				7	11	
+1206	Moss Agate	2			134105				7	11	
+1210	Shadowgem	2			134074				7	11	
+1529	Jade	2			134134				7	11	
+1705	Lesser Moonstone	2			134087				7	11	
+2318	Light Leather	1			134252	Leather			7	6	
+2319	Medium Leather	1			134254	Leather			7	6	
+2570	Linen Cloak	1	1	16	133766	Back (Cloth)			4	1	
+2589	Linen Cloth	1			132889	Cloth			7	5	
+2592	Wool Cloth	1			132911	Cloth			7	5	
+2835	Rough Stone	1			135232	Metal & Stone			7	7	
+2836	Coarse Stone	1			135235	Metal & Stone			7	7	
+2838	Heavy Stone	1			135238	Metal & Stone			7	7	
+2840	Copper Bar	1			133216	Metal & Stone			7	7	
+2841	Bronze Bar	1			133227	Metal & Stone			7	7	
+2842	Silver Bar	2			133215	Metal & Stone			7	7	
+2880	Weak Flux	1			133588				7	11	
+2996	Bolt of Linen Cloth	1			132890	Cloth			7	5	
+3030	Razor Arrow	1	25	24	132382	Projectile (Arrow)			6	2	
+3575	Iron Bar	1			133232	Metal & Stone			7	7	
+3577	Gold Bar	2			133217	Metal & Stone			7	7	
+3829	Frost Oil	1	30		134800	Consumable				8	
+3859	Steel Bar	1			133234	Metal & Stone			7	7	
+3860	Mithril Bar	1			133220	Metal & Stone			7	7	
+3864	Citrine	2			134117				7	11	
+4234	Heavy Leather	1			134256	Leather			7	6	
+4304	Thick Leather	1			134257	Leather			7	6	
+4305	Bolt of Silk Cloth	1			132907	Cloth			7	5	
+4306	Silk Cloth	1			132905	Cloth			7	5	
+4337	Thick Spider's Silk	1			136113	Cloth			7	5	
+4338	Mageweave Cloth	1			132892	Cloth			7	5	
+4339	Bolt of Mageweave	1			132894	Cloth			7	5	
+4357	Rough Blasting Powder	1			133848	Parts			7	1	
+4358	Rough Dynamite	1			133714			1			
+4359	Handful of Copper Bolts	1			134068	Parts			7	1	
+4360	Rough Copper Bomb	1			133717			30			
+4361	Copper Tube	1			133025	Parts			7	1	
+4362	Rough Boomstick	2	5	26	135612	Ranged (Guns)	Speed 2.30, Stamina		2	3	2
+4363	Copper Modulator	1			132997	Parts			7	1	
+4364	Coarse Blasting Powder	1			133849	Parts			7	1	
+4365	Coarse Dynamite	1			133714			75			
+4366	Target Dummy	1			132766			85		14	
+4367	Small Seaforium Charge	1			134514			100			
+4368	Flying Tiger Goggles	2		1	133149	Head (Cloth)	Stamina, Spirit	100	4	1	2
+4369	Deadly Blunderbuss	2	16	26	135616	Ranged (Guns)	Speed 2.60, Agility		2	3	2
+4370	Large Copper Bomb	1			133709			105			
+4371	Bronze Tube	1			133024	Parts			7	1	
+4372	Lovingly Crafted Boomstick	2	19	26	135616	Ranged (Guns)	Speed 1.80, Spirit		2	3	2
+4373	Shadow Goggles	2		1	133149	Head (Cloth)	Spirit, Intellect	120	4	1	2
+4374	Small Bronze Bomb	1			133717			120			
+4375	Whirring Bronze Gizmo	1			132996	Parts			7	1	
+4376	Flame Deflector	1	15		132995					14	
+4377	Heavy Blasting Powder	1			133853	Parts			7	1	
+4378	Heavy Dynamite	1			133714			125			
+4379	Silver-plated Shotgun	2	21	26	135616	Ranged (Guns)	Speed 2.70, Stamina		2	3	2
+4380	Big Bronze Bomb	1			133713			140			
+4381	Minor Recombobulator	2		12	133001	Trinket		140	4		
+4382	Bronze Framework	1			133006	Parts			7	1	
+4383	Moonsight Rifle	2	24	26	135615	Ranged (Guns)	Speed 1.70, Hit Rating		2	3	2
+4384	Explosive Sheep	1			136071			150			
+4385	Green Tinted Goggles	2		1	133149	Head (Cloth)	Stamina, Spirit	150	4	1	2
+4386	Ice Deflector	1	21		132995					14	
+4387	Iron Strut	1			135128	Parts			7	1	
+4388	Discombobulator Ray	1			134441			160		14	
+4389	Gyrochronatom	1			134377	Parts			7	1	
+4390	Iron Grenade	1			133716			175			
+4391	Compact Harvest Reaper Kit	1	30		133076			175		14	
+4392	Advanced Target Dummy	1			132765			185		14	
+4393	Craftsman's Monocle	2	32	1	133146	Head (Cloth)	Intellect	185	4	1	2
+4394	Big Iron Bomb	1			133709			190			
+4395	Goblin Land Mine	1			134954			195			
+4396	Mechanical Dragonling	1	30	12	134153	Trinket		200	4		2
+4397	Gnomish Cloaking Device	1		12	132995	Trinket		200	4		2
+4398	Large Seaforium Charge	1			134514			200			
+4399	Wooden Stock	1			133486	Parts			7	1	
+4400	Heavy Stock	1			133486	Parts			7	1	
+4401	Mechanical Squirrel Box	1			132761				15	2	
+4402	Small Flame Sac	1			134343				7	11	
+4403	Portable Bronze Mortar	1			134535			165		14	
+4404	Silver Contact	1			133218	Parts			7	1	
+4405	Crude Scope	1	5		134441					14	
+4406	Standard Scope	1	10		134441					14	
+4407	Accurate Scope	1	20		134441					14	
+4408	Schematic: Mechanical Squirrel	2			134942	Engineering		75	9	3	
+4409	Schematic: Small Seaforium Charge	2			134942	Engineering		100	9	3	
+4410	Schematic: Shadow Goggles	2			134942	Engineering		120	9	3	
+4411	Schematic: Flame Deflector	2			134939	Engineering		125	9	3	
+4412	Schematic: Moonsight Rifle	2			134942	Engineering		145	9	3	
+4413	Schematic: Discombobulator Ray	2			134942	Engineering		160	9	3	
+4414	Schematic: Portable Bronze Mortar	2			134942	Engineering		165	9	3	
+4415	Schematic: Craftsman's Monocle	3			134939	Engineering		185	9	3	
+4416	Schematic: Goblin Land Mine	2			134942	Engineering		195	9	3	
+4417	Schematic: Large Seaforium Charge	2			134942	Engineering		200	9	3	
+4611	Blue Pearl	1			134564				7	11	
+4852	Flash Bomb	1	27		133581						
+5507	Ornate Spyglass	1			134440					14	
+6037	Truesilver Bar	2			133222	Metal & Stone			7	7	
+6219	Arclight Spanner	1		21	134520	Main Hand (Miscellaneous)	Speed 2.40	50	2	14	
+6530	Nightcrawlers	1			134324	Consumable		50		8	
+6533	Aquadynamic Fish Attractor	1			133982			100		14	
+6672	Schematic: Flash Bomb	2			134942	Engineering		185	9	3	
+6712	Practice Lock	1			132594				15		
+6714	Ez-Thro Dynamite	1	10		133714						
+6716	Schematic: EZ-Thro Dynamite	2			134942	Engineering		100	9	3	
+7067	Elemental Earth	1			134572	Elemental			7	10	
+7068	Elemental Fire	1			135805	Elemental			7	10	
+7069	Elemental Air	1			136107	Elemental			7	10	
+7075	Core of Earth	1			135231	Elemental			7	10	
+7076	Essence of Earth	2			136102	Elemental			7	10	
+7077	Heart of Fire	1			135819	Elemental			7	10	
+7078	Essence of Fire	2			135830	Elemental			7	10	
+7079	Globe of Water	1			134333	Elemental			7	10	
+7080	Essence of Water	2			136007	Elemental			7	10	
+7082	Essence of Air	2			136022	Elemental			7	10	
+7148	Goblin Jumper Cables	1		12	133868	Trinket		165	4		
+7189	Goblin Rocket Boots	2		8	133029	Feet (Cloth)		225	4	1	2
+7191	Fused Wiring	1			134065	Parts			7	1	
+7192	Schematic: Goblin Rocket Boots	2			134939	Engineering		130	9	3	
+7387	Dusky Belt	2	34	6	132495	Waist (Leather)	Agility, Stamina		4	2	2
+7506	Gnomish Universal Remote	2		12	134376	Trinket		125	4		2
+7560	Schematic: Gnomish Universal Remote	1			134939	Engineering		125	9	3	1
+7561	Schematic: Goblin Jumper Cables	1			134939	Engineering		165	9	3	1
+7742	Schematic: Gnomish Cloaking Device	1			134939	Engineering		200	9	3	1
+7909	Aquamarine	2			134088				7	11	
+7910	Star Ruby	2			134129				7	11	
+7912	Solid Stone	1			135236	Metal & Stone			7	7	
+7972	Ichor of Undeath	1			134437	Elemental			7	10	
+8067	Crafted Light Shot	1	5	24	132384	Projectile (Bullet)			6	3	
+8068	Crafted Heavy Shot	1	15	24	132384	Projectile (Bullet)			6	3	
+8069	Crafted Solid Shot	1	30	24	132384	Projectile (Bullet)			6	3	
+8150	Deeprock Salt	1			133849	Leather			7	6	
+8151	Flask of Mojo	1			134776				7	11	
+8153	Wildvine	1			134183	Herb			7	9	
+8170	Rugged Leather	1			134251	Leather			7	6	
+9060	Inlaid Mithril Cylinder	1			134535	Parts			7	1	
+9061	Goblin Rocket Fuel	1			132621	Parts			7	1	
+9262	Black Vitriol	1			134133				7	11	
+9312	Blue Firework	1			135989	Consumable				8	
+9313	Green Firework	1			136006	Consumable				8	
+9318	Red Firework	1			135808	Consumable				8	
+10026	Black Mageweave Boots	2	41	8	132539	Feet (Cloth)	Spell Power, Intellect		4	1	2
+10285	Shadow Silk	1			136113	Cloth			7	5	
+10286	Heart of the Wild	1			134188	Elemental			7	10	
+10498	Gyromatic Micro-Adjustor	1	1		134429	Parts			7	1	
+10499	Bright-Eye Goggles	2		1	133149	Head (Cloth)	Spirit, Stamina	175	4	1	2
+10500	Fire Goggles	2		1	133149	Head (Cloth)		205	4	1	2
+10501	Catseye Ultra Goggles	2		1	133149	Head (Cloth)		220	4	1	2
+10502	Spellpower Goggles Xtreme	2		1	133149	Head (Cloth)	Spell Power	215	4	1	2
+10503	Rose Colored Goggles	2		1	133149	Head (Cloth)	Spirit, Intellect	230	4	1	2
+10504	Green Lens	3		1	133146	Head (Cloth)	Stamina	245	4	1	2
+10505	Solid Blasting Powder	1			134380	Parts			7	1	
+10506	Deepdive Helmet	2		1	133151	Head (Cloth)	Stamina	230	4	1	2
+10507	Solid Dynamite	1			133714			175			
+10508	Mithril Blunderbuss	2	36	26	135616	Ranged (Guns)	Speed 2.90, Agility		2	3	2
+10510	Mithril Heavy-bore Rifle	2	39	26	135616	Ranged (Guns)	Speed 2.90, Ranged Attack Power		2	3	2
+10512	Hi-Impact Mithril Slugs	2	37	24	132383	Projectile (Bullet)			6	3	
+10513	Mithril Gyro-Shot	2	44	24	132383	Projectile (Bullet)			6	3	
+10514	Mithril Frag Bomb	1			133710			205			
+10518	Parachute Cloak	2		16	133763	Back (Cloth)	Agility	225	4	1	2
+10542	Goblin Mining Helmet	2		1	133127	Head (Mail)	Stamina	205	4	3	1
+10543	Goblin Construction Helmet	2		1	133162	Head (Cloth)		205	4	1	1
+10545	Gnomish Goggles	2		1	133149	Head (Cloth)	Agility, Stamina, Spirit	210	4	1	1
+10546	Deadly Scope	1	30		134441					14	
+10548	Sniper Scope	1	40		134441					14	
+10558	Gold Power Core	1			132489	Parts			7	1	
+10559	Mithril Tube	1			134535	Parts			7	1	
+10560	Unstable Trigger	1			132488	Parts			7	1	
+10561	Mithril Casing	1			133021	Parts			7	1	
+10562	Hi-Explosive Bomb	1			133715			235			
+10576	Mithril Mechanical Dragonling	1	40	12	134153	Trinket		250	4		2
+10577	Goblin Mortar	1		12	134535	Trinket		205	4		2
+10579	Explosive Arrow	3	37	24	132382	Projectile (Arrow)			6	2	
+10580	Goblin "Boom" Box	1			132594						
+10585	Goblin Radio	1		12	135899	Trinket			4		
+10586	The Big One	1			133712			225			
+10587	Goblin Bomb Dispenser	1		12	133000	Trinket		230	4		1
+10588	Goblin Rocket Helmet	2		1	133151	Head (Cloth)	Stamina	235	4	1	2
+10592	Catseye Draught	1	30		134816	Elixir				2	
+10601	Schematic: Bright-Eye Goggles	2			134942	Engineering		175	9	3	
+10602	Schematic: Deadly Scope	1			134939	Engineering		210	9	3	1
+10603	Schematic: Catseye Ultra Goggles	2			134942	Engineering		220	9	3	
+10604	Schematic: Mithril Heavy-bore Rifle	2			134942	Engineering		220	9	3	
+10605	Schematic: Spellpower Goggles Xtreme	3			134939	Engineering		225	9	3	
+10606	Schematic: Parachute Cloak	2			134942	Engineering		225	9	3	
+10607	Schematic: Deepdive Helmet	1			134939	Engineering		230	9	3	1
+10608	Schematic: Sniper Scope	3			134939	Engineering		240	9	3	
+10609	Schematic: Mithril Mechanical Dragonling	1			134939	Engineering		250	9	3	
+10644	Recipe: Goblin Rocket Fuel	1			134939	Alchemy		210	9	6	
+10645	Gnomish Death Ray	1		12	133002	Trinket		240	4		1
+10646	Goblin Sapper Charge	1			135826			205			
+10647	Engineer's Ink	1			134845	Parts			7	1	
+10648	Blank Parchment	1			134328				7	11	
+10713	Plans: Inlaid Mithril Cylinder	1			134941	Blacksmithing		200	9	4	
+10716	Gnomish Shrink Ray	1		12	133003	Trinket		205	4		2
+10719	Mobile Alarm	1			132761			205		14	
+10720	Gnomish Net-o-Matic Projector	1		12	134325	Trinket		210	4		2
+10721	Gnomish Harm Prevention Belt	2		6	132495	Waist (Leather)	Stamina	215	4	2	2
+10723	Gnomish Ham Radio	1		12	135899	Trinket			4		
+10724	Gnomish Rocket Boots	2		8	132536	Feet (Cloth)		225	4	1	2
+10725	Gnomish Battle Chicken	1		12	135996	Trinket		230	4		1
+10726	Gnomish Mind Control Cap	2		1	133151	Head (Cloth)	Spirit	215	4	1	2
+10727	Goblin Dragon Gun	1		12	135812	Trinket		240	4		1
+11175	Greater Nether Essence	2			132870	Enchanting			7	12	
+11371	Dark Iron Bar	1			133233	Metal & Stone			7	7	
+11590	Mechanical Repair Kit	1			132997			200		14	
+11825	Pet Bombling	1			133712					14	
+11826	Lil' Smoky	1			2915723					14	
+11827	Schematic: Lil' Smoky	2			134942	Engineering		205	9	3	1
+11828	Schematic: Pet Bombling	2			134942	Engineering		205	9	3	1
+12359	Thorium Bar	1			133221	Metal & Stone			7	7	
+12360	Arcanite Bar	2			134459	Metal & Stone			7	7	
+12361	Blue Sapphire	2			134132				7	11	
+12363	Arcane Crystal	2			134135				7	11	
+12364	Huge Emerald	2			134104				7	11	
+12365	Dense Stone	1			134461	Metal & Stone			7	7	
+12655	Enchanted Thorium Bar	1			133229	Metal & Stone			7	7	
+12799	Large Opal	2			134116				7	11	
+12800	Azerothian Diamond	2			134094				7	11	
+12803	Living Essence	2			136006	Elemental			7	10	
+12804	Powerful Mojo	1			136011				7	11	
+12808	Essence of Undeath	2			136195	Elemental			7	10	
+12810	Enchanted Leather	1			134418	Leather			7	6	
+12811	Righteous Orb	2			134122				7	11	
+13308	Schematic: Ice Deflector	1			134939	Engineering		155	9	3	1
+13309	Schematic: Lovingly Crafted Boomstick	1			134939	Engineering		120	9	3	1
+13310	Schematic: Accurate Scope	1			134939	Engineering		180	9	3	1
+13311	Schematic: Mechanical Dragonling	1			134939	Engineering		200	9	3	
+13467	Icecap	1			134212	Herb			7	9	
+14047	Runecloth	1			132903	Cloth			7	5	
+14227	Ironweb Spider Silk	1			136113	Cloth			7	5	
+14344	Large Brilliant Shard	3			132873	Enchanting			7	12	
+14639	Schematic: Minor Recombobulator	1			134939	Engineering		140	9	3	
+15407	Cured Rugged Hide	1			134355	Leather			7	6	
+15846	Salt Shaker	1			132836			250		14	
+15992	Dense Blasting Powder	1			133587	Parts			7	1	
+15993	Thorium Grenade	1			133716			260			
+15994	Thorium Widget	1			132998	Parts			7	1	
+15995	Thorium Rifle	2	47	26	135616	Ranged (Guns)	Speed 2.50, Ranged Attack Power		2	3	2
+15996	Lifelike Mechanical Toad	1			134301				15	2	
+15997	Thorium Shells	2	52	24	132385	Projectile (Bullet)			6	3	
+15999	Spellpower Goggles Xtreme Plus	2		1	133149	Head (Cloth)	Spell Power	270	4	1	2
+16000	Thorium Tube	1			133027	Parts			7	1	
+16004	Dark Iron Rifle	3	50	26	135617	Ranged (Guns)	Speed 2.70		2	3	2
+16005	Dark Iron Bomb	1			133713			285			
+16006	Delicate Arcanite Converter	1			133001	Parts			7	1	
+16007	Flawless Arcanite Rifle	3	56	26	135612	Ranged (Guns)	Speed 3.00, Stamina, Ranged Attack Power		2	3	2
+16008	Master Engineer's Goggles	2		1	133149	Head (Cloth)	Spirit, Stamina	280	4	1	2
+16009	Voice Amplification Modulator	2		2	133282	Neck			4		2
+16022	Arcanite Dragonling	3	50	12	134153	Trinket		300	4		2
+16023	Masterwork Target Dummy	1			132762			275		14	
+16040	Arcane Bomb	1			136173			300			
+16041	Schematic: Thorium Grenade	1			134939	Engineering		260	9	3	
+16042	Schematic: Thorium Widget	1			134939	Engineering		260	9	3	
+16043	Schematic: Thorium Rifle	2			134942	Engineering		260	9	3	
+16044	Schematic: Lifelike Mechanical Toad	2			134942	Engineering		265	9	3	
+16045	Schematic: Spellpower Goggles Xtreme Plus	2			134942	Engineering		270	9	3	
+16046	Schematic: Masterwork Target Dummy	1			134939	Engineering		275	9	3	1
+16047	Schematic: Thorium Tube	1			134939	Engineering		275	9	3	1
+16048	Schematic: Dark Iron Rifle	2			134942	Engineering		275	9	3	
+16049	Schematic: Dark Iron Bomb	2			134942	Engineering		285	9	3	
+16050	Schematic: Delicate Arcanite Converter	1			134939	Engineering		285	9	3	1
+16051	Schematic: Thorium Shells	2			134942	Engineering		285	9	3	
+16052	Schematic: Voice Amplification Modulator	2			134942	Engineering		290	9	3	
+16053	Schematic: Master Engineer's Goggles	2			134942	Engineering		290	9	3	
+16054	Schematic: Arcanite Dragonling	2			134942	Engineering		300	9	3	
+16055	Schematic: Arcane Bomb	2			134942	Engineering		300	9	3	
+16056	Schematic: Flawless Arcanite Rifle	2			134942	Engineering		300	9	3	
+16203	Greater Eternal Essence	2			132864	Enchanting			7	12	
+16204	Illusion Dust	1			132856	Enchanting			7	12	
+16583	Demonic Figurine	1			134337				15	1	
+17010	Fiery Core	3			135812				7	11	
+17011	Lava Core	3			136025				7	11	
+17056	Light Feather	1			132917				15	1	
+17202	Snowball	1			132387				15	3	
+17716	Snowmaster 9000	1			135863			190		14	
+17720	Schematic: Snowmaster 9000	2			134942	Engineering		190	9	3	
+18168	Force Reactive Disk	4	60	14	135741	Off Hand (Shield)	Stamina, Bonus Armor	300	4	6	2
+18232	Field Repair Bot 74A	1			132836			300		14	
+18235	Schematic: Field Repair Bot 74A	1			134939	Engineering		300	9	3	
+18282	Core Marksman Rifle	4	60	26	135614	Ranged (Guns)	Speed 2.50, Ranged Attack Power, Hit Rating		2	3	2
+18283	Biznicks 247x128 Accurascope	3	50		134441					14	
+18290	Schematic: Biznicks 247x128 Accurascope	3			134941	Engineering		300	9	3	1
+18291	Schematic: Force Reactive Disk	3			134941	Engineering		300	9	3	1
+18292	Schematic: Core Marksman Rifle	3			134941	Engineering		300	9	3	1
+18587	Goblin Jumper Cables XL	1		12	133869	Trinket		265	4		
+18588	Ez-Thro Dynamite II	1	30		133711						
+18594	Powerful Seaforium Charge	1			136152			275			
+18631	Truesilver Transformer	1			135155	Parts			7	1	
+18634	Gyrofreeze Ice Reflector	3	47	12	133860	Trinket		260	4		2
+18637	Major Recombobulator	2		12	133867	Trinket		275	4		
+18638	Hyper-Radiant Flame Reflector	3	53	12	133862	Trinket		290	4		2
+18639	Ultra-Flash Shadow Reflector	3	55	12	133874	Trinket		300	4		2
+18641	Dense Dynamite	1			133714			250			
+18645	Gnomish Alarm-O-Bot	1			133871			265		14	
+18647	Schematic: Red Firework	1			134939	Engineering		150	9	3	
+18648	Schematic: Green Firework	1			134939	Engineering		150	9	3	1
+18649	Schematic: Blue Firework	1			134939	Engineering		150	9	3	
+18650	Schematic: EZ-Thro Dynamite II	1			134939	Engineering		200	9	3	1
+18651	Schematic: Truesilver Transformer	1			134939	Engineering		260	9	3	1
+18652	Schematic: Gyrofreeze Ice Reflector	1			134939	Engineering		260	9	3	
+18653	Schematic: Goblin Jumper Cables XL	2			134942	Engineering		265	9	3	
+18654	Schematic: Gnomish Alarm-O-Bot	2			134942	Engineering		265	9	3	
+18655	Schematic: Major Recombobulator	2			134942	Engineering		275	9	3	
+18656	Schematic: Powerful Seaforium Charge	1			134939	Engineering		275	9	3	
+18657	Schematic: Hyper-Radiant Flame Reflector	2			134942	Engineering		290	9	3	
+18658	Schematic: Ultra-Flash Shadow Reflector	2			134942	Engineering		300	9	3	
+18660	World Enlarger	2			133866			250		14	
+18661	Schematic: World Enlarger	2			134942	Engineering		260	9	3	
+18984	Dimensional Ripper - Everlook	2			133865			260	15	4	3
+18986	Ultrasafe Transporter: Gadgetzan	2			133870			260	15	4	3
+19026	Snake Burst Firework	1			135920	Consumable				8	
+19027	Schematic: Snake Burst Firework	1			134939	Engineering		250	9	3	1
+19726	Bloodvine	2			134189	Herb			7	9	
+19774	Souldarite	2			134071				7	11	
+19998	Bloodvine Lens	3	60	1	133146	Head (Leather)	Stamina, Critical Strike Rating	300	4	2	2
+19999	Bloodvine Goggles	3	60	1	133149	Head (Cloth)	Hit Rating, Critical Strike Rating, Mana every 5 sec.	300	4	1	2
+20000	Schematic: Bloodvine Goggles	1			134939	Engineering		300	9	3	1
+20001	Schematic: Bloodvine Lens	1			134939	Engineering		300	9	3	1
+20725	Nexus Crystal	4			132880	Enchanting			7	12	
+20868	Lambent Idol	3			134901				12		
+20870	Jasper Idol	3			134900				12		
+20881	Idol of Strife	3			134908				12		
+21277	Tranquil Mechanical Yeti	1			132189				15	2	
+21557	Small Red Rocket	1			134285				15	3	
+21558	Small Blue Rocket	1			134282				15	3	
+21559	Small Green Rocket	1			134283				15	3	
+21560	Small Purple Rocket	1			134284				15	3	
+21561	Small White Rocket	1			134286				15	3	
+21562	Small Yellow Rocket	1			134287				15	3	
+21569	Firework Launcher	1			134538				15	3	
+21570	Cluster Launcher	1			133861				15	3	
+21571	Blue Rocket Cluster	1			134288				15	3	
+21574	Green Rocket Cluster	1			134289				15	3	
+21575	Purple Rocket Cluster	1			134290				15	3	
+21576	Red Rocket Cluster	1			134291				15	3	
+21577	White Rocket Cluster	1			134292				15	3	
+21578	Yellow Rocket Cluster	1			134293				15	3	
+21589	Large Blue Rocket	1			134270				15	3	
+21590	Large Green Rocket	1			134271				15	3	
+21591	Large Purple Rocket	1			134272				15	3	
+21592	Large Red Rocket	1			134273				15	3	
+21593	Large White Rocket	1			134274				15	3	
+21595	Large Yellow Rocket	1			134275				15	3	
+21714	Large Blue Rocket Cluster	1			134276				15	3	
+21716	Large Green Rocket Cluster	1			134277				15	3	
+21717	Large Purple Rocket Cluster	1			134278				15	3	
+21718	Large Red Rocket Cluster	1			134279				15	3	
+21719	Large White Rocket Cluster	1			134280				15	3	
+21720	Large Yellow Rocket Cluster	1			134281				15	3	
+21724	Schematic: Small Blue Rocket	2			134939	Engineering		125	9	3	1
+21725	Schematic: Small Green Rocket	2			134939	Engineering		125	9	3	1
+21726	Schematic: Small Red Rocket	2			134939	Engineering		125	9	3	1
+21727	Schematic: Large Blue Rocket	2			134939	Engineering		175	9	3	1
+21728	Schematic: Large Green Rocket	2			134939	Engineering		175	9	3	1
+21729	Schematic: Large Red Rocket	2			134939	Engineering		175	9	3	1
+21730	Schematic: Blue Rocket Cluster	2			134939	Engineering		225	9	3	1
+21731	Schematic: Green Rocket Cluster	2			134939	Engineering		225	9	3	1
+21732	Schematic: Red Rocket Cluster	2			134939	Engineering		225	9	3	1
+21733	Schematic: Large Blue Rocket Cluster	2			134939	Engineering		275	9	3	1
+21734	Schematic: Large Green Rocket Cluster	2			134939	Engineering		275	9	3	1
+21735	Schematic: Large Red Rocket Cluster	2			134939	Engineering		275	9	3	1
+21737	Schematic: Cluster Launcher	2			134940	Engineering		275	9	3	1
+21738	Schematic: Firework Launcher	2			134940	Engineering		225	9	3	1
+22202	Small Obsidian Shard	1			134455	Metal & Stone			7	7	
+22728	Steam Tonk Controller	2			133878				15	4	
+22729	Schematic: Steam Tonk Controller	1			134939	Engineering		275	9	3	1
+210147	Shredder Autosalvage Unit	1	1		133870	Consumable				8	
+210178	Schematic: Shredder Autosalvage Unit	2			134939	Engineering		135	9	3	
+211427	Soul Vessel	3			133254				12		
+212230	Schematic: Soul Vessel	3			134942	Engineering		205	9	3	1
+213369	Faintly Glowing Leather	3			237420	Leather			7	6	
+213376	Low-Background Truesilver Plates	3			133022	Metal & Stone			7	7	
+213379	Hyperconductive Arcano-Filament	3			237428	Cloth			7	5	
+213381	Pile of Tarnished Gears	2			134067	Parts			7	1	1
+213383	Polished Truesilver Gears	3			305162	Parts			7	1	
+213390	Whirling Truesilver Gearwall	1		14	236307	Off Hand (Shield)			4	6	
+215115	Hyperconductive Goldwap	1		6	132521	Waist (Cloth)			4	1	
+215127	High-Yield Radiation Bomb	1			133009	Explosives			7	2	
+215153	Schematic: Whirling Truesilver Gearwall	4			134942	Blacksmithing		225	9	4	1
+215156	Schematic: Hyperconductive Goldwrap	4			134942	Engineering		225	9	3	1
+215168	Ez-Thro Radiation Bomb	1			133009	Explosives			7	2	
+215429	Schematic: Polished Truesilver Gears	3			134942	Blacksmithing		200	9	4	1
+215430	Gnomeregan Fallout	1			134383	Parts			7	1	
+215431	Schematic: High-Yield Radiation Bomb	4			134942	Blacksmithing		225	9	4	1
+215432	Schematic: Ez-Thro Radiation Bomb	4			134942	Blacksmithing		225	9	4	1
+220688		1			135084				5		
+220689		1		9	133878	Wrist (Cloth)			4	1	
+221021		1			134217				7	11	
+221025	Void-Powered Invoker's Vambraces	1		9	133878	Wrist (Cloth)			4	1	
+221026	Void-Powered Slayer's Vambraces	1		9	133878	Wrist (Leather)			4	2	
+221027	Void-Powered Protector's Vambraces	1		9	133878	Wrist (Plate)			4	4	
+221336	Schematic: Goblin Mining Helmet	2			134942	Engineering		205	9	3	1
+227849	Fiery Core Sharpshooter Rifle	1		26	135614	Ranged (Guns)			2	3	
+233984	Arcane Megabomb	1			254118				7	11	
+233985	The Fumigator	1			135800	Explosives			7	2	
+233986	Obsidian Bomb	1			252172	Explosives			7	2	
+233987	G00 DV-1B3 Generator	1			134519				13		
+233988	Tuned Force Reactive Disk	1		14	237508	Off Hand (Shield)			4	6	
+234003		1			237047	Metal & Stone			7	7	
+234005	Obsidian Blasting Powder	1			133592	Parts			7	1	
+234007		1			134260	Leather			7	6	
+234008		1			132901	Cloth			7	5	
+234009		1			132902	Cloth			7	5	
+234010		1			237414				7	11	
+234011		1			132106				7	11	
+234012	Hive Thistle	1			134439	Herb			7	9	
+234434	Obsidian Shotgun	1		26	135618	Ranged (Guns)			2	3	
+235529	Obsidian Scope	1			134442	Item Enhancement				6	
+236871	Creepy Censor Sensors	1		1	133023	Head (Cloth)			4	1	
+236872	Schematic: Creepy Censor Sensors	2			134942	Engineering		250	9	3	1
+237023	Pop-Up Shrub	1	10		237425	Consumable				8	
+238734	Tinkerbox: Teleport	1			133874	Consumable				8	
+238735	Tinkerbox: Nitro Boosts	1			133861	Consumable				8	
+238736	Tinkerbox: Magnetic Displacement	1			133016	Consumable				8	
+238737	Tinkerbox	1			133015	Parts			7	1	
+238781	Semisafe Transporter: New Avalon	1		12	133878	Trinket			4		
+238786		1			134942	Engineering			9	3	
+238787		1			134942	Engineering			9	3	
+238788		1			134942	Engineering			9	3	
+238789	Schematic: Semisafe Transporter: New Avalon	3	1		134942	Engineering		300	9	3	1
+239222	Schematic: Pop-Up Shrub	3	1		134942	Engineering		250	9	3	1
+248820	Torbernite	2			237222				7	11	
+248822	Death Lotus	2			5976935	Herb			7	9	
+248823	Marefoil	1			348547	Herb			7	9	
+249391	Pyrite	2			961627	Metal & Stone			7	7	
+249409	Cerulean Dye	2			1021860				7	11	
+249410	Sulfuric Acid	2			136240				7	11	
+249425	Bauxite	2			876372	Metal & Stone			7	7	
+249426	Pitchblende	2			3749975	Metal & Stone			7	7	
+249428	Pristine Hide	2			3586020	Leather			7	6	
+249429	Pristine Scale	2			134311	Leather			7	6	
+249430	Magenta Dye	2			237071				7	11	
+249431	Viridian Dye	2			237062				7	11	
+249432	Sandpaper	2			237132	Parts			7	1	
+249726	Azerothium Bar	2			612100	Metal & Stone			7	7	
+251290	Legionite Bar	2			1416159	Metal & Stone			7	7	
+251291	Heavy Thorium Bar	2			348540	Metal & Stone			7	7	
+255007	Golem Isospring	1			4548890	Parts			7	1	
+260784	SAF-T Tabs	1	1		134393	Parts			7	1	
+260792	SAF-T Dynamite	1	1		133714						
+260793	SAF-T Copper Bomb	1	1		133717						
+260794	EZ-Thro Wrap	1	1		134147	Parts			7	1	
+260795	EZ-Thro Copper Bomb XL	1	1		133709						
+260796	No Slip SAF-T Padding	1	1		134260	Parts			7	1	
+260797	SAF-T Bronze Bomb	1	1		133717						
+260798	SAF-T Jumbo Dynamite	1	1		133714						
+260799	SAF-T Bell	1	1		133706	Parts			7	1	
+260800	Shafety Sheep	1	1		538563						
+260801	EZ-Thro Fireproof Fuse	1	1		133243	Parts			7	1	
+260802	EZ-Thro Bronze Mortar	1	1	12	134535	Trinket			4		2
+260803	EZ-Thro Grenade	1	1		133714						
+260804	SAF-T Casing	1	1		133022	Parts			7	1	
+260805	SAF-T Bomb	1	1		133709						
+260806	Emergency Field Cloak	1	1	12	133872	Trinket			4		1
+260807	Compact Critter Carrier	1	40		132598	Consumable		225		8	
+260808	EZ-Thro Tru-Trigger	1	1		1405812	Parts			7	1	
+260809	Tru-Trigger Frag Bomb	1	1		133710						
+260810	SAF-T Disposable Parachute	1	1	16	133763	Back (Cloth)			4	1	2
+260811	Gnomish Army Knife	1	45		237296	Parts			7	1	
+260812	Loot-A-Rang	3	50		986490			250	15	4	3
+260813	SAF-T Tube	1	1		133016	Parts			7	1	
+260814	SAF-T Clever Dynamite	1	1		133714						
+260815	EZ-Thro Shell	1	1		134882	Parts			7	1	
+260816	EZ-Thro Thorium Grenade	1	1		133716						
+260817	EZ-Thro Dark Bomb	1	1		133713						
+260818	EZ-Thro Mana Bomb	1	1		136173						
+260819	EZ-Thro Field Transporter: Gadgetzan	2	55	12	133860	Trinket			4		3
+260820	SAF-T Emergency Ripper: Everlook	2	55	12	133859	Trinket			4		3
+260821	EZ and SAF Field Transporter: Mt. Hyjal	2	60	12	133868	Trinket			4		3
+260822	Ultrasafe Rechargeable Battery	2	60		465875					14	
+260823	Dimensional Transporter - Mt. Hyjal	2	60		133864			300	15	4	3
+260824	Gnomish Poultryizer	3	60	12	133864	Trinket			4		1
+260825	Ultralight Goblin Glider	2			237276			250	15	4	3
+260826	Gnomish Weather Machine NYI	2	60		133001	Parts		300	7	1	3
+260827	Stealthman 52	2	55		133862			250		14	
+260828	SAF-T Nitro Boosts	2	55	6	133031	Waist (Cloth)			4	1	2
+260829	EZ-Thro Magnetic Displacer	2	55	6	3694922	Waist (Cloth)			4	1	2
+260830	SAF-T Teleport	2	55		133874						
+264201	Schematic: SAF-T Tabs	1			134939	Engineering		25	9	3	
+264202	Schematic: SAF-T Dynamite	1			134939	Engineering		25	9	3	
+264203	Schematic: SAF-T Copper Bomb	1			134939	Engineering		55	9	3	
+264204	Schematic: EZ-Thro Wrap	1			134939	Engineering		100	9	3	
+264205	Schematic: EZ-Thro Copper Bomb XL	1			134939	Engineering		130	9	3	
+264206	Schematic: No Slip SAF-T Padding	1			134939	Engineering		145	9	3	
+264207	Schematic: SAF-T Bronze Bomb	1			134939	Engineering		145	9	3	
+264208	Schematic: SAF-T Jumbo Dynamite	1			134939	Engineering		150	9	3	
+264209	Schematic: SAF-T Bell	1			134939	Engineering		175	9	3	
+264210	Schematic: Shafety Sheep	1			134939	Engineering		175	9	3	
+264211	Schematic: EZ-Thro Fireproof Fuse	1			134939	Engineering		190	9	3	
+264212	Schematic: EZ-Thro Bronze Mortar	1			134939	Engineering		190	9	3	
+264213	Schematic: EZ-Thro Grenade	1			134939	Engineering		200	9	3	
+264214	Schematic: SAF-T Casing	1			134939	Engineering		215	9	3	
+264215	Schematic: SAF-T Bomb	1			134939	Engineering		215	9	3	
+264216	Schematic: Emergency Field Cloak	1			134939	Engineering		225	9	3	1
+264217	Schematic: Compact Critter Carrier	1			134939	Engineering		225	9	3	1
+264218	Schematic: EZ-Thro Tru-Trigger	1			134939	Engineering		240	9	3	
+264219	Schematic: Tru-Trigger Frag Bomb	1			134939	Engineering		240	9	3	
+264220	Schematic: SAF-T Disposable Parachute	1			134939	Engineering		250	9	3	1
+264221	Schematic: Gnomish Army Knife	1			134939	Engineering		250	9	3	1
+264222	Schematic: Loot-A-Rang	1			134939	Engineering		275	9	3	1
+264223	Schematic: SAF-T Tube	1			134939	Engineering		275	9	3	
+264224	Schematic: SAF-T Clever Dynamite	1			134939	Engineering		275	9	3	
+264225	Schematic: EZ-Thro Shell	1			134939	Engineering		285	9	3	
+264226	Schematic: EZ-Thro Thorium Grenade	1			134939	Engineering		285	9	3	
+264227	Schematic: EZ-Thro Dark Bomb	1			134939	Engineering		300	9	3	
+264228	Schematic: EZ-Thro Mana Bomb	1			134939	Engineering		300	9	3	
+264229	Schematic: EZ-Thro Field Transporter: Gadgetzan	1			134939	Engineering		300	9	3	
+264230	Schematic: SAF-T Emergency Ripper: Everlook	1			134939	Engineering		300	9	3	
+264231	Schematic: EZ and SAF Field Transporter: Mt. Hyjal	1			134939	Engineering		300	9	3	
+264232	Schematic: Ultrasafe Rechargeable Battery	1			134939	Engineering		300	9	3	1
+264233	Schematic: Dimensional Transporter: Mt. Hyjal	1			134939	Engineering		300	9	3	1
+264234	Schematic: Gnomish Poultryizer	1			134939	Engineering		300	9	3	1
+264235	Schematic: Ultralight Goblin Glider	1			134939	Engineering		300	9	3	1
+264236	Schematic: Gnomish Weather Machine	1			134939	Engineering		300	9	3	1
+264237	Schematic: Stealthman 52	1			134939	Engineering		300	9	3	1
+264238	Schematic: SAF-T Nitro Boosts	1			134939	Engineering		300	9	3	
+264239	Schematic: EZ-Thro Magnetic Displacer	1			134939	Engineering		300	9	3	
+264240	Schematic: SAF-T Teleport	1			134939	Engineering		300	9	3	
+269900	Centaur Banner Deployment Device	2	1		236362				15	4	
+269901	Schematic: Centaur Banner Deployment Device	2			134939	Engineering		190	9	3	1
+269902	Hoof-Shaped Foot Pedal	1	1		1534178					14	
+269903	Schematic: Hoof-Shaped Foot Pedal	2			134939	Engineering		140	9	3	1
+273092	Blueprint: Repair Bot	2			1001491	Engineering		140	9	3	
+273117	Blueprint: Anarchist's Workbench	2			1001491	Engineering		300	9	3	
+273129	Essence of Anarchy	2			133712				15	1	
+274030	Malleable Essence of Nature	4	1		132119	Enchanting			7	12	
+274048	9-60 Battery Pack	1			132489	Consumable				8	
+274387	Swiftfeather Arrow	4	60	24	249173	Projectile (Arrow)			6	2	1
+274388	Swiftstrike Shot	4	60	24	249176	Projectile (Bullet)			6	3	1
+274389	Schematic: Swiftfeather Arrow	4	1		134940	Engineering		300	9	3	1
+274390	Schematic: Swiftstrike Shot	4	1		134940	Engineering		300	9	3	1
+277132	Harvester Override Signalcaster	2			133015			65		14	1
+277470	Schematic: Harvester Override Signalcaster	1			134939	Engineering		65	9	3	1
+279272	SAF-T Ultra Precision Scope	3	60		3610512					14	
+279273	Hyper Deluxe Sniper Rifle Mk XVII	4	60	26	135614	Ranged (Guns)	Speed 2.50, Ranged Attack Power, Stamina, Spirit		2	3	2
+279321	Schematic: SAF-T Ultra Precision Scope	4			134942	Engineering		300	9	3	1
+279322	Schematic: Hyper Deluxe Sniper Rifle Mk XVII	4			134942	Engineering		300	9	3	1
+279949	Repair Bot	1			1336885	Consumable		140		8	
+279950	Reagent Bot	1			133871	Consumable		20		8	
+279989	Anarchist's Workbench	1			4624728	Consumable		300		8	
+280306	Whimsical Waistwrap	2	30	6		Waist (Cloth)		175	4	1	1
+280307	Gizmo Girdle	2	30	6		Waist (Leather)		175	4	2	1
+280308	Clanking Cord	2	30	6		Waist (Mail)		175	4	3	1
+280309	Serrated Strap	1		6		Waist (Cloth)			4	1	
+280310	Floppy Goggles	2	40	1		Head (Cloth)		200	4	1	1
+280311	Bent Goggles	2	40	1		Head (Leather)		200	4	2	1
+280312	Stuckbutton Goggles	2	40	1		Head (Mail)		200	4	3	1
+280313	Dented Goggles	2	40	1		Head (Plate)		200	4	4	1
+280321	Schematic: Whimsical Waistwrap	2	1		134942	Engineering		175	9	3	1
+280322	Schematic: Gizmo Girdle	2	1		134942	Engineering		175	9	3	1
+280323	Schematic: Clanking Cord	2	1		134942	Engineering		175	9	3	1
+280324	Schematic: Serrated Strap	2	1		134942	Engineering		175	9	3	1
+280325	Schematic: Floppy Goggles	2	1		134942	Engineering		200	9	3	1
+280326	Schematic: Bent Goggles	2	1		134942	Engineering		200	9	3	1
+280327	Schematic: Stuckbutton Goggles	2	1		134942	Engineering		200	9	3	1
+280328	Schematic: Dented Goggles	2	1		134942	Engineering		200	9	3	1
+284869	Unsanctified Grenade	1			133709						
+284870	Schematic: Unsanctified Grenade	1			134939	Engineering		260	9	3	
+285275	Satchel of Copper Bombs	2	13	25	133626	Thrown (Thrown)	Speed 2.00, Stamina	85	2	16	1
+285276	Satchel of Bronze Bombs	2	28	25	133635	Thrown (Thrown)	Speed 2.00, Stamina	165	2	16	1
+285277	Satchel of Iron Bombs	2	41	25	133640	Thrown (Thrown)	Speed 2.00, Stamina	230	2	16	1
+285278	Satchel of Dark Iron Bombs	2	52	25	133629	Thrown (Thrown)	Speed 2.00, Stamina	285	2	16	1
+285285	Schematic: Satchel of Copper Bombs	2	1		134942	Engineering		85	9	3	1
+285286	Schematic: Satchel of Bronze Bombs	2	1		134942	Engineering		165	9	3	1
+285287	Schematic: Satchel of Iron Bombs	2	1		134942	Engineering		230	9	3	1
+285288	Schematic: Satchel of Dark Iron Bombs	2	1		134942	Engineering		285	9	3	1
+286076	Schematic: Small Purple Rocket	2			134939	Engineering		125	9	3	1
+286077	Schematic: Small White Rocket	2			134939	Engineering		125	9	3	1
+286078	Schematic: Small Yellow Rocket	2			134939	Engineering		125	9	3	1
+286079	Schematic: Large Purple Rocket	2			134939	Engineering		175	9	3	1
+286080	Schematic: Large White Rocket	2			134939	Engineering		175	9	3	1
+286081	Schematic: Large Yellow Rocket	2			134939	Engineering		175	9	3	1
+286082	Schematic: Purple Rocket Cluster	2			134939	Engineering		225	9	3	1
+286083	Schematic: White Rocket Cluster	2			134939	Engineering		225	9	3	1
+286084	Schematic: Yellow Rocket Cluster	2			134939	Engineering		225	9	3	1
+286085	Schematic: Large Purple Rocket Cluster	2			134939	Engineering		275	9	3	1
+286086	Schematic: Large White Rocket Cluster	2			134939	Engineering		275	9	3	1
+286087	Schematic: Large Yellow Rocket Cluster	2			134939	Engineering		275	9	3	1]],
         },
         {
             name = "Leatherworking", skill = 165, count = 592,
@@ -4257,1218 +4257,1218 @@ ns.Data = {
 1213731	Spitfire Breastplate	320	320,330,340	234304,1,1	20500:4;20498:40;7078:2;15407:4;19726:8	0	1	
 1213728	Spitfire Gauntlets	320	320,330,340	234302,1,1	20500:3;20498:30;7078:2;15407:2;19726:6	0	1	]],
             items = [[
-783	Light Hide	1			134369	Leather			7	6
-1206	Moss Agate	2			134105				7	11
-1210	Shadowgem	2			134074				7	11
-1529	Jade	2			134134				7	11
-2300	Embossed Leather Vest	2	7	5	132724	Chest (Leather)	Stamina		4	2
-2302	Handstitched Leather Boots	1	3	8	132538	Feet (Leather)			4	2
-2303	Handstitched Leather Pants	2	5	7	134706	Legs (Leather)	Agility		4	2
-2304	Light Armor Kit	1	1		133611	Item Enhancement				6
-2307	Fine Leather Boots	2	13	8	132540	Feet (Leather)	Agility, Stamina		4	2
-2308	Fine Leather Cloak	2	10	16	133762	Back (Cloth)	Stamina		4	1
-2309	Embossed Leather Boots	2	10	8	132539	Feet (Leather)	Stamina, Spell Power		4	2
-2310	Embossed Leather Cloak	2	8	16	133150	Back (Cloth)	Agility		4	1
-2311	White Leather Jerkin	2	8	5	132760	Chest (Leather)	Strength, Spell Power		4	2
-2312	Fine Leather Gloves	2	10	10	132939	Hands (Leather)	Intellect, Spell Power		4	2
-2313	Medium Armor Kit	1	5		133609	Item Enhancement				6
-2314	Toughened Leather Armor	2	19	5	132725	Chest (Leather)	Stamina, Spirit		4	2
-2315	Gray Leather Boots	2	15	8	132539	Feet (Leather)	Agility		4	2
-2316	Dark Leather Cloak	2	17	16	133762	Back (Cloth)	Agility, Strength		4	1
-2317	Dark Leather Tunic	2	15	5	132718	Chest (Leather)	Agility		4	2
-2318	Light Leather	1			134252	Leather			7	6
-2319	Medium Leather	1			134254	Leather			7	6
-2320	Coarse Thread	1			132891	Cloth			7	5
-2321	Fine Thread	1			132912	Cloth			7	5
-2324	Bleach	1			132799				7	11
-2325	Black Dye	1			134843				7	11
-2406	Pattern: Fine Leather Boots	2			134942	Leatherworking		65	9	1
-2407	Pattern: White Leather Jerkin	2			134939	Leatherworking		40	9	1
-2408	Pattern: Fine Leather Gloves	2			134942	Leatherworking		50	9	1
-2409	Pattern: Dark Leather Tunic	2			134942	Leatherworking		75	9	1
-2454	Elixir of Minor Strength	1	1		134836	Elixir				2
-2455	Minor Mana Potion	1	5		134850	Potion				1
-2457	Elixir of Minor Agility	1	2		134871	Elixir				2
-2458	Elixir of Minor Fortitude	1	2		134822	Elixir				2
-2459	Swiftness Potion	1	5		134875	Potion				1
-2605	Green Dye	1			134743				7	11
-2840	Copper Bar	1			133216	Metal & Stone			7	7
-2934	Ruined Leather Scraps	1			134360	Leather			7	6
-2997	Bolt of Woolen Cloth	1			132913	Cloth			7	5
-3182	Spider's Silk	1			136113	Cloth			7	5
-3356	Kingsblood	1			134183	Herb			7	9
-3383	Elixir of Wisdom	1	10		134717	Elixir				2
-3385	Lesser Mana Potion	1	14		134851	Potion				1
-3389	Elixir of Lesser Defense	1	16		134844	Elixir				2
-3390	Elixir of Lesser Agility	1	18		134872	Elixir				2
-3391	Elixir of Ogre Strength	1	20		134837	Elixir				2
-3719	Hillman's Cloak	2	25	16	133759	Back (Cloth)	Spell Power, Stamina		4	1
-3824	Shadow Oil	1	24		134803	Consumable				8
-3827	Mana Potion	1	22		134852	Potion				1
-3864	Citrine	2			134117				7	11
-4096	Coarse Gorilla Hair	1			134324				15	
-4231	Cured Light Hide	1			134366	Leather			7	6
-4232	Medium Hide	1			134364	Leather			7	6
-4233	Cured Medium Hide	1			134354	Leather			7	6
-4234	Heavy Leather	1			134256	Leather			7	6
-4235	Heavy Hide	1			134370	Leather			7	6
-4236	Cured Heavy Hide	1			134367	Leather			7	6
-4237	Handstitched Leather Belt	2	5	6	132493	Waist (Leather)	Strength		4	2
-4239	Embossed Leather Gloves	2	8	10	132939	Hands (Leather)	Agility, Stamina		4	2
-4242	Embossed Leather Pants	2	10	7	134582	Legs (Leather)	Stamina, Spell Power		4	2
-4243	Fine Leather Tunic	2	12	5	132724	Chest (Leather)	Agility, Stamina		4	2
-4244	Hillman's Leather Vest	2	15	5	132725	Chest (Leather)	Stamina, Spell Power		4	2
-4246	Fine Leather Belt	2	11	6	132493	Waist (Leather)	Agility, Stamina		4	2
-4247	Hillman's Leather Gloves	2	24	10	132939	Hands (Leather)	Stamina, Spell Power		4	2
-4248	Dark Leather Gloves	2	21	10	132939	Hands (Leather)			4	2
-4249	Dark Leather Belt	2	20	6	132492	Waist (Leather)	Agility, Stamina		4	2
-4250	Hillman's Belt	2	20	6	132495	Waist (Leather)	Stamina, Spell Power		4	2
-4251	Hillman's Shoulders	2	21	3	135039	Shoulder (Leather)	Stamina, Spirit		4	2
-4252	Dark Leather Shoulders	2	23	3	135043	Shoulder (Leather)	Agility		4	2
-4253	Toughened Leather Gloves	3	22	10	132958	Hands (Leather)	Agility, Strength, Stamina		4	2
-4254	Barbaric Gloves	2	25	10	132939	Hands (Leather)	Stamina, Strength, Agility		4	2
-4255	Green Leather Armor	2	26	5	132723	Chest (Leather)	Agility, Intellect		4	2
-4256	Guardian Armor	2	30	5	132723	Chest (Leather)	Intellect, Spell Power		4	2
-4257	Green Leather Belt	2	27	6	132506	Waist (Leather)	Agility, Intellect		4	2
-4258	Guardian Belt	2	29	6	132492	Waist (Leather)	Intellect, Spell Power		4	2
-4259	Green Leather Bracers	2	31	9	132611	Wrist (Leather)	Agility, Intellect		4	2
-4260	Guardian Leather Bracers	2	34	9	132609	Wrist (Leather)	Intellect, Spell Power		4	2
-4262	Gem-studded Leather Belt	3	32	6	132490	Waist (Leather)	Stamina, Attack Power		4	2
-4264	Barbaric Belt	2	35	6	132498	Waist (Leather)	Strength		4	2
-4265	Heavy Armor Kit	1	20		133610	Item Enhancement				6
-4289	Salt	1			133849	Leather			7	6
-4291	Silken Thread	1			132906	Cloth			7	5
-4293	Pattern: Hillman's Leather Vest	2			134939	Leatherworking		75	9	1
-4294	Pattern: Hillman's Belt	2			134939	Leatherworking		95	9	1
-4295	Pattern: Double-stitched Leather Gloves OLD	1			134939	Leatherworking		125	9	1
-4296	Pattern: Dark Leather Shoulders	2			134942	Leatherworking		115	9	1
-4297	Pattern: Barbaric Gloves	2			134942	Leatherworking		125	9	1
-4298	Pattern: Guardian Belt	3			134939	Leatherworking		145	9	1
-4299	Pattern: Guardian Armor	2			134939	Leatherworking		150	9	1
-4300	Pattern: Guardian Leather Bracers	2			134939	Leatherworking		170	9	1
-4301	Pattern: Barbaric Belt	3			134939	Leatherworking		175	9	1
-4304	Thick Leather	1			134257	Leather			7	6
-4305	Bolt of Silk Cloth	1			132907	Cloth			7	5
-4337	Thick Spider's Silk	1			136113	Cloth			7	5
-4338	Mageweave Cloth	1			132892	Cloth			7	5
-4340	Gray Dye	1			132797				7	11
-4455	Raptor Hide Harness	2	28	5	132719	Chest (Leather)	Stamina		4	2
-4456	Raptor Hide Belt	2	28	6	132491	Waist (Leather)	Strength, Stamina		4	2
-4461	Raptor Hide	1			134303	Leather			7	6
-4470	Simple Wood	1			135435				7	11
-5081	Kodo Hide Bag	1		18	133639	Bag (Bag)			1	
-5082	Thin Kodo Leather	1			134255	Leather			7	6
-5083	Pattern: Kodo Hide Bag	2			134939	Leatherworking		35	9	1
-5116	Long Tail Feather	1			132916	Leather			7	6
-5373	Lucky Charm	1			133601				15	
-5498	Small Lustrous Pearl	2			134122				7	11
-5500	Iridescent Pearl	2			134121				7	11
-5633	Great Rage Potion	1	25		134801	Potion				1
-5637	Large Fang	1			133725				7	11
-5739	Barbaric Harness	2	33	5	132719	Chest (Leather)	Agility, Stamina, Strength		4	2
-5780	Murloc Scale Belt	2	13	6	132491	Waist (Leather)	Agility, Strength		4	2
-5781	Murloc Scale Breastplate	2	14	5	132634	Chest (Leather)	Strength, Agility		4	2
-5782	Thick Murloc Armor	2	29	5	132634	Chest (Leather)	Strength, Stamina		4	2
-5783	Murloc Scale Bracers	2	33	9	132604	Wrist (Leather)	Stamina, Strength		4	2
-5784	Slimy Murloc Scale	1			134304	Leather			7	6
-5785	Thick Murloc Scale	1			134305	Leather			7	6
-5786	Pattern: Murloc Scale Belt	1			134939	Leatherworking		65	9	1
-5787	Pattern: Murloc Scale Breastplate	1			134939	Leatherworking		70	9	1
-5788	Pattern: Thick Murloc Armor	2			134939	Leatherworking		145	9	1
-5789	Pattern: Murloc Scale Bracers	2			134939	Leatherworking		165	9	1
-5957	Handstitched Leather Vest	2	3	5	132760	Chest (Leather)	Agility		4	2
-5958	Fine Leather Pants	2	16	7	134582	Legs (Leather)	Intellect, Spirit		4	2
-5961	Dark Leather Pants	2	18	7	134589	Legs (Leather)	Agility		4	2
-5962	Guardian Pants	2	27	7	134582	Legs (Leather)	Intellect, Spell Power		4	2
-5963	Barbaric Leggings	2	29	7	134592	Legs (Leather)	Stamina, Strength, Agility		4	2
-5964	Barbaric Shoulders	2	30	3	135039	Shoulder (Leather)	Stamina, Strength, Agility		4	2
-5965	Guardian Cloak	2	32	16	133755	Back (Cloth)	Spell Power, Intellect		4	1
-5966	Guardian Gloves	2	33	10	132939	Hands (Leather)	Intellect, Spell Power		4	2
-5972	Pattern: Fine Leather Pants	2			134942	Leatherworking		80	9	1
-5973	Pattern: Barbaric Leggings	1			134939	Leatherworking		145	9	1
-5974	Pattern: Guardian Cloak	2			134942	Leatherworking		160	9	1
-6260	Blue Dye	1			134776				7	11
-6261	Orange Dye	1			134815				7	11
-6466	Deviate Scale Cloak	2	13	16	134305	Back (Cloth)	Stamina, Agility		4	1
-6467	Deviate Scale Gloves	2	16	10	132939	Hands (Leather)	Stamina, Agility		4	2
-6468	Deviate Scale Belt	3	18	6	132498	Waist (Leather)	Stamina, Agility, Strength		4	2
-6470	Deviate Scale	1			134304	Leather			7	6
-6471	Perfect Deviate Scale	1			134303	Leather			7	6
-6474	Pattern: Deviate Scale Cloak	1			134939	Leatherworking		65	9	1
-6475	Pattern: Deviate Scale Gloves	1			134939	Leatherworking		80	9	1
-6476	Pattern: Deviate Scale Belt	2			134942	Leatherworking		90	9	1
-6662	Elixir of Giant Growth	1	8		134721	Elixir				2
-6709	Moonglow Vest	2	13	5	132724	Chest (Leather)	Spell Power, Intellect		4	2
-6710	Pattern: Moonglow Vest	2			134939	Leatherworking		65	9	1
-7067	Elemental Earth	1			134572	Elemental			7	10
-7069	Elemental Air	1			136107	Elemental			7	10
-7070	Elemental Water	1			134714	Elemental			7	10
-7071	Iron Buckle	1			133607	Parts			7	1
-7075	Core of Earth	1			135231	Elemental			7	10
-7076	Essence of Earth	2			136102	Elemental			7	10
-7077	Heart of Fire	1			135819	Elemental			7	10
-7078	Essence of Fire	2			135830	Elemental			7	10
-7079	Globe of Water	1			134333	Elemental			7	10
-7080	Essence of Water	2			136007	Elemental			7	10
-7082	Essence of Air	2			136022	Elemental			7	10
-7276	Handstitched Leather Cloak	1	4	16	133150	Back (Cloth)			4	1
-7277	Handstitched Leather Bracers	1	4	9	132607	Wrist (Leather)			4	2
-7278	Light Leather Quiver	1	1	18	134401	Bag			11	2
-7279	Small Leather Ammo Pouch	1	1	18	133581	Bag			11	3
-7280	Rugged Leather Pants	2	6	7	134582	Legs (Leather)	Stamina		4	2
-7281	Light Leather Bracers	2	9	9	132603	Wrist (Leather)	Agility, Strength		4	2
-7282	Light Leather Pants	2	14	7	134582	Legs (Leather)	Agility, Stamina		4	2
-7283	Black Whelp Cloak	2	15	16	134305	Back (Cloth)	Spell Power		4	1
-7284	Red Whelp Gloves	2	19	10	132939	Hands (Leather)			4	2
-7285	Nimble Leather Gloves	2	19	10	132939	Hands (Leather)	Agility, Stamina		4	2
-7286	Black Whelp Scale	1			134310	Leather			7	6
-7287	Red Whelp Scale	1			134318	Leather			7	6
-7288	Pattern: Rugged Leather Pants	2			134939	Leatherworking		30	9	1
-7289	Pattern: Black Whelp Cloak	1			134939	Leatherworking		75	9	1
-7290	Pattern: Red Whelp Gloves	1			134939	Leatherworking		95	9	1
-7348	Fletcher's Gloves	2	20	10	132939	Hands (Leather)	Critical Strike Rating, Parry Rating		4	2
-7349	Herbalist's Gloves	2	22	10	132952	Hands (Leather)			4	2
-7352	Earthen Leather Shoulders	2	22	3	135037	Shoulder (Leather)	Stamina		4	2
-7358	Pilferer's Gloves	2	23	10	132939	Hands (Leather)	Agility		4	2
-7359	Heavy Earthen Gloves	2	24	10	132957	Hands (Leather)	Attack Power		4	2
-7360	Pattern: Dark Leather Gloves	2			134942	Leatherworking		95	9	1
-7361	Pattern: Herbalist's Gloves	2			134939	Leatherworking		110	9	1
-7362	Pattern: Earthen Leather Shoulders	1			134939	Leatherworking		110	9	1
-7363	Pattern: Pilferer's Gloves	2			134939	Leatherworking		115	9	1
-7364	Pattern: Heavy Earthen Gloves	2			134939	Leatherworking		120	9	1
-7371	Heavy Quiver	2	30	18	134402	Bag			11	2
-7372	Heavy Leather Ammo Pouch	2	30	18	133634	Bag			11	3
-7373	Dusky Leather Leggings	2	28	7	134587	Legs (Leather)	Agility		4	2
-7374	Dusky Leather Armor	2	30	5	132718	Chest (Leather)	Agility		4	2
-7375	Green Whelp Armor	2	30	5	132631	Chest (Leather)	Stamina		4	2
-7377	Frost Leather Cloak	2	31	16	133756	Back (Cloth)			4	1
-7378	Dusky Bracers	2	32	9	132606	Wrist (Leather)	Agility		4	2
-7386	Green Whelp Bracers	2	33	9	132605	Wrist (Leather)	Intellect		4	2
-7387	Dusky Belt	2	34	6	132495	Waist (Leather)	Agility, Stamina		4	2
-7390	Dusky Boots	2	35	8	132541	Feet (Leather)	Agility, Stamina		4	2
-7391	Swift Boots	2	35	8	132542	Feet (Leather)	Stamina		4	2
-7392	Green Whelp Scale	1			134314	Leather			7	6
-7428	Shadowcat Hide	1			134345	Leather			7	6
-7449	Pattern: Dusky Leather Leggings	2			134942	Leatherworking		140	9	1
-7450	Pattern: Green Whelp Armor	2			134939	Leatherworking		150	9	1
-7451	Pattern: Green Whelp Bracers	2			134939	Leatherworking		165	9	1
-7452	Pattern: Dusky Boots	3			134939	Leatherworking		175	9	1
-7453	Pattern: Swift Boots	2			134939	Leatherworking		175	9	1
-7613	Pattern: Green Leather Armor	1			134939	Leatherworking		130	9	1
-7971	Black Pearl	2			134120				7	11
-8146	Wicked Claw	1			134294				7	11
-8150	Deeprock Salt	1			133849	Leather			7	6
-8151	Flask of Mojo	1			134776				7	11
-8152	Flask of Big Mojo	1			134743				7	11
-8153	Wildvine	1			134183	Herb			7	9
-8154	Scorpid Scale	1			134304	Leather			7	6
-8165	Worn Dragonscale	1			134319	Leather			7	6
-8167	Turtle Scale	1			134313	Leather			7	6
-8168	Jet Black Feather	1			132915	Leather			7	6
-8169	Thick Hide	1			134356	Leather			7	6
-8170	Rugged Leather	1			134251	Leather			7	6
-8171	Rugged Hide	1			134357	Leather			7	6
-8172	Cured Thick Hide	1			134353	Leather			7	6
-8173	Thick Armor Kit	1	30		133602	Item Enhancement				6
-8174	Comfortable Leather Hat	2	35	1	133117	Head (Leather)	Stamina, Spell Power		4	2
-8175	Nightscape Tunic	2	36	5	132718	Chest (Leather)	Agility, Stamina		4	2
-8176	Nightscape Headband	2	36	1	132513	Head (Leather)	Agility, Stamina		4	2
-8185	Turtle Scale Leggings	2	42	7	134582	Legs (Mail)	Stamina, Spell Power, Intellect		4	3
-8187	Turtle Scale Gloves	2	36	10	132939	Hands (Mail)	Stamina, Spell Power, Intellect		4	3
-8189	Turtle Scale Breastplate	2	37	5	132634	Chest (Mail)	Stamina, Spell Power, Intellect		4	3
-8191	Turtle Scale Helm	2	41	1	133142	Head (Mail)	Stamina, Spell Power, Intellect		4	3
-8192	Nightscape Shoulders	2	37	3	135038	Shoulder (Leather)	Agility, Stamina		4	2
-8193	Nightscape Pants	2	41	7	134591	Legs (Leather)	Agility, Stamina		4	2
-8195	Nightscape Cloak	2	41	16	133755	Back (Cloth)	Agility, Stamina		4	1
-8197	Nightscape Boots	2	42	8	132539	Feet (Leather)	Agility		4	2
-8198	Turtle Scale Bracers	2	37	9	132605	Wrist (Mail)	Intellect, Spell Power, Stamina		4	3
-8200	Big Voodoo Robe	2	38	20	132666	Chest (Leather)	Intellect, Spell Power		4	2
-8201	Big Voodoo Mask	2	39	1	132482	Head (Leather)	Intellect, Spell Power		4	2
-8202	Big Voodoo Pants	2	42	7	134582	Legs (Leather)	Spell Power, Intellect		4	2
-8203	Tough Scorpid Breastplate	2	39	5	132717	Chest (Mail)	Agility, Intellect		4	3
-8204	Tough Scorpid Gloves	2	40	10	132958	Hands (Mail)	Agility, Intellect		4	3
-8205	Tough Scorpid Bracers	2	39	9	132608	Wrist (Mail)	Agility, Intellect		4	3
-8206	Tough Scorpid Leggings	2	44	7	134592	Legs (Mail)	Agility, Intellect		4	3
-8207	Tough Scorpid Shoulders	2	43	3	135035	Shoulder (Mail)	Agility, Intellect		4	3
-8208	Tough Scorpid Helm	2	45	1	133122	Head (Mail)	Agility, Intellect		4	3
-8209	Tough Scorpid Boots	2	42	8	132539	Feet (Mail)	Agility, Intellect		4	3
-8210	Wild Leather Shoulders	2	39	3	135049	Shoulder (Leather)			4	2
-8211	Wild Leather Vest	2	40	5	132647	Chest (Leather)			4	2
-8212	Wild Leather Leggings	2	45	7	134594	Legs (Leather)			4	2
-8213	Wild Leather Boots	2	44	8	132541	Feet (Leather)			4	2
-8214	Wild Leather Helmet	2	40	1	133078	Head (Leather)			4	2
-8215	Wild Leather Cloak	2	45	16	133755	Back (Cloth)			4	1
-8216	Big Voodoo Cloak	2	43	16	133754	Back (Cloth)	Intellect, Spell Power		4	1
-8217	Quickdraw Quiver	2	40	18	134407	Bag			11	2
-8218	Thick Leather Ammo Pouch	2	40	18	133635	Bag			11	3
-8343	Heavy Silken Thread	1			132906	Cloth			7	5
-8345	Wolfshead Helm	3	40	1	133072	Head (Leather)	Spirit		4	2
-8346	Gauntlets of the Sea	3	41	10	132964	Hands (Leather)	Agility, Spell Damage, Healing		4	2
-8347	Dragonscale Gauntlets	3	40	10	132944	Hands (Mail)	Agility, Stamina, Critical Strike Rating		4	3
-8348	Helm of Fire	3	45	1	133076	Head (Leather)	Agility, Stamina		4	2
-8349	Feathered Breastplate	3	45	5	132721	Chest (Leather)	Spirit, Intellect, Spell Power		4	2
-8367	Dragonscale Breastplate	3	46	5	132629	Chest (Mail)	Stamina		4	3
-8368	Thick Wolfhide	1			134346	Leather			7	6
-8384	Pattern: Comfortable Leather Hat	3			134939	Leatherworking		175	9	1
-8385	Pattern: Turtle Scale Gloves	1			134939	Leatherworking		180	9	1
-8386	Pattern: Big Voodoo Robe	2			134942	Leatherworking		190	9	1
-8387	Pattern: Big Voodoo Mask	2			134942	Leatherworking		195	9	1
-8388	Pattern: Nightscape Cloak	2			134939	Leatherworking		205	9	1
-8389	Pattern: Big Voodoo Pants	2			134942	Leatherworking		215	9	1
-8390	Pattern: Big Voodoo Cloak	2			134942	Leatherworking		215	9	1
-8395	Pattern: Tough Scorpid Breastplate	2			134942	Leatherworking		195	9	1
-8397	Pattern: Tough Scorpid Bracers	2			134942	Leatherworking		195	9	1
-8398	Pattern: Tough Scorpid Gloves	2			134942	Leatherworking		200	9	1
-8399	Pattern: Tough Scorpid Boots	2			134942	Leatherworking		210	9	1
-8400	Pattern: Tough Scorpid Shoulders	2			134942	Leatherworking		215	9	1
-8401	Pattern: Tough Scorpid Leggings	2			134942	Leatherworking		220	9	1
-8402	Pattern: Tough Scorpid Helm	2			134942	Leatherworking		225	9	1
-8403	Pattern: Wild Leather Shoulders	2			134939	Leatherworking		195	9	1
-8404	Pattern: Wild Leather Vest	2			134939	Leatherworking		200	9	1
-8405	Pattern: Wild Leather Helmet	2			134939	Leatherworking		200	9	1
-8406	Pattern: Wild Leather Boots	2			134939	Leatherworking		220	9	1
-8407	Pattern: Wild Leather Leggings	2			134939	Leatherworking		225	9	1
-8408	Pattern: Wild Leather Cloak	2			134939	Leatherworking		225	9	1
-8409	Pattern: Nightscape Shoulders	2			134939	Leatherworking		185	9	1
-8949	Elixir of Agility	1	27		134873	Elixir				2
-8951	Elixir of Defense	1	29		134845	Elixir				2
-9206	Elixir of Greater Strength	1	48		134839	Elixir				2
-10940	Strange Dust	1			132858	Enchanting			7	12
-11083	Soul Dust	1			132857	Enchanting			7	12
-11137	Vision Dust	1			132859	Enchanting			7	12
-11176	Dream Dust	1			132855	Enchanting			7	12
-11754	Black Diamond	2			134071				12	
-12361	Blue Sapphire	2			134132				7	11
-12364	Huge Emerald	2			134104				7	11
-12607	Brilliant Chromatic Scale	3			134319	Leather			7	6
-12624	Wildthorn Mail	3	49	5	132634	Chest (Mail)	Spell Power, Stamina, Hit Rating		4	3
-12632	Storm Gauntlets	3	54	10	132964	Hands (Mail)	Stamina, Spell Power, Hit Rating		4	3
-12636	Helm of the Great Chief	3	56	1	133126	Head (Mail)	Spirit, Healing, Spell Damage		4	3
-12641	Invulnerable Mail	4	57	5	132629	Chest (Mail)	Stamina		4	3
-12691	Pattern: Wildthorn Mail	2			134942	Leatherworking		245	9	1
-12703	Pattern: Storm Gauntlets	3			134939	Leatherworking		270	9	1
-12716	Pattern: Helm of the Great Chief	3			134939	Leatherworking		290	9	1
-12728	Pattern: Invulnerable Mail	4			134939	Leatherworking		295	9	1
-12753	Skin of Shadow	2			134430				12	
-12799	Large Opal	2			134116				7	11
-12800	Azerothian Diamond	2			134094				7	11
-12803	Living Essence	2			136006	Elemental			7	10
-12804	Powerful Mojo	1			136011				7	11
-12809	Guardian Stone	2			135228	Metal & Stone			7	7
-12810	Enchanted Leather	1			134418	Leather			7	6
-12811	Righteous Orb	2			134122				7	11
-12938	Blood of Heroes	1			134813				12	
-13287	Pattern: Raptor Hide Harness	2			134939	Leatherworking		140	9	1
-13288	Pattern: Raptor Hide Belt	2			134939	Leatherworking		140	9	1
-13423	Stonescale Oil	1			134848				7	11
-13444	Major Mana Potion	1	49		134856	Potion				1
-14044	Cindercloth Cloak	2	50	16	133770	Back (Cloth)	Intellect		4	1
-14047	Runecloth	1			132903	Cloth			7	5
-14048	Bolt of Runecloth	1			132904	Cloth			7	5
-14227	Ironweb Spider Silk	1			136113	Cloth			7	5
-14256	Felcloth	1			132888	Cloth			7	5
-14341	Rune Thread	1			136120	Cloth			7	5
-14342	Mooncloth	1			132895	Cloth			7	5
-14635	Pattern: Gem-studded Leather Belt	1			134939	Leatherworking		160	9	1
-15045	Green Dragonscale Breastplate	3	47	5	132628	Chest (Mail)	Spell Damage, Healing, Stamina		4	3
-15046	Green Dragonscale Leggings	3	49	7	134585	Legs (Mail)	Healing, Stamina, Spell Damage		4	3
-15047	Red Dragonscale Breastplate	3	56	5	132628	Chest (Mail)	Healing, Spell Damage		4	3
-15048	Blue Dragonscale Breastplate	3	52	5	132626	Chest (Mail)	Intellect, Spell Power		4	3
-15049	Blue Dragonscale Shoulders	3	54	3	135049	Shoulder (Mail)	Intellect, Spell Power		4	3
-15050	Black Dragonscale Breastplate	3	53	5	132741	Chest (Mail)	Stamina, Attack Power		4	3
-15051	Black Dragonscale Shoulders	3	55	3	135032	Shoulder (Mail)	Stamina, Attack Power		4	3
-15052	Black Dragonscale Leggings	3	57	7	134583	Legs (Mail)	Stamina, Attack Power		4	3
-15053	Volcanic Breastplate	2	52	5	132722	Chest (Leather)	Stamina		4	2
-15054	Volcanic Leggings	2	49	7	134586	Legs (Leather)	Stamina		4	2
-15055	Volcanic Shoulders	2	56	3	135044	Shoulder (Leather)	Stamina		4	2
-15056	Stormshroud Armor	3	52	5	132723	Chest (Leather)	Critical Strike Rating, Dodge Rating		4	2
-15057	Stormshroud Pants	3	50	7	134589	Legs (Leather)	Critical Strike Rating, Dodge Rating		4	2
-15058	Stormshroud Shoulders	3	54	3	135036	Shoulder (Leather)	Stamina, Critical Strike Rating, Dodge Rating		4	2
-15059	Living Breastplate	3	55	5	132742	Chest (Leather)	Spirit, Stamina, Healing, Spell Damage		4	2
-15060	Living Leggings	3	52	7	134585	Legs (Leather)	Spirit, Stamina, Healing, Spell Damage		4	2
-15061	Living Shoulders	3	49	3	135049	Shoulder (Leather)	Spirit, Stamina, Healing, Spell Damage		4	2
-15062	Devilsaur Leggings	3	55	7	134706	Legs (Leather)	Stamina, Attack Power, Critical Strike Rating		4	2
-15063	Devilsaur Gauntlets	3	53	10	132960	Hands (Leather)	Stamina, Attack Power, Critical Strike Rating		4	2
-15064	Warbear Harness	3	50	5	132719	Chest (Leather)	Stamina, Strength, Agility		4	2
-15065	Warbear Woolies	3	52	7	134706	Legs (Leather)	Strength, Stamina, Agility		4	2
-15066	Ironfeather Breastplate	3	53	5	132721	Chest (Leather)	Spirit, Intellect, Spell Power		4	2
-15067	Ironfeather Shoulders	3	49	3	135037	Shoulder (Leather)	Intellect, Spirit, Spell Power		4	2
-15068	Frostsaber Tunic	2	57	5	132632	Chest (Leather)	Stamina		4	2
-15069	Frostsaber Leggings	2	52	7	134581	Legs (Leather)	Stamina		4	2
-15070	Frostsaber Gloves	2	54	10	132950	Hands (Leather)	Stamina		4	2
-15071	Frostsaber Boots	2	50	8	132539	Feet (Leather)	Stamina		4	2
-15072	Chimeric Leggings	2	51	7	134582	Legs (Leather)	Stamina		4	2
-15073	Chimeric Boots	2	50	8	132541	Feet (Leather)	Stamina		4	2
-15074	Chimeric Gloves	2	48	10	132957	Hands (Leather)	Stamina		4	2
-15075	Chimeric Vest	2	53	5	132722	Chest (Leather)	Stamina		4	2
-15076	Heavy Scorpid Vest	2	48	5	132637	Chest (Mail)	Stamina, Agility		4	3
-15077	Heavy Scorpid Bracers	2	46	9	132608	Wrist (Mail)	Stamina, Agility		4	3
-15078	Heavy Scorpid Gauntlet	2	50	10	132958	Hands (Mail)	Stamina, Agility		4	3
-15079	Heavy Scorpid Leggings	2	52	7	134592	Legs (Mail)	Agility, Stamina		4	3
-15080	Heavy Scorpid Helm	2	54	1	133122	Head (Mail)	Stamina, Agility		4	3
-15081	Heavy Scorpid Shoulders	2	56	3	135038	Shoulder (Mail)	Stamina, Agility		4	3
-15082	Heavy Scorpid Belt	2	51	6	132492	Waist (Mail)	Stamina, Agility		4	3
-15083	Wicked Leather Gauntlets	2	47	10	132965	Hands (Leather)	Agility, Stamina		4	2
-15084	Wicked Leather Bracers	2	48	9	132606	Wrist (Leather)	Agility, Stamina		4	2
-15085	Wicked Leather Armor	2	56	5	132741	Chest (Leather)	Agility, Stamina		4	2
-15086	Wicked Leather Headband	2	51	1	133683	Head (Leather)	Agility, Stamina		4	2
-15087	Wicked Leather Pants	2	53	7	134592	Legs (Leather)	Agility, Stamina		4	2
-15088	Wicked Leather Belt	2	55	6	132492	Waist (Leather)	Agility, Stamina		4	2
-15090	Runic Leather Armor	2	57	5	132722	Chest (Leather)	Intellect, Spell Power		4	2
-15091	Runic Leather Gauntlets	2	49	10	132965	Hands (Leather)	Spell Power, Intellect		4	2
-15092	Runic Leather Bracers	2	50	9	132610	Wrist (Leather)	Intellect, Spell Power		4	2
-15093	Runic Leather Belt	2	51	6	132512	Waist (Leather)	Intellect, Spell Power		4	2
-15094	Runic Leather Headband	2	53	1	133681	Head (Leather)	Intellect, Spell Power		4	2
-15095	Runic Leather Pants	2	55	7	134582	Legs (Leather)	Spell Power, Intellect		4	2
-15096	Runic Leather Shoulders	2	57	3	135046	Shoulder (Leather)	Intellect, Spell Power		4	2
-15138	Onyxia Scale Cloak	3	55	16	133757	Back (Cloth)	Stamina		4	1
-15141	Onyxia Scale Breastplate	4	57	5	132741	Chest (Mail)	Strength, Agility, Stamina, Intellect, Spirit, Bonus Armor, Critical Strike Rating		4	3
-15407	Cured Rugged Hide	1			134355	Leather			7	6
-15408	Heavy Scorpid Scale	1			134305	Leather			7	6
-15409	Refined Deeprock Salt	1			133848	Leather			7	6
-15410	Scale of Onyxia	3			134309	Leather			7	6
-15412	Green Dragonscale	1			134313	Leather			7	6
-15414	Red Dragonscale	1			134317	Leather			7	6
-15415	Blue Dragonscale	1			134311	Leather			7	6
-15416	Black Dragonscale	1			134309	Leather			7	6
-15417	Devilsaur Leather	1			134347	Leather			7	6
-15419	Warbear Leather	1			134360	Leather			7	6
-15420	Ironfeather	1			132918	Leather			7	6
-15422	Frostsaber Leather	1			134350	Leather			7	6
-15423	Chimera Leather	1			134250	Leather			7	6
-15564	Rugged Armor Kit	1	40		133604	Item Enhancement				6
-15724	Pattern: Heavy Scorpid Bracers	1			134939	Leatherworking		255	9	1
-15725	Pattern: Wicked Leather Gauntlets	1			134939	Leatherworking		235	9	1
-15726	Pattern: Green Dragonscale Breastplate	1			134939	Leatherworking		235	9	1
-15727	Pattern: Heavy Scorpid Vest	2			134939	Leatherworking		240	9	1
-15728	Pattern: Wicked Leather Bracers	2			134942	Leatherworking		240	9	1
-15729	Pattern: Chimeric Gloves	1			134939	Leatherworking		240	9	1
-15730	Pattern: Red Dragonscale Breastplate	3			134939	Leatherworking		290	9	1
-15731	Pattern: Runic Leather Gauntlets	2			134942	Leatherworking		245	9	1
-15732	Pattern: Volcanic Leggings	2			134942	Leatherworking		245	9	1
-15733	Pattern: Green Dragonscale Leggings	3			134939	Leatherworking		245	9	1
-15734	Pattern: Living Shoulders	1			134939	Leatherworking		245	9	1
-15735	Pattern: Ironfeather Shoulders	1			134939	Leatherworking		245	9	1
-15737	Pattern: Chimeric Boots	2			134942	Leatherworking		250	9	1
-15738	Pattern: Heavy Scorpid Gauntlets	2			134939	Leatherworking		250	9	1
-15739	Pattern: Runic Leather Bracers	2			134942	Leatherworking		250	9	1
-15740	Pattern: Frostsaber Boots	1			134939	Leatherworking		250	9	1
-15741	Pattern: Stormshroud Pants	1			134939	Leatherworking		250	9	1
-15742	Pattern: Warbear Harness	1			134939	Leatherworking		250	9	1
-15743	Pattern: Heavy Scorpid Belt	2			134939	Leatherworking		255	9	1
-15744	Pattern: Wicked Leather Headband	2			134942	Leatherworking		255	9	1
-15745	Pattern: Runic Leather Belt	2			134942	Leatherworking		255	9	1
-15746	Pattern: Chimeric Leggings	2			134942	Leatherworking		255	9	1
-15747	Pattern: Frostsaber Leggings	2			134942	Leatherworking		260	9	1
-15748	Pattern: Heavy Scorpid Leggings	2			134939	Leatherworking		260	9	1
-15749	Pattern: Volcanic Breastplate	2			134942	Leatherworking		260	9	1
-15751	Pattern: Blue Dragonscale Breastplate	1			134939	Leatherworking		260	9	1
-15752	Pattern: Living Leggings	3			134941	Leatherworking		260	9	1
-15753	Pattern: Stormshroud Armor	3			134939	Leatherworking		260	9	1
-15755	Pattern: Chimeric Vest	2			134942	Leatherworking		265	9	1
-15756	Pattern: Runic Leather Headband	1			134939	Leatherworking		265	9	1
-15757	Pattern: Wicked Leather Pants	2			134942	Leatherworking		265	9	1
-15758	Pattern: Devilsaur Gauntlets	1			134939	Leatherworking		265	9	1
-15759	Pattern: Black Dragonscale Breastplate	1			134939	Leatherworking		265	9	1
-15760	Pattern: Ironfeather Breastplate	3			134939	Leatherworking		265	9	1
-15761	Pattern: Frostsaber Gloves	2			134942	Leatherworking		270	9	1
-15762	Pattern: Heavy Scorpid Helm	1			134939	Leatherworking		270	9	1
-15763	Pattern: Blue Dragonscale Shoulders	3			134939	Leatherworking		270	9	1
-15764	Pattern: Stormshroud Shoulders	3			134939	Leatherworking		270	9	1
-15765	Pattern: Runic Leather Pants	2			134942	Leatherworking		275	9	1
-15768	Pattern: Wicked Leather Belt	2			134942	Leatherworking		275	9	1
-15770	Pattern: Black Dragonscale Shoulders	3			134939	Leatherworking		270	9	1
-15771	Pattern: Living Breastplate	3			134939	Leatherworking		290	9	1
-15772	Pattern: Devilsaur Leggings	3			134941	Leatherworking		290	9	1
-15773	Pattern: Wicked Leather Armor	2			134942	Leatherworking		280	9	1
-15774	Pattern: Heavy Scorpid Shoulders	2			134939	Leatherworking		280	9	1
-15775	Pattern: Volcanic Shoulders	2			134942	Leatherworking		280	9	1
-15776	Pattern: Runic Leather Armor	2			134942	Leatherworking		285	9	1
-15777	Pattern: Runic Leather Shoulders	2			134942	Leatherworking		285	9	1
-15779	Pattern: Frostsaber Tunic	2			134942	Leatherworking		290	9	1
-15781	Pattern: Black Dragonscale Leggings	3			134941	Leatherworking		290	9	1
-16982	Corehound Boots	4	54	8	132541	Feet (Leather)	Agility, Stamina		4	2
-16983	Molten Helm	4	55	1	133076	Head (Leather)	Stamina, Dodge Rating		4	2
-16984	Black Dragonscale Boots	4	56	8	132590	Feet (Mail)	Stamina, Attack Power		4	3
-17010	Fiery Core	3			135812				7	11
-17011	Lava Core	3			136025				7	11
-17012	Core Leather	1			132386	Leather			7	6
-17022	Pattern: Corehound Boots	1			134939	Leatherworking		295	9	1
-17023	Pattern: Molten Helm	1			134939	Leatherworking		300	9	1
-17025	Pattern: Black Dragonscale Boots	1			134939	Leatherworking		300	9	1
-17721	Gloves of the Greatfather	2	33	10	132955	Hands (Leather)	Spell Damage, Healing		4	2
-17722	Pattern: Gloves of the Greatfather	2			134939	Leatherworking		165	9	1
-18238	Shadowskin Gloves	3	35	10	132966	Hands (Leather)	Stamina, Critical Strike Rating		4	2
-18239	Pattern: Shadowskin Gloves	1			134939	Leatherworking		175	9	1
-18240	Ogre Tannin	2			134719				7	11
-18251	Core Armor Kit	3	50		133600	Item Enhancement				6
-18252	Pattern: Core Armor Kit	3			134941	Leatherworking		300	9	1
-18258	Gordok Ogre Suit	2	55		132636				12	
-18504	Girdle of Insight	3	57	6	132515	Waist (Leather)	Intellect, Stamina, Spell Power		4	2
-18506	Mongoose Boots	3	57	8	132542	Feet (Leather)	Agility, Stamina		4	2
-18508	Swift Flight Bracers	3	57	9	132604	Wrist (Mail)	Stamina, Ranged Attack Power		4	3
-18509	Chromatic Cloak	4	57	16	133754	Back (Cloth)	Stamina, Critical Strike Rating		4	1
-18510	Hide of the Wild	4	57	16	133753	Back (Cloth)	Intellect, Stamina, Healing, Spell Damage		4	1
-18511	Shifting Cloak	4	57	16	133772	Back (Cloth)	Agility, Stamina, Dodge Rating		4	1
-18512	Larval Acid	1			134802				7	11
-18514	Pattern: Girdle of Insight	3			134941	Leatherworking		290	9	1
-18515	Pattern: Mongoose Boots	3			134941	Leatherworking		290	9	1
-18516	Pattern: Swift Flight Bracers	3			134941	Leatherworking		290	9	1
-18517	Pattern: Chromatic Cloak	4			134940	Leatherworking		300	9	1
-18518	Pattern: Hide of the Wild	4			134940	Leatherworking		300	9	1
-18519	Pattern: Shifting Cloak	4			134940	Leatherworking		300	9	1
-18662	Heavy Leather Ball	1	1		134480	Consumable				8
-18731	Pattern: Heavy Leather Ball	1			134939	Leatherworking		125	9	1
-18948	Barbaric Bracers	3	27	9	132614	Wrist (Leather)	Stamina, Strength, Agility		4	2
-18949	Pattern: Barbaric Bracers	1			134939	Leatherworking		130	9	1
-19043	Heavy Timbermaw Belt	3	53	6	132505	Waist (Mail)	Stamina, Attack Power		4	3
-19044	Might of the Timbermaw	3	53	6	132498	Waist (Leather)	Strength, Stamina, Agility		4	2
-19048	Heavy Timbermaw Boots	3	56	8	132553	Feet (Mail)	Stamina, Attack Power		4	3
-19049	Timbermaw Brawlers	3	56	10	132960	Hands (Leather)	Strength, Stamina, Agility		4	2
-19052	Dawn Treaders	3	53	8	132565	Feet (Leather)	Stamina, Strength, Agility		4	2
-19058	Golden Mantle of the Dawn	3	56	3	135057	Shoulder (Leather)	Stamina, Strength, Agility		4	2
-19149	Lava Belt	4	60	6	132521	Waist (Leather)	Stamina, Bonus Armor		4	2
-19157	Chromatic Gauntlets	4	60	10	132956	Hands (Mail)	Attack Power, Critical Strike Rating		4	3
-19162	Corehound Belt	4	60	6	132513	Waist (Leather)	Intellect, Healing, Spell Damage		4	2
-19163	Molten Belt	4	60	6	132502	Waist (Leather)	Agility, Stamina		4	2
-19202	Pattern: Heavy Timbermaw Belt	1			134939	Leatherworking		265	9	1
-19204	Pattern: Heavy Timbermaw Boots	1			134939	Leatherworking		295	9	1
-19326	Pattern: Might of the Timbermaw	1			134939	Leatherworking		265	9	1
-19327	Pattern: Timbermaw Brawlers	1			134939	Leatherworking		295	9	1
-19328	Pattern: Dawn Treaders	1			134939	Leatherworking		265	9	1
-19329	Pattern: Golden Mantle of the Dawn	1			134939	Leatherworking		295	9	1
-19330	Pattern: Lava Belt	1			134939	Leatherworking		300	9	1
-19331	Pattern: Chromatic Gauntlets	1			134939	Leatherworking		300	9	1
-19332	Pattern: Corehound Belt	1			134939	Leatherworking		300	9	1
-19333	Pattern: Molten Belt	1			134939	Leatherworking		300	9	1
-19685	Primal Batskin Jerkin	3	60	5	132718	Chest (Leather)	Agility, Stamina, Hit Rating		4	2
-19686	Primal Batskin Gloves	3	60	10	132965	Hands (Leather)	Agility, Stamina, Hit Rating		4	2
-19687	Primal Batskin Bracers	3	60	9	132606	Wrist (Leather)	Agility, Stamina, Hit Rating		4	2
-19688	Blood Tiger Breastplate	3	60	5	132722	Chest (Leather)	Strength, Stamina, Intellect, Spirit		4	2
-19689	Blood Tiger Shoulders	3	60	3	135054	Shoulder (Leather)	Strength, Stamina, Intellect, Spirit		4	2
-19726	Bloodvine	2			134189	Herb			7	9
-19767	Primal Bat Leather	1			134345	Leather			7	6
-19768	Primal Tiger Leather	1			134348	Leather			7	6
-19769	Pattern: Primal Batskin Jerkin	1			134939	Leatherworking		300	9	1
-19770	Pattern: Primal Batskin Gloves	1			134939	Leatherworking		300	9	1
-19771	Pattern: Primal Batskin Bracers	1			134939	Leatherworking		300	9	1
-19772	Pattern: Blood Tiger Breastplate	1			134939	Leatherworking		300	9	1
-19773	Pattern: Blood Tiger Shoulders	1			134939	Leatherworking		300	9	1
-20253	Pattern: Warbear Harness	1			134939	Leatherworking		250	9	1
-20254	Pattern: Warbear Woolies	1			134939	Leatherworking		260	9	1
-20295	Blue Dragonscale Leggings	3	55	7	134667	Legs (Mail)	Intellect, Spell Power		4	3
-20296	Green Dragonscale Gauntlets	3	51	10	132946	Hands (Mail)	Stamina, Healing, Spell Damage		4	3
-20380	Dreamscale Breastplate	4	60	5	132743	Chest (Mail)	Agility, Stamina, Intellect, Mana every 5 sec.		4	3
-20381	Dreamscale	2			134313	Leather			7	6
-20476	Sandstalker Bracers	3	57	9	132611	Wrist (Mail)	Stamina		4	3
-20477	Sandstalker Gauntlets	3	57	10	132945	Hands (Mail)	Stamina		4	3
-20478	Sandstalker Breastplate	3	57	5	132742	Chest (Mail)	Stamina		4	3
-20479	Spitfire Breastplate	3	57	5	132717	Chest (Mail)	Agility, Intellect, Spirit, Spell Power		4	3
-20480	Spitfire Gauntlets	3	57	10	132945	Hands (Mail)	Agility, Intellect, Spirit, Spell Power		4	3
-20481	Spitfire Bracers	3	57	9	132604	Wrist (Mail)	Agility, Intellect, Spirit, Spell Power		4	3
-20498	Silithid Chitin	1			134315	Leather			7	6
-20500	Light Silithid Carapace	1			134316	Leather			7	6
-20501	Heavy Silithid Carapace	1			134307	Leather			7	6
-20575	Black Whelp Tunic	2	15	5	132686	Chest (Leather)	Intellect, Spell Power		4	2
-20576	Pattern: Black Whelp Tunic	1			134939	Leatherworking		75	9	1
-21278	Stormshroud Gloves	3	57	10	132939	Hands (Leather)	Critical Strike Rating, Hit Rating		4	2
-21548	Pattern: Stormshroud Gloves	3			134939	Leatherworking		290	9	1
-22661	Polar Tunic	4	60	5	132649	Chest (Leather)	Stamina, Agility		4	2
-22662	Polar Gloves	4	60	10	132940	Hands (Leather)	Stamina, Agility		4	2
-22663	Polar Bracers	4	60	9	132606	Wrist (Leather)	Stamina, Agility		4	2
-22664	Icy Scale Breastplate	4	60	5	132744	Chest (Mail)	Stamina, Attack Power		4	3
-22665	Icy Scale Bracers	4	60	9	132606	Wrist (Mail)	Stamina, Attack Power		4	3
-22666	Icy Scale Gauntlets	4	60	10	132962	Hands (Mail)	Stamina, Attack Power		4	3
-22682	Frozen Rune	3	60		134422				7	11
-22759	Bramblewood Helm	3	60	1	133160	Head (Leather)	Stamina		4	2
-22760	Bramblewood Boots	3	60	8	132561	Feet (Leather)	Stamina		4	2
-22761	Bramblewood Belt	3	60	6	132506	Waist (Leather)	Stamina		4	2
-34086	Winter Boots	1		8	132557	Feet			4	5
-34262	Pattern: Winter Boots	2			134939	Leatherworking		285	9	1
-211422		1			133449				5	
-211423	Void-Touched Leather Gloves	1		10	132958	Hands (Leather)			4	2
-211502	Void-Touched Leather Gauntlets	1		10	132958	Hands (Leather)			4	2
-213369	Faintly Glowing Leather	3			237420	Leather			7	6
-213370	Irradiated Leather Scraps	2			134262	Leather			7	6
-213372		1			134792				7	11
-213376	Low-Background Truesilver Plates	3			133022	Metal & Stone			7	7
-213379	Hyperconductive Arcano-Filament	3			237428	Cloth			7	5
-215114	Glowing Hyperconductive Scale Coif	1		1	133145	Head (Mail)			4	3
-215152	Pattern: Glowing Gneuro-Linked Cowl	4			134939	Leatherworking		225	9	1
-215166	Glowing Gneuro-Linked Cowl	1		1	133117	Head (Leather)			4	2
-215367	Pattern: Faintly Glowing Leather	3			134939	Leatherworking		200	9	1
-215381	Gneuro-Conductive Channeler's Hood	1		1	133144	Head (Leather)			4	2
-215382	Rad-Resistant Scale Hood	1		1	133143	Head (Mail)			4	3
-215422	Pattern: Glowing Hyperconductive Scale Coif	4			134939	Leatherworking		225	9	1
-215423	Pattern: Gneuro-Conductive Channeler's Hood	4			134939	Leatherworking		225	9	1
-215424	Pattern: Rad-Resistant Scale Hood	4			134939	Leatherworking		225	9	1
-217259	Big Voodoo Mask	1		1	132482	Head (Leather)			4	2
-217260	Pattern: Big Voodoo Mask	2			134942	Leatherworking		220	9	1
-217261	Big Voodoo Robe	1		20	132666	Chest (Leather)			4	2
-217262	Pattern: Big Voodoo Robe	2			134942	Leatherworking		215	9	1
-217263	Guardian Leather Bracers	1		9	132609	Wrist (Leather)			4	2
-217264	Pattern: Guardian Leather Bracers	2			134939	Leatherworking		195	9	1
-217265	Guardian Belt	1		6	132492	Waist (Leather)			4	2
-217266	Pattern: Guardian Belt	3			134939	Leatherworking		170	9	1
-217267	Guardian Pants	1		7	134582	Legs (Leather)			4	2
-217268	Turtle Scale Breastplate	1		5	132634	Chest (Mail)			4	3
-217270	Turtle Scale Gloves	2	36	10	132939	Hands (Mail)	Stamina, Spell Power, Intellect		4	3
-217271	Pattern: Turtle Scale Gloves	1			134939	Leatherworking		205	9	1
-220688		1			135084				5	
-220741	Screaming Chain Pauldrons	1		3	135046	Shoulder (Mail)			4	3
-220742	Shrieking Spaulders	1		3	135046	Shoulder (Mail)			4	3
-220743	Cacophonous Chain Shoulderguards	1		3	135046	Shoulder (Mail)			4	3
-220744	Wailing Chain Mantle	1		3	135046	Shoulder (Mail)			4	3
-220745	Membrane of Dark Neurosis	1		3	135049	Shoulder (Leather)			4	2
-220747	Paranoia Mantle	1		3	135049	Shoulder (Leather)			4	2
-220748	Shoulderpads of Obsession	1		3	135049	Shoulder (Leather)			4	2
-221021		1			134217				7	11
-227847	Devilcore Leggings	1		7	134706	Legs (Leather)			4	2
-227848	Devilcore Gauntlets	1		10	132960	Hands (Leather)			4	2
-227851	Hardened Black Dragonscale Breastplate	1		5	132741	Chest (Mail)			4	3
-227852	Hardened Black Dragonscale Leggings	1		7	134583	Legs (Mail)			4	3
-227853	Hardened Black Dragonscale Shoulders	1		3	135032	Shoulder (Mail)			4	3
-227854	Mastercrafted Shifting Cloak	1		16	133772	Back (Cloth)			4	1
-227855	Synthetic Gordok Ogre Suit	1			132636	Consumable				8
-227866	Masterwork Volcanic Shoulders	1		3	135044	Shoulder (Leather)			4	2
-227867	Masterwork Volcanic Leggings	1		7	134586	Legs (Leather)			4	2
-227868	Masterwork Volcanic Breastplate	1		5	132722	Chest (Leather)			4	2
-227869	Brilliant Chromatic Cloak	1		16	133754	Back (Cloth)			4	1
-227873	Honed Blue Dragonscale Shoulders	1		3	135049	Shoulder (Mail)			4	3
-227874	Honed Blue Dragonscale Leggings	1		7	134667	Legs (Mail)			4	3
-227875	Honed Blue Dragonscale Breastplate	1		5	132626	Chest (Mail)			4	3
-227877	Living Green Dragonscale Leggings	1		7	134585	Legs (Mail)			4	3
-227878	Living Green Dragonscale Gauntlets	1		10	132946	Hands (Mail)			4	3
-227879	Living Green Dragonscale Breastplate	1		5	132628	Chest (Mail)			4	3
-227882	Girdle of Arcane Insight	1		6	132515	Waist (Leather)			4	2
-227883	Swift Flight Vambraces	1		9	132604	Wrist (Mail)			4	3
-227895	Pattern: Golden Mantle of the Dawn	1			134939	Leatherworking		300	9	1
-227898	Pattern: Honed Blue Dragonscale Breastplate	1			134939	Leatherworking		285	9	1
-227899	Pattern: Honed Blue Dragonscale Shoulders	3			134939	Leatherworking		295	9	1
-227900	Pattern: Living Green Dragonscale Leggings	3			134939	Leatherworking		270	9	1
-227902	Pattern: Hardened Black Dragonscale Breastplate	1			134939	Leatherworking		290	9	1
-227903	Pattern: Hardened Black Dragonscale Leggings	3			134941	Leatherworking		300	9	1
-227904	Pattern: Hardened Black Dragonscale Shoulders	3			134939	Leatherworking		300	9	1
-227906	Pattern: Masterwork Volcanic Breastplate	2			134942	Leatherworking		285	9	1
-227907	Pattern: Masterwork Volcanic Shoulders	2			134942	Leatherworking		300	9	1
-227908	Pattern: Masterwork Volcanic Leggings	2			134942	Leatherworking		270	9	1
-227910	Pattern: Brilliant Chromatic Cloak	4			134940	Leatherworking		300	9	1
-228119	Pattern: Devilcore Gauntlets	3			134939	Leatherworking		290	9	1
-228120	Pattern: Devilcore Leggings	3			134941	Leatherworking		300	9	1
-228251	Pattern: Living Green Dragonscale Gauntlets	3			134939	Leatherworking		270	9	1
-228276	Pattern: Mastercrafted Shifting Cloak	4			134940	Leatherworking		300	9	1
-228301	Pattern: Swift Flight Vambraces	3			134941	Leatherworking		300	9	1
-228309	Pattern: Living Green Dragonscale Breastplate	1			134939	Leatherworking		260	9	1
-228319	Pattern: Girdle of Arcane Insight	3			134941	Leatherworking		300	9	1
-233802	Glowing Chitin Armor Kit	1			133601	Consumable				8
-233803	Sharpened Chitin Armor Kit	1			133614	Consumable				8
-233804	Razorbramble Shoulderpads	1		3	135061	Shoulder (Leather)			4	2
-233808	Razorbramble Cowl	1		1	133069	Head (Leather)			4	2
-233813	Razorbramble Leathers	1		5	132686	Chest (Leather)			4	2
-234007		1			134260	Leather			7	6
-234009		1			132902	Cloth			7	5
-234294	Sandstalker Bracers	1		9	132611	Wrist (Mail)			4	3
-234296	Sandstalker Gauntlets	1		10	132945	Hands (Mail)			4	3
-234298	Sandstalker Breastplate	1		5	132742	Chest (Mail)			4	3
-234300	Spitfire Bracers	1		9	132604	Wrist (Mail)			4	3
-234302	Spitfire Gauntlets	1		10	132945	Hands (Mail)			4	3
-234304	Spitfire Breastplate	1		5	132717	Chest (Mail)			4	3
-234306	Bramblewood Belt	1		6	132506	Waist (Leather)			4	2
-234308	Bramblewood Boots	1		8	132561	Feet (Leather)			4	2
-234310	Bramblewood Helm	1		1	133160	Head (Leather)			4	2
-234324	Dreamscale Breastplate	1		5	132743	Chest (Mail)			4	3
-234482	Dreamscale Kilt	1		7	134636	Legs (Leather)			4	2
-236656		1			134422				7	11
-236698	Icy Scale Bracers	1		9	132606	Wrist (Mail)			4	3
-236699	Icy Scale Breastplate	1		5	132744	Chest (Mail)			4	3
-236700	Icy Scale Gauntlets	1		10	132962	Hands (Mail)			4	3
-236701	Polar Bracers	1		9	132606	Wrist (Leather)			4	2
-236702	Polar Tunic	1		5	132649	Chest (Leather)			4	2
-236703	Polar Gloves	1		10	132940	Hands (Leather)			4	2
-238272	Scarlet Infiltrator's Bandana	1		1	133694	Head (Leather)			4	2
-238273	Scarlet Infiltrator's Shoulderpads	1		3	135039	Shoulder (Leather)			4	2
-238274	Scarlet Infiltrator's Vest	1		5	132718	Chest (Leather)			4	2
-238275	Scarlet Infiltrator's Bracers	1		9	132601	Wrist (Leather)			4	2
-238276	Scarlet Infiltrator's Gloves	1		10	132953	Hands (Leather)			4	2
-238277	Scarlet Infiltrator's Belt	1		6	236895	Waist (Leather)			4	2
-238278	Scarlet Infiltrator's Trousers	1		7	134586	Legs (Leather)			4	2
-238279	Scarlet Infiltrator's Shoes	1		8	132541	Feet (Leather)			4	2
-238280	Scarlet Huntsman's Coif	1		1	133141	Head (Mail)			4	3
-238281	Scarlet Huntsman's Pauldrons	1		3	135047	Shoulder (Mail)			4	3
-238282	Scarlet Huntsman's Chain	1		5	132629	Chest (Mail)			4	3
-238283	Scarlet Huntsman's Wristguards	1		9	236962	Wrist (Mail)			4	3
-238284	Scarlet Huntsman's Handguards	1		10	132946	Hands (Mail)			4	3
-238285	Scarlet Huntsman's Clasp	1		6	132498	Waist (Mail)			4	3
-238286	Scarlet Huntsman's Legguards	1		7	134655	Legs (Mail)			4	3
-238287	Scarlet Huntsman's Boots	1		8	132547	Feet (Mail)			4	3
-238306	Pattern: Scarlet Infiltrator's Bandana	3	1		134940	Leatherworking		280	9	1
-238307	Pattern: Scarlet Infiltrator's Shoulderpads	3	1		134940	Leatherworking		280	9	1
-238308	Pattern: Scarlet Infiltrator's Vest	3	1		134940	Leatherworking		280	9	1
-238309	Pattern: Scarlet Infiltrator's Bracers	3	1		134940	Leatherworking		250	9	1
-238310	Pattern: Scarlet Infiltrator's Gloves	3	1		134940	Leatherworking		260	9	1
-238311	Pattern: Scarlet Infiltrator's Belt	3	1		134940	Leatherworking		250	9	1
-238312	Pattern: Scarlet Infiltrator's Trousers	3	1		134940	Leatherworking		270	9	1
-238313	Pattern: Scarlet Infiltrator's Shoes	3	1		134940	Leatherworking		260	9	1
-238314	Pattern: Scarlet Huntsman's Coif	3	1		134940	Leatherworking		280	9	1
-238315	Pattern: Scarlet Huntsman's Pauldrons	3	1		134940	Leatherworking		280	9	1
-238316	Pattern: Scarlet Huntsman's Chain	3	1		134940	Leatherworking		280	9	1
-238317	Pattern: Scarlet Huntsman's Wristguards	3	1		134940	Leatherworking		250	9	1
-238318	Pattern: Scarlet Huntsman's Handguards	3	1		134940	Leatherworking		260	9	1
-238319	Pattern: Scarlet Huntsman's Clasp	3	1		134940	Leatherworking		250	9	1
-238320	Pattern: Scarlet Huntsman's Legguards	3	1		134940	Leatherworking		270	9	1
-238321	Pattern: Scarlet Huntsman's Boots	3	1		134940	Leatherworking		260	9	1
-238925	Scarlet Quiver	1		18	134405	Bag			11	2
-238926	Scarlet Ammo Pouch	1		18	249177	Bag			11	3
-238927	Pattern: Scarlet Quiver	2	1		134942	Leatherworking		275	9	1
-238928	Pattern: Scarlet Ammo Pouch	2	1		134942	Leatherworking		275	9	1
-248824	Fel Hide	1			134262	Leather			7	6
-248825	Fel Leather	1			134259	Leather			7	6
-249409	Cerulean Dye	2			1021860				7	11
-249410	Sulfuric Acid	2			136240				7	11
-249427	Pristine Leather	2			348551	Leather			7	6
-249428	Pristine Hide	2			3586020	Leather			7	6
-249429	Pristine Scale	2			134311	Leather			7	6
-252424	Black Whelp Slippers	3	10	8		Feet (Leather)	Spell Damage, Healing, Intellect		4	2
-252425	Dark Leather Boots	3	10	8		Feet (Leather)	Agility, Stamina		4	2
-252426	Murloc Scale Shoes	3	10	8		Feet (Leather)	Stamina, Strength		4	2
-252427	Moonglow Boots	3	10	8		Feet (Leather)	Spell Power, Stamina		4	2
-252428	Brawler's Leather Belt	3	12	6		Waist (Leather)	Agility, Stamina, Strength		4	2
-252429	Trapper's Leather Belt	3	12	6		Waist (Leather)	Agility, Intellect, Stamina		4	2
-252430	Defender's Leather Belt	3	12	6		Waist (Leather)	Bonus Armor, Stamina, Strength		4	2
-252431	Totemic Leather Belt	3	12	6		Waist (Leather)	Spell Power, Stamina, Strength		4	2
-252432	Stormrider's Leather Belt	3	12	6		Waist (Leather)	Intellect, Spell Power, Stamina		4	2
-252433	Wisdom's Leather Belt	3	12	6		Waist (Leather)	Intellect, Spell Damage, Healing, Stamina		4	2
-252434	Defender's Leather Armor	3	15	5		Chest (Leather)	Agility, Bonus Armor, Stamina, Strength		4	2
-252435	Totemic Leather Armor	3	15	5		Chest (Leather)	Intellect, Spell Power, Stamina, Strength		4	2
-252436	Mystic Medium Armor Kit	2	15		133609	Item Enhancement				6
-252437	Forceful Medium Armor Kit	2	15		133609	Item Enhancement				6
-252439	Brawler's Leather Boots	3	17	8		Feet (Leather)	Agility, Stamina, Strength		4	2
-252440	Trapper's Leather Boots	3	17	8		Feet (Leather)	Agility, Intellect, Stamina		4	2
-252441	Defender's Leather Boots	3	17	8		Feet (Leather)	Bonus Armor, Stamina, Strength		4	2
-252442	Totemic Leather Boots	3	17	8		Feet (Leather)	Spell Power, Stamina, Strength		4	2
-252443	Stormrider's Leather Boots	3	17	8		Feet (Leather)	Intellect, Spell Power, Stamina		4	2
-252444	Wisdom's Leather Boots	3	17	8		Feet (Leather)	Intellect, Spell Damage, Healing, Stamina		4	2
-252445	Defender's Leather Pants	3	20	7		Legs (Leather)	Agility, Bonus Armor, Stamina, Strength		4	2
-252446	Totemic Leather Pants	3	20	7		Legs (Leather)	Intellect, Spell Power, Stamina, Strength		4	2
-252447	Defender's Leather Hood	3	20	1		Head (Leather)	Stamina, Strength		4	2
-252448	Totemic Leather Hood	3	20	1		Head (Leather)	Spell Power, Stamina		4	2
-252449	Hillman's Leather Boots	2	22	8		Feet (Leather)	Spell Power, Stamina		4	2
-252450	Defender's Leather Tunic	3	22	5		Chest (Leather)	Agility, Bonus Armor, Stamina, Strength		4	2
-252451	Totemic Leather Tunic	3	22	5		Chest (Leather)	Intellect, Spell Power, Stamina, Strength		4	2
-252452	Mystic Heavy Armor Kit	2	30		133610	Item Enhancement				6
-252453	Forceful Heavy Armor Kit	2	30		133610	Item Enhancement				6
-252455	Defender's Leather Helm	3	25	1		Head (Leather)	Stamina, Strength		4	2
-252456	Totemic Leather Helm	3	25	1		Head (Leather)	Spell Power, Stamina		4	2
-252457	Defender's Leather Kilt	3	25	7		Legs (Leather)	Agility, Bonus Armor, Stamina, Strength		4	2
-252458	Totemic Leather Leggings	3	25	7		Legs (Leather)	Intellect, Spell Power, Stamina, Strength		4	2
-252459	Prowler's Leather Belt	3	30	6		Waist (Leather)	Agility, Intellect, Stamina, Strength		4	2
-252460	Warden's Leather Belt	3	30	6		Waist (Leather)	Agility, Bonus Armor, Stamina, Strength		4	2
-252461	Skirmisher's Leather Belt	3	30	6		Waist (Leather)	Intellect, Spell Power, Stamina, Strength		4	2
-252462	Mystic Thick Armor Kit	2	40		133602	Item Enhancement				6
-252463	Forceful Thick Armor Kit	2	40		133602	Item Enhancement				6
-252465	Prowler's Leather Shoes	3	40	8		Feet (Leather)	Agility, Intellect, Stamina, Strength		4	2
-252466	Warden's Leather Shoes	3	40	8		Feet (Leather)	Agility, Bonus Armor, Stamina, Strength		4	2
-252467	Blue Suede Shoes	2	47	8		Feet (Leather)	Agility, Stamina, Strength		4	2
-252468	Prowler's Leather Boots	3	47	8		Feet (Leather)	Agility, Stamina, Strength		4	2
-252469	Skulker's Leather Boots	3	47	8		Feet (Leather)	Agility, Stamina, Strength		4	2
-252470	Warden's Leather Boots	3	47	8		Feet (Leather)	Bonus Armor, Stamina, Strength		4	2
-252471	Skycaller's Leather Boots	3	47	8		Feet (Leather)	Intellect, Spell Power, Stamina		4	2
-252472	Mender's Leather Boots	3	47	8		Feet (Leather)	Intellect, Spell Damage, Healing, Stamina		4	2
-252473	Prowler's Leather Waistguard	3	50	6		Waist (Leather)	Agility, Stamina, Strength		4	2
-252474	Skulker's Leather Waistguard	3	50	6		Waist (Leather)	Agility, Stamina, Strength		4	2
-252475	Warden's Leather Waistguard	3	50	6		Waist (Leather)	Bonus Armor, Stamina, Strength		4	2
-252476	Skycaller's Leather Waistguard	3	50	6		Waist (Leather)	Intellect, Spell Power, Stamina		4	2
-252477	Mender's Leather Waistguard	3	50	6		Waist (Leather)	Intellect, Spell Damage, Healing, Stamina		4	2
-252478	Blue Suede Pants	2	51	7		Legs (Leather)	Agility, Stamina, Strength		4	2
-252479	Wicked Leather Boots	2	52	8		Feet (Leather)	Agility, Stamina		4	2
-252480	Blue Suede Armor	2	53	5		Chest (Leather)	Agility, Stamina, Strength		4	2
-252481	Blue Suede Belt	2	54	6		Waist (Leather)	Agility, Stamina, Strength		4	2
-252482	Blue Suede Hat	2	56	1		Head (Leather)	Agility, Stamina, Strength		4	2
-252483	Dawn Armor	4	56	5		Chest (Leather)	Agility, Critical Strike Rating, Hit Rating		4	2
-252484	Timbermaw Tunic	4	56	5		Chest (Leather)	Agility, Strength, Critical Strike Rating		4	2
-252485	Warbear Helm	4	56	1		Head (Leather)	Agility, Stamina, Strength		4	2
-252486	Ironfeather Leggings	4	56	7		Legs (Leather)	Intellect, Spell Power, Critical Strike Rating		4	2
-252487	Mystic Rugged Armor Kit	2	50		133604	Item Enhancement				6
-252488	Forceful Rugged Armor Kit	2	50		133604	Item Enhancement				6
-252490	Brawler's Leather Armor	3	15	5		Chest (Leather)	Agility, Spirit, Stamina, Strength		4	2
-252491	Trapper's Leather Armor	3	15	5		Chest (Leather)	Agility, Intellect, Spirit, Stamina		4	2
-252492	Stormrider's Leather Armor	3	15	5		Chest (Leather)	Intellect, Spell Power, Spirit, Stamina		4	2
-252493	Wisdom's Leather Armor	3	15	5		Chest (Leather)	Intellect, Spell Damage, Healing, Spirit, Stamina		4	2
-252494	Brawler's Leather Gloves	3	15	10		Hands (Leather)	Agility, Stamina, Strength		4	2
-252495	Trapper's Leather Gloves	3	15	10		Hands (Leather)	Agility, Intellect, Stamina		4	2
-252496	Defender's Leather Gloves	3	15	10		Hands (Leather)	Bonus Armor, Stamina, Strength		4	2
-252497	Totemic Leather Gloves	3	15	10		Hands (Leather)	Spell Power, Stamina, Strength		4	2
-252498	Stormrider's Leather Gloves	3	15	10		Hands (Leather)	Intellect, Spell Power, Stamina		4	2
-252499	Wisdom's Leather Gloves	3	15	10		Hands (Leather)	Intellect, Spell Damage, Healing, Stamina		4	2
-252500	Brawler's Leather Pants	3	20	7		Legs (Leather)	Agility, Spirit, Stamina, Strength		4	2
-252501	Trapper's Leather Pants	3	20	7		Legs (Leather)	Agility, Intellect, Spirit, Strength		4	2
-252502	Stormrider's Leather Pants	3	20	7		Legs (Leather)	Intellect, Spell Power, Spirit, Stamina		4	2
-252503	Wisdom's Leather Pants	3	20	7		Legs (Leather)	Intellect, Spell Damage, Healing, Spirit, Stamina		4	2
-252504	Brawler's Leather Hood	3	20	1		Head (Leather)	Stamina, Agility		4	2
-252505	Trapper's Leather Hood	3	20	1		Head (Leather)	Intellect, Stamina		4	2
-252506	Stormrider's Leather Hood	3	20	1		Head (Leather)	Spirit, Stamina		4	2
-252507	Wisdom's Leather Hood	3	20	1		Head (Leather)	Spell Damage, Healing, Stamina		4	2
-252508	Brawler's Leather Tunic	3	22	5		Chest (Leather)	Agility, Spirit, Stamina, Strength		4	2
-252509	Trapper's Leather Tunic	3	22	5		Chest (Leather)	Agility, Intellect, Spirit, Stamina		4	2
-252510	Stormrider's Leather Tunic	3	22	5		Chest (Leather)	Intellect, Spell Power, Spirit, Stamina		4	2
-252511	Wisdom's Leather Tunic	3	22	5		Chest (Leather)	Intellect, Spell Damage, Healing, Spirit, Stamina		4	2
-252512	Brawler's Leather Helm	3	25	1		Head (Leather)	Agility, Stamina		4	2
-252513	Trapper's Leather Helm	3	25	1		Head (Leather)	Intellect, Stamina		4	2
-252514	Stormrider's Leather Helm	3	25	1		Head (Leather)	Spirit, Stamina		4	2
-252515	Wisdom's Leather Helm	3	25	1		Head (Leather)	Spell Damage, Healing, Stamina		4	2
-252516	Brawler's Leather Legguards	3	25	7		Legs (Leather)	Agility, Spirit, Stamina, Strength		4	2
-252517	Trapper's Leather Legguards	3	25	7		Legs (Leather)	Agility, Intellect, Spirit, Stamina		4	2
-252518	Stormrider's Leather Kilt	3	25	7		Legs (Leather)	Intellect, Spirit, Stamina, Strength		4	2
-252519	Wisdom's Leather Leggings	3	25	7		Legs (Leather)	Intellect, Spell Damage, Healing, Spirit, Stamina		4	2
-252520	Skulker's Leather Belt	3	30	6		Waist (Leather)	Agility, Spirit, Stamina, Strength		4	2
-252521	Stalker's Leather Belt	3	30	6		Waist (Leather)	Agility, Intellect, Spirit, Stamina		4	2
-252522	Skycaller's Leather Belt	3	30	6		Waist (Leather)	Intellect, Spell Power, Spirit, Stamina		4	2
-252523	Mender's Leather Belt	3	30	6		Waist (Leather)	Intellect, Spell Damage, Healing, Spirit, Stamina		4	2
-252524	Prowler's Leather Gloves	3	35	10		Hands (Leather)	Agility, Stamina, Strength		4	2
-252525	Skulker's Leather Gloves	3	35	10		Hands (Leather)	Agility, Stamina, Strength		4	2
-252526	Stalker's Leather Gloves	3	35	10		Hands (Leather)	Agility, Intellect, Stamina		4	2
-252527	Warden's Leather Gloves	3	35	10		Hands (Leather)	Bonus Armor, Stamina, Strength		4	2
-252528	Skirmisher's Leather Gloves	3	35	10		Hands (Leather)	Spell Power, Stamina, Strength		4	2
-252529	Skycaller's Leather Gloves	3	35	10		Hands (Leather)	Intellect, Spell Power, Stamina		4	2
-252530	Mender's Leather Gloves	3	35	10		Hands (Leather)	Intellect, Spell Damage, Healing, Stamina		4	2
-252531	Skulker's Leather Shoes	3	40	8		Feet (Leather)	Agility, Spirit, Stamina, Strength		4	2
-252532	Skycaller's Leather Shoes	3	40	8		Feet (Leather)	Intellect, Spell Power, Spirit, Stamina		4	2
-252533	Mender's Leather Shoes	3	40	8		Feet (Leather)	Intellect, Spell Damage, Healing, Spirit, Stamina		4	2
-252534	Prowler's Leather Shoulders	3	42	3		Shoulder (Leather)	Agility, Intellect, Stamina, Strength		4	2
-252535	Skulker's Leather Shoulder	3	42	3		Shoulder (Leather)	Agility, Spirit, Stamina, Strength		4	2
-252536	Warden's Leather Shoulders	3	42	3		Shoulder (Leather)	Agility, Bonus Armor, Stamina, Strength		4	2
-252537	Skycaller's Leather Shoulders	3	42	3		Shoulder (Leather)	Intellect, Spell Power, Spirit, Stamina		4	2
-252538	Mender's Leather Shoulders	3	42	3		Shoulder (Leather)	Intellect, Spell Damage, Healing, Spirit, Stamina		4	2
-252539	Prowler's Leather Bracers	3	45	9		Wrist (Leather)	Agility, Intellect, Stamina, Strength		4	2
-252540	Skulker's Leather Bracers	3	45	9		Wrist (Leather)	Agility, Spirit, Stamina, Strength		4	2
-252541	Warden's Leather Bracers	3	45	9		Wrist (Leather)	Agility, Bonus Armor, Stamina, Strength		4	2
-252542	Skycaller's Leather Bracers	3	45	9		Wrist (Leather)	Intellect, Spell Power, Spirit, Stamina		4	2
-252543	Mender's Leather Bracers	3	45	9		Wrist (Leather)	Intellect, Spell Damage, Healing, Spirit, Stamina		4	2
-252544	Tooled Leather Belt	2	47	6		Waist (Leather)	Intellect, Spell Power, Spirit		4	2
-252545	Tooled Leather Boots	2	48	8		Feet (Leather)	Intellect, Spell Power, Spirit		4	2
-252546	Blue Suede Gloves	2	48	10		Hands (Leather)	Agility, Stamina, Strength		4	2
-252547	Prowler's Leather Gauntlets	3	50	10		Hands (Leather)	Agility, Intellect, Stamina, Strength		4	2
-252548	Skulker's Leather Gauntlets	3	50	10		Hands (Leather)	Agility, Spirit, Stamina, Strength		4	2
-252549	Warden's Leather Gauntlets	3	50	10		Hands (Leather)	Agility, Bonus Armor, Stamina, Strength		4	2
-252550	Skycaller's Leather Gauntlets	3	50	10		Hands (Leather)	Intellect, Spell Power, Spirit, Stamina		4	2
-252551	Mender's Leather Gauntlets	3	50	10		Hands (Leather)	Intellect, Spell Damage, Healing, Spirit, Stamina		4	2
-252552	Tooled Leather Armor	2	51	5		Chest (Leather)	Intellect, Spell Power, Spirit		4	2
-252553	Tooled Leather Gauntlets	2	52	10		Hands (Leather)	Intellect, Spell Power, Spirit		4	2
-252554	Blue Suede Shoulders	2	52	3		Shoulder (Leather)	Agility, Stamina, Strength		4	2
-252555	Tooled Leather Crown	2	53	1		Head (Leather)	Intellect, Spell Power, Spirit		4	2
-252556	Wicked Leather Shoulders	2	54	3		Shoulder (Leather)	Agility, Stamina		4	2
-252557	Tooled Leather Bracers	2	54	9		Wrist (Leather)	Intellect, Spell Power, Spirit		4	2
-252558	Tooled Leather Epaulets	2	55	3		Shoulder (Leather)	Spell Power, Spirit, Stamina		4	2
-252559	Blue Suede Bracers	2	55	9		Wrist (Leather)	Agility, Stamina, Strength		4	2
-252560	Tooled Leather Pants	2	56	7		Legs (Leather)	Spell Power, Spirit, Stamina		4	2
-252561	Living Crown	4	56	1		Head (Leather)	Intellect, Spell Damage, Healing, Spirit		4	2
-252562	Stalker's Mail Boots	3	40	8		Feet (Mail)	Agility, Intellect, Spirit, Stamina		4	3
-252563	Skycaller's Mail Boots	3	40	8		Feet (Mail)	Intellect, Spell Power, Spirit, Stamina		4	3
-252564	Skirmisher's Mail Boots	3	40	8	132547	Feet (Mail)	Intellect, Spell Power, Stamina, Strength		4	3
-252565	Mender's Mail Boots	3	40	8		Feet (Mail)	Intellect, Spell Damage, Healing, Spirit, Stamina		4	3
-252566	Stalker's Mail Shoulders	3	42	3		Shoulder (Mail)	Agility, Intellect, Spirit, Stamina		4	3
-252567	Skycaller's Mail Shoulders	3	42	3		Shoulder (Mail)	Intellect, Spell Power, Spirit, Stamina		4	3
-252568	Skirmisher's Mail Shoulders	3	42	3		Shoulder (Mail)	Intellect, Spell Power, Stamina, Strength		4	3
-252569	Mender's Mail Shoulders	3	42	3		Shoulder (Mail)	Intellect, Spell Damage, Healing, Spirit, Stamina		4	3
-252570	Stalker's Mail Bracers	3	45	9		Wrist (Mail)	Agility, Intellect, Spirit, Stamina		4	3
-252571	Skycaller's Mail Bracers	3	45	9		Wrist (Mail)	Intellect, Spell Power, Spirit, Stamina		4	3
-252572	Skirmisher's Mail Bracers	3	45	9		Wrist (Mail)	Intellect, Spell Power, Stamina, Strength		4	3
-252573	Mender's Mail Bracers	3	45	9		Wrist (Mail)	Intellect, Spell Damage, Healing, Spirit, Stamina		4	3
-252574	Supple Scorpid Boots	2	46	8		Feet (Mail)	Spell Power, Stamina, Strength		4	3
-252575	Charged Scorpid Belt	2	46	6		Waist (Mail)	Intellect, Spell Power, Spirit		4	3
-252576	Stalker's Mail Sabatons	3	47	8		Feet (Mail)	Agility, Intellect, Stamina		4	3
-252577	Skycaller's Mail Sabatons	3	47	8		Feet (Mail)	Intellect, Spell Power, Stamina		4	3
-252578	Skirmisher's Mail Sabatons	3	47	8		Feet (Mail)	Spell Power, Stamina, Strength		4	3
-252579	Mender's Mail Sabatons	3	47	8		Feet (Mail)	Intellect, Spell Damage, Healing, Stamina		4	3
-252580	Supple Scorpid Leggings	2	48	7		Legs (Mail)	Spell Power, Stamina, Strength		4	3
-252581	Charged Scorpid Helm	2	48	1		Head (Mail)	Intellect, Spell Power, Spirit		4	3
-252582	Supple Scorpid Bracers	2	50	9		Wrist (Mail)	Spell Power, Stamina, Strength		4	3
-252583	Charged Scorpid Shoulders	2	50	3		Shoulder (Mail)	Intellect, Spell Power, Spirit		4	3
-252584	Stalker's Mail Gauntlets	3	50	10		Hands (Mail)	Agility, Intellect, Spirit, Stamina		4	3
-252585	Skycaller's Mail Gauntlets	3	50	10		Hands (Mail)	Intellect, Spell Power, Spirit, Stamina		4	3
-252586	Skirmisher's Mail Gauntlets	3	50	10		Hands (Mail)	Intellect, Spell Power, Stamina, Strength		4	3
-252587	Mender's Mail Gauntlets	3	50	10		Hands (Mail)	Intellect, Spell Damage, Healing, Spirit, Stamina		4	3
-252588	Stalker's Mail Belt	3	50	6		Waist (Mail)	Agility, Intellect, Stamina		4	3
-252589	Skycaller's Mail Belt	3	50	6		Waist (Mail)	Intellect, Spell Power, Stamina		4	3
-252590	Skirmisher's Mail Belt	3	50	6		Waist (Mail)	Spell Power, Stamina, Strength		4	3
-252591	Mender's Mail Belt	3	50	6		Waist (Mail)	Intellect, Spell Damage, Healing, Stamina		4	3
-252592	Supple Scorpid Shoulders	2	51	3		Shoulder (Mail)	Spell Power, Stamina, Strength		4	3
-252593	Charged Scorpid Bracers	2	51	9		Wrist (Mail)	Intellect, Spell Power, Spirit		4	3
-252594	Heavy Scorpid Boots	2	51	8		Feet (Mail)	Agility, Stamina		4	3
-252595	Supple Scorpid Belt	2	51	6		Waist (Mail)	Spell Power, Stamina		4	3
-252596	Charged Scorpid Gauntlets	2	51	10		Hands (Mail)	Intellect, Spell Power, Spirit		4	3
-252597	Supple Scorpid Helm	2	52	1		Head (Mail)	Spell Power, Stamina, Strength		4	3
-252598	Charged Scorpid Vest	2	52	5		Chest (Mail)	Intellect, Spell Power, Spirit		4	3
-252599	Supple Scorpid Vest	2	54	5		Chest (Mail)	Spell Power, Stamina, Strength		4	3
-252600	Charged Scorpid Leggings	2	54	7		Legs (Mail)	Intellect, Spell Power, Spirit		4	3
-252601	Supple Scorpid Sabatons	2	56	8		Feet (Mail)	Spell Power, Stamina, Strength		4	3
-252602	Charged Scorpid Boots	2	56	8		Feet (Mail)	Intellect, Spell Power, Spirit		4	3
-252603	Red Dragonscale Leggings	4	56	7		Legs (Mail)	Intellect, Spell Damage, Healing		4	3
-252604	Blue Dragonscale Helm	4	56	1		Head (Mail)	Intellect, Spell Power, Hit Rating		4	3
-252605	Black Dragonscale Helm	4	56	1		Head (Mail)	Agility, Intellect, Critical Strike Rating		4	3
-252606	Pristine Scorpid Leggings	4	56	7		Legs (Mail)	Spell Power, Strength, Critical Strike Rating		4	3
-252761	Pattern: Black Whelp Slippers	3			134942	Leatherworking		35	9	1
-252762	Pattern: Dark Leather Boots	3			134942	Leatherworking		35	9	1
-252763	Pattern: Murloc Scale Shoes	3			134942	Leatherworking		35	9	1
-252764	Pattern: Moonglow Boots	3			134942	Leatherworking		35	9	1
-252765	Pattern: Brawler's Leather Belt	3			134942	Leatherworking		60	9	1
-252766	Pattern: Trapper's Leather Belt	3			134942	Leatherworking		60	9	1
-252767	Pattern: Defender's Leather Belt	3			134942	Leatherworking		60	9	1
-252768	Pattern: Totemic Leather Belt	3			134942	Leatherworking		60	9	1
-252769	Pattern: Stormrider's Leather Belt	3			134942	Leatherworking		60	9	1
-252770	Pattern: Wisdom's Leather Belt	3			134942	Leatherworking		60	9	1
-252771	Pattern: Brawler's Leather Armor	3			134942	Leatherworking		75	9	1
-252772	Pattern: Trapper's Leather Armor	3			134942	Leatherworking		75	9	1
-252773	Pattern: Defender's Leather Armor	3			134942	Leatherworking		75	9	1
-252774	Pattern: Totemic Leather Armor	3			134942	Leatherworking		75	9	1
-252775	Pattern: Stormrider's Leather Armor	3			134942	Leatherworking		75	9	1
-252776	Pattern: Wisdom's Leather Armor	3			134942	Leatherworking		75	9	1
-252777	Pattern: Brawler's Leather Gloves	3			134942	Leatherworking		75	9	1
-252778	Pattern: Trapper's Leather Gloves	3			134942	Leatherworking		75	9	1
-252779	Pattern: Defender's Leather Gloves	3			134942	Leatherworking		75	9	1
-252780	Pattern: Totemic Leather Gloves	3			134942	Leatherworking		75	9	1
-252781	Pattern: Stormrider's Leather Gloves	3			134942	Leatherworking		75	9	1
-252782	Pattern: Wisdom's Leather Gloves	3			134942	Leatherworking		75	9	1
-252783	Pattern: Mystic Medium Armor Kit	2			134942	Leatherworking		80	9	1
-252784	Pattern: Forceful Medium Armor Kit	2			134942	Leatherworking		80	9	1
-252786	Pattern: Brawler's Leather Boots	3			134942	Leatherworking		85	9	1
-252787	Pattern: Trapper's Leather Boots	3			134942	Leatherworking		85	9	1
-252788	Pattern: Defender's Leather Boots	3			134942	Leatherworking		85	9	1
-252789	Pattern: Totemic Leather Boots	3			134942	Leatherworking		85	9	1
-252790	Pattern: Stormrider's Leather Boots	3			134942	Leatherworking		85	9	1
-252791	Pattern: Wisdom's Leather Boots	3			134942	Leatherworking		85	9	1
-252792	Pattern: Brawler's Leather Pants	3			134942	Leatherworking		100	9	1
-252793	Pattern: Trapper's Leather Pants	3			134942	Leatherworking		100	9	1
-252794	Pattern: Defender's Leather Pants	3			134942	Leatherworking		100	9	1
-252795	Pattern: Totemic Leather Pants	3			134942	Leatherworking		100	9	1
-252796	Pattern: Stormrider's Leather Pants	3			134942	Leatherworking		100	9	1
-252797	Pattern: Wisdom's Leather Pants	3			134942	Leatherworking		100	9	1
-252798	Pattern: Brawler's Leather Hood	3			134942	Leatherworking		100	9	1
-252799	Pattern: Trapper's Leather Hood	3			134942	Leatherworking		100	9	1
-252800	Pattern: Defender's Leather Hood	3			134942	Leatherworking		100	9	1
-252801	Pattern: Totemic Leather Hood	3			134942	Leatherworking		100	9	1
-252802	Pattern: Stormrider's Leather Hood	3			134942	Leatherworking		100	9	1
-252803	Pattern: Wisdom's Leather Hood	3			134942	Leatherworking		100	9	1
-252804	Pattern: Hillman's Leather Boots	2			134942	Leatherworking		110	9	1
-252805	Pattern: Brawler's Leather Tunic	3			134942	Leatherworking		110	9	1
-252806	Pattern: Trapper's Leather Tunic	3			134942	Leatherworking		110	9	1
-252807	Pattern: Defender's Leather Tunic	3			134942	Leatherworking		110	9	1
-252808	Pattern: Totemic Leather Tunic	3			134942	Leatherworking		110	9	1
-252809	Pattern: Stormrider's Leather Tunic	3			134942	Leatherworking		110	9	1
-252810	Pattern: Wisdom's Leather Tunic	3			134942	Leatherworking		110	9	1
-252811	Pattern: Mystic Heavy Armor Kit	2			134942	Leatherworking		135	9	1
-252812	Pattern: Forceful Heavy Armor Kit	2			134942	Leatherworking		135	9	1
-252814	Pattern: Brawler's Leather Helm	3			134942	Leatherworking		125	9	1
-252815	Pattern: Trapper's Leather Helm	3			134942	Leatherworking		125	9	1
-252816	Pattern: Defender's Leather Helm	3			134942	Leatherworking		125	9	1
-252817	Pattern: Totemic Leather Helm	3			134942	Leatherworking		125	9	1
-252818	Pattern: Stormrider's Leather Helm	3			134942	Leatherworking		125	9	1
-252819	Pattern: Wisdom's Leather Helm	3			134942	Leatherworking		125	9	1
-252820	Pattern: Brawler's Leather Legguards	3			134942	Leatherworking		125	9	1
-252821	Pattern: Trapper's Leather Legguards	3			134942	Leatherworking		125	9	1
-252822	Pattern: Defender's Leather Kilt	3			134942	Leatherworking		125	9	1
-252823	Pattern: Totemic Leather Leggings	3			134942	Leatherworking		125	9	1
-252824	Pattern: Stormrider's Leather Kilt	3			134942	Leatherworking		125	9	1
-252825	Pattern: Wisdom's Leather Leggings	3			134942	Leatherworking		125	9	1
-252826	Pattern: Prowler's Leather Belt	3			134942	Leatherworking		150	9	1
-252827	Pattern: Skulker's Leather Belt	3			134942	Leatherworking		150	9	1
-252828	Pattern: Stalker's Leather Belt	3			134942	Leatherworking		150	9	1
-252829	Pattern: Warden's Leather Belt	3			134942	Leatherworking		150	9	1
-252830	Pattern: Skirmisher's Leather Belt	3			134942	Leatherworking		150	9	1
-252831	Pattern: Skycaller's Leather Belt	3			134942	Leatherworking		150	9	1
-252832	Pattern: Mender's Leather Belt	3			134942	Leatherworking		150	9	1
-252833	Pattern: Mystic Thick Armor Kit	2			134942	Leatherworking		185	9	1
-252834	Pattern: Forceful Thick Armor Kit	2			134942	Leatherworking		185	9	1
-252836	Pattern: Prowler's Leather Gloves	3			134942	Leatherworking		175	9	1
-252837	Pattern: Skulker's Leather Gloves	3			134942	Leatherworking		175	9	1
-252838	Pattern: Stalker's Leather Gloves	3			134942	Leatherworking		175	9	1
-252839	Pattern: Warden's Leather Gloves	3			134942	Leatherworking		175	9	1
-252840	Pattern: Skirmisher's Leather Gloves	3			134942	Leatherworking		175	9	1
-252841	Pattern: Skycaller's Leather Gloves	3			134942	Leatherworking		175	9	1
-252842	Pattern: Mender's Leather Gloves	3			134942	Leatherworking		175	9	1
-252843	Pattern: Prowler's Leather Shoes	3			134942	Leatherworking		200	9	1
-252844	Pattern: Skulker's Leather Shoes	3			134942	Leatherworking		200	9	1
-252845	Pattern: Warden's Leather Shoes	3			134942	Leatherworking		200	9	1
-252846	Pattern: Skycaller's Leather Shoes	3			134942	Leatherworking		200	9	1
-252847	Pattern: Mender's Leather Shoes	3			134942	Leatherworking		200	9	1
-252848	Pattern: Prowler's Leather Shoulders	3			134942	Leatherworking		210	9	1
-252849	Pattern: Skulker's Leather Shoulder	3			134942	Leatherworking		210	9	1
-252850	Pattern: Warden's Leather Shoulders	3			134942	Leatherworking		210	9	1
-252851	Pattern: Skycaller's Leather Shoulders	3			134942	Leatherworking		210	9	1
-252852	Pattern: Mender's Leather Shoulders	3			134942	Leatherworking		210	9	1
-252853	Pattern: Prowler's Leather Bracers	3			134942	Leatherworking		225	9	1
-252854	Pattern: Skulker's Leather Bracers	3			134942	Leatherworking		225	9	1
-252855	Pattern: Warden's Leather Bracers	3			134942	Leatherworking		225	9	1
-252856	Pattern: Skycaller's Leather Bracers	3			134942	Leatherworking		225	9	1
-252857	Pattern: Mender's Leather Bracers	3			134942	Leatherworking		225	9	1
-252858	Pattern: Tooled Leather Belt	2			134942	Leatherworking		235	9	1
-252859	Pattern: Blue Suede Shoes	2			134942	Leatherworking		235	9	1
-252860	Pattern: Prowler's Leather Boots	3			134942	Leatherworking		235	9	1
-252861	Pattern: Skulker's Leather Boots	3			134942	Leatherworking		235	9	1
-252862	Pattern: Warden's Leather Boots	3			134942	Leatherworking		235	9	1
-252863	Pattern: Skycaller's Leather Boots	3			134942	Leatherworking		235	9	1
-252864	Pattern: Mender's Leather Boots	3			134942	Leatherworking		235	9	1
-252865	Pattern: Tooled Leather Boots	2			134942	Leatherworking		240	9	1
-252866	Pattern: Blue Suede Gloves	2			134942	Leatherworking		240	9	1
-252867	Pattern: Prowler's Leather Gauntlets	3			134942	Leatherworking		250	9	1
-252868	Pattern: Skulker's Leather Gauntlets	3			134942	Leatherworking		250	9	1
-252869	Pattern: Warden's Leather Gauntlets	3			134942	Leatherworking		250	9	1
-252870	Pattern: Skycaller's Leather Gauntlets	3			134942	Leatherworking		250	9	1
-252871	Pattern: Mender's Leather Gauntlets	3			134942	Leatherworking		250	9	1
-252872	Pattern: Prowler's Leather Waistguard	3			134942	Leatherworking		250	9	1
-252873	Pattern: Skulker's Leather Waistguard	3			134942	Leatherworking		250	9	1
-252874	Pattern: Warden's Leather Waistguard	3			134942	Leatherworking		250	9	1
-252875	Pattern: Skycaller's Leather Waistguard	3			134942	Leatherworking		250	9	1
-252876	Pattern: Mender's Leather Waistguard	3			134942	Leatherworking		250	9	1
-252877	Pattern: Tooled Leather Armor	2			134942	Leatherworking		255	9	1
-252878	Pattern: Blue Suede Pants	2			134942	Leatherworking		255	9	1
-252879	Pattern: Wicked Leather Boots	2			134942	Leatherworking		260	9	1
-252880	Pattern: Tooled Leather Gauntlets	2			134942	Leatherworking		260	9	1
-252881	Pattern: Blue Suede Shoulders	2			134942	Leatherworking		260	9	1
-252882	Pattern: Tooled Leather Crown	2			134942	Leatherworking		265	9	1
-252883	Pattern: Blue Suede Armor	2			134942	Leatherworking		265	9	1
-252884	Pattern: Wicked Leather Shoulders	2			134942	Leatherworking		270	9	1
-252885	Pattern: Tooled Leather Bracers	2			134942	Leatherworking		270	9	1
-252886	Pattern: Blue Suede Belt	2			134942	Leatherworking		270	9	1
-252887	Pattern: Tooled Leather Epaulets	2			134942	Leatherworking		275	9	1
-252888	Pattern: Blue Suede Bracers	2			134942	Leatherworking		275	9	1
-252889	Pattern: Tooled Leather Pants	2			134942	Leatherworking		280	9	1
-252890	Pattern: Blue Suede Hat	2			134942	Leatherworking		280	9	1
-252891	Pattern: Living Crown	4			134942	Leatherworking		300	9	1
-252892	Pattern: Dawn Armor	4			134942	Leatherworking		300	9	1
-252893	Pattern: Timbermaw Tunic	4			134942	Leatherworking		300	9	1
-252894	Pattern: Warbear Helm	4			134942	Leatherworking		300	9	1
-252895	Pattern: Ironfeather Leggings	4			134942	Leatherworking		300	9	1
-252896	Pattern: Stalker's Mail Boots	3			134942	Leatherworking		200	9	1
-252897	Pattern: Skycaller's Mail Boots	3			134942	Leatherworking		200	9	1
-252898	Pattern: Skirmisher's Mail Boots	3			134942	Leatherworking		200	9	1
-252899	Pattern: Mender's Mail Boots	3			134942	Leatherworking		200	9	1
-252900	Pattern: Stalker's Mail Shoulders	3			134942	Leatherworking		210	9	1
-252901	Pattern: Skycaller's Mail Shoulders	3			134942	Leatherworking		210	9	1
-252902	Pattern: Skirmisher's Mail Shoulders	3			134942	Leatherworking		210	9	1
-252903	Pattern: Mender's Mail Shoulders	3			134942	Leatherworking		210	9	1
-252904	Pattern: Stalker's Mail Bracers	3			134942	Leatherworking		225	9	1
-252905	Pattern: Skycaller's Mail Bracers	3			134942	Leatherworking		225	9	1
-252906	Pattern: Skirmisher's Mail Bracers	3			134942	Leatherworking		225	9	1
-252907	Pattern: Mender's Mail Bracers	3			134942	Leatherworking		225	9	1
-252908	Pattern: Supple Scorpid Boots	2			134942	Leatherworking		230	9	1
-252909	Pattern: Charged Scorpid Belt	2			134942	Leatherworking		230	9	1
-252910	Pattern: Stalker's Mail Sabatons	3			134942	Leatherworking		235	9	1
-252911	Pattern: Skycaller's Mail Sabatons	3			134942	Leatherworking		235	9	1
-252912	Pattern: Skirmisher's Mail Sabatons	3			134942	Leatherworking		235	9	1
-252913	Pattern: Mender's Mail Sabatons	3			134942	Leatherworking		235	9	1
-252914	Pattern: Supple Scorpid Leggings	2			134942	Leatherworking		240	9	1
-252915	Pattern: Charged Scorpid Helm	2			134942	Leatherworking		240	9	1
-252916	Pattern: Supple Scorpid Bracers	2			134942	Leatherworking		250	9	1
-252917	Pattern: Charged Scorpid Shoulders	2			134942	Leatherworking		250	9	1
-252918	Pattern: Stalker's Mail Gauntlets	3			134942	Leatherworking		250	9	1
-252919	Pattern: Skycaller's Mail Gauntlets	3			134942	Leatherworking		250	9	1
-252920	Pattern: Skirmisher's Mail Gauntlets	3			134942	Leatherworking		250	9	1
-252921	Pattern: Mender's Mail Gauntlets	3			134942	Leatherworking		250	9	1
-252922	Pattern: Stalker's Mail Belt	3			134942	Leatherworking		250	9	1
-252923	Pattern: Skycaller's Mail Belt	3			134942	Leatherworking		250	9	1
-252924	Pattern: Skirmisher's Mail Belt	3			134942	Leatherworking		250	9	1
-252925	Pattern: Mender's Mail Belt	3			134942	Leatherworking		250	9	1
-252926	Pattern: Supple Scorpid Shoulders	2			134942	Leatherworking		255	9	1
-252927	Pattern: Charged Scorpid Bracers	2			134942	Leatherworking		255	9	1
-252928	Pattern: Heavy Scorpid Boots	2			134942	Leatherworking		255	9	1
-252929	Pattern: Supple Scorpid Belt	2			134942	Leatherworking		255	9	1
-252930	Pattern: Charged Scorpid Gauntlets	2			134942	Leatherworking		255	9	1
-252931	Pattern: Supple Scorpid Helm	2			134942	Leatherworking		260	9	1
-252932	Pattern: Charged Scorpid Vest	2			134942	Leatherworking		260	9	1
-252933	Pattern: Supple Scorpid Vest	2			134942	Leatherworking		270	9	1
-252934	Pattern: Charged Scorpid Leggings	2			134942	Leatherworking		270	9	1
-252935	Pattern: Supple Scorpid Sabatons	2			134942	Leatherworking		280	9	1
-252936	Pattern: Charged Scorpid Boots	2			134942	Leatherworking		280	9	1
-252937	Pattern: Red Dragonscale Leggings	4			134942	Leatherworking		300	9	1
-252938	Pattern: Blue Dragonscale Helm	4			134942	Leatherworking		300	9	1
-252939	Pattern: Black Dragonscale Helm	4			134942	Leatherworking		300	9	1
-252940	Pattern: Pristine Scorpid Leggings	4			134942	Leatherworking		300	9	1
-252941	Pattern: Mystic Rugged Armor Kit	2			134942	Leatherworking		235	9	1
-252942	Pattern: Forceful Rugged Armor Kit	2			134942	Leatherworking		235	9	1
-273096	Blueprint: Tanning Rack	2			1001491	Leatherworking		140	9	1
-273121	Blueprint: Sewing Machine	2			1001491	Leatherworking		300	9	1
-273130	Undeath Engine	2			1413153				15	1
-273884	Grovekeeper Trousers	1		7		Legs (Leather)			4	2
-273885	Grovekeeper Grips	1		10		Hands (Leather)			4	2
-273886	Grovekeeper Shoulderpads	1		3		Shoulder (Leather)			4	2
-273887	Grovekeeper Stompers	1		8		Feet (Leather)			4	2
-273888	Grovekeeper Kilt	1		7		Legs (Leather)			4	2
-273889	Grovekeeper Mitts	1		10		Hands (Leather)			4	2
-273890	Grovekeeper Mantle	1		3		Shoulder (Leather)			4	2
-273891	Grovekeeper Sandals	1		8		Feet (Leather)			4	2
-273892	Grovekeeper Legguards	1		7		Legs (Leather)			4	2
-273893	Grovekeeper Handguards	1		10		Hands (Leather)			4	2
-273894	Grovekeeper Pauldrons	1		3		Shoulder (Leather)			4	2
-273895	Grovekeeper Boots	1		8		Feet (Leather)			4	2
-273896	Grovekeeper Leggings	1		7		Legs (Leather)			4	2
-273897	Grovekeeper Gauntlets	1		10		Hands (Leather)			4	2
-273898	Grovekeeper Spaulders	1		3		Shoulder (Leather)			4	2
-273899	Grovekeeper Treads	1		8		Feet (Leather)			4	2
-273900	Wildstalker's Legguards	1		7		Legs (Mail)			4	3
-273901	Wildstalker's Gauntlets	1		10		Hands (Mail)			4	3
-273902	Wildstalker's Spaulders	1		3		Shoulder (Mail)			4	3
-273903	Wildstalker's Greaves	1		8		Feet (Mail)			4	3
-273928	Grimstitch Pants	1		7		Legs (Leather)			4	2
-273929	Grimstitch Gloves	1		10		Hands (Leather)			4	2
-273930	Grimstitch Spaulders	1		3		Shoulder (Leather)			4	2
-273931	Grimstitch Boots	1		8		Feet (Leather)			4	2
-273932	Spiritcaller Leggings	1		7		Legs (Mail)			4	3
-273933	Spiritcaller Grips	1		10		Hands (Mail)			4	3
-273934	Spiritcaller Spaulders	1		3		Shoulder (Mail)			4	3
-273935	Spiritcaller Treads	1		8		Feet (Mail)			4	3
-273936	Spiritcaller Pants	1		7		Legs (Mail)			4	3
-273937	Spiritcaller Gauntlets	1		10		Hands (Mail)			4	3
-273938	Spiritcaller Epaulets	1		3		Shoulder (Mail)			4	3
-273939	Spiritcaller Greaves	1		8		Feet (Mail)			4	3
-273952	Pattern: Grovekeeper Trousers	4	1		134940	Leatherworking		300	9	1
-273953	Pattern: Grovekeeper Grips	4	1		134940	Leatherworking		300	9	1
-273954	Pattern: Grovekeeper Shoulderpads	4	1		134940	Leatherworking		300	9	1
-273955	Pattern: Grovekeeper Stompers	4	1		134940	Leatherworking		300	9	1
-273956	Pattern: Grovekeeper Kilt	4	1		134940	Leatherworking		300	9	1
-273957	Pattern: Grovekeeper Mitts	4	1		134940	Leatherworking		300	9	1
-273958	Pattern: Grovekeeper Mantle	4	1		134940	Leatherworking		300	9	1
-273959	Pattern: Grovekeeper Sandals	4	1		134940	Leatherworking		300	9	1
-273960	Pattern: Grovekeeper Legguards	4	1		134940	Leatherworking		300	9	1
-273961	Pattern: Grovekeeper Handguards	4	1		134940	Leatherworking		300	9	1
-273962	Pattern: Grovekeeper Pauldrons	4	1		134940	Leatherworking		300	9	1
-273963	Pattern: Grovekeeper Boots	4	1		134940	Leatherworking		300	9	1
-273964	Pattern: Grovekeeper Leggings	4	1		134940	Leatherworking		300	9	1
-273965	Pattern: Grovekeeper Gauntlets	4	1		134940	Leatherworking		300	9	1
-273966	Pattern: Grovekeeper Spaulders	4	1		134940	Leatherworking		300	9	1
-273967	Pattern: Grovekeeper Treads	4	1		134940	Leatherworking		300	9	1
-273968	Pattern: Wildstalker's Legguards	4	1		134940	Leatherworking		300	9	1
-273969	Pattern: Wildstalker's Gauntlets	4	1		134940	Leatherworking		300	9	1
-273970	Pattern: Wildstalker's Spaulders	4	1		134940	Leatherworking		300	9	1
-273971	Pattern: Wildstalker's Greaves	4	1		134940	Leatherworking		300	9	1
-273996	Pattern: Grimstitch Pants	4	1		134940	Leatherworking		300	9	1
-273997	Pattern: Grimstitch Gloves	4	1		134940	Leatherworking		300	9	1
-273998	Pattern: Grimstitch Spaulders	4	1		134940	Leatherworking		300	9	1
-273999	Pattern: Grimstitch Boots	4	1		134940	Leatherworking		300	9	1
-274000	Pattern: Spiritcaller Leggings	4	1		134940	Leatherworking		300	9	1
-274001	Pattern: Spiritcaller Grips	4	1		134940	Leatherworking		300	9	1
-274002	Pattern: Spiritcaller Spaulders	4	1		134940	Leatherworking		300	9	1
-274003	Pattern: Spiritcaller Treads	4	1		134940	Leatherworking		300	9	1
-274004	Pattern: Spiritcaller Pants	4	1		134940	Leatherworking		300	9	1
-274005	Pattern: Spiritcaller Gauntlets	4	1		134940	Leatherworking		300	9	1
-274006	Pattern: Spiritcaller Epaulets	4	1		134940	Leatherworking		300	9	1
-274007	Pattern: Spiritcaller Greaves	4	1		134940	Leatherworking		300	9	1
-274030	Malleable Essence of Nature	4	1		132119	Enchanting			7	12
-275586	Pattern: Bileblister Claws	3	1		134940	Tailoring		285	9	2
-275587	Pattern: Bileblister Girdle	3	1		134940	Tailoring		290	9	2
-275588	Pattern: Bileblister Boots	3	1		134940	Leatherworking		295	9	1
-275589	Pattern: Hivethrasher's Claws	3	1		134940	Leatherworking		285	9	1
-275590	Pattern: Hivethrasher's Girdle	3	1		134940	Leatherworking		290	9	1
-275591	Pattern: Hivethrasher's Boots	3	1		134940	Leatherworking		295	9	1
-275592	Pattern: Scalegut Clenchers	3	1		134940	Leatherworking		285	9	1
-275593	Pattern: Scalegut Belt	3	1		134940	Leatherworking		290	9	1
-275594	Pattern: Scalegut Treaders	3	1		134940	Leatherworking		295	9	1
-275595	Pattern: Broodwatcher's Clenchers	3	1		134940	Leatherworking		285	9	1
-275596	Pattern: Broodwatcher's Belt	3	1		134940	Leatherworking		290	9	1
-275597	Pattern: Broodwatcher's Treaders	3	1		134940	Leatherworking		295	9	1
-275610	Bileblister Claws	3	53	10		Hands (Leather)	Stamina, Intellect		4	2
-275611	Bileblister Girdle	3	53	6		Waist (Leather)	Stamina, Intellect		4	2
-275612	Bileblister Boots	3	53	8		Feet (Leather)	Spirit, Spell Power		4	2
-275613	Hivethrasher's Claws	3	53	10		Hands (Leather)	Stamina, Agility		4	2
-275614	Hivethrasher's Girdle	3	53	6		Waist (Leather)	Stamina, Agility		4	2
-275615	Hivethrasher's Boots	3	53	8		Feet (Leather)	Stamina, Agility		4	2
-275616	Scalegut Clenchers	3	53	10		Hands (Mail)	Stamina, Agility		4	3
-275617	Scalegut Belt	3	53	6		Waist (Mail)	Stamina, Agility		4	3
-275618	Scalegut Treaders	3	53	8		Feet (Mail)	Agility, Attack Power		4	3
-275619	Broodwatcher's Clenchers	3	53	10		Hands (Mail)	Spirit, Healing, Spell Damage		4	3
-275620	Broodwatcher's Belt	3	53	6		Waist (Mail)	Stamina, Healing, Spell Damage		4	3
-275621	Broodwatcher's Treaders	3	53	8		Feet (Mail)	Stamina, Healing, Spell Damage		4	3
-276538	Spiritcaller Kilt	4	60	7	133826	Legs (Mail)			4	3
-276539	Spiritcaller Gloves	4	60	10	133824	Hands (Mail)			4	3
-276540	Spiritcaller Mantle	4	60	3	133827	Shoulder (Mail)			4	3
-276541	Spiritcaller Boots	4	60	8	133821	Feet (Mail)			4	3
-276542	Pattern: Spiritcaller Kilt	4	1		134940	Leatherworking		300	9	1
-276543	Pattern: Spiritcaller Gloves	4	1		134940	Leatherworking		300	9	1
-276544	Pattern: Spiritcaller Mantle	4	1		134940	Leatherworking		300	9	1
-276545	Pattern: Spiritcaller Boots	4	1		134940	Leatherworking		300	9	1
-276934	Pattern: Cloudy Gustwoven Harness	2			134942	Leatherworking		60	9	1
-276935	Pattern: Cloudy Gustwoven Bracers	2			134942	Leatherworking		50	9	1
-276936	Pattern: Cloudy Gustwoven Gloves	2			134942	Leatherworking		55	9	1
-276937	Pattern: Cloudy Gustwoven Belt	2			134942	Leatherworking		50	9	1
-276938	Pattern: Cloudy Gustwoven Trousers	2			134942	Leatherworking		60	9	1
-276939	Pattern: Cloudy Gustwoven Boots	2			134942	Leatherworking		55	9	1
-276940	Pattern: Cloudy Windraveled Jerkin	2			134942	Leatherworking		60	9	1
-276941	Pattern: Cloudy Windraveled Armguards	2			134942	Leatherworking		50	9	1
-276942	Pattern: Cloudy Windraveled Mitts	2			134942	Leatherworking		55	9	1
-276943	Pattern: Cloudy Windraveled Strap	2			134942	Leatherworking		50	9	1
-276944	Pattern: Cloudy Windraveled Pants	2			134942	Leatherworking		60	9	1
-276945	Pattern: Cloudy Windraveled Footwraps	2			134942	Leatherworking		55	9	1
-276958	Pattern: Azure Gustwoven Harness	2			134942	Leatherworking		60	9	1
-276959	Pattern: Azure Gustwoven Bracers	2			134942	Leatherworking		50	9	1
-276960	Pattern: Azure Gustwoven Gloves	2			134942	Leatherworking		55	9	1
-276961	Pattern: Azure Gustwoven Belt	2			134942	Leatherworking		50	9	1
-276962	Pattern: Azure Gustwoven Trousers	2			134942	Leatherworking		60	9	1
-276963	Pattern: Azure Gustwoven Boots	2			134942	Leatherworking		55	9	1
-276964	Pattern: Azure Windraveled Jerkin	2			134942	Leatherworking		60	9	1
-276965	Pattern: Azure Windraveled Armguards	2			134942	Leatherworking		50	9	1
-276966	Pattern: Azure Windraveled Mitts	2			134942	Leatherworking		55	9	1
-276967	Pattern: Azure Windraveled Strap	2			134942	Leatherworking		50	9	1
-276968	Pattern: Azure Windraveled Pants	2			134942	Leatherworking		60	9	1
-276969	Pattern: Azure Windraveled Footwraps	2			134942	Leatherworking		55	9	1
-276978	Pattern: Cloudy Gustwoven Hood	2			134942	Leatherworking		175	9	1
-276979	Pattern: Cloudy Gustwoven Spaulders	2			134942	Leatherworking		175	9	1
-276980	Pattern: Cloudy Windraveled Cover	2			134942	Leatherworking		175	9	1
-276981	Pattern: Cloudy Windraveled Drapes	2			134942	Leatherworking		175	9	1
-276986	Pattern: Azure Gustwoven Hood	2			134942	Leatherworking		175	9	1
-276987	Pattern: Azure Gustwoven Spaulders	2			134942	Leatherworking		175	9	1
-276988	Pattern: Azure Windraveled Cover	2			134942	Leatherworking		175	9	1
-276989	Pattern: Azure Windraveled Drapes	2			134942	Leatherworking		175	9	1
-276998	Cloudy Gustwoven Harness	2	7	5		Chest (Leather)	Strength		4	2
-276999	Cloudy Gustwoven Bracers	2	5	9		Wrist (Leather)	Strength		4	2
-277000	Cloudy Gustwoven Gloves	2	6	10		Hands (Leather)	Agility		4	2
-277001	Cloudy Gustwoven Belt	2	5	6		Waist (Leather)	Stamina		4	2
-277002	Cloudy Gustwoven Trousers	2	7	7		Legs (Leather)	Stamina		4	2
-277003	Cloudy Gustwoven Boots	2	6	8		Feet (Leather)	Agility		4	2
-277004	Cloudy Windraveled Jerkin	2	7	5		Chest (Leather)	Intellect		4	2
-277005	Cloudy Windraveled Armguards	2	5	9		Wrist (Leather)	Intellect		4	2
-277006	Cloudy Windraveled Mitts	2	6	10		Hands (Leather)	Spirit		4	2
-277007	Cloudy Windraveled Strap	2	5	6		Waist (Leather)	Stamina		4	2
-277008	Cloudy Windraveled Pants	2	7	7		Legs (Leather)	Stamina		4	2
-277009	Cloudy Windraveled Footwraps	2	6	8		Feet (Leather)	Spirit		4	2
-277022	Azure Gustwoven Harness	2	7	5		Chest (Leather)	Strength		4	2
-277023	Azure Gustwoven Bracers	2	5	9		Wrist (Leather)	Strength		4	2
-277024	Azure Gustwoven Gloves	2	6	10		Hands (Leather)	Agility		4	2
-277025	Azure Gustwoven Belt	2	5	6		Waist (Leather)	Stamina		4	2
-277026	Azure Gustwoven Trousers	2	7	7		Legs (Leather)	Stamina		4	2
-277027	Azure Gustwoven Boots	2	6	8		Feet (Leather)	Agility		4	2
-277028	Azure Windraveled Jerkin	2	7	5		Chest (Leather)	Intellect		4	2
-277029	Azure Windraveled Armguards	2	5	9		Wrist (Leather)	Intellect		4	2
-277030	Azure Windraveled Mitts	2	6	10		Hands (Leather)	Spirit		4	2
-277031	Azure Windraveled Strap	2	5	6		Waist (Leather)	Stamina		4	2
-277032	Azure Windraveled Pants	2	7	7		Legs (Leather)	Stamina		4	2
-277033	Azure Windraveled Footwraps	2	6	8		Feet (Leather)	Spirit		4	2
-277042	Cloudy Gustwoven Hood	2	30	1		Head (Leather)	Strength, Stamina		4	2
-277043	Cloudy Gustwoven Spaulders	2	30	3		Shoulder (Leather)	Agility, Stamina		4	2
-277044	Cloudy Windraveled Cover	2	30	1		Head (Leather)	Intellect, Stamina		4	2
-277045	Cloudy Windraveled Drapes	2	30	3		Shoulder (Leather)	Spirit, Stamina		4	2
-277050	Azure Gustwoven Hood	2	30	1		Head (Leather)	Strength, Stamina		4	2
-277051	Azure Gustwoven Spaulders	2	30	3		Shoulder (Leather)	Agility, Stamina		4	2
-277052	Azure Windraveled Cover	2	30	1		Head (Leather)	Intellect, Stamina		4	2
-277053	Azure Windraveled Drapes	2	30	3		Shoulder (Leather)	Spirit, Stamina		4	2
-277715	Light Leather Reagent Bag	1		18	133652	Bag			1	11
-277716	Pattern: Light Leather Reagent Bag	2	1		134939	Leatherworking		30	9	1
-279252	Elderwild Waistcord	4	60	6		Waist (Leather)	Stamina, Spirit, Healing, Spell Damage		4	2
-279253	Outlaw's Collar	4	60	1	133694	Head (Leather)	Stamina, Agility, Critical Strike Rating		4	2
-279254	Elderwild Pants	4	60	7	134602	Legs (Leather)	Stamina, Spirit, Healing, Spell Damage		4	2
-279255	Eternity Pauldrons	4	60	3	135041	Shoulder (Mail)	Stamina, Spirit, Healing, Spell Damage		4	3
-279256	Tranquil Wristguards	4	60	9	132601	Wrist (Mail)	Intellect, Strength, Stamina		4	3
-279257	Mourning Handguards	4	60	10	132945	Hands (Mail)	Agility, Stamina, Intellect		4	3
-279258	Wild Leather Armor Kit	3	60		4632799	Item Enhancement				6
-279301	Pattern: Elderwild Waistcord	4			134942	Leatherworking		300	9	1
-279302	Pattern: Outlaw's Collar	4			134942	Leatherworking		300	9	1
-279303	Pattern: Elderwild Pants	4			134942	Leatherworking		300	9	1
-279304	Pattern: Eternity Pauldrons	4			134942	Leatherworking		300	9	1
-279305	Pattern: Tranquil Wristguards	4			134942	Leatherworking		300	9	1
-279306	Pattern: Mourning Handguards	4			134942	Leatherworking		300	9	1
-279307	Pattern: Wild Leather Armor Kit	4			134941	Leatherworking		300	9	1
-279941	Tanning Rack	1			4559256	Consumable		140		8
-279945	Sewing Machine	1			3622223	Consumable		300		8
-279978	Camp Tent	1			134250	Consumable		20		8]],
+783	Light Hide	1			134369	Leather			7	6	
+1206	Moss Agate	2			134105				7	11	
+1210	Shadowgem	2			134074				7	11	
+1529	Jade	2			134134				7	11	
+2300	Embossed Leather Vest	2	7	5	132724	Chest (Leather)	Stamina		4	2	2
+2302	Handstitched Leather Boots	1	3	8	132538	Feet (Leather)			4	2	
+2303	Handstitched Leather Pants	2	5	7	134706	Legs (Leather)	Agility		4	2	2
+2304	Light Armor Kit	1	1		133611	Item Enhancement				6	
+2307	Fine Leather Boots	2	13	8	132540	Feet (Leather)	Agility, Stamina		4	2	2
+2308	Fine Leather Cloak	2	10	16	133762	Back (Cloth)	Stamina		4	1	2
+2309	Embossed Leather Boots	2	10	8	132539	Feet (Leather)	Stamina, Spell Power		4	2	2
+2310	Embossed Leather Cloak	2	8	16	133150	Back (Cloth)	Agility		4	1	2
+2311	White Leather Jerkin	2	8	5	132760	Chest (Leather)	Strength, Spell Power		4	2	2
+2312	Fine Leather Gloves	2	10	10	132939	Hands (Leather)	Intellect, Spell Power		4	2	2
+2313	Medium Armor Kit	1	5		133609	Item Enhancement				6	
+2314	Toughened Leather Armor	2	19	5	132725	Chest (Leather)	Stamina, Spirit		4	2	2
+2315	Gray Leather Boots	2	15	8	132539	Feet (Leather)	Agility		4	2	2
+2316	Dark Leather Cloak	2	17	16	133762	Back (Cloth)	Agility, Strength		4	1	2
+2317	Dark Leather Tunic	2	15	5	132718	Chest (Leather)	Agility		4	2	2
+2318	Light Leather	1			134252	Leather			7	6	
+2319	Medium Leather	1			134254	Leather			7	6	
+2320	Coarse Thread	1			132891	Cloth			7	5	
+2321	Fine Thread	1			132912	Cloth			7	5	
+2324	Bleach	1			132799				7	11	
+2325	Black Dye	1			134843				7	11	
+2406	Pattern: Fine Leather Boots	2			134942	Leatherworking		65	9	1	
+2407	Pattern: White Leather Jerkin	2			134939	Leatherworking		40	9	1	
+2408	Pattern: Fine Leather Gloves	2			134942	Leatherworking		50	9	1	
+2409	Pattern: Dark Leather Tunic	2			134942	Leatherworking		75	9	1	
+2454	Elixir of Minor Strength	1	1		134836	Elixir				2	
+2455	Minor Mana Potion	1	5		134850	Potion				1	
+2457	Elixir of Minor Agility	1	2		134871	Elixir				2	
+2458	Elixir of Minor Fortitude	1	2		134822	Elixir				2	
+2459	Swiftness Potion	1	5		134875	Potion				1	
+2605	Green Dye	1			134743				7	11	
+2840	Copper Bar	1			133216	Metal & Stone			7	7	
+2934	Ruined Leather Scraps	1			134360	Leather			7	6	
+2997	Bolt of Woolen Cloth	1			132913	Cloth			7	5	
+3182	Spider's Silk	1			136113	Cloth			7	5	
+3356	Kingsblood	1			134183	Herb			7	9	
+3383	Elixir of Wisdom	1	10		134717	Elixir				2	
+3385	Lesser Mana Potion	1	14		134851	Potion				1	
+3389	Elixir of Lesser Defense	1	16		134844	Elixir				2	
+3390	Elixir of Lesser Agility	1	18		134872	Elixir				2	
+3391	Elixir of Ogre Strength	1	20		134837	Elixir				2	
+3719	Hillman's Cloak	2	25	16	133759	Back (Cloth)	Spell Power, Stamina		4	1	2
+3824	Shadow Oil	1	24		134803	Consumable				8	
+3827	Mana Potion	1	22		134852	Potion				1	
+3864	Citrine	2			134117				7	11	
+4096	Coarse Gorilla Hair	1			134324				15		
+4231	Cured Light Hide	1			134366	Leather			7	6	
+4232	Medium Hide	1			134364	Leather			7	6	
+4233	Cured Medium Hide	1			134354	Leather			7	6	
+4234	Heavy Leather	1			134256	Leather			7	6	
+4235	Heavy Hide	1			134370	Leather			7	6	
+4236	Cured Heavy Hide	1			134367	Leather			7	6	
+4237	Handstitched Leather Belt	2	5	6	132493	Waist (Leather)	Strength		4	2	2
+4239	Embossed Leather Gloves	2	8	10	132939	Hands (Leather)	Agility, Stamina		4	2	2
+4242	Embossed Leather Pants	2	10	7	134582	Legs (Leather)	Stamina, Spell Power		4	2	2
+4243	Fine Leather Tunic	2	12	5	132724	Chest (Leather)	Agility, Stamina		4	2	2
+4244	Hillman's Leather Vest	2	15	5	132725	Chest (Leather)	Stamina, Spell Power		4	2	2
+4246	Fine Leather Belt	2	11	6	132493	Waist (Leather)	Agility, Stamina		4	2	2
+4247	Hillman's Leather Gloves	2	24	10	132939	Hands (Leather)	Stamina, Spell Power		4	2	2
+4248	Dark Leather Gloves	2	21	10	132939	Hands (Leather)			4	2	2
+4249	Dark Leather Belt	2	20	6	132492	Waist (Leather)	Agility, Stamina		4	2	2
+4250	Hillman's Belt	2	20	6	132495	Waist (Leather)	Stamina, Spell Power		4	2	2
+4251	Hillman's Shoulders	2	21	3	135039	Shoulder (Leather)	Stamina, Spirit		4	2	2
+4252	Dark Leather Shoulders	2	23	3	135043	Shoulder (Leather)	Agility		4	2	2
+4253	Toughened Leather Gloves	3	22	10	132958	Hands (Leather)	Agility, Strength, Stamina		4	2	2
+4254	Barbaric Gloves	2	25	10	132939	Hands (Leather)	Stamina, Strength, Agility		4	2	2
+4255	Green Leather Armor	2	26	5	132723	Chest (Leather)	Agility, Intellect		4	2	2
+4256	Guardian Armor	2	30	5	132723	Chest (Leather)	Intellect, Spell Power		4	2	2
+4257	Green Leather Belt	2	27	6	132506	Waist (Leather)	Agility, Intellect		4	2	2
+4258	Guardian Belt	2	29	6	132492	Waist (Leather)	Intellect, Spell Power		4	2	2
+4259	Green Leather Bracers	2	31	9	132611	Wrist (Leather)	Agility, Intellect		4	2	2
+4260	Guardian Leather Bracers	2	34	9	132609	Wrist (Leather)	Intellect, Spell Power		4	2	2
+4262	Gem-studded Leather Belt	3	32	6	132490	Waist (Leather)	Stamina, Attack Power		4	2	2
+4264	Barbaric Belt	2	35	6	132498	Waist (Leather)	Strength		4	2	2
+4265	Heavy Armor Kit	1	20		133610	Item Enhancement				6	
+4289	Salt	1			133849	Leather			7	6	
+4291	Silken Thread	1			132906	Cloth			7	5	
+4293	Pattern: Hillman's Leather Vest	2			134939	Leatherworking		75	9	1	
+4294	Pattern: Hillman's Belt	2			134939	Leatherworking		95	9	1	
+4295	Pattern: Double-stitched Leather Gloves OLD	1			134939	Leatherworking		125	9	1	
+4296	Pattern: Dark Leather Shoulders	2			134942	Leatherworking		115	9	1	
+4297	Pattern: Barbaric Gloves	2			134942	Leatherworking		125	9	1	
+4298	Pattern: Guardian Belt	3			134939	Leatherworking		145	9	1	
+4299	Pattern: Guardian Armor	2			134939	Leatherworking		150	9	1	
+4300	Pattern: Guardian Leather Bracers	2			134939	Leatherworking		170	9	1	
+4301	Pattern: Barbaric Belt	3			134939	Leatherworking		175	9	1	
+4304	Thick Leather	1			134257	Leather			7	6	
+4305	Bolt of Silk Cloth	1			132907	Cloth			7	5	
+4337	Thick Spider's Silk	1			136113	Cloth			7	5	
+4338	Mageweave Cloth	1			132892	Cloth			7	5	
+4340	Gray Dye	1			132797				7	11	
+4455	Raptor Hide Harness	2	28	5	132719	Chest (Leather)	Stamina		4	2	2
+4456	Raptor Hide Belt	2	28	6	132491	Waist (Leather)	Strength, Stamina		4	2	2
+4461	Raptor Hide	1			134303	Leather			7	6	
+4470	Simple Wood	1			135435				7	11	
+5081	Kodo Hide Bag	1		18	133639	Bag (Bag)			1		
+5082	Thin Kodo Leather	1			134255	Leather			7	6	
+5083	Pattern: Kodo Hide Bag	2			134939	Leatherworking		35	9	1	
+5116	Long Tail Feather	1			132916	Leather			7	6	
+5373	Lucky Charm	1			133601				15		
+5498	Small Lustrous Pearl	2			134122				7	11	
+5500	Iridescent Pearl	2			134121				7	11	
+5633	Great Rage Potion	1	25		134801	Potion				1	
+5637	Large Fang	1			133725				7	11	
+5739	Barbaric Harness	2	33	5	132719	Chest (Leather)	Agility, Stamina, Strength		4	2	2
+5780	Murloc Scale Belt	2	13	6	132491	Waist (Leather)	Agility, Strength		4	2	2
+5781	Murloc Scale Breastplate	2	14	5	132634	Chest (Leather)	Strength, Agility		4	2	2
+5782	Thick Murloc Armor	2	29	5	132634	Chest (Leather)	Strength, Stamina		4	2	2
+5783	Murloc Scale Bracers	2	33	9	132604	Wrist (Leather)	Stamina, Strength		4	2	2
+5784	Slimy Murloc Scale	1			134304	Leather			7	6	
+5785	Thick Murloc Scale	1			134305	Leather			7	6	
+5786	Pattern: Murloc Scale Belt	1			134939	Leatherworking		65	9	1	1
+5787	Pattern: Murloc Scale Breastplate	1			134939	Leatherworking		70	9	1	1
+5788	Pattern: Thick Murloc Armor	2			134939	Leatherworking		145	9	1	1
+5789	Pattern: Murloc Scale Bracers	2			134939	Leatherworking		165	9	1	1
+5957	Handstitched Leather Vest	2	3	5	132760	Chest (Leather)	Agility		4	2	2
+5958	Fine Leather Pants	2	16	7	134582	Legs (Leather)	Intellect, Spirit		4	2	2
+5961	Dark Leather Pants	2	18	7	134589	Legs (Leather)	Agility		4	2	2
+5962	Guardian Pants	2	27	7	134582	Legs (Leather)	Intellect, Spell Power		4	2	2
+5963	Barbaric Leggings	2	29	7	134592	Legs (Leather)	Stamina, Strength, Agility		4	2	2
+5964	Barbaric Shoulders	2	30	3	135039	Shoulder (Leather)	Stamina, Strength, Agility		4	2	2
+5965	Guardian Cloak	2	32	16	133755	Back (Cloth)	Spell Power, Intellect		4	1	2
+5966	Guardian Gloves	2	33	10	132939	Hands (Leather)	Intellect, Spell Power		4	2	2
+5972	Pattern: Fine Leather Pants	2			134942	Leatherworking		80	9	1	
+5973	Pattern: Barbaric Leggings	1			134939	Leatherworking		145	9	1	1
+5974	Pattern: Guardian Cloak	2			134942	Leatherworking		160	9	1	
+6260	Blue Dye	1			134776				7	11	
+6261	Orange Dye	1			134815				7	11	
+6466	Deviate Scale Cloak	2	13	16	134305	Back (Cloth)	Stamina, Agility		4	1	2
+6467	Deviate Scale Gloves	2	16	10	132939	Hands (Leather)	Stamina, Agility		4	2	2
+6468	Deviate Scale Belt	3	18	6	132498	Waist (Leather)	Stamina, Agility, Strength		4	2	2
+6470	Deviate Scale	1			134304	Leather			7	6	
+6471	Perfect Deviate Scale	1			134303	Leather			7	6	
+6474	Pattern: Deviate Scale Cloak	1			134939	Leatherworking		65	9	1	
+6475	Pattern: Deviate Scale Gloves	1			134939	Leatherworking		80	9	1	
+6476	Pattern: Deviate Scale Belt	2			134942	Leatherworking		90	9	1	
+6662	Elixir of Giant Growth	1	8		134721	Elixir				2	
+6709	Moonglow Vest	2	13	5	132724	Chest (Leather)	Spell Power, Intellect		4	2	2
+6710	Pattern: Moonglow Vest	2			134939	Leatherworking		65	9	1	
+7067	Elemental Earth	1			134572	Elemental			7	10	
+7069	Elemental Air	1			136107	Elemental			7	10	
+7070	Elemental Water	1			134714	Elemental			7	10	
+7071	Iron Buckle	1			133607	Parts			7	1	
+7075	Core of Earth	1			135231	Elemental			7	10	
+7076	Essence of Earth	2			136102	Elemental			7	10	
+7077	Heart of Fire	1			135819	Elemental			7	10	
+7078	Essence of Fire	2			135830	Elemental			7	10	
+7079	Globe of Water	1			134333	Elemental			7	10	
+7080	Essence of Water	2			136007	Elemental			7	10	
+7082	Essence of Air	2			136022	Elemental			7	10	
+7276	Handstitched Leather Cloak	1	4	16	133150	Back (Cloth)			4	1	
+7277	Handstitched Leather Bracers	1	4	9	132607	Wrist (Leather)			4	2	
+7278	Light Leather Quiver	1	1	18	134401	Bag			11	2	
+7279	Small Leather Ammo Pouch	1	1	18	133581	Bag			11	3	
+7280	Rugged Leather Pants	2	6	7	134582	Legs (Leather)	Stamina		4	2	2
+7281	Light Leather Bracers	2	9	9	132603	Wrist (Leather)	Agility, Strength		4	2	2
+7282	Light Leather Pants	2	14	7	134582	Legs (Leather)	Agility, Stamina		4	2	2
+7283	Black Whelp Cloak	2	15	16	134305	Back (Cloth)	Spell Power		4	1	2
+7284	Red Whelp Gloves	2	19	10	132939	Hands (Leather)			4	2	2
+7285	Nimble Leather Gloves	2	19	10	132939	Hands (Leather)	Agility, Stamina		4	2	2
+7286	Black Whelp Scale	1			134310	Leather			7	6	
+7287	Red Whelp Scale	1			134318	Leather			7	6	
+7288	Pattern: Rugged Leather Pants	2			134939	Leatherworking		30	9	1	
+7289	Pattern: Black Whelp Cloak	1			134939	Leatherworking		75	9	1	
+7290	Pattern: Red Whelp Gloves	1			134939	Leatherworking		95	9	1	
+7348	Fletcher's Gloves	2	20	10	132939	Hands (Leather)	Critical Strike Rating, Parry Rating		4	2	2
+7349	Herbalist's Gloves	2	22	10	132952	Hands (Leather)			4	2	2
+7352	Earthen Leather Shoulders	2	22	3	135037	Shoulder (Leather)	Stamina		4	2	2
+7358	Pilferer's Gloves	2	23	10	132939	Hands (Leather)	Agility		4	2	2
+7359	Heavy Earthen Gloves	2	24	10	132957	Hands (Leather)	Attack Power		4	2	2
+7360	Pattern: Dark Leather Gloves	2			134942	Leatherworking		95	9	1	
+7361	Pattern: Herbalist's Gloves	2			134939	Leatherworking		110	9	1	
+7362	Pattern: Earthen Leather Shoulders	1			134939	Leatherworking		110	9	1	1
+7363	Pattern: Pilferer's Gloves	2			134939	Leatherworking		115	9	1	
+7364	Pattern: Heavy Earthen Gloves	2			134939	Leatherworking		120	9	1	
+7371	Heavy Quiver	2	30	18	134402	Bag			11	2	
+7372	Heavy Leather Ammo Pouch	2	30	18	133634	Bag			11	3	
+7373	Dusky Leather Leggings	2	28	7	134587	Legs (Leather)	Agility		4	2	2
+7374	Dusky Leather Armor	2	30	5	132718	Chest (Leather)	Agility		4	2	2
+7375	Green Whelp Armor	2	30	5	132631	Chest (Leather)	Stamina		4	2	2
+7377	Frost Leather Cloak	2	31	16	133756	Back (Cloth)			4	1	2
+7378	Dusky Bracers	2	32	9	132606	Wrist (Leather)	Agility		4	2	2
+7386	Green Whelp Bracers	2	33	9	132605	Wrist (Leather)	Intellect		4	2	2
+7387	Dusky Belt	2	34	6	132495	Waist (Leather)	Agility, Stamina		4	2	2
+7390	Dusky Boots	2	35	8	132541	Feet (Leather)	Agility, Stamina		4	2	2
+7391	Swift Boots	2	35	8	132542	Feet (Leather)	Stamina		4	2	2
+7392	Green Whelp Scale	1			134314	Leather			7	6	
+7428	Shadowcat Hide	1			134345	Leather			7	6	
+7449	Pattern: Dusky Leather Leggings	2			134942	Leatherworking		140	9	1	
+7450	Pattern: Green Whelp Armor	2			134939	Leatherworking		150	9	1	
+7451	Pattern: Green Whelp Bracers	2			134939	Leatherworking		165	9	1	1
+7452	Pattern: Dusky Boots	3			134939	Leatherworking		175	9	1	
+7453	Pattern: Swift Boots	2			134939	Leatherworking		175	9	1	
+7613	Pattern: Green Leather Armor	1			134939	Leatherworking		130	9	1	1
+7971	Black Pearl	2			134120				7	11	
+8146	Wicked Claw	1			134294				7	11	
+8150	Deeprock Salt	1			133849	Leather			7	6	
+8151	Flask of Mojo	1			134776				7	11	
+8152	Flask of Big Mojo	1			134743				7	11	
+8153	Wildvine	1			134183	Herb			7	9	
+8154	Scorpid Scale	1			134304	Leather			7	6	
+8165	Worn Dragonscale	1			134319	Leather			7	6	
+8167	Turtle Scale	1			134313	Leather			7	6	
+8168	Jet Black Feather	1			132915	Leather			7	6	
+8169	Thick Hide	1			134356	Leather			7	6	
+8170	Rugged Leather	1			134251	Leather			7	6	
+8171	Rugged Hide	1			134357	Leather			7	6	
+8172	Cured Thick Hide	1			134353	Leather			7	6	
+8173	Thick Armor Kit	1	30		133602	Item Enhancement				6	
+8174	Comfortable Leather Hat	2	35	1	133117	Head (Leather)	Stamina, Spell Power		4	2	2
+8175	Nightscape Tunic	2	36	5	132718	Chest (Leather)	Agility, Stamina		4	2	2
+8176	Nightscape Headband	2	36	1	132513	Head (Leather)	Agility, Stamina		4	2	2
+8185	Turtle Scale Leggings	2	42	7	134582	Legs (Mail)	Stamina, Spell Power, Intellect		4	3	2
+8187	Turtle Scale Gloves	2	36	10	132939	Hands (Mail)	Stamina, Spell Power, Intellect		4	3	2
+8189	Turtle Scale Breastplate	2	37	5	132634	Chest (Mail)	Stamina, Spell Power, Intellect		4	3	2
+8191	Turtle Scale Helm	2	41	1	133142	Head (Mail)	Stamina, Spell Power, Intellect		4	3	2
+8192	Nightscape Shoulders	2	37	3	135038	Shoulder (Leather)	Agility, Stamina		4	2	2
+8193	Nightscape Pants	2	41	7	134591	Legs (Leather)	Agility, Stamina		4	2	2
+8195	Nightscape Cloak	2	41	16	133755	Back (Cloth)	Agility, Stamina		4	1	2
+8197	Nightscape Boots	2	42	8	132539	Feet (Leather)	Agility		4	2	2
+8198	Turtle Scale Bracers	2	37	9	132605	Wrist (Mail)	Intellect, Spell Power, Stamina		4	3	2
+8200	Big Voodoo Robe	2	38	20	132666	Chest (Leather)	Intellect, Spell Power		4	2	2
+8201	Big Voodoo Mask	2	39	1	132482	Head (Leather)	Intellect, Spell Power		4	2	2
+8202	Big Voodoo Pants	2	42	7	134582	Legs (Leather)	Spell Power, Intellect		4	2	2
+8203	Tough Scorpid Breastplate	2	39	5	132717	Chest (Mail)	Agility, Intellect		4	3	2
+8204	Tough Scorpid Gloves	2	40	10	132958	Hands (Mail)	Agility, Intellect		4	3	2
+8205	Tough Scorpid Bracers	2	39	9	132608	Wrist (Mail)	Agility, Intellect		4	3	2
+8206	Tough Scorpid Leggings	2	44	7	134592	Legs (Mail)	Agility, Intellect		4	3	2
+8207	Tough Scorpid Shoulders	2	43	3	135035	Shoulder (Mail)	Agility, Intellect		4	3	2
+8208	Tough Scorpid Helm	2	45	1	133122	Head (Mail)	Agility, Intellect		4	3	2
+8209	Tough Scorpid Boots	2	42	8	132539	Feet (Mail)	Agility, Intellect		4	3	2
+8210	Wild Leather Shoulders	2	39	3	135049	Shoulder (Leather)			4	2	2
+8211	Wild Leather Vest	2	40	5	132647	Chest (Leather)			4	2	2
+8212	Wild Leather Leggings	2	45	7	134594	Legs (Leather)			4	2	2
+8213	Wild Leather Boots	2	44	8	132541	Feet (Leather)			4	2	2
+8214	Wild Leather Helmet	2	40	1	133078	Head (Leather)			4	2	2
+8215	Wild Leather Cloak	2	45	16	133755	Back (Cloth)			4	1	2
+8216	Big Voodoo Cloak	2	43	16	133754	Back (Cloth)	Intellect, Spell Power		4	1	2
+8217	Quickdraw Quiver	2	40	18	134407	Bag			11	2	
+8218	Thick Leather Ammo Pouch	2	40	18	133635	Bag			11	3	
+8343	Heavy Silken Thread	1			132906	Cloth			7	5	
+8345	Wolfshead Helm	3	40	1	133072	Head (Leather)	Spirit		4	2	2
+8346	Gauntlets of the Sea	3	41	10	132964	Hands (Leather)	Agility, Spell Damage, Healing		4	2	2
+8347	Dragonscale Gauntlets	3	40	10	132944	Hands (Mail)	Agility, Stamina, Critical Strike Rating		4	3	2
+8348	Helm of Fire	3	45	1	133076	Head (Leather)	Agility, Stamina		4	2	2
+8349	Feathered Breastplate	3	45	5	132721	Chest (Leather)	Spirit, Intellect, Spell Power		4	2	2
+8367	Dragonscale Breastplate	3	46	5	132629	Chest (Mail)	Stamina		4	3	2
+8368	Thick Wolfhide	1			134346	Leather			7	6	
+8384	Pattern: Comfortable Leather Hat	3			134939	Leatherworking		175	9	1	
+8385	Pattern: Turtle Scale Gloves	1			134939	Leatherworking		180	9	1	1
+8386	Pattern: Big Voodoo Robe	2			134942	Leatherworking		190	9	1	
+8387	Pattern: Big Voodoo Mask	2			134942	Leatherworking		195	9	1	
+8388	Pattern: Nightscape Cloak	2			134939	Leatherworking		205	9	1	
+8389	Pattern: Big Voodoo Pants	2			134942	Leatherworking		215	9	1	
+8390	Pattern: Big Voodoo Cloak	2			134942	Leatherworking		215	9	1	
+8395	Pattern: Tough Scorpid Breastplate	2			134942	Leatherworking		195	9	1	
+8397	Pattern: Tough Scorpid Bracers	2			134942	Leatherworking		195	9	1	
+8398	Pattern: Tough Scorpid Gloves	2			134942	Leatherworking		200	9	1	
+8399	Pattern: Tough Scorpid Boots	2			134942	Leatherworking		210	9	1	
+8400	Pattern: Tough Scorpid Shoulders	2			134942	Leatherworking		215	9	1	
+8401	Pattern: Tough Scorpid Leggings	2			134942	Leatherworking		220	9	1	
+8402	Pattern: Tough Scorpid Helm	2			134942	Leatherworking		225	9	1	
+8403	Pattern: Wild Leather Shoulders	2			134939	Leatherworking		195	9	1	1
+8404	Pattern: Wild Leather Vest	2			134939	Leatherworking		200	9	1	1
+8405	Pattern: Wild Leather Helmet	2			134939	Leatherworking		200	9	1	1
+8406	Pattern: Wild Leather Boots	2			134939	Leatherworking		220	9	1	1
+8407	Pattern: Wild Leather Leggings	2			134939	Leatherworking		225	9	1	1
+8408	Pattern: Wild Leather Cloak	2			134939	Leatherworking		225	9	1	1
+8409	Pattern: Nightscape Shoulders	2			134939	Leatherworking		185	9	1	1
+8949	Elixir of Agility	1	27		134873	Elixir				2	
+8951	Elixir of Defense	1	29		134845	Elixir				2	
+9206	Elixir of Greater Strength	1	48		134839	Elixir				2	
+10940	Strange Dust	1			132858	Enchanting			7	12	
+11083	Soul Dust	1			132857	Enchanting			7	12	
+11137	Vision Dust	1			132859	Enchanting			7	12	
+11176	Dream Dust	1			132855	Enchanting			7	12	
+11754	Black Diamond	2			134071				12		
+12361	Blue Sapphire	2			134132				7	11	
+12364	Huge Emerald	2			134104				7	11	
+12607	Brilliant Chromatic Scale	3			134319	Leather			7	6	
+12624	Wildthorn Mail	3	49	5	132634	Chest (Mail)	Spell Power, Stamina, Hit Rating		4	3	2
+12632	Storm Gauntlets	3	54	10	132964	Hands (Mail)	Stamina, Spell Power, Hit Rating		4	3	2
+12636	Helm of the Great Chief	3	56	1	133126	Head (Mail)	Spirit, Healing, Spell Damage		4	3	2
+12641	Invulnerable Mail	4	57	5	132629	Chest (Mail)	Stamina		4	3	2
+12691	Pattern: Wildthorn Mail	2			134942	Leatherworking		245	9	1	
+12703	Pattern: Storm Gauntlets	3			134939	Leatherworking		270	9	1	
+12716	Pattern: Helm of the Great Chief	3			134939	Leatherworking		290	9	1	
+12728	Pattern: Invulnerable Mail	4			134939	Leatherworking		295	9	1	
+12753	Skin of Shadow	2			134430				12		1
+12799	Large Opal	2			134116				7	11	
+12800	Azerothian Diamond	2			134094				7	11	
+12803	Living Essence	2			136006	Elemental			7	10	
+12804	Powerful Mojo	1			136011				7	11	
+12809	Guardian Stone	2			135228	Metal & Stone			7	7	
+12810	Enchanted Leather	1			134418	Leather			7	6	
+12811	Righteous Orb	2			134122				7	11	
+12938	Blood of Heroes	1			134813				12		1
+13287	Pattern: Raptor Hide Harness	2			134939	Leatherworking		140	9	1	
+13288	Pattern: Raptor Hide Belt	2			134939	Leatherworking		140	9	1	
+13423	Stonescale Oil	1			134848				7	11	
+13444	Major Mana Potion	1	49		134856	Potion				1	
+14044	Cindercloth Cloak	2	50	16	133770	Back (Cloth)	Intellect		4	1	2
+14047	Runecloth	1			132903	Cloth			7	5	
+14048	Bolt of Runecloth	1			132904	Cloth			7	5	
+14227	Ironweb Spider Silk	1			136113	Cloth			7	5	
+14256	Felcloth	1			132888	Cloth			7	5	
+14341	Rune Thread	1			136120	Cloth			7	5	
+14342	Mooncloth	1			132895	Cloth			7	5	
+14635	Pattern: Gem-studded Leather Belt	1			134939	Leatherworking		160	9	1	
+15045	Green Dragonscale Breastplate	3	47	5	132628	Chest (Mail)	Spell Damage, Healing, Stamina		4	3	2
+15046	Green Dragonscale Leggings	3	49	7	134585	Legs (Mail)	Healing, Stamina, Spell Damage		4	3	2
+15047	Red Dragonscale Breastplate	3	56	5	132628	Chest (Mail)	Healing, Spell Damage		4	3	2
+15048	Blue Dragonscale Breastplate	3	52	5	132626	Chest (Mail)	Intellect, Spell Power		4	3	2
+15049	Blue Dragonscale Shoulders	3	54	3	135049	Shoulder (Mail)	Intellect, Spell Power		4	3	2
+15050	Black Dragonscale Breastplate	3	53	5	132741	Chest (Mail)	Stamina, Attack Power		4	3	2
+15051	Black Dragonscale Shoulders	3	55	3	135032	Shoulder (Mail)	Stamina, Attack Power		4	3	2
+15052	Black Dragonscale Leggings	3	57	7	134583	Legs (Mail)	Stamina, Attack Power		4	3	2
+15053	Volcanic Breastplate	2	52	5	132722	Chest (Leather)	Stamina		4	2	2
+15054	Volcanic Leggings	2	49	7	134586	Legs (Leather)	Stamina		4	2	2
+15055	Volcanic Shoulders	2	56	3	135044	Shoulder (Leather)	Stamina		4	2	2
+15056	Stormshroud Armor	3	52	5	132723	Chest (Leather)	Critical Strike Rating, Dodge Rating		4	2	2
+15057	Stormshroud Pants	3	50	7	134589	Legs (Leather)	Critical Strike Rating, Dodge Rating		4	2	2
+15058	Stormshroud Shoulders	3	54	3	135036	Shoulder (Leather)	Stamina, Critical Strike Rating, Dodge Rating		4	2	2
+15059	Living Breastplate	3	55	5	132742	Chest (Leather)	Spirit, Stamina, Healing, Spell Damage		4	2	2
+15060	Living Leggings	3	52	7	134585	Legs (Leather)	Spirit, Stamina, Healing, Spell Damage		4	2	2
+15061	Living Shoulders	3	49	3	135049	Shoulder (Leather)	Spirit, Stamina, Healing, Spell Damage		4	2	2
+15062	Devilsaur Leggings	3	55	7	134706	Legs (Leather)	Stamina, Attack Power, Critical Strike Rating		4	2	2
+15063	Devilsaur Gauntlets	3	53	10	132960	Hands (Leather)	Stamina, Attack Power, Critical Strike Rating		4	2	2
+15064	Warbear Harness	3	50	5	132719	Chest (Leather)	Stamina, Strength, Agility		4	2	2
+15065	Warbear Woolies	3	52	7	134706	Legs (Leather)	Strength, Stamina, Agility		4	2	2
+15066	Ironfeather Breastplate	3	53	5	132721	Chest (Leather)	Spirit, Intellect, Spell Power		4	2	2
+15067	Ironfeather Shoulders	3	49	3	135037	Shoulder (Leather)	Intellect, Spirit, Spell Power		4	2	2
+15068	Frostsaber Tunic	2	57	5	132632	Chest (Leather)	Stamina		4	2	2
+15069	Frostsaber Leggings	2	52	7	134581	Legs (Leather)	Stamina		4	2	2
+15070	Frostsaber Gloves	2	54	10	132950	Hands (Leather)	Stamina		4	2	2
+15071	Frostsaber Boots	2	50	8	132539	Feet (Leather)	Stamina		4	2	2
+15072	Chimeric Leggings	2	51	7	134582	Legs (Leather)	Stamina		4	2	2
+15073	Chimeric Boots	2	50	8	132541	Feet (Leather)	Stamina		4	2	2
+15074	Chimeric Gloves	2	48	10	132957	Hands (Leather)	Stamina		4	2	2
+15075	Chimeric Vest	2	53	5	132722	Chest (Leather)	Stamina		4	2	2
+15076	Heavy Scorpid Vest	2	48	5	132637	Chest (Mail)	Stamina, Agility		4	3	2
+15077	Heavy Scorpid Bracers	2	46	9	132608	Wrist (Mail)	Stamina, Agility		4	3	2
+15078	Heavy Scorpid Gauntlet	2	50	10	132958	Hands (Mail)	Stamina, Agility		4	3	2
+15079	Heavy Scorpid Leggings	2	52	7	134592	Legs (Mail)	Agility, Stamina		4	3	2
+15080	Heavy Scorpid Helm	2	54	1	133122	Head (Mail)	Stamina, Agility		4	3	2
+15081	Heavy Scorpid Shoulders	2	56	3	135038	Shoulder (Mail)	Stamina, Agility		4	3	2
+15082	Heavy Scorpid Belt	2	51	6	132492	Waist (Mail)	Stamina, Agility		4	3	2
+15083	Wicked Leather Gauntlets	2	47	10	132965	Hands (Leather)	Agility, Stamina		4	2	2
+15084	Wicked Leather Bracers	2	48	9	132606	Wrist (Leather)	Agility, Stamina		4	2	2
+15085	Wicked Leather Armor	2	56	5	132741	Chest (Leather)	Agility, Stamina		4	2	2
+15086	Wicked Leather Headband	2	51	1	133683	Head (Leather)	Agility, Stamina		4	2	2
+15087	Wicked Leather Pants	2	53	7	134592	Legs (Leather)	Agility, Stamina		4	2	2
+15088	Wicked Leather Belt	2	55	6	132492	Waist (Leather)	Agility, Stamina		4	2	2
+15090	Runic Leather Armor	2	57	5	132722	Chest (Leather)	Intellect, Spell Power		4	2	2
+15091	Runic Leather Gauntlets	2	49	10	132965	Hands (Leather)	Spell Power, Intellect		4	2	2
+15092	Runic Leather Bracers	2	50	9	132610	Wrist (Leather)	Intellect, Spell Power		4	2	2
+15093	Runic Leather Belt	2	51	6	132512	Waist (Leather)	Intellect, Spell Power		4	2	2
+15094	Runic Leather Headband	2	53	1	133681	Head (Leather)	Intellect, Spell Power		4	2	2
+15095	Runic Leather Pants	2	55	7	134582	Legs (Leather)	Spell Power, Intellect		4	2	2
+15096	Runic Leather Shoulders	2	57	3	135046	Shoulder (Leather)	Intellect, Spell Power		4	2	2
+15138	Onyxia Scale Cloak	3	55	16	133757	Back (Cloth)	Stamina		4	1	2
+15141	Onyxia Scale Breastplate	4	57	5	132741	Chest (Mail)	Strength, Agility, Stamina, Intellect, Spirit, Bonus Armor, Critical Strike Rating		4	3	2
+15407	Cured Rugged Hide	1			134355	Leather			7	6	
+15408	Heavy Scorpid Scale	1			134305	Leather			7	6	
+15409	Refined Deeprock Salt	1			133848	Leather			7	6	
+15410	Scale of Onyxia	3			134309	Leather			7	6	
+15412	Green Dragonscale	1			134313	Leather			7	6	
+15414	Red Dragonscale	1			134317	Leather			7	6	
+15415	Blue Dragonscale	1			134311	Leather			7	6	
+15416	Black Dragonscale	1			134309	Leather			7	6	
+15417	Devilsaur Leather	1			134347	Leather			7	6	
+15419	Warbear Leather	1			134360	Leather			7	6	
+15420	Ironfeather	1			132918	Leather			7	6	
+15422	Frostsaber Leather	1			134350	Leather			7	6	
+15423	Chimera Leather	1			134250	Leather			7	6	
+15564	Rugged Armor Kit	1	40		133604	Item Enhancement				6	
+15724	Pattern: Heavy Scorpid Bracers	1			134939	Leatherworking		255	9	1	1
+15725	Pattern: Wicked Leather Gauntlets	1			134939	Leatherworking		235	9	1	1
+15726	Pattern: Green Dragonscale Breastplate	1			134939	Leatherworking		235	9	1	
+15727	Pattern: Heavy Scorpid Vest	2			134939	Leatherworking		240	9	1	
+15728	Pattern: Wicked Leather Bracers	2			134942	Leatherworking		240	9	1	
+15729	Pattern: Chimeric Gloves	1			134939	Leatherworking		240	9	1	1
+15730	Pattern: Red Dragonscale Breastplate	3			134939	Leatherworking		290	9	1	1
+15731	Pattern: Runic Leather Gauntlets	2			134942	Leatherworking		245	9	1	
+15732	Pattern: Volcanic Leggings	2			134942	Leatherworking		245	9	1	
+15733	Pattern: Green Dragonscale Leggings	3			134939	Leatherworking		245	9	1	
+15734	Pattern: Living Shoulders	1			134939	Leatherworking		245	9	1	
+15735	Pattern: Ironfeather Shoulders	1			134939	Leatherworking		245	9	1	
+15737	Pattern: Chimeric Boots	2			134942	Leatherworking		250	9	1	
+15738	Pattern: Heavy Scorpid Gauntlets	2			134939	Leatherworking		250	9	1	
+15739	Pattern: Runic Leather Bracers	2			134942	Leatherworking		250	9	1	
+15740	Pattern: Frostsaber Boots	1			134939	Leatherworking		250	9	1	1
+15741	Pattern: Stormshroud Pants	1			134939	Leatherworking		250	9	1	
+15742	Pattern: Warbear Harness	1			134939	Leatherworking		250	9	1	
+15743	Pattern: Heavy Scorpid Belt	2			134939	Leatherworking		255	9	1	
+15744	Pattern: Wicked Leather Headband	2			134942	Leatherworking		255	9	1	
+15745	Pattern: Runic Leather Belt	2			134942	Leatherworking		255	9	1	
+15746	Pattern: Chimeric Leggings	2			134942	Leatherworking		255	9	1	
+15747	Pattern: Frostsaber Leggings	2			134942	Leatherworking		260	9	1	
+15748	Pattern: Heavy Scorpid Leggings	2			134939	Leatherworking		260	9	1	
+15749	Pattern: Volcanic Breastplate	2			134942	Leatherworking		260	9	1	
+15751	Pattern: Blue Dragonscale Breastplate	1			134939	Leatherworking		260	9	1	
+15752	Pattern: Living Leggings	3			134941	Leatherworking		260	9	1	
+15753	Pattern: Stormshroud Armor	3			134939	Leatherworking		260	9	1	
+15755	Pattern: Chimeric Vest	2			134942	Leatherworking		265	9	1	
+15756	Pattern: Runic Leather Headband	1			134939	Leatherworking		265	9	1	1
+15757	Pattern: Wicked Leather Pants	2			134942	Leatherworking		265	9	1	
+15758	Pattern: Devilsaur Gauntlets	1			134939	Leatherworking		265	9	1	
+15759	Pattern: Black Dragonscale Breastplate	1			134939	Leatherworking		265	9	1	
+15760	Pattern: Ironfeather Breastplate	3			134939	Leatherworking		265	9	1	
+15761	Pattern: Frostsaber Gloves	2			134942	Leatherworking		270	9	1	
+15762	Pattern: Heavy Scorpid Helm	1			134939	Leatherworking		270	9	1	1
+15763	Pattern: Blue Dragonscale Shoulders	3			134939	Leatherworking		270	9	1	
+15764	Pattern: Stormshroud Shoulders	3			134939	Leatherworking		270	9	1	
+15765	Pattern: Runic Leather Pants	2			134942	Leatherworking		275	9	1	
+15768	Pattern: Wicked Leather Belt	2			134942	Leatherworking		275	9	1	
+15770	Pattern: Black Dragonscale Shoulders	3			134939	Leatherworking		270	9	1	
+15771	Pattern: Living Breastplate	3			134939	Leatherworking		290	9	1	
+15772	Pattern: Devilsaur Leggings	3			134941	Leatherworking		290	9	1	
+15773	Pattern: Wicked Leather Armor	2			134942	Leatherworking		280	9	1	
+15774	Pattern: Heavy Scorpid Shoulders	2			134939	Leatherworking		280	9	1	
+15775	Pattern: Volcanic Shoulders	2			134942	Leatherworking		280	9	1	
+15776	Pattern: Runic Leather Armor	2			134942	Leatherworking		285	9	1	
+15777	Pattern: Runic Leather Shoulders	2			134942	Leatherworking		285	9	1	
+15779	Pattern: Frostsaber Tunic	2			134942	Leatherworking		290	9	1	
+15781	Pattern: Black Dragonscale Leggings	3			134941	Leatherworking		290	9	1	
+16982	Corehound Boots	4	54	8	132541	Feet (Leather)	Agility, Stamina		4	2	2
+16983	Molten Helm	4	55	1	133076	Head (Leather)	Stamina, Dodge Rating		4	2	2
+16984	Black Dragonscale Boots	4	56	8	132590	Feet (Mail)	Stamina, Attack Power		4	3	2
+17010	Fiery Core	3			135812				7	11	
+17011	Lava Core	3			136025				7	11	
+17012	Core Leather	1			132386	Leather			7	6	
+17022	Pattern: Corehound Boots	1			134939	Leatherworking		295	9	1	1
+17023	Pattern: Molten Helm	1			134939	Leatherworking		300	9	1	1
+17025	Pattern: Black Dragonscale Boots	1			134939	Leatherworking		300	9	1	1
+17721	Gloves of the Greatfather	2	33	10	132955	Hands (Leather)	Spell Damage, Healing		4	2	2
+17722	Pattern: Gloves of the Greatfather	2			134939	Leatherworking		165	9	1	
+18238	Shadowskin Gloves	3	35	10	132966	Hands (Leather)	Stamina, Critical Strike Rating		4	2	2
+18239	Pattern: Shadowskin Gloves	1			134939	Leatherworking		175	9	1	
+18240	Ogre Tannin	2			134719				7	11	1
+18251	Core Armor Kit	3	50		133600	Item Enhancement				6	
+18252	Pattern: Core Armor Kit	3			134941	Leatherworking		300	9	1	1
+18258	Gordok Ogre Suit	2	55		132636				12		
+18504	Girdle of Insight	3	57	6	132515	Waist (Leather)	Intellect, Stamina, Spell Power		4	2	2
+18506	Mongoose Boots	3	57	8	132542	Feet (Leather)	Agility, Stamina		4	2	2
+18508	Swift Flight Bracers	3	57	9	132604	Wrist (Mail)	Stamina, Ranged Attack Power		4	3	2
+18509	Chromatic Cloak	4	57	16	133754	Back (Cloth)	Stamina, Critical Strike Rating		4	1	2
+18510	Hide of the Wild	4	57	16	133753	Back (Cloth)	Intellect, Stamina, Healing, Spell Damage		4	1	2
+18511	Shifting Cloak	4	57	16	133772	Back (Cloth)	Agility, Stamina, Dodge Rating		4	1	2
+18512	Larval Acid	1			134802				7	11	
+18514	Pattern: Girdle of Insight	3			134941	Leatherworking		290	9	1	1
+18515	Pattern: Mongoose Boots	3			134941	Leatherworking		290	9	1	1
+18516	Pattern: Swift Flight Bracers	3			134941	Leatherworking		290	9	1	1
+18517	Pattern: Chromatic Cloak	4			134940	Leatherworking		300	9	1	
+18518	Pattern: Hide of the Wild	4			134940	Leatherworking		300	9	1	
+18519	Pattern: Shifting Cloak	4			134940	Leatherworking		300	9	1	
+18662	Heavy Leather Ball	1	1		134480	Consumable				8	
+18731	Pattern: Heavy Leather Ball	1			134939	Leatherworking		125	9	1	
+18948	Barbaric Bracers	3	27	9	132614	Wrist (Leather)	Stamina, Strength, Agility		4	2	2
+18949	Pattern: Barbaric Bracers	1			134939	Leatherworking		130	9	1	
+19043	Heavy Timbermaw Belt	3	53	6	132505	Waist (Mail)	Stamina, Attack Power		4	3	2
+19044	Might of the Timbermaw	3	53	6	132498	Waist (Leather)	Strength, Stamina, Agility		4	2	2
+19048	Heavy Timbermaw Boots	3	56	8	132553	Feet (Mail)	Stamina, Attack Power		4	3	2
+19049	Timbermaw Brawlers	3	56	10	132960	Hands (Leather)	Strength, Stamina, Agility		4	2	2
+19052	Dawn Treaders	3	53	8	132565	Feet (Leather)	Stamina, Strength, Agility		4	2	2
+19058	Golden Mantle of the Dawn	3	56	3	135057	Shoulder (Leather)	Stamina, Strength, Agility		4	2	2
+19149	Lava Belt	4	60	6	132521	Waist (Leather)	Stamina, Bonus Armor		4	2	2
+19157	Chromatic Gauntlets	4	60	10	132956	Hands (Mail)	Attack Power, Critical Strike Rating		4	3	2
+19162	Corehound Belt	4	60	6	132513	Waist (Leather)	Intellect, Healing, Spell Damage		4	2	2
+19163	Molten Belt	4	60	6	132502	Waist (Leather)	Agility, Stamina		4	2	2
+19202	Pattern: Heavy Timbermaw Belt	1			134939	Leatherworking		265	9	1	1
+19204	Pattern: Heavy Timbermaw Boots	1			134939	Leatherworking		295	9	1	1
+19326	Pattern: Might of the Timbermaw	1			134939	Leatherworking		265	9	1	1
+19327	Pattern: Timbermaw Brawlers	1			134939	Leatherworking		295	9	1	1
+19328	Pattern: Dawn Treaders	1			134939	Leatherworking		265	9	1	1
+19329	Pattern: Golden Mantle of the Dawn	1			134939	Leatherworking		295	9	1	1
+19330	Pattern: Lava Belt	1			134939	Leatherworking		300	9	1	1
+19331	Pattern: Chromatic Gauntlets	1			134939	Leatherworking		300	9	1	1
+19332	Pattern: Corehound Belt	1			134939	Leatherworking		300	9	1	1
+19333	Pattern: Molten Belt	1			134939	Leatherworking		300	9	1	1
+19685	Primal Batskin Jerkin	3	60	5	132718	Chest (Leather)	Agility, Stamina, Hit Rating		4	2	2
+19686	Primal Batskin Gloves	3	60	10	132965	Hands (Leather)	Agility, Stamina, Hit Rating		4	2	2
+19687	Primal Batskin Bracers	3	60	9	132606	Wrist (Leather)	Agility, Stamina, Hit Rating		4	2	2
+19688	Blood Tiger Breastplate	3	60	5	132722	Chest (Leather)	Strength, Stamina, Intellect, Spirit		4	2	2
+19689	Blood Tiger Shoulders	3	60	3	135054	Shoulder (Leather)	Strength, Stamina, Intellect, Spirit		4	2	2
+19726	Bloodvine	2			134189	Herb			7	9	
+19767	Primal Bat Leather	1			134345	Leather			7	6	
+19768	Primal Tiger Leather	1			134348	Leather			7	6	
+19769	Pattern: Primal Batskin Jerkin	1			134939	Leatherworking		300	9	1	1
+19770	Pattern: Primal Batskin Gloves	1			134939	Leatherworking		300	9	1	1
+19771	Pattern: Primal Batskin Bracers	1			134939	Leatherworking		300	9	1	1
+19772	Pattern: Blood Tiger Breastplate	1			134939	Leatherworking		300	9	1	1
+19773	Pattern: Blood Tiger Shoulders	1			134939	Leatherworking		300	9	1	1
+20253	Pattern: Warbear Harness	1			134939	Leatherworking		250	9	1	1
+20254	Pattern: Warbear Woolies	1			134939	Leatherworking		260	9	1	1
+20295	Blue Dragonscale Leggings	3	55	7	134667	Legs (Mail)	Intellect, Spell Power		4	3	2
+20296	Green Dragonscale Gauntlets	3	51	10	132946	Hands (Mail)	Stamina, Healing, Spell Damage		4	3	2
+20380	Dreamscale Breastplate	4	60	5	132743	Chest (Mail)	Agility, Stamina, Intellect, Mana every 5 sec.		4	3	2
+20381	Dreamscale	2			134313	Leather			7	6	
+20476	Sandstalker Bracers	3	57	9	132611	Wrist (Mail)	Stamina		4	3	2
+20477	Sandstalker Gauntlets	3	57	10	132945	Hands (Mail)	Stamina		4	3	2
+20478	Sandstalker Breastplate	3	57	5	132742	Chest (Mail)	Stamina		4	3	2
+20479	Spitfire Breastplate	3	57	5	132717	Chest (Mail)	Agility, Intellect, Spirit, Spell Power		4	3	2
+20480	Spitfire Gauntlets	3	57	10	132945	Hands (Mail)	Agility, Intellect, Spirit, Spell Power		4	3	2
+20481	Spitfire Bracers	3	57	9	132604	Wrist (Mail)	Agility, Intellect, Spirit, Spell Power		4	3	2
+20498	Silithid Chitin	1			134315	Leather			7	6	
+20500	Light Silithid Carapace	1			134316	Leather			7	6	
+20501	Heavy Silithid Carapace	1			134307	Leather			7	6	
+20575	Black Whelp Tunic	2	15	5	132686	Chest (Leather)	Intellect, Spell Power		4	2	2
+20576	Pattern: Black Whelp Tunic	1			134939	Leatherworking		75	9	1	
+21278	Stormshroud Gloves	3	57	10	132939	Hands (Leather)	Critical Strike Rating, Hit Rating		4	2	2
+21548	Pattern: Stormshroud Gloves	3			134939	Leatherworking		290	9	1	
+22661	Polar Tunic	4	60	5	132649	Chest (Leather)	Stamina, Agility		4	2	2
+22662	Polar Gloves	4	60	10	132940	Hands (Leather)	Stamina, Agility		4	2	2
+22663	Polar Bracers	4	60	9	132606	Wrist (Leather)	Stamina, Agility		4	2	2
+22664	Icy Scale Breastplate	4	60	5	132744	Chest (Mail)	Stamina, Attack Power		4	3	2
+22665	Icy Scale Bracers	4	60	9	132606	Wrist (Mail)	Stamina, Attack Power		4	3	2
+22666	Icy Scale Gauntlets	4	60	10	132962	Hands (Mail)	Stamina, Attack Power		4	3	2
+22682	Frozen Rune	3	60		134422				7	11	
+22759	Bramblewood Helm	3	60	1	133160	Head (Leather)	Stamina		4	2	2
+22760	Bramblewood Boots	3	60	8	132561	Feet (Leather)	Stamina		4	2	2
+22761	Bramblewood Belt	3	60	6	132506	Waist (Leather)	Stamina		4	2	2
+34086	Winter Boots	1		8	132557	Feet			4	5	2
+34262	Pattern: Winter Boots	2			134939	Leatherworking		285	9	1	1
+211422		1			133449				5		
+211423	Void-Touched Leather Gloves	1		10	132958	Hands (Leather)			4	2	
+211502	Void-Touched Leather Gauntlets	1		10	132958	Hands (Leather)			4	2	
+213369	Faintly Glowing Leather	3			237420	Leather			7	6	
+213370	Irradiated Leather Scraps	2			134262	Leather			7	6	1
+213372		1			134792				7	11	
+213376	Low-Background Truesilver Plates	3			133022	Metal & Stone			7	7	
+213379	Hyperconductive Arcano-Filament	3			237428	Cloth			7	5	
+215114	Glowing Hyperconductive Scale Coif	1		1	133145	Head (Mail)			4	3	
+215152	Pattern: Glowing Gneuro-Linked Cowl	4			134939	Leatherworking		225	9	1	1
+215166	Glowing Gneuro-Linked Cowl	1		1	133117	Head (Leather)			4	2	
+215367	Pattern: Faintly Glowing Leather	3			134939	Leatherworking		200	9	1	1
+215381	Gneuro-Conductive Channeler's Hood	1		1	133144	Head (Leather)			4	2	
+215382	Rad-Resistant Scale Hood	1		1	133143	Head (Mail)			4	3	
+215422	Pattern: Glowing Hyperconductive Scale Coif	4			134939	Leatherworking		225	9	1	1
+215423	Pattern: Gneuro-Conductive Channeler's Hood	4			134939	Leatherworking		225	9	1	1
+215424	Pattern: Rad-Resistant Scale Hood	4			134939	Leatherworking		225	9	1	1
+217259	Big Voodoo Mask	1		1	132482	Head (Leather)			4	2	
+217260	Pattern: Big Voodoo Mask	2			134942	Leatherworking		220	9	1	
+217261	Big Voodoo Robe	1		20	132666	Chest (Leather)			4	2	
+217262	Pattern: Big Voodoo Robe	2			134942	Leatherworking		215	9	1	
+217263	Guardian Leather Bracers	1		9	132609	Wrist (Leather)			4	2	
+217264	Pattern: Guardian Leather Bracers	2			134939	Leatherworking		195	9	1	
+217265	Guardian Belt	1		6	132492	Waist (Leather)			4	2	
+217266	Pattern: Guardian Belt	3			134939	Leatherworking		170	9	1	
+217267	Guardian Pants	1		7	134582	Legs (Leather)			4	2	
+217268	Turtle Scale Breastplate	1		5	132634	Chest (Mail)			4	3	
+217270	Turtle Scale Gloves	2	36	10	132939	Hands (Mail)	Stamina, Spell Power, Intellect		4	3	2
+217271	Pattern: Turtle Scale Gloves	1			134939	Leatherworking		205	9	1	
+220688		1			135084				5		
+220741	Screaming Chain Pauldrons	1		3	135046	Shoulder (Mail)			4	3	
+220742	Shrieking Spaulders	1		3	135046	Shoulder (Mail)			4	3	
+220743	Cacophonous Chain Shoulderguards	1		3	135046	Shoulder (Mail)			4	3	
+220744	Wailing Chain Mantle	1		3	135046	Shoulder (Mail)			4	3	
+220745	Membrane of Dark Neurosis	1		3	135049	Shoulder (Leather)			4	2	
+220747	Paranoia Mantle	1		3	135049	Shoulder (Leather)			4	2	
+220748	Shoulderpads of Obsession	1		3	135049	Shoulder (Leather)			4	2	
+221021		1			134217				7	11	
+227847	Devilcore Leggings	1		7	134706	Legs (Leather)			4	2	
+227848	Devilcore Gauntlets	1		10	132960	Hands (Leather)			4	2	
+227851	Hardened Black Dragonscale Breastplate	1		5	132741	Chest (Mail)			4	3	
+227852	Hardened Black Dragonscale Leggings	1		7	134583	Legs (Mail)			4	3	
+227853	Hardened Black Dragonscale Shoulders	1		3	135032	Shoulder (Mail)			4	3	
+227854	Mastercrafted Shifting Cloak	1		16	133772	Back (Cloth)			4	1	
+227855	Synthetic Gordok Ogre Suit	1			132636	Consumable				8	
+227866	Masterwork Volcanic Shoulders	1		3	135044	Shoulder (Leather)			4	2	
+227867	Masterwork Volcanic Leggings	1		7	134586	Legs (Leather)			4	2	
+227868	Masterwork Volcanic Breastplate	1		5	132722	Chest (Leather)			4	2	
+227869	Brilliant Chromatic Cloak	1		16	133754	Back (Cloth)			4	1	
+227873	Honed Blue Dragonscale Shoulders	1		3	135049	Shoulder (Mail)			4	3	
+227874	Honed Blue Dragonscale Leggings	1		7	134667	Legs (Mail)			4	3	
+227875	Honed Blue Dragonscale Breastplate	1		5	132626	Chest (Mail)			4	3	
+227877	Living Green Dragonscale Leggings	1		7	134585	Legs (Mail)			4	3	
+227878	Living Green Dragonscale Gauntlets	1		10	132946	Hands (Mail)			4	3	
+227879	Living Green Dragonscale Breastplate	1		5	132628	Chest (Mail)			4	3	
+227882	Girdle of Arcane Insight	1		6	132515	Waist (Leather)			4	2	
+227883	Swift Flight Vambraces	1		9	132604	Wrist (Mail)			4	3	
+227895	Pattern: Golden Mantle of the Dawn	1			134939	Leatherworking		300	9	1	1
+227898	Pattern: Honed Blue Dragonscale Breastplate	1			134939	Leatherworking		285	9	1	
+227899	Pattern: Honed Blue Dragonscale Shoulders	3			134939	Leatherworking		295	9	1	
+227900	Pattern: Living Green Dragonscale Leggings	3			134939	Leatherworking		270	9	1	
+227902	Pattern: Hardened Black Dragonscale Breastplate	1			134939	Leatherworking		290	9	1	
+227903	Pattern: Hardened Black Dragonscale Leggings	3			134941	Leatherworking		300	9	1	
+227904	Pattern: Hardened Black Dragonscale Shoulders	3			134939	Leatherworking		300	9	1	
+227906	Pattern: Masterwork Volcanic Breastplate	2			134942	Leatherworking		285	9	1	
+227907	Pattern: Masterwork Volcanic Shoulders	2			134942	Leatherworking		300	9	1	
+227908	Pattern: Masterwork Volcanic Leggings	2			134942	Leatherworking		270	9	1	
+227910	Pattern: Brilliant Chromatic Cloak	4			134940	Leatherworking		300	9	1	
+228119	Pattern: Devilcore Gauntlets	3			134939	Leatherworking		290	9	1	
+228120	Pattern: Devilcore Leggings	3			134941	Leatherworking		300	9	1	
+228251	Pattern: Living Green Dragonscale Gauntlets	3			134939	Leatherworking		270	9	1	
+228276	Pattern: Mastercrafted Shifting Cloak	4			134940	Leatherworking		300	9	1	
+228301	Pattern: Swift Flight Vambraces	3			134941	Leatherworking		300	9	1	1
+228309	Pattern: Living Green Dragonscale Breastplate	1			134939	Leatherworking		260	9	1	
+228319	Pattern: Girdle of Arcane Insight	3			134941	Leatherworking		300	9	1	1
+233802	Glowing Chitin Armor Kit	1			133601	Consumable				8	
+233803	Sharpened Chitin Armor Kit	1			133614	Consumable				8	
+233804	Razorbramble Shoulderpads	1		3	135061	Shoulder (Leather)			4	2	
+233808	Razorbramble Cowl	1		1	133069	Head (Leather)			4	2	
+233813	Razorbramble Leathers	1		5	132686	Chest (Leather)			4	2	
+234007		1			134260	Leather			7	6	
+234009		1			132902	Cloth			7	5	
+234294	Sandstalker Bracers	1		9	132611	Wrist (Mail)			4	3	
+234296	Sandstalker Gauntlets	1		10	132945	Hands (Mail)			4	3	
+234298	Sandstalker Breastplate	1		5	132742	Chest (Mail)			4	3	
+234300	Spitfire Bracers	1		9	132604	Wrist (Mail)			4	3	
+234302	Spitfire Gauntlets	1		10	132945	Hands (Mail)			4	3	
+234304	Spitfire Breastplate	1		5	132717	Chest (Mail)			4	3	
+234306	Bramblewood Belt	1		6	132506	Waist (Leather)			4	2	
+234308	Bramblewood Boots	1		8	132561	Feet (Leather)			4	2	
+234310	Bramblewood Helm	1		1	133160	Head (Leather)			4	2	
+234324	Dreamscale Breastplate	1		5	132743	Chest (Mail)			4	3	
+234482	Dreamscale Kilt	1		7	134636	Legs (Leather)			4	2	
+236656		1			134422				7	11	
+236698	Icy Scale Bracers	1		9	132606	Wrist (Mail)			4	3	
+236699	Icy Scale Breastplate	1		5	132744	Chest (Mail)			4	3	
+236700	Icy Scale Gauntlets	1		10	132962	Hands (Mail)			4	3	
+236701	Polar Bracers	1		9	132606	Wrist (Leather)			4	2	
+236702	Polar Tunic	1		5	132649	Chest (Leather)			4	2	
+236703	Polar Gloves	1		10	132940	Hands (Leather)			4	2	
+238272	Scarlet Infiltrator's Bandana	1		1	133694	Head (Leather)			4	2	
+238273	Scarlet Infiltrator's Shoulderpads	1		3	135039	Shoulder (Leather)			4	2	
+238274	Scarlet Infiltrator's Vest	1		5	132718	Chest (Leather)			4	2	
+238275	Scarlet Infiltrator's Bracers	1		9	132601	Wrist (Leather)			4	2	
+238276	Scarlet Infiltrator's Gloves	1		10	132953	Hands (Leather)			4	2	
+238277	Scarlet Infiltrator's Belt	1		6	236895	Waist (Leather)			4	2	
+238278	Scarlet Infiltrator's Trousers	1		7	134586	Legs (Leather)			4	2	
+238279	Scarlet Infiltrator's Shoes	1		8	132541	Feet (Leather)			4	2	
+238280	Scarlet Huntsman's Coif	1		1	133141	Head (Mail)			4	3	
+238281	Scarlet Huntsman's Pauldrons	1		3	135047	Shoulder (Mail)			4	3	
+238282	Scarlet Huntsman's Chain	1		5	132629	Chest (Mail)			4	3	
+238283	Scarlet Huntsman's Wristguards	1		9	236962	Wrist (Mail)			4	3	
+238284	Scarlet Huntsman's Handguards	1		10	132946	Hands (Mail)			4	3	
+238285	Scarlet Huntsman's Clasp	1		6	132498	Waist (Mail)			4	3	
+238286	Scarlet Huntsman's Legguards	1		7	134655	Legs (Mail)			4	3	
+238287	Scarlet Huntsman's Boots	1		8	132547	Feet (Mail)			4	3	
+238306	Pattern: Scarlet Infiltrator's Bandana	3	1		134940	Leatherworking		280	9	1	
+238307	Pattern: Scarlet Infiltrator's Shoulderpads	3	1		134940	Leatherworking		280	9	1	
+238308	Pattern: Scarlet Infiltrator's Vest	3	1		134940	Leatherworking		280	9	1	
+238309	Pattern: Scarlet Infiltrator's Bracers	3	1		134940	Leatherworking		250	9	1	
+238310	Pattern: Scarlet Infiltrator's Gloves	3	1		134940	Leatherworking		260	9	1	
+238311	Pattern: Scarlet Infiltrator's Belt	3	1		134940	Leatherworking		250	9	1	
+238312	Pattern: Scarlet Infiltrator's Trousers	3	1		134940	Leatherworking		270	9	1	
+238313	Pattern: Scarlet Infiltrator's Shoes	3	1		134940	Leatherworking		260	9	1	
+238314	Pattern: Scarlet Huntsman's Coif	3	1		134940	Leatherworking		280	9	1	
+238315	Pattern: Scarlet Huntsman's Pauldrons	3	1		134940	Leatherworking		280	9	1	
+238316	Pattern: Scarlet Huntsman's Chain	3	1		134940	Leatherworking		280	9	1	
+238317	Pattern: Scarlet Huntsman's Wristguards	3	1		134940	Leatherworking		250	9	1	
+238318	Pattern: Scarlet Huntsman's Handguards	3	1		134940	Leatherworking		260	9	1	
+238319	Pattern: Scarlet Huntsman's Clasp	3	1		134940	Leatherworking		250	9	1	
+238320	Pattern: Scarlet Huntsman's Legguards	3	1		134940	Leatherworking		270	9	1	
+238321	Pattern: Scarlet Huntsman's Boots	3	1		134940	Leatherworking		260	9	1	
+238925	Scarlet Quiver	1		18	134405	Bag			11	2	
+238926	Scarlet Ammo Pouch	1		18	249177	Bag			11	3	
+238927	Pattern: Scarlet Quiver	2	1		134942	Leatherworking		275	9	1	1
+238928	Pattern: Scarlet Ammo Pouch	2	1		134942	Leatherworking		275	9	1	1
+248824	Fel Hide	1			134262	Leather			7	6	
+248825	Fel Leather	1			134259	Leather			7	6	
+249409	Cerulean Dye	2			1021860				7	11	
+249410	Sulfuric Acid	2			136240				7	11	
+249427	Pristine Leather	2			348551	Leather			7	6	
+249428	Pristine Hide	2			3586020	Leather			7	6	
+249429	Pristine Scale	2			134311	Leather			7	6	
+252424	Black Whelp Slippers	3	10	8		Feet (Leather)	Spell Damage, Healing, Intellect		4	2	1
+252425	Dark Leather Boots	3	10	8		Feet (Leather)	Agility, Stamina		4	2	1
+252426	Murloc Scale Shoes	3	10	8		Feet (Leather)	Stamina, Strength		4	2	1
+252427	Moonglow Boots	3	10	8		Feet (Leather)	Spell Power, Stamina		4	2	1
+252428	Brawler's Leather Belt	3	12	6		Waist (Leather)	Agility, Stamina, Strength		4	2	1
+252429	Trapper's Leather Belt	3	12	6		Waist (Leather)	Agility, Intellect, Stamina		4	2	1
+252430	Defender's Leather Belt	3	12	6		Waist (Leather)	Bonus Armor, Stamina, Strength		4	2	1
+252431	Totemic Leather Belt	3	12	6		Waist (Leather)	Spell Power, Stamina, Strength		4	2	1
+252432	Stormrider's Leather Belt	3	12	6		Waist (Leather)	Intellect, Spell Power, Stamina		4	2	1
+252433	Wisdom's Leather Belt	3	12	6		Waist (Leather)	Intellect, Spell Damage, Healing, Stamina		4	2	1
+252434	Defender's Leather Armor	3	15	5		Chest (Leather)	Agility, Bonus Armor, Stamina, Strength		4	2	1
+252435	Totemic Leather Armor	3	15	5		Chest (Leather)	Intellect, Spell Power, Stamina, Strength		4	2	1
+252436	Mystic Medium Armor Kit	2	15		133609	Item Enhancement				6	
+252437	Forceful Medium Armor Kit	2	15		133609	Item Enhancement				6	
+252439	Brawler's Leather Boots	3	17	8		Feet (Leather)	Agility, Stamina, Strength		4	2	1
+252440	Trapper's Leather Boots	3	17	8		Feet (Leather)	Agility, Intellect, Stamina		4	2	1
+252441	Defender's Leather Boots	3	17	8		Feet (Leather)	Bonus Armor, Stamina, Strength		4	2	1
+252442	Totemic Leather Boots	3	17	8		Feet (Leather)	Spell Power, Stamina, Strength		4	2	1
+252443	Stormrider's Leather Boots	3	17	8		Feet (Leather)	Intellect, Spell Power, Stamina		4	2	1
+252444	Wisdom's Leather Boots	3	17	8		Feet (Leather)	Intellect, Spell Damage, Healing, Stamina		4	2	1
+252445	Defender's Leather Pants	3	20	7		Legs (Leather)	Agility, Bonus Armor, Stamina, Strength		4	2	1
+252446	Totemic Leather Pants	3	20	7		Legs (Leather)	Intellect, Spell Power, Stamina, Strength		4	2	1
+252447	Defender's Leather Hood	3	20	1		Head (Leather)	Stamina, Strength		4	2	1
+252448	Totemic Leather Hood	3	20	1		Head (Leather)	Spell Power, Stamina		4	2	1
+252449	Hillman's Leather Boots	2	22	8		Feet (Leather)	Spell Power, Stamina		4	2	2
+252450	Defender's Leather Tunic	3	22	5		Chest (Leather)	Agility, Bonus Armor, Stamina, Strength		4	2	1
+252451	Totemic Leather Tunic	3	22	5		Chest (Leather)	Intellect, Spell Power, Stamina, Strength		4	2	1
+252452	Mystic Heavy Armor Kit	2	30		133610	Item Enhancement				6	
+252453	Forceful Heavy Armor Kit	2	30		133610	Item Enhancement				6	
+252455	Defender's Leather Helm	3	25	1		Head (Leather)	Stamina, Strength		4	2	1
+252456	Totemic Leather Helm	3	25	1		Head (Leather)	Spell Power, Stamina		4	2	1
+252457	Defender's Leather Kilt	3	25	7		Legs (Leather)	Agility, Bonus Armor, Stamina, Strength		4	2	1
+252458	Totemic Leather Leggings	3	25	7		Legs (Leather)	Intellect, Spell Power, Stamina, Strength		4	2	1
+252459	Prowler's Leather Belt	3	30	6		Waist (Leather)	Agility, Intellect, Stamina, Strength		4	2	1
+252460	Warden's Leather Belt	3	30	6		Waist (Leather)	Agility, Bonus Armor, Stamina, Strength		4	2	1
+252461	Skirmisher's Leather Belt	3	30	6		Waist (Leather)	Intellect, Spell Power, Stamina, Strength		4	2	1
+252462	Mystic Thick Armor Kit	2	40		133602	Item Enhancement				6	
+252463	Forceful Thick Armor Kit	2	40		133602	Item Enhancement				6	
+252465	Prowler's Leather Shoes	3	40	8		Feet (Leather)	Agility, Intellect, Stamina, Strength		4	2	1
+252466	Warden's Leather Shoes	3	40	8		Feet (Leather)	Agility, Bonus Armor, Stamina, Strength		4	2	1
+252467	Blue Suede Shoes	2	47	8		Feet (Leather)	Agility, Stamina, Strength		4	2	2
+252468	Prowler's Leather Boots	3	47	8		Feet (Leather)	Agility, Stamina, Strength		4	2	1
+252469	Skulker's Leather Boots	3	47	8		Feet (Leather)	Agility, Stamina, Strength		4	2	1
+252470	Warden's Leather Boots	3	47	8		Feet (Leather)	Bonus Armor, Stamina, Strength		4	2	1
+252471	Skycaller's Leather Boots	3	47	8		Feet (Leather)	Intellect, Spell Power, Stamina		4	2	1
+252472	Mender's Leather Boots	3	47	8		Feet (Leather)	Intellect, Spell Damage, Healing, Stamina		4	2	1
+252473	Prowler's Leather Waistguard	3	50	6		Waist (Leather)	Agility, Stamina, Strength		4	2	1
+252474	Skulker's Leather Waistguard	3	50	6		Waist (Leather)	Agility, Stamina, Strength		4	2	1
+252475	Warden's Leather Waistguard	3	50	6		Waist (Leather)	Bonus Armor, Stamina, Strength		4	2	1
+252476	Skycaller's Leather Waistguard	3	50	6		Waist (Leather)	Intellect, Spell Power, Stamina		4	2	1
+252477	Mender's Leather Waistguard	3	50	6		Waist (Leather)	Intellect, Spell Damage, Healing, Stamina		4	2	1
+252478	Blue Suede Pants	2	51	7		Legs (Leather)	Agility, Stamina, Strength		4	2	2
+252479	Wicked Leather Boots	2	52	8		Feet (Leather)	Agility, Stamina		4	2	2
+252480	Blue Suede Armor	2	53	5		Chest (Leather)	Agility, Stamina, Strength		4	2	2
+252481	Blue Suede Belt	2	54	6		Waist (Leather)	Agility, Stamina, Strength		4	2	2
+252482	Blue Suede Hat	2	56	1		Head (Leather)	Agility, Stamina, Strength		4	2	2
+252483	Dawn Armor	4	56	5		Chest (Leather)	Agility, Critical Strike Rating, Hit Rating		4	2	2
+252484	Timbermaw Tunic	4	56	5		Chest (Leather)	Agility, Strength, Critical Strike Rating		4	2	2
+252485	Warbear Helm	4	56	1		Head (Leather)	Agility, Stamina, Strength		4	2	2
+252486	Ironfeather Leggings	4	56	7		Legs (Leather)	Intellect, Spell Power, Critical Strike Rating		4	2	2
+252487	Mystic Rugged Armor Kit	2	50		133604	Item Enhancement				6	
+252488	Forceful Rugged Armor Kit	2	50		133604	Item Enhancement				6	
+252490	Brawler's Leather Armor	3	15	5		Chest (Leather)	Agility, Spirit, Stamina, Strength		4	2	1
+252491	Trapper's Leather Armor	3	15	5		Chest (Leather)	Agility, Intellect, Spirit, Stamina		4	2	1
+252492	Stormrider's Leather Armor	3	15	5		Chest (Leather)	Intellect, Spell Power, Spirit, Stamina		4	2	1
+252493	Wisdom's Leather Armor	3	15	5		Chest (Leather)	Intellect, Spell Damage, Healing, Spirit, Stamina		4	2	1
+252494	Brawler's Leather Gloves	3	15	10		Hands (Leather)	Agility, Stamina, Strength		4	2	1
+252495	Trapper's Leather Gloves	3	15	10		Hands (Leather)	Agility, Intellect, Stamina		4	2	1
+252496	Defender's Leather Gloves	3	15	10		Hands (Leather)	Bonus Armor, Stamina, Strength		4	2	1
+252497	Totemic Leather Gloves	3	15	10		Hands (Leather)	Spell Power, Stamina, Strength		4	2	1
+252498	Stormrider's Leather Gloves	3	15	10		Hands (Leather)	Intellect, Spell Power, Stamina		4	2	1
+252499	Wisdom's Leather Gloves	3	15	10		Hands (Leather)	Intellect, Spell Damage, Healing, Stamina		4	2	1
+252500	Brawler's Leather Pants	3	20	7		Legs (Leather)	Agility, Spirit, Stamina, Strength		4	2	1
+252501	Trapper's Leather Pants	3	20	7		Legs (Leather)	Agility, Intellect, Spirit, Strength		4	2	1
+252502	Stormrider's Leather Pants	3	20	7		Legs (Leather)	Intellect, Spell Power, Spirit, Stamina		4	2	1
+252503	Wisdom's Leather Pants	3	20	7		Legs (Leather)	Intellect, Spell Damage, Healing, Spirit, Stamina		4	2	1
+252504	Brawler's Leather Hood	3	20	1		Head (Leather)	Stamina, Agility		4	2	1
+252505	Trapper's Leather Hood	3	20	1		Head (Leather)	Intellect, Stamina		4	2	1
+252506	Stormrider's Leather Hood	3	20	1		Head (Leather)	Spirit, Stamina		4	2	1
+252507	Wisdom's Leather Hood	3	20	1		Head (Leather)	Spell Damage, Healing, Stamina		4	2	1
+252508	Brawler's Leather Tunic	3	22	5		Chest (Leather)	Agility, Spirit, Stamina, Strength		4	2	1
+252509	Trapper's Leather Tunic	3	22	5		Chest (Leather)	Agility, Intellect, Spirit, Stamina		4	2	1
+252510	Stormrider's Leather Tunic	3	22	5		Chest (Leather)	Intellect, Spell Power, Spirit, Stamina		4	2	1
+252511	Wisdom's Leather Tunic	3	22	5		Chest (Leather)	Intellect, Spell Damage, Healing, Spirit, Stamina		4	2	1
+252512	Brawler's Leather Helm	3	25	1		Head (Leather)	Agility, Stamina		4	2	1
+252513	Trapper's Leather Helm	3	25	1		Head (Leather)	Intellect, Stamina		4	2	1
+252514	Stormrider's Leather Helm	3	25	1		Head (Leather)	Spirit, Stamina		4	2	1
+252515	Wisdom's Leather Helm	3	25	1		Head (Leather)	Spell Damage, Healing, Stamina		4	2	1
+252516	Brawler's Leather Legguards	3	25	7		Legs (Leather)	Agility, Spirit, Stamina, Strength		4	2	1
+252517	Trapper's Leather Legguards	3	25	7		Legs (Leather)	Agility, Intellect, Spirit, Stamina		4	2	1
+252518	Stormrider's Leather Kilt	3	25	7		Legs (Leather)	Intellect, Spirit, Stamina, Strength		4	2	1
+252519	Wisdom's Leather Leggings	3	25	7		Legs (Leather)	Intellect, Spell Damage, Healing, Spirit, Stamina		4	2	1
+252520	Skulker's Leather Belt	3	30	6		Waist (Leather)	Agility, Spirit, Stamina, Strength		4	2	1
+252521	Stalker's Leather Belt	3	30	6		Waist (Leather)	Agility, Intellect, Spirit, Stamina		4	2	1
+252522	Skycaller's Leather Belt	3	30	6		Waist (Leather)	Intellect, Spell Power, Spirit, Stamina		4	2	1
+252523	Mender's Leather Belt	3	30	6		Waist (Leather)	Intellect, Spell Damage, Healing, Spirit, Stamina		4	2	1
+252524	Prowler's Leather Gloves	3	35	10		Hands (Leather)	Agility, Stamina, Strength		4	2	1
+252525	Skulker's Leather Gloves	3	35	10		Hands (Leather)	Agility, Stamina, Strength		4	2	1
+252526	Stalker's Leather Gloves	3	35	10		Hands (Leather)	Agility, Intellect, Stamina		4	2	1
+252527	Warden's Leather Gloves	3	35	10		Hands (Leather)	Bonus Armor, Stamina, Strength		4	2	1
+252528	Skirmisher's Leather Gloves	3	35	10		Hands (Leather)	Spell Power, Stamina, Strength		4	2	1
+252529	Skycaller's Leather Gloves	3	35	10		Hands (Leather)	Intellect, Spell Power, Stamina		4	2	1
+252530	Mender's Leather Gloves	3	35	10		Hands (Leather)	Intellect, Spell Damage, Healing, Stamina		4	2	1
+252531	Skulker's Leather Shoes	3	40	8		Feet (Leather)	Agility, Spirit, Stamina, Strength		4	2	1
+252532	Skycaller's Leather Shoes	3	40	8		Feet (Leather)	Intellect, Spell Power, Spirit, Stamina		4	2	1
+252533	Mender's Leather Shoes	3	40	8		Feet (Leather)	Intellect, Spell Damage, Healing, Spirit, Stamina		4	2	1
+252534	Prowler's Leather Shoulders	3	42	3		Shoulder (Leather)	Agility, Intellect, Stamina, Strength		4	2	1
+252535	Skulker's Leather Shoulder	3	42	3		Shoulder (Leather)	Agility, Spirit, Stamina, Strength		4	2	1
+252536	Warden's Leather Shoulders	3	42	3		Shoulder (Leather)	Agility, Bonus Armor, Stamina, Strength		4	2	1
+252537	Skycaller's Leather Shoulders	3	42	3		Shoulder (Leather)	Intellect, Spell Power, Spirit, Stamina		4	2	1
+252538	Mender's Leather Shoulders	3	42	3		Shoulder (Leather)	Intellect, Spell Damage, Healing, Spirit, Stamina		4	2	1
+252539	Prowler's Leather Bracers	3	45	9		Wrist (Leather)	Agility, Intellect, Stamina, Strength		4	2	1
+252540	Skulker's Leather Bracers	3	45	9		Wrist (Leather)	Agility, Spirit, Stamina, Strength		4	2	1
+252541	Warden's Leather Bracers	3	45	9		Wrist (Leather)	Agility, Bonus Armor, Stamina, Strength		4	2	1
+252542	Skycaller's Leather Bracers	3	45	9		Wrist (Leather)	Intellect, Spell Power, Spirit, Stamina		4	2	1
+252543	Mender's Leather Bracers	3	45	9		Wrist (Leather)	Intellect, Spell Damage, Healing, Spirit, Stamina		4	2	1
+252544	Tooled Leather Belt	2	47	6		Waist (Leather)	Intellect, Spell Power, Spirit		4	2	2
+252545	Tooled Leather Boots	2	48	8		Feet (Leather)	Intellect, Spell Power, Spirit		4	2	2
+252546	Blue Suede Gloves	2	48	10		Hands (Leather)	Agility, Stamina, Strength		4	2	2
+252547	Prowler's Leather Gauntlets	3	50	10		Hands (Leather)	Agility, Intellect, Stamina, Strength		4	2	1
+252548	Skulker's Leather Gauntlets	3	50	10		Hands (Leather)	Agility, Spirit, Stamina, Strength		4	2	1
+252549	Warden's Leather Gauntlets	3	50	10		Hands (Leather)	Agility, Bonus Armor, Stamina, Strength		4	2	1
+252550	Skycaller's Leather Gauntlets	3	50	10		Hands (Leather)	Intellect, Spell Power, Spirit, Stamina		4	2	1
+252551	Mender's Leather Gauntlets	3	50	10		Hands (Leather)	Intellect, Spell Damage, Healing, Spirit, Stamina		4	2	1
+252552	Tooled Leather Armor	2	51	5		Chest (Leather)	Intellect, Spell Power, Spirit		4	2	2
+252553	Tooled Leather Gauntlets	2	52	10		Hands (Leather)	Intellect, Spell Power, Spirit		4	2	2
+252554	Blue Suede Shoulders	2	52	3		Shoulder (Leather)	Agility, Stamina, Strength		4	2	2
+252555	Tooled Leather Crown	2	53	1		Head (Leather)	Intellect, Spell Power, Spirit		4	2	2
+252556	Wicked Leather Shoulders	2	54	3		Shoulder (Leather)	Agility, Stamina		4	2	2
+252557	Tooled Leather Bracers	2	54	9		Wrist (Leather)	Intellect, Spell Power, Spirit		4	2	2
+252558	Tooled Leather Epaulets	2	55	3		Shoulder (Leather)	Spell Power, Spirit, Stamina		4	2	2
+252559	Blue Suede Bracers	2	55	9		Wrist (Leather)	Agility, Stamina, Strength		4	2	2
+252560	Tooled Leather Pants	2	56	7		Legs (Leather)	Spell Power, Spirit, Stamina		4	2	2
+252561	Living Crown	4	56	1		Head (Leather)	Intellect, Spell Damage, Healing, Spirit		4	2	2
+252562	Stalker's Mail Boots	3	40	8		Feet (Mail)	Agility, Intellect, Spirit, Stamina		4	3	1
+252563	Skycaller's Mail Boots	3	40	8		Feet (Mail)	Intellect, Spell Power, Spirit, Stamina		4	3	1
+252564	Skirmisher's Mail Boots	3	40	8	132547	Feet (Mail)	Intellect, Spell Power, Stamina, Strength		4	3	1
+252565	Mender's Mail Boots	3	40	8		Feet (Mail)	Intellect, Spell Damage, Healing, Spirit, Stamina		4	3	1
+252566	Stalker's Mail Shoulders	3	42	3		Shoulder (Mail)	Agility, Intellect, Spirit, Stamina		4	3	1
+252567	Skycaller's Mail Shoulders	3	42	3		Shoulder (Mail)	Intellect, Spell Power, Spirit, Stamina		4	3	1
+252568	Skirmisher's Mail Shoulders	3	42	3		Shoulder (Mail)	Intellect, Spell Power, Stamina, Strength		4	3	1
+252569	Mender's Mail Shoulders	3	42	3		Shoulder (Mail)	Intellect, Spell Damage, Healing, Spirit, Stamina		4	3	1
+252570	Stalker's Mail Bracers	3	45	9		Wrist (Mail)	Agility, Intellect, Spirit, Stamina		4	3	1
+252571	Skycaller's Mail Bracers	3	45	9		Wrist (Mail)	Intellect, Spell Power, Spirit, Stamina		4	3	1
+252572	Skirmisher's Mail Bracers	3	45	9		Wrist (Mail)	Intellect, Spell Power, Stamina, Strength		4	3	1
+252573	Mender's Mail Bracers	3	45	9		Wrist (Mail)	Intellect, Spell Damage, Healing, Spirit, Stamina		4	3	1
+252574	Supple Scorpid Boots	2	46	8		Feet (Mail)	Spell Power, Stamina, Strength		4	3	2
+252575	Charged Scorpid Belt	2	46	6		Waist (Mail)	Intellect, Spell Power, Spirit		4	3	2
+252576	Stalker's Mail Sabatons	3	47	8		Feet (Mail)	Agility, Intellect, Stamina		4	3	1
+252577	Skycaller's Mail Sabatons	3	47	8		Feet (Mail)	Intellect, Spell Power, Stamina		4	3	1
+252578	Skirmisher's Mail Sabatons	3	47	8		Feet (Mail)	Spell Power, Stamina, Strength		4	3	1
+252579	Mender's Mail Sabatons	3	47	8		Feet (Mail)	Intellect, Spell Damage, Healing, Stamina		4	3	1
+252580	Supple Scorpid Leggings	2	48	7		Legs (Mail)	Spell Power, Stamina, Strength		4	3	2
+252581	Charged Scorpid Helm	2	48	1		Head (Mail)	Intellect, Spell Power, Spirit		4	3	2
+252582	Supple Scorpid Bracers	2	50	9		Wrist (Mail)	Spell Power, Stamina, Strength		4	3	2
+252583	Charged Scorpid Shoulders	2	50	3		Shoulder (Mail)	Intellect, Spell Power, Spirit		4	3	2
+252584	Stalker's Mail Gauntlets	3	50	10		Hands (Mail)	Agility, Intellect, Spirit, Stamina		4	3	1
+252585	Skycaller's Mail Gauntlets	3	50	10		Hands (Mail)	Intellect, Spell Power, Spirit, Stamina		4	3	1
+252586	Skirmisher's Mail Gauntlets	3	50	10		Hands (Mail)	Intellect, Spell Power, Stamina, Strength		4	3	1
+252587	Mender's Mail Gauntlets	3	50	10		Hands (Mail)	Intellect, Spell Damage, Healing, Spirit, Stamina		4	3	1
+252588	Stalker's Mail Belt	3	50	6		Waist (Mail)	Agility, Intellect, Stamina		4	3	1
+252589	Skycaller's Mail Belt	3	50	6		Waist (Mail)	Intellect, Spell Power, Stamina		4	3	1
+252590	Skirmisher's Mail Belt	3	50	6		Waist (Mail)	Spell Power, Stamina, Strength		4	3	1
+252591	Mender's Mail Belt	3	50	6		Waist (Mail)	Intellect, Spell Damage, Healing, Stamina		4	3	1
+252592	Supple Scorpid Shoulders	2	51	3		Shoulder (Mail)	Spell Power, Stamina, Strength		4	3	2
+252593	Charged Scorpid Bracers	2	51	9		Wrist (Mail)	Intellect, Spell Power, Spirit		4	3	2
+252594	Heavy Scorpid Boots	2	51	8		Feet (Mail)	Agility, Stamina		4	3	2
+252595	Supple Scorpid Belt	2	51	6		Waist (Mail)	Spell Power, Stamina		4	3	2
+252596	Charged Scorpid Gauntlets	2	51	10		Hands (Mail)	Intellect, Spell Power, Spirit		4	3	2
+252597	Supple Scorpid Helm	2	52	1		Head (Mail)	Spell Power, Stamina, Strength		4	3	2
+252598	Charged Scorpid Vest	2	52	5		Chest (Mail)	Intellect, Spell Power, Spirit		4	3	2
+252599	Supple Scorpid Vest	2	54	5		Chest (Mail)	Spell Power, Stamina, Strength		4	3	2
+252600	Charged Scorpid Leggings	2	54	7		Legs (Mail)	Intellect, Spell Power, Spirit		4	3	2
+252601	Supple Scorpid Sabatons	2	56	8		Feet (Mail)	Spell Power, Stamina, Strength		4	3	2
+252602	Charged Scorpid Boots	2	56	8		Feet (Mail)	Intellect, Spell Power, Spirit		4	3	2
+252603	Red Dragonscale Leggings	4	56	7		Legs (Mail)	Intellect, Spell Damage, Healing		4	3	2
+252604	Blue Dragonscale Helm	4	56	1		Head (Mail)	Intellect, Spell Power, Hit Rating		4	3	2
+252605	Black Dragonscale Helm	4	56	1		Head (Mail)	Agility, Intellect, Critical Strike Rating		4	3	2
+252606	Pristine Scorpid Leggings	4	56	7		Legs (Mail)	Spell Power, Strength, Critical Strike Rating		4	3	2
+252761	Pattern: Black Whelp Slippers	3			134942	Leatherworking		35	9	1	
+252762	Pattern: Dark Leather Boots	3			134942	Leatherworking		35	9	1	
+252763	Pattern: Murloc Scale Shoes	3			134942	Leatherworking		35	9	1	
+252764	Pattern: Moonglow Boots	3			134942	Leatherworking		35	9	1	
+252765	Pattern: Brawler's Leather Belt	3			134942	Leatherworking		60	9	1	1
+252766	Pattern: Trapper's Leather Belt	3			134942	Leatherworking		60	9	1	1
+252767	Pattern: Defender's Leather Belt	3			134942	Leatherworking		60	9	1	1
+252768	Pattern: Totemic Leather Belt	3			134942	Leatherworking		60	9	1	1
+252769	Pattern: Stormrider's Leather Belt	3			134942	Leatherworking		60	9	1	1
+252770	Pattern: Wisdom's Leather Belt	3			134942	Leatherworking		60	9	1	1
+252771	Pattern: Brawler's Leather Armor	3			134942	Leatherworking		75	9	1	
+252772	Pattern: Trapper's Leather Armor	3			134942	Leatherworking		75	9	1	
+252773	Pattern: Defender's Leather Armor	3			134942	Leatherworking		75	9	1	
+252774	Pattern: Totemic Leather Armor	3			134942	Leatherworking		75	9	1	
+252775	Pattern: Stormrider's Leather Armor	3			134942	Leatherworking		75	9	1	
+252776	Pattern: Wisdom's Leather Armor	3			134942	Leatherworking		75	9	1	
+252777	Pattern: Brawler's Leather Gloves	3			134942	Leatherworking		75	9	1	1
+252778	Pattern: Trapper's Leather Gloves	3			134942	Leatherworking		75	9	1	1
+252779	Pattern: Defender's Leather Gloves	3			134942	Leatherworking		75	9	1	1
+252780	Pattern: Totemic Leather Gloves	3			134942	Leatherworking		75	9	1	1
+252781	Pattern: Stormrider's Leather Gloves	3			134942	Leatherworking		75	9	1	1
+252782	Pattern: Wisdom's Leather Gloves	3			134942	Leatherworking		75	9	1	1
+252783	Pattern: Mystic Medium Armor Kit	2			134942	Leatherworking		80	9	1	
+252784	Pattern: Forceful Medium Armor Kit	2			134942	Leatherworking		80	9	1	
+252786	Pattern: Brawler's Leather Boots	3			134942	Leatherworking		85	9	1	1
+252787	Pattern: Trapper's Leather Boots	3			134942	Leatherworking		85	9	1	1
+252788	Pattern: Defender's Leather Boots	3			134942	Leatherworking		85	9	1	1
+252789	Pattern: Totemic Leather Boots	3			134942	Leatherworking		85	9	1	1
+252790	Pattern: Stormrider's Leather Boots	3			134942	Leatherworking		85	9	1	1
+252791	Pattern: Wisdom's Leather Boots	3			134942	Leatherworking		85	9	1	1
+252792	Pattern: Brawler's Leather Pants	3			134942	Leatherworking		100	9	1	
+252793	Pattern: Trapper's Leather Pants	3			134942	Leatherworking		100	9	1	
+252794	Pattern: Defender's Leather Pants	3			134942	Leatherworking		100	9	1	
+252795	Pattern: Totemic Leather Pants	3			134942	Leatherworking		100	9	1	
+252796	Pattern: Stormrider's Leather Pants	3			134942	Leatherworking		100	9	1	
+252797	Pattern: Wisdom's Leather Pants	3			134942	Leatherworking		100	9	1	
+252798	Pattern: Brawler's Leather Hood	3			134942	Leatherworking		100	9	1	1
+252799	Pattern: Trapper's Leather Hood	3			134942	Leatherworking		100	9	1	1
+252800	Pattern: Defender's Leather Hood	3			134942	Leatherworking		100	9	1	1
+252801	Pattern: Totemic Leather Hood	3			134942	Leatherworking		100	9	1	1
+252802	Pattern: Stormrider's Leather Hood	3			134942	Leatherworking		100	9	1	1
+252803	Pattern: Wisdom's Leather Hood	3			134942	Leatherworking		100	9	1	1
+252804	Pattern: Hillman's Leather Boots	2			134942	Leatherworking		110	9	1	
+252805	Pattern: Brawler's Leather Tunic	3			134942	Leatherworking		110	9	1	1
+252806	Pattern: Trapper's Leather Tunic	3			134942	Leatherworking		110	9	1	1
+252807	Pattern: Defender's Leather Tunic	3			134942	Leatherworking		110	9	1	1
+252808	Pattern: Totemic Leather Tunic	3			134942	Leatherworking		110	9	1	1
+252809	Pattern: Stormrider's Leather Tunic	3			134942	Leatherworking		110	9	1	1
+252810	Pattern: Wisdom's Leather Tunic	3			134942	Leatherworking		110	9	1	1
+252811	Pattern: Mystic Heavy Armor Kit	2			134942	Leatherworking		135	9	1	
+252812	Pattern: Forceful Heavy Armor Kit	2			134942	Leatherworking		135	9	1	
+252814	Pattern: Brawler's Leather Helm	3			134942	Leatherworking		125	9	1	
+252815	Pattern: Trapper's Leather Helm	3			134942	Leatherworking		125	9	1	
+252816	Pattern: Defender's Leather Helm	3			134942	Leatherworking		125	9	1	
+252817	Pattern: Totemic Leather Helm	3			134942	Leatherworking		125	9	1	
+252818	Pattern: Stormrider's Leather Helm	3			134942	Leatherworking		125	9	1	
+252819	Pattern: Wisdom's Leather Helm	3			134942	Leatherworking		125	9	1	
+252820	Pattern: Brawler's Leather Legguards	3			134942	Leatherworking		125	9	1	1
+252821	Pattern: Trapper's Leather Legguards	3			134942	Leatherworking		125	9	1	1
+252822	Pattern: Defender's Leather Kilt	3			134942	Leatherworking		125	9	1	1
+252823	Pattern: Totemic Leather Leggings	3			134942	Leatherworking		125	9	1	1
+252824	Pattern: Stormrider's Leather Kilt	3			134942	Leatherworking		125	9	1	1
+252825	Pattern: Wisdom's Leather Leggings	3			134942	Leatherworking		125	9	1	1
+252826	Pattern: Prowler's Leather Belt	3			134942	Leatherworking		150	9	1	
+252827	Pattern: Skulker's Leather Belt	3			134942	Leatherworking		150	9	1	
+252828	Pattern: Stalker's Leather Belt	3			134942	Leatherworking		150	9	1	
+252829	Pattern: Warden's Leather Belt	3			134942	Leatherworking		150	9	1	
+252830	Pattern: Skirmisher's Leather Belt	3			134942	Leatherworking		150	9	1	
+252831	Pattern: Skycaller's Leather Belt	3			134942	Leatherworking		150	9	1	
+252832	Pattern: Mender's Leather Belt	3			134942	Leatherworking		150	9	1	
+252833	Pattern: Mystic Thick Armor Kit	2			134942	Leatherworking		185	9	1	1
+252834	Pattern: Forceful Thick Armor Kit	2			134942	Leatherworking		185	9	1	1
+252836	Pattern: Prowler's Leather Gloves	3			134942	Leatherworking		175	9	1	1
+252837	Pattern: Skulker's Leather Gloves	3			134942	Leatherworking		175	9	1	1
+252838	Pattern: Stalker's Leather Gloves	3			134942	Leatherworking		175	9	1	1
+252839	Pattern: Warden's Leather Gloves	3			134942	Leatherworking		175	9	1	1
+252840	Pattern: Skirmisher's Leather Gloves	3			134942	Leatherworking		175	9	1	1
+252841	Pattern: Skycaller's Leather Gloves	3			134942	Leatherworking		175	9	1	1
+252842	Pattern: Mender's Leather Gloves	3			134942	Leatherworking		175	9	1	1
+252843	Pattern: Prowler's Leather Shoes	3			134942	Leatherworking		200	9	1	
+252844	Pattern: Skulker's Leather Shoes	3			134942	Leatherworking		200	9	1	
+252845	Pattern: Warden's Leather Shoes	3			134942	Leatherworking		200	9	1	
+252846	Pattern: Skycaller's Leather Shoes	3			134942	Leatherworking		200	9	1	
+252847	Pattern: Mender's Leather Shoes	3			134942	Leatherworking		200	9	1	
+252848	Pattern: Prowler's Leather Shoulders	3			134942	Leatherworking		210	9	1	1
+252849	Pattern: Skulker's Leather Shoulder	3			134942	Leatherworking		210	9	1	1
+252850	Pattern: Warden's Leather Shoulders	3			134942	Leatherworking		210	9	1	1
+252851	Pattern: Skycaller's Leather Shoulders	3			134942	Leatherworking		210	9	1	1
+252852	Pattern: Mender's Leather Shoulders	3			134942	Leatherworking		210	9	1	1
+252853	Pattern: Prowler's Leather Bracers	3			134942	Leatherworking		225	9	1	1
+252854	Pattern: Skulker's Leather Bracers	3			134942	Leatherworking		225	9	1	1
+252855	Pattern: Warden's Leather Bracers	3			134942	Leatherworking		225	9	1	1
+252856	Pattern: Skycaller's Leather Bracers	3			134942	Leatherworking		225	9	1	1
+252857	Pattern: Mender's Leather Bracers	3			134942	Leatherworking		225	9	1	1
+252858	Pattern: Tooled Leather Belt	2			134942	Leatherworking		235	9	1	
+252859	Pattern: Blue Suede Shoes	2			134942	Leatherworking		235	9	1	
+252860	Pattern: Prowler's Leather Boots	3			134942	Leatherworking		235	9	1	1
+252861	Pattern: Skulker's Leather Boots	3			134942	Leatherworking		235	9	1	1
+252862	Pattern: Warden's Leather Boots	3			134942	Leatherworking		235	9	1	1
+252863	Pattern: Skycaller's Leather Boots	3			134942	Leatherworking		235	9	1	1
+252864	Pattern: Mender's Leather Boots	3			134942	Leatherworking		235	9	1	1
+252865	Pattern: Tooled Leather Boots	2			134942	Leatherworking		240	9	1	
+252866	Pattern: Blue Suede Gloves	2			134942	Leatherworking		240	9	1	
+252867	Pattern: Prowler's Leather Gauntlets	3			134942	Leatherworking		250	9	1	
+252868	Pattern: Skulker's Leather Gauntlets	3			134942	Leatherworking		250	9	1	
+252869	Pattern: Warden's Leather Gauntlets	3			134942	Leatherworking		250	9	1	
+252870	Pattern: Skycaller's Leather Gauntlets	3			134942	Leatherworking		250	9	1	
+252871	Pattern: Mender's Leather Gauntlets	3			134942	Leatherworking		250	9	1	
+252872	Pattern: Prowler's Leather Waistguard	3			134942	Leatherworking		250	9	1	1
+252873	Pattern: Skulker's Leather Waistguard	3			134942	Leatherworking		250	9	1	1
+252874	Pattern: Warden's Leather Waistguard	3			134942	Leatherworking		250	9	1	1
+252875	Pattern: Skycaller's Leather Waistguard	3			134942	Leatherworking		250	9	1	1
+252876	Pattern: Mender's Leather Waistguard	3			134942	Leatherworking		250	9	1	1
+252877	Pattern: Tooled Leather Armor	2			134942	Leatherworking		255	9	1	1
+252878	Pattern: Blue Suede Pants	2			134942	Leatherworking		255	9	1	
+252879	Pattern: Wicked Leather Boots	2			134942	Leatherworking		260	9	1	
+252880	Pattern: Tooled Leather Gauntlets	2			134942	Leatherworking		260	9	1	
+252881	Pattern: Blue Suede Shoulders	2			134942	Leatherworking		260	9	1	
+252882	Pattern: Tooled Leather Crown	2			134942	Leatherworking		265	9	1	
+252883	Pattern: Blue Suede Armor	2			134942	Leatherworking		265	9	1	1
+252884	Pattern: Wicked Leather Shoulders	2			134942	Leatherworking		270	9	1	
+252885	Pattern: Tooled Leather Bracers	2			134942	Leatherworking		270	9	1	
+252886	Pattern: Blue Suede Belt	2			134942	Leatherworking		270	9	1	
+252887	Pattern: Tooled Leather Epaulets	2			134942	Leatherworking		275	9	1	
+252888	Pattern: Blue Suede Bracers	2			134942	Leatherworking		275	9	1	
+252889	Pattern: Tooled Leather Pants	2			134942	Leatherworking		280	9	1	
+252890	Pattern: Blue Suede Hat	2			134942	Leatherworking		280	9	1	
+252891	Pattern: Living Crown	4			134942	Leatherworking		300	9	1	
+252892	Pattern: Dawn Armor	4			134942	Leatherworking		300	9	1	
+252893	Pattern: Timbermaw Tunic	4			134942	Leatherworking		300	9	1	
+252894	Pattern: Warbear Helm	4			134942	Leatherworking		300	9	1	
+252895	Pattern: Ironfeather Leggings	4			134942	Leatherworking		300	9	1	
+252896	Pattern: Stalker's Mail Boots	3			134942	Leatherworking		200	9	1	
+252897	Pattern: Skycaller's Mail Boots	3			134942	Leatherworking		200	9	1	
+252898	Pattern: Skirmisher's Mail Boots	3			134942	Leatherworking		200	9	1	
+252899	Pattern: Mender's Mail Boots	3			134942	Leatherworking		200	9	1	
+252900	Pattern: Stalker's Mail Shoulders	3			134942	Leatherworking		210	9	1	1
+252901	Pattern: Skycaller's Mail Shoulders	3			134942	Leatherworking		210	9	1	1
+252902	Pattern: Skirmisher's Mail Shoulders	3			134942	Leatherworking		210	9	1	1
+252903	Pattern: Mender's Mail Shoulders	3			134942	Leatherworking		210	9	1	1
+252904	Pattern: Stalker's Mail Bracers	3			134942	Leatherworking		225	9	1	1
+252905	Pattern: Skycaller's Mail Bracers	3			134942	Leatherworking		225	9	1	1
+252906	Pattern: Skirmisher's Mail Bracers	3			134942	Leatherworking		225	9	1	1
+252907	Pattern: Mender's Mail Bracers	3			134942	Leatherworking		225	9	1	1
+252908	Pattern: Supple Scorpid Boots	2			134942	Leatherworking		230	9	1	
+252909	Pattern: Charged Scorpid Belt	2			134942	Leatherworking		230	9	1	
+252910	Pattern: Stalker's Mail Sabatons	3			134942	Leatherworking		235	9	1	1
+252911	Pattern: Skycaller's Mail Sabatons	3			134942	Leatherworking		235	9	1	1
+252912	Pattern: Skirmisher's Mail Sabatons	3			134942	Leatherworking		235	9	1	1
+252913	Pattern: Mender's Mail Sabatons	3			134942	Leatherworking		235	9	1	1
+252914	Pattern: Supple Scorpid Leggings	2			134942	Leatherworking		240	9	1	
+252915	Pattern: Charged Scorpid Helm	2			134942	Leatherworking		240	9	1	
+252916	Pattern: Supple Scorpid Bracers	2			134942	Leatherworking		250	9	1	
+252917	Pattern: Charged Scorpid Shoulders	2			134942	Leatherworking		250	9	1	
+252918	Pattern: Stalker's Mail Gauntlets	3			134942	Leatherworking		250	9	1	
+252919	Pattern: Skycaller's Mail Gauntlets	3			134942	Leatherworking		250	9	1	
+252920	Pattern: Skirmisher's Mail Gauntlets	3			134942	Leatherworking		250	9	1	
+252921	Pattern: Mender's Mail Gauntlets	3			134942	Leatherworking		250	9	1	
+252922	Pattern: Stalker's Mail Belt	3			134942	Leatherworking		250	9	1	1
+252923	Pattern: Skycaller's Mail Belt	3			134942	Leatherworking		250	9	1	1
+252924	Pattern: Skirmisher's Mail Belt	3			134942	Leatherworking		250	9	1	1
+252925	Pattern: Mender's Mail Belt	3			134942	Leatherworking		250	9	1	1
+252926	Pattern: Supple Scorpid Shoulders	2			134942	Leatherworking		255	9	1	
+252927	Pattern: Charged Scorpid Bracers	2			134942	Leatherworking		255	9	1	
+252928	Pattern: Heavy Scorpid Boots	2			134942	Leatherworking		255	9	1	
+252929	Pattern: Supple Scorpid Belt	2			134942	Leatherworking		255	9	1	
+252930	Pattern: Charged Scorpid Gauntlets	2			134942	Leatherworking		255	9	1	
+252931	Pattern: Supple Scorpid Helm	2			134942	Leatherworking		260	9	1	
+252932	Pattern: Charged Scorpid Vest	2			134942	Leatherworking		260	9	1	
+252933	Pattern: Supple Scorpid Vest	2			134942	Leatherworking		270	9	1	1
+252934	Pattern: Charged Scorpid Leggings	2			134942	Leatherworking		270	9	1	
+252935	Pattern: Supple Scorpid Sabatons	2			134942	Leatherworking		280	9	1	
+252936	Pattern: Charged Scorpid Boots	2			134942	Leatherworking		280	9	1	
+252937	Pattern: Red Dragonscale Leggings	4			134942	Leatherworking		300	9	1	
+252938	Pattern: Blue Dragonscale Helm	4			134942	Leatherworking		300	9	1	
+252939	Pattern: Black Dragonscale Helm	4			134942	Leatherworking		300	9	1	
+252940	Pattern: Pristine Scorpid Leggings	4			134942	Leatherworking		300	9	1	
+252941	Pattern: Mystic Rugged Armor Kit	2			134942	Leatherworking		235	9	1	1
+252942	Pattern: Forceful Rugged Armor Kit	2			134942	Leatherworking		235	9	1	
+273096	Blueprint: Tanning Rack	2			1001491	Leatherworking		140	9	1	
+273121	Blueprint: Sewing Machine	2			1001491	Leatherworking		300	9	1	
+273130	Undeath Engine	2			1413153				15	1	
+273884	Grovekeeper Trousers	1		7		Legs (Leather)			4	2	
+273885	Grovekeeper Grips	1		10		Hands (Leather)			4	2	
+273886	Grovekeeper Shoulderpads	1		3		Shoulder (Leather)			4	2	
+273887	Grovekeeper Stompers	1		8		Feet (Leather)			4	2	
+273888	Grovekeeper Kilt	1		7		Legs (Leather)			4	2	
+273889	Grovekeeper Mitts	1		10		Hands (Leather)			4	2	
+273890	Grovekeeper Mantle	1		3		Shoulder (Leather)			4	2	
+273891	Grovekeeper Sandals	1		8		Feet (Leather)			4	2	
+273892	Grovekeeper Legguards	1		7		Legs (Leather)			4	2	
+273893	Grovekeeper Handguards	1		10		Hands (Leather)			4	2	
+273894	Grovekeeper Pauldrons	1		3		Shoulder (Leather)			4	2	
+273895	Grovekeeper Boots	1		8		Feet (Leather)			4	2	
+273896	Grovekeeper Leggings	1		7		Legs (Leather)			4	2	
+273897	Grovekeeper Gauntlets	1		10		Hands (Leather)			4	2	
+273898	Grovekeeper Spaulders	1		3		Shoulder (Leather)			4	2	
+273899	Grovekeeper Treads	1		8		Feet (Leather)			4	2	
+273900	Wildstalker's Legguards	1		7		Legs (Mail)			4	3	
+273901	Wildstalker's Gauntlets	1		10		Hands (Mail)			4	3	
+273902	Wildstalker's Spaulders	1		3		Shoulder (Mail)			4	3	
+273903	Wildstalker's Greaves	1		8		Feet (Mail)			4	3	
+273928	Grimstitch Pants	1		7		Legs (Leather)			4	2	
+273929	Grimstitch Gloves	1		10		Hands (Leather)			4	2	
+273930	Grimstitch Spaulders	1		3		Shoulder (Leather)			4	2	
+273931	Grimstitch Boots	1		8		Feet (Leather)			4	2	
+273932	Spiritcaller Leggings	1		7		Legs (Mail)			4	3	
+273933	Spiritcaller Grips	1		10		Hands (Mail)			4	3	
+273934	Spiritcaller Spaulders	1		3		Shoulder (Mail)			4	3	
+273935	Spiritcaller Treads	1		8		Feet (Mail)			4	3	
+273936	Spiritcaller Pants	1		7		Legs (Mail)			4	3	
+273937	Spiritcaller Gauntlets	1		10		Hands (Mail)			4	3	
+273938	Spiritcaller Epaulets	1		3		Shoulder (Mail)			4	3	
+273939	Spiritcaller Greaves	1		8		Feet (Mail)			4	3	
+273952	Pattern: Grovekeeper Trousers	4	1		134940	Leatherworking		300	9	1	1
+273953	Pattern: Grovekeeper Grips	4	1		134940	Leatherworking		300	9	1	1
+273954	Pattern: Grovekeeper Shoulderpads	4	1		134940	Leatherworking		300	9	1	1
+273955	Pattern: Grovekeeper Stompers	4	1		134940	Leatherworking		300	9	1	1
+273956	Pattern: Grovekeeper Kilt	4	1		134940	Leatherworking		300	9	1	1
+273957	Pattern: Grovekeeper Mitts	4	1		134940	Leatherworking		300	9	1	1
+273958	Pattern: Grovekeeper Mantle	4	1		134940	Leatherworking		300	9	1	1
+273959	Pattern: Grovekeeper Sandals	4	1		134940	Leatherworking		300	9	1	1
+273960	Pattern: Grovekeeper Legguards	4	1		134940	Leatherworking		300	9	1	1
+273961	Pattern: Grovekeeper Handguards	4	1		134940	Leatherworking		300	9	1	1
+273962	Pattern: Grovekeeper Pauldrons	4	1		134940	Leatherworking		300	9	1	1
+273963	Pattern: Grovekeeper Boots	4	1		134940	Leatherworking		300	9	1	1
+273964	Pattern: Grovekeeper Leggings	4	1		134940	Leatherworking		300	9	1	1
+273965	Pattern: Grovekeeper Gauntlets	4	1		134940	Leatherworking		300	9	1	1
+273966	Pattern: Grovekeeper Spaulders	4	1		134940	Leatherworking		300	9	1	1
+273967	Pattern: Grovekeeper Treads	4	1		134940	Leatherworking		300	9	1	1
+273968	Pattern: Wildstalker's Legguards	4	1		134940	Leatherworking		300	9	1	1
+273969	Pattern: Wildstalker's Gauntlets	4	1		134940	Leatherworking		300	9	1	1
+273970	Pattern: Wildstalker's Spaulders	4	1		134940	Leatherworking		300	9	1	1
+273971	Pattern: Wildstalker's Greaves	4	1		134940	Leatherworking		300	9	1	1
+273996	Pattern: Grimstitch Pants	4	1		134940	Leatherworking		300	9	1	1
+273997	Pattern: Grimstitch Gloves	4	1		134940	Leatherworking		300	9	1	1
+273998	Pattern: Grimstitch Spaulders	4	1		134940	Leatherworking		300	9	1	1
+273999	Pattern: Grimstitch Boots	4	1		134940	Leatherworking		300	9	1	1
+274000	Pattern: Spiritcaller Leggings	4	1		134940	Leatherworking		300	9	1	1
+274001	Pattern: Spiritcaller Grips	4	1		134940	Leatherworking		300	9	1	1
+274002	Pattern: Spiritcaller Spaulders	4	1		134940	Leatherworking		300	9	1	1
+274003	Pattern: Spiritcaller Treads	4	1		134940	Leatherworking		300	9	1	1
+274004	Pattern: Spiritcaller Pants	4	1		134940	Leatherworking		300	9	1	1
+274005	Pattern: Spiritcaller Gauntlets	4	1		134940	Leatherworking		300	9	1	1
+274006	Pattern: Spiritcaller Epaulets	4	1		134940	Leatherworking		300	9	1	1
+274007	Pattern: Spiritcaller Greaves	4	1		134940	Leatherworking		300	9	1	1
+274030	Malleable Essence of Nature	4	1		132119	Enchanting			7	12	
+275586	Pattern: Bileblister Claws	3	1		134940	Tailoring		285	9	2	1
+275587	Pattern: Bileblister Girdle	3	1		134940	Tailoring		290	9	2	1
+275588	Pattern: Bileblister Boots	3	1		134940	Leatherworking		295	9	1	1
+275589	Pattern: Hivethrasher's Claws	3	1		134940	Leatherworking		285	9	1	1
+275590	Pattern: Hivethrasher's Girdle	3	1		134940	Leatherworking		290	9	1	1
+275591	Pattern: Hivethrasher's Boots	3	1		134940	Leatherworking		295	9	1	1
+275592	Pattern: Scalegut Clenchers	3	1		134940	Leatherworking		285	9	1	1
+275593	Pattern: Scalegut Belt	3	1		134940	Leatherworking		290	9	1	1
+275594	Pattern: Scalegut Treaders	3	1		134940	Leatherworking		295	9	1	1
+275595	Pattern: Broodwatcher's Clenchers	3	1		134940	Leatherworking		285	9	1	1
+275596	Pattern: Broodwatcher's Belt	3	1		134940	Leatherworking		290	9	1	1
+275597	Pattern: Broodwatcher's Treaders	3	1		134940	Leatherworking		295	9	1	1
+275610	Bileblister Claws	3	53	10		Hands (Leather)	Stamina, Intellect		4	2	2
+275611	Bileblister Girdle	3	53	6		Waist (Leather)	Stamina, Intellect		4	2	2
+275612	Bileblister Boots	3	53	8		Feet (Leather)	Spirit, Spell Power		4	2	2
+275613	Hivethrasher's Claws	3	53	10		Hands (Leather)	Stamina, Agility		4	2	2
+275614	Hivethrasher's Girdle	3	53	6		Waist (Leather)	Stamina, Agility		4	2	2
+275615	Hivethrasher's Boots	3	53	8		Feet (Leather)	Stamina, Agility		4	2	2
+275616	Scalegut Clenchers	3	53	10		Hands (Mail)	Stamina, Agility		4	3	2
+275617	Scalegut Belt	3	53	6		Waist (Mail)	Stamina, Agility		4	3	2
+275618	Scalegut Treaders	3	53	8		Feet (Mail)	Agility, Attack Power		4	3	2
+275619	Broodwatcher's Clenchers	3	53	10		Hands (Mail)	Spirit, Healing, Spell Damage		4	3	2
+275620	Broodwatcher's Belt	3	53	6		Waist (Mail)	Stamina, Healing, Spell Damage		4	3	2
+275621	Broodwatcher's Treaders	3	53	8		Feet (Mail)	Stamina, Healing, Spell Damage		4	3	2
+276538	Spiritcaller Kilt	4	60	7	133826	Legs (Mail)			4	3	2
+276539	Spiritcaller Gloves	4	60	10	133824	Hands (Mail)			4	3	2
+276540	Spiritcaller Mantle	4	60	3	133827	Shoulder (Mail)			4	3	2
+276541	Spiritcaller Boots	4	60	8	133821	Feet (Mail)			4	3	2
+276542	Pattern: Spiritcaller Kilt	4	1		134940	Leatherworking		300	9	1	1
+276543	Pattern: Spiritcaller Gloves	4	1		134940	Leatherworking		300	9	1	1
+276544	Pattern: Spiritcaller Mantle	4	1		134940	Leatherworking		300	9	1	1
+276545	Pattern: Spiritcaller Boots	4	1		134940	Leatherworking		300	9	1	1
+276934	Pattern: Cloudy Gustwoven Harness	2			134942	Leatherworking		60	9	1	1
+276935	Pattern: Cloudy Gustwoven Bracers	2			134942	Leatherworking		50	9	1	1
+276936	Pattern: Cloudy Gustwoven Gloves	2			134942	Leatherworking		55	9	1	1
+276937	Pattern: Cloudy Gustwoven Belt	2			134942	Leatherworking		50	9	1	1
+276938	Pattern: Cloudy Gustwoven Trousers	2			134942	Leatherworking		60	9	1	1
+276939	Pattern: Cloudy Gustwoven Boots	2			134942	Leatherworking		55	9	1	1
+276940	Pattern: Cloudy Windraveled Jerkin	2			134942	Leatherworking		60	9	1	1
+276941	Pattern: Cloudy Windraveled Armguards	2			134942	Leatherworking		50	9	1	1
+276942	Pattern: Cloudy Windraveled Mitts	2			134942	Leatherworking		55	9	1	1
+276943	Pattern: Cloudy Windraveled Strap	2			134942	Leatherworking		50	9	1	1
+276944	Pattern: Cloudy Windraveled Pants	2			134942	Leatherworking		60	9	1	1
+276945	Pattern: Cloudy Windraveled Footwraps	2			134942	Leatherworking		55	9	1	1
+276958	Pattern: Azure Gustwoven Harness	2			134942	Leatherworking		60	9	1	1
+276959	Pattern: Azure Gustwoven Bracers	2			134942	Leatherworking		50	9	1	1
+276960	Pattern: Azure Gustwoven Gloves	2			134942	Leatherworking		55	9	1	1
+276961	Pattern: Azure Gustwoven Belt	2			134942	Leatherworking		50	9	1	1
+276962	Pattern: Azure Gustwoven Trousers	2			134942	Leatherworking		60	9	1	1
+276963	Pattern: Azure Gustwoven Boots	2			134942	Leatherworking		55	9	1	1
+276964	Pattern: Azure Windraveled Jerkin	2			134942	Leatherworking		60	9	1	1
+276965	Pattern: Azure Windraveled Armguards	2			134942	Leatherworking		50	9	1	1
+276966	Pattern: Azure Windraveled Mitts	2			134942	Leatherworking		55	9	1	1
+276967	Pattern: Azure Windraveled Strap	2			134942	Leatherworking		50	9	1	1
+276968	Pattern: Azure Windraveled Pants	2			134942	Leatherworking		60	9	1	1
+276969	Pattern: Azure Windraveled Footwraps	2			134942	Leatherworking		55	9	1	1
+276978	Pattern: Cloudy Gustwoven Hood	2			134942	Leatherworking		175	9	1	1
+276979	Pattern: Cloudy Gustwoven Spaulders	2			134942	Leatherworking		175	9	1	1
+276980	Pattern: Cloudy Windraveled Cover	2			134942	Leatherworking		175	9	1	1
+276981	Pattern: Cloudy Windraveled Drapes	2			134942	Leatherworking		175	9	1	1
+276986	Pattern: Azure Gustwoven Hood	2			134942	Leatherworking		175	9	1	1
+276987	Pattern: Azure Gustwoven Spaulders	2			134942	Leatherworking		175	9	1	1
+276988	Pattern: Azure Windraveled Cover	2			134942	Leatherworking		175	9	1	1
+276989	Pattern: Azure Windraveled Drapes	2			134942	Leatherworking		175	9	1	1
+276998	Cloudy Gustwoven Harness	2	7	5		Chest (Leather)	Strength		4	2	2
+276999	Cloudy Gustwoven Bracers	2	5	9		Wrist (Leather)	Strength		4	2	2
+277000	Cloudy Gustwoven Gloves	2	6	10		Hands (Leather)	Agility		4	2	2
+277001	Cloudy Gustwoven Belt	2	5	6		Waist (Leather)	Stamina		4	2	2
+277002	Cloudy Gustwoven Trousers	2	7	7		Legs (Leather)	Stamina		4	2	2
+277003	Cloudy Gustwoven Boots	2	6	8		Feet (Leather)	Agility		4	2	2
+277004	Cloudy Windraveled Jerkin	2	7	5		Chest (Leather)	Intellect		4	2	2
+277005	Cloudy Windraveled Armguards	2	5	9		Wrist (Leather)	Intellect		4	2	2
+277006	Cloudy Windraveled Mitts	2	6	10		Hands (Leather)	Spirit		4	2	2
+277007	Cloudy Windraveled Strap	2	5	6		Waist (Leather)	Stamina		4	2	2
+277008	Cloudy Windraveled Pants	2	7	7		Legs (Leather)	Stamina		4	2	2
+277009	Cloudy Windraveled Footwraps	2	6	8		Feet (Leather)	Spirit		4	2	2
+277022	Azure Gustwoven Harness	2	7	5		Chest (Leather)	Strength		4	2	2
+277023	Azure Gustwoven Bracers	2	5	9		Wrist (Leather)	Strength		4	2	2
+277024	Azure Gustwoven Gloves	2	6	10		Hands (Leather)	Agility		4	2	2
+277025	Azure Gustwoven Belt	2	5	6		Waist (Leather)	Stamina		4	2	2
+277026	Azure Gustwoven Trousers	2	7	7		Legs (Leather)	Stamina		4	2	2
+277027	Azure Gustwoven Boots	2	6	8		Feet (Leather)	Agility		4	2	2
+277028	Azure Windraveled Jerkin	2	7	5		Chest (Leather)	Intellect		4	2	2
+277029	Azure Windraveled Armguards	2	5	9		Wrist (Leather)	Intellect		4	2	2
+277030	Azure Windraveled Mitts	2	6	10		Hands (Leather)	Spirit		4	2	2
+277031	Azure Windraveled Strap	2	5	6		Waist (Leather)	Stamina		4	2	2
+277032	Azure Windraveled Pants	2	7	7		Legs (Leather)	Stamina		4	2	2
+277033	Azure Windraveled Footwraps	2	6	8		Feet (Leather)	Spirit		4	2	2
+277042	Cloudy Gustwoven Hood	2	30	1		Head (Leather)	Strength, Stamina		4	2	2
+277043	Cloudy Gustwoven Spaulders	2	30	3		Shoulder (Leather)	Agility, Stamina		4	2	2
+277044	Cloudy Windraveled Cover	2	30	1		Head (Leather)	Intellect, Stamina		4	2	2
+277045	Cloudy Windraveled Drapes	2	30	3		Shoulder (Leather)	Spirit, Stamina		4	2	2
+277050	Azure Gustwoven Hood	2	30	1		Head (Leather)	Strength, Stamina		4	2	2
+277051	Azure Gustwoven Spaulders	2	30	3		Shoulder (Leather)	Agility, Stamina		4	2	2
+277052	Azure Windraveled Cover	2	30	1		Head (Leather)	Intellect, Stamina		4	2	2
+277053	Azure Windraveled Drapes	2	30	3		Shoulder (Leather)	Spirit, Stamina		4	2	2
+277715	Light Leather Reagent Bag	1		18	133652	Bag			1	11	2
+277716	Pattern: Light Leather Reagent Bag	2	1		134939	Leatherworking		30	9	1	1
+279252	Elderwild Waistcord	4	60	6		Waist (Leather)	Stamina, Spirit, Healing, Spell Damage		4	2	2
+279253	Outlaw's Collar	4	60	1	133694	Head (Leather)	Stamina, Agility, Critical Strike Rating		4	2	2
+279254	Elderwild Pants	4	60	7	134602	Legs (Leather)	Stamina, Spirit, Healing, Spell Damage		4	2	2
+279255	Eternity Pauldrons	4	60	3	135041	Shoulder (Mail)	Stamina, Spirit, Healing, Spell Damage		4	3	2
+279256	Tranquil Wristguards	4	60	9	132601	Wrist (Mail)	Intellect, Strength, Stamina		4	3	2
+279257	Mourning Handguards	4	60	10	132945	Hands (Mail)	Agility, Stamina, Intellect		4	3	2
+279258	Wild Leather Armor Kit	3	60		4632799	Item Enhancement				6	
+279301	Pattern: Elderwild Waistcord	4			134942	Leatherworking		300	9	1	1
+279302	Pattern: Outlaw's Collar	4			134942	Leatherworking		300	9	1	1
+279303	Pattern: Elderwild Pants	4			134942	Leatherworking		300	9	1	1
+279304	Pattern: Eternity Pauldrons	4			134942	Leatherworking		300	9	1	1
+279305	Pattern: Tranquil Wristguards	4			134942	Leatherworking		300	9	1	1
+279306	Pattern: Mourning Handguards	4			134942	Leatherworking		300	9	1	1
+279307	Pattern: Wild Leather Armor Kit	4			134941	Leatherworking		300	9	1	1
+279941	Tanning Rack	1			4559256	Consumable		140		8	
+279945	Sewing Machine	1			3622223	Consumable		300		8	
+279978	Camp Tent	1			134250	Consumable		20		8	]],
         },
         {
             name = "Tailoring", skill = 197, count = 471,
@@ -5945,948 +5945,948 @@ ns.Data = {
 1213540	Qiraji Silk Drape	320	320,330,340	233960,1,1	234009:9;234007:8;15407:4;12810:8;14341:1	0	1	
 1213534	Qiraji Silk Scarf	320	320,330,340	233956,1,1	234009:9;234007:8;15407:4;12810:8;14341:1	0	1	]],
             items = [[
-118	Minor Healing Potion	1	1		134829	Potion				1
-814	Flask of Oil	1			132794	Parts			7	1
-929	Healing Potion	1	12		134831	Potion				1
-1210	Shadowgem	2			134074				7	11
-1529	Jade	2			134134				7	11
-2318	Light Leather	1			134252	Leather			7	6
-2319	Medium Leather	1			134254	Leather			7	6
-2320	Coarse Thread	1			132891	Cloth			7	5
-2321	Fine Thread	1			132912	Cloth			7	5
-2324	Bleach	1			132799				7	11
-2325	Black Dye	1			134843				7	11
-2455	Minor Mana Potion	1	5		134850	Potion				1
-2568	Brown Linen Vest	1	3	5	135009	Chest (Cloth)			4	1
-2569	Linen Boots	2	8	8	132543	Feet (Cloth)	Stamina		4	1
-2570	Linen Cloak	1	1	16	133766	Back (Cloth)			4	1
-2572	Red Linen Robe	2	5	20	132659	Chest (Cloth)	Intellect		4	1
-2575	Red Linen Shirt	1		4	135029	Shirt			4	
-2576	White Linen Shirt	1		4	135030	Shirt			4	
-2577	Blue Linen Shirt	1		4	135023	Shirt			4	
-2578	Barbaric Linen Vest	2	9	5	132715	Chest (Cloth)	Stamina, Spell Power		4	1
-2579	Green Linen Shirt	1		4	135024	Shirt			4	
-2580	Reinforced Linen Cape	2	7	16	133759	Back (Cloth)	Spell Power		4	1
-2582	Green Woolen Vest	2	12	5	132680	Chest (Cloth)	Spell Power, Spirit		4	1
-2583	Woolen Boots	2	14	8	132543	Feet (Cloth)	Intellect, Spirit, Spell Power		4	1
-2584	Woolen Cape	2	11	16	133762	Back (Cloth)	Spell Power, Spirit		4	1
-2585	Gray Woolen Robe	2	16	20	132654	Chest (Cloth)	Intellect, Spell Power		4	1
-2587	Gray Woolen Shirt	1		4	135025	Shirt			4	
-2589	Linen Cloth	1			132889	Cloth			7	5
-2592	Wool Cloth	1			132911	Cloth			7	5
-2598	Pattern: Red Linen Robe	2			134942	Tailoring		25	9	2
-2601	Pattern: Gray Woolen Robe	2			134942	Tailoring		80	9	2
-2604	Red Dye	1			134732				7	11
-2605	Green Dye	1			134743				7	11
-2842	Silver Bar	2			133215	Metal & Stone			7	7
-2996	Bolt of Linen Cloth	1			132890	Cloth			7	5
-2997	Bolt of Woolen Cloth	1			132913	Cloth			7	5
-3182	Spider's Silk	1			136113	Cloth			7	5
-3383	Elixir of Wisdom	1	10		134717	Elixir				2
-3577	Gold Bar	2			133217	Metal & Stone			7	7
-3824	Shadow Oil	1	24		134803	Consumable				8
-3827	Mana Potion	1	22		134852	Potion				1
-3829	Frost Oil	1	30		134800	Consumable				8
-3864	Citrine	2			134117				7	11
-4234	Heavy Leather	1			134256	Leather			7	6
-4238	Linen Bag	1		18	133622	Bag (Bag)			1	
-4240	Woolen Bag	1		18	133639	Bag (Bag)			1	
-4241	Green Woolen Bag	1		18	133642	Bag (Bag)			1	
-4245	Small Silk Pack	1		18	133628	Bag (Bag)			1	
-4291	Silken Thread	1			132906	Cloth			7	5
-4292	Pattern: Green Woolen Bag	2			134939	Tailoring		75	9	2
-4304	Thick Leather	1			134257	Leather			7	6
-4305	Bolt of Silk Cloth	1			132907	Cloth			7	5
-4306	Silk Cloth	1			132905	Cloth			7	5
-4307	Heavy Linen Gloves	2	5	10	132939	Hands (Cloth)	Spell Power		4	1
-4308	Green Linen Bracers	2	7	9	132611	Wrist (Cloth)	Spirit		4	1
-4309	Handstitched Linen Britches	2	9	7	134587	Legs (Cloth)	Spell Power, Intellect		4	1
-4310	Heavy Woolen Gloves	2	12	10	132939	Hands (Cloth)	Intellect, Spell Power		4	1
-4311	Heavy Woolen Cloak	2	16	16	133766	Back (Cloth)	Spirit, Spell Power		4	1
-4312	Soft-soled Linen Boots	2	11	8	132543	Feet (Cloth)	Stamina, Spell Power		4	1
-4313	Red Woolen Boots	2	15	8	132543	Feet (Cloth)	Spirit, Spell Power		4	1
-4314	Double-Stitched Woolen Shoulders	2	17	3	135037	Shoulder (Cloth)	Spell Power, Stamina		4	1
-4315	Reinforced Woolen Shoulders	2	19	3	135040	Shoulder (Cloth)	Intellect, Spell Power		4	1
-4316	Heavy Woolen Pants	2	17	7	134581	Legs (Cloth)	Spirit, Spell Power		4	1
-4317	Phoenix Pants	2	20	7	134586	Legs (Cloth)	Intellect		4	1
-4318	Gloves of Meditation	2	21	10	132939	Hands (Cloth)	Spirit, Spell Power		4	1
-4319	Azure Silk Gloves	2	24	10	132951	Hands (Cloth)	Spirit		4	1
-4320	Spidersilk Boots	3	20	8	132539	Feet (Cloth)	Spell Power, Intellect, Stamina		4	1
-4321	Spider Silk Slippers	2	23	8	132537	Feet (Cloth)	Spirit, Spell Power		4	1
-4322	Enchanter's Cowl	2	28	1	133133	Head (Cloth)	Intellect, Spell Power		4	1
-4323	Shadow Hood	2	29	1	133129	Head (Cloth)	Intellect		4	1
-4324	Azure Silk Vest	2	25	5	132678	Chest (Cloth)	Intellect		4	1
-4325	Boots of the Enchanter	2	30	8	132539	Feet (Cloth)	Spirit, Spell Power		4	1
-4326	Long Silken Cloak	2	32	16	133754	Back (Cloth)	Spell Power, Intellect		4	1
-4327	Icy Cloak	3	35	16	133756	Back (Cloth)	Spirit, Spell Power		4	1
-4328	Spider Belt	2	31	6	132514	Waist (Cloth)	Intellect		4	1
-4329	Star Belt	2	35	6	132495	Waist (Cloth)	Spirit, Spell Power		4	1
-4330	Stylish Red Shirt	1		4	135029	Shirt			4	
-4331	Phoenix Gloves	2	20	10	132953	Hands (Cloth)			4	1
-4332	Bright Yellow Shirt	1		4	135031	Shirt			4	
-4333	Dark Silk Shirt	1		4	135022	Shirt			4	
-4334	Formal White Shirt	1		4	135012	Shirt			4	
-4335	Rich Purple Silk Shirt	1		4	135020	Shirt			4	
-4336	Black Swashbuckler's Shirt	1		4	135022	Shirt			4	
-4337	Thick Spider's Silk	1			136113	Cloth			7	5
-4338	Mageweave Cloth	1			132892	Cloth			7	5
-4339	Bolt of Mageweave	1			132894	Cloth			7	5
-4340	Gray Dye	1			132797				7	11
-4341	Yellow Dye	1			134743				7	11
-4342	Purple Dye	1			134713				7	11
-4343	Brown Linen Pants	2	5	7	134586	Legs (Cloth)	Spell Power, Spell Damage		4	1
-4344	Brown Linen Shirt	1		4	135006	Shirt			4	
-4345	Pattern: Red Woolen Boots	2			134942	Tailoring		75	9	2
-4346	Pattern: Heavy Woolen Cloak	2			134942	Tailoring		80	9	2
-4347	Pattern: Reinforced Woolen Shoulders	2			134942	Tailoring		95	9	2
-4348	Pattern: Phoenix Gloves	2			134942	Tailoring		100	9	2
-4349	Pattern: Phoenix Pants	2			134942	Tailoring		100	9	2
-4350	Pattern: Spider Silk Slippers	2			134942	Tailoring		115	9	2
-4351	Pattern: Shadow Hood	2			134942	Tailoring		135	9	2
-4352	Pattern: Boots of the Enchanter	2			134942	Tailoring		140	9	2
-4353	Pattern: Spider Belt	2			134942	Tailoring		145	9	2
-4354	Pattern: Rich Purple Silk Shirt	3			134941	Tailoring		150	9	2
-4355	Pattern: Icy Cloak	1			134939	Tailoring		165	9	2
-4356	Pattern: Star Belt	2			134942	Tailoring		165	9	2
-4470	Simple Wood	1			135435				7	11
-4589	Long Elegant Feather	1			135992				7	11
-4625	Firebloom	1			134200	Herb			7	9
-5498	Small Lustrous Pearl	2			134122				7	11
-5500	Iridescent Pearl	2			134121				7	11
-5542	Pearl-clasped Cloak	2	14	16	133763	Back (Cloth)	Intellect, Spell Power		4	1
-5762	Red Linen Bag	1		18	133623	Bag (Bag)			1	
-5763	Red Woolen Bag	1		18	133643	Bag (Bag)			1	
-5764	Green Silk Pack	1		18	133631	Bag (Bag)			1	
-5765	Black Silk Pack	1		18	133629	Bag (Bag)			1	
-5766	Lesser Wizard's Robe	2	22	20	132658	Chest (Cloth)	Intellect, Spell Power		4	1
-5770	Robes of Arcana	2	25	20	132670	Chest (Cloth)	Spell Power, Spirit		4	1
-5771	Pattern: Red Linen Bag	1			134939	Tailoring		50	9	2
-5772	Pattern: Red Woolen Bag	1			134939	Tailoring		90	9	2
-5773	Pattern: Robes of Arcana	2			134942	Tailoring		125	9	2
-5774	Pattern: Green Silk Pack	2			134942	Tailoring		140	9	2
-5775	Pattern: Black Silk Pack	2			134942	Tailoring		150	9	2
-6037	Truesilver Bar	2			133222	Metal & Stone			7	7
-6048	Shadow Protection Potion	1	17		134824	Potion				1
-6238	Brown Linen Robe	2	5	20	132662	Chest (Cloth)	Spirit		4	1
-6239	Red Linen Vest	2	7	5	132681	Chest (Cloth)	Intellect, Spell Power		4	1
-6240	Blue Linen Vest	2	7	5	132678	Chest (Cloth)	Spirit, Spell Power		4	1
-6241	White Linen Robe	2	5	20	132645	Chest (Cloth)	Intellect		4	1
-6242	Blue Linen Robe	2	9	20	132664	Chest (Cloth)	Spirit, Spell Power		4	1
-6243	Green Woolen Robe	2	13	20	132663	Chest (Cloth)	Intellect, Spell Power		4	1
-6260	Blue Dye	1			134776				7	11
-6261	Orange Dye	1			134815				7	11
-6263	Blue Overalls	2	15	20	135017	Chest (Cloth)	Strength, Stamina		4	1
-6264	Greater Adept's Robe	2	18	20	132665	Chest (Cloth)	Spell Power, Intellect, Spirit		4	1
-6270	Pattern: Blue Linen Vest	1			134939	Tailoring		35	9	2
-6271	Pattern: Red Linen Vest	2			134942	Tailoring		35	9	2
-6272	Pattern: Blue Linen Robe	1			134939	Tailoring		45	9	2
-6274	Pattern: Blue Overalls	1			134939	Tailoring		75	9	2
-6275	Pattern: Greater Adept's Robe	1			134939	Tailoring		90	9	2
-6371	Fire Oil	1			134818				7	11
-6384	Stylish Blue Shirt	1		4	135023	Shirt			4	
-6385	Stylish Green Shirt	1		4	135024	Shirt			4	
-6390	Pattern: Stylish Blue Shirt	2			134942	Tailoring		95	9	2
-6391	Pattern: Stylish Green Shirt	2			134942	Tailoring		95	9	2
-6401	Pattern: Dark Silk Shirt	1			134939	Tailoring		120	9	2
-6786	Simple Dress	1		20	135016	Chest			4	
-6787	White Woolen Dress	2	17	20	135016	Chest (Cloth)	Spirit, Stamina		4	1
-6795	White Swashbuckler's Shirt	1		4	135030	Shirt			4	
-6796	Red Swashbuckler's Shirt	1		4	135029	Shirt			4	
-7026	Linen Belt	1	4	6	132494	Waist (Cloth)			4	1
-7027	Boots of Darkness	2	23	8	132539	Feet (Cloth)	Stamina		4	1
-7046	Azure Silk Pants	2	23	7	134588	Legs (Cloth)	Intellect		4	1
-7047	Hands of Darkness	2	24	10	132956	Hands (Cloth)	Spirit		4	1
-7048	Azure Silk Hood	2	24	1	133131	Head (Cloth)	Stamina		4	1
-7049	Truefaith Gloves	2	25	10	132950	Hands (Cloth)	Intellect, Healing, Spell Damage		4	1
-7050	Silk Headband	2	27	1	133693	Head (Cloth)	Spell Power, Stamina		4	1
-7051	Earthen Vest	2	29	5	135008	Chest (Cloth)	Spirit, Stamina		4	1
-7052	Azure Silk Belt	2	30	6	132511	Waist (Cloth)	Stamina		4	1
-7053	Azure Silk Cloak	2	30	16	132655	Back (Cloth)	Spirit		4	1
-7054	Robe of Power	3	33	20	132643	Chest (Cloth)	Intellect, Spirit, Spell Power		4	1
-7055	Crimson Silk Belt	2	30	6	132493	Waist (Cloth)	Intellect, Spell Power		4	1
-7056	Crimson Silk Cloak	2	31	16	132657	Back (Cloth)	Stamina, Spell Power		4	1
-7057	Green Silken Shoulders	2	31	3	135049	Shoulder (Cloth)	Intellect, Spell Power		4	1
-7058	Crimson Silk Vest	2	32	5	135008	Chest (Cloth)	Intellect, Spell Power		4	1
-7059	Crimson Silk Shoulders	2	33	3	135054	Shoulder (Cloth)	Intellect, Spirit		4	1
-7060	Azure Shoulders	2	33	3	135058	Shoulder (Cloth)	Stamina		4	1
-7061	Earthen Silk Belt	2	34	6	132513	Waist (Cloth)	Spirit, Healing, Spell Damage		4	1
-7062	Crimson Silk Pantaloons	2	34	7	134586	Legs (Cloth)	Intellect, Spell Power		4	1
-7063	Crimson Silk Robe	2	36	20	132666	Chest (Cloth)	Intellect		4	1
-7064	Crimson Silk Gloves	2	37	10	132939	Hands (Cloth)	Intellect		4	1
-7065	Green Silk Armor	2	28	5	132647	Chest (Cloth)	Intellect, Spell Power		4	1
-7067	Elemental Earth	1			134572	Elemental			7	10
-7068	Elemental Fire	1			135805	Elemental			7	10
-7069	Elemental Air	1			136107	Elemental			7	10
-7070	Elemental Water	1			134714	Elemental			7	10
-7071	Iron Buckle	1			133607	Parts			7	1
-7072	Naga Scale	1			134303				7	11
-7076	Essence of Earth	2			136102	Elemental			7	10
-7077	Heart of Fire	1			135819	Elemental			7	10
-7078	Essence of Fire	2			135830	Elemental			7	10
-7079	Globe of Water	1			134333	Elemental			7	10
-7080	Essence of Water	2			136007	Elemental			7	10
-7082	Essence of Air	2			136022	Elemental			7	10
-7084	Pattern: Crimson Silk Shoulders	2			134942	Tailoring		155	9	2
-7085	Pattern: Azure Shoulders	2			134942	Tailoring		155	9	2
-7086	Pattern: Earthen Silk Belt	2			134942	Tailoring		160	9	2
-7087	Pattern: Crimson Silk Cloak	1			134939	Tailoring		145	9	2
-7088	Pattern: Crimson Silk Robe	1			134939	Tailoring		170	9	2
-7089	Pattern: Azure Silk Cloak	1			134939	Tailoring		140	9	2
-7090	Pattern: Green Silk Armor	2			134942	Tailoring		130	9	2
-7091	Pattern: Truefaith Gloves	2			134942	Tailoring		125	9	2
-7092	Pattern: Hands of Darkness	2			134942	Tailoring		120	9	2
-7114	Pattern: Azure Silk Gloves	1			134939	Tailoring		120	9	2
-7910	Star Ruby	2			134129				7	11
-7971	Black Pearl	2			134120				7	11
-7972	Ichor of Undeath	1			134437	Elemental			7	10
-8153	Wildvine	1			134183	Herb			7	9
-8170	Rugged Leather	1			134251	Leather			7	6
-8343	Heavy Silken Thread	1			132906	Cloth			7	5
-8831	Purple Lotus	1			134198	Herb			7	9
-9210	Ghost Dye	1			134711				7	11
-9998	Black Mageweave Vest	2	36	5	132718	Chest (Cloth)	Spirit, Spell Power		4	1
-9999	Black Mageweave Leggings	2	36	7	134589	Legs (Cloth)	Spirit, Spell Power		4	1
-10001	Black Mageweave Robe	2	37	20	132654	Chest (Cloth)	Spirit, Intellect		4	1
-10002	Shadoweave Pants	2	37	7	134591	Legs (Cloth)	Stamina		4	1
-10003	Black Mageweave Gloves	2	38	10	132939	Hands (Cloth)	Spell Power		4	1
-10004	Shadoweave Robe	2	38	20	132679	Chest (Cloth)	Spirit		4	1
-10007	Red Mageweave Vest	2	38	5	135013	Chest (Cloth)	Intellect		4	1
-10008	White Bandit Mask	2	38	1		Head (Cloth)	Agility, Strength		4	1
-10009	Red Mageweave Pants	2	38	7	134586	Legs (Cloth)	Intellect, Spell Power		4	1
-10010	Stormcloth Pants	2	39	7	134593	Legs (Cloth)	Spirit, Healing, Spell Damage		4	1
-10011	Stormcloth Gloves	2	39	10	132951	Hands (Cloth)	Intellect, Healing, Spell Damage		4	1
-10018	Red Mageweave Gloves	2	40	10	132953	Hands (Cloth)	Intellect, Spell Power		4	1
-10019	Dreamweave Gloves	3	40	10	132952	Hands (Cloth)	Spirit, Intellect, Spell Power		4	1
-10020	Stormcloth Vest	2	40	5	132649	Chest (Cloth)	Spirit, Stamina, Healing, Spell Damage		4	1
-10021	Dreamweave Vest	3	40	5	132683	Chest (Cloth)	Spirit, Intellect, Spell Power		4	1
-10023	Shadoweave Gloves	2	40	10	132943	Hands (Cloth)	Intellect		4	1
-10024	Black Mageweave Headband	2	41	1	133693	Head (Cloth)	Spell Power, Intellect		4	1
-10025	Shadoweave Mask	2	44	1	133129	Head (Cloth)	Intellect		4	1
-10026	Black Mageweave Boots	2	41	8	132539	Feet (Cloth)	Spell Power, Intellect		4	1
-10027	Black Mageweave Shoulders	2	41	3	135056	Shoulder (Cloth)	Spell Power, Intellect		4	1
-10028	Shadoweave Shoulders	2	42	3	135056	Shoulder (Cloth)	Stamina		4	1
-10029	Red Mageweave Shoulders	2	42	3	135054	Shoulder (Cloth)	Intellect, Spell Power		4	1
-10030	Admiral's Hat	2	43	1	133131	Head (Cloth)			4	1
-10031	Shadoweave Boots	2	43	8	132539	Feet (Cloth)	Spirit		4	1
-10032	Stormcloth Headband	2	43	1	133132	Head (Cloth)	Spirit, Intellect, Healing, Spell Damage		4	1
-10033	Red Mageweave Headband	2	43	1	133694	Head (Cloth)	Intellect, Spell Power		4	1
-10034	Tuxedo Shirt	1		4	135012	Shirt			4	
-10035	Tuxedo Pants	1	30	7	134581	Legs (Cloth)			4	1
-10036	Tuxedo Jacket	1	30	5	135022	Chest (Cloth)			4	1
-10038	Stormcloth Shoulders	2	44	3	135056	Shoulder (Cloth)	Stamina, Healing, Spell Damage		4	1
-10039	Stormcloth Boots	2	45	8	132539	Feet (Cloth)	Stamina, Healing, Spell Damage		4	1
-10040	White Wedding Dress	1	30	20	132645	Chest (Cloth)			4	1
-10041	Dreamweave Circlet	3	45	1	132767	Head (Cloth)	Spirit, Intellect, Spell Power		4	1
-10042	Cindercloth Robe	2	40	20	132666	Chest (Cloth)			4	1
-10044	Cindercloth Boots	2	44	8	132539	Feet (Cloth)			4	1
-10045	Simple Linen Pants	1	2	7	134591	Legs (Cloth)			4	1
-10046	Simple Linen Boots	1	4	8	132539	Feet (Cloth)			4	1
-10047	Simple Kilt	2	10	7	134591	Legs (Cloth)	Stamina, Spell Power		4	1
-10048	Colorful Kilt	2	14	7	134582	Legs (Cloth)	Spell Power, Spirit		4	1
-10050	Mageweave Bag	1		18	133640	Bag (Bag)			1	
-10051	Red Mageweave Bag	1		18	133643	Bag (Bag)			1	
-10052	Orange Martial Shirt	1		4	135027	Shirt			4	
-10053	Simple Black Dress	1		20	132662	Chest			4	
-10054	Lavender Mageweave Shirt	1		4	135028	Shirt			4	
-10055	Pink Mageweave Shirt	1		4	135029	Shirt			4	
-10056	Orange Mageweave Shirt	1		4	135027	Shirt			4	
-10285	Shadow Silk	1			136113	Cloth			7	5
-10286	Heart of the Wild	1			134188	Elemental			7	10
-10290	Pink Dye	1			134720				7	11
-10300	Pattern: Red Mageweave Vest	2			134942	Tailoring		180	9	2
-10301	Pattern: White Bandit Mask	2			134942	Tailoring		180	9	2
-10302	Pattern: Red Mageweave Pants	2			134942	Tailoring		180	9	2
-10311	Pattern: Orange Martial Shirt	1			134939	Tailoring		185	9	2
-10312	Pattern: Red Mageweave Gloves	2			134942	Tailoring		190	9	2
-10314	Pattern: Lavender Mageweave Shirt	1			134939	Tailoring		190	9	2
-10315	Pattern: Red Mageweave Shoulders	2			134942	Tailoring		195	9	2
-10316	Pattern: Colorful Kilt	2			134942	Tailoring		70	9	2
-10317	Pattern: Pink Mageweave Shirt	1			134939	Tailoring		195	9	2
-10318	Pattern: Admiral's Hat	1			134939	Tailoring		200	9	2
-10320	Pattern: Red Mageweave Headband	2			134942	Tailoring		200	9	2
-10321	Pattern: Tuxedo Shirt	1			134939	Tailoring		200	9	2
-10323	Pattern: Tuxedo Pants	1			134939	Tailoring		140	9	2
-10325	Pattern: White Wedding Dress	1			134939	Tailoring		140	9	2
-10326	Pattern: Tuxedo Jacket	1			134939	Tailoring		140	9	2
-10463	Pattern: Shadoweave Mask	2			134942	Tailoring		200	9	2
-10728	Pattern: Black Swashbuckler's Shirt	1			134939	Tailoring		165	9	2
-11040	Morrowgrain	1			134185				12	
-11082	Greater Astral Essence	2			132862	Enchanting			7	12
-11134	Lesser Mystic Essence	2			132869	Enchanting			7	12
-11137	Vision Dust	1			132859	Enchanting			7	12
-11175	Greater Nether Essence	2			132870	Enchanting			7	12
-11176	Dream Dust	1			132855	Enchanting			7	12
-11178	Large Radiant Shard	3			132883	Enchanting			7	12
-12360	Arcanite Bar	2			134459	Metal & Stone			7	7
-12364	Huge Emerald	2			134104				7	11
-12662	Demonic Rune	2			134417				7	11
-12800	Azerothian Diamond	2			134094				7	11
-12803	Living Essence	2			136006	Elemental			7	10
-12804	Powerful Mojo	1			136011				7	11
-12808	Essence of Undeath	2			136195	Elemental			7	10
-12809	Guardian Stone	2			135228	Metal & Stone			7	7
-12810	Enchanted Leather	1			134418	Leather			7	6
-12811	Righteous Orb	2			134122				7	11
-12938	Blood of Heroes	1			134813				12	
-13468	Black Lotus	2			134202	Herb			7	9
-13856	Runecloth Belt	2	46	6	132504	Waist (Cloth)	Intellect, Spell Power		4	1
-13857	Runecloth Tunic	2	47	5	132645	Chest (Cloth)	Spell Power, Intellect		4	1
-13858	Runecloth Robe	2	47	20	132645	Chest (Cloth)	Intellect, Spell Power		4	1
-13860	Runecloth Cloak	2	48	16	133762	Back (Cloth)	Spell Power, Intellect		4	1
-13863	Runecloth Gloves	2	50	10	132959	Hands (Cloth)	Spirit, Intellect, Spell Power		4	1
-13864	Runecloth Boots	2	51	8	132539	Feet (Cloth)	Spirit, Spell Power		4	1
-13865	Runecloth Pants	2	52	7	134589	Legs (Cloth)	Spirit, Spell Power		4	1
-13866	Runecloth Headband	2	54	1	133694	Head (Cloth)	Intellect, Spell Power		4	1
-13867	Runecloth Shoulders	2	56	3	135052	Shoulder (Cloth)	Intellect, Spell Power		4	1
-13868	Frostweave Robe	2	46	20	132644	Chest (Cloth)	Spirit		4	1
-13869	Frostweave Tunic	2	46	5	132649	Chest (Cloth)	Intellect		4	1
-13870	Frostweave Gloves	2	47	10	132939	Hands (Cloth)	Intellect		4	1
-13871	Frostweave Pants	2	51	7	134588	Legs (Cloth)	Spirit		4	1
-13926	Golden Pearl	2			134123				7	11
-14042	Cindercloth Vest	2	47	5	132648	Chest (Cloth)	Spirit		4	1
-14043	Cindercloth Gloves	2	49	10	132939	Hands (Cloth)	Spirit		4	1
-14044	Cindercloth Cloak	2	50	16	133770	Back (Cloth)	Intellect		4	1
-14045	Cindercloth Pants	2	51	7	134586	Legs (Cloth)	Intellect		4	1
-14046	Runecloth Bag	1		18	133652	Bag (Bag)			1	
-14047	Runecloth	1			132903	Cloth			7	5
-14048	Bolt of Runecloth	1			132904	Cloth			7	5
-14100	Brightcloth Robe	2	49	20	132667	Chest (Cloth)	Spell Power		4	1
-14101	Brightcloth Gloves	2	49	10	132955	Hands (Cloth)	Spell Power		4	1
-14103	Brightcloth Cloak	2	50	16	133763	Back (Cloth)			4	1
-14104	Brightcloth Pants	2	53	7	134589	Legs (Cloth)	Spell Power		4	1
-14106	Felcloth Robe	2	56	20	132650	Chest (Cloth)	Stamina		4	1
-14107	Felcloth Pants	2	50	7	134586	Legs (Cloth)	Intellect		4	1
-14108	Felcloth Boots	2	52	8	132539	Feet (Cloth)	Spirit		4	1
-14111	Felcloth Hood	2	53	1	133136	Head (Cloth)	Intellect		4	1
-14112	Felcloth Shoulders	2	57	3	135054	Shoulder (Cloth)	Spirit		4	1
-14128	Wizardweave Robe	2	55	20	132687	Chest (Cloth)	Spell Power		4	1
-14130	Wizardweave Turban	2	56	1	133165	Head (Cloth)	Spell Power		4	1
-14132	Wizardweave Leggings	2	50	7	134589	Legs (Cloth)	Spell Power		4	1
-14134	Cloak of Fire	3	50	16	133770	Back (Cloth)			4	1
-14136	Robe of Winter Night	3	52	20	132690	Chest (Cloth)	Intellect		4	1
-14137	Mooncloth Leggings	3	53	7	134593	Legs (Cloth)	Spirit, Healing, Spell Damage, Stamina		4	1
-14138	Mooncloth Vest	3	55	5	132649	Chest (Cloth)	Intellect, Healing, Spell Damage, Spirit		4	1
-14139	Mooncloth Shoulders	3	56	3	135033	Shoulder (Cloth)	Healing, Spell Damage, Stamina, Spirit		4	1
-14140	Mooncloth Circlet	3	57	1	133693	Head (Cloth)	Healing, Spell Damage, Stamina, Spirit		4	1
-14141	Ghostweave Vest	2	50	5	135012	Chest (Cloth)	Spell Power, Spirit, Mana every 5 sec.		4	1
-14142	Ghostweave Gloves	2	49	10	132939	Hands (Cloth)	Spell Power, Spirit		4	1
-14143	Ghostweave Belt	2	48	6	132505	Waist (Cloth)	Spell Power, Spirit		4	1
-14144	Ghostweave Pants	2	53	7	134581	Legs (Cloth)	Spell Power, Spirit		4	1
-14146	Gloves of Spell Mastery	4	57	10	132940	Hands (Cloth)	Intellect, Spell Power, Critical Strike Rating		4	1
-14152	Robe of the Archmage	4	57	20	132679	Chest (Cloth)	Intellect, Spell Power, Critical Strike Rating		4	1
-14153	Robe of the Void	4	57	20	132692	Chest (Cloth)	Stamina, Intellect, Spell Power		4	1
-14154	Truefaith Vestments	4	57	20	132672	Chest (Cloth)	Stamina, Healing, Spell Damage, Spirit		4	1
-14155	Mooncloth Bag	2		18	133647	Bag (Bag)			1	
-14156	Bottomless Bag	3		18	133646	Bag (Bag)			1	
-14227	Ironweb Spider Silk	1			136113	Cloth			7	5
-14256	Felcloth	1			132888	Cloth			7	5
-14341	Rune Thread	1			136120	Cloth			7	5
-14342	Mooncloth	1			132895	Cloth			7	5
-14343	Small Brilliant Shard	3			132874	Enchanting			7	12
-14344	Large Brilliant Shard	3			132873	Enchanting			7	12
-14466	Pattern: Frostweave Tunic	2			134942	Tailoring		210	9	2
-14467	Pattern: Frostweave Robe	2			134942	Tailoring		210	9	2
-14468	Pattern: Runecloth Bag	1			134939	Tailoring		215	9	2
-14469	Pattern: Runecloth Robe	1			134939	Tailoring		215	9	2
-14470	Pattern: Runecloth Tunic	2			134942	Tailoring		215	9	2
-14471	Pattern: Cindercloth Vest	2			134942	Tailoring		215	9	2
-14472	Pattern: Runecloth Cloak	1			134939	Tailoring		220	9	2
-14473	Pattern: Ghostweave Belt	2			134942	Tailoring		220	9	2
-14474	Pattern: Frostweave Gloves	2			134942	Tailoring		215	9	2
-14476	Pattern: Cindercloth Gloves	2			134942	Tailoring		225	9	2
-14477	Pattern: Ghostweave Gloves	2			134942	Tailoring		225	9	2
-14478	Pattern: Brightcloth Robe	2			134942	Tailoring		225	9	2
-14479	Pattern: Brightcloth Gloves	2			134942	Tailoring		225	9	2
-14480	Pattern: Ghostweave Vest	2			134942	Tailoring		225	9	2
-14481	Pattern: Runecloth Gloves	1			134939	Tailoring		230	9	2
-14482	Pattern: Cindercloth Cloak	2			134942	Tailoring		230	9	2
-14483	Pattern: Felcloth Pants	1			134939	Tailoring		230	9	2
-14484	Pattern: Brightcloth Cloak	2			134942	Tailoring		230	9	2
-14485	Pattern: Wizardweave Leggings	2			134942	Tailoring		230	9	2
-14486	Pattern: Cloak of Fire	3			134939	Tailoring		235	9	2
-14488	Pattern: Runecloth Boots	1			134939	Tailoring		235	9	2
-14489	Pattern: Frostweave Pants	2			134942	Tailoring		235	9	2
-14490	Pattern: Cindercloth Pants	2			134942	Tailoring		235	9	2
-14491	Pattern: Runecloth Pants	2			134942	Tailoring		240	9	2
-14492	Pattern: Felcloth Boots	2			134942	Tailoring		240	9	2
-14493	Pattern: Robe of Winter Night	3			134941	Tailoring		245	9	2
-14494	Pattern: Brightcloth Pants	2			134942	Tailoring		245	9	2
-14495	Pattern: Ghostweave Pants	2			134942	Tailoring		245	9	2
-14496	Pattern: Felcloth Hood	2			134942	Tailoring		245	9	2
-14497	Pattern: Mooncloth Leggings	3			134939	Tailoring		245	9	2
-14498	Pattern: Runecloth Headband	2			134942	Tailoring		250	9	2
-14499	Pattern: Mooncloth Bag	2			134942	Tailoring		255	9	2
-14500	Pattern: Wizardweave Robe	2			134942	Tailoring		255	9	2
-14501	Pattern: Mooncloth Vest	3			134939	Tailoring		270	9	2
-14504	Pattern: Runecloth Shoulders	2			134942	Tailoring		260	9	2
-14505	Pattern: Wizardweave Turban	2			134942	Tailoring		260	9	2
-14506	Pattern: Felcloth Robe	2			134942	Tailoring		260	9	2
-14507	Pattern: Mooncloth Shoulders	3			134939	Tailoring		275	9	2
-14508	Pattern: Felcloth Shoulders	2			134942	Tailoring		265	9	2
-14509	Pattern: Mooncloth Circlet	3			134939	Tailoring		280	9	2
-14510	Pattern: Bottomless Bag	3			134939	Tailoring		300	9	2
-14511	Pattern: Gloves of Spell Mastery	4			134939	Tailoring		295	9	2
-14512	Pattern: Truefaith Vestments	4			134939	Tailoring		295	9	2
-14513	Pattern: Robe of the Archmage	4			134939	Tailoring		295	9	2
-14514	Pattern: Robe of the Void	4			134939	Tailoring		295	9	2
-14526	Pattern: Mooncloth	1			134939	Tailoring		230	9	2
-14627	Pattern: Bright Yellow Shirt	1			134939	Tailoring		110	9	2
-14630	Pattern: Enchanter's Cowl	1			134939	Tailoring		130	9	2
-15407	Cured Rugged Hide	1			134355	Leather			7	6
-15802	Mooncloth Boots	3	51	8	132539	Feet (Cloth)	Intellect, Spirit, Healing, Spell Damage		4	1
-16203	Greater Eternal Essence	2			132864	Enchanting			7	12
-16979	Flarecore Gloves	4	57	10	132960	Hands (Cloth)	Intellect, Stamina		4	1
-16980	Flarecore Mantle	4	56	3	135054	Shoulder (Cloth)	Spirit, Intellect, Stamina		4	1
-17010	Fiery Core	3			135812				7	11
-17011	Lava Core	3			136025				7	11
-17012	Core Leather	1			132386	Leather			7	6
-17017	Pattern: Flarecore Mantle	1			134939	Tailoring		300	9	2
-17018	Pattern: Flarecore Gloves	1			134939	Tailoring		300	9	2
-17723	Green Holiday Shirt	1		4	135024	Shirt			4	
-17724	Pattern: Green Holiday Shirt	1			134939	Tailoring		155	9	2
-18240	Ogre Tannin	2			134719				7	11
-18258	Gordok Ogre Suit	2	55		132636				12	
-18263	Flarecore Wraps	4	60	9	132608	Wrist (Cloth)	Intellect, Mana every 5 sec.		4	1
-18265	Pattern: Flarecore Wraps	3			134941	Tailoring		300	9	2
-18405	Belt of the Archmage	4	57	6	132520	Waist (Cloth)	Intellect, Stamina, Spell Power, Critical Strike Rating		4	1
-18407	Felcloth Gloves	3	57	10	132953	Hands (Cloth)	Stamina		4	1
-18408	Inferno Gloves	3	57	10	132953	Hands (Cloth)	Intellect		4	1
-18409	Mooncloth Gloves	3	57	10	132951	Hands (Cloth)	Intellect, Healing, Spell Damage, Stamina		4	1
-18413	Cloak of Warding	3	57	16	133758	Back (Cloth)	Bonus Armor, Defense Rating		4	1
-18414	Pattern: Belt of the Archmage	4			134940	Tailoring		295	9	2
-18415	Pattern: Felcloth Gloves	3			134941	Tailoring		280	9	2
-18416	Pattern: Inferno Gloves	3			134941	Tailoring		280	9	2
-18417	Pattern: Mooncloth Gloves	3			134941	Tailoring		280	9	2
-18418	Pattern: Cloak of Warding	3			134941	Tailoring		280	9	2
-18486	Mooncloth Robe	3	56	20	132645	Chest (Cloth)	Intellect, Healing, Spell Damage, Stamina		4	1
-18487	Pattern: Mooncloth Robe	1			134939	Tailoring		275	9	2
-19047	Wisdom of the Timbermaw	3	53	6	132498	Waist (Cloth)	Intellect, Healing, Spell Damage, Spirit		4	1
-19050	Mantle of the Timbermaw	3	56	3	135050	Shoulder (Cloth)	Intellect, Spell Power, Critical Strike Rating		4	1
-19056	Argent Boots	3	53	8	132560	Feet (Cloth)	Stamina, Spell Power		4	1
-19059	Argent Shoulders	3	56	3	135044	Shoulder (Cloth)	Spell Power, Spirit		4	1
-19156	Flarecore Robe	4	60	20	132659	Chest (Cloth)	Stamina, Spell Power		4	1
-19165	Flarecore Leggings	4	60	7	134586	Legs (Cloth)	Stamina, Spell Power		4	1
-19215	Pattern: Wisdom of the Timbermaw	1			134939	Tailoring		255	9	2
-19216	Pattern: Argent Boots	1			134939	Tailoring		255	9	2
-19217	Pattern: Argent Shoulders	1			134939	Tailoring		290	9	2
-19218	Pattern: Mantle of the Timbermaw	3			134939	Tailoring		290	9	2
-19219	Pattern: Flarecore Robe	1			134939	Tailoring		300	9	2
-19220	Pattern: Flarecore Leggings	1			134939	Tailoring		300	9	2
-19682	Bloodvine Vest	3	60	5	132648	Chest (Cloth)	Intellect, Hit Rating, Spell Power		4	1
-19683	Bloodvine Leggings	3	60	7	134608	Legs (Cloth)	Intellect, Hit Rating, Spell Power		4	1
-19684	Bloodvine Boots	3	60	8	132559	Feet (Cloth)	Intellect, Hit Rating, Spell Power		4	1
-19726	Bloodvine	2			134189	Herb			7	9
-19764	Pattern: Bloodvine Vest	1			134939	Tailoring		300	9	2
-19765	Pattern: Bloodvine Leggings	1			134939	Tailoring		300	9	2
-19766	Pattern: Bloodvine Boots	1			134939	Tailoring		300	9	2
-20381	Dreamscale	2			134313	Leather			7	6
-20520	Dark Rune	2			136192				7	11
-20537	Runed Stygian Boots	3	58	8	132539	Feet (Cloth)	Stamina		4	1
-20538	Runed Stygian Leggings	3	58	7	134599	Legs (Cloth)	Stamina		4	1
-20539	Runed Stygian Belt	3	58	6	132503	Waist (Cloth)	Stamina		4	1
-20546	Pattern: Runed Stygian Leggings	3			134941	Tailoring		285	9	2
-20547	Pattern: Runed Stygian Boots	3			134941	Tailoring		285	9	2
-20548	Pattern: Runed Stygian Belt	3			134941	Tailoring		285	9	2
-21154	Festival Dress	1		20	132697	Chest			4	5
-21340	Soul Pouch	2		18	133670	Bag			1	1
-21341	Felcloth Bag	3		18	133667	Bag			1	1
-21342	Core Felcloth Bag	4		18	133664	Bag			1	1
-21358	Pattern: Soul Pouch	1			134939	Tailoring		215	9	2
-21371	Pattern: Core Felcloth Bag	3			134941	Tailoring		300	9	2
-21542	Festival Suit	1		20	132696	Chest			4	5
-21722	Pattern: Festival Dress	2			134942	Tailoring		205	9	2
-21723	Pattern: Festival Suit	2			134942	Tailoring		205	9	2
-22246	Enchanted Mageweave Pouch	2		18	133665	Bag			1	3
-22248	Enchanted Runecloth Bag	2		18	133666	Bag			1	3
-22249	Big Bag of Enchantment	2		18	133662	Bag			1	3
-22251	Cenarion Herb Bag	2		18	133663	Bag			1	2
-22252	Satchel of Cenarius	2		18	133669	Bag			1	2
-22307	Pattern: Enchanted Mageweave Pouch	1			134939	Tailoring		190	9	2
-22308	Pattern: Enchanted Runecloth Bag	1			134939	Tailoring		230	9	2
-22309	Pattern: Big Bag of Enchantment	2			134942	Tailoring		255	9	2
-22310	Pattern: Cenarion Herb Bag	1			134939	Tailoring		230	9	2
-22312	Pattern: Satchel of Cenarius	1			134939	Tailoring		255	9	2
-22652	Glacial Vest	4	60	5	132649	Chest (Cloth)	Stamina, Spell Power		4	1
-22654	Glacial Gloves	4	60	10	132940	Hands (Cloth)	Stamina, Spell Power		4	1
-22655	Glacial Wrists	4	60	9	132606	Wrist (Cloth)	Stamina, Spell Power		4	1
-22658	Glacial Cloak	4	60	16	133768	Back (Cloth)	Stamina		4	1
-22660	Gaea's Embrace	3	60	16	133769	Back (Cloth)	Stamina		4	1
-22682	Frozen Rune	3	60		134422				7	11
-22683	Pattern: Gaea's Embrace	1			134939	Tailoring		300	9	2
-22756	Sylvan Vest	3	60	5	132742	Chest (Cloth)	Stamina, Spell Power		4	1
-22757	Sylvan Crown	3	60	1	132767	Head (Cloth)	Stamina, Spell Power		4	1
-22758	Sylvan Shoulders	3	60	3	135049	Shoulder (Cloth)	Stamina, Spell Power		4	1
-22772	Pattern: Sylvan Shoulders	1			134939	Tailoring		300	9	2
-22773	Pattern: Sylvan Crown	1			134939	Tailoring		300	9	2
-22774	Pattern: Sylvan Vest	1			134939	Tailoring		300	9	2
-34085	Red Winter Clothes	1		20	132641	Chest			4	5
-34087	Green Winter Clothes	1		20	132640	Chest			4	5
-34261	Pattern: Green Winter Clothes	2			134942	Tailoring		250	9	2
-34319	Pattern: Red Winter Clothes	2			134942	Tailoring		250	9	2
-210781	Phoenix Bindings	3	25	9	236968	Wrist (Cloth)			4	1
-210795	Extraplanar Spidersilk Boots	1		8	132539	Feet (Cloth)			4	1
-211247	Pattern: Phoenix Bindings	2			134942	Tailoring		125	9	2
-211422		1			133449				5	
-213369	Faintly Glowing Leather	3			237420	Leather			7	6
-213372		1			134792				7	11
-213378	Unstable Microfilament	2			133003	Cloth			7	5
-213379	Hyperconductive Arcano-Filament	3			237428	Cloth			7	5
-215111	Gneuro-Linked Arcano-Filament Monocle	1		1	237290	Head (Cloth)			4	1
-215149	Pattern: Gneuro-Linked Arcano-Filament Monocle	4			134939	Leatherworking		225	9	1
-215365	Invoker's Mantle	2	25	3	135033	Shoulder (Cloth)	Intellect, Spell Power		4	1
-215366	Invoker's Cord	2	25	6	132492	Waist (Cloth)	Intellect, Spell Power		4	1
-215368	Pattern: Hyperconductive Arcano-Filament	3			134939	Leatherworking		200	9	1
-215369	Pattern: Invoker's Cord	2			134942	Tailoring		150	9	2
-215370	Pattern: Invoker's Mantle	2			134942	Tailoring		150	9	2
-217244	Pattern: Crimson Silk Robe	1			134939	Tailoring		205	9	2
-217245	Crimson Silk Robe	1		20	132666	Chest (Cloth)			4	1
-217246	Black Mageweave Vest	1		5	132718	Chest (Cloth)			4	1
-217247	Black Mageweave Leggings	1		7	134589	Legs (Cloth)			4	1
-217248	Earthen Silk Belt	1		6	132513	Waist (Cloth)			4	1
-217249	Pattern: Earthen Silk Belt	2			134942	Tailoring		195	9	2
-217250	Crimson Silk Shoulders	1		3	135054	Shoulder (Cloth)			4	1
-217251	Pattern: Crimson Silk Shoulders	2			134942	Tailoring		190	9	2
-217252	Long Silken Cloak	1		16	133754	Back (Cloth)			4	1
-217253	Boots of the Enchanter	1		8	132539	Feet (Cloth)			4	1
-217254	Pattern: Boots of the Enchanter	2			134942	Tailoring		175	9	2
-217255	Crimson Silk Belt	1		6	132493	Waist (Cloth)			4	1
-217256	Earthen Vest	1		5	135008	Chest (Cloth)			4	1
-217257	Enchanter's Cowl	1		1	133133	Head (Cloth)			4	1
-217258	Pattern: Enchanter's Cowl	1			134939	Tailoring		165	9	2
-220688		1			135084				5	
-220749	Mantle of Insanity	1		3	135033	Shoulder (Cloth)			4	1
-220750	Fractured Mind Pauldrons	1		3	135033	Shoulder (Cloth)			4	1
-220751	Shoulderpads of the Deranged	1		3	135033	Shoulder (Cloth)			4	1
-221021		1			134217				7	11
-227844	Leather-Reinforced Runecloth Bag	3		18	133659	Bag (Bag)			1	
-227855	Synthetic Gordok Ogre Suit	1			132636	Consumable				8
-227860	Incandescent Mooncloth Vest	1		5	132649	Chest (Cloth)			4	1
-227861	Incandescent Mooncloth Robe	1		20	132645	Chest (Cloth)			4	1
-227863	Incandescent Mooncloth Circlet	1		1	133693	Head (Cloth)			4	1
-227864	Incandescent Mooncloth Leggings	1		7	134593	Legs (Cloth)			4	1
-227896	Pattern: Argent Boots	1			134939	Tailoring		290	9	2
-227897	Pattern: Argent Shoulders	1			134939	Tailoring		300	9	2
-228121	Pattern: Leather-Reinforced Runecloth Bag	2			134942	Tailoring		300	9	2
-228303	Pattern: Incandescent Mooncloth Robe	1			134939	Tailoring		300	9	2
-228316	Pattern: Incandescent Mooncloth Vest	3			134939	Tailoring		300	9	2
-228317	Pattern: Incandescent Mooncloth Circlet	3			134939	Tailoring		300	9	2
-228318	Pattern: Incandescent Mooncloth Leggings	3			134939	Tailoring		290	9	2
-228476	Embroidered Belt of the Archmage	1		6	132520	Waist (Cloth)			4	1
-228477	Pattern: Embroidered Belt of the Archmage	4			134940	Tailoring		300	9	2
-228993	Pattern: Bottomless Bag	3			134939	Tailoring		300	9	2
-228994	Bottomless Bag	1		18	133646	Bag (Bag)			1	
-233826	Vampiric Cowl	1		1	133154	Head (Cloth)			4	1
-233833	Vampiric Shawl	1		3	135054	Shoulder (Cloth)			4	1
-233837	Vampiric Robe	1		20	132679	Chest (Cloth)			4	1
-233956	Qiraji Silk Scarf	1		16	133770	Back (Cloth)			4	1
-233958	Qiraji Silk Cape	1		16	133760	Back (Cloth)			4	1
-233959	Qiraji Silk Cloak	1		16	133774	Back (Cloth)			4	1
-233960	Qiraji Silk Drape	1		16	132657	Back (Cloth)			4	1
-234007		1			134260	Leather			7	6
-234008		1			132901	Cloth			7	5
-234009	Bolt of Qiraji Silk	1			132902	Cloth			7	5
-234312	Sylvan Shoulders	1		3	135049	Shoulder (Cloth)			4	1
-234315	Sylvan Crown	1		1	132767	Head (Cloth)			4	1
-234317	Sylvan Vest	1		5	132742	Chest (Cloth)			4	1
-234484	Dreamscale Bracers	1		9	132605	Wrist (Cloth)			4	1
-234485	Dreamscale Mitts	1		10	132957	Hands (Cloth)			4	1
-236656		1			134422				7	11
-236690	Glacial Cloak	1		16	133768	Back (Cloth)			4	1
-236692	Glacial Gloves	1		10	132940	Hands (Cloth)			4	1
-236693	Glacial Wrists	1		9	132606	Wrist (Cloth)			4	1
-236694	Glacial Vest	1		5	132649	Chest (Cloth)			4	1
-236704	Frosty Wrists	1		9	132606	Wrist (Cloth)			4	1
-236705	Frosty Gloves	1		10	132940	Hands (Cloth)			4	1
-236706	Frosty Vest	1		5	132649	Chest (Cloth)			4	1
-238264	Scarlet Augur's Hood	1		1	133130	Head (Cloth)			4	1
-238265	Scarlet Augur's Mantle	1		3	135036	Shoulder (Cloth)			4	1
-238266	Scarlet Augur's Vestments	1		5	132659	Chest (Cloth)			4	1
-238267	Scarlet Augur's Cuffs	1		9	132612	Wrist (Cloth)			4	1
-238268	Scarlet Augur's Mitts	1		10	132950	Hands (Cloth)			4	1
-238269	Scarlet Augur's Strap	1		6	132493	Waist (Cloth)			4	1
-238270	Scarlet Augur's Leggings	1		7	134596	Legs (Cloth)			4	1
-238271	Scarlet Augur's Soles	1		8	132536	Feet (Cloth)			4	1
-238298	Pattern: Scarlet Augur's Hood	3	1		134940	Tailoring		280	9	2
-238299	Pattern: Scarlet Augur's Mantle	3	1		134940	Tailoring		280	9	2
-238300	Pattern: Scarlet Augur's Vestments	3	1		134940	Tailoring		280	9	2
-238301	Pattern: Scarlet Augur's Cuffs	3	1		134940	Tailoring		250	9	2
-238302	Pattern: Scarlet Augur's Mitts	3	1		134940	Tailoring		260	9	2
-238303	Pattern: Scarlet Augur's Strap	3	1		134940	Tailoring		250	9	2
-238304	Pattern: Scarlet Augur's Leggings	3	1		134940	Tailoring		270	9	2
-238305	Pattern: Scarlet Augur's Soles	3	1		134940	Tailoring		260	9	2
-239147	Crusader's Knapsack	3	1	18	133655	Bag (Bag)			1	
-239148	Crimson Dawnwoven Bag	4	1	18	133659	Bag (Bag)			1	
-239149	Pattern: Crusader's Knapsack	3	1		134942	Tailoring		250	9	2
-239150	Pattern: Crimson Dawnwoven Bag	4	1		134942	Leatherworking		290	9	1
-249391	Pyrite	2			961627	Metal & Stone			7	7
-249409	Cerulean Dye	2			1021860				7	11
-249427	Pristine Leather	2			348551	Leather			7	6
-249428	Pristine Hide	2			3586020	Leather			7	6
-249429	Pristine Scale	2			134311	Leather			7	6
-249430	Magenta Dye	2			237071				7	11
-249431	Viridian Dye	2			237062				7	11
-253664	Linen Reagent Bag	1		18	348520	Bag			1	11
-253665	Pattern: Linen Reagent Bag	2	1		134939	Tailoring		5	9	2
-253667	Woolen Reagent Bag	1		18	348520	Bag			1	11
-253668	Pattern: Woolen Reagent Bag	2	1		134939	Tailoring		70	9	2
-253885	Novice Arcanist's Sash	3	10	6		Waist (Cloth)	Spell Power, Intellect, Stamina		4	1
-253886	Pattern: Novice Arcanist's Sash	3	1		134939	Tailoring		50	9	2
-253887	Novice Ardent's Sash	3	10	6		Waist (Cloth)	Healing, Spell Damage, Intellect, Spirit		4	1
-253888	Pattern: Novice Ardent's Sash	3	1		134939	Tailoring		50	9	2
-253889	Pristine Boots	3	12	8		Feet (Cloth)	Healing, Spell Damage, Intellect, Stamina		4	1
-253890	Pattern: Pristine Boots	3	1		134939	Tailoring		60	9	2
-253891	Silky Boots	3	12	8		Feet (Cloth)	Intellect, Stamina		4	1
-253892	Pattern: Silky Boots	3	1		134939	Tailoring		60	9	2
-253893	Flame Boots	3	12	8		Feet (Cloth)	Intellect, Stamina		4	1
-253894	Pattern: Flame Boots	3	1		134939	Tailoring		60	9	2
-253895	Shadow Boots	3	12	8		Feet (Cloth)	Intellect, Stamina		4	1
-253896	Pattern: Shadow Boots	3	1		134939	Tailoring		60	9	2
-253897	Pearly Boots	3	12	8		Feet (Cloth)	Intellect, Stamina		4	1
-253898	Pattern: Pearly Boots	3	1		134939	Tailoring		60	9	2
-253899	Shining Boots	3	12	8		Feet (Cloth)	Intellect, Stamina		4	1
-253900	Pattern: Shining Boots	3	1		134939	Tailoring		60	9	2
-253901	Filigreed Pristine Gown	3	15	20		Chest (Cloth)	Healing, Spell Damage, Intellect, Stamina, Spirit		4	1
-253902	Pattern: Filigreed Pristine Gown	3	1		134939	Tailoring		75	9	2
-253903	Filigreed Silky Gown	3	15	5		Chest (Cloth)	Intellect, Stamina, Spirit		4	1
-253904	Pattern: Filigreed Silky Gown	3	1		134939	Tailoring		75	9	2
-253905	Filigreed Flame Gown	3	15	5		Chest (Cloth)	Intellect, Stamina, Spirit		4	1
-253906	Pattern: Filigreed Flame Gown	3	1		134939	Tailoring		75	9	2
-253907	Filigreed Shadow Gown	3	15	5		Chest (Cloth)	Intellect, Stamina, Spirit		4	1
-253908	Pattern: Filigreed Shadow Gown	3	1		134939	Tailoring		75	9	2
-253909	Filigreed Pearly Gown	3	15	5		Chest (Cloth)	Intellect, Stamina, Spirit		4	1
-253910	Pattern: Filigreed Pearly Gown	3	1		134939	Tailoring		75	9	2
-253911	Filigreed Shining Gown	3	15	5		Chest (Cloth)	Intellect, Stamina, Spirit		4	1
-253912	Pattern: Filigreed Shining Gown	3	1		134939	Tailoring		75	9	2
-253913	Pristine Gloves	3	15	10		Hands (Cloth)	Healing, Spell Damage, Intellect, Stamina		4	1
-253914	Pattern: Pristine Gloves	3	1		134939	Tailoring		75	9	2
-253915	Silky Gloves	3	15	10		Hands (Cloth)	Intellect, Stamina		4	1
-253916	Pattern: Silky Gloves	3	1		134939	Tailoring		75	9	2
-253917	Flame Gloves	3	15	10		Hands (Cloth)	Intellect, Stamina		4	1
-253918	Pattern: Flame Gloves	3	1		134939	Tailoring		75	9	2
-253919	Shadow Gloves	3	15	10		Hands (Cloth)	Intellect, Stamina		4	1
-253920	Pattern: Shadow Gloves	3	1		134939	Tailoring		75	9	2
-253921	Pearly Gloves	3	15	10		Hands (Cloth)	Intellect, Stamina		4	1
-253922	Pattern: Pearly Gloves	3	1		134939	Tailoring		75	9	2
-253923	Shining Gloves	3	15	10		Hands (Cloth)	Intellect, Stamina		4	1
-253924	Pattern: Shining Gloves	3	1		134939	Tailoring		75	9	2
-253925	Pristine Sash	3	17	6		Waist (Cloth)	Healing, Spell Damage, Intellect, Stamina		4	1
-253926	Pattern: Pristine Sash	3	1		134939	Tailoring		85	9	2
-253927	Silky Sash	3	17	6		Waist (Cloth)	Intellect, Stamina		4	1
-253928	Pattern: Silky Sash	3	1		134939	Tailoring		85	9	2
-253929	Flame Sash	3	17	6		Waist (Cloth)	Intellect, Stamina		4	1
-253930	Pattern: Flame Sash	3	1		134939	Tailoring		85	9	2
-253931	Shadow Sash	3	17	6		Waist (Cloth)	Intellect, Stamina		4	1
-253932	Pattern: Shadow Sash	3	1		134939	Tailoring		85	9	2
-253933	Pearly Sash	3	17	6		Waist (Cloth)	Intellect, Stamina		4	1
-253934	Pattern: Pearly Sash	3	1		134939	Tailoring		85	9	2
-253935	Shining Sash	3	17	6		Waist (Cloth)	Intellect, Stamina		4	1
-253936	Pattern: Shining Sash	3	1		134939	Tailoring		85	9	2
-253937	Filigreed Pristine Leggings	3	20	7		Legs (Cloth)	Healing, Spell Damage, Intellect, Stamina, Spirit		4	1
-253938	Pattern: Filigreed Pristine Leggings	3	1		134939	Tailoring		100	9	2
-253939	Filigreed Silky Leggings	3	20	7		Legs (Cloth)	Intellect, Stamina, Spirit		4	1
-253940	Pattern: Filigreed Silky Leggings	3	1		134939	Tailoring		100	9	2
-253941	Filigreed Flame Leggings	3	20	7		Legs (Cloth)	Intellect, Stamina, Spirit		4	1
-253942	Pattern: Filigreed Flame Leggings	3	1		134939	Tailoring		100	9	2
-253943	Filigreed Shadow Leggings	3	20	7		Legs (Cloth)	Intellect, Stamina, Spirit		4	1
-253944	Pattern: Filigreed Shadow Leggings	3	1		134939	Tailoring		100	9	2
-253945	Filigreed Pearly Leggings	3	20	7		Legs (Cloth)	Intellect, Stamina, Spirit		4	1
-253946	Pattern: Filigreed Pearly Leggings	3	1		134939	Tailoring		100	9	2
-253947	Filigreed Shining Leggings	3	20	7		Legs (Cloth)	Intellect, Stamina, Spirit		4	1
-253948	Pattern: Filigreed Shining Leggings	3	1		134939	Tailoring		100	9	2
-253949	Pristine Circlet	3	20	1		Head (Cloth)	Healing, Spell Damage, Stamina		4	1
-253950	Pattern: Pristine Circlet	3	1		134939	Tailoring		100	9	2
-253951	Silky Circlet	3	20	1		Head (Cloth)	Stamina		4	1
-253952	Pattern: Silky Circlet	3	1		134939	Tailoring		100	9	2
-253953	Flame Circlet	3	20	1		Head (Cloth)	Stamina		4	1
-253954	Pattern: Flame Circlet	3	1		134939	Tailoring		100	9	2
-253955	Shadow Circlet	3	20	1		Head (Cloth)	Stamina		4	1
-253956	Pattern: Shadow Circlet	3	1		134939	Tailoring		100	9	2
-253957	Pearly Circlet	3	20	1		Head (Cloth)	Stamina		4	1
-253958	Pattern: Pearly Circlet	3	1		134939	Tailoring		100	9	2
-253959	Shining Circlet	3	20	1		Head (Cloth)	Stamina		4	1
-253960	Pattern: Shining Circlet	3	1		134939	Tailoring		100	9	2
-253961	Pristine Gown	3	22	5		Chest (Cloth)	Healing, Spell Damage, Intellect, Stamina, Spirit		4	1
-253962	Pattern: Pristine Gown	3	1		134939	Tailoring		110	9	2
-253963	Silky Gown	3	22	5		Chest (Cloth)	Intellect, Stamina, Spirit		4	1
-253964	Pattern: Silky Gown	3	1		134939	Tailoring		110	9	2
-253965	Flame Gown	3	22	5		Chest (Cloth)	Intellect, Stamina, Spirit		4	1
-253966	Pattern: Flame Gown	3	1		134939	Tailoring		110	9	2
-253967	Shadow Gown	3	22	5		Chest (Cloth)	Intellect, Stamina, Spirit		4	1
-253968	Pattern: Shadow Gown	3	1		134939	Tailoring		110	9	2
-253969	Pearly Gown	3	22	5		Chest (Cloth)	Intellect, Stamina, Spirit		4	1
-253970	Pattern: Pearly Gown	3	1		134939	Tailoring		110	9	2
-253971	Shining Gown	3	22	5		Chest (Cloth)	Intellect, Stamina, Spirit		4	1
-253972	Pattern: Shining Gown	3	1		134939	Tailoring		110	9	2
-253973	Silk Reagent Bag	1		18	133622	Bag			1	11
-253974	Pattern: Silk Reagent Bag	2	1		134939	Tailoring		125	9	2
-253975	Filigreed Pristine Circlet	3	25	1		Head (Cloth)	Healing, Spell Damage, Stamina		4	1
-253976	Pattern: Filigreed Pristine Circlet	3	1		134939	Tailoring		125	9	2
-253977	Filigreed Silky Circlet	3	25	1		Head (Cloth)	Stamina		4	1
-253978	Pattern: Filigreed Silky Circlet	3	1		134939	Tailoring		125	9	2
-253979	Filigreed Flame Circlet	3	25	1		Head (Cloth)	Stamina		4	1
-253980	Pattern: Filigreed Flame Circlet	3	1		134939	Tailoring		125	9	2
-253981	Filigreed Shadow Circlet	3	25	1		Head (Cloth)	Stamina		4	1
-253982	Pattern: Filigreed Shadow Circlet	3	1		134939	Tailoring		125	9	2
-253983	Filigreed Pearly Circlet	3	25	1		Head (Cloth)	Stamina		4	1
-253984	Pattern: Filigreed Pearly Circlet	3	1		134939	Tailoring		125	9	2
-253985	Filigreed Shining Circlet	3	25	1		Head (Cloth)	Stamina		4	1
-253986	Pattern: Filigreed Shining Circlet	3	1		134939	Tailoring		125	9	2
-253987	Pristine Leggings	3	25	7		Legs (Cloth)	Healing, Spell Damage, Intellect, Stamina, Spirit		4	1
-253988	Pattern: Pristine Leggings	3	1		134939	Tailoring		125	9	2
-253989	Silky Leggings	3	25	7		Legs (Cloth)	Intellect, Stamina, Spirit		4	1
-253990	Pattern: Silky Leggings	3	1		134939	Tailoring		125	9	2
-253991	Flame Leggings	3	25	7		Legs (Cloth)	Intellect, Stamina, Spirit		4	1
-253992	Pattern: Flame Leggings	3	1		134939	Tailoring		125	9	2
-253993	Shadow Leggings	3	25	7		Legs (Cloth)	Intellect, Stamina, Spirit		4	1
-253994	Pattern: Shadow Leggings	3	1		134939	Tailoring		125	9	2
-253995	Pearly Leggings	3	25	7		Legs (Cloth)	Intellect, Stamina, Spirit		4	1
-253996	Pattern: Pearly Leggings	3	1		134939	Tailoring		125	9	2
-253997	Shining Leggings	3	25	7		Legs (Cloth)	Intellect, Stamina, Spirit		4	1
-253998	Pattern: Shining Leggings	3	1		134939	Tailoring		125	9	2
-253999	Earthen Leggings	2	30	7		Legs (Cloth)	Healing, Spell Damage, Spirit		4	1
-254000	Pattern: Earthen Leggings	2	1		134939	Tailoring		140	9	2
-254001	Gilded Slippers	3	30	8		Feet (Cloth)	Healing, Spell Damage, Intellect, Stamina, Spirit		4	1
-254002	Pattern: Gilded Slippers	3	1		134939	Tailoring		140	9	2
-254003	Frothing Slippers	3	30	8		Feet (Cloth)	Intellect, Stamina, Spirit		4	1
-254004	Pattern: Frothing Slippers	3	1		134939	Tailoring		140	9	2
-254005	Fiery Slippers	3	30	8		Feet (Cloth)	Intellect, Stamina, Spirit		4	1
-254006	Pattern: Fiery Slippers	3	1		134939	Tailoring		140	9	2
-254007	Black Slippers	3	30	8		Feet (Cloth)	Intellect, Stamina, Spirit		4	1
-254008	Pattern: Black Slippers	3	1		134939	Tailoring		140	9	2
-254009	Golden Slippers	3	30	8		Feet (Cloth)	Intellect, Stamina, Spirit		4	1
-254010	Pattern: Golden Slippers	3	1		134939	Tailoring		140	9	2
-254011	Radiant Slippers	3	30	8		Feet (Cloth)	Intellect, Stamina, Spirit		4	1
-254012	Pattern: Radiant Slippers	3	1		134939	Tailoring		140	9	2
-254013	Earthen Silk Slippers	2	31	8		Feet (Cloth)	Spell Power, Spell Damage, Spirit		4	1
-254014	Pattern: Earthen Silk Slippers	2	1		134939	Tailoring		145	9	2
-254015	Earthen Silk Hood	2	32	1		Head (Cloth)	Healing, Spell Damage, Spirit		4	1
-254016	Pattern: Earthen Silk Hood	2	1		134939	Tailoring		150	9	2
-254017	Earthen Silk Gloves	2	34	10		Hands (Cloth)	Healing, Spell Damage, Spirit		4	1
-254018	Pattern: Earthen Silk Gloves	2	1		134939	Tailoring		160	9	2
-254019	Earthen Silk Cuffs	2	35	9		Wrist (Cloth)	Healing, Spell Damage, Spirit		4	1
-254020	Pattern: Earthen Silk Cuffs	2	1		134939	Tailoring		165	9	2
-254021	Gilded Handwraps	3	35	10		Hands (Cloth)	Healing, Spell Damage, Intellect, Stamina		4	1
-254022	Pattern: Gilded Handwraps	3	1		134939	Tailoring		165	9	2
-254023	Frothing Handwraps	3	35	10		Hands (Cloth)	Intellect, Stamina		4	1
-254024	Pattern: Frothing Handwraps	3	1		134939	Tailoring		165	9	2
-254025	Fiery Handwraps	3	35	10		Hands (Cloth)	Intellect, Stamina		4	1
-254026	Pattern: Fiery Handwraps	3	1		134939	Tailoring		165	9	2
-254027	Black Handwraps	3	35	10		Hands (Cloth)	Intellect, Stamina		4	1
-254028	Pattern: Black Handwraps	3	1		134939	Tailoring		165	9	2
-254029	Golden Handwraps	3	35	10		Hands (Cloth)	Intellect, Stamina		4	1
-254030	Pattern: Golden Handwraps	3	1		134939	Tailoring		165	9	2
-254031	Radiant Handwraps	3	35	10		Hands (Cloth)	Intellect, Stamina		4	1
-254032	Pattern: Radiant Handwraps	3	1		134939	Tailoring		165	9	2
-254033	Earthen Silk Shoulders	2	36	3		Shoulder (Cloth)	Healing, Spell Damage, Spirit		4	1
-254034	Pattern: Earthen Silk Shoulders	2	1		134939	Tailoring		170	9	2
-254035	Mageweave Reagent Bag	1		18	133622	Bag			1	11
-254036	Pattern: Mageweave Reagent Bag	2	1		134939	Tailoring		190	9	2
-254037	Gilded Cord	3	40	6		Waist (Cloth)	Healing, Spell Damage, Intellect, Stamina, Spirit		4	1
-254038	Pattern: Gilded Cord	3	1		134939	Tailoring		190	9	2
-254039	Frothing Cord	3	40	6		Waist (Cloth)	Intellect, Stamina, Spirit		4	1
-254040	Pattern: Frothing Cord	3	1		134939	Tailoring		190	9	2
-254041	Fiery Cord	3	40	6		Waist (Cloth)	Intellect, Stamina, Spirit		4	1
-254042	Pattern: Fiery Cord	3	1		134939	Tailoring		190	9	2
-254043	Black Cord	3	40	6		Waist (Cloth)	Intellect, Stamina, Spirit		4	1
-254044	Pattern: Black Cord	3	1		134939	Tailoring		190	9	2
-254045	Golden Cord	3	40	6		Waist (Cloth)	Intellect, Stamina, Spirit		4	1
-254046	Pattern: Golden Cord	3	1		134939	Tailoring		190	9	2
-254047	Radiant Cord	3	40	6		Waist (Cloth)	Intellect, Stamina, Spirit		4	1
-254048	Pattern: Radiant Cord	3	1		134939	Tailoring		190	9	2
-254049	Nethergeld Shoulders	3	42	3		Shoulder (Cloth)	Healing, Spell Damage, Intellect, Stamina, Spirit		4	1
-254050	Pattern: Nethergeld Shoulders	3	1		134939	Tailoring		195	9	2
-254051	Netherfroth Shoulders	3	42	3		Shoulder (Cloth)	Intellect, Stamina, Spirit		4	1
-254052	Pattern: Netherfroth Shoulders	3	1		134939	Tailoring		195	9	2
-254053	Netherflame Shoulders	3	42	3		Shoulder (Cloth)	Intellect, Stamina, Spirit		4	1
-254054	Pattern: Netherflame Shoulders	3	1		134939	Tailoring		195	9	2
-254055	Netherpearl Shoulders	3	42	3		Shoulder (Cloth)	Intellect, Stamina, Spirit		4	1
-254056	Pattern: Netherpearl Shoulders	3	1		134939	Tailoring		195	9	2
-254057	Nethershine Shoulders	3	42	3		Shoulder (Cloth)	Intellect, Stamina, Spirit		4	1
-254058	Pattern: Nethershine Shoulders	3	1		134939	Tailoring		195	9	2
-254059	Netherlight Shoulders	3	42	3		Shoulder (Cloth)	Intellect, Stamina, Spirit		4	1
-254060	Pattern: Netherlight Shoulders	3	1		134939	Tailoring		195	9	2
-254061	Nethergeld Cuffs	3	45	9		Wrist (Cloth)	Healing, Spell Damage, Intellect, Stamina, Spirit		4	1
-254062	Pattern: Nethergeld Cuffs	3	1		134939	Tailoring		205	9	2
-254063	Netherfroth Cuffs	3	45	9		Wrist (Cloth)	Intellect, Stamina, Spirit		4	1
-254064	Pattern: Netherfroth Cuffs	3	1		134939	Tailoring		205	9	2
-254065	Netherflame Cuffs	3	45	9		Wrist (Cloth)	Intellect, Stamina, Spirit		4	1
-254066	Pattern: Netherflame Cuffs	3	1		134939	Tailoring		205	9	2
-254067	Netherpearl Cuffs	3	45	9		Wrist (Cloth)	Intellect, Stamina, Spirit		4	1
-254068	Pattern: Netherpearl Cuffs	3	1		134939	Tailoring		205	9	2
-254069	Nethershine Cuffs	3	45	9		Wrist (Cloth)	Intellect, Stamina, Spirit		4	1
-254070	Pattern: Nethershine Cuffs	3	1		134939	Tailoring		205	9	2
-254071	Netherlight Cuffs	3	45	9		Wrist (Cloth)	Intellect, Stamina, Spirit		4	1
-254072	Pattern: Netherlight Cuffs	3	1		134939	Tailoring		205	9	2
-254073	Ghostweave Cord	2	47	6		Waist (Cloth)	Spell Power, Spirit		4	1
-254074	Pattern: Ghostweave Cord	2	1		134939	Tailoring		215	9	2
-254075	Earthenweave Gloves	2	47	10		Hands (Cloth)	Healing, Spell Damage, Spirit		4	1
-254076	Pattern: Earthenweave Gloves	2	1		134939	Tailoring		215	9	2
-254077	Earthenweave Cord	2	47	6		Waist (Cloth)	Healing, Spell Damage, Spirit		4	1
-254078	Pattern: Earthenweave Cord	2	1		134939	Tailoring		215	9	2
-254079	Runecloth Reagent Bag	1		18	133622	Bag			1	11
-254080	Pattern: Runecloth Reagent Bag	2	1		134939	Tailoring		215	9	2
-254081	Gilded Waistcord	3	47	6		Waist (Cloth)	Healing, Spell Damage, Intellect, Stamina		4	1
-254082	Pattern: Gilded Waistcord	3	1		134939	Tailoring		215	9	2
-254083	Frothing Waistcord	3	47	6		Waist (Cloth)	Intellect, Stamina		4	1
-254084	Pattern: Frothing Waistcord	3	1		134939	Tailoring		215	9	2
-254085	Fiery Waistcord	3	47	6		Waist (Cloth)	Intellect, Stamina		4	1
-254086	Pattern: Fiery Waistcord	3	1		134939	Tailoring		215	9	2
-254087	Black Waistcord	3	47	6		Waist (Cloth)	Intellect, Stamina		4	1
-254088	Pattern: Black Waistcord	3	1		134939	Tailoring		215	9	2
-254089	Golden Waistcord	3	47	6		Waist (Cloth)	Intellect, Stamina		4	1
-254090	Pattern: Golden Waistcord	3	1		134939	Tailoring		215	9	2
-254091	Radiant Waistcord	3	47	6		Waist (Cloth)	Intellect, Stamina		4	1
-254092	Pattern: Radiant Waistcord	3	1		134939	Tailoring		215	9	2
-254093	Earthenweave Boots	2	49	8		Feet (Cloth)	Healing, Spell Damage, Spirit		4	1
-254094	Pattern: Earthenweave Boots	2	1		134939	Tailoring		225	9	2
-254095	Gilded Gloves	3	50	10		Hands (Cloth)	Healing, Spell Damage, Intellect, Stamina, Spirit		4	1
-254096	Pattern: Gilded Gloves	3	1		134939	Tailoring		235	9	2
-254097	Frothing Gloves	3	50	10		Hands (Cloth)	Intellect, Stamina, Spirit		4	1
-254098	Pattern: Frothing Gloves	3	1		134939	Tailoring		235	9	2
-254099	Fiery Gloves	3	50	10		Hands (Cloth)	Intellect, Stamina, Spirit		4	1
-254100	Pattern: Fiery Gloves	3	1		134939	Tailoring		235	9	2
-254101	Black Gloves	3	50	10		Hands (Cloth)	Intellect, Stamina, Spirit		4	1
-254102	Pattern: Black Gloves	3	1		134939	Tailoring		235	9	2
-254103	Golden Gloves	3	50	10		Hands (Cloth)	Intellect, Stamina, Spirit		4	1
-254104	Pattern: Golden Gloves	3	1		134939	Tailoring		235	9	2
-254105	Radiant Gloves	3	50	10		Hands (Cloth)	Intellect, Stamina, Spirit		4	1
-254106	Pattern: Radiant Gloves	3	1		134939	Tailoring		235	9	2
-254107	Gilded Sandals	3	50	8		Feet (Cloth)	Healing, Spell Damage, Intellect, Stamina		4	1
-254108	Pattern: Gilded Sandals	3	1		134939	Tailoring		235	9	2
-254109	Frothing Sandals	3	50	8		Feet (Cloth)	Intellect, Stamina		4	1
-254110	Pattern: Frothing Sandals	3	1		134939	Tailoring		235	9	2
-254111	Fiery Sandals	3	50	8		Feet (Cloth)	Intellect, Stamina		4	1
-254112	Pattern: Fiery Sandals	3	1		134939	Tailoring		235	9	2
-254113	Black Sandals	3	50	8		Feet (Cloth)	Intellect, Stamina		4	1
-254114	Pattern: Black Sandals	3	1		134939	Tailoring		235	9	2
-254115	Golden Sandals	3	50	8		Feet (Cloth)	Intellect, Stamina		4	1
-254116	Pattern: Golden Sandals	3	1		134939	Tailoring		235	9	2
-254117	Radiant Sandals	3	50	8		Feet (Cloth)	Intellect, Stamina		4	1
-254118	Pattern: Radiant Sandals	3	1		134939	Tailoring		235	9	2
-254119	Earthenweave Mantle	2	52	3		Shoulder (Cloth)	Healing, Spell Damage, Spirit		4	1
-254120	Pattern: Earthenweave Mantle	2	1		134939	Tailoring		240	9	2
-254121	Earthenweave Vest	2	54	5		Chest (Cloth)	Healing, Spell Damage, Spirit		4	1
-254122	Pattern: Earthenweave Vest	2	1		134939	Tailoring		250	9	2
-254123	Runecloth Cuffs	2	52	9		Wrist (Cloth)	Intellect, Spell Power		4	1
-254124	Pattern: Runecloth Cuffs	2	1		134939	Tailoring		250	9	2
-254125	Earthenweave Leggings	2	53	7		Legs (Cloth)	Healing, Spell Damage, Spirit		4	1
-254126	Pattern: Earthenweave Leggings	2	1		134939	Tailoring		245	9	2
-254127	Ghostweave Mantle	2	54	3		Shoulder (Cloth)	Spell Power, Spirit		4	1
-254128	Pattern: Ghostweave Mantle	2	1		134939	Tailoring		250	9	2
-254129	Ghostweave Boots	2	55	8		Feet (Cloth)	Spell Power, Spirit		4	1
-254130	Pattern: Ghostweave Boots	2	1		134939	Tailoring		255	9	2
-254131	Earthenweave Cuffs	2	55	9		Wrist (Cloth)	Healing, Spell Damage, Spirit		4	1
-254132	Pattern: Earthenweave Cuffs	2	1		134939	Tailoring		255	9	2
-254133	Mooncloth Reagent Bag	1		18	133622	Bag			1	11
-254134	Pattern: Mooncloth Reagent Bag	2	1		134939	Tailoring		255	9	2
-254135	Ghostweave Hood	2	56	1		Head (Cloth)	Spell Power, Spirit		4	1
-254136	Pattern: Ghostweave Hood	2	1		134939	Tailoring		260	9	2
-254137	Earthenweave Crown	2	56	1		Head (Cloth)	Healing, Spell Damage, Spirit		4	1
-254138	Pattern: Earthenweave Crown	2	1		134939	Tailoring		260	9	2
-254139	Bottomless Reagent Bag	1		18	133622	Bag			1	11
-254140	Pattern: Bottomless Reagent Bag	2	1		134939	Tailoring		300	9	2
-254681	Pattern: Stormcloth Pants	2	1		134939	Tailoring		185	9	2
-254682	Pattern: Stormcloth Gloves	2	1		134939	Tailoring		185	9	2
-254683	Pattern: Stormcloth Vest	2	1		134939	Tailoring		190	9	2
-254684	Pattern: Stormcloth Headband	2	1		134939	Tailoring		200	9	2
-254685	Pattern: Stormcloth Shoulders	2	1		134939	Tailoring		200	9	2
-254686	Pattern: Stormcloth Boots	2	1		134939	Tailoring		205	9	2
-273099	Blueprint: Spinning Wheel	2			1001491	Tailoring		140	9	2
-273124	Blueprint: Loom	2			1001491	Tailoring		300	9	2
-273131	Bottled Screams	2			135974				15	1
-273904	Manaflare Pants	1		7		Legs (Cloth)			4	1
-273905	Manaflare Gloves	1		10		Hands (Cloth)			4	1
-273906	Manaflare Mantle	1		3		Shoulder (Cloth)			4	1
-273907	Manaflare Boots	1		8		Feet (Cloth)			4	1
-273920	Pants of Conviction	1		7		Legs (Cloth)			4	1
-273921	Gloves of Conviction	1		10		Hands (Cloth)			4	1
-273922	Mantle of Conviction	1		3		Shoulder (Cloth)			4	1
-273923	Treads of Conviction	1		8		Feet (Cloth)			4	1
-273924	Leggings of Conviction	1		7		Legs (Cloth)			4	1
-273925	Handguards of Conviction	1		10		Hands (Cloth)			4	1
-273926	Pauldrons of Conviction	1		3		Shoulder (Cloth)			4	1
-273927	Boots of Conviction	1		8		Feet (Cloth)			4	1
-273940	Demonheart Leggings	1		7		Legs (Cloth)			4	1
-273941	Demonheart Gloves	1		10		Hands (Cloth)			4	1
-273942	Demonheart Spaulders	1		3		Shoulder (Cloth)			4	1
-273943	Demonheart Boots	1		8		Feet (Cloth)			4	1
-273972	Pattern: Manaflare Pants	4	1		134940	Tailoring		300	9	2
-273973	Pattern: Manaflare Gloves	4	1		134940	Tailoring		300	9	2
-273974	Pattern: Manaflare Mantle	4	1		134940	Tailoring		300	9	2
-273975	Pattern: Manaflare Boots	4	1		134940	Tailoring		300	9	2
-273988	Pattern: Pants of Conviction	4	1		134940	Tailoring		300	9	2
-273989	Pattern: Gloves of Conviction	4	1		134940	Tailoring		300	9	2
-273990	Pattern: Mantle of Conviction	4	1		134940	Tailoring		300	9	2
-273991	Pattern: Treads of Conviction	4	1		134940	Tailoring		300	9	2
-273992	Pattern: Leggings of Conviction	4	1		134940	Tailoring		300	9	2
-273993	Pattern: Handguards of Conviction	4	1		134940	Tailoring		300	9	2
-273994	Pattern: Pauldrons of Conviction	4	1		134940	Tailoring		300	9	2
-273995	Pattern: Boots of Conviction	4	1		134940	Tailoring		300	9	2
-274008	Pattern: Demonheart Leggings	4	1		134940	Tailoring		300	9	2
-274009	Pattern: Demonheart Gloves	4	1		134940	Tailoring		300	9	2
-274010	Pattern: Demonheart Spaulders	4	1		134940	Tailoring		300	9	2
-274011	Pattern: Demonheart Boots	4	1		134940	Tailoring		300	9	2
-274030	Malleable Essence of Nature	4	1		132119	Enchanting			7	12
-275580	Pattern: Venomspew Gloves	3	1		134940	Tailoring		285	9	2
-275581	Pattern: Venomspew Cord	3	1		134940	Tailoring		290	9	2
-275582	Pattern: Venomspew Footpads	3	1		134940	Tailoring		295	9	2
-275583	Pattern: Swarmtender's Gloves	3	1		134940	Tailoring		285	9	2
-275584	Pattern: Swarmtender's Cord	3	1		134940	Tailoring		290	9	2
-275585	Pattern: Swarmtender's Footpads	3	1		134940	Tailoring		295	9	2
-275604	Venomspew Gloves	3	53	10		Hands (Cloth)	Stamina, Intellect		4	1
-275605	Venomspew Cord	3	53	6		Waist (Cloth)	Stamina, Intellect		4	1
-275606	Venomspew Footpads	3	53	8		Feet (Cloth)	Spirit, Spell Power		4	1
-275607	Swarmtender's Gloves	3	53	10		Hands (Cloth)	Spirit, Healing, Spell Damage		4	1
-275608	Swarmtender's Cord	3	53	6		Waist (Cloth)	Stamina, Healing, Spell Damage		4	1
-275609	Swarmtender's Footpads	3	53	8		Feet (Cloth)	Stamina, Healing, Spell Damage		4	1
-276946	Pattern: Cloudy Stormsewn Vest	2			134942	Tailoring		60	9	2
-276947	Pattern: Cloudy Stormsewn Cuffs	2			134942	Tailoring		50	9	2
-276948	Pattern: Cloudy Stormsewn Handwraps	2			134942	Tailoring		55	9	2
-276949	Pattern: Cloudy Stormsewn Cord	2			134942	Tailoring		50	9	2
-276950	Pattern: Cloudy Stormsewn Leggings	2			134942	Tailoring		60	9	2
-276951	Pattern: Cloudy Stormsewn Shoes	2			134942	Tailoring		55	9	2
-276970	Pattern: Azure Stormsewn Vest	2			134942	Tailoring		60	9	2
-276971	Pattern: Azure Stormsewn Cuffs	2			134942	Tailoring		50	9	2
-276972	Pattern: Azure Stormsewn Handwraps	2			134942	Tailoring		55	9	2
-276973	Pattern: Azure Stormsewn Cord	2			134942	Tailoring		50	9	2
-276974	Pattern: Azure Stormsewn Leggings	2			134942	Tailoring		60	9	2
-276975	Pattern: Azure Stormsewn Shoes	2			134942	Tailoring		55	9	2
-276982	Pattern: Cloudy Stormsewn Cowl	2			134942	Tailoring		175	9	2
-276983	Pattern: Cloudy Stormsewn Epaulets	2			134942	Tailoring		175	9	2
-276990	Pattern: Azure Stormsewn Cowl	2			134942	Tailoring		175	9	2
-276991	Pattern: Azure Stormsewn Epaulets	2			134942	Tailoring		175	9	2
-277010	Cloudy Stormsewn Vest	2	7	5		Chest (Cloth)	Intellect		4	1
-277011	Cloudy Stormsewn Cuffs	2	5	9		Wrist (Cloth)	Intellect		4	1
-277012	Cloudy Stormsewn Handwraps	2	6	10		Hands (Cloth)	Spirit		4	1
-277013	Cloudy Stormsewn Cord	2	5	6		Waist (Cloth)	Stamina		4	1
-277014	Cloudy Stormsewn Leggings	2	7	7		Legs (Cloth)	Stamina		4	1
-277015	Cloudy Stormsewn Shoes	2	6	8		Feet (Cloth)	Spirit		4	1
-277034	Azure Stormsewn Vest	2	7	5		Chest (Cloth)	Intellect		4	1
-277035	Azure Stormsewn Cuffs	2	5	9		Wrist (Cloth)	Intellect		4	1
-277036	Azure Stormsewn Handwraps	2	6	10		Hands (Cloth)	Spirit		4	1
-277037	Azure Stormsewn Cord	2	5	6		Waist (Cloth)	Stamina		4	1
-277038	Azure Stormsewn Leggings	2	7	7		Legs (Cloth)	Stamina		4	1
-277039	Azure Stormsewn Shoes	2	6	8		Feet (Cloth)	Spirit		4	1
-277046	Cloudy Stormsewn Cowl	2	30	1		Head (Cloth)	Intellect, Stamina		4	1
-277047	Cloudy Stormsewn Epaulets	2	30	3		Shoulder (Cloth)	Spirit, Stamina		4	1
-277054	Azure Stormsewn Cowl	2	30	1		Head (Cloth)	Intellect, Stamina		4	1
-277055	Azure Stormsewn Epaulets	2	30	3		Shoulder (Cloth)	Spirit, Stamina		4	1
-279266	Robes of Fiery Devastation	4	60	20	132658	Chest (Cloth)	Stamina, Intellect		4	1
-279267	Mana-infused Cord	4	60	6	132495	Waist (Cloth)	Stamina, Spirit		4	1
-279268	Rime-encrusted Boots	4	60	8	132576	Feet (Cloth)	Stamina, Spirit		4	1
-279269	Fel Cape	4	60	16	133753	Back (Cloth)	Stamina, Critical Strike Rating		4	1
-279270	Cloak of Earth and Sky	4	60	16	133765	Back (Cloth)	Stamina, Spirit		4	1
-279271	Felblood Soul Bag	4	60	18	133664	Bag			1	1
-279315	Pattern: Robes of Fiery Devastation	4			134942	Tailoring		300	9	2
-279316	Pattern: Mana-infused Cord	4			134942	Tailoring		300	9	2
-279317	Pattern: Rime-encrusted Boots	4			134942	Tailoring		300	9	2
-279318	Pattern: Fel Cape	4			134942	Tailoring		300	9	2
-279319	Pattern: Cloak of Earth and Sky	4			134942	Tailoring		300	9	2
-279320	Pattern: Felblood Soul Bag	4			134942	Tailoring		300	9	2
-279943	Spinning Wheel	1			4777839	Consumable		140		8
-279959	Loom	1			2067081	Consumable		300		8
-279972	Faction Banner	1			132484	Consumable		20		8
-279973	Faction Banner	1			132484	Consumable		20		8]],
+118	Minor Healing Potion	1	1		134829	Potion				1	
+814	Flask of Oil	1			132794	Parts			7	1	
+929	Healing Potion	1	12		134831	Potion				1	
+1210	Shadowgem	2			134074				7	11	
+1529	Jade	2			134134				7	11	
+2318	Light Leather	1			134252	Leather			7	6	
+2319	Medium Leather	1			134254	Leather			7	6	
+2320	Coarse Thread	1			132891	Cloth			7	5	
+2321	Fine Thread	1			132912	Cloth			7	5	
+2324	Bleach	1			132799				7	11	
+2325	Black Dye	1			134843				7	11	
+2455	Minor Mana Potion	1	5		134850	Potion				1	
+2568	Brown Linen Vest	1	3	5	135009	Chest (Cloth)			4	1	
+2569	Linen Boots	2	8	8	132543	Feet (Cloth)	Stamina		4	1	2
+2570	Linen Cloak	1	1	16	133766	Back (Cloth)			4	1	
+2572	Red Linen Robe	2	5	20	132659	Chest (Cloth)	Intellect		4	1	2
+2575	Red Linen Shirt	1		4	135029	Shirt			4		
+2576	White Linen Shirt	1		4	135030	Shirt			4		
+2577	Blue Linen Shirt	1		4	135023	Shirt			4		
+2578	Barbaric Linen Vest	2	9	5	132715	Chest (Cloth)	Stamina, Spell Power		4	1	2
+2579	Green Linen Shirt	1		4	135024	Shirt			4		
+2580	Reinforced Linen Cape	2	7	16	133759	Back (Cloth)	Spell Power		4	1	2
+2582	Green Woolen Vest	2	12	5	132680	Chest (Cloth)	Spell Power, Spirit		4	1	2
+2583	Woolen Boots	2	14	8	132543	Feet (Cloth)	Intellect, Spirit, Spell Power		4	1	2
+2584	Woolen Cape	2	11	16	133762	Back (Cloth)	Spell Power, Spirit		4	1	2
+2585	Gray Woolen Robe	2	16	20	132654	Chest (Cloth)	Intellect, Spell Power		4	1	2
+2587	Gray Woolen Shirt	1		4	135025	Shirt			4		
+2589	Linen Cloth	1			132889	Cloth			7	5	
+2592	Wool Cloth	1			132911	Cloth			7	5	
+2598	Pattern: Red Linen Robe	2			134942	Tailoring		25	9	2	
+2601	Pattern: Gray Woolen Robe	2			134942	Tailoring		80	9	2	
+2604	Red Dye	1			134732				7	11	
+2605	Green Dye	1			134743				7	11	
+2842	Silver Bar	2			133215	Metal & Stone			7	7	
+2996	Bolt of Linen Cloth	1			132890	Cloth			7	5	
+2997	Bolt of Woolen Cloth	1			132913	Cloth			7	5	
+3182	Spider's Silk	1			136113	Cloth			7	5	
+3383	Elixir of Wisdom	1	10		134717	Elixir				2	
+3577	Gold Bar	2			133217	Metal & Stone			7	7	
+3824	Shadow Oil	1	24		134803	Consumable				8	
+3827	Mana Potion	1	22		134852	Potion				1	
+3829	Frost Oil	1	30		134800	Consumable				8	
+3864	Citrine	2			134117				7	11	
+4234	Heavy Leather	1			134256	Leather			7	6	
+4238	Linen Bag	1		18	133622	Bag (Bag)			1		
+4240	Woolen Bag	1		18	133639	Bag (Bag)			1		
+4241	Green Woolen Bag	1		18	133642	Bag (Bag)			1		
+4245	Small Silk Pack	1		18	133628	Bag (Bag)			1		
+4291	Silken Thread	1			132906	Cloth			7	5	
+4292	Pattern: Green Woolen Bag	2			134939	Tailoring		75	9	2	
+4304	Thick Leather	1			134257	Leather			7	6	
+4305	Bolt of Silk Cloth	1			132907	Cloth			7	5	
+4306	Silk Cloth	1			132905	Cloth			7	5	
+4307	Heavy Linen Gloves	2	5	10	132939	Hands (Cloth)	Spell Power		4	1	2
+4308	Green Linen Bracers	2	7	9	132611	Wrist (Cloth)	Spirit		4	1	2
+4309	Handstitched Linen Britches	2	9	7	134587	Legs (Cloth)	Spell Power, Intellect		4	1	2
+4310	Heavy Woolen Gloves	2	12	10	132939	Hands (Cloth)	Intellect, Spell Power		4	1	2
+4311	Heavy Woolen Cloak	2	16	16	133766	Back (Cloth)	Spirit, Spell Power		4	1	2
+4312	Soft-soled Linen Boots	2	11	8	132543	Feet (Cloth)	Stamina, Spell Power		4	1	2
+4313	Red Woolen Boots	2	15	8	132543	Feet (Cloth)	Spirit, Spell Power		4	1	2
+4314	Double-Stitched Woolen Shoulders	2	17	3	135037	Shoulder (Cloth)	Spell Power, Stamina		4	1	2
+4315	Reinforced Woolen Shoulders	2	19	3	135040	Shoulder (Cloth)	Intellect, Spell Power		4	1	2
+4316	Heavy Woolen Pants	2	17	7	134581	Legs (Cloth)	Spirit, Spell Power		4	1	2
+4317	Phoenix Pants	2	20	7	134586	Legs (Cloth)	Intellect		4	1	2
+4318	Gloves of Meditation	2	21	10	132939	Hands (Cloth)	Spirit, Spell Power		4	1	2
+4319	Azure Silk Gloves	2	24	10	132951	Hands (Cloth)	Spirit		4	1	2
+4320	Spidersilk Boots	3	20	8	132539	Feet (Cloth)	Spell Power, Intellect, Stamina		4	1	2
+4321	Spider Silk Slippers	2	23	8	132537	Feet (Cloth)	Spirit, Spell Power		4	1	2
+4322	Enchanter's Cowl	2	28	1	133133	Head (Cloth)	Intellect, Spell Power		4	1	2
+4323	Shadow Hood	2	29	1	133129	Head (Cloth)	Intellect		4	1	2
+4324	Azure Silk Vest	2	25	5	132678	Chest (Cloth)	Intellect		4	1	2
+4325	Boots of the Enchanter	2	30	8	132539	Feet (Cloth)	Spirit, Spell Power		4	1	2
+4326	Long Silken Cloak	2	32	16	133754	Back (Cloth)	Spell Power, Intellect		4	1	2
+4327	Icy Cloak	3	35	16	133756	Back (Cloth)	Spirit, Spell Power		4	1	2
+4328	Spider Belt	2	31	6	132514	Waist (Cloth)	Intellect		4	1	2
+4329	Star Belt	2	35	6	132495	Waist (Cloth)	Spirit, Spell Power		4	1	2
+4330	Stylish Red Shirt	1		4	135029	Shirt			4		
+4331	Phoenix Gloves	2	20	10	132953	Hands (Cloth)			4	1	2
+4332	Bright Yellow Shirt	1		4	135031	Shirt			4		
+4333	Dark Silk Shirt	1		4	135022	Shirt			4		
+4334	Formal White Shirt	1		4	135012	Shirt			4		
+4335	Rich Purple Silk Shirt	1		4	135020	Shirt			4		
+4336	Black Swashbuckler's Shirt	1		4	135022	Shirt			4		
+4337	Thick Spider's Silk	1			136113	Cloth			7	5	
+4338	Mageweave Cloth	1			132892	Cloth			7	5	
+4339	Bolt of Mageweave	1			132894	Cloth			7	5	
+4340	Gray Dye	1			132797				7	11	
+4341	Yellow Dye	1			134743				7	11	
+4342	Purple Dye	1			134713				7	11	
+4343	Brown Linen Pants	2	5	7	134586	Legs (Cloth)	Spell Power, Spell Damage		4	1	2
+4344	Brown Linen Shirt	1		4	135006	Shirt			4		
+4345	Pattern: Red Woolen Boots	2			134942	Tailoring		75	9	2	
+4346	Pattern: Heavy Woolen Cloak	2			134942	Tailoring		80	9	2	
+4347	Pattern: Reinforced Woolen Shoulders	2			134942	Tailoring		95	9	2	
+4348	Pattern: Phoenix Gloves	2			134942	Tailoring		100	9	2	
+4349	Pattern: Phoenix Pants	2			134942	Tailoring		100	9	2	
+4350	Pattern: Spider Silk Slippers	2			134942	Tailoring		115	9	2	
+4351	Pattern: Shadow Hood	2			134942	Tailoring		135	9	2	
+4352	Pattern: Boots of the Enchanter	2			134942	Tailoring		140	9	2	
+4353	Pattern: Spider Belt	2			134942	Tailoring		145	9	2	
+4354	Pattern: Rich Purple Silk Shirt	3			134941	Tailoring		150	9	2	
+4355	Pattern: Icy Cloak	1			134939	Tailoring		165	9	2	
+4356	Pattern: Star Belt	2			134942	Tailoring		165	9	2	
+4470	Simple Wood	1			135435				7	11	
+4589	Long Elegant Feather	1			135992				7	11	
+4625	Firebloom	1			134200	Herb			7	9	
+5498	Small Lustrous Pearl	2			134122				7	11	
+5500	Iridescent Pearl	2			134121				7	11	
+5542	Pearl-clasped Cloak	2	14	16	133763	Back (Cloth)	Intellect, Spell Power		4	1	2
+5762	Red Linen Bag	1		18	133623	Bag (Bag)			1		
+5763	Red Woolen Bag	1		18	133643	Bag (Bag)			1		
+5764	Green Silk Pack	1		18	133631	Bag (Bag)			1		
+5765	Black Silk Pack	1		18	133629	Bag (Bag)			1		
+5766	Lesser Wizard's Robe	2	22	20	132658	Chest (Cloth)	Intellect, Spell Power		4	1	2
+5770	Robes of Arcana	2	25	20	132670	Chest (Cloth)	Spell Power, Spirit		4	1	2
+5771	Pattern: Red Linen Bag	1			134939	Tailoring		50	9	2	
+5772	Pattern: Red Woolen Bag	1			134939	Tailoring		90	9	2	
+5773	Pattern: Robes of Arcana	2			134942	Tailoring		125	9	2	
+5774	Pattern: Green Silk Pack	2			134942	Tailoring		140	9	2	
+5775	Pattern: Black Silk Pack	2			134942	Tailoring		150	9	2	
+6037	Truesilver Bar	2			133222	Metal & Stone			7	7	
+6048	Shadow Protection Potion	1	17		134824	Potion				1	
+6238	Brown Linen Robe	2	5	20	132662	Chest (Cloth)	Spirit		4	1	2
+6239	Red Linen Vest	2	7	5	132681	Chest (Cloth)	Intellect, Spell Power		4	1	2
+6240	Blue Linen Vest	2	7	5	132678	Chest (Cloth)	Spirit, Spell Power		4	1	2
+6241	White Linen Robe	2	5	20	132645	Chest (Cloth)	Intellect		4	1	2
+6242	Blue Linen Robe	2	9	20	132664	Chest (Cloth)	Spirit, Spell Power		4	1	2
+6243	Green Woolen Robe	2	13	20	132663	Chest (Cloth)	Intellect, Spell Power		4	1	2
+6260	Blue Dye	1			134776				7	11	
+6261	Orange Dye	1			134815				7	11	
+6263	Blue Overalls	2	15	20	135017	Chest (Cloth)	Strength, Stamina		4	1	2
+6264	Greater Adept's Robe	2	18	20	132665	Chest (Cloth)	Spell Power, Intellect, Spirit		4	1	2
+6270	Pattern: Blue Linen Vest	1			134939	Tailoring		35	9	2	
+6271	Pattern: Red Linen Vest	2			134942	Tailoring		35	9	2	
+6272	Pattern: Blue Linen Robe	1			134939	Tailoring		45	9	2	
+6274	Pattern: Blue Overalls	1			134939	Tailoring		75	9	2	
+6275	Pattern: Greater Adept's Robe	1			134939	Tailoring		90	9	2	
+6371	Fire Oil	1			134818				7	11	
+6384	Stylish Blue Shirt	1		4	135023	Shirt			4		
+6385	Stylish Green Shirt	1		4	135024	Shirt			4		
+6390	Pattern: Stylish Blue Shirt	2			134942	Tailoring		95	9	2	
+6391	Pattern: Stylish Green Shirt	2			134942	Tailoring		95	9	2	
+6401	Pattern: Dark Silk Shirt	1			134939	Tailoring		120	9	2	1
+6786	Simple Dress	1		20	135016	Chest			4		
+6787	White Woolen Dress	2	17	20	135016	Chest (Cloth)	Spirit, Stamina		4	1	2
+6795	White Swashbuckler's Shirt	1		4	135030	Shirt			4		
+6796	Red Swashbuckler's Shirt	1		4	135029	Shirt			4		
+7026	Linen Belt	1	4	6	132494	Waist (Cloth)			4	1	
+7027	Boots of Darkness	2	23	8	132539	Feet (Cloth)	Stamina		4	1	2
+7046	Azure Silk Pants	2	23	7	134588	Legs (Cloth)	Intellect		4	1	2
+7047	Hands of Darkness	2	24	10	132956	Hands (Cloth)	Spirit		4	1	2
+7048	Azure Silk Hood	2	24	1	133131	Head (Cloth)	Stamina		4	1	2
+7049	Truefaith Gloves	2	25	10	132950	Hands (Cloth)	Intellect, Healing, Spell Damage		4	1	2
+7050	Silk Headband	2	27	1	133693	Head (Cloth)	Spell Power, Stamina		4	1	2
+7051	Earthen Vest	2	29	5	135008	Chest (Cloth)	Spirit, Stamina		4	1	2
+7052	Azure Silk Belt	2	30	6	132511	Waist (Cloth)	Stamina		4	1	2
+7053	Azure Silk Cloak	2	30	16	132655	Back (Cloth)	Spirit		4	1	2
+7054	Robe of Power	3	33	20	132643	Chest (Cloth)	Intellect, Spirit, Spell Power		4	1	1
+7055	Crimson Silk Belt	2	30	6	132493	Waist (Cloth)	Intellect, Spell Power		4	1	2
+7056	Crimson Silk Cloak	2	31	16	132657	Back (Cloth)	Stamina, Spell Power		4	1	2
+7057	Green Silken Shoulders	2	31	3	135049	Shoulder (Cloth)	Intellect, Spell Power		4	1	2
+7058	Crimson Silk Vest	2	32	5	135008	Chest (Cloth)	Intellect, Spell Power		4	1	2
+7059	Crimson Silk Shoulders	2	33	3	135054	Shoulder (Cloth)	Intellect, Spirit		4	1	2
+7060	Azure Shoulders	2	33	3	135058	Shoulder (Cloth)	Stamina		4	1	2
+7061	Earthen Silk Belt	2	34	6	132513	Waist (Cloth)	Spirit, Healing, Spell Damage		4	1	2
+7062	Crimson Silk Pantaloons	2	34	7	134586	Legs (Cloth)	Intellect, Spell Power		4	1	2
+7063	Crimson Silk Robe	2	36	20	132666	Chest (Cloth)	Intellect		4	1	2
+7064	Crimson Silk Gloves	2	37	10	132939	Hands (Cloth)	Intellect		4	1	2
+7065	Green Silk Armor	2	28	5	132647	Chest (Cloth)	Intellect, Spell Power		4	1	2
+7067	Elemental Earth	1			134572	Elemental			7	10	
+7068	Elemental Fire	1			135805	Elemental			7	10	
+7069	Elemental Air	1			136107	Elemental			7	10	
+7070	Elemental Water	1			134714	Elemental			7	10	
+7071	Iron Buckle	1			133607	Parts			7	1	
+7072	Naga Scale	1			134303				7	11	
+7076	Essence of Earth	2			136102	Elemental			7	10	
+7077	Heart of Fire	1			135819	Elemental			7	10	
+7078	Essence of Fire	2			135830	Elemental			7	10	
+7079	Globe of Water	1			134333	Elemental			7	10	
+7080	Essence of Water	2			136007	Elemental			7	10	
+7082	Essence of Air	2			136022	Elemental			7	10	
+7084	Pattern: Crimson Silk Shoulders	2			134942	Tailoring		155	9	2	
+7085	Pattern: Azure Shoulders	2			134942	Tailoring		155	9	2	
+7086	Pattern: Earthen Silk Belt	2			134942	Tailoring		160	9	2	
+7087	Pattern: Crimson Silk Cloak	1			134939	Tailoring		145	9	2	1
+7088	Pattern: Crimson Silk Robe	1			134939	Tailoring		170	9	2	1
+7089	Pattern: Azure Silk Cloak	1			134939	Tailoring		140	9	2	1
+7090	Pattern: Green Silk Armor	2			134942	Tailoring		130	9	2	
+7091	Pattern: Truefaith Gloves	2			134942	Tailoring		125	9	2	
+7092	Pattern: Hands of Darkness	2			134942	Tailoring		120	9	2	
+7114	Pattern: Azure Silk Gloves	1			134939	Tailoring		120	9	2	1
+7910	Star Ruby	2			134129				7	11	
+7971	Black Pearl	2			134120				7	11	
+7972	Ichor of Undeath	1			134437	Elemental			7	10	
+8153	Wildvine	1			134183	Herb			7	9	
+8170	Rugged Leather	1			134251	Leather			7	6	
+8343	Heavy Silken Thread	1			132906	Cloth			7	5	
+8831	Purple Lotus	1			134198	Herb			7	9	
+9210	Ghost Dye	1			134711				7	11	
+9998	Black Mageweave Vest	2	36	5	132718	Chest (Cloth)	Spirit, Spell Power		4	1	2
+9999	Black Mageweave Leggings	2	36	7	134589	Legs (Cloth)	Spirit, Spell Power		4	1	2
+10001	Black Mageweave Robe	2	37	20	132654	Chest (Cloth)	Spirit, Intellect		4	1	2
+10002	Shadoweave Pants	2	37	7	134591	Legs (Cloth)	Stamina		4	1	2
+10003	Black Mageweave Gloves	2	38	10	132939	Hands (Cloth)	Spell Power		4	1	2
+10004	Shadoweave Robe	2	38	20	132679	Chest (Cloth)	Spirit		4	1	2
+10007	Red Mageweave Vest	2	38	5	135013	Chest (Cloth)	Intellect		4	1	2
+10008	White Bandit Mask	2	38	1		Head (Cloth)	Agility, Strength		4	1	2
+10009	Red Mageweave Pants	2	38	7	134586	Legs (Cloth)	Intellect, Spell Power		4	1	2
+10010	Stormcloth Pants	2	39	7	134593	Legs (Cloth)	Spirit, Healing, Spell Damage		4	1	2
+10011	Stormcloth Gloves	2	39	10	132951	Hands (Cloth)	Intellect, Healing, Spell Damage		4	1	2
+10018	Red Mageweave Gloves	2	40	10	132953	Hands (Cloth)	Intellect, Spell Power		4	1	2
+10019	Dreamweave Gloves	3	40	10	132952	Hands (Cloth)	Spirit, Intellect, Spell Power		4	1	2
+10020	Stormcloth Vest	2	40	5	132649	Chest (Cloth)	Spirit, Stamina, Healing, Spell Damage		4	1	2
+10021	Dreamweave Vest	3	40	5	132683	Chest (Cloth)	Spirit, Intellect, Spell Power		4	1	2
+10023	Shadoweave Gloves	2	40	10	132943	Hands (Cloth)	Intellect		4	1	2
+10024	Black Mageweave Headband	2	41	1	133693	Head (Cloth)	Spell Power, Intellect		4	1	2
+10025	Shadoweave Mask	2	44	1	133129	Head (Cloth)	Intellect		4	1	2
+10026	Black Mageweave Boots	2	41	8	132539	Feet (Cloth)	Spell Power, Intellect		4	1	2
+10027	Black Mageweave Shoulders	2	41	3	135056	Shoulder (Cloth)	Spell Power, Intellect		4	1	2
+10028	Shadoweave Shoulders	2	42	3	135056	Shoulder (Cloth)	Stamina		4	1	2
+10029	Red Mageweave Shoulders	2	42	3	135054	Shoulder (Cloth)	Intellect, Spell Power		4	1	2
+10030	Admiral's Hat	2	43	1	133131	Head (Cloth)			4	1	2
+10031	Shadoweave Boots	2	43	8	132539	Feet (Cloth)	Spirit		4	1	2
+10032	Stormcloth Headband	2	43	1	133132	Head (Cloth)	Spirit, Intellect, Healing, Spell Damage		4	1	2
+10033	Red Mageweave Headband	2	43	1	133694	Head (Cloth)	Intellect, Spell Power		4	1	2
+10034	Tuxedo Shirt	1		4	135012	Shirt			4		
+10035	Tuxedo Pants	1	30	7	134581	Legs (Cloth)			4	1	
+10036	Tuxedo Jacket	1	30	5	135022	Chest (Cloth)			4	1	
+10038	Stormcloth Shoulders	2	44	3	135056	Shoulder (Cloth)	Stamina, Healing, Spell Damage		4	1	2
+10039	Stormcloth Boots	2	45	8	132539	Feet (Cloth)	Stamina, Healing, Spell Damage		4	1	2
+10040	White Wedding Dress	1	30	20	132645	Chest (Cloth)			4	1	
+10041	Dreamweave Circlet	3	45	1	132767	Head (Cloth)	Spirit, Intellect, Spell Power		4	1	2
+10042	Cindercloth Robe	2	40	20	132666	Chest (Cloth)			4	1	2
+10044	Cindercloth Boots	2	44	8	132539	Feet (Cloth)			4	1	2
+10045	Simple Linen Pants	1	2	7	134591	Legs (Cloth)			4	1	
+10046	Simple Linen Boots	1	4	8	132539	Feet (Cloth)			4	1	
+10047	Simple Kilt	2	10	7	134591	Legs (Cloth)	Stamina, Spell Power		4	1	2
+10048	Colorful Kilt	2	14	7	134582	Legs (Cloth)	Spell Power, Spirit		4	1	2
+10050	Mageweave Bag	1		18	133640	Bag (Bag)			1		
+10051	Red Mageweave Bag	1		18	133643	Bag (Bag)			1		
+10052	Orange Martial Shirt	1		4	135027	Shirt			4		
+10053	Simple Black Dress	1		20	132662	Chest			4		
+10054	Lavender Mageweave Shirt	1		4	135028	Shirt			4		
+10055	Pink Mageweave Shirt	1		4	135029	Shirt			4		
+10056	Orange Mageweave Shirt	1		4	135027	Shirt			4		
+10285	Shadow Silk	1			136113	Cloth			7	5	
+10286	Heart of the Wild	1			134188	Elemental			7	10	
+10290	Pink Dye	1			134720				7	11	
+10300	Pattern: Red Mageweave Vest	2			134942	Tailoring		180	9	2	
+10301	Pattern: White Bandit Mask	2			134942	Tailoring		180	9	2	
+10302	Pattern: Red Mageweave Pants	2			134942	Tailoring		180	9	2	
+10311	Pattern: Orange Martial Shirt	1			134939	Tailoring		185	9	2	
+10312	Pattern: Red Mageweave Gloves	2			134942	Tailoring		190	9	2	
+10314	Pattern: Lavender Mageweave Shirt	1			134939	Tailoring		190	9	2	
+10315	Pattern: Red Mageweave Shoulders	2			134942	Tailoring		195	9	2	
+10316	Pattern: Colorful Kilt	2			134942	Tailoring		70	9	2	
+10317	Pattern: Pink Mageweave Shirt	1			134939	Tailoring		195	9	2	
+10318	Pattern: Admiral's Hat	1			134939	Tailoring		200	9	2	
+10320	Pattern: Red Mageweave Headband	2			134942	Tailoring		200	9	2	
+10321	Pattern: Tuxedo Shirt	1			134939	Tailoring		200	9	2	
+10323	Pattern: Tuxedo Pants	1			134939	Tailoring		140	9	2	
+10325	Pattern: White Wedding Dress	1			134939	Tailoring		140	9	2	
+10326	Pattern: Tuxedo Jacket	1			134939	Tailoring		140	9	2	
+10463	Pattern: Shadoweave Mask	2			134942	Tailoring		200	9	2	
+10728	Pattern: Black Swashbuckler's Shirt	1			134939	Tailoring		165	9	2	1
+11040	Morrowgrain	1			134185				12		
+11082	Greater Astral Essence	2			132862	Enchanting			7	12	
+11134	Lesser Mystic Essence	2			132869	Enchanting			7	12	
+11137	Vision Dust	1			132859	Enchanting			7	12	
+11175	Greater Nether Essence	2			132870	Enchanting			7	12	
+11176	Dream Dust	1			132855	Enchanting			7	12	
+11178	Large Radiant Shard	3			132883	Enchanting			7	12	
+12360	Arcanite Bar	2			134459	Metal & Stone			7	7	
+12364	Huge Emerald	2			134104				7	11	
+12662	Demonic Rune	2			134417				7	11	1
+12800	Azerothian Diamond	2			134094				7	11	
+12803	Living Essence	2			136006	Elemental			7	10	
+12804	Powerful Mojo	1			136011				7	11	
+12808	Essence of Undeath	2			136195	Elemental			7	10	
+12809	Guardian Stone	2			135228	Metal & Stone			7	7	
+12810	Enchanted Leather	1			134418	Leather			7	6	
+12811	Righteous Orb	2			134122				7	11	
+12938	Blood of Heroes	1			134813				12		1
+13468	Black Lotus	2			134202	Herb			7	9	
+13856	Runecloth Belt	2	46	6	132504	Waist (Cloth)	Intellect, Spell Power		4	1	2
+13857	Runecloth Tunic	2	47	5	132645	Chest (Cloth)	Spell Power, Intellect		4	1	2
+13858	Runecloth Robe	2	47	20	132645	Chest (Cloth)	Intellect, Spell Power		4	1	2
+13860	Runecloth Cloak	2	48	16	133762	Back (Cloth)	Spell Power, Intellect		4	1	2
+13863	Runecloth Gloves	2	50	10	132959	Hands (Cloth)	Spirit, Intellect, Spell Power		4	1	2
+13864	Runecloth Boots	2	51	8	132539	Feet (Cloth)	Spirit, Spell Power		4	1	2
+13865	Runecloth Pants	2	52	7	134589	Legs (Cloth)	Spirit, Spell Power		4	1	2
+13866	Runecloth Headband	2	54	1	133694	Head (Cloth)	Intellect, Spell Power		4	1	2
+13867	Runecloth Shoulders	2	56	3	135052	Shoulder (Cloth)	Intellect, Spell Power		4	1	2
+13868	Frostweave Robe	2	46	20	132644	Chest (Cloth)	Spirit		4	1	2
+13869	Frostweave Tunic	2	46	5	132649	Chest (Cloth)	Intellect		4	1	2
+13870	Frostweave Gloves	2	47	10	132939	Hands (Cloth)	Intellect		4	1	2
+13871	Frostweave Pants	2	51	7	134588	Legs (Cloth)	Spirit		4	1	2
+13926	Golden Pearl	2			134123				7	11	
+14042	Cindercloth Vest	2	47	5	132648	Chest (Cloth)	Spirit		4	1	2
+14043	Cindercloth Gloves	2	49	10	132939	Hands (Cloth)	Spirit		4	1	2
+14044	Cindercloth Cloak	2	50	16	133770	Back (Cloth)	Intellect		4	1	2
+14045	Cindercloth Pants	2	51	7	134586	Legs (Cloth)	Intellect		4	1	2
+14046	Runecloth Bag	1		18	133652	Bag (Bag)			1		
+14047	Runecloth	1			132903	Cloth			7	5	
+14048	Bolt of Runecloth	1			132904	Cloth			7	5	
+14100	Brightcloth Robe	2	49	20	132667	Chest (Cloth)	Spell Power		4	1	2
+14101	Brightcloth Gloves	2	49	10	132955	Hands (Cloth)	Spell Power		4	1	2
+14103	Brightcloth Cloak	2	50	16	133763	Back (Cloth)			4	1	2
+14104	Brightcloth Pants	2	53	7	134589	Legs (Cloth)	Spell Power		4	1	2
+14106	Felcloth Robe	2	56	20	132650	Chest (Cloth)	Stamina		4	1	2
+14107	Felcloth Pants	2	50	7	134586	Legs (Cloth)	Intellect		4	1	2
+14108	Felcloth Boots	2	52	8	132539	Feet (Cloth)	Spirit		4	1	2
+14111	Felcloth Hood	2	53	1	133136	Head (Cloth)	Intellect		4	1	2
+14112	Felcloth Shoulders	2	57	3	135054	Shoulder (Cloth)	Spirit		4	1	2
+14128	Wizardweave Robe	2	55	20	132687	Chest (Cloth)	Spell Power		4	1	2
+14130	Wizardweave Turban	2	56	1	133165	Head (Cloth)	Spell Power		4	1	2
+14132	Wizardweave Leggings	2	50	7	134589	Legs (Cloth)	Spell Power		4	1	2
+14134	Cloak of Fire	3	50	16	133770	Back (Cloth)			4	1	2
+14136	Robe of Winter Night	3	52	20	132690	Chest (Cloth)	Intellect		4	1	2
+14137	Mooncloth Leggings	3	53	7	134593	Legs (Cloth)	Spirit, Healing, Spell Damage, Stamina		4	1	2
+14138	Mooncloth Vest	3	55	5	132649	Chest (Cloth)	Intellect, Healing, Spell Damage, Spirit		4	1	2
+14139	Mooncloth Shoulders	3	56	3	135033	Shoulder (Cloth)	Healing, Spell Damage, Stamina, Spirit		4	1	2
+14140	Mooncloth Circlet	3	57	1	133693	Head (Cloth)	Healing, Spell Damage, Stamina, Spirit		4	1	2
+14141	Ghostweave Vest	2	50	5	135012	Chest (Cloth)	Spell Power, Spirit, Mana every 5 sec.		4	1	2
+14142	Ghostweave Gloves	2	49	10	132939	Hands (Cloth)	Spell Power, Spirit		4	1	2
+14143	Ghostweave Belt	2	48	6	132505	Waist (Cloth)	Spell Power, Spirit		4	1	2
+14144	Ghostweave Pants	2	53	7	134581	Legs (Cloth)	Spell Power, Spirit		4	1	2
+14146	Gloves of Spell Mastery	4	57	10	132940	Hands (Cloth)	Intellect, Spell Power, Critical Strike Rating		4	1	2
+14152	Robe of the Archmage	4	57	20	132679	Chest (Cloth)	Intellect, Spell Power, Critical Strike Rating		4	1	1
+14153	Robe of the Void	4	57	20	132692	Chest (Cloth)	Stamina, Intellect, Spell Power		4	1	1
+14154	Truefaith Vestments	4	57	20	132672	Chest (Cloth)	Stamina, Healing, Spell Damage, Spirit		4	1	1
+14155	Mooncloth Bag	2		18	133647	Bag (Bag)			1		
+14156	Bottomless Bag	3		18	133646	Bag (Bag)			1		2
+14227	Ironweb Spider Silk	1			136113	Cloth			7	5	
+14256	Felcloth	1			132888	Cloth			7	5	
+14341	Rune Thread	1			136120	Cloth			7	5	
+14342	Mooncloth	1			132895	Cloth			7	5	
+14343	Small Brilliant Shard	3			132874	Enchanting			7	12	
+14344	Large Brilliant Shard	3			132873	Enchanting			7	12	
+14466	Pattern: Frostweave Tunic	2			134942	Tailoring		210	9	2	
+14467	Pattern: Frostweave Robe	2			134942	Tailoring		210	9	2	
+14468	Pattern: Runecloth Bag	1			134939	Tailoring		215	9	2	
+14469	Pattern: Runecloth Robe	1			134939	Tailoring		215	9	2	1
+14470	Pattern: Runecloth Tunic	2			134942	Tailoring		215	9	2	
+14471	Pattern: Cindercloth Vest	2			134942	Tailoring		215	9	2	
+14472	Pattern: Runecloth Cloak	1			134939	Tailoring		220	9	2	1
+14473	Pattern: Ghostweave Belt	2			134942	Tailoring		220	9	2	
+14474	Pattern: Frostweave Gloves	2			134942	Tailoring		215	9	2	
+14476	Pattern: Cindercloth Gloves	2			134942	Tailoring		225	9	2	
+14477	Pattern: Ghostweave Gloves	2			134942	Tailoring		225	9	2	
+14478	Pattern: Brightcloth Robe	2			134942	Tailoring		225	9	2	
+14479	Pattern: Brightcloth Gloves	2			134942	Tailoring		225	9	2	
+14480	Pattern: Ghostweave Vest	2			134942	Tailoring		225	9	2	
+14481	Pattern: Runecloth Gloves	1			134939	Tailoring		230	9	2	1
+14482	Pattern: Cindercloth Cloak	2			134942	Tailoring		230	9	2	
+14483	Pattern: Felcloth Pants	1			134939	Tailoring		230	9	2	1
+14484	Pattern: Brightcloth Cloak	2			134942	Tailoring		230	9	2	
+14485	Pattern: Wizardweave Leggings	2			134942	Tailoring		230	9	2	
+14486	Pattern: Cloak of Fire	3			134939	Tailoring		235	9	2	1
+14488	Pattern: Runecloth Boots	1			134939	Tailoring		235	9	2	1
+14489	Pattern: Frostweave Pants	2			134942	Tailoring		235	9	2	
+14490	Pattern: Cindercloth Pants	2			134942	Tailoring		235	9	2	
+14491	Pattern: Runecloth Pants	2			134942	Tailoring		240	9	2	
+14492	Pattern: Felcloth Boots	2			134942	Tailoring		240	9	2	
+14493	Pattern: Robe of Winter Night	3			134941	Tailoring		245	9	2	1
+14494	Pattern: Brightcloth Pants	2			134942	Tailoring		245	9	2	
+14495	Pattern: Ghostweave Pants	2			134942	Tailoring		245	9	2	
+14496	Pattern: Felcloth Hood	2			134942	Tailoring		245	9	2	
+14497	Pattern: Mooncloth Leggings	3			134939	Tailoring		245	9	2	
+14498	Pattern: Runecloth Headband	2			134942	Tailoring		250	9	2	
+14499	Pattern: Mooncloth Bag	2			134942	Tailoring		255	9	2	
+14500	Pattern: Wizardweave Robe	2			134942	Tailoring		255	9	2	
+14501	Pattern: Mooncloth Vest	3			134939	Tailoring		270	9	2	
+14504	Pattern: Runecloth Shoulders	2			134942	Tailoring		260	9	2	
+14505	Pattern: Wizardweave Turban	2			134942	Tailoring		260	9	2	
+14506	Pattern: Felcloth Robe	2			134942	Tailoring		260	9	2	
+14507	Pattern: Mooncloth Shoulders	3			134939	Tailoring		275	9	2	
+14508	Pattern: Felcloth Shoulders	2			134942	Tailoring		265	9	2	
+14509	Pattern: Mooncloth Circlet	3			134939	Tailoring		280	9	2	
+14510	Pattern: Bottomless Bag	3			134939	Tailoring		300	9	2	
+14511	Pattern: Gloves of Spell Mastery	4			134939	Tailoring		295	9	2	
+14512	Pattern: Truefaith Vestments	4			134939	Tailoring		295	9	2	
+14513	Pattern: Robe of the Archmage	4			134939	Tailoring		295	9	2	
+14514	Pattern: Robe of the Void	4			134939	Tailoring		295	9	2	
+14526	Pattern: Mooncloth	1			134939	Tailoring		230	9	2	1
+14627	Pattern: Bright Yellow Shirt	1			134939	Tailoring		110	9	2	1
+14630	Pattern: Enchanter's Cowl	1			134939	Tailoring		130	9	2	1
+15407	Cured Rugged Hide	1			134355	Leather			7	6	
+15802	Mooncloth Boots	3	51	8	132539	Feet (Cloth)	Intellect, Spirit, Healing, Spell Damage		4	1	2
+16203	Greater Eternal Essence	2			132864	Enchanting			7	12	
+16979	Flarecore Gloves	4	57	10	132960	Hands (Cloth)	Intellect, Stamina		4	1	2
+16980	Flarecore Mantle	4	56	3	135054	Shoulder (Cloth)	Spirit, Intellect, Stamina		4	1	2
+17010	Fiery Core	3			135812				7	11	
+17011	Lava Core	3			136025				7	11	
+17012	Core Leather	1			132386	Leather			7	6	
+17017	Pattern: Flarecore Mantle	1			134939	Tailoring		300	9	2	1
+17018	Pattern: Flarecore Gloves	1			134939	Tailoring		300	9	2	1
+17723	Green Holiday Shirt	1		4	135024	Shirt			4		
+17724	Pattern: Green Holiday Shirt	1			134939	Tailoring		155	9	2	
+18240	Ogre Tannin	2			134719				7	11	1
+18258	Gordok Ogre Suit	2	55		132636				12		
+18263	Flarecore Wraps	4	60	9	132608	Wrist (Cloth)	Intellect, Mana every 5 sec.		4	1	2
+18265	Pattern: Flarecore Wraps	3			134941	Tailoring		300	9	2	
+18405	Belt of the Archmage	4	57	6	132520	Waist (Cloth)	Intellect, Stamina, Spell Power, Critical Strike Rating		4	1	2
+18407	Felcloth Gloves	3	57	10	132953	Hands (Cloth)	Stamina		4	1	2
+18408	Inferno Gloves	3	57	10	132953	Hands (Cloth)	Intellect		4	1	2
+18409	Mooncloth Gloves	3	57	10	132951	Hands (Cloth)	Intellect, Healing, Spell Damage, Stamina		4	1	2
+18413	Cloak of Warding	3	57	16	133758	Back (Cloth)	Bonus Armor, Defense Rating		4	1	2
+18414	Pattern: Belt of the Archmage	4			134940	Tailoring		295	9	2	
+18415	Pattern: Felcloth Gloves	3			134941	Tailoring		280	9	2	1
+18416	Pattern: Inferno Gloves	3			134941	Tailoring		280	9	2	1
+18417	Pattern: Mooncloth Gloves	3			134941	Tailoring		280	9	2	1
+18418	Pattern: Cloak of Warding	3			134941	Tailoring		280	9	2	1
+18486	Mooncloth Robe	3	56	20	132645	Chest (Cloth)	Intellect, Healing, Spell Damage, Stamina		4	1	2
+18487	Pattern: Mooncloth Robe	1			134939	Tailoring		275	9	2	
+19047	Wisdom of the Timbermaw	3	53	6	132498	Waist (Cloth)	Intellect, Healing, Spell Damage, Spirit		4	1	2
+19050	Mantle of the Timbermaw	3	56	3	135050	Shoulder (Cloth)	Intellect, Spell Power, Critical Strike Rating		4	1	2
+19056	Argent Boots	3	53	8	132560	Feet (Cloth)	Stamina, Spell Power		4	1	2
+19059	Argent Shoulders	3	56	3	135044	Shoulder (Cloth)	Spell Power, Spirit		4	1	2
+19156	Flarecore Robe	4	60	20	132659	Chest (Cloth)	Stamina, Spell Power		4	1	2
+19165	Flarecore Leggings	4	60	7	134586	Legs (Cloth)	Stamina, Spell Power		4	1	2
+19215	Pattern: Wisdom of the Timbermaw	1			134939	Tailoring		255	9	2	1
+19216	Pattern: Argent Boots	1			134939	Tailoring		255	9	2	1
+19217	Pattern: Argent Shoulders	1			134939	Tailoring		290	9	2	1
+19218	Pattern: Mantle of the Timbermaw	3			134939	Tailoring		290	9	2	1
+19219	Pattern: Flarecore Robe	1			134939	Tailoring		300	9	2	1
+19220	Pattern: Flarecore Leggings	1			134939	Tailoring		300	9	2	1
+19682	Bloodvine Vest	3	60	5	132648	Chest (Cloth)	Intellect, Hit Rating, Spell Power		4	1	2
+19683	Bloodvine Leggings	3	60	7	134608	Legs (Cloth)	Intellect, Hit Rating, Spell Power		4	1	2
+19684	Bloodvine Boots	3	60	8	132559	Feet (Cloth)	Intellect, Hit Rating, Spell Power		4	1	2
+19726	Bloodvine	2			134189	Herb			7	9	
+19764	Pattern: Bloodvine Vest	1			134939	Tailoring		300	9	2	1
+19765	Pattern: Bloodvine Leggings	1			134939	Tailoring		300	9	2	1
+19766	Pattern: Bloodvine Boots	1			134939	Tailoring		300	9	2	1
+20381	Dreamscale	2			134313	Leather			7	6	
+20520	Dark Rune	2			136192				7	11	
+20537	Runed Stygian Boots	3	58	8	132539	Feet (Cloth)	Stamina		4	1	2
+20538	Runed Stygian Leggings	3	58	7	134599	Legs (Cloth)	Stamina		4	1	2
+20539	Runed Stygian Belt	3	58	6	132503	Waist (Cloth)	Stamina		4	1	2
+20546	Pattern: Runed Stygian Leggings	3			134941	Tailoring		285	9	2	
+20547	Pattern: Runed Stygian Boots	3			134941	Tailoring		285	9	2	
+20548	Pattern: Runed Stygian Belt	3			134941	Tailoring		285	9	2	
+21154	Festival Dress	1		20	132697	Chest			4	5	
+21340	Soul Pouch	2		18	133670	Bag			1	1	2
+21341	Felcloth Bag	3		18	133667	Bag			1	1	2
+21342	Core Felcloth Bag	4		18	133664	Bag			1	1	2
+21358	Pattern: Soul Pouch	1			134939	Tailoring		215	9	2	
+21371	Pattern: Core Felcloth Bag	3			134941	Tailoring		300	9	2	
+21542	Festival Suit	1		20	132696	Chest			4	5	
+21722	Pattern: Festival Dress	2			134942	Tailoring		205	9	2	1
+21723	Pattern: Festival Suit	2			134942	Tailoring		205	9	2	1
+22246	Enchanted Mageweave Pouch	2		18	133665	Bag			1	3	2
+22248	Enchanted Runecloth Bag	2		18	133666	Bag			1	3	2
+22249	Big Bag of Enchantment	2		18	133662	Bag			1	3	2
+22251	Cenarion Herb Bag	2		18	133663	Bag			1	2	2
+22252	Satchel of Cenarius	2		18	133669	Bag			1	2	2
+22307	Pattern: Enchanted Mageweave Pouch	1			134939	Tailoring		190	9	2	
+22308	Pattern: Enchanted Runecloth Bag	1			134939	Tailoring		230	9	2	
+22309	Pattern: Big Bag of Enchantment	2			134942	Tailoring		255	9	2	
+22310	Pattern: Cenarion Herb Bag	1			134939	Tailoring		230	9	2	1
+22312	Pattern: Satchel of Cenarius	1			134939	Tailoring		255	9	2	1
+22652	Glacial Vest	4	60	5	132649	Chest (Cloth)	Stamina, Spell Power		4	1	2
+22654	Glacial Gloves	4	60	10	132940	Hands (Cloth)	Stamina, Spell Power		4	1	2
+22655	Glacial Wrists	4	60	9	132606	Wrist (Cloth)	Stamina, Spell Power		4	1	2
+22658	Glacial Cloak	4	60	16	133768	Back (Cloth)	Stamina		4	1	2
+22660	Gaea's Embrace	3	60	16	133769	Back (Cloth)	Stamina		4	1	2
+22682	Frozen Rune	3	60		134422				7	11	
+22683	Pattern: Gaea's Embrace	1			134939	Tailoring		300	9	2	1
+22756	Sylvan Vest	3	60	5	132742	Chest (Cloth)	Stamina, Spell Power		4	1	2
+22757	Sylvan Crown	3	60	1	132767	Head (Cloth)	Stamina, Spell Power		4	1	2
+22758	Sylvan Shoulders	3	60	3	135049	Shoulder (Cloth)	Stamina, Spell Power		4	1	2
+22772	Pattern: Sylvan Shoulders	1			134939	Tailoring		300	9	2	1
+22773	Pattern: Sylvan Crown	1			134939	Tailoring		300	9	2	1
+22774	Pattern: Sylvan Vest	1			134939	Tailoring		300	9	2	1
+34085	Red Winter Clothes	1		20	132641	Chest			4	5	2
+34087	Green Winter Clothes	1		20	132640	Chest			4	5	2
+34261	Pattern: Green Winter Clothes	2			134942	Tailoring		250	9	2	1
+34319	Pattern: Red Winter Clothes	2			134942	Tailoring		250	9	2	1
+210781	Phoenix Bindings	3	25	9	236968	Wrist (Cloth)			4	1	2
+210795	Extraplanar Spidersilk Boots	1		8	132539	Feet (Cloth)			4	1	
+211247	Pattern: Phoenix Bindings	2			134942	Tailoring		125	9	2	1
+211422		1			133449				5		
+213369	Faintly Glowing Leather	3			237420	Leather			7	6	
+213372		1			134792				7	11	
+213378	Unstable Microfilament	2			133003	Cloth			7	5	1
+213379	Hyperconductive Arcano-Filament	3			237428	Cloth			7	5	
+215111	Gneuro-Linked Arcano-Filament Monocle	1		1	237290	Head (Cloth)			4	1	
+215149	Pattern: Gneuro-Linked Arcano-Filament Monocle	4			134939	Leatherworking		225	9	1	1
+215365	Invoker's Mantle	2	25	3	135033	Shoulder (Cloth)	Intellect, Spell Power		4	1	2
+215366	Invoker's Cord	2	25	6	132492	Waist (Cloth)	Intellect, Spell Power		4	1	2
+215368	Pattern: Hyperconductive Arcano-Filament	3			134939	Leatherworking		200	9	1	1
+215369	Pattern: Invoker's Cord	2			134942	Tailoring		150	9	2	
+215370	Pattern: Invoker's Mantle	2			134942	Tailoring		150	9	2	
+217244	Pattern: Crimson Silk Robe	1			134939	Tailoring		205	9	2	
+217245	Crimson Silk Robe	1		20	132666	Chest (Cloth)			4	1	
+217246	Black Mageweave Vest	1		5	132718	Chest (Cloth)			4	1	
+217247	Black Mageweave Leggings	1		7	134589	Legs (Cloth)			4	1	
+217248	Earthen Silk Belt	1		6	132513	Waist (Cloth)			4	1	
+217249	Pattern: Earthen Silk Belt	2			134942	Tailoring		195	9	2	
+217250	Crimson Silk Shoulders	1		3	135054	Shoulder (Cloth)			4	1	
+217251	Pattern: Crimson Silk Shoulders	2			134942	Tailoring		190	9	2	
+217252	Long Silken Cloak	1		16	133754	Back (Cloth)			4	1	
+217253	Boots of the Enchanter	1		8	132539	Feet (Cloth)			4	1	
+217254	Pattern: Boots of the Enchanter	2			134942	Tailoring		175	9	2	
+217255	Crimson Silk Belt	1		6	132493	Waist (Cloth)			4	1	
+217256	Earthen Vest	1		5	135008	Chest (Cloth)			4	1	
+217257	Enchanter's Cowl	1		1	133133	Head (Cloth)			4	1	
+217258	Pattern: Enchanter's Cowl	1			134939	Tailoring		165	9	2	
+220688		1			135084				5		
+220749	Mantle of Insanity	1		3	135033	Shoulder (Cloth)			4	1	
+220750	Fractured Mind Pauldrons	1		3	135033	Shoulder (Cloth)			4	1	
+220751	Shoulderpads of the Deranged	1		3	135033	Shoulder (Cloth)			4	1	
+221021		1			134217				7	11	
+227844	Leather-Reinforced Runecloth Bag	3		18	133659	Bag (Bag)			1		
+227855	Synthetic Gordok Ogre Suit	1			132636	Consumable				8	
+227860	Incandescent Mooncloth Vest	1		5	132649	Chest (Cloth)			4	1	
+227861	Incandescent Mooncloth Robe	1		20	132645	Chest (Cloth)			4	1	
+227863	Incandescent Mooncloth Circlet	1		1	133693	Head (Cloth)			4	1	
+227864	Incandescent Mooncloth Leggings	1		7	134593	Legs (Cloth)			4	1	
+227896	Pattern: Argent Boots	1			134939	Tailoring		290	9	2	1
+227897	Pattern: Argent Shoulders	1			134939	Tailoring		300	9	2	1
+228121	Pattern: Leather-Reinforced Runecloth Bag	2			134942	Tailoring		300	9	2	
+228303	Pattern: Incandescent Mooncloth Robe	1			134939	Tailoring		300	9	2	
+228316	Pattern: Incandescent Mooncloth Vest	3			134939	Tailoring		300	9	2	
+228317	Pattern: Incandescent Mooncloth Circlet	3			134939	Tailoring		300	9	2	
+228318	Pattern: Incandescent Mooncloth Leggings	3			134939	Tailoring		290	9	2	
+228476	Embroidered Belt of the Archmage	1		6	132520	Waist (Cloth)			4	1	
+228477	Pattern: Embroidered Belt of the Archmage	4			134940	Tailoring		300	9	2	
+228993	Pattern: Bottomless Bag	3			134939	Tailoring		300	9	2	
+228994	Bottomless Bag	1		18	133646	Bag (Bag)			1		
+233826	Vampiric Cowl	1		1	133154	Head (Cloth)			4	1	
+233833	Vampiric Shawl	1		3	135054	Shoulder (Cloth)			4	1	
+233837	Vampiric Robe	1		20	132679	Chest (Cloth)			4	1	
+233956	Qiraji Silk Scarf	1		16	133770	Back (Cloth)			4	1	
+233958	Qiraji Silk Cape	1		16	133760	Back (Cloth)			4	1	
+233959	Qiraji Silk Cloak	1		16	133774	Back (Cloth)			4	1	
+233960	Qiraji Silk Drape	1		16	132657	Back (Cloth)			4	1	
+234007		1			134260	Leather			7	6	
+234008		1			132901	Cloth			7	5	
+234009	Bolt of Qiraji Silk	1			132902	Cloth			7	5	
+234312	Sylvan Shoulders	1		3	135049	Shoulder (Cloth)			4	1	
+234315	Sylvan Crown	1		1	132767	Head (Cloth)			4	1	
+234317	Sylvan Vest	1		5	132742	Chest (Cloth)			4	1	
+234484	Dreamscale Bracers	1		9	132605	Wrist (Cloth)			4	1	
+234485	Dreamscale Mitts	1		10	132957	Hands (Cloth)			4	1	
+236656		1			134422				7	11	
+236690	Glacial Cloak	1		16	133768	Back (Cloth)			4	1	
+236692	Glacial Gloves	1		10	132940	Hands (Cloth)			4	1	
+236693	Glacial Wrists	1		9	132606	Wrist (Cloth)			4	1	
+236694	Glacial Vest	1		5	132649	Chest (Cloth)			4	1	
+236704	Frosty Wrists	1		9	132606	Wrist (Cloth)			4	1	
+236705	Frosty Gloves	1		10	132940	Hands (Cloth)			4	1	
+236706	Frosty Vest	1		5	132649	Chest (Cloth)			4	1	
+238264	Scarlet Augur's Hood	1		1	133130	Head (Cloth)			4	1	
+238265	Scarlet Augur's Mantle	1		3	135036	Shoulder (Cloth)			4	1	
+238266	Scarlet Augur's Vestments	1		5	132659	Chest (Cloth)			4	1	
+238267	Scarlet Augur's Cuffs	1		9	132612	Wrist (Cloth)			4	1	
+238268	Scarlet Augur's Mitts	1		10	132950	Hands (Cloth)			4	1	
+238269	Scarlet Augur's Strap	1		6	132493	Waist (Cloth)			4	1	
+238270	Scarlet Augur's Leggings	1		7	134596	Legs (Cloth)			4	1	
+238271	Scarlet Augur's Soles	1		8	132536	Feet (Cloth)			4	1	
+238298	Pattern: Scarlet Augur's Hood	3	1		134940	Tailoring		280	9	2	
+238299	Pattern: Scarlet Augur's Mantle	3	1		134940	Tailoring		280	9	2	
+238300	Pattern: Scarlet Augur's Vestments	3	1		134940	Tailoring		280	9	2	
+238301	Pattern: Scarlet Augur's Cuffs	3	1		134940	Tailoring		250	9	2	
+238302	Pattern: Scarlet Augur's Mitts	3	1		134940	Tailoring		260	9	2	
+238303	Pattern: Scarlet Augur's Strap	3	1		134940	Tailoring		250	9	2	
+238304	Pattern: Scarlet Augur's Leggings	3	1		134940	Tailoring		270	9	2	
+238305	Pattern: Scarlet Augur's Soles	3	1		134940	Tailoring		260	9	2	
+239147	Crusader's Knapsack	3	1	18	133655	Bag (Bag)			1		2
+239148	Crimson Dawnwoven Bag	4	1	18	133659	Bag (Bag)			1		2
+239149	Pattern: Crusader's Knapsack	3	1		134942	Tailoring		250	9	2	1
+239150	Pattern: Crimson Dawnwoven Bag	4	1		134942	Leatherworking		290	9	1	1
+249391	Pyrite	2			961627	Metal & Stone			7	7	
+249409	Cerulean Dye	2			1021860				7	11	
+249427	Pristine Leather	2			348551	Leather			7	6	
+249428	Pristine Hide	2			3586020	Leather			7	6	
+249429	Pristine Scale	2			134311	Leather			7	6	
+249430	Magenta Dye	2			237071				7	11	
+249431	Viridian Dye	2			237062				7	11	
+253664	Linen Reagent Bag	1		18	348520	Bag			1	11	2
+253665	Pattern: Linen Reagent Bag	2	1		134939	Tailoring		5	9	2	
+253667	Woolen Reagent Bag	1		18	348520	Bag			1	11	2
+253668	Pattern: Woolen Reagent Bag	2	1		134939	Tailoring		70	9	2	
+253885	Novice Arcanist's Sash	3	10	6		Waist (Cloth)	Spell Power, Intellect, Stamina		4	1	1
+253886	Pattern: Novice Arcanist's Sash	3	1		134939	Tailoring		50	9	2	
+253887	Novice Ardent's Sash	3	10	6		Waist (Cloth)	Healing, Spell Damage, Intellect, Spirit		4	1	1
+253888	Pattern: Novice Ardent's Sash	3	1		134939	Tailoring		50	9	2	
+253889	Pristine Boots	3	12	8		Feet (Cloth)	Healing, Spell Damage, Intellect, Stamina		4	1	1
+253890	Pattern: Pristine Boots	3	1		134939	Tailoring		60	9	2	1
+253891	Silky Boots	3	12	8		Feet (Cloth)	Intellect, Stamina		4	1	1
+253892	Pattern: Silky Boots	3	1		134939	Tailoring		60	9	2	1
+253893	Flame Boots	3	12	8		Feet (Cloth)	Intellect, Stamina		4	1	1
+253894	Pattern: Flame Boots	3	1		134939	Tailoring		60	9	2	1
+253895	Shadow Boots	3	12	8		Feet (Cloth)	Intellect, Stamina		4	1	1
+253896	Pattern: Shadow Boots	3	1		134939	Tailoring		60	9	2	1
+253897	Pearly Boots	3	12	8		Feet (Cloth)	Intellect, Stamina		4	1	1
+253898	Pattern: Pearly Boots	3	1		134939	Tailoring		60	9	2	1
+253899	Shining Boots	3	12	8		Feet (Cloth)	Intellect, Stamina		4	1	1
+253900	Pattern: Shining Boots	3	1		134939	Tailoring		60	9	2	1
+253901	Filigreed Pristine Gown	3	15	20		Chest (Cloth)	Healing, Spell Damage, Intellect, Stamina, Spirit		4	1	1
+253902	Pattern: Filigreed Pristine Gown	3	1		134939	Tailoring		75	9	2	
+253903	Filigreed Silky Gown	3	15	5		Chest (Cloth)	Intellect, Stamina, Spirit		4	1	1
+253904	Pattern: Filigreed Silky Gown	3	1		134939	Tailoring		75	9	2	
+253905	Filigreed Flame Gown	3	15	5		Chest (Cloth)	Intellect, Stamina, Spirit		4	1	1
+253906	Pattern: Filigreed Flame Gown	3	1		134939	Tailoring		75	9	2	
+253907	Filigreed Shadow Gown	3	15	5		Chest (Cloth)	Intellect, Stamina, Spirit		4	1	1
+253908	Pattern: Filigreed Shadow Gown	3	1		134939	Tailoring		75	9	2	
+253909	Filigreed Pearly Gown	3	15	5		Chest (Cloth)	Intellect, Stamina, Spirit		4	1	1
+253910	Pattern: Filigreed Pearly Gown	3	1		134939	Tailoring		75	9	2	
+253911	Filigreed Shining Gown	3	15	5		Chest (Cloth)	Intellect, Stamina, Spirit		4	1	1
+253912	Pattern: Filigreed Shining Gown	3	1		134939	Tailoring		75	9	2	
+253913	Pristine Gloves	3	15	10		Hands (Cloth)	Healing, Spell Damage, Intellect, Stamina		4	1	1
+253914	Pattern: Pristine Gloves	3	1		134939	Tailoring		75	9	2	1
+253915	Silky Gloves	3	15	10		Hands (Cloth)	Intellect, Stamina		4	1	1
+253916	Pattern: Silky Gloves	3	1		134939	Tailoring		75	9	2	1
+253917	Flame Gloves	3	15	10		Hands (Cloth)	Intellect, Stamina		4	1	1
+253918	Pattern: Flame Gloves	3	1		134939	Tailoring		75	9	2	1
+253919	Shadow Gloves	3	15	10		Hands (Cloth)	Intellect, Stamina		4	1	1
+253920	Pattern: Shadow Gloves	3	1		134939	Tailoring		75	9	2	1
+253921	Pearly Gloves	3	15	10		Hands (Cloth)	Intellect, Stamina		4	1	1
+253922	Pattern: Pearly Gloves	3	1		134939	Tailoring		75	9	2	1
+253923	Shining Gloves	3	15	10		Hands (Cloth)	Intellect, Stamina		4	1	1
+253924	Pattern: Shining Gloves	3	1		134939	Tailoring		75	9	2	1
+253925	Pristine Sash	3	17	6		Waist (Cloth)	Healing, Spell Damage, Intellect, Stamina		4	1	1
+253926	Pattern: Pristine Sash	3	1		134939	Tailoring		85	9	2	1
+253927	Silky Sash	3	17	6		Waist (Cloth)	Intellect, Stamina		4	1	1
+253928	Pattern: Silky Sash	3	1		134939	Tailoring		85	9	2	1
+253929	Flame Sash	3	17	6		Waist (Cloth)	Intellect, Stamina		4	1	1
+253930	Pattern: Flame Sash	3	1		134939	Tailoring		85	9	2	1
+253931	Shadow Sash	3	17	6		Waist (Cloth)	Intellect, Stamina		4	1	1
+253932	Pattern: Shadow Sash	3	1		134939	Tailoring		85	9	2	1
+253933	Pearly Sash	3	17	6		Waist (Cloth)	Intellect, Stamina		4	1	1
+253934	Pattern: Pearly Sash	3	1		134939	Tailoring		85	9	2	1
+253935	Shining Sash	3	17	6		Waist (Cloth)	Intellect, Stamina		4	1	1
+253936	Pattern: Shining Sash	3	1		134939	Tailoring		85	9	2	1
+253937	Filigreed Pristine Leggings	3	20	7		Legs (Cloth)	Healing, Spell Damage, Intellect, Stamina, Spirit		4	1	1
+253938	Pattern: Filigreed Pristine Leggings	3	1		134939	Tailoring		100	9	2	
+253939	Filigreed Silky Leggings	3	20	7		Legs (Cloth)	Intellect, Stamina, Spirit		4	1	1
+253940	Pattern: Filigreed Silky Leggings	3	1		134939	Tailoring		100	9	2	
+253941	Filigreed Flame Leggings	3	20	7		Legs (Cloth)	Intellect, Stamina, Spirit		4	1	1
+253942	Pattern: Filigreed Flame Leggings	3	1		134939	Tailoring		100	9	2	
+253943	Filigreed Shadow Leggings	3	20	7		Legs (Cloth)	Intellect, Stamina, Spirit		4	1	1
+253944	Pattern: Filigreed Shadow Leggings	3	1		134939	Tailoring		100	9	2	
+253945	Filigreed Pearly Leggings	3	20	7		Legs (Cloth)	Intellect, Stamina, Spirit		4	1	1
+253946	Pattern: Filigreed Pearly Leggings	3	1		134939	Tailoring		100	9	2	
+253947	Filigreed Shining Leggings	3	20	7		Legs (Cloth)	Intellect, Stamina, Spirit		4	1	1
+253948	Pattern: Filigreed Shining Leggings	3	1		134939	Tailoring		100	9	2	
+253949	Pristine Circlet	3	20	1		Head (Cloth)	Healing, Spell Damage, Stamina		4	1	1
+253950	Pattern: Pristine Circlet	3	1		134939	Tailoring		100	9	2	1
+253951	Silky Circlet	3	20	1		Head (Cloth)	Stamina		4	1	1
+253952	Pattern: Silky Circlet	3	1		134939	Tailoring		100	9	2	1
+253953	Flame Circlet	3	20	1		Head (Cloth)	Stamina		4	1	1
+253954	Pattern: Flame Circlet	3	1		134939	Tailoring		100	9	2	1
+253955	Shadow Circlet	3	20	1		Head (Cloth)	Stamina		4	1	1
+253956	Pattern: Shadow Circlet	3	1		134939	Tailoring		100	9	2	1
+253957	Pearly Circlet	3	20	1		Head (Cloth)	Stamina		4	1	1
+253958	Pattern: Pearly Circlet	3	1		134939	Tailoring		100	9	2	1
+253959	Shining Circlet	3	20	1		Head (Cloth)	Stamina		4	1	1
+253960	Pattern: Shining Circlet	3	1		134939	Tailoring		100	9	2	1
+253961	Pristine Gown	3	22	5		Chest (Cloth)	Healing, Spell Damage, Intellect, Stamina, Spirit		4	1	1
+253962	Pattern: Pristine Gown	3	1		134939	Tailoring		110	9	2	1
+253963	Silky Gown	3	22	5		Chest (Cloth)	Intellect, Stamina, Spirit		4	1	1
+253964	Pattern: Silky Gown	3	1		134939	Tailoring		110	9	2	1
+253965	Flame Gown	3	22	5		Chest (Cloth)	Intellect, Stamina, Spirit		4	1	1
+253966	Pattern: Flame Gown	3	1		134939	Tailoring		110	9	2	1
+253967	Shadow Gown	3	22	5		Chest (Cloth)	Intellect, Stamina, Spirit		4	1	1
+253968	Pattern: Shadow Gown	3	1		134939	Tailoring		110	9	2	1
+253969	Pearly Gown	3	22	5		Chest (Cloth)	Intellect, Stamina, Spirit		4	1	1
+253970	Pattern: Pearly Gown	3	1		134939	Tailoring		110	9	2	1
+253971	Shining Gown	3	22	5		Chest (Cloth)	Intellect, Stamina, Spirit		4	1	1
+253972	Pattern: Shining Gown	3	1		134939	Tailoring		110	9	2	1
+253973	Silk Reagent Bag	1		18	133622	Bag			1	11	2
+253974	Pattern: Silk Reagent Bag	2	1		134939	Tailoring		125	9	2	1
+253975	Filigreed Pristine Circlet	3	25	1		Head (Cloth)	Healing, Spell Damage, Stamina		4	1	1
+253976	Pattern: Filigreed Pristine Circlet	3	1		134939	Tailoring		125	9	2	
+253977	Filigreed Silky Circlet	3	25	1		Head (Cloth)	Stamina		4	1	1
+253978	Pattern: Filigreed Silky Circlet	3	1		134939	Tailoring		125	9	2	
+253979	Filigreed Flame Circlet	3	25	1		Head (Cloth)	Stamina		4	1	1
+253980	Pattern: Filigreed Flame Circlet	3	1		134939	Tailoring		125	9	2	
+253981	Filigreed Shadow Circlet	3	25	1		Head (Cloth)	Stamina		4	1	1
+253982	Pattern: Filigreed Shadow Circlet	3	1		134939	Tailoring		125	9	2	
+253983	Filigreed Pearly Circlet	3	25	1		Head (Cloth)	Stamina		4	1	1
+253984	Pattern: Filigreed Pearly Circlet	3	1		134939	Tailoring		125	9	2	
+253985	Filigreed Shining Circlet	3	25	1		Head (Cloth)	Stamina		4	1	1
+253986	Pattern: Filigreed Shining Circlet	3	1		134939	Tailoring		125	9	2	
+253987	Pristine Leggings	3	25	7		Legs (Cloth)	Healing, Spell Damage, Intellect, Stamina, Spirit		4	1	1
+253988	Pattern: Pristine Leggings	3	1		134939	Tailoring		125	9	2	1
+253989	Silky Leggings	3	25	7		Legs (Cloth)	Intellect, Stamina, Spirit		4	1	1
+253990	Pattern: Silky Leggings	3	1		134939	Tailoring		125	9	2	1
+253991	Flame Leggings	3	25	7		Legs (Cloth)	Intellect, Stamina, Spirit		4	1	1
+253992	Pattern: Flame Leggings	3	1		134939	Tailoring		125	9	2	1
+253993	Shadow Leggings	3	25	7		Legs (Cloth)	Intellect, Stamina, Spirit		4	1	1
+253994	Pattern: Shadow Leggings	3	1		134939	Tailoring		125	9	2	1
+253995	Pearly Leggings	3	25	7		Legs (Cloth)	Intellect, Stamina, Spirit		4	1	1
+253996	Pattern: Pearly Leggings	3	1		134939	Tailoring		125	9	2	1
+253997	Shining Leggings	3	25	7		Legs (Cloth)	Intellect, Stamina, Spirit		4	1	1
+253998	Pattern: Shining Leggings	3	1		134939	Tailoring		125	9	2	1
+253999	Earthen Leggings	2	30	7		Legs (Cloth)	Healing, Spell Damage, Spirit		4	1	2
+254000	Pattern: Earthen Leggings	2	1		134939	Tailoring		140	9	2	
+254001	Gilded Slippers	3	30	8		Feet (Cloth)	Healing, Spell Damage, Intellect, Stamina, Spirit		4	1	1
+254002	Pattern: Gilded Slippers	3	1		134939	Tailoring		140	9	2	
+254003	Frothing Slippers	3	30	8		Feet (Cloth)	Intellect, Stamina, Spirit		4	1	1
+254004	Pattern: Frothing Slippers	3	1		134939	Tailoring		140	9	2	
+254005	Fiery Slippers	3	30	8		Feet (Cloth)	Intellect, Stamina, Spirit		4	1	1
+254006	Pattern: Fiery Slippers	3	1		134939	Tailoring		140	9	2	
+254007	Black Slippers	3	30	8		Feet (Cloth)	Intellect, Stamina, Spirit		4	1	1
+254008	Pattern: Black Slippers	3	1		134939	Tailoring		140	9	2	
+254009	Golden Slippers	3	30	8		Feet (Cloth)	Intellect, Stamina, Spirit		4	1	1
+254010	Pattern: Golden Slippers	3	1		134939	Tailoring		140	9	2	
+254011	Radiant Slippers	3	30	8		Feet (Cloth)	Intellect, Stamina, Spirit		4	1	1
+254012	Pattern: Radiant Slippers	3	1		134939	Tailoring		140	9	2	
+254013	Earthen Silk Slippers	2	31	8		Feet (Cloth)	Spell Power, Spell Damage, Spirit		4	1	2
+254014	Pattern: Earthen Silk Slippers	2	1		134939	Tailoring		145	9	2	
+254015	Earthen Silk Hood	2	32	1		Head (Cloth)	Healing, Spell Damage, Spirit		4	1	2
+254016	Pattern: Earthen Silk Hood	2	1		134939	Tailoring		150	9	2	
+254017	Earthen Silk Gloves	2	34	10		Hands (Cloth)	Healing, Spell Damage, Spirit		4	1	2
+254018	Pattern: Earthen Silk Gloves	2	1		134939	Tailoring		160	9	2	
+254019	Earthen Silk Cuffs	2	35	9		Wrist (Cloth)	Healing, Spell Damage, Spirit		4	1	2
+254020	Pattern: Earthen Silk Cuffs	2	1		134939	Tailoring		165	9	2	
+254021	Gilded Handwraps	3	35	10		Hands (Cloth)	Healing, Spell Damage, Intellect, Stamina		4	1	2
+254022	Pattern: Gilded Handwraps	3	1		134939	Tailoring		165	9	2	
+254023	Frothing Handwraps	3	35	10		Hands (Cloth)	Intellect, Stamina		4	1	1
+254024	Pattern: Frothing Handwraps	3	1		134939	Tailoring		165	9	2	1
+254025	Fiery Handwraps	3	35	10		Hands (Cloth)	Intellect, Stamina		4	1	1
+254026	Pattern: Fiery Handwraps	3	1		134939	Tailoring		165	9	2	1
+254027	Black Handwraps	3	35	10		Hands (Cloth)	Intellect, Stamina		4	1	1
+254028	Pattern: Black Handwraps	3	1		134939	Tailoring		165	9	2	1
+254029	Golden Handwraps	3	35	10		Hands (Cloth)	Intellect, Stamina		4	1	1
+254030	Pattern: Golden Handwraps	3	1		134939	Tailoring		165	9	2	1
+254031	Radiant Handwraps	3	35	10		Hands (Cloth)	Intellect, Stamina		4	1	1
+254032	Pattern: Radiant Handwraps	3	1		134939	Tailoring		165	9	2	1
+254033	Earthen Silk Shoulders	2	36	3		Shoulder (Cloth)	Healing, Spell Damage, Spirit		4	1	2
+254034	Pattern: Earthen Silk Shoulders	2	1		134939	Tailoring		170	9	2	
+254035	Mageweave Reagent Bag	1		18	133622	Bag			1	11	2
+254036	Pattern: Mageweave Reagent Bag	2	1		134939	Tailoring		190	9	2	1
+254037	Gilded Cord	3	40	6		Waist (Cloth)	Healing, Spell Damage, Intellect, Stamina, Spirit		4	1	1
+254038	Pattern: Gilded Cord	3	1		134939	Tailoring		190	9	2	
+254039	Frothing Cord	3	40	6		Waist (Cloth)	Intellect, Stamina, Spirit		4	1	1
+254040	Pattern: Frothing Cord	3	1		134939	Tailoring		190	9	2	
+254041	Fiery Cord	3	40	6		Waist (Cloth)	Intellect, Stamina, Spirit		4	1	1
+254042	Pattern: Fiery Cord	3	1		134939	Tailoring		190	9	2	
+254043	Black Cord	3	40	6		Waist (Cloth)	Intellect, Stamina, Spirit		4	1	1
+254044	Pattern: Black Cord	3	1		134939	Tailoring		190	9	2	
+254045	Golden Cord	3	40	6		Waist (Cloth)	Intellect, Stamina, Spirit		4	1	1
+254046	Pattern: Golden Cord	3	1		134939	Tailoring		190	9	2	
+254047	Radiant Cord	3	40	6		Waist (Cloth)	Intellect, Stamina, Spirit		4	1	1
+254048	Pattern: Radiant Cord	3	1		134939	Tailoring		190	9	2	
+254049	Nethergeld Shoulders	3	42	3		Shoulder (Cloth)	Healing, Spell Damage, Intellect, Stamina, Spirit		4	1	1
+254050	Pattern: Nethergeld Shoulders	3	1		134939	Tailoring		195	9	2	1
+254051	Netherfroth Shoulders	3	42	3		Shoulder (Cloth)	Intellect, Stamina, Spirit		4	1	1
+254052	Pattern: Netherfroth Shoulders	3	1		134939	Tailoring		195	9	2	1
+254053	Netherflame Shoulders	3	42	3		Shoulder (Cloth)	Intellect, Stamina, Spirit		4	1	1
+254054	Pattern: Netherflame Shoulders	3	1		134939	Tailoring		195	9	2	1
+254055	Netherpearl Shoulders	3	42	3		Shoulder (Cloth)	Intellect, Stamina, Spirit		4	1	1
+254056	Pattern: Netherpearl Shoulders	3	1		134939	Tailoring		195	9	2	1
+254057	Nethershine Shoulders	3	42	3		Shoulder (Cloth)	Intellect, Stamina, Spirit		4	1	1
+254058	Pattern: Nethershine Shoulders	3	1		134939	Tailoring		195	9	2	1
+254059	Netherlight Shoulders	3	42	3		Shoulder (Cloth)	Intellect, Stamina, Spirit		4	1	1
+254060	Pattern: Netherlight Shoulders	3	1		134939	Tailoring		195	9	2	1
+254061	Nethergeld Cuffs	3	45	9		Wrist (Cloth)	Healing, Spell Damage, Intellect, Stamina, Spirit		4	1	1
+254062	Pattern: Nethergeld Cuffs	3	1		134939	Tailoring		205	9	2	1
+254063	Netherfroth Cuffs	3	45	9		Wrist (Cloth)	Intellect, Stamina, Spirit		4	1	1
+254064	Pattern: Netherfroth Cuffs	3	1		134939	Tailoring		205	9	2	1
+254065	Netherflame Cuffs	3	45	9		Wrist (Cloth)	Intellect, Stamina, Spirit		4	1	1
+254066	Pattern: Netherflame Cuffs	3	1		134939	Tailoring		205	9	2	1
+254067	Netherpearl Cuffs	3	45	9		Wrist (Cloth)	Intellect, Stamina, Spirit		4	1	1
+254068	Pattern: Netherpearl Cuffs	3	1		134939	Tailoring		205	9	2	1
+254069	Nethershine Cuffs	3	45	9		Wrist (Cloth)	Intellect, Stamina, Spirit		4	1	1
+254070	Pattern: Nethershine Cuffs	3	1		134939	Tailoring		205	9	2	1
+254071	Netherlight Cuffs	3	45	9		Wrist (Cloth)	Intellect, Stamina, Spirit		4	1	1
+254072	Pattern: Netherlight Cuffs	3	1		134939	Tailoring		205	9	2	1
+254073	Ghostweave Cord	2	47	6		Waist (Cloth)	Spell Power, Spirit		4	1	2
+254074	Pattern: Ghostweave Cord	2	1		134939	Tailoring		215	9	2	
+254075	Earthenweave Gloves	2	47	10		Hands (Cloth)	Healing, Spell Damage, Spirit		4	1	2
+254076	Pattern: Earthenweave Gloves	2	1		134939	Tailoring		215	9	2	
+254077	Earthenweave Cord	2	47	6		Waist (Cloth)	Healing, Spell Damage, Spirit		4	1	2
+254078	Pattern: Earthenweave Cord	2	1		134939	Tailoring		215	9	2	
+254079	Runecloth Reagent Bag	1		18	133622	Bag			1	11	2
+254080	Pattern: Runecloth Reagent Bag	2	1		134939	Tailoring		215	9	2	1
+254081	Gilded Waistcord	3	47	6		Waist (Cloth)	Healing, Spell Damage, Intellect, Stamina		4	1	1
+254082	Pattern: Gilded Waistcord	3	1		134939	Tailoring		215	9	2	1
+254083	Frothing Waistcord	3	47	6		Waist (Cloth)	Intellect, Stamina		4	1	1
+254084	Pattern: Frothing Waistcord	3	1		134939	Tailoring		215	9	2	1
+254085	Fiery Waistcord	3	47	6		Waist (Cloth)	Intellect, Stamina		4	1	1
+254086	Pattern: Fiery Waistcord	3	1		134939	Tailoring		215	9	2	1
+254087	Black Waistcord	3	47	6		Waist (Cloth)	Intellect, Stamina		4	1	1
+254088	Pattern: Black Waistcord	3	1		134939	Tailoring		215	9	2	1
+254089	Golden Waistcord	3	47	6		Waist (Cloth)	Intellect, Stamina		4	1	1
+254090	Pattern: Golden Waistcord	3	1		134939	Tailoring		215	9	2	1
+254091	Radiant Waistcord	3	47	6		Waist (Cloth)	Intellect, Stamina		4	1	1
+254092	Pattern: Radiant Waistcord	3	1		134939	Tailoring		215	9	2	1
+254093	Earthenweave Boots	2	49	8		Feet (Cloth)	Healing, Spell Damage, Spirit		4	1	2
+254094	Pattern: Earthenweave Boots	2	1		134939	Tailoring		225	9	2	
+254095	Gilded Gloves	3	50	10		Hands (Cloth)	Healing, Spell Damage, Intellect, Stamina, Spirit		4	1	1
+254096	Pattern: Gilded Gloves	3	1		134939	Tailoring		235	9	2	
+254097	Frothing Gloves	3	50	10		Hands (Cloth)	Intellect, Stamina, Spirit		4	1	1
+254098	Pattern: Frothing Gloves	3	1		134939	Tailoring		235	9	2	
+254099	Fiery Gloves	3	50	10		Hands (Cloth)	Intellect, Stamina, Spirit		4	1	1
+254100	Pattern: Fiery Gloves	3	1		134939	Tailoring		235	9	2	
+254101	Black Gloves	3	50	10		Hands (Cloth)	Intellect, Stamina, Spirit		4	1	1
+254102	Pattern: Black Gloves	3	1		134939	Tailoring		235	9	2	
+254103	Golden Gloves	3	50	10		Hands (Cloth)	Intellect, Stamina, Spirit		4	1	1
+254104	Pattern: Golden Gloves	3	1		134939	Tailoring		235	9	2	
+254105	Radiant Gloves	3	50	10		Hands (Cloth)	Intellect, Stamina, Spirit		4	1	1
+254106	Pattern: Radiant Gloves	3	1		134939	Tailoring		235	9	2	
+254107	Gilded Sandals	3	50	8		Feet (Cloth)	Healing, Spell Damage, Intellect, Stamina		4	1	1
+254108	Pattern: Gilded Sandals	3	1		134939	Tailoring		235	9	2	1
+254109	Frothing Sandals	3	50	8		Feet (Cloth)	Intellect, Stamina		4	1	1
+254110	Pattern: Frothing Sandals	3	1		134939	Tailoring		235	9	2	1
+254111	Fiery Sandals	3	50	8		Feet (Cloth)	Intellect, Stamina		4	1	1
+254112	Pattern: Fiery Sandals	3	1		134939	Tailoring		235	9	2	1
+254113	Black Sandals	3	50	8		Feet (Cloth)	Intellect, Stamina		4	1	1
+254114	Pattern: Black Sandals	3	1		134939	Tailoring		235	9	2	1
+254115	Golden Sandals	3	50	8		Feet (Cloth)	Intellect, Stamina		4	1	1
+254116	Pattern: Golden Sandals	3	1		134939	Tailoring		235	9	2	1
+254117	Radiant Sandals	3	50	8		Feet (Cloth)	Intellect, Stamina		4	1	1
+254118	Pattern: Radiant Sandals	3	1		134939	Tailoring		235	9	2	1
+254119	Earthenweave Mantle	2	52	3		Shoulder (Cloth)	Healing, Spell Damage, Spirit		4	1	2
+254120	Pattern: Earthenweave Mantle	2	1		134939	Tailoring		240	9	2	
+254121	Earthenweave Vest	2	54	5		Chest (Cloth)	Healing, Spell Damage, Spirit		4	1	2
+254122	Pattern: Earthenweave Vest	2	1		134939	Tailoring		250	9	2	
+254123	Runecloth Cuffs	2	52	9		Wrist (Cloth)	Intellect, Spell Power		4	1	2
+254124	Pattern: Runecloth Cuffs	2	1		134939	Tailoring		250	9	2	1
+254125	Earthenweave Leggings	2	53	7		Legs (Cloth)	Healing, Spell Damage, Spirit		4	1	2
+254126	Pattern: Earthenweave Leggings	2	1		134939	Tailoring		245	9	2	
+254127	Ghostweave Mantle	2	54	3		Shoulder (Cloth)	Spell Power, Spirit		4	1	2
+254128	Pattern: Ghostweave Mantle	2	1		134939	Tailoring		250	9	2	
+254129	Ghostweave Boots	2	55	8		Feet (Cloth)	Spell Power, Spirit		4	1	2
+254130	Pattern: Ghostweave Boots	2	1		134939	Tailoring		255	9	2	
+254131	Earthenweave Cuffs	2	55	9		Wrist (Cloth)	Healing, Spell Damage, Spirit		4	1	2
+254132	Pattern: Earthenweave Cuffs	2	1		134939	Tailoring		255	9	2	
+254133	Mooncloth Reagent Bag	1		18	133622	Bag			1	11	2
+254134	Pattern: Mooncloth Reagent Bag	2	1		134939	Tailoring		255	9	2	1
+254135	Ghostweave Hood	2	56	1		Head (Cloth)	Spell Power, Spirit		4	1	2
+254136	Pattern: Ghostweave Hood	2	1		134939	Tailoring		260	9	2	
+254137	Earthenweave Crown	2	56	1		Head (Cloth)	Healing, Spell Damage, Spirit		4	1	2
+254138	Pattern: Earthenweave Crown	2	1		134939	Tailoring		260	9	2	
+254139	Bottomless Reagent Bag	1		18	133622	Bag			1	11	2
+254140	Pattern: Bottomless Reagent Bag	2	1		134939	Tailoring		300	9	2	
+254681	Pattern: Stormcloth Pants	2	1		134939	Tailoring		185	9	2	
+254682	Pattern: Stormcloth Gloves	2	1		134939	Tailoring		185	9	2	1
+254683	Pattern: Stormcloth Vest	2	1		134939	Tailoring		190	9	2	
+254684	Pattern: Stormcloth Headband	2	1		134939	Tailoring		200	9	2	
+254685	Pattern: Stormcloth Shoulders	2	1		134939	Tailoring		200	9	2	
+254686	Pattern: Stormcloth Boots	2	1		134939	Tailoring		205	9	2	
+273099	Blueprint: Spinning Wheel	2			1001491	Tailoring		140	9	2	
+273124	Blueprint: Loom	2			1001491	Tailoring		300	9	2	
+273131	Bottled Screams	2			135974				15	1	
+273904	Manaflare Pants	1		7		Legs (Cloth)			4	1	
+273905	Manaflare Gloves	1		10		Hands (Cloth)			4	1	
+273906	Manaflare Mantle	1		3		Shoulder (Cloth)			4	1	
+273907	Manaflare Boots	1		8		Feet (Cloth)			4	1	
+273920	Pants of Conviction	1		7		Legs (Cloth)			4	1	
+273921	Gloves of Conviction	1		10		Hands (Cloth)			4	1	
+273922	Mantle of Conviction	1		3		Shoulder (Cloth)			4	1	
+273923	Treads of Conviction	1		8		Feet (Cloth)			4	1	
+273924	Leggings of Conviction	1		7		Legs (Cloth)			4	1	
+273925	Handguards of Conviction	1		10		Hands (Cloth)			4	1	
+273926	Pauldrons of Conviction	1		3		Shoulder (Cloth)			4	1	
+273927	Boots of Conviction	1		8		Feet (Cloth)			4	1	
+273940	Demonheart Leggings	1		7		Legs (Cloth)			4	1	
+273941	Demonheart Gloves	1		10		Hands (Cloth)			4	1	
+273942	Demonheart Spaulders	1		3		Shoulder (Cloth)			4	1	
+273943	Demonheart Boots	1		8		Feet (Cloth)			4	1	
+273972	Pattern: Manaflare Pants	4	1		134940	Tailoring		300	9	2	1
+273973	Pattern: Manaflare Gloves	4	1		134940	Tailoring		300	9	2	1
+273974	Pattern: Manaflare Mantle	4	1		134940	Tailoring		300	9	2	1
+273975	Pattern: Manaflare Boots	4	1		134940	Tailoring		300	9	2	1
+273988	Pattern: Pants of Conviction	4	1		134940	Tailoring		300	9	2	1
+273989	Pattern: Gloves of Conviction	4	1		134940	Tailoring		300	9	2	1
+273990	Pattern: Mantle of Conviction	4	1		134940	Tailoring		300	9	2	1
+273991	Pattern: Treads of Conviction	4	1		134940	Tailoring		300	9	2	1
+273992	Pattern: Leggings of Conviction	4	1		134940	Tailoring		300	9	2	1
+273993	Pattern: Handguards of Conviction	4	1		134940	Tailoring		300	9	2	1
+273994	Pattern: Pauldrons of Conviction	4	1		134940	Tailoring		300	9	2	1
+273995	Pattern: Boots of Conviction	4	1		134940	Tailoring		300	9	2	1
+274008	Pattern: Demonheart Leggings	4	1		134940	Tailoring		300	9	2	1
+274009	Pattern: Demonheart Gloves	4	1		134940	Tailoring		300	9	2	1
+274010	Pattern: Demonheart Spaulders	4	1		134940	Tailoring		300	9	2	1
+274011	Pattern: Demonheart Boots	4	1		134940	Tailoring		300	9	2	1
+274030	Malleable Essence of Nature	4	1		132119	Enchanting			7	12	
+275580	Pattern: Venomspew Gloves	3	1		134940	Tailoring		285	9	2	1
+275581	Pattern: Venomspew Cord	3	1		134940	Tailoring		290	9	2	1
+275582	Pattern: Venomspew Footpads	3	1		134940	Tailoring		295	9	2	1
+275583	Pattern: Swarmtender's Gloves	3	1		134940	Tailoring		285	9	2	1
+275584	Pattern: Swarmtender's Cord	3	1		134940	Tailoring		290	9	2	1
+275585	Pattern: Swarmtender's Footpads	3	1		134940	Tailoring		295	9	2	1
+275604	Venomspew Gloves	3	53	10		Hands (Cloth)	Stamina, Intellect		4	1	2
+275605	Venomspew Cord	3	53	6		Waist (Cloth)	Stamina, Intellect		4	1	2
+275606	Venomspew Footpads	3	53	8		Feet (Cloth)	Spirit, Spell Power		4	1	2
+275607	Swarmtender's Gloves	3	53	10		Hands (Cloth)	Spirit, Healing, Spell Damage		4	1	2
+275608	Swarmtender's Cord	3	53	6		Waist (Cloth)	Stamina, Healing, Spell Damage		4	1	2
+275609	Swarmtender's Footpads	3	53	8		Feet (Cloth)	Stamina, Healing, Spell Damage		4	1	2
+276946	Pattern: Cloudy Stormsewn Vest	2			134942	Tailoring		60	9	2	1
+276947	Pattern: Cloudy Stormsewn Cuffs	2			134942	Tailoring		50	9	2	1
+276948	Pattern: Cloudy Stormsewn Handwraps	2			134942	Tailoring		55	9	2	1
+276949	Pattern: Cloudy Stormsewn Cord	2			134942	Tailoring		50	9	2	1
+276950	Pattern: Cloudy Stormsewn Leggings	2			134942	Tailoring		60	9	2	1
+276951	Pattern: Cloudy Stormsewn Shoes	2			134942	Tailoring		55	9	2	1
+276970	Pattern: Azure Stormsewn Vest	2			134942	Tailoring		60	9	2	1
+276971	Pattern: Azure Stormsewn Cuffs	2			134942	Tailoring		50	9	2	1
+276972	Pattern: Azure Stormsewn Handwraps	2			134942	Tailoring		55	9	2	1
+276973	Pattern: Azure Stormsewn Cord	2			134942	Tailoring		50	9	2	1
+276974	Pattern: Azure Stormsewn Leggings	2			134942	Tailoring		60	9	2	1
+276975	Pattern: Azure Stormsewn Shoes	2			134942	Tailoring		55	9	2	1
+276982	Pattern: Cloudy Stormsewn Cowl	2			134942	Tailoring		175	9	2	1
+276983	Pattern: Cloudy Stormsewn Epaulets	2			134942	Tailoring		175	9	2	1
+276990	Pattern: Azure Stormsewn Cowl	2			134942	Tailoring		175	9	2	1
+276991	Pattern: Azure Stormsewn Epaulets	2			134942	Tailoring		175	9	2	1
+277010	Cloudy Stormsewn Vest	2	7	5		Chest (Cloth)	Intellect		4	1	2
+277011	Cloudy Stormsewn Cuffs	2	5	9		Wrist (Cloth)	Intellect		4	1	2
+277012	Cloudy Stormsewn Handwraps	2	6	10		Hands (Cloth)	Spirit		4	1	2
+277013	Cloudy Stormsewn Cord	2	5	6		Waist (Cloth)	Stamina		4	1	2
+277014	Cloudy Stormsewn Leggings	2	7	7		Legs (Cloth)	Stamina		4	1	2
+277015	Cloudy Stormsewn Shoes	2	6	8		Feet (Cloth)	Spirit		4	1	2
+277034	Azure Stormsewn Vest	2	7	5		Chest (Cloth)	Intellect		4	1	2
+277035	Azure Stormsewn Cuffs	2	5	9		Wrist (Cloth)	Intellect		4	1	2
+277036	Azure Stormsewn Handwraps	2	6	10		Hands (Cloth)	Spirit		4	1	2
+277037	Azure Stormsewn Cord	2	5	6		Waist (Cloth)	Stamina		4	1	2
+277038	Azure Stormsewn Leggings	2	7	7		Legs (Cloth)	Stamina		4	1	2
+277039	Azure Stormsewn Shoes	2	6	8		Feet (Cloth)	Spirit		4	1	2
+277046	Cloudy Stormsewn Cowl	2	30	1		Head (Cloth)	Intellect, Stamina		4	1	2
+277047	Cloudy Stormsewn Epaulets	2	30	3		Shoulder (Cloth)	Spirit, Stamina		4	1	2
+277054	Azure Stormsewn Cowl	2	30	1		Head (Cloth)	Intellect, Stamina		4	1	2
+277055	Azure Stormsewn Epaulets	2	30	3		Shoulder (Cloth)	Spirit, Stamina		4	1	2
+279266	Robes of Fiery Devastation	4	60	20	132658	Chest (Cloth)	Stamina, Intellect		4	1	2
+279267	Mana-infused Cord	4	60	6	132495	Waist (Cloth)	Stamina, Spirit		4	1	2
+279268	Rime-encrusted Boots	4	60	8	132576	Feet (Cloth)	Stamina, Spirit		4	1	2
+279269	Fel Cape	4	60	16	133753	Back (Cloth)	Stamina, Critical Strike Rating		4	1	2
+279270	Cloak of Earth and Sky	4	60	16	133765	Back (Cloth)	Stamina, Spirit		4	1	2
+279271	Felblood Soul Bag	4	60	18	133664	Bag			1	1	2
+279315	Pattern: Robes of Fiery Devastation	4			134942	Tailoring		300	9	2	1
+279316	Pattern: Mana-infused Cord	4			134942	Tailoring		300	9	2	1
+279317	Pattern: Rime-encrusted Boots	4			134942	Tailoring		300	9	2	1
+279318	Pattern: Fel Cape	4			134942	Tailoring		300	9	2	1
+279319	Pattern: Cloak of Earth and Sky	4			134942	Tailoring		300	9	2	1
+279320	Pattern: Felblood Soul Bag	4			134942	Tailoring		300	9	2	1
+279943	Spinning Wheel	1			4777839	Consumable		140		8	
+279959	Loom	1			2067081	Consumable		300		8	
+279972	Faction Banner	1			132484	Consumable		20		8	
+279973	Faction Banner	1			132484	Consumable		20		8	]],
         },
         {
             name = "Mining", skill = 186, count = 18,
@@ -6910,47 +6910,47 @@ ns.Data = {
 22967	Smelt Elementium	310	310,315,320	17771,1,1	18562:1;12360:10;17010:1;18567:3	0	1	
 1213638	Smelt Obsidian-Infused Thorium Bar	315	315,322,330	234003,1,1	12655:2;22203:2	0	1	]],
             items = [[
-2770	Copper Ore	1			134566	Metal & Stone			7	7
-2771	Tin Ore	1			134579	Metal & Stone			7	7
-2772	Iron Ore	1			134572	Metal & Stone			7	7
-2775	Silver Ore	2			135242	Metal & Stone			7	7
-2776	Gold Ore	2			134571	Metal & Stone			7	7
-2835	Rough Stone	1			135232	Metal & Stone			7	7
-2838	Heavy Stone	1			135238	Metal & Stone			7	7
-2840	Copper Bar	1			133216	Metal & Stone			7	7
-2841	Bronze Bar	1			133227	Metal & Stone			7	7
-2842	Silver Bar	2			133215	Metal & Stone			7	7
-3575	Iron Bar	1			133232	Metal & Stone			7	7
-3576	Tin Bar	1			133219	Metal & Stone			7	7
-3577	Gold Bar	2			133217	Metal & Stone			7	7
-3857	Coal	1			134579	Metal & Stone			7	7
-3858	Mithril Ore	1			134576	Metal & Stone			7	7
-3859	Steel Bar	1			133234	Metal & Stone			7	7
-3860	Mithril Bar	1			133220	Metal & Stone			7	7
-6037	Truesilver Bar	2			133222	Metal & Stone			7	7
-7911	Truesilver Ore	2			134580	Metal & Stone			7	7
-10620	Thorium Ore	1			134578	Metal & Stone			7	7
-11370	Dark Iron Ore	1			134575	Metal & Stone			7	7
-11371	Dark Iron Bar	1			133233	Metal & Stone			7	7
-12359	Thorium Bar	1			133221	Metal & Stone			7	7
-12360	Arcanite Bar	2			134459	Metal & Stone			7	7
-12365	Dense Stone	1			134461	Metal & Stone			7	7
-12655	Enchanted Thorium Bar	1			133229	Metal & Stone			7	7
-17010	Fiery Core	3			135812				7	11
-17771	Elementium Bar	5			133235	Metal & Stone			7	7
-18562	Elementium Ore	4			135248	Metal & Stone			7	7
-18567	Elemental Flux	1			135839	Metal & Stone			7	7
-22203	Large Obsidian Shard	1			135241	Metal & Stone			7	7
-234003	Smelt Obsidian-Infused Thorium Bar	1			237047	Metal & Stone			7	7
-248815	Heavy Thorium Ore	1			3608331	Metal & Stone			7	7
-249426	Pitchblende	2			3749975	Metal & Stone			7	7
-249726	Azerothium Bar	2			612100	Metal & Stone			7	7
-251291	Heavy Thorium Bar	2			348540	Metal & Stone			7	7
-273097	Blueprint: Rock Garden	2			1001491	Book		140	9	
-273122	Blueprint: Molten Foundry	2			1001491	Book		300	9	
-279948	Rock Garden	1			134385	Consumable		140		8
-279952	Molten Foundry	1			5931157	Consumable		300		8
-279960	Lodestone	1			134419	Consumable		20		8]],
+2770	Copper Ore	1			134566	Metal & Stone			7	7	
+2771	Tin Ore	1			134579	Metal & Stone			7	7	
+2772	Iron Ore	1			134572	Metal & Stone			7	7	
+2775	Silver Ore	2			135242	Metal & Stone			7	7	
+2776	Gold Ore	2			134571	Metal & Stone			7	7	
+2835	Rough Stone	1			135232	Metal & Stone			7	7	
+2838	Heavy Stone	1			135238	Metal & Stone			7	7	
+2840	Copper Bar	1			133216	Metal & Stone			7	7	
+2841	Bronze Bar	1			133227	Metal & Stone			7	7	
+2842	Silver Bar	2			133215	Metal & Stone			7	7	
+3575	Iron Bar	1			133232	Metal & Stone			7	7	
+3576	Tin Bar	1			133219	Metal & Stone			7	7	
+3577	Gold Bar	2			133217	Metal & Stone			7	7	
+3857	Coal	1			134579	Metal & Stone			7	7	
+3858	Mithril Ore	1			134576	Metal & Stone			7	7	
+3859	Steel Bar	1			133234	Metal & Stone			7	7	
+3860	Mithril Bar	1			133220	Metal & Stone			7	7	
+6037	Truesilver Bar	2			133222	Metal & Stone			7	7	
+7911	Truesilver Ore	2			134580	Metal & Stone			7	7	
+10620	Thorium Ore	1			134578	Metal & Stone			7	7	
+11370	Dark Iron Ore	1			134575	Metal & Stone			7	7	
+11371	Dark Iron Bar	1			133233	Metal & Stone			7	7	
+12359	Thorium Bar	1			133221	Metal & Stone			7	7	
+12360	Arcanite Bar	2			134459	Metal & Stone			7	7	
+12365	Dense Stone	1			134461	Metal & Stone			7	7	
+12655	Enchanted Thorium Bar	1			133229	Metal & Stone			7	7	
+17010	Fiery Core	3			135812				7	11	
+17771	Elementium Bar	5			133235	Metal & Stone			7	7	
+18562	Elementium Ore	4			135248	Metal & Stone			7	7	
+18567	Elemental Flux	1			135839	Metal & Stone			7	7	
+22203	Large Obsidian Shard	1			135241	Metal & Stone			7	7	
+234003	Smelt Obsidian-Infused Thorium Bar	1			237047	Metal & Stone			7	7	
+248815	Heavy Thorium Ore	1			3608331	Metal & Stone			7	7	
+249426	Pitchblende	2			3749975	Metal & Stone			7	7	
+249726	Azerothium Bar	2			612100	Metal & Stone			7	7	
+251291	Heavy Thorium Bar	2			348540	Metal & Stone			7	7	
+273097	Blueprint: Rock Garden	2			1001491	Book		140	9		
+273122	Blueprint: Molten Foundry	2			1001491	Book		300	9		
+279948	Rock Garden	1			134385	Consumable		140		8	
+279952	Molten Foundry	1			5931157	Consumable		300		8	
+279960	Lodestone	1			134419	Consumable		20		8	]],
         },
         {
             name = "Cooking", skill = 185, count = 133,
@@ -7089,368 +7089,368 @@ ns.Data = {
 470370	Smoked Redgill	300	325,345,365	232438,1,1	13758:1	0	1	232443
 24801	Smoked Desert Dumplings	325	325,345,365	20452,1,1	20424:1;3713:1	0	1	]],
             items = [[
-159	Refreshing Spring Water	1	1		132794	Food & Drink				5
-723	Goretusk Liver	1			134341	Cooking			7	8
-724	Goretusk Liver Pie	1	5		133952	Food & Drink				5
-728	Recipe: Westfall Stew	1			134939	Cooking		75	9	5
-729	Stringy Vulture Meat	1			133972	Cooking			7	8
-730	Murloc Eye	1			133884	Cooking			7	8
-731	Goretusk Snout	1			135997	Cooking			7	8
-733	Westfall Stew	1	5		133748	Food & Drink				5
-769	Chunk of Boar Meat	1			133970	Cooking			7	8
-785	Mageroyal	1			133436	Herb			7	9
-787	Slitherskin Mackerel	1	1		133910	Food & Drink				5
-1015	Lean Wolf Flank	1			133970	Cooking			7	8
-1017	Seasoned Wolf Kabob	1	15		133972	Food & Drink				5
-1080	Tough Condor Meat	1			134028	Cooking			7	8
-1081	Crisp Spider Meat	1			134321	Cooking			7	8
-1082	Redridge Goulash	1	5		133748	Food & Drink				5
-1179	Ice Cold Milk	1	5		132815	Food & Drink				5
-1205	Melon Juice	1	15		132796	Food & Drink				5
-1468	Murloc Fin	1			134304	Cooking			7	8
-1475	Small Venom Sac	1			134339				7	11
-1645	Moonberry Juice	1	35		132789	Food & Drink				5
-1708	Sweet Nectar	1	25		132799	Food & Drink				5
-2251	Gooey Spider Leg	1			134321	Cooking			7	8
-2447	Peacebloom	1			133939	Herb			7	9
-2452	Swiftthistle	1			134184	Herb			7	9
-2596	Skin of Dwarven Stout	1			132816	Food & Drink				5
-2672	Stringy Wolf Meat	1			133970	Cooking			7	8
-2673	Coyote Meat	1			134025	Cooking			7	8
-2674	Crawler Meat	1			134007	Cooking			7	8
-2675	Crawler Claw	1			133708	Cooking			7	8
-2677	Boar Ribs	1			133972	Cooking			7	8
-2678	Mild Spices	1			134059				7	11
-2679	Charred Wolf Meat	1	1		133974	Food & Drink				5
-2680	Spiced Wolf Meat	1	1		134021	Food & Drink				5
-2681	Roasted Boar Meat	1	1		133974	Food & Drink				5
-2682	Cooked Crab Claw	1	1		133708	Food & Drink				5
-2683	Crab Cake	1	5		133950	Food & Drink				5
-2684	Coyote Steak	1	5		134021	Food & Drink				5
-2685	Succulent Pork Ribs	1	15		133972	Food & Drink				5
-2687	Dry Pork Ribs	1	5		134004	Food & Drink				5
-2692	Hot Spices	1			1387643				7	11
-2697	Recipe: Goretusk Liver Pie	1			134939	Cooking		50	9	5
-2698	Recipe: Cooked Crab Claw	1			134939	Cooking		85	9	5
-2699	Recipe: Redridge Goulash	1			134939	Cooking		100	9	5
-2700	Recipe: Succulent Pork Ribs	1			134939	Cooking		110	9	5
-2701	Recipe: Seasoned Wolf Kabob	1			134939	Cooking		100	9	5
-2886	Crag Boar Rib	1			133972	Cooking			7	8
-2888	Beer Basted Boar Ribs	1	1		134004	Food & Drink				5
-2889	Recipe: Beer Basted Boar Ribs	1			134939	Cooking		25	9	5
-2894	Rhapsody Malt	1	1		132800	Food & Drink				5
-2924	Crocolisk Meat	1			133970	Cooking			7	8
-3172	Boar Intestines	1			134342	Cooking			7	8
-3173	Bear Meat	1			134027	Cooking			7	8
-3174	Spider Ichor	1			134437	Cooking			7	8
-3220	Blood Sausage	1	5		134005	Food & Drink				5
-3357	Liferoot	1			134413	Herb			7	9
-3404	Buzzard Wing	1			134304	Cooking			7	8
-3662	Crocolisk Steak	1	5		134003	Food & Drink				5
-3663	Murloc Fin Soup	1	1		133748	Food & Drink				5
-3664	Crocolisk Gumbo	1	15		133748	Food & Drink				5
-3665	Curiously Tasty Omelet	1	15		132835	Food & Drink				5
-3666	Gooey Spider Cake	1	15		133952	Food & Drink				5
-3667	Tender Crocolisk Meat	1			133970	Cooking			7	8
-3678	Recipe: Crocolisk Steak	1			134939	Cooking		80	9	5
-3679	Recipe: Blood Sausage	1			134939	Cooking		60	9	5
-3680	Recipe: Murloc Fin Soup	1			134939	Cooking		90	9	5
-3681	Recipe: Crocolisk Gumbo	1			134939	Cooking		120	9	5
-3682	Recipe: Curiously Tasty Omelet	1			134939	Cooking		130	9	5
-3683	Recipe: Gooey Spider Cake	1			134939	Cooking		110	9	5
-3685	Raptor Egg	1			132834	Cooking			7	8
-3712	Turtle Meat	1			134026	Cooking			7	8
-3713	Soothing Spices	1			646176				7	11
-3726	Big Bear Steak	1	5		134003	Food & Drink				5
-3727	Hot Lion Chops	1	15		133974	Food & Drink				5
-3728	Tasty Lion Steak	1	25		133970	Food & Drink				5
-3729	Soothing Turtle Bisque	1	15		133748	Food & Drink				5
-3730	Big Bear Meat	1			133970	Cooking			7	8
-3731	Lion Meat	1			134027	Cooking			7	8
-3734	Recipe: Big Bear Steak	1			134939	Cooking		110	9	5
-3735	Recipe: Hot Lion Chops	1			134939	Cooking		125	9	5
-3736	Recipe: Tasty Lion Steak	1			134939	Cooking		150	9	5
-3737	Recipe: Soothing Turtle Bisque	1			134939	Cooking		175	9	5
-3818	Fadeleaf	1			134193	Herb			7	9
-3821	Goldthorn	1			134196	Herb			7	9
-4402	Small Flame Sac	1			134343				7	11
-4457	Barbecued Buzzard Wing	1	25		133974	Food & Drink				5
-4470	Simple Wood	1			135435				7	11
-4536	Shiny Red Apple	1	1		133975	Food & Drink				5
-4592	Longjaw Mud Snapper	1	5		133918	Food & Drink				5
-4593	Bristle Whisker Catfish	1	15		133916	Food & Drink				5
-4594	Rockscale Cod	1	25		133890	Food & Drink				5
-4603	Raw Spotted Yellowtail	1	35		133887	Cooking			7	8
-4609	Recipe: Barbecued Buzzard Wing	1			134939	Cooking		175	9	5
-4655	Giant Clam Meat	1			134007	Cooking			7	8
-5051	Dig Rat	1			134359				12	
-5095	Rainbow Fin Albacore	1	5		133913	Food & Drink				5
-5465	Small Spider Leg	1			134321	Cooking			7	8
-5466	Scorpid Stinger	1			136067	Cooking			7	8
-5467	Kodo Meat	1			133970	Cooking			7	8
-5468	Soft Frenzy Flesh	1			133890	Cooking			7	8
-5469	Strider Meat	1			133972	Cooking			7	8
-5470	Thunder Lizard Tail	1			133721	Cooking			7	8
-5471	Stag Meat	1			134370	Cooking			7	8
-5472	Kaldorei Spider Kabob	1	1		134024	Food & Drink				5
-5473	Scorpid Surprise	1	1		133952	Food & Drink				5
-5474	Roasted Kodo Meat	1	1		134016	Food & Drink				5
-5476	Fillet of Frenzy	1	5		133891	Food & Drink				5
-5477	Strider Stew	1	1		133748	Food & Drink				5
-5478	Dig Rat Stew	1	15		133748	Food & Drink				5
-5479	Crispy Lizard Tail	1	5		133973	Food & Drink				5
-5480	Lean Venison	1	15		134028	Food & Drink				5
-5482	Recipe: Kaldorei Spider Kabob	1			134939	Cooking		10	9	5
-5483	Recipe: Scorpid Surprise	1			134939	Cooking		20	9	5
-5484	Recipe: Roasted Kodo Meat	1			134939	Cooking		35	9	5
-5485	Recipe: Fillet of Frenzy	1			134939	Cooking		50	9	5
-5486	Recipe: Strider Stew	1			134939	Cooking		50	9	5
-5487	Recipe: Dig Rat Stew	1			134939	Cooking		90	9	5
-5488	Recipe: Crispy Lizard Tail	1			134939	Cooking		100	9	5
-5489	Recipe: Lean Venison	1			134939	Cooking		110	9	5
-5503	Clam Meat	1			134007	Cooking			7	8
-5504	Tangy Clam Meat	1			134007	Cooking			7	8
-5525	Boiled Clams	1	1		134432	Food & Drink				5
-5526	Clam Chowder	1	5		134712	Food & Drink				5
-5527	Goblin Deviled Clams	1	15		134431	Food & Drink				5
-5528	Recipe: Clam Chowder	1			134939	Cooking		90	9	5
-5637	Large Fang	1			133725				7	11
-6038	Giant Clam Scorcho	1	25		132386	Food & Drink				5
-6039	Recipe: Giant Clam Scorcho	1			134939	Cooking		175	9	5
-6289	Raw Longjaw Mud Snapper	1	5		133918	Cooking			7	8
-6290	Brilliant Smallfish	1	1		133893	Food & Drink				5
-6291	Raw Brilliant Smallfish	1	1		133894	Cooking			7	8
-6303	Raw Slitherskin Mackerel	1	1		133910	Cooking			7	8
-6308	Raw Bristle Whisker Catfish	1	15		133916	Cooking			7	8
-6316	Loch Frenzy Delight	1	5		134712	Food & Drink				5
-6317	Raw Loch Frenzy	1	5		133889	Cooking			7	8
-6325	Recipe: Brilliant Smallfish	1			134939	Cooking		1	9	5
-6326	Recipe: Slitherskin Mackerel	1			134939	Cooking		1	9	5
-6328	Recipe: Longjaw Mud Snapper	1			134939	Cooking		50	9	5
-6329	Recipe: Loch Frenzy Delight	1			134939	Cooking		50	9	5
-6330	Recipe: Bristle Whisker Catfish	1			134939	Cooking		100	9	5
-6361	Raw Rainbow Fin Albacore	1	5		133911	Cooking			7	8
-6362	Raw Rockscale Cod	1	25		133890	Cooking			7	8
-6368	Recipe: Rainbow Fin Albacore	1			134939	Cooking		50	9	5
-6369	Recipe: Rockscale Cod	1			134939	Cooking		175	9	5
-6522	Deviate Fish	1			134299	Food & Drink				5
-6657	Savory Deviate Delight	1	1		134302	Food & Drink				5
-6661	Recipe: Savory Deviate Delight	2			134939	Cooking		85	9	5
-6887	Spotted Yellowtail	1	35		133887	Food & Drink				5
-6888	Herb Baked Egg	1	1		132834	Food & Drink				5
-6889	Small Egg	1			132832	Cooking			7	8
-6890	Smoked Bear Meat	1	1		133969	Food & Drink				5
-6892	Recipe: Smoked Bear Meat	1			134939	Cooking		40	9	5
-7676	Thistle Tea	1	5		132819	Food & Drink				5
-7678	Recipe: Thistle Tea	1			134939	Cooking		60	9	5
-7974	Zesty Clam Meat	1			134007	Cooking			7	8
-8146	Wicked Claw	1			134294				7	11
-8150	Deeprock Salt	1			133849	Leather			7	6
-8364	Mithril Head Trout	1	25		133888	Food & Drink				5
-8365	Raw Mithril Head Trout	1	25		133888	Cooking			7	8
-8766	Morning Glory Dew	1	45		134712	Food & Drink				5
-8838	Sungrass	1			134199	Herb			7	9
-8957	Spinefin Halibut	1	45		133908	Food & Drink				5
-8959	Raw Spinefin Halibut	1	45		133908	Cooking			7	8
-9061	Goblin Rocket Fuel	1			132621	Parts			7	1
-10284	Simple Flour	1			134058	Cooking			7	8
-10841	Goldthorn Tea	1	25		132802	Food & Drink				5
-11291	Star Wood	1			135437				7	11
-12037	Mystery Meat	1			134023	Cooking			7	8
-12184	Raptor Flesh	1			134025	Cooking			7	8
-12202	Tiger Meat	1			133970	Cooking			7	8
-12203	Red Wolf Meat	1			134027	Cooking			7	8
-12204	Heavy Kodo Meat	1			134026	Cooking			7	8
-12205	White Spider Meat	1			134007	Cooking			7	8
-12206	Tender Crab Meat	1			134007	Cooking			7	8
-12207	Giant Egg	1			132834	Cooking			7	8
-12208	Tender Wolf Meat	1			133970	Cooking			7	8
-12209	Lean Wolf Steak	1	15		134003	Food & Drink				5
-12210	Roast Raptor	1	15		134006	Food & Drink				5
-12212	Jungle Stew	1	35		132804	Food & Drink				5
-12213	Carrion Surprise	1	5		134005	Food & Drink				5
-12214	Mystery Stew	1	15		132806	Food & Drink				5
-12215	Heavy Kodo Stew	1	25		132806	Food & Drink				5
-12216	Spiced Chili Crab	1	25		134004	Food & Drink				5
-12217	Dragonbreath Chili	1	25		132804	Food & Drink				5
-12218	Monster Omelet	1	35		133948	Food & Drink				5
-12223	Meaty Bat Wing	1			134360	Cooking			7	8
-12224	Crispy Bat Wing	1	1		134002	Food & Drink				5
-12226	Recipe: Crispy Bat Wing	1			134939	Cooking		1	9	5
-12227	Recipe: Lean Wolf Steak	1			134939	Cooking		125	9	5
-12228	Recipe: Roast Raptor	1			134939	Cooking		175	9	5
-12229	Recipe: Hot Wolf Ribs	1			134939	Cooking		175	9	5
-12231	Recipe: Jungle Stew	1			134939	Cooking		175	9	5
-12232	Recipe: Carrion Surprise	1			134939	Cooking		175	9	5
-12233	Recipe: Mystery Stew	1			134939	Cooking		175	9	5
-12239	Recipe: Dragonbreath Chili	1			134939	Cooking		200	9	5
-12240	Recipe: Heavy Kodo Stew	1			134939	Cooking		200	9	5
-13465	Mountain Silversage	1			134215	Herb			7	9
-13754	Raw Glossy Mightfish	1	35		134301	Cooking			7	8
-13755	Raw Winter Squid	1	35		133899	Food & Drink				5
-13756	Raw Summer Bass	1	35		133889	Cooking			7	8
-13758	Raw Redgill	1	35		133892	Cooking			7	8
-13759	Raw Nightfin Snapper	1	35		133909	Cooking			7	8
-13760	Raw Sunscale Salmon	1	35		133905	Cooking			7	8
-13851	Hot Wolf Ribs	1	25		134004	Food & Drink				5
-13888	Darkclaw Lobster	1	45		133900	Cooking			7	8
-13889	Raw Whitescale Salmon	1	45		133906	Cooking			7	8
-13890	Raw Plated Armorfish	1			133890				12	
-13893	Large Raw Mightfish	1	45		134300	Food & Drink				5
-13927	Cooked Glossy Mightfish	1	35		134301	Food & Drink				5
-13928	Grilled Squid	1	35		133899	Food & Drink				5
-13929	Hot Smoked Bass	1	35		133889	Food & Drink				5
-13930	Filet of Redgill	1	35		133892	Food & Drink				5
-13931	Nightfin Soup	1	35		132804	Food & Drink				5
-13932	Poached Sunscale Salmon	1	35		133905	Food & Drink				5
-13933	Lobster Stew	1	45		132804	Food & Drink				5
-13934	Mightfish Steak	1	45		134003	Food & Drink				5
-13935	Baked Salmon	1	45		133906	Food & Drink				5
-13939	Recipe: Spotted Yellowtail	1			134939	Cooking		225	9	5
-13940	Recipe: Cooked Glossy Mightfish	1			134939	Cooking		225	9	5
-13941	Recipe: Filet of Redgill	1			134939	Cooking		225	9	5
-13942	Recipe: Grilled Squid	1			134939	Cooking		240	9	5
-13943	Recipe: Hot Smoked Bass	1			134939	Cooking		240	9	5
-13945	Recipe: Nightfin Soup	1			134939	Cooking		250	9	5
-13946	Recipe: Poached Sunscale Salmon	1			134939	Cooking		250	9	5
-13947	Recipe: Lobster Stew	1			134939	Cooking		275	9	5
-13948	Recipe: Mightfish Steak	1			134939	Cooking		275	9	5
-13949	Recipe: Baked Salmon	1			134939	Cooking		275	9	5
-16110	Recipe: Monster Omelet	1			134939	Cooking		225	9	5
-16111	Recipe: Spiced Chili Crab	1			134939	Cooking		225	9	5
-16766	Undermine Clam Chowder	1	35		132804	Food & Drink				5
-16767	Recipe: Undermine Clam Chowder	1			134939	Cooking		225	9	5
-17062	Recipe: Mithril Head Trout	1			134939	Cooking		175	9	5
-17194	Holiday Spices	1			133644				15	3
-17196	Holiday Spirits	1	1		132797	Food & Drink				5
-17197	Gingerbread Cookie	1	1		134018	Food & Drink				5
-17198	Egg Nog	1	1		132791	Food & Drink				5
-17200	Recipe: Gingerbread Cookie	1			134939	Cooking		1	9	5
-17201	Recipe: Egg Nog	1			134939	Cooking		35	9	5
-17222	Spider Sausage	1	35		134022	Food & Drink				5
-18045	Tender Wolf Steak	1	35		134003	Food & Drink				5
-18046	Recipe: Tender Wolf Steak	1			134939	Cooking		225	9	5
-18160	Recipe: Thistle Tea	2			134939	Cooking		60	9	5
-18254	Runn Tum Tuber Surprise	1	35		134019	Food & Drink				5
-18255	Runn Tum Tuber	1	45		134011	Food & Drink				5
-18267	Recipe: Runn Tum Tuber Surprise	2			134939	Cooking		275	9	5
-20074	Heavy Crocolisk Stew	1	25		134020	Food & Drink				5
-20075	Recipe: Heavy Crocolisk Stew	1			134939	Cooking		150	9	5
-20424	Sandworm Meat	1			134007	Cooking			7	8
-20452	Smoked Desert Dumplings	1	45		134020	Food & Drink				5
-21023	Dirge's Kickin' Chimaerok Chops	1	45		134021	Food & Drink				5
-21024	Chimaerok Tenderloin	1			134026	Cooking			7	8
-21025	Recipe: Dirge's Kickin' Chimaerok Chops	4			133734	Cooking		300	9	5
-21071	Raw Sagefish	1	10		133906	Cooking			7	8
-21072	Smoked Sagefish	1	10		133906	Food & Drink				5
-21099	Recipe: Smoked Sagefish	1			134939	Cooking		80	9	5
-21153	Raw Greater Sagefish	1	30		133907	Cooking			7	8
-21217	Sagefish Delight	1	30		133907	Food & Drink				5
-21219	Recipe: Sagefish Delight	1			134939	Cooking		175	9	5
-227813		1			236211	Consumable				8
-232436	Darkclaw Bisque	1	45		237331	Consumable				8
-232437	Recipe: Darkclaw Bisque	1			134939	Cooking		300	9	5
-232438	Smoked Redgill	1	35		133965	Consumable				8
-232443	Recipe: Smoked Redgill	1			134939	Cooking		300	9	5
-238637	Prowler Steak	1	55		134040	Consumable				8
-238638	Filet o' Flank	1	55		134044	Food & Drink				5
-238639	Sunrise Omelette	1	55		133991	Consumable				8
-238641	Specklefin Feast	2	55		237331	Consumable				8
-238642	Grand Lobster Banquet	2	55		134019	Consumable				8
-238645	Recipe: Prowler Steak	1	1		134939	Cooking		250	9	5
-238646	Recipe: Filet o' Flank	1	1		134939	Cooking		250	9	5
-238647	Recipe: Sunrise Omelette	1	1		134939	Cooking		250	9	5
-238649	Recipe: Specklefin Feast	1	1		134939	Cooking		280	9	5
-238650	Recipe: Grand Lobster Banquet	1	1		134939	Cooking		280	9	5
-239016	Holy Salts	1	1		134389	Cooking			7	8
-239017	Exquisite Spices	2	1		133210	Cooking			7	8
-249796	Hyjal Berries	1	45		133996	Food & Drink				5
-249865	Peace Tea	1	1		132802	Food & Drink				5
-249866	Royal Tea	1	5		132802	Food & Drink				5
-249867	Root Tea	1	15		132802	Food & Drink				5
-249868	Triage Tea	1	25		132802	Food & Drink				5
-249869	Sunny Tea	1	35		132802	Food & Drink				5
-249870	Sage's Tea	1	45		132802	Food & Drink				5
-249871	Venomous Smoothie	1	1		132808	Food & Drink				5
-249872	Slimy Smoothie	1	5		4621577	Food & Drink				5
-249873	Mrrggl Smrrthle	1	15		4621583	Food & Drink				5
-249874	Calcified Smoothie	1	25		4621575	Food & Drink				5
-249875	Spicy Smoothie	1	35		4621586	Food & Drink				5
-249876	Wicked Smoothie	1	45		4621578	Food & Drink				5
-249879	Recipe: Peace Tea	1	1		134939	Cooking		25	9	5
-249880	Recipe: Royal Tea	1	1		134939	Cooking		100	9	5
-249881	Recipe: Root Tea	1	1		134939	Cooking		125	9	5
-249882	Recipe: Triage Tea	1	1		134939	Cooking		180	9	5
-249883	Recipe: Sunny Tea	1	1		134939	Cooking		200	9	5
-249884	Recipe: Sage's Tea	1	1		134939	Cooking		250	9	5
-249885	Recipe: Venomous Smoothie	1	1		134939	Cooking		25	9	5
-249886	Recipe: Slimy Smoothie	1	1		134939	Cooking		100	9	5
-249887	Recipe: Mrrggl Smrrthle	1	1		134939	Cooking		125	9	5
-249888	Recipe: Calcified Smoothie	1	1		134939	Cooking		180	9	5
-249889	Recipe: Spicy Smoothie	1	1		134939	Cooking		200	9	5
-249890	Recipe: Wicked Smoothie	1	1		134939	Cooking		250	9	5
-250065	Savory Stag Sliders	1	35		237335	Food & Drink				5
-250066	Soaring Pamplona	1	45		350562	Food & Drink				5
-250067	Bat Hachee	1	45		237329	Food & Drink				5
-250068	Savory Turtle Stew	1	45		651567	Food & Drink				5
-250069	Flank au Poivre	1	45		350563	Food & Drink				5
-250070	Bear Bruscitti	1	45		1387649	Food & Drink				5
-250071	Steaming Stag Steak	1	45		350558	Food & Drink				5
-250072	Swiftstrike Steak	1	45		134005	Food & Drink				5
-250073	Raging Raptor Ribs	1	25		1387664	Food & Drink				5
-250074	Bear Brisket	1	25		134003	Food & Drink				5
-250075	Prehistoric Pulled Raptor	1	45		237337	Food & Drink				5
-250076	Raptor Rouladen	1	35		350564	Food & Drink				5
-250077	Twice-Spiced Raptor Slice	1	5		1387662	Food & Drink				5
-250078	Giant Scrambled Eggs	1	25		133748	Food & Drink				5
-250079	Tasty Raptor Bites	1	1		134024	Food & Drink				5
-250080	Breakfast Omelette	1	5		651570	Food & Drink				5
-250081	Clam Linguine	1	45		133748	Food & Drink				5
-250173	Recipe: Savory Stag Sliders	1	1		134939	Cooking		225	9	5
-250174	Recipe: Soaring Pamplona	1	1		134939	Cooking		275	9	5
-250175	Recipe: Bat Hachee	1	1		134939	Cooking		275	9	5
-250176	Recipe: Savory Turtle Stew	1	1		134939	Cooking		275	9	5
-250177	Recipe: Flank au Poivre	1	1		134939	Cooking		275	9	5
-250178	Recipe: Bear Bruscitti	1	1		134939	Cooking		275	9	5
-250179	Recipe: Steaming Stag Steak	1	1		134939	Cooking		275	9	5
-250180	Recipe: Swiftstrike Steak	1	1		134939	Cooking		275	9	5
-250181	Recipe: Raging Raptor Ribs	1	1		134939	Cooking		180	9	5
-250182	Recipe: Bear Brisket	1	1		134939	Cooking		175	9	5
-250183	Recipe: Prehistoric Pulled Raptor	1	1		134939	Cooking		275	9	5
-250184	Recipe: Raptor Rouladen	1	1		134939	Cooking		225	9	5
-250185	Recipe: Twice-Spiced Raptor Slice	1	1		134939	Cooking		75	9	5
-250186	Recipe: Giant Scrambled Eggs	1	1		134939	Cooking		175	9	5
-250187	Recipe: Tasty Raptor Bites	1	1		134939	Cooking		25	9	5
-250188	Recipe: Breakfast Omelette	1	1		134939	Cooking		75	9	5
-250189	Recipe: Clam Linguine	1	1		134939	Cooking		275	9	5
-251524	Whimsyfin	1			237319				7	11
-251525	Savory Whimsyfin Delight	1	1		237320	Consumable				8
-251526	Recipe: Savory Whimsyfin Delight	2			134939	Cooking		85	9	5
-252683	Cleansing Stew	1			1046255	Food & Drink				5
-252948		1			4279015				12	
-263507	Critter Cookie	1			237363	Food & Drink				5
-263509	Skywall Souffle	1	5		651570	Food & Drink				5
-263511	Recipe: Skywall Souffle	1			134939	Cooking		25	9	5
-263512	Pincer Bites	1	5		1508493	Food & Drink				5
-263513	Recipe: Pincer Bites	1			134939	Cooking		35	9	5
-267341	Sweetpaw Jam	1	55		133748	Food & Drink				5
-272941	Thick Logs	1			135437				7	11
-273087	Blueprint: Journeyman Campfire	2			1001491	Cooking		90	9	5
-273101	Blueprint: Expert Campfire	2			1001491	Cooking		200	9	5
-273102	Blueprint: Cookie's Feast	2			1001491	Cooking		140	9	5
-273115	Blueprint: Iron Oven	2			1001491	Cooking		300	9	5
-274415	Recipe: Sweetpaw Jam	1	1		134939	Cooking		275	9	5
-274971	Briny Seafood Stew	1	25		461131	Food & Drink				5
-274972	Recipe: Briny Seafood Stew	1			134939	Cooking		200	9	5
-274976	Plain Ol' Paletusk	1	25		133972	Food & Drink				5
-274977	Recipe: Plain Ol' Paletusk	1			134939	Cooking		185	9	5
-279957	Cookie's Feast	1			2066011	Consumable		140		8
-279961	Journeyman Campfire Kit	1			7808148	Consumable		140		8
-279974	Expert Campfire Kit	1			7808148	Consumable		220		8
-279981	Basic Campfire Kit	1			7808148	Consumable		1		8
-279982	Iron Oven	1			629055	Consumable		300		8
-286152	Plated Armorfish	1	35		133890	Food & Drink				5
-286153	Recipe: Plated Armorfish	1			134939	Cooking		225	9	5]],
+159	Refreshing Spring Water	1	1		132794	Food & Drink				5	
+723	Goretusk Liver	1			134341	Cooking			7	8	
+724	Goretusk Liver Pie	1	5		133952	Food & Drink				5	
+728	Recipe: Westfall Stew	1			134939	Cooking		75	9	5	
+729	Stringy Vulture Meat	1			133972	Cooking			7	8	
+730	Murloc Eye	1			133884	Cooking			7	8	
+731	Goretusk Snout	1			135997	Cooking			7	8	
+733	Westfall Stew	1	5		133748	Food & Drink				5	
+769	Chunk of Boar Meat	1			133970	Cooking			7	8	
+785	Mageroyal	1			133436	Herb			7	9	
+787	Slitherskin Mackerel	1	1		133910	Food & Drink				5	
+1015	Lean Wolf Flank	1			133970	Cooking			7	8	
+1017	Seasoned Wolf Kabob	1	15		133972	Food & Drink				5	
+1080	Tough Condor Meat	1			134028	Cooking			7	8	
+1081	Crisp Spider Meat	1			134321	Cooking			7	8	
+1082	Redridge Goulash	1	5		133748	Food & Drink				5	
+1179	Ice Cold Milk	1	5		132815	Food & Drink				5	
+1205	Melon Juice	1	15		132796	Food & Drink				5	
+1468	Murloc Fin	1			134304	Cooking			7	8	
+1475	Small Venom Sac	1			134339				7	11	
+1645	Moonberry Juice	1	35		132789	Food & Drink				5	
+1708	Sweet Nectar	1	25		132799	Food & Drink				5	
+2251	Gooey Spider Leg	1			134321	Cooking			7	8	
+2447	Peacebloom	1			133939	Herb			7	9	
+2452	Swiftthistle	1			134184	Herb			7	9	
+2596	Skin of Dwarven Stout	1			132816	Food & Drink				5	
+2672	Stringy Wolf Meat	1			133970	Cooking			7	8	
+2673	Coyote Meat	1			134025	Cooking			7	8	
+2674	Crawler Meat	1			134007	Cooking			7	8	
+2675	Crawler Claw	1			133708	Cooking			7	8	
+2677	Boar Ribs	1			133972	Cooking			7	8	
+2678	Mild Spices	1			134059				7	11	
+2679	Charred Wolf Meat	1	1		133974	Food & Drink				5	
+2680	Spiced Wolf Meat	1	1		134021	Food & Drink				5	
+2681	Roasted Boar Meat	1	1		133974	Food & Drink				5	
+2682	Cooked Crab Claw	1	1		133708	Food & Drink				5	
+2683	Crab Cake	1	5		133950	Food & Drink				5	
+2684	Coyote Steak	1	5		134021	Food & Drink				5	
+2685	Succulent Pork Ribs	1	15		133972	Food & Drink				5	
+2687	Dry Pork Ribs	1	5		134004	Food & Drink				5	
+2692	Hot Spices	1			1387643				7	11	
+2697	Recipe: Goretusk Liver Pie	1			134939	Cooking		50	9	5	
+2698	Recipe: Cooked Crab Claw	1			134939	Cooking		85	9	5	
+2699	Recipe: Redridge Goulash	1			134939	Cooking		100	9	5	
+2700	Recipe: Succulent Pork Ribs	1			134939	Cooking		110	9	5	
+2701	Recipe: Seasoned Wolf Kabob	1			134939	Cooking		100	9	5	
+2886	Crag Boar Rib	1			133972	Cooking			7	8	
+2888	Beer Basted Boar Ribs	1	1		134004	Food & Drink				5	
+2889	Recipe: Beer Basted Boar Ribs	1			134939	Cooking		25	9	5	
+2894	Rhapsody Malt	1	1		132800	Food & Drink				5	
+2924	Crocolisk Meat	1			133970	Cooking			7	8	
+3172	Boar Intestines	1			134342	Cooking			7	8	
+3173	Bear Meat	1			134027	Cooking			7	8	
+3174	Spider Ichor	1			134437	Cooking			7	8	
+3220	Blood Sausage	1	5		134005	Food & Drink				5	
+3357	Liferoot	1			134413	Herb			7	9	
+3404	Buzzard Wing	1			134304	Cooking			7	8	
+3662	Crocolisk Steak	1	5		134003	Food & Drink				5	
+3663	Murloc Fin Soup	1	1		133748	Food & Drink				5	
+3664	Crocolisk Gumbo	1	15		133748	Food & Drink				5	
+3665	Curiously Tasty Omelet	1	15		132835	Food & Drink				5	
+3666	Gooey Spider Cake	1	15		133952	Food & Drink				5	
+3667	Tender Crocolisk Meat	1			133970	Cooking			7	8	
+3678	Recipe: Crocolisk Steak	1			134939	Cooking		80	9	5	
+3679	Recipe: Blood Sausage	1			134939	Cooking		60	9	5	
+3680	Recipe: Murloc Fin Soup	1			134939	Cooking		90	9	5	
+3681	Recipe: Crocolisk Gumbo	1			134939	Cooking		120	9	5	
+3682	Recipe: Curiously Tasty Omelet	1			134939	Cooking		130	9	5	
+3683	Recipe: Gooey Spider Cake	1			134939	Cooking		110	9	5	
+3685	Raptor Egg	1			132834	Cooking			7	8	
+3712	Turtle Meat	1			134026	Cooking			7	8	
+3713	Soothing Spices	1			646176				7	11	
+3726	Big Bear Steak	1	5		134003	Food & Drink				5	
+3727	Hot Lion Chops	1	15		133974	Food & Drink				5	
+3728	Tasty Lion Steak	1	25		133970	Food & Drink				5	
+3729	Soothing Turtle Bisque	1	15		133748	Food & Drink				5	
+3730	Big Bear Meat	1			133970	Cooking			7	8	
+3731	Lion Meat	1			134027	Cooking			7	8	
+3734	Recipe: Big Bear Steak	1			134939	Cooking		110	9	5	1
+3735	Recipe: Hot Lion Chops	1			134939	Cooking		125	9	5	1
+3736	Recipe: Tasty Lion Steak	1			134939	Cooking		150	9	5	
+3737	Recipe: Soothing Turtle Bisque	1			134939	Cooking		175	9	5	
+3818	Fadeleaf	1			134193	Herb			7	9	
+3821	Goldthorn	1			134196	Herb			7	9	
+4402	Small Flame Sac	1			134343				7	11	
+4457	Barbecued Buzzard Wing	1	25		133974	Food & Drink				5	
+4470	Simple Wood	1			135435				7	11	
+4536	Shiny Red Apple	1	1		133975	Food & Drink				5	
+4592	Longjaw Mud Snapper	1	5		133918	Food & Drink				5	
+4593	Bristle Whisker Catfish	1	15		133916	Food & Drink				5	
+4594	Rockscale Cod	1	25		133890	Food & Drink				5	
+4603	Raw Spotted Yellowtail	1	35		133887	Cooking			7	8	
+4609	Recipe: Barbecued Buzzard Wing	1			134939	Cooking		175	9	5	1
+4655	Giant Clam Meat	1			134007	Cooking			7	8	
+5051	Dig Rat	1			134359				12		
+5095	Rainbow Fin Albacore	1	5		133913	Food & Drink				5	
+5465	Small Spider Leg	1			134321	Cooking			7	8	
+5466	Scorpid Stinger	1			136067	Cooking			7	8	
+5467	Kodo Meat	1			133970	Cooking			7	8	
+5468	Soft Frenzy Flesh	1			133890	Cooking			7	8	
+5469	Strider Meat	1			133972	Cooking			7	8	
+5470	Thunder Lizard Tail	1			133721	Cooking			7	8	
+5471	Stag Meat	1			134370	Cooking			7	8	
+5472	Kaldorei Spider Kabob	1	1		134024	Food & Drink				5	
+5473	Scorpid Surprise	1	1		133952	Food & Drink				5	
+5474	Roasted Kodo Meat	1	1		134016	Food & Drink				5	
+5476	Fillet of Frenzy	1	5		133891	Food & Drink				5	
+5477	Strider Stew	1	1		133748	Food & Drink				5	
+5478	Dig Rat Stew	1	15		133748	Food & Drink				5	
+5479	Crispy Lizard Tail	1	5		133973	Food & Drink				5	
+5480	Lean Venison	1	15		134028	Food & Drink				5	
+5482	Recipe: Kaldorei Spider Kabob	1			134939	Cooking		10	9	5	
+5483	Recipe: Scorpid Surprise	1			134939	Cooking		20	9	5	
+5484	Recipe: Roasted Kodo Meat	1			134939	Cooking		35	9	5	
+5485	Recipe: Fillet of Frenzy	1			134939	Cooking		50	9	5	
+5486	Recipe: Strider Stew	1			134939	Cooking		50	9	5	
+5487	Recipe: Dig Rat Stew	1			134939	Cooking		90	9	5	
+5488	Recipe: Crispy Lizard Tail	1			134939	Cooking		100	9	5	
+5489	Recipe: Lean Venison	1			134939	Cooking		110	9	5	1
+5503	Clam Meat	1			134007	Cooking			7	8	
+5504	Tangy Clam Meat	1			134007	Cooking			7	8	
+5525	Boiled Clams	1	1		134432	Food & Drink				5	
+5526	Clam Chowder	1	5		134712	Food & Drink				5	
+5527	Goblin Deviled Clams	1	15		134431	Food & Drink				5	
+5528	Recipe: Clam Chowder	1			134939	Cooking		90	9	5	
+5637	Large Fang	1			133725				7	11	
+6038	Giant Clam Scorcho	1	25		132386	Food & Drink				5	
+6039	Recipe: Giant Clam Scorcho	1			134939	Cooking		175	9	5	
+6289	Raw Longjaw Mud Snapper	1	5		133918	Cooking			7	8	
+6290	Brilliant Smallfish	1	1		133893	Food & Drink				5	
+6291	Raw Brilliant Smallfish	1	1		133894	Cooking			7	8	
+6303	Raw Slitherskin Mackerel	1	1		133910	Cooking			7	8	
+6308	Raw Bristle Whisker Catfish	1	15		133916	Cooking			7	8	
+6316	Loch Frenzy Delight	1	5		134712	Food & Drink				5	
+6317	Raw Loch Frenzy	1	5		133889	Cooking			7	8	
+6325	Recipe: Brilliant Smallfish	1			134939	Cooking		1	9	5	
+6326	Recipe: Slitherskin Mackerel	1			134939	Cooking		1	9	5	
+6328	Recipe: Longjaw Mud Snapper	1			134939	Cooking		50	9	5	
+6329	Recipe: Loch Frenzy Delight	1			134939	Cooking		50	9	5	
+6330	Recipe: Bristle Whisker Catfish	1			134939	Cooking		100	9	5	
+6361	Raw Rainbow Fin Albacore	1	5		133911	Cooking			7	8	
+6362	Raw Rockscale Cod	1	25		133890	Cooking			7	8	
+6368	Recipe: Rainbow Fin Albacore	1			134939	Cooking		50	9	5	
+6369	Recipe: Rockscale Cod	1			134939	Cooking		175	9	5	
+6522	Deviate Fish	1			134299	Food & Drink				5	
+6657	Savory Deviate Delight	1	1		134302	Food & Drink				5	
+6661	Recipe: Savory Deviate Delight	2			134939	Cooking		85	9	5	
+6887	Spotted Yellowtail	1	35		133887	Food & Drink				5	
+6888	Herb Baked Egg	1	1		132834	Food & Drink				5	
+6889	Small Egg	1			132832	Cooking			7	8	
+6890	Smoked Bear Meat	1	1		133969	Food & Drink				5	
+6892	Recipe: Smoked Bear Meat	1			134939	Cooking		40	9	5	
+7676	Thistle Tea	1	5		132819	Food & Drink				5	
+7678	Recipe: Thistle Tea	1			134939	Cooking		60	9	5	
+7974	Zesty Clam Meat	1			134007	Cooking			7	8	
+8146	Wicked Claw	1			134294				7	11	
+8150	Deeprock Salt	1			133849	Leather			7	6	
+8364	Mithril Head Trout	1	25		133888	Food & Drink				5	
+8365	Raw Mithril Head Trout	1	25		133888	Cooking			7	8	
+8766	Morning Glory Dew	1	45		134712	Food & Drink				5	
+8838	Sungrass	1			134199	Herb			7	9	
+8957	Spinefin Halibut	1	45		133908	Food & Drink				5	
+8959	Raw Spinefin Halibut	1	45		133908	Cooking			7	8	
+9061	Goblin Rocket Fuel	1			132621	Parts			7	1	
+10284	Simple Flour	1			134058	Cooking			7	8	
+10841	Goldthorn Tea	1	25		132802	Food & Drink				5	
+11291	Star Wood	1			135437				7	11	
+12037	Mystery Meat	1			134023	Cooking			7	8	
+12184	Raptor Flesh	1			134025	Cooking			7	8	
+12202	Tiger Meat	1			133970	Cooking			7	8	
+12203	Red Wolf Meat	1			134027	Cooking			7	8	
+12204	Heavy Kodo Meat	1			134026	Cooking			7	8	
+12205	White Spider Meat	1			134007	Cooking			7	8	
+12206	Tender Crab Meat	1			134007	Cooking			7	8	
+12207	Giant Egg	1			132834	Cooking			7	8	
+12208	Tender Wolf Meat	1			133970	Cooking			7	8	
+12209	Lean Wolf Steak	1	15		134003	Food & Drink				5	
+12210	Roast Raptor	1	15		134006	Food & Drink				5	
+12212	Jungle Stew	1	35		132804	Food & Drink				5	
+12213	Carrion Surprise	1	5		134005	Food & Drink				5	
+12214	Mystery Stew	1	15		132806	Food & Drink				5	
+12215	Heavy Kodo Stew	1	25		132806	Food & Drink				5	
+12216	Spiced Chili Crab	1	25		134004	Food & Drink				5	
+12217	Dragonbreath Chili	1	25		132804	Food & Drink				5	
+12218	Monster Omelet	1	35		133948	Food & Drink				5	
+12223	Meaty Bat Wing	1			134360	Cooking			7	8	
+12224	Crispy Bat Wing	1	1		134002	Food & Drink				5	
+12226	Recipe: Crispy Bat Wing	1			134939	Cooking		1	9	5	
+12227	Recipe: Lean Wolf Steak	1			134939	Cooking		125	9	5	1
+12228	Recipe: Roast Raptor	1			134939	Cooking		175	9	5	1
+12229	Recipe: Hot Wolf Ribs	1			134939	Cooking		175	9	5	1
+12231	Recipe: Jungle Stew	1			134939	Cooking		175	9	5	1
+12232	Recipe: Carrion Surprise	1			134939	Cooking		175	9	5	1
+12233	Recipe: Mystery Stew	1			134939	Cooking		175	9	5	1
+12239	Recipe: Dragonbreath Chili	1			134939	Cooking		200	9	5	
+12240	Recipe: Heavy Kodo Stew	1			134939	Cooking		200	9	5	1
+13465	Mountain Silversage	1			134215	Herb			7	9	
+13754	Raw Glossy Mightfish	1	35		134301	Cooking			7	8	
+13755	Raw Winter Squid	1	35		133899	Food & Drink				5	
+13756	Raw Summer Bass	1	35		133889	Cooking			7	8	
+13758	Raw Redgill	1	35		133892	Cooking			7	8	
+13759	Raw Nightfin Snapper	1	35		133909	Cooking			7	8	
+13760	Raw Sunscale Salmon	1	35		133905	Cooking			7	8	
+13851	Hot Wolf Ribs	1	25		134004	Food & Drink				5	
+13888	Darkclaw Lobster	1	45		133900	Cooking			7	8	
+13889	Raw Whitescale Salmon	1	45		133906	Cooking			7	8	
+13890	Raw Plated Armorfish	1			133890				12		
+13893	Large Raw Mightfish	1	45		134300	Food & Drink				5	
+13927	Cooked Glossy Mightfish	1	35		134301	Food & Drink				5	
+13928	Grilled Squid	1	35		133899	Food & Drink				5	
+13929	Hot Smoked Bass	1	35		133889	Food & Drink				5	
+13930	Filet of Redgill	1	35		133892	Food & Drink				5	
+13931	Nightfin Soup	1	35		132804	Food & Drink				5	
+13932	Poached Sunscale Salmon	1	35		133905	Food & Drink				5	
+13933	Lobster Stew	1	45		132804	Food & Drink				5	
+13934	Mightfish Steak	1	45		134003	Food & Drink				5	
+13935	Baked Salmon	1	45		133906	Food & Drink				5	
+13939	Recipe: Spotted Yellowtail	1			134939	Cooking		225	9	5	
+13940	Recipe: Cooked Glossy Mightfish	1			134939	Cooking		225	9	5	
+13941	Recipe: Filet of Redgill	1			134939	Cooking		225	9	5	
+13942	Recipe: Grilled Squid	1			134939	Cooking		240	9	5	
+13943	Recipe: Hot Smoked Bass	1			134939	Cooking		240	9	5	
+13945	Recipe: Nightfin Soup	1			134939	Cooking		250	9	5	
+13946	Recipe: Poached Sunscale Salmon	1			134939	Cooking		250	9	5	
+13947	Recipe: Lobster Stew	1			134939	Cooking		275	9	5	
+13948	Recipe: Mightfish Steak	1			134939	Cooking		275	9	5	
+13949	Recipe: Baked Salmon	1			134939	Cooking		275	9	5	
+16110	Recipe: Monster Omelet	1			134939	Cooking		225	9	5	
+16111	Recipe: Spiced Chili Crab	1			134939	Cooking		225	9	5	
+16766	Undermine Clam Chowder	1	35		132804	Food & Drink				5	
+16767	Recipe: Undermine Clam Chowder	1			134939	Cooking		225	9	5	1
+17062	Recipe: Mithril Head Trout	1			134939	Cooking		175	9	5	
+17194	Holiday Spices	1			133644				15	3	
+17196	Holiday Spirits	1	1		132797	Food & Drink				5	
+17197	Gingerbread Cookie	1	1		134018	Food & Drink				5	
+17198	Egg Nog	1	1		132791	Food & Drink				5	
+17200	Recipe: Gingerbread Cookie	1			134939	Cooking		1	9	5	
+17201	Recipe: Egg Nog	1			134939	Cooking		35	9	5	
+17222	Spider Sausage	1	35		134022	Food & Drink				5	
+18045	Tender Wolf Steak	1	35		134003	Food & Drink				5	
+18046	Recipe: Tender Wolf Steak	1			134939	Cooking		225	9	5	
+18160	Recipe: Thistle Tea	2			134939	Cooking		60	9	5	1
+18254	Runn Tum Tuber Surprise	1	35		134019	Food & Drink				5	
+18255	Runn Tum Tuber	1	45		134011	Food & Drink				5	
+18267	Recipe: Runn Tum Tuber Surprise	2			134939	Cooking		275	9	5	1
+20074	Heavy Crocolisk Stew	1	25		134020	Food & Drink				5	
+20075	Recipe: Heavy Crocolisk Stew	1			134939	Cooking		150	9	5	
+20424	Sandworm Meat	1			134007	Cooking			7	8	
+20452	Smoked Desert Dumplings	1	45		134020	Food & Drink				5	
+21023	Dirge's Kickin' Chimaerok Chops	1	45		134021	Food & Drink				5	
+21024	Chimaerok Tenderloin	1			134026	Cooking			7	8	
+21025	Recipe: Dirge's Kickin' Chimaerok Chops	4			133734	Cooking		300	9	5	
+21071	Raw Sagefish	1	10		133906	Cooking			7	8	
+21072	Smoked Sagefish	1	10		133906	Food & Drink				5	
+21099	Recipe: Smoked Sagefish	1			134939	Cooking		80	9	5	
+21153	Raw Greater Sagefish	1	30		133907	Cooking			7	8	
+21217	Sagefish Delight	1	30		133907	Food & Drink				5	
+21219	Recipe: Sagefish Delight	1			134939	Cooking		175	9	5	
+227813		1			236211	Consumable				8	
+232436	Darkclaw Bisque	1	45		237331	Consumable				8	
+232437	Recipe: Darkclaw Bisque	1			134939	Cooking		300	9	5	
+232438	Smoked Redgill	1	35		133965	Consumable				8	
+232443	Recipe: Smoked Redgill	1			134939	Cooking		300	9	5	
+238637	Prowler Steak	1	55		134040	Consumable				8	
+238638	Filet o' Flank	1	55		134044	Food & Drink				5	
+238639	Sunrise Omelette	1	55		133991	Consumable				8	
+238641	Specklefin Feast	2	55		237331	Consumable				8	
+238642	Grand Lobster Banquet	2	55		134019	Consumable				8	
+238645	Recipe: Prowler Steak	1	1		134939	Cooking		250	9	5	1
+238646	Recipe: Filet o' Flank	1	1		134939	Cooking		250	9	5	1
+238647	Recipe: Sunrise Omelette	1	1		134939	Cooking		250	9	5	1
+238649	Recipe: Specklefin Feast	1	1		134939	Cooking		280	9	5	1
+238650	Recipe: Grand Lobster Banquet	1	1		134939	Cooking		280	9	5	1
+239016	Holy Salts	1	1		134389	Cooking			7	8	
+239017	Exquisite Spices	2	1		133210	Cooking			7	8	
+249796	Hyjal Berries	1	45		133996	Food & Drink				5	
+249865	Peace Tea	1	1		132802	Food & Drink				5	
+249866	Royal Tea	1	5		132802	Food & Drink				5	
+249867	Root Tea	1	15		132802	Food & Drink				5	
+249868	Triage Tea	1	25		132802	Food & Drink				5	
+249869	Sunny Tea	1	35		132802	Food & Drink				5	
+249870	Sage's Tea	1	45		132802	Food & Drink				5	
+249871	Venomous Smoothie	1	1		132808	Food & Drink				5	
+249872	Slimy Smoothie	1	5		4621577	Food & Drink				5	
+249873	Mrrggl Smrrthle	1	15		4621583	Food & Drink				5	
+249874	Calcified Smoothie	1	25		4621575	Food & Drink				5	
+249875	Spicy Smoothie	1	35		4621586	Food & Drink				5	
+249876	Wicked Smoothie	1	45		4621578	Food & Drink				5	
+249879	Recipe: Peace Tea	1	1		134939	Cooking		25	9	5	1
+249880	Recipe: Royal Tea	1	1		134939	Cooking		100	9	5	1
+249881	Recipe: Root Tea	1	1		134939	Cooking		125	9	5	1
+249882	Recipe: Triage Tea	1	1		134939	Cooking		180	9	5	1
+249883	Recipe: Sunny Tea	1	1		134939	Cooking		200	9	5	1
+249884	Recipe: Sage's Tea	1	1		134939	Cooking		250	9	5	1
+249885	Recipe: Venomous Smoothie	1	1		134939	Cooking		25	9	5	1
+249886	Recipe: Slimy Smoothie	1	1		134939	Cooking		100	9	5	1
+249887	Recipe: Mrrggl Smrrthle	1	1		134939	Cooking		125	9	5	1
+249888	Recipe: Calcified Smoothie	1	1		134939	Cooking		180	9	5	1
+249889	Recipe: Spicy Smoothie	1	1		134939	Cooking		200	9	5	1
+249890	Recipe: Wicked Smoothie	1	1		134939	Cooking		250	9	5	1
+250065	Savory Stag Sliders	1	35		237335	Food & Drink				5	
+250066	Soaring Pamplona	1	45		350562	Food & Drink				5	
+250067	Bat Hachee	1	45		237329	Food & Drink				5	
+250068	Savory Turtle Stew	1	45		651567	Food & Drink				5	
+250069	Flank au Poivre	1	45		350563	Food & Drink				5	
+250070	Bear Bruscitti	1	45		1387649	Food & Drink				5	
+250071	Steaming Stag Steak	1	45		350558	Food & Drink				5	
+250072	Swiftstrike Steak	1	45		134005	Food & Drink				5	
+250073	Raging Raptor Ribs	1	25		1387664	Food & Drink				5	
+250074	Bear Brisket	1	25		134003	Food & Drink				5	
+250075	Prehistoric Pulled Raptor	1	45		237337	Food & Drink				5	
+250076	Raptor Rouladen	1	35		350564	Food & Drink				5	
+250077	Twice-Spiced Raptor Slice	1	5		1387662	Food & Drink				5	
+250078	Giant Scrambled Eggs	1	25		133748	Food & Drink				5	
+250079	Tasty Raptor Bites	1	1		134024	Food & Drink				5	
+250080	Breakfast Omelette	1	5		651570	Food & Drink				5	
+250081	Clam Linguine	1	45		133748	Food & Drink				5	
+250173	Recipe: Savory Stag Sliders	1	1		134939	Cooking		225	9	5	1
+250174	Recipe: Soaring Pamplona	1	1		134939	Cooking		275	9	5	1
+250175	Recipe: Bat Hachee	1	1		134939	Cooking		275	9	5	1
+250176	Recipe: Savory Turtle Stew	1	1		134939	Cooking		275	9	5	1
+250177	Recipe: Flank au Poivre	1	1		134939	Cooking		275	9	5	1
+250178	Recipe: Bear Bruscitti	1	1		134939	Cooking		275	9	5	1
+250179	Recipe: Steaming Stag Steak	1	1		134939	Cooking		275	9	5	1
+250180	Recipe: Swiftstrike Steak	1	1		134939	Cooking		275	9	5	1
+250181	Recipe: Raging Raptor Ribs	1	1		134939	Cooking		180	9	5	1
+250182	Recipe: Bear Brisket	1	1		134939	Cooking		175	9	5	1
+250183	Recipe: Prehistoric Pulled Raptor	1	1		134939	Cooking		275	9	5	1
+250184	Recipe: Raptor Rouladen	1	1		134939	Cooking		225	9	5	1
+250185	Recipe: Twice-Spiced Raptor Slice	1	1		134939	Cooking		75	9	5	1
+250186	Recipe: Giant Scrambled Eggs	1	1		134939	Cooking		175	9	5	1
+250187	Recipe: Tasty Raptor Bites	1	1		134939	Cooking		25	9	5	1
+250188	Recipe: Breakfast Omelette	1	1		134939	Cooking		75	9	5	1
+250189	Recipe: Clam Linguine	1	1		134939	Cooking		275	9	5	1
+251524	Whimsyfin	1			237319				7	11	
+251525	Savory Whimsyfin Delight	1	1		237320	Consumable				8	
+251526	Recipe: Savory Whimsyfin Delight	2			134939	Cooking		85	9	5	
+252683	Cleansing Stew	1			1046255	Food & Drink				5	
+252948		1			4279015				12		
+263507	Critter Cookie	1			237363	Food & Drink				5	
+263509	Skywall Souffle	1	5		651570	Food & Drink				5	
+263511	Recipe: Skywall Souffle	1			134939	Cooking		25	9	5	
+263512	Pincer Bites	1	5		1508493	Food & Drink				5	
+263513	Recipe: Pincer Bites	1			134939	Cooking		35	9	5	
+267341	Sweetpaw Jam	1	55		133748	Food & Drink				5	
+272941	Thick Logs	1			135437				7	11	
+273087	Blueprint: Journeyman Campfire	2			1001491	Cooking		90	9	5	
+273101	Blueprint: Expert Campfire	2			1001491	Cooking		200	9	5	
+273102	Blueprint: Cookie's Feast	2			1001491	Cooking		140	9	5	
+273115	Blueprint: Iron Oven	2			1001491	Cooking		300	9	5	
+274415	Recipe: Sweetpaw Jam	1	1		134939	Cooking		275	9	5	1
+274971	Briny Seafood Stew	1	25		461131	Food & Drink				5	
+274972	Recipe: Briny Seafood Stew	1			134939	Cooking		200	9	5	1
+274976	Plain Ol' Paletusk	1	25		133972	Food & Drink				5	
+274977	Recipe: Plain Ol' Paletusk	1			134939	Cooking		185	9	5	1
+279957	Cookie's Feast	1			2066011	Consumable		140		8	
+279961	Journeyman Campfire Kit	1			7808148	Consumable		140		8	
+279974	Expert Campfire Kit	1			7808148	Consumable		220		8	
+279981	Basic Campfire Kit	1			7808148	Consumable		1		8	
+279982	Iron Oven	1			629055	Consumable		300		8	
+286152	Plated Armorfish	1	35		133890	Food & Drink				5	
+286153	Recipe: Plated Armorfish	1			134939	Cooking		225	9	5	1]],
         },
         {
             name = "First Aid", skill = 129, count = 32,
@@ -7488,91 +7488,91 @@ ns.Data = {
 1263001	Plague Doctor's Laboratory	300	300,300,300	279951,1,1	4470:2;6453:2;14530:5	0	1	273118
 23787	Powerful Anti-Venom	300	300,330,360	19440,3,3	19441:1	0	1	19442]],
             items = [[
-118	Minor Healing Potion	1	1		134829	Potion				1
-159	Refreshing Spring Water	1	1		132794	Food & Drink				5
-858	Lesser Healing Potion	1	3		134830	Potion				1
-929	Healing Potion	1	12		134831	Potion				1
-1251	Linen Bandage	1			133685	Bandage		1		7
-1288	Large Venom Sac	1			134338				7	11
-1468	Murloc Fin	1			134304	Cooking			7	8
-1475	Small Venom Sac	1			134339				7	11
-1710	Greater Healing Potion	1	21		134832	Potion				1
-2321	Fine Thread	1			132912	Cloth			7	5
-2447	Peacebloom	1			133939	Herb			7	9
-2450	Briarthorn	1			134412	Herb			7	9
-2453	Bruiseweed	1			134181	Herb			7	9
-2581	Heavy Linen Bandage	1			133688	Bandage		20		7
-2589	Linen Cloth	1			132889	Cloth			7	5
-2592	Wool Cloth	1			132911	Cloth			7	5
-2594	Flagon of Dwarven Honeymead	1			132792	Food & Drink				5
-2596	Skin of Dwarven Stout	1			132816	Food & Drink				5
-2678	Mild Spices	1			134059				7	11
-2686	Thunder Ale	1	1		132800	Food & Drink				5
-2692	Hot Spices	1			1387643				7	11
-2723	Bottle of Dalaran Noir	1	1		132797	Food & Drink				5
-3174	Spider Ichor	1			134437	Cooking			7	8
-3357	Liferoot	1			134413	Herb			7	9
-3371	Empty Vial	1			134864				7	11
-3372	Leaded Vial	1			134865				7	11
-3530	Wool Bandage	1			133684	Bandage		50		7
-3531	Heavy Wool Bandage	1			133687	Bandage		75		7
-3713	Soothing Spices	1			646176				7	11
-3928	Superior Healing Potion	1	35		134833	Potion				1
-4291	Silken Thread	1			132906	Cloth			7	5
-4304	Thick Leather	1			134257	Leather			7	6
-4306	Silk Cloth	1			132905	Cloth			7	5
-4338	Mageweave Cloth	1			132892	Cloth			7	5
-4470	Simple Wood	1			135435				7	11
-6450	Silk Bandage	1			133671	Bandage		100		7
-6451	Heavy Silk Bandage	1			133672	Bandage		125		7
-6452	Anti-Venom	1			134437	Consumable				8
-6453	Strong Anti-Venom	1			134437	Consumable				8
-6454	Manual: Strong Anti-Venom	2			133735	First Aid		130	9	7
-7070	Elemental Water	1			134714	Elemental			7	10
-7080	Essence of Water	2			136007	Elemental			7	10
-8170	Rugged Leather	1			134251	Leather			7	6
-8343	Heavy Silken Thread	1			132906	Cloth			7	5
-8544	Mageweave Bandage	1			133689	Bandage		150		7
-8545	Heavy Mageweave Bandage	1			133690	Bandage		175		7
-8838	Sungrass	1			134199	Herb			7	9
-8925	Crystal Vial	1			134866				7	11
-13446	Major Healing Potion	1	45		134834	Potion				1
-13464	Golden Sansam	1			134221	Herb			7	9
-14047	Runecloth	1			132903	Cloth			7	5
-14529	Runecloth Bandage	1			133681	Bandage		200		7
-14530	Heavy Runecloth Bandage	1			133682	Bandage		225		7
-16112	Manual: Heavy Silk Bandage	1			133735	First Aid		180	9	7
-16113	Manual: Mageweave Bandage	1			133735	First Aid		210	9	7
-19440	Powerful Anti-Venom	1			132801	Consumable		300		8
-19441	Huge Venom Sac	1			134341				7	11
-19442	Formula: Powerful Anti-Venom	1			134939	First Aid		300	9	7
-23567	DEPRECATED ITEM	1	1		134337				7	11
-23684	Crystal Infused Bandage	1			133686	Bandage		225		7
-232433	Dense Runecloth Bandage	1	50		133692	Consumable		300		8
-232434	Manual: Dense Runecloth Bandage	1			133735	First Aid		300	9	7
-255645	Swollen Venom Sac	1			134343				7	11
-255715	Potent Anti-Venom	1			132104				7	11
-255716	Simple Poultice	1			4554333				7	11
-255717	Clever Poultice	1			4554335				7	11
-255718	Superior Poultice	1			4554334				7	11
-255719	Powerful Poultice	1			4554332				7	11
-255720	Woolen Tourniquet	1			133675				7	11
-255721	Leather Tourniquet	1			133676				7	11
-255722	Surgical Tourniquet	1			133679				7	11
-255723	Manual: Greater Healing Potion	2			133735	First Aid		155	9	7
-255724	Manual: Clever Poultice	2			133735	First Aid		140	9	7
-255725	Manual: Superior Healing Potion	2			133735	First Aid		215	9	7
-255726	Manual: Leather Tourniquet	2			133735	First Aid		200	9	7
-255727	Manual: Superior Poultice	2			133735	First Aid		210	9	7
-255728	Manual: Potent Anti-Venom	2			133735	First Aid		215	9	7
-255729	Manual: Major Healing Potion	2			133735	First Aid		275	9	7
-255730	Manual: Surgical Tourniquet	2			133735	First Aid		265	9	7
-255731	Manual: Powerful Poultice	2			133735	First Aid		280	9	7
-273105	Blueprint: Toxin Study	2			1001491	First Aid		140	9	7
-273118	Blueprint: Plague Doctor's Laboratory	2			1001491	First Aid		300	9	7
-279940	Toxin Study	1			463860	Consumable		140		8
-279951	Plague Doctor's Laboratory	1			4626285	Consumable		300		8
-279968	First Aid Kit	1			133681	Consumable		20		8]],
+118	Minor Healing Potion	1	1		134829	Potion				1	
+159	Refreshing Spring Water	1	1		132794	Food & Drink				5	
+858	Lesser Healing Potion	1	3		134830	Potion				1	
+929	Healing Potion	1	12		134831	Potion				1	
+1251	Linen Bandage	1			133685	Bandage		1		7	
+1288	Large Venom Sac	1			134338				7	11	
+1468	Murloc Fin	1			134304	Cooking			7	8	
+1475	Small Venom Sac	1			134339				7	11	
+1710	Greater Healing Potion	1	21		134832	Potion				1	
+2321	Fine Thread	1			132912	Cloth			7	5	
+2447	Peacebloom	1			133939	Herb			7	9	
+2450	Briarthorn	1			134412	Herb			7	9	
+2453	Bruiseweed	1			134181	Herb			7	9	
+2581	Heavy Linen Bandage	1			133688	Bandage		20		7	
+2589	Linen Cloth	1			132889	Cloth			7	5	
+2592	Wool Cloth	1			132911	Cloth			7	5	
+2594	Flagon of Dwarven Honeymead	1			132792	Food & Drink				5	
+2596	Skin of Dwarven Stout	1			132816	Food & Drink				5	
+2678	Mild Spices	1			134059				7	11	
+2686	Thunder Ale	1	1		132800	Food & Drink				5	
+2692	Hot Spices	1			1387643				7	11	
+2723	Bottle of Dalaran Noir	1	1		132797	Food & Drink				5	
+3174	Spider Ichor	1			134437	Cooking			7	8	
+3357	Liferoot	1			134413	Herb			7	9	
+3371	Empty Vial	1			134864				7	11	
+3372	Leaded Vial	1			134865				7	11	
+3530	Wool Bandage	1			133684	Bandage		50		7	
+3531	Heavy Wool Bandage	1			133687	Bandage		75		7	
+3713	Soothing Spices	1			646176				7	11	
+3928	Superior Healing Potion	1	35		134833	Potion				1	
+4291	Silken Thread	1			132906	Cloth			7	5	
+4304	Thick Leather	1			134257	Leather			7	6	
+4306	Silk Cloth	1			132905	Cloth			7	5	
+4338	Mageweave Cloth	1			132892	Cloth			7	5	
+4470	Simple Wood	1			135435				7	11	
+6450	Silk Bandage	1			133671	Bandage		100		7	
+6451	Heavy Silk Bandage	1			133672	Bandage		125		7	
+6452	Anti-Venom	1			134437	Consumable				8	
+6453	Strong Anti-Venom	1			134437	Consumable				8	
+6454	Manual: Strong Anti-Venom	2			133735	First Aid		130	9	7	
+7070	Elemental Water	1			134714	Elemental			7	10	
+7080	Essence of Water	2			136007	Elemental			7	10	
+8170	Rugged Leather	1			134251	Leather			7	6	
+8343	Heavy Silken Thread	1			132906	Cloth			7	5	
+8544	Mageweave Bandage	1			133689	Bandage		150		7	
+8545	Heavy Mageweave Bandage	1			133690	Bandage		175		7	
+8838	Sungrass	1			134199	Herb			7	9	
+8925	Crystal Vial	1			134866				7	11	
+13446	Major Healing Potion	1	45		134834	Potion				1	
+13464	Golden Sansam	1			134221	Herb			7	9	
+14047	Runecloth	1			132903	Cloth			7	5	
+14529	Runecloth Bandage	1			133681	Bandage		200		7	
+14530	Heavy Runecloth Bandage	1			133682	Bandage		225		7	
+16112	Manual: Heavy Silk Bandage	1			133735	First Aid		180	9	7	
+16113	Manual: Mageweave Bandage	1			133735	First Aid		210	9	7	
+19440	Powerful Anti-Venom	1			132801	Consumable		300		8	
+19441	Huge Venom Sac	1			134341				7	11	
+19442	Formula: Powerful Anti-Venom	1			134939	First Aid		300	9	7	1
+23567	DEPRECATED ITEM	1	1		134337				7	11	
+23684	Crystal Infused Bandage	1			133686	Bandage		225		7	
+232433	Dense Runecloth Bandage	1	50		133692	Consumable		300		8	
+232434	Manual: Dense Runecloth Bandage	1			133735	First Aid		300	9	7	
+255645	Swollen Venom Sac	1			134343				7	11	
+255715	Potent Anti-Venom	1			132104				7	11	
+255716	Simple Poultice	1			4554333				7	11	
+255717	Clever Poultice	1			4554335				7	11	
+255718	Superior Poultice	1			4554334				7	11	
+255719	Powerful Poultice	1			4554332				7	11	
+255720	Woolen Tourniquet	1			133675				7	11	
+255721	Leather Tourniquet	1			133676				7	11	
+255722	Surgical Tourniquet	1			133679				7	11	
+255723	Manual: Greater Healing Potion	2			133735	First Aid		155	9	7	
+255724	Manual: Clever Poultice	2			133735	First Aid		140	9	7	
+255725	Manual: Superior Healing Potion	2			133735	First Aid		215	9	7	
+255726	Manual: Leather Tourniquet	2			133735	First Aid		200	9	7	
+255727	Manual: Superior Poultice	2			133735	First Aid		210	9	7	
+255728	Manual: Potent Anti-Venom	2			133735	First Aid		215	9	7	
+255729	Manual: Major Healing Potion	2			133735	First Aid		275	9	7	
+255730	Manual: Surgical Tourniquet	2			133735	First Aid		265	9	7	
+255731	Manual: Powerful Poultice	2			133735	First Aid		280	9	7	
+273105	Blueprint: Toxin Study	2			1001491	First Aid		140	9	7	
+273118	Blueprint: Plague Doctor's Laboratory	2			1001491	First Aid		300	9	7	
+279940	Toxin Study	1			463860	Consumable		140		8	
+279951	Plague Doctor's Laboratory	1			4626285	Consumable		300		8	
+279968	First Aid Kit	1			133681	Consumable		20		8	]],
         },
     },
 }

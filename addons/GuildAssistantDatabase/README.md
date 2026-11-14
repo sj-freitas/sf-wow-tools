@@ -30,9 +30,10 @@ Recipes. Drag the clip to move it around the minimap;
 - **Tab** moves from one box to the next (search, then the level and skill boxes), **Shift-Tab**
   back.
 - **Filter**: tick armor types (Cloth, Leather, Mail, Plate) and slots (Head, Chest, One-Hand,
-  Ranged…). Any of the armor types ticked, and any of the slots; both when both have some. The
-  button says how many are ticked. While you're in a guild, **Only guild** (under the armor types)
-  lists only the recipes someone in your guild can craft: your characters there, and the
+  Ranged…). Any of the armor types ticked, and any of the slots; both when both have some. Under
+  the armor types, **Binding: On pickup** lists only the recipes whose item binds when picked up
+  (to whoever makes it, as the game's data says). The button says how many are ticked. While
+  you're in a guild, **Only guild** (under Binding) lists only the recipes someone in your guild can craft: your characters there, and the
   guildmates who use GuildAssistant Professions (it shares what they know). Under a line, **Show
   unknown recipes** also lists the recipes no source knows (unreleased, removed, or not found
   yet): unticked at first, and once ticked it stays ticked (saved for the account; Clear and Reset
@@ -43,11 +44,11 @@ Recipes. Drag the clip to move it around the minimap;
   shows green when you can learn it now, red when not yet. What you know comes from
   GuildAssistant Professions (open each profession's window once so it records it); without it,
   from what the game says, which can miss some.
-- **Reset** clears it all, the Filter too (Only guild as well).
+- **Reset** clears it all, the Filter too (Binding and Only guild as well).
 - On the left, a profession shows only its recipes (with Not known yet, only yours are listed,
   with your skill).
 - Click a recipe for its details: the item (its slot, type and stats), the specialization it
-  needs ("Requires Armorsmith"), how many it makes, the skill-up colours, the reagents, how to
+  needs ("Requires Armorsmith"), "Binds when picked up" when its item does, how many it makes, the skill-up colours, the reagents, how to
   learn it and who can craft it.
 - Hover a recipe, a reagent or a recipe item for the game's tooltip; **shift-click** with the chat
   box open to link it in the chat (a recipe in the list: the recipe, to craft it; the item at the top of its details: the

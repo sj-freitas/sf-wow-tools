@@ -50,7 +50,8 @@ local function joined(...)
     return table.concat(parts, ", ")
 end
 
--- An item: id, name, quality, level, slot, icon (file id), kind, stats, skill, class, subclass. One
+-- An item: id, name, quality, level, slot, icon (file id), kind, stats, skill, class, subclass, how it
+-- binds (the game's number, Core.BIND_ON_PICKUP; 0 when it doesn't). One
 -- the game's tables have no row for has no name: `missing`, named "Item <id>" until the game (or a
 -- sources companion) says better.
 local function decodeItem(line)
@@ -60,7 +61,7 @@ local function decodeItem(line)
         id = id, name = text(f[2]) or ("Item " .. id), missing = text(f[2]) == nil,
         quality = tonumber(f[3]) or 1, level = number(f[4]), slot = number(f[5]), icon = tonumber(f[6]),
         kind = f[7] or "", stats = f[8] or "", skill = number(f[9]), classID = tonumber(f[10]),
-        subclassID = tonumber(f[11]), sources = {},
+        subclassID = tonumber(f[11]), bonding = number(f[12]), sources = {},
     }
     item.summary = joined(item.kind, item.stats)
     return item
@@ -68,7 +69,7 @@ end
 
 local function unknownItem(id)
     return { id = id, name = "Item " .. id, missing = true, quality = 1, level = 0, slot = 0, kind = "", stats = "",
-        summary = "", skill = 0, sources = {} }
+        summary = "", skill = 0, bonding = 0, sources = {} }
 end
 
 -- Sources companions ---------------------------------------------------------------------------------
@@ -362,11 +363,16 @@ Core.ARMOR_TYPES = {
     { name = "Cloth", subclass = 1 }, { name = "Leather", subclass = 2 },
     { name = "Mail", subclass = 3 }, { name = "Plate", subclass = 4 },
 }
+-- How the item binds, as the game numbers it (ItemSparse's Bonding): when picked up, it binds to
+-- whoever makes it.
+Core.BIND_ON_PICKUP = 1
+Core.BINDINGS = { { name = "On pickup", bonding = Core.BIND_ON_PICKUP } }
 
---- The query's slot and armor type sets from the names picked: { slots = { [inventory type] = true }
---- or nil, armor = { [subclass] = true } or nil } (nil: no filter of that kind).
-function Core.filterSets(slotNames, armorNames)
-    local slots, armor
+--- The query's slot, armor type and binding sets from the names picked: slots = { [inventory type]
+--- = true }, armor = { [subclass] = true }, binding = { [bonding] = true }, each nil when nothing
+--- of its kind is picked (no filter of that kind).
+function Core.filterSets(slotNames, armorNames, bindingNames)
+    local slots, armor, binding
     for _, choice in ipairs(Core.SLOTS) do
         if slotNames[choice.name] then
             slots = slots or {}
@@ -379,14 +385,20 @@ function Core.filterSets(slotNames, armorNames)
             armor[choice.subclass] = true
         end
     end
-    return slots, armor
+    for _, choice in ipairs(Core.BINDINGS) do
+        if (bindingNames or {})[choice.name] then
+            binding = binding or {}
+            binding[choice.bonding] = true
+        end
+    end
+    return slots, armor, binding
 end
 
 --- Whether `recipe` matches `query`: every term somewhere in its text (name, the item it makes and
 --- its stats and slot, its reagents, its plans, the specialization it needs, the profession), the level the item needs within
 --- minLevel..maxLevel (an item with none counts as level 1, a recipe that makes no item too), its
---- skill within minSkill..maxSkill (any of them nil: no limit), the item's slot in `query.slots` and
---- its armor type in `query.armor` (sets; nil: any), not unvouched when `query.vouchedOnly` (no
+--- skill within minSkill..maxSkill (any of them nil: no limit), the item's slot in `query.slots`, its
+--- armor type in `query.armor` and how it binds in `query.binding` (sets; nil: any), not unvouched when `query.vouchedOnly` (no
 --- sources companion lists it), known by `query.known` when given (Core.guildRecipes: someone in
 --- your guild can craft it), and, when `query.include` is given, that it says yes.
 function Core.matches(recipe, query)
@@ -400,6 +412,7 @@ function Core.matches(recipe, query)
     if query.armor and not (item and item.classID == Core.ARMOR_CLASS and query.armor[item.subclassID]) then
         return false
     end
+    if query.binding and not (item and query.binding[item.bonding]) then return false end
     if query.vouchedOnly and recipe.vouched == false then return false end
     if query.known and not Core.knows(query.known[recipe.profession], recipe) then return false end
     if query.include and not query.include(recipe) then return false end
@@ -411,7 +424,7 @@ end
 function Core.isQuery(query)
     return #(query.terms or {}) > 0 or query.minLevel ~= nil or query.maxLevel ~= nil
         or query.minSkill ~= nil or query.maxSkill ~= nil or query.slots ~= nil or query.armor ~= nil
-        or query.known ~= nil
+        or query.binding ~= nil or query.known ~= nil
 end
 
 --- How many of `recipes` each profession has: { [profession] = n }.

@@ -95,6 +95,19 @@ it("knows the specializations recipes need, from their plans and patterns", func
     end
 end)
 
+it("knows which items bind when picked up, from the game's data", function()
+    local all, bound = {}, 0
+    for _, entry in ipairs(Data.professions) do all[#all + 1] = Core.load(entry) end
+    local found = Core.search(all, { binding = { [Core.BIND_ON_PICKUP] = true } })
+    for _, recipe in ipairs(found) do
+        check(recipe.creates and recipe.creates.bonding == Core.BIND_ON_PICKUP, recipe.name .. " doesn't bind on pickup")
+        bound = bound + 1
+    end
+    check(bound > 300, bound .. " recipes whose item binds on pickup")
+    local helm = Core.search(all, { terms = Core.terms("lionheart helm") })[1]
+    check(helm and helm.creates.bonding == 2, "Lionheart Helm binds when equipped")
+end)
+
 it("ships the seed of known sources, complete, and it matches the data", function()
     _G.GuildAssistantDatabaseSources = nil
     assert(loadfile("GuildAssistantDatabase/Seed.lua"))("GuildAssistantDatabase", {})

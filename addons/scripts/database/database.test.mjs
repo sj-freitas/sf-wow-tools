@@ -63,11 +63,16 @@ test('builds each profession from the game tables: recipes, reagents, items, how
   assert.deepEqual(items[7935], {
     id: 7935, name: 'Ornate Mithril Breastplate', quality: 2, level: 43, slot: 5, icon: 132745,
     kind: 'Chest (Plate)', stats: 'Critical Strike Rating, Dodge Rating', skill: 0, classID: 4, subclassID: 4,
+    bonding: 2,
   });
+  // How each binds, as the game numbers it: 1 when picked up, 0 when it doesn't.
+  assert.equal(items[99004].bonding, 1, 'Stonevault Greatsword binds when picked up');
+  assert.equal(items[2840].bonding, 0, 'Copper Bar');
   assert.equal(items[2881].skill, 55);
   // Made, but no row in ItemSparse: named after its recipe; its slot and type from Item.
   assert.equal(items[99002].name, 'Ironforge Gauntlets');
   assert.equal(items[99002].kind, 'Hands (Plate)');
+  assert.equal(items[99002].bonding, 0, 'nothing says it binds');
 
   const enchanting = database.professions[1];
   const enchant = enchanting.recipes.find((r) => r.id === 7418);
@@ -96,11 +101,11 @@ test("names the specialization a recipe's plans require, broadest first, and onl
   assert.match(toRecipesLua(database), /specializations = \{\n {8}\["Blacksmithing"\] = "9787,17039",\n {4}\},\n\}/);
 
   // Weaponsmith itself: no parent.
-  const weaponsmith = buildDatabase({ ...tables, ItemSparse: tables.ItemSparse.replace(/,17039\n/, ',9787\n') }, meta);
+  const weaponsmith = buildDatabase({ ...tables, ItemSparse: tables.ItemSparse.replace(/,17039,1\n/, ',9787,1\n') }, meta);
   assert.deepEqual(recipe(weaponsmith, 'Stonevault Greatsword').specializations, ['Weaponsmith']);
   assert.deepEqual(weaponsmith.professions[0].specializations, [{ id: 9787, name: 'Weaponsmith' }], 'no Master: no parent');
   // Something that isn't one of the profession's (riding): nothing.
-  const riding = buildDatabase({ ...tables, ItemSparse: tables.ItemSparse.replace(/,17039\n/, ',824\n') }, meta);
+  const riding = buildDatabase({ ...tables, ItemSparse: tables.ItemSparse.replace(/,17039,1\n/, ',824,1\n') }, meta);
   assert.deepEqual(recipe(riding, 'Stonevault Greatsword').specializations, []);
   assert.deepEqual(riding.professions[0].specializations, [], 'none required: none listed');
   // Taught by other plans too, which anyone can learn: nothing.
@@ -126,8 +131,14 @@ test('writes lines the addon reads, with nothing in a field that would break the
   );
   assert.equal(
     itemLine({ id: 9, name: 'Plans: X', quality: 2, level: 0, slot: 0, icon: 134942, kind: 'Blacksmithing', stats: '',
-      skill: 55, classID: 9, subclassID: 4 }),
-    '9\tPlans: X\t2\t\t\t134942\tBlacksmithing\t\t55\t9\t4',
+      skill: 55, classID: 9, subclassID: 4, bonding: 1 }),
+    '9\tPlans: X\t2\t\t\t134942\tBlacksmithing\t\t55\t9\t4\t1',
+  );
+  assert.equal(
+    itemLine({ id: 9, name: 'X', quality: 1, level: 0, slot: 0, icon: 0, kind: '', stats: '', skill: 0, classID: 7,
+      subclassID: 0, bonding: 0 }),
+    '9\tX\t1\t\t\t\t\t\t\t7\t\t',
+    "binds to no one: empty",
   );
   assert.equal(longString('a'), '[[\na]]');
   assert.equal(longString('a]]b]=]'), '[==[\na]]b]=]]==]');

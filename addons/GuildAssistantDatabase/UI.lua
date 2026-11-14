@@ -1,5 +1,5 @@
 -- GuildAssistant Database: the window. A search box, level/skill limits and a Filter button (slots,
--- armor types, only your guild's) along the top; the professions on the left, with how many recipes of each match
+-- armor types, binds on pickup, only your guild's) along the top; the professions on the left, with how many recipes of each match
 -- the search; the matching recipes in the middle (only the visible rows exist, reused as the list
 -- scrolls); the chosen recipe's details on the right: what it makes, its reagents, how to learn it
 -- and who can craft it. A profession's data is only read the first time it's needed, one
@@ -48,7 +48,7 @@ local state = {
     selected = nil, -- the recipe whose details are shown
     loadingScheduled = false,
     mine = {}, -- Game.myProfessions() at the last refresh
-    slots = {}, armor = {}, -- the Filter's choices, by name (Core.SLOTS, Core.ARMOR_TYPES)
+    slots = {}, armor = {}, binding = {}, -- the Filter's choices, by name (Core.SLOTS, Core.ARMOR_TYPES, Core.BINDINGS)
     guild = {}, -- the Filter's "Only guild" ({ [GUILD_CHOICE] = true } when ticked)
     showUnvouched = false, -- "Show unknown recipes": also those no source knows (saved: showUnknown)
     counts = nil, -- with a search: how many recipes of each profession match ({ [name] = n })
@@ -214,12 +214,12 @@ local function query()
             return profession ~= nil and not profession.knows(recipe)
         end
     end
-    local slots, armor = Core.filterSets(state.slots, state.armor)
+    local slots, armor, binding = Core.filterSets(state.slots, state.armor, state.binding)
     return {
         terms = Core.terms(searchBox:GetText()),
         minLevel = Core.limit(minLevelBox:GetText()), maxLevel = Core.limit(maxLevelBox:GetText()),
         minSkill = Core.limit(minSkillBox:GetText()), maxSkill = Core.limit(maxSkillBox:GetText()),
-        slots = slots, armor = armor, include = include,
+        slots = slots, armor = armor, binding = binding, include = include,
         known = guild and Core.guildRecipes(Game.professionsDB(), guild) or nil,
         vouchedOnly = Game.hidesUnvouched() and not state.showUnvouched,
     }
@@ -428,6 +428,8 @@ local function infoLines(recipe)
     if recipe.specialization then lines[#lines + 1] = ("Requires %s"):format(recipe.specialization) end
     local item = recipe.creates
     if item then
+        -- As the item's tooltip says it: what you make is yours alone.
+        if item.bonding == Core.BIND_ON_PICKUP then lines[#lines + 1] = "Binds when picked up" end
         -- "Chest (Plate), 463 Armor, …": slot and type, then its stats (with values when a sources
         -- companion knows them).
         if item.summary ~= "" then lines[#lines + 1] = item.summary end
@@ -944,20 +946,20 @@ local function buildFilters()
     recipeControls = { levelLabel, minLevelBox, dash, maxLevelBox, skillLabel, minSkillBox, dash2, maxSkillBox, unknownCheck }
 end
 
--- The Filter button and its panel: armor types and slots to tick (any of those ticked in a group;
--- both groups when both have some), and only what your guild can craft.
+-- The Filter button and its panel: armor types, slots and binding to tick (any of those ticked in a
+-- group; every group that has some), and only what your guild can craft.
 local function updateFilterButton()
     local picked = 0
-    for _ in pairs(state.slots) do picked = picked + 1 end
-    for _ in pairs(state.armor) do picked = picked + 1 end
-    for _ in pairs(state.guild) do picked = picked + 1 end
+    for _, group in ipairs({ state.slots, state.armor, state.binding, state.guild }) do
+        for _ in pairs(group) do picked = picked + 1 end
+    end
     filterButton:SetText(picked > 0 and ("Filter (%d)"):format(picked) or "Filter")
 end
 
---- Unticks every armor type and slot, and Only guild. "Show unknown recipes" is a saved preference:
---- it stays.
+--- Unticks every armor type, slot and binding, and Only guild. "Show unknown recipes" is a saved
+--- preference: it stays.
 function UI.clearFilter()
-    state.slots, state.armor, state.guild = {}, {}, {}
+    state.slots, state.armor, state.binding, state.guild = {}, {}, {}, {}
     for _, check in pairs(filterChecks) do check:SetChecked(false) end
     updateFilterButton()
 end
@@ -993,9 +995,14 @@ local function buildFilterPopup()
     recipeControls[#recipeControls + 1] = filterButton
 
     local slotColumns, slotRows = 3, math.ceil(#Core.SLOTS / 3)
+    -- The first column: the armor types, then Binding (its title and choices), then Who can craft
+    -- (while you're in a guild): the panel is as tall as the longer of it and the slots.
+    local bindingRow = #Core.ARMOR_TYPES
+    local guildRow = bindingRow + 1 + #Core.BINDINGS
+    local function rowsShown(inGuild) return math.max(slotRows, inGuild and guildRow + 2 or guildRow) end
     filterPopup = CreateFrame("Frame", nil, frame)
     filterPopup:SetFrameStrata("DIALOG")
-    filterPopup:SetSize(20 + (1 + slotColumns) * FILTER_COLUMN, 30 + slotRows * FILTER_ROW + 88)
+    filterPopup:SetSize(20 + (1 + slotColumns) * FILTER_COLUMN, 30 + rowsShown(false) * FILTER_ROW + 88)
     filterPopup:SetPoint("TOPRIGHT", filterButton, "BOTTOMRIGHT", 0, -2)
     filterPopup:EnableMouse(true) -- clicks on it don't reach the list below
     local edge = filterPopup:CreateTexture(nil, "BACKGROUND")
@@ -1019,12 +1026,25 @@ local function buildFilterPopup()
         filterCheck("slots", choice.name, 1 + math.floor((i - 1) / slotRows), (i - 1) % slotRows)
     end
 
-    -- Under the armor types, while you're in a guild: Only guild, the recipes someone in it can craft
+    -- Under the armor types: Binding, only the recipes whose item binds when picked up (to whoever
+    -- makes it, as the game's data says).
+    local bindingTitle = fontString(filterPopup, "GameFontNormal")
+    bindingTitle:SetPoint("TOPLEFT", filterPopup, "TOPLEFT", 12, -30 - bindingRow * FILTER_ROW - 4)
+    bindingTitle:SetText("Binding")
+    for i, choice in ipairs(Core.BINDINGS) do
+        local check = filterCheck("binding", choice.name, 0, bindingRow + i)
+        check:SetScript("OnEnter", function(self)
+            Game.showTextTooltip(self, "Binds when picked up", { "Recipes whose item binds to whoever makes it." })
+        end)
+        check:SetScript("OnLeave", Game.hideTooltip)
+    end
+
+    -- Under those, while you're in a guild: Only guild, the recipes someone in it can craft
     -- (GuildAssistant Professions knows who: your characters there and the guildmates it heard from).
     local guildTitle = fontString(filterPopup, "GameFontNormal")
-    guildTitle:SetPoint("TOPLEFT", filterPopup, "TOPLEFT", 12, -30 - #Core.ARMOR_TYPES * FILTER_ROW - 4)
+    guildTitle:SetPoint("TOPLEFT", filterPopup, "TOPLEFT", 12, -30 - guildRow * FILTER_ROW - 4)
     guildTitle:SetText("Who can craft")
-    local guildCheck = filterCheck("guild", GUILD_CHOICE, 0, #Core.ARMOR_TYPES + 1)
+    local guildCheck = filterCheck("guild", GUILD_CHOICE, 0, guildRow + 1)
     guildCheck:SetScript("OnEnter", function(self)
         Game.showTextTooltip(self, GUILD_CHOICE, { ("Recipes someone in %s can craft."):format(Game.guildName() or "your guild"),
             "Your characters there, and guildmates who use GuildAssistant Professions." })
@@ -1035,8 +1055,12 @@ local function buildFilterPopup()
     -- removed, or not found yet), hidden otherwise. A saved preference (showUnknown): it stays ticked
     -- across sessions, and Clear and Reset leave it. Only there when a complete source is (the seed).
     local section = CreateFrame("Frame", nil, filterPopup)
-    section:SetPoint("TOPLEFT", filterPopup, "TOPLEFT", 0, -30 - slotRows * FILTER_ROW - 4)
-    section:SetPoint("RIGHT", filterPopup, "RIGHT", 0, 0)
+    local function placeSection(rows)
+        section:ClearAllPoints()
+        section:SetPoint("TOPLEFT", filterPopup, "TOPLEFT", 0, -30 - rows * FILTER_ROW - 4)
+        section:SetPoint("RIGHT", filterPopup, "RIGHT", 0, 0)
+    end
+    placeSection(rowsShown(false))
     section:SetHeight(48)
     local line = section:CreateTexture(nil, "ARTWORK")
     line:SetHeight(1)
@@ -1060,12 +1084,16 @@ local function buildFilterPopup()
         UI.refresh()
     end)
     filterPopup.unvouched, filterPopup.unknownSection = unvouched, section
-    filterPopup.guildTitle, filterPopup.guildCheck = guildTitle, guildCheck
+    filterPopup.guildTitle, filterPopup.guildCheck, filterPopup.bindingTitle = guildTitle, guildCheck, bindingTitle
     filterPopup:SetScript("OnShow", function(self)
         self.unknownSection:SetShown(Game.hidesUnvouched())
         local inGuild = Game.guildName() ~= nil
         self.guildTitle:SetShown(inGuild)
         self.guildCheck:SetShown(inGuild)
+        -- Who can craft takes two more rows, under Binding.
+        local rows = rowsShown(inGuild)
+        placeSection(rows)
+        self:SetHeight(30 + rows * FILTER_ROW + 88)
     end)
 
     local clear = CreateFrame("Button", nil, filterPopup, "UIPanelButtonTemplate")

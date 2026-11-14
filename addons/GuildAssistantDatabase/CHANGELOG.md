@@ -1,5 +1,12 @@
 # GuildAssistant Database
 
+## 1.7.0
+
+- **Binds on pickup** in the Filter (Binding: On pickup): only the recipes whose item binds when
+  picked up, as the game's data says. With the other filters, it lists what's both: plate that
+  binds on pickup, say.
+- A recipe's details say "Binds when picked up" when its item does.
+
 ## 1.6.0
 
 - **Guild tab** (with GuildAssistant Professions): your guildmates' professions, each with its

@@ -50,8 +50,8 @@ local function region(kind, parent)
 end
 
 local function noop() end
-for _, name in ipairs({ "SetSize", "SetPoint", "SetFrameStrata", "SetToplevel", "SetClampedToScreen", "EnableMouse",
-    "SetMovable", "RegisterForDrag", "StartMoving", "StopMovingOrSizing", "SetWidth", "SetHeight", "EnableMouseWheel",
+for _, name in ipairs({ "SetPoint", "SetFrameStrata", "SetToplevel", "SetClampedToScreen", "EnableMouse",
+    "SetMovable", "RegisterForDrag", "StartMoving", "StopMovingOrSizing", "SetWidth", "EnableMouseWheel",
     "ClearAllPoints", "SetAllPoints", "SetAutoFocus", "SetNumeric", "SetMaxLetters", "SetHighlightTexture",
     "SetOrientation", "SetThumbTexture", "SetValueStep", "SetObeyStepOnDrag", "SetJustifyH", "SetWordWrap",
     "SetSpacing", "SetColorTexture", "SetBlendMode", "UnregisterEvent", "SetTextInsets", "SetAlpha",
@@ -62,6 +62,10 @@ end
 local setPoint = Region.SetPoint
 function Region:SetPoint(...) self._point = { ... }; return setPoint(self, ...) end
 function Region:GetWidth() return self._width or 140 end
+-- The height it was given (the Filter panel's grows with what it shows).
+function Region:SetHeight(height) self._height = height end
+function Region:SetSize(_, height) self._height = height end
+function Region:GetHeight() return self._height or 0 end
 function Region:GetCenter() return 1000, 500 end
 function Region:GetEffectiveScale() return 1 end
 function Region:RegisterEvent(event) self._events = self._events or {}; self._events[event] = true end
@@ -580,6 +584,33 @@ it("filters by armor type and slot from the Filter panel", function()
     eq(parts.filterButton:GetText(), "Filter (2)", "and keeps the filter")
 end)
 
+it("filters to what binds when picked up from the Filter panel, and says so in the details", function()
+    local ns = loadAddon({ noSources = true })
+    SlashCmdList.GADB("")
+    local parts = ns.UI.parts()
+    parts.filterButton:Click()
+    eq(parts.filterPopup.bindingTitle:GetText(), "Binding")
+    local pickup = parts.filterChecks["On pickup"]
+    pickup:Fire("OnEnter")
+    eq(GameTooltip.lines[1], "Binds when picked up")
+    eq(GameTooltip.lines[2], "Recipes whose item binds to whoever makes it.")
+    pickup:Click()
+    eq(shownRows(ns), "Stonevault Greatsword")
+    eq(parts.filterButton:GetText(), "Filter (1)")
+    rowNamed(ns, "Stonevault Greatsword"):Click()
+    has(parts.details.info:GetText(), "Requires Master Swordsmith\nBinds when picked up\nTwo-Hand (Two-Handed Swords)")
+    -- With an armor type too: both.
+    parts.filterChecks.Plate:Click()
+    eq(shownRows(ns), "")
+    eq(parts.filterButton:GetText(), "Filter (2)")
+    parts.filterPopup.clear:Click()
+    eq(pickup:GetChecked(), false, "Clear unticks it")
+    eq(parts.filterButton:GetText(), "Filter")
+    -- What binds when equipped doesn't say it.
+    rowNamed(ns, "Ornate Mithril Breastplate"):Click()
+    eq(parts.details.info:GetText():find("Binds", 1, true), nil)
+end)
+
 -- Luna and Ana in Test Guild, as GuildAssistant Professions saves them; Di, Luna's alt there, knows
 -- the wand by the item it makes; Bo (a link) and Cy (another guild) don't count.
 local function guildDB()
@@ -636,11 +667,14 @@ it("doesn't offer Only guild outside a guild, and says why the guild has none", 
     parts.filterButton:Click()
     eq(parts.filterChecks["Only guild"]:IsShown(), false, "not in a guild")
     eq(parts.filterPopup.guildTitle:IsShown(), false)
+    local height = parts.filterPopup:GetHeight()
+    eq(parts.filterChecks["On pickup"]:IsShown(), true, "Binding is there all the same")
     -- In a guild no one shared anything with: nothing, and why.
     ns = loadAddon({ professionsAddon = true, guild = "Test Guild" })
     SlashCmdList.GADB("")
     parts = ns.UI.parts()
     parts.filterButton:Click()
+    eq(parts.filterPopup:GetHeight(), height + 2 * 22, "Who can craft makes the panel two rows taller")
     parts.filterChecks["Only guild"]:Click()
     eq(shownRows(ns), "")
     has(parts.statusText:GetText(), "Only guildmates who use GuildAssistant Professions are known.")
@@ -804,8 +838,8 @@ it("says which specialization a recipe needs, as its plans do, and finds it by t
     eq(shownRows(ns), "Stonevault Greatsword")
     rowNamed(ns, "Stonevault Greatsword"):Click()
     local parts = ns.UI.parts()
-    has(parts.details.info:GetText(),
-        "Blacksmithing, skill 300, requires level 55\nRequires Master Swordsmith\nTwo-Hand (Two-Handed Swords), Speed 3.60, Strength")
+    has(parts.details.info:GetText(), "Blacksmithing, skill 300, requires level 55\nRequires Master Swordsmith\n")
+    has(parts.details.info:GetText(), "\nTwo-Hand (Two-Handed Swords), Speed 3.60, Strength")
     parts.searchBox:SetText("breastplate")
     rowNamed(ns, "Runed Copper Breastplate"):Click()
     eq(parts.details.info:GetText():find("Requires", 1, true), nil, "none for plans anyone can learn")
