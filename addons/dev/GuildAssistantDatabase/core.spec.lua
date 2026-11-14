@@ -338,6 +338,64 @@ it("finds who knows a recipe: you first, then your alts, the guild, links", func
     eq(#Core.crafters(nil, breastplate, "Luna-RP"), 0, "no saved data, nobody")
 end)
 
+-- The guild (the Guild tab) -----------------------------------------------------------------------
+
+it("reads a profession's specializations, and which a character has: the spell, or a recipe that needs it", function()
+    local entry = profession("Blacksmithing")
+    local specs = Core.specializationsOf(entry)
+    eq(#specs.list, 2)
+    eq(specs.byId[9787].name, "Weaponsmith"); eq(specs.byId[17039].parent, 9787)
+    eq(Core.specializationsOf(entry), specs, "read once")
+    eq(#Core.specializationsOf(profession("Enchanting")).list, 0)
+    local loaded = Core.load(entry)
+    local function has(recipes, withLoaded)
+        local names, shown = Core.memberSpecializations(entry, { recipes = recipes }, withLoaded and loaded or nil)
+        return table.concat(names, ", ") .. " / " .. table.concat(shown, ", ")
+    end
+    eq(has({ ["spell:2662"] = true }, true), " / ", "none")
+    eq(has({ ["spell:9787"] = true }), "Weaponsmith / Weaponsmith", "the spell (GuildAssistant Professions 1.5.0)")
+    eq(has({ ["spell:17039"] = true }), "Weaponsmith, Master Swordsmith / Master Swordsmith", "a Master is a Weaponsmith")
+    eq(has({ ["spell:99003"] = true }, true), "Weaponsmith, Master Swordsmith / Master Swordsmith", "from a recipe that needs it")
+    eq(has({ ["spell:99003"] = true }), " / ", "not before the recipes are read")
+    local _, shown = Core.memberSpecializations(nil, nil)
+    eq(#shown, 0, "a profession without recipes, nothing saved")
+end)
+
+it("writes a profession with its specializations, without saying the profession twice", function()
+    eq(Core.professionLine({ profession = "Blacksmithing", shown = { "Weaponsmith" } }), "Blacksmithing - Weaponsmith")
+    eq(Core.professionLine({ profession = "Leatherworking", shown = { "Dragonscale Leatherworking" } }), "Leatherworking - Dragonscale")
+    eq(Core.professionLine({ profession = "Engineering", shown = { "Goblin Engineer" } }), "Engineering - Goblin Engineer")
+    eq(Core.professionLine({ profession = "Herbalism", shown = {} }), "Herbalism")
+end)
+
+it("lists the guild's members, a row per profession, best first, and what each can make", function()
+    local db = { characters = {
+        ["Luna-RP"] = { name = "Luna", realm = "RP", class = "MAGE", source = "own", guild = "G",
+            professions = { Blacksmithing = { rank = 120, recipes = { ["spell:2662"] = true } } } },
+        ["Ana-RP"] = { name = "Ana", realm = "RP", source = "guild", guild = "G",
+            professions = { Blacksmithing = { rank = 300, max = 300, recipes = { ["spell:9787"] = true, ["spell:9972"] = true } },
+                Herbalism = { rank = 225, recipes = {} } } },
+        ["Bo-RP"] = { name = "Bo", realm = "RP", source = "link", guild = "G", professions = { Blacksmithing = { recipes = {} } } },
+        ["Cy-RP"] = { name = "Cy", realm = "RP", source = "guild", guild = "Other", professions = { Blacksmithing = { recipes = {} } } },
+    } }
+    local entries = { Blacksmithing = profession("Blacksmithing") }
+    local members = Core.guildMembers(db, "G", entries, "Luna-RP")
+    local function line(list)
+        local out = {}
+        for i, m in ipairs(list) do out[i] = ("%s %d %s%s"):format(m.name, m.rank, Core.professionLine(m), m.you and " (you)" or "") end
+        return table.concat(out, " | ")
+    end
+    eq(line(members), "Ana 300 Blacksmithing - Weaponsmith | Luna 120 Blacksmithing (you) | Ana 225 Herbalism", "not a link, not another guild")
+    eq(#Core.guildMembers(db, nil, entries), 0, "no guild")
+    eq(line(Core.findMembers(members, Core.terms("weaponsmith"))), "Ana 300 Blacksmithing - Weaponsmith")
+    eq(line(Core.findMembers(members, Core.terms("ana"), "Herbalism")), "Ana 225 Herbalism")
+    eq(line(Core.findMembers(members, {}, "Blacksmithing")), "Ana 300 Blacksmithing - Weaponsmith | Luna 120 Blacksmithing (you)")
+    -- What Ana can make: her recipes, not her specialization's spell; with a search, those that match.
+    local loaded = Core.load(profession("Blacksmithing"))
+    eq(names(Core.memberRecipes(loaded, members[1].record, {})), "Ornate Mithril Breastplate")
+    eq(names(Core.memberRecipes(loaded, members[1].record, Core.terms("pants"))), "")
+end)
+
 it("knows what a guild can craft: its characters on this account and the guildmates heard from", function()
     local db = { characters = {
         ["Luna-RP"] = { name = "Luna", source = "own", guild = "Order",

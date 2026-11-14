@@ -220,7 +220,8 @@ end
 
 it("records the recipes you know at login on WoW Forever, quietly, no window needed, and those you learn", function()
     loadAddon()
-    local known = { [2660] = true, [2667] = true, [7418] = true }
+    -- 9787: Weaponsmith, Blacksmithing's specialization (Recipes.fixture.lua lists it).
+    local known = { [2660] = true, [2667] = true, [7418] = true, [9787] = true }
     forever(known)
     fire("ADDON_LOADED", "GuildAssistantProfessions")
     eq(chat[#chat], "|cff7c5cffGuildAssistant Professions|r: Loaded.", "loaded, and nothing more")
@@ -230,6 +231,10 @@ it("records the recipes you know at login on WoW Forever, quietly, no window nee
     local blacksmithing = db.characters["Luna-Test Realm"].professions.Blacksmithing
     eq(blacksmithing.recipes["spell:2660"], true); eq(blacksmithing.recipes["spell:2667"], true)
     eq(blacksmithing.recipes["spell:2662"], nil, "not one it doesn't know")
+    eq(blacksmithing.recipes["spell:9787"], true, "its specialization, as a spell it knows")
+    eq(blacksmithing.recipes["spell:17039"], nil, "not one it doesn't have")
+    assert(db.export:find('"specializations":[9787]', 1, true), "the export gives it apart: " .. db.export)
+    assert(not db.export:find('"spells":[2660,2667,9787]', 1, true), "not as a recipe")
     eq(blacksmithing.rank, 120, "the skill as the game says")
     eq(db.characters["Luna-Test Realm"].professions.Enchanting.recipes["spell:7418"], true, "and Enchanting's")
     assert(db.export:find("2667", 1, true), "in the export: " .. db.export)
@@ -261,7 +266,7 @@ it("asks the game once for a burst of events, a moment after the last", function
     fire("SKILL_LINES_CHANGED")
     eq(asked, 0, "not while events keep coming")
     for _, fn in ipairs(timers) do fn() end
-    eq(asked, 10, "once: Blacksmithing's 8 recipes and Enchanting's 2")
+    eq(asked, 12, "once: Blacksmithing's 8 recipes and 2 specializations, and Enchanting's 2 recipes")
     unforever()
 end)
 

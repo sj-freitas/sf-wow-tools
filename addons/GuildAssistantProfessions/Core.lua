@@ -133,9 +133,29 @@ function Core.knownRecipes(ids, knows)
     return recipes
 end
 
+-- Specializations ------------------------------------------------------------------------------
+-- A character's specialization (Weaponsmith, Goblin Engineer) is a spell it knows, kept with its
+-- profession's recipes as one ("spell:9787"): guild sharing carries it like a recipe, and versions
+-- before 1.5.0 pass it on untouched. Recipes.lua says which spells they are; the profession window
+-- doesn't list them, and the export gives them apart from the recipes.
+
+--- Whether `key` ("spell:9787") is a specialization's spell, not a recipe.
+function Core.isSpecialization(key)
+    local list = ns.Recipes and ns.Recipes.specializations
+    if not list then return false end
+    if not Core.specializationSpells then
+        Core.specializationSpells = {}
+        for _, ids in pairs(list) do
+            for id in ids:gmatch("%d+") do Core.specializationSpells["spell:" .. id] = true end
+        end
+    end
+    return Core.specializationSpells[key] == true
+end
+
 --- Replaces the profession's recipes with `recipes`: for a window that lists every recipe whatever
---- its filters (the modern API), so wrong ones recorded before go too. Returns whether anything
---- changed; `now` (time()) marks the character updated when it did.
+--- its filters (the modern API), so wrong ones recorded before go too. Specializations stay: the
+--- window doesn't list them. Returns whether anything changed; `now` (time()) marks the character
+--- updated when it did.
 function Core.setRecipes(character, professionName, rank, max, recipes, now)
     local profession = character.professions[professionName] or { recipes = {}, learned = now }
     character.professions[professionName] = profession
@@ -144,6 +164,9 @@ function Core.setRecipes(character, professionName, rank, max, recipes, now)
     for _, recipe in ipairs(recipes) do
         local key = recipe.kind .. ":" .. recipe.id
         if not new[key] then new[key], count = true, count + 1 end
+    end
+    for key in pairs(profession.recipes) do
+        if Core.isSpecialization(key) and not new[key] then new[key], count = true, count + 1 end
     end
     local changed = false
     for key in pairs(profession.recipes) do
@@ -182,18 +205,26 @@ function Core.exportData(db)
         local professions = {}
         for _, name in ipairs(sortedKeys(character.professions)) do
             local profession = character.professions[name]
-            local spells, items = {}, {}
+            local spells, items, specializations = {}, {}, {}
             for recipe in pairs(profession.recipes) do
                 local kind, id = recipe:match("^(%a+):(%d+)$")
-                if kind == "spell" then spells[#spells + 1] = tonumber(id) end
-                if kind == "item" then items[#items + 1] = tonumber(id) end
+                if Core.isSpecialization(recipe) then
+                    specializations[#specializations + 1] = tonumber(id)
+                elseif kind == "spell" then
+                    spells[#spells + 1] = tonumber(id)
+                elseif kind == "item" then
+                    items[#items + 1] = tonumber(id)
+                end
             end
             table.sort(spells)
             table.sort(items)
+            table.sort(specializations)
             professions[#professions + 1] = {
                 name = name, skill = profession.rank, max = profession.max,
                 learned = profession.learned, updated = profession.updated,
                 spells = spells, items = items,
+                -- 1.5.0: its specializations' spells (Weaponsmith 9787), only when it has some.
+                specializations = #specializations > 0 and specializations or nil,
             }
         end
         characters[#characters + 1] = {
@@ -793,7 +824,7 @@ local function isArray(value)
 end
 
 local ARRAY_FIELDS = { characters = true, professions = true, spells = true, items = true, trainers = true,
-    entries = true, requires = true }
+    entries = true, requires = true, specializations = true }
 
 local function encode(value, field)
     local kind = type(value)

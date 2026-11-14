@@ -605,6 +605,148 @@ function Core.guildRecipes(db, guild)
     return known
 end
 
+-- The guild (the Guild tab) ---------------------------------------------------------------------
+-- Who in your guild has which profession, at what skill and with which specialization, and what
+-- each can make: GuildAssistant Professions' saved data, as for Only guild. A specialization is a
+-- spell the character knows, kept with its profession's recipes ("spell:9787"; 1.5.0 records them);
+-- the recipes it knows that need one tell it too (for what older versions recorded).
+
+--- The profession's specializations, as the data lists them (`entry.specializations`, "9787=
+--- Weaponsmith;17039=Master Swordsmith>9787"): { list = { { id, name, parent } }, byId }. Read once.
+function Core.specializationsOf(entry)
+    if entry.specializationList then return entry.specializationList end
+    local list, byId = {}, {}
+    for id, name, parent in (entry.specializations or ""):gmatch("(%d+)=([^;>]+)>?(%d*)") do
+        local spec = { id = tonumber(id), name = name, parent = tonumber(parent) }
+        list[#list + 1] = spec
+        byId[spec.id] = spec
+    end
+    entry.specializationList = { list = list, byId = byId }
+    return entry.specializationList
+end
+
+--- The specializations a character has in a profession (`profession`, as GuildAssistant Professions
+--- saved it; `entry`, the data's, nil for one without recipes; `loaded`, its recipes once read):
+--- their names, broadest first ({ "Weaponsmith", "Master Swordsmith" }), and those to show, none
+--- the parent of another it has ({ "Master Swordsmith" }).
+function Core.memberSpecializations(entry, profession, loaded)
+    local specs = entry and Core.specializationsOf(entry) or { list = {}, byId = {} }
+    local recipes = profession and profession.recipes or {}
+    local has = {}
+    for _, spec in ipairs(specs.list) do
+        if recipes["spell:" .. spec.id] then
+            has[spec.name] = true
+            local parent = spec.parent and specs.byId[spec.parent]
+            if parent then has[parent.name] = true end
+        end
+    end
+    if loaded then
+        -- Only the recipes that need one (a few dozen of hundreds): found once per profession.
+        if not loaded.specialized then
+            loaded.specialized = {}
+            for _, recipe in ipairs(loaded.recipes) do
+                if #recipe.specializations > 0 then loaded.specialized[#loaded.specialized + 1] = recipe end
+            end
+        end
+        for _, recipe in ipairs(loaded.specialized) do
+            if Core.knows(profession, recipe) then
+                for _, name in ipairs(recipe.specializations) do has[name] = true end
+            end
+        end
+    end
+    local names, others = {}, {}
+    for _, spec in ipairs(specs.list) do
+        if has[spec.name] then names[#names + 1], has[spec.name] = spec.name, nil end
+    end
+    for name in pairs(has) do others[#others + 1] = name end -- a trainer's, the data doesn't list
+    table.sort(others)
+    for _, name in ipairs(others) do names[#names + 1] = name end
+    local parents = {}
+    for _, spec in ipairs(specs.list) do
+        local parent = spec.parent and specs.byId[spec.parent]
+        if parent then
+            for _, name in ipairs(names) do
+                if name == spec.name then parents[parent.name] = true end
+            end
+        end
+    end
+    local shown = {}
+    for _, name in ipairs(names) do
+        if not parents[name] then shown[#shown + 1] = name end
+    end
+    return names, shown
+end
+
+--- "Blacksmithing - Weaponsmith", "Leatherworking - Dragonscale" (its own name left out of the
+--- specialization's), "Mining": a member's profession and the specializations shown.
+function Core.professionLine(member)
+    if #member.shown == 0 then return member.profession end
+    local names = {}
+    for i, name in ipairs(member.shown) do
+        local short = name:gsub("%s+" .. member.profession:gsub("%p", "%%%0") .. "$", "")
+        names[i] = short ~= "" and short or name
+    end
+    return member.profession .. " - " .. table.concat(names, ", ")
+end
+
+--- Your guild's members, from GuildAssistant Professions' saved data (`db`): each character in
+--- `guild` (this account's there and the guildmates it heard from, as Only guild counts them) and
+--- each profession it has, one row each: { key, name, realm, class, source, you, profession, rank,
+--- max, record (the saved profession), specializations, shown, search (lowercase text: the name, the
+--- profession and its specializations) }. `entries` = { [profession] = the data's }; `you` is
+--- Core.playerKey's. By profession, then highest skill, then name.
+function Core.guildMembers(db, guild, entries, you)
+    local members = {}
+    if not guild then return members end
+    for key, character in pairs(db and db.characters or {}) do
+        if character.guild == guild and (character.source == "own" or character.source == "guild") then
+            for name, profession in pairs(character.professions or {}) do
+                local entry = entries[name]
+                local specs, shown = Core.memberSpecializations(entry, profession, entry and entry.loaded)
+                members[#members + 1] = {
+                    key = key, name = character.name, realm = character.realm, class = character.class,
+                    source = character.source, you = key == you, profession = name, rank = profession.rank or 0,
+                    max = profession.max, record = profession, specializations = specs, shown = shown,
+                    search = table.concat({ character.name, name, table.concat(specs, " ") }, " "):lower(),
+                }
+            end
+        end
+    end
+    table.sort(members, function(a, b)
+        if a.profession ~= b.profession then return a.profession < b.profession end
+        if a.rank ~= b.rank then return a.rank > b.rank end
+        if a.name ~= b.name then return a.name < b.name end
+        return (a.realm or "") < (b.realm or "")
+    end)
+    return members
+end
+
+--- The members whose text has every term (Core.terms), and of `profession` when given.
+function Core.findMembers(members, terms, profession)
+    local found = {}
+    for _, member in ipairs(members) do
+        if (not profession or member.profession == profession) and hasAll(member.search, terms or {}) then
+            found[#found + 1] = member
+        end
+    end
+    return found
+end
+
+--- What a member can make: the recipes of `loaded` (its profession, read) that `record` (their saved
+--- profession) knows and that match `terms`, by skill, then name.
+function Core.memberRecipes(loaded, record, terms)
+    local found = {}
+    for _, recipe in ipairs(loaded and loaded.recipes or {}) do
+        if Core.knows(record, recipe) and hasAll(recipe.search, terms or {}) then found[#found + 1] = recipe end
+    end
+    table.sort(found, function(a, b)
+        if a.skill ~= b.skill then return a.skill < b.skill end
+        if a.name ~= b.name then return a.name < b.name end
+        return a.id < b.id
+    end)
+    return found
+end
+
 --- How many times the recipe can be made from what you carry (`countOf(itemId)`), and the reagents
 --- short of one: { { item, short } }. A recipe without reagents can always be made (once at a time).
 function Core.craftable(recipe, countOf)

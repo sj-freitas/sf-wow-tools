@@ -2,6 +2,9 @@
 
 ## 1.5.0
 
+- **Specializations** on WoW Forever: your character's (Weaponsmith, Goblin Engineer, Tribal
+  Leatherworking…) is recorded with its profession as you log in, shared with your guild, and in the
+  file you upload. GuildAssistant Database's Guild tab shows each guildmate's.
 - **Trainers**: what a recipe requires besides the profession is recorded too, as the trainer's
   window says it (a specialization: "Goblin Engineer" at a Goblin Engineering trainer), whether
   you have it or not. GuildAssistant Database shows it with the recipe, and it's shared with your

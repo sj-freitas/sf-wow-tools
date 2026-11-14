@@ -57,6 +57,16 @@ export interface ExportedProfession {
   updated: Date | null;
 }
 
+/**
+ * Specializations' spells (Weaponsmith 9787, Goblin Engineer 20222…; GuildAssistant Database's data
+ * lists them). A character knows them as it knows recipes: GuildAssistant Professions 1.5.0 exports
+ * them apart (`specializations`, not read here yet), but its versions before pass a guildmate's on
+ * among the recipes. Never a recipe.
+ */
+const SPECIALIZATION_SPELLS = new Set([
+  9787, 9788, 17039, 17040, 17041, 10656, 10658, 10660, 20219, 20222,
+]);
+
 const MAX_CHARACTERS = 100;
 const MAX_PROFESSIONS = 20;
 const MAX_RECIPES = 3000;
@@ -206,7 +216,7 @@ export function parseProfessionExport(input: unknown): ProfessionExport {
           name: text(profession.name, 'profession name', 64),
           skill: optionalInt(profession.skill),
           max: optionalInt(profession.max),
-          spells: ids(profession.spells, 'recipes'),
+          spells: ids(profession.spells, 'recipes').filter((id) => !SPECIALIZATION_SPELLS.has(id)),
           items: ids(profession.items, 'recipes'),
           learned: time(profession.learned),
           updated: time(profession.updated),

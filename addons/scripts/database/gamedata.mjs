@@ -117,7 +117,7 @@ const byKey = (rows, key) => {
 
 /**
  * The database from the tables' CSV text ({ [table]: text }): { version, build, fetched,
- * professions, warnings }, each profession { name, skill, recipes, items }.
+ * professions, warnings }, each profession { name, skill, recipes, items, specializations }.
  */
 export function buildDatabase(csv, { version, build, fetched }, professions = PROFESSIONS) {
   const table = (name) => parseCsv(csv[name] ?? '');
@@ -172,24 +172,29 @@ export function buildDatabase(csv, { version, build, fetched }, professions = PR
       });
     };
 
-    // The profession's specializations ("Armorsmith", "Gnomish Engineer"): its abilities that make
-    // nothing, but its ranks (named after it).
+    // The profession's abilities that make nothing, but its ranks (named after it): its
+    // specializations among them ("Armorsmith", "Gnomish Engineer").
     const specializations = new Map();
     for (const ability of abilities) {
       if (num(ability.SkillLine) !== profession.skill || reagentsOf.has(ability.Spell)) continue;
       const name = names.get(ability.Spell)?.Name_lang?.trim();
       if (name && name !== profession.name) specializations.set(num(ability.Spell), name);
     }
-    // What a recipe item requires, broadest first: ["Weaponsmith", "Master Swordsmith"].
+    // What a recipe item requires, broadest first, by spell: [9787 Weaponsmith, 17039 Master Swordsmith].
     const requiredBy = (id) => {
       const ability = num(sparse.get(String(id))?.RequiredAbility);
-      return [SPECIALIZATION_PARENTS[ability], ability].map((spell) => specializations.get(spell)).filter(Boolean);
+      return [SPECIALIZATION_PARENTS[ability], ability].filter((spell) => specializations.has(spell));
     };
-    // A recipe's: what all its recipe items require (one that requires nothing teaches it to anyone).
+    // The specializations some recipe requires: the profession's, as the data lists them.
+    const used = new Set();
+    // A recipe's, by name: what all its recipe items require (one that requires nothing teaches it to
+    // anyone).
     const required = (recipeItems) => {
       if (recipeItems.length === 0) return [];
       const [first, ...others] = recipeItems.map(requiredBy);
-      return first.filter((name) => others.every((names) => names.includes(name)));
+      const spells = first.filter((spell) => others.every((list) => list.includes(spell)));
+      for (const spell of spells) used.add(spell);
+      return spells.map((spell) => specializations.get(spell));
     };
 
     const seen = new Set();
@@ -238,7 +243,19 @@ export function buildDatabase(csv, { version, build, fetched }, professions = PR
       });
     }
     recipes.sort((a, b) => a.skill - b.skill || a.name.localeCompare(b.name) || a.id - b.id);
-    return { name: profession.name, skill: profession.skill, recipes, items: [...items.values()].sort((a, b) => a.id - b.id) };
+    // { id, name, parent (its spell, for a Master Swordsmith: Weaponsmith's) }, by spell.
+    const professionSpecializations = [...used].sort((a, b) => a - b).map((id) => ({
+      id,
+      name: specializations.get(id),
+      ...(used.has(SPECIALIZATION_PARENTS[id]) ? { parent: SPECIALIZATION_PARENTS[id] } : {}),
+    }));
+    return {
+      name: profession.name,
+      skill: profession.skill,
+      recipes,
+      items: [...items.values()].sort((a, b) => a.id - b.id),
+      specializations: professionSpecializations,
+    };
   });
 
   if (missing.size > 0) warnings.push(`${missing.size} items have no row in the game's item tables (named in game instead)`);

@@ -86,13 +86,23 @@ test("names the specialization a recipe's plans require, broadest first, and onl
   assert.deepEqual(recipe(database, 'Ornate Mithril Breastplate').specializations, [], 'plans that require nothing');
   assert.deepEqual(recipe(database, 'The Shatterer').specializations, [], 'no plans');
   assert.equal(database.professions[0].recipes.some((r) => r.name === 'Weaponsmith'), false, 'a specialization is no recipe');
+  // The profession's: those some recipe requires, by spell, with the parent of a Master Swordsmith.
+  assert.deepEqual(database.professions[0].specializations, [
+    { id: 9787, name: 'Weaponsmith' },
+    { id: 17039, name: 'Master Swordsmith', parent: 9787 },
+  ]);
+  assert.deepEqual(database.professions[1].specializations, [], 'Enchanting has none');
+  assert.match(toLua(database), /count = 8,\n {12}specializations = "9787=Weaponsmith;17039=Master Swordsmith>9787",\n/);
+  assert.match(toRecipesLua(database), /specializations = \{\n {8}\["Blacksmithing"\] = "9787,17039",\n {4}\},\n\}/);
 
   // Weaponsmith itself: no parent.
   const weaponsmith = buildDatabase({ ...tables, ItemSparse: tables.ItemSparse.replace(/,17039\n/, ',9787\n') }, meta);
   assert.deepEqual(recipe(weaponsmith, 'Stonevault Greatsword').specializations, ['Weaponsmith']);
+  assert.deepEqual(weaponsmith.professions[0].specializations, [{ id: 9787, name: 'Weaponsmith' }], 'no Master: no parent');
   // Something that isn't one of the profession's (riding): nothing.
   const riding = buildDatabase({ ...tables, ItemSparse: tables.ItemSparse.replace(/,17039\n/, ',824\n') }, meta);
   assert.deepEqual(recipe(riding, 'Stonevault Greatsword').specializations, []);
+  assert.deepEqual(riding.professions[0].specializations, [], 'none required: none listed');
   // Taught by other plans too, which anyone can learn: nothing.
   const twoPlans = buildDatabase({
     ...tables,

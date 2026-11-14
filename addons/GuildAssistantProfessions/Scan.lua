@@ -137,9 +137,12 @@ function Scan.knownRecipes()
     if not Scan.knowsWithoutWindow() then return false end
     local character = Scan.current()
     local changed = false
+    local specializations = ns.Recipes.specializations or {}
     for name in pairs(character.professions) do
         local ids = ns.Recipes.professions[name]
         if ids then
+            -- Its specializations too (Weaponsmith): spells the character knows, as recipes are.
+            ids = ids .. "," .. (specializations[name] or "")
             local recipes = Core.knownRecipes(ids, function(id) return IsPlayerSpell(id) == true end)
             if #recipes > 0 and Core.addRecipes(character, name, nil, nil, recipes, ns.now()) > 0 then
                 changed = true
@@ -168,7 +171,9 @@ local function record(character, professionName, rank, max, recipes, replace)
     if changed and not announced[key] then
         announced[key] = true
         local count = 0
-        for _ in pairs(character.professions[professionName].recipes) do count = count + 1 end
+        for key in pairs(character.professions[professionName].recipes) do
+            if not Core.isSpecialization(key) then count = count + 1 end
+        end
         local whose = character.source == "link" and (" of %s (from their link)"):format(character.name) or ""
         Scan.say("recorded %s%s: %d recipes. Type /ga-prof save to write it to the file (it reloads the screen).",
             professionName, whose, count)

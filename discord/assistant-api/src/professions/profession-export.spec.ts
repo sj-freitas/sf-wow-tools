@@ -86,6 +86,29 @@ describe('parseProfessionExport', () => {
     assert.equal(herbalism.updated?.toISOString(), new Date(1792100000 * 1000).toISOString());
   });
 
+  it("leaves a specialization's spell out of the recipes, as an older addon passes it on", () => {
+    const data = parseProfessionExport({
+      addon: 'GuildAssistantProfessions',
+      format: 2,
+      characters: [
+        {
+          name: 'Ana',
+          realm: 'RP',
+          professions: [
+            {
+              name: 'Blacksmithing',
+              spells: [9787, 9972, 17039],
+              items: [],
+              // 1.5.0 gives them apart: not read yet, and no harm.
+              specializations: [9787],
+            },
+          ],
+        },
+      ],
+    });
+    assert.deepEqual(data.characters[0].professions[0].spells, [9972]);
+  });
+
   it('refuses anything else, saying how to get an export', () => {
     for (const input of [
       'not json',

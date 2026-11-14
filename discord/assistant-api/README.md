@@ -1243,6 +1243,10 @@ on logout). Blizzard's Classic Era / SoD API has no professions, hence the addon
 - **Tables:** `character_professions` and `wowhead_entries`, in `prisma/professions.prisma`.
 - The export's format is tested from both sides: the addon's spec writes
   `addons/dev/GuildAssistantProfessions/export.fixture.json` and `profession-export.spec.ts` reads it.
+- A specialization's spell (Weaponsmith 9787, Goblin Engineer 20222…) is never a recipe: the addon
+  1.5.0 exports them apart (`specializations`, not read yet), and its older versions pass a
+  guildmate's on among the recipes, so `parseProfessionExport` leaves them out of `spells`
+  (`SPECIALIZATION_SPELLS`).
 
 ## MCP server for AI agents (`src/mcp/`)
 

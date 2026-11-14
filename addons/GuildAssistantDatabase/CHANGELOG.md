@@ -2,6 +2,10 @@
 
 ## 1.6.0
 
+- **Guild tab** (with GuildAssistant Professions): your guildmates' professions, each with its
+  skill and specialization ("Shivan Darkwhisp  190  Blacksmithing - Weaponsmith"), by profession on
+  the left. Search by name, profession or specialization; click a guildmate to see what they can
+  make, and a recipe for its details. **Recipes** is the tab for the recipes, as before.
 - **Specializations**: a recipe whose plans or pattern need one says so in its details, as their
   tooltip does: Dark Iron Helm "Requires Armorsmith". 116 recipes: Armorsmith, Weaponsmith and its
   Master Axesmith, Hammersmith and Swordsmith, Dragonscale, Elemental and Tribal Leatherworking,

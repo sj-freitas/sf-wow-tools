@@ -90,6 +90,11 @@ needed: each recipe the game's tables have of the character's professions (`Reci
 with GuildAssistant Database's data, `npm run database`) is asked of the game (`IsPlayerSpell`,
 which answers with the window closed), and the known ones are added. A profession's window there
 lists all its recipes, so what it shows replaces what was saved (and catches one the tables lack).
+Its specialization (Weaponsmith, Goblin Engineer, Tribal Leatherworking…; 1.5.0) is a spell the
+character knows too: `Recipes.lua` lists each profession's, they're asked of the game the same way,
+and kept with the recipes (`spell:9787`), so guild sharing carries them like one and versions before
+1.5.0 pass them on. The window doesn't list them, so they stay when it replaces the rest. The
+export gives them apart: `"specializations":[9787]` on the profession, left out of `spells`.
 On Classic Era recipes come from the windows only, and a window with a filter on shows fewer, so
 they're only added there. Each character keeps when something new was last recorded
 for it, and each profession when it was learned (first seen; again after unlearning it) and last

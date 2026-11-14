@@ -4,6 +4,11 @@
 -- scrolls); the chosen recipe's details on the right: what it makes, its reagents, how to learn it
 -- and who can craft it. A profession's data is only read the first time it's needed, one
 -- profession per frame, so opening the window never stalls the game.
+--
+-- With GuildAssistant Professions, two tabs under the window: Recipes (the above) and Guild: the
+-- professions on the left with how many guildmates have each, the guildmates in the middle ("Shivan
+-- Darkwhisp  190  Blacksmithing - Weaponsmith"), and a click on one lists what they can make, whose
+-- details show as Recipes' do. The search box searches whichever is listed.
 
 local _, ns = ...
 local Core, Game = ns.Core, ns.Game
@@ -16,6 +21,8 @@ local SIDEBAR_WIDTH, LIST_WIDTH = 168, 372
 -- The status line at the bottom left, leaving room for the version on the right.
 local STATUS_WIDTH = WIDTH - 32 - 80
 local ROW_HEIGHT, ROWS = 22, 18
+-- The Guild tab's rows: the name, the skill (right-aligned, ending here), the profession from here.
+local MEMBER_SKILL_RIGHT, MEMBER_PROFESSION_LEFT = 166, 176
 local SIDEBAR_ROWS = 14
 local MAX_REAGENTS, MAX_RECIPE_ITEMS, MAX_CRAFTERS = 8, 3, 15
 local QUESTION_MARK = "Interface\\Icons\\INV_Misc_QuestionMark"
@@ -27,6 +34,11 @@ local searchBox, placeholder, clearButton, minLevelBox, maxLevelBox, minSkillBox
 local filterButton, filterPopup, filterChecks
 local sidebarButtons, rows, slider, statusText, statusHover, versionText, columnSkill
 local details
+-- The tabs, what only Recipes shows (the limits, the Filter, Not known yet), and the Guild tab's own:
+-- the guildmates' rows, their column titles, and the line above the list (Back, whose recipes).
+local tabs, recipeControls, recipeColumns, memberRows, memberColumns, backButton, crumb
+local GUILD_HINT = "Click a guildmate to see what they can make.\n\nYour guildmates who use GuildAssistant Professions, each profession with its skill and specialization. Search by name, profession or specialization (weaponsmith)."
+local RECIPE_HINT = "Pick a recipe to see its reagents, how to learn it and who can craft it.\n\nShift-click a recipe to link it in the chat, or the item at the top of its details for the item's link; ctrl-click to try it on. Click a name under Who can craft it to whisper them.\n\nShift-click an item anywhere (your bags, a link in the chat) with the chat box closed to search for it."
 
 local state = {
     profession = nil, -- the profession picked on the left, nil for all
@@ -41,7 +53,13 @@ local state = {
     showUnvouched = false, -- "Show unknown recipes": also those no source knows (saved: showUnknown)
     counts = nil, -- with a search: how many recipes of each profession match ({ [name] = n })
     total = 0, -- how many match in all the listed professions
+    tab = "recipes", -- or "guild"
+    -- The Guild tab: every guildmate row (Core.guildMembers), those listed, the one whose recipes are
+    -- listed instead (nil: the guildmates are), and what to go back to (the search, the place).
+    allMembers = {}, members = {}, member = nil, back = nil,
 }
+-- Each tab's search, profession, place in the list and pick, kept while the other is shown.
+local memory = { recipes = {}, guild = {} }
 
 -- Building blocks ----------------------------------------------------------------------------------
 
@@ -222,7 +240,32 @@ local function total(entry)
     return entry.count or 0
 end
 
+-- The Guild tab's left column: all professions, then each one a guildmate has (the data's first, in
+-- its order, then the others: Herbalism…), with how many guildmates have it (with a search, how
+-- many match, in gold).
+local function drawGuildSidebar()
+    local searching = #Core.terms(searchBox:GetText()) > 0 and not state.member
+    local function count(n) return searching and matchCount(n) or Core.thousands(n or 0) end
+    local items = { { name = nil, text = "All professions", right = count(state.guildTotal) } }
+    for _, name in ipairs(state.guildProfessions or {}) do
+        items[#items + 1] = { name = name, text = name, right = count((state.guildCounts or {})[name]) }
+    end
+    for i, button in ipairs(sidebarButtons) do
+        local item = items[i]
+        if item then
+            button.profession = item.name
+            button.text:SetText(item.text)
+            button.right:SetText(item.right or "")
+            if item.name == state.profession then button.selected:Show() else button.selected:Hide() end
+            button:Show()
+        else
+            button:Hide()
+        end
+    end
+end
+
 local function drawSidebar()
+    if state.tab == "guild" then return drawGuildSidebar() end
     local entries = listedEntries()
     local all = ""
     if state.counts then
@@ -262,13 +305,49 @@ end
 -- The list ----------------------------------------------------------------------------------------
 
 local function skillColor(recipe)
-    if not state.unknownOnly then return "ffffd100" end
+    if not state.unknownOnly or state.tab ~= "recipes" then return "ffffd100" end
     local mine = state.mine[recipe.profession]
     -- Learnable now (green), or not yet (red).
     return (mine and mine.rank >= recipe.skill) and "ff40ff40" or "ffff5050"
 end
 
-local function drawRows()
+-- The Guild tab lists guildmates, until one is picked (then their recipes, as Recipes lists them).
+local function listingMembers()
+    return state.tab == "guild" and state.member == nil
+end
+
+local function sourceSuffix(member)
+    if member.you then return " |cff808080(you)|r" end
+    return member.source == "own" and " |cff808080(alt)|r" or ""
+end
+
+local function updateSlider(count)
+    local maxOffset = math.max(0, count - ROWS)
+    state.offset = math.min(math.max(state.offset, 0), maxOffset)
+    slider:SetMinMaxValues(0, maxOffset)
+    slider:SetValue(state.offset)
+    if maxOffset > 0 then slider:Show() else slider:Hide() end
+end
+
+local function drawMembers()
+    local members = state.members
+    updateSlider(#members)
+    for i, row in ipairs(memberRows) do
+        local member = members[state.offset + i]
+        if member then
+            row.member = member
+            row.name:SetText(("|c%s%s|r%s"):format(Game.classHex(member.class), member.name, sourceSuffix(member)))
+            row.skill:SetText(member.rank > 0 and tostring(member.rank) or "")
+            row.profession:SetText(Core.professionLine(member))
+            row:Show()
+        else
+            row.member = nil
+            row:Hide()
+        end
+    end
+end
+
+local function drawRecipeRows()
     local results = state.results
     local maxOffset = math.max(0, #results - ROWS)
     state.offset = math.min(math.max(state.offset, 0), maxOffset)
@@ -291,6 +370,25 @@ local function drawRows()
     slider:SetMinMaxValues(0, maxOffset)
     slider:SetValue(state.offset)
     if maxOffset > 0 then slider:Show() else slider:Hide() end
+end
+
+--- The list: guildmates, or recipes; the column titles that go with it.
+local function drawRows()
+    local members = listingMembers()
+    for _, region in ipairs(memberColumns) do region:SetShown(members) end
+    for _, region in ipairs(recipeColumns) do region:SetShown(not members) end
+    if members then
+        for _, row in ipairs(rows) do
+            row.recipe, row.hyperlink = nil, nil
+            row:Hide()
+        end
+        return drawMembers()
+    end
+    for _, row in ipairs(memberRows) do
+        row.member = nil
+        row:Hide()
+    end
+    drawRecipeRows()
 end
 
 -- The details -------------------------------------------------------------------------------------
@@ -414,15 +512,40 @@ local function craftTooltip(button)
     end
 end
 
+-- A guildmate, when no recipe of theirs is picked: who they are, and each profession they have with
+-- its skill and specialization.
+local function memberSummary(member)
+    local who = member.you and "You" or member.source == "own" and "Your alt" or "Guildmate"
+    local lines = { ("|c%s%s|r"):format(Game.classHex(member.class), member.name), "|cff808080" .. who .. "|r", "" }
+    for _, other in ipairs(state.allMembers) do
+        if other.key == member.key then
+            local skill = other.rank > 0 and (other.max and ("%d/%d "):format(other.rank, other.max) or (other.rank .. " ")) or ""
+            lines[#lines + 1] = skill .. Core.professionLine(other)
+        end
+    end
+    lines[#lines + 1] = ""
+    lines[#lines + 1] = "|cff808080Click a recipe for its details.|r"
+    return table.concat(lines, "\n")
+end
+
 local function drawDetails()
     local recipe = state.selected
     local d = details
     if not recipe then
-        d.hint:Show()
         for _, region in ipairs(d.regions) do region[1]:Hide() end
         d.learnHover:Hide()
+        if state.tab == "guild" and state.member then
+            d.hint:Hide()
+            d.summary:SetText(memberSummary(state.member))
+            d.summary:Show()
+            return
+        end
+        d.summary:Hide()
+        d.hint:SetText(state.tab == "guild" and GUILD_HINT or RECIPE_HINT)
+        d.hint:Show()
         return
     end
+    d.summary:Hide()
     d.hint:Hide()
     -- The item it makes (its link on shift-click); an enchant, which makes none, links the recipe.
     d.name.recipe, d.name.item, d.name.hyperlink = recipe, recipe.creates, Game.hyperlink(recipe)
@@ -506,10 +629,173 @@ local function statusLine(pending, total)
     return line
 end
 
+-- The Guild tab ----------------------------------------------------------------------------------
+
+--- The line above the Guild tab's list: your guild, or Back and whose recipes are listed.
+local function drawCrumb()
+    local guildTab = state.tab == "guild"
+    backButton:SetShown(guildTab and state.member ~= nil)
+    crumb:SetShown(guildTab)
+    if not guildTab then return end
+    crumb:ClearAllPoints()
+    local member = state.member
+    if member then
+        crumb:SetPoint("LEFT", backButton, "RIGHT", 10, 0)
+        crumb:SetText(("|c%s%s|r  %s%s"):format(Game.classHex(member.class), member.name,
+            member.rank > 0 and (member.rank .. " ") or "", Core.professionLine(member)))
+    else
+        crumb:SetPoint("TOPLEFT", frame, "TOPLEFT", 20, -64)
+        local guild = Game.guildName()
+        crumb:SetText(guild and ("|cffffd100%s|r: guildmates who use GuildAssistant Professions"):format(guild) or "")
+    end
+end
+
+local function guildStatus(pending, total, guild, byName)
+    if pending > 0 then return ("Reading recipes... %d of %d professions"):format(total - pending, total) end
+    if not guild then return "You're not in a guild: this tab lists your guildmates' professions." end
+    if #state.allMembers == 0 then
+        return ("No one in %s is known yet: guildmates who use GuildAssistant Professions show here."):format(guild)
+    end
+    local member = state.member
+    if member then
+        if not byName[member.profession] then return ("Nothing to make with %s."):format(member.profession) end
+        local count = #state.results
+        if count == 0 then return "No recipes match." end
+        return ("%s can make %s recipe%s%s."):format(member.name, Core.thousands(count), count == 1 and "" or "s",
+            #Core.terms(searchBox:GetText()) > 0 and " that match" or "")
+    end
+    local people = {}
+    local count = 0
+    for _, row in ipairs(state.members) do
+        if not people[row.key] then people[row.key], count = true, count + 1 end
+    end
+    if count == 0 then return "No guildmates match." end
+    return ("%s guildmate%s"):format(Core.thousands(count), count == 1 and "" or "s")
+end
+
+--- The Guild tab, up to date: its guildmates (each profession they have, read one per frame for
+--- the specializations their recipes tell), those the search and the profession picked keep, or
+--- what the one picked can make.
+local function refreshGuild()
+    local guild = Game.guildName()
+    local byName = {}
+    for _, entry in ipairs(ns.Data and ns.Data.professions or {}) do byName[entry.name] = entry end
+    local all = Core.guildMembers(Game.professionsDB(), guild, byName, Game.playerKey())
+    local wanted, seen, professions, known = {}, {}, {}, {}
+    for _, member in ipairs(all) do
+        local entry = byName[member.profession]
+        if entry and not seen[entry] then seen[entry], wanted[#wanted + 1] = true, entry end
+        known[member.profession] = true
+    end
+    -- The data's professions first, in its order, then the others (Herbalism…), by name.
+    for _, entry in ipairs(ns.Data and ns.Data.professions or {}) do
+        if known[entry.name] then professions[#professions + 1], known[entry.name] = entry.name, nil end
+    end
+    local others = {}
+    for name in pairs(known) do others[#others + 1] = name end
+    table.sort(others)
+    for _, name in ipairs(others) do professions[#professions + 1] = name end
+    local pending = loadPending(wanted)
+    state.allMembers, state.guildProfessions = all, professions
+    if state.member then
+        -- As read now (a newer skill, a specialization its recipes tell once read); gone: back.
+        local again
+        for _, member in ipairs(all) do
+            if member.key == state.member.key and member.profession == state.member.profession then again = member end
+        end
+        state.member = again
+        if not again then state.selected, state.back = nil, nil end
+    end
+    local terms = Core.terms(searchBox:GetText())
+    local found = Core.findMembers(all, state.member and {} or terms)
+    state.guildCounts = {}
+    for _, member in ipairs(found) do
+        state.guildCounts[member.profession] = (state.guildCounts[member.profession] or 0) + 1
+    end
+    state.guildTotal = #found
+    if state.member then
+        local entry = byName[state.member.profession]
+        state.results = entry and entry.loaded and Core.memberRecipes(entry.loaded, state.member.record, terms) or {}
+        state.members = {}
+    else
+        state.members = Core.findMembers(all, terms, state.profession)
+        state.results = {}
+    end
+    if state.selected then
+        local listed = false
+        for _, recipe in ipairs(state.results) do listed = listed or recipe == state.selected end
+        if not listed then state.selected = nil end
+    end
+    drawSidebar()
+    drawRows()
+    drawDetails()
+    drawCrumb()
+    statusText:SetText(guildStatus(pending, #wanted, guild, byName))
+    statusHover:SetWidth(math.min(statusText:GetStringWidth(), STATUS_WIDTH))
+end
+
+-- Which tab shows: its own controls (Recipes: the limits, the Filter and Not known yet), the search
+-- box's hint, and the tabs drawn picked or not.
+local function drawTabs()
+    local guildTab = state.tab == "guild"
+    for _, control in ipairs(recipeControls) do control:SetShown(not guildTab) end
+    if guildTab then filterPopup:Hide() end
+    placeholder:SetText(guildTab and "Search: name, profession, specialization" or "Search: name, stat, slot, reagent")
+    for i, tab in ipairs(tabs) do
+        local picked = (i == 2) == guildTab
+        if tab.panel and PanelTemplates_SelectTab and PanelTemplates_DeselectTab then
+            if picked then PanelTemplates_SelectTab(tab) else PanelTemplates_DeselectTab(tab) end
+        else
+            tab:SetEnabled(not picked)
+        end
+    end
+    if not guildTab then
+        backButton:Hide()
+        crumb:Hide()
+    end
+end
+
+--- Shows tab `to` ("recipes", "guild") as it was left: its search, profession, place and pick.
+local function switchTab(to)
+    if state.tab == to then return end
+    memory[state.tab] = { search = searchBox:GetText(), profession = state.profession, offset = state.offset,
+        selected = state.selected, member = state.member, back = state.back }
+    state.tab = to
+    local kept = memory[to] or {}
+    state.profession, state.offset, state.selected = kept.profession, kept.offset or 0, kept.selected
+    state.member, state.back = kept.member, kept.back
+    state.results, state.members = {}, {}
+    searchBox:SetText(kept.search or "")
+    drawTabs()
+end
+
+--- Lists what `member` can make (their profession's recipes they know); Back returns to the
+--- guildmates as they were (the search too).
+local function openMember(member)
+    state.back = { search = searchBox:GetText(), offset = state.offset }
+    state.member, state.selected, state.offset = member, nil, 0
+    searchBox:SetText("")
+    UI.refresh()
+end
+
+local function closeMember()
+    local back = state.back or {}
+    state.member, state.selected, state.back = nil, nil, nil
+    searchBox:SetText(back.search or "")
+    state.offset = back.offset or 0
+    UI.refresh()
+end
+
 --- Brings everything up to date with the filters: which professions, the results, the details.
 function UI.refresh()
     if not frame or not frame:IsShown() then return end
+    -- The tabs only with GuildAssistant Professions: the Guild tab is what it saved.
+    local hasProfessions = Game.professionsDB() ~= nil
+    for _, tab in ipairs(tabs) do tab:SetShown(hasProfessions) end
+    if not hasProfessions and state.tab ~= "recipes" then switchTab("recipes") end
+    drawTabs()
     placeholder:SetShown(searchBox:GetText() == "" and not searchBox:HasFocus())
+    if state.tab == "guild" then return refreshGuild() end
     state.mine = state.unknownOnly and Game.myProfessions() or {}
     -- A profession picked before that isn't listed now (switching to yours only): all of them.
     if state.profession then
@@ -625,6 +911,14 @@ local function buildFilters()
     resetButton:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -14, -33)
     resetButton:SetText("Reset")
     resetButton:SetScript("OnClick", function()
+        if state.tab == "guild" then
+            -- The Guild tab's: its search, the profession picked, the guildmate.
+            searchBox:SetText("")
+            searchBox:ClearFocus()
+            state.profession, state.member, state.selected, state.back, state.offset = nil, nil, nil, nil, 0
+            UI.refresh()
+            return
+        end
         for _, box in ipairs(boxes) do
             box:SetText("")
             box:ClearFocus()
@@ -647,6 +941,7 @@ local function buildFilters()
         state.unknownOnly, state.offset = self:GetChecked() and true or false, 0
         UI.refresh()
     end)
+    recipeControls = { levelLabel, minLevelBox, dash, maxLevelBox, skillLabel, minSkillBox, dash2, maxSkillBox, unknownCheck }
 end
 
 -- The Filter button and its panel: armor types and slots to tick (any of those ticked in a group;
@@ -695,6 +990,7 @@ local function buildFilterPopup()
     filterButton:SetScript("OnClick", function()
         if filterPopup:IsShown() then filterPopup:Hide() else filterPopup:Show() end
     end)
+    recipeControls[#recipeControls + 1] = filterButton
 
     local slotColumns, slotRows = 3, math.ceil(#Core.SLOTS / 3)
     filterPopup = CreateFrame("Frame", nil, frame)
@@ -806,6 +1102,12 @@ local function buildSidebar()
         button.right = fontString(button, "GameFontDisableSmall", "RIGHT")
         button.right:SetPoint("RIGHT", button, "RIGHT", -6, 0)
         button:SetScript("OnClick", function(self)
+            if state.tab == "guild" and state.member then
+                -- Back to the guildmates (their search), of the profession picked.
+                local back = state.back or {}
+                state.member, state.selected, state.back = nil, nil, nil
+                searchBox:SetText(back.search or "")
+            end
             state.profession, state.offset = self.profession, 0
             UI.refresh()
         end)
@@ -835,6 +1137,50 @@ local function buildList()
     columnSkill = fontString(frame, "GameFontNormalSmall", "RIGHT")
     columnSkill:SetPoint("BOTTOMRIGHT", list, "TOPRIGHT", -62, 3)
     columnSkill:SetText("Skill")
+    recipeColumns = { columnName, columnLevel, columnSkill }
+
+    -- The Guild tab's: a guildmate's name, the profession's skill, the profession and specialization.
+    local memberName = fontString(frame, "GameFontNormalSmall")
+    memberName:SetPoint("BOTTOMLEFT", list, "TOPLEFT", 10, 3)
+    memberName:SetText("Guildmate")
+    local memberSkill = fontString(frame, "GameFontNormalSmall", "RIGHT")
+    memberSkill:SetPoint("BOTTOMRIGHT", list, "TOPLEFT", MEMBER_SKILL_RIGHT + 2, 3)
+    memberSkill:SetText("Skill")
+    local memberProfession = fontString(frame, "GameFontNormalSmall")
+    memberProfession:SetPoint("BOTTOMLEFT", list, "TOPLEFT", MEMBER_PROFESSION_LEFT + 2, 3)
+    memberProfession:SetText("Profession")
+    memberColumns = { memberName, memberSkill, memberProfession }
+    for _, region in ipairs(memberColumns) do region:Hide() end
+
+    memberRows = {}
+    for i = 1, ROWS do
+        local row = CreateFrame("Button", nil, list)
+        row:SetSize(LIST_WIDTH - 18, ROW_HEIGHT)
+        row:SetPoint("TOPLEFT", list, "TOPLEFT", 2, -4 - (i - 1) * (ROW_HEIGHT + 1))
+        highlightTextures(row)
+        row.name = fontString(row, "GameFontHighlight")
+        row.name:SetPoint("LEFT", row, "LEFT", 6, 0)
+        row.name:SetWidth(MEMBER_SKILL_RIGHT - 36)
+        row.name:SetWordWrap(false)
+        row.skill = fontString(row, "GameFontHighlightSmall", "RIGHT")
+        row.skill:SetPoint("RIGHT", row, "LEFT", MEMBER_SKILL_RIGHT, 0)
+        row.skill:SetWidth(28)
+        row.profession = fontString(row, "GameFontHighlightSmall")
+        row.profession:SetPoint("LEFT", row, "LEFT", MEMBER_PROFESSION_LEFT, 0)
+        row.profession:SetPoint("RIGHT", row, "RIGHT", -4, 0)
+        row.profession:SetWordWrap(false)
+        row:SetScript("OnClick", function(self)
+            if self.member then openMember(self.member) end
+        end)
+        row:SetScript("OnEnter", function(self)
+            local member = self.member
+            if not member then return end
+            Game.showTextTooltip(self, member.name, { Core.professionLine(member), "Click to see what they can make" })
+        end)
+        row:SetScript("OnLeave", Game.hideTooltip)
+        row:Hide()
+        memberRows[i] = row
+    end
 
     rows = {}
     for i = 1, ROWS do
@@ -911,7 +1257,13 @@ local function buildDetails()
     d.hint = fontString(d, "GameFontDisable")
     d.hint:SetPoint("TOPLEFT", d, "TOPLEFT", 10, -10)
     d.hint:SetWidth(width)
-    d.hint:SetText("Pick a recipe to see its reagents, how to learn it and who can craft it.\n\nShift-click a recipe to link it in the chat, or the item at the top of its details for the item's link; ctrl-click to try it on. Click a name under Who can craft it to whisper them.\n\nShift-click an item anywhere (your bags, a link in the chat) with the chat box closed to search for it.")
+    d.hint:SetText(RECIPE_HINT)
+    -- The Guild tab's guildmate, before one of their recipes is picked.
+    d.summary = fontString(d, "GameFontHighlight")
+    d.summary:SetPoint("TOPLEFT", d, "TOPLEFT", 10, -10)
+    d.summary:SetWidth(width)
+    d.summary:SetSpacing(3)
+    d.summary:Hide()
 
     d.craft = CreateFrame("Button", nil, d, "UIPanelButtonTemplate")
     d.craft:SetSize(90, 22)
@@ -998,6 +1350,51 @@ local function buildDetails()
     d.regions[#d.regions + 1] = { d.crafterNames, 4 }
 end
 
+-- The tabs under the window, as the game's own windows have them (its tab template; a plain button
+-- where the client lacks it), shown only with GuildAssistant Professions.
+local function buildTabs()
+    tabs = {}
+    for i, text in ipairs({ "Recipes", "Guild" }) do
+        local name = "GuildAssistantDatabaseFrameTab" .. i
+        local ok, tab = pcall(CreateFrame, "Button", name, frame, "PanelTabButtonTemplate")
+        -- The template's textures: by key on newer clients, by name on older ones.
+        if ok and tab and (rawget(tab, "Left") or rawget(_G, name .. "Left")) then
+            tab.panel = true
+        else
+            tab = CreateFrame("Button", name .. "Button", frame, "UIPanelButtonTemplate")
+            tab:SetSize(90, 22)
+        end
+        tab:SetText(text)
+        if tab.panel and PanelTemplates_TabResize then PanelTemplates_TabResize(tab, 0) end
+        if i == 1 then
+            tab:SetPoint("TOPLEFT", frame, "BOTTOMLEFT", 10, 2)
+        else
+            -- Older clients' tabs overlap by their transparent edges; newer ones sit side by side.
+            tab:SetPoint("LEFT", tabs[i - 1], "RIGHT", (tab.panel and not rawget(tab, "LeftActive")) and -15 or 4, 0)
+        end
+        local key = i == 1 and "recipes" or "guild"
+        tab:SetScript("OnClick", function()
+            switchTab(key)
+            UI.refresh()
+        end)
+        tab:Hide()
+        tabs[i] = tab
+    end
+
+    -- Above the Guild tab's list, where Not known yet is in Recipes: Back (from a guildmate's
+    -- recipes) and whose they are, or your guild's name.
+    backButton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+    backButton:SetSize(64, 20)
+    backButton:SetPoint("TOPLEFT", frame, "TOPLEFT", 16, -60)
+    backButton:SetText("Back")
+    backButton:SetScript("OnClick", closeMember)
+    backButton:Hide()
+    crumb = fontString(frame, "GameFontHighlight")
+    crumb:SetWidth(WIDTH - 140)
+    crumb:SetWordWrap(false)
+    crumb:Hide()
+end
+
 local function build()
     frame = CreateFrame("Frame", "GuildAssistantDatabaseFrame", UIParent, "BasicFrameTemplateWithInset")
     frame:SetSize(WIDTH, HEIGHT)
@@ -1025,6 +1422,7 @@ local function build()
     Game.onItemLinked(searchBox, function(name)
         if not frame:IsShown() then return end
         Game.closeStackSplit()
+        switchTab("recipes")
         searchBox:SetText(name)
         searchBox:ClearFocus()
         state.offset = 0
@@ -1033,6 +1431,7 @@ local function build()
     buildSidebar()
     buildList()
     buildDetails()
+    buildTabs()
 
     statusText = fontString(frame, "GameFontHighlightSmall")
     statusText:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 16, 13)
@@ -1065,6 +1464,7 @@ end
 function UI.show(search)
     if not frame then build() end
     if search then
+        switchTab("recipes")
         searchBox:SetText(search)
         state.offset = 0
     end
@@ -1088,6 +1488,7 @@ function UI.parts()
         clearButton = clearButton, filterButton = filterButton, filterPopup = filterPopup, filterChecks = filterChecks,
         sidebarButtons = sidebarButtons, rows = rows, details = details, statusText = statusText,
         statusHover = statusHover, versionText = versionText,
+        tabs = tabs, memberRows = memberRows, backButton = backButton, crumb = crumb,
         state = state,
     }
 end

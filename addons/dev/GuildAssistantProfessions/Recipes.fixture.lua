@@ -11,4 +11,7 @@ ns.Recipes = {
         ["Enchanting"] = [[
 7418,14807]],
     },
+    specializations = {
+        ["Blacksmithing"] = "9787,17039",
+    },
 }

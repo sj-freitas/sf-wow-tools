@@ -1176,6 +1176,142 @@ it("shows what GuildAssistant Professions saw: a vendor, a trainer, and a recipe
     has(ns.UI.parts().details.learn:GetText(), "Trainer (2g): Bengus Deepforge (Ironforge)")
 end)
 
+-- The Guild tab ----------------------------------------------------------------------------------
+
+-- The Guild tab's rows as they read, colours left out: "Ana 300 Blacksmithing - Weaponsmith".
+local function memberRows(ns)
+    local out = {}
+    for _, row in ipairs(ns.UI.parts().memberRows) do
+        if row:IsShown() then
+            local text = ("%s %s %s"):format(row.name:GetText(), row.skill:GetText(), row.profession:GetText())
+            out[#out + 1] = (text:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""):gsub("  +", " "))
+        end
+    end
+    return table.concat(out, " | ")
+end
+
+-- guildDB, and: Ana is a Weaponsmith (the spell: GuildAssistant Professions 1.5.0 records it), Kael
+-- knows a Master Swordsmith's recipe (so he's one, and a Weaponsmith) and is an herbalist.
+local function guildWithSpecializations()
+    guildDB()
+    local db = GuildAssistantProfessionsDB
+    db.characters["Ana-Test Realm"].professions.Blacksmithing.recipes["spell:9787"] = true
+    db.characters["Kael-Test Realm"] = { name = "Kael", realm = "Test Realm", class = "MAGE", source = "guild",
+        guild = "Test Guild", professions = {
+            Blacksmithing = { rank = 300, max = 300, recipes = { ["spell:99003"] = true } },
+            Herbalism = { rank = 225, max = 300, recipes = {} },
+        } }
+end
+
+it("shows the Guild tab only with GuildAssistant Professions, and Recipes' own controls only there", function()
+    local ns = loadAddon()
+    SlashCmdList.GADB("")
+    local parts = ns.UI.parts()
+    eq(parts.tabs[1]:IsShown(), false, "no tabs without it"); eq(parts.tabs[2]:IsShown(), false)
+    ns = loadAddon({ professionsAddon = true, guild = "Test Guild" })
+    SlashCmdList.GADB("")
+    parts = ns.UI.parts()
+    eq(parts.tabs[1]:GetText(), "Recipes"); eq(parts.tabs[2]:GetText(), "Guild")
+    eq(parts.tabs[1]:IsShown(), true)
+    eq(parts.tabs[1]:IsEnabled(), false, "Recipes picked"); eq(parts.tabs[2]:IsEnabled(), true)
+    parts.searchBox:SetText("breastplate")
+    parts.tabs[2]:Click()
+    eq(parts.state.tab, "guild")
+    eq(parts.tabs[2]:IsEnabled(), false, "Guild picked")
+    for _, control in ipairs({ parts.minLevelBox, parts.maxSkillBox, parts.filterButton, parts.unknownCheck }) do
+        eq(control:IsShown(), false, "Recipes' own")
+    end
+    eq(parts.searchBox:GetText(), "", "each tab its own search")
+    eq(parts.crumb:GetText(), "|cffffd100Test Guild|r: guildmates who use GuildAssistant Professions")
+    eq(parts.details.hint:GetText():sub(1, 44), "Click a guildmate to see what they can make.")
+    parts.tabs[1]:Click()
+    eq(parts.searchBox:GetText(), "breastplate", "Recipes' search kept")
+    eq(parts.minLevelBox:IsShown(), true)
+    eq(parts.crumb:IsShown(), false)
+    eq(shownRows(ns), "Runed Copper Breastplate, Ornate Mithril Breastplate")
+end)
+
+it("lists the guildmates by profession, with their skill and specialization, and finds them", function()
+    local ns = loadAddon({ professionsAddon = true, guild = "Test Guild" })
+    guildWithSpecializations()
+    SlashCmdList.GADB("")
+    local parts = ns.UI.parts()
+    parts.tabs[2]:Click()
+    eq(memberRows(ns), "Ana 300 Blacksmithing - Weaponsmith | Kael 300 Blacksmithing - Master Swordsmith"
+        .. " | Luna (you) 120 Blacksmithing | Di (alt) Enchanting | Kael 225 Herbalism")
+    eq(sidebar(ns), "All professions 5 | Blacksmithing 3 | Enchanting 1 | Herbalism 1")
+    eq(parts.statusText:GetText(), "4 guildmates")
+    -- By specialization: Kael's a Master Swordsmith, so a Weaponsmith too.
+    parts.searchBox:SetText("weaponsmith")
+    eq(memberRows(ns), "Ana 300 Blacksmithing - Weaponsmith | Kael 300 Blacksmithing - Master Swordsmith")
+    eq(sidebar(ns), "All professions " .. GOLD .. "2|r | Blacksmithing " .. GOLD .. "2|r | Enchanting | Herbalism", "counted in gold")
+    parts.searchBox:SetText("kael")
+    eq(memberRows(ns), "Kael 300 Blacksmithing - Master Swordsmith | Kael 225 Herbalism")
+    parts.searchBox:SetText("")
+    parts.sidebarButtons[3]:Click()
+    eq(memberRows(ns), "Di (alt) Enchanting", "one profession")
+    eq(parts.statusText:GetText(), "1 guildmate")
+    parts.resetButton:Click()
+    eq(parts.state.profession, nil, "Reset")
+    eq(#parts.state.members, 5)
+end)
+
+it("lists what a guildmate can make on a click, with their details, and goes back as it was", function()
+    local ns = loadAddon({ professionsAddon = true, guild = "Test Guild" })
+    guildWithSpecializations()
+    SlashCmdList.GADB("")
+    local parts = ns.UI.parts()
+    parts.tabs[2]:Click()
+    parts.searchBox:SetText("blacksmithing")
+    parts.memberRows[1]:Fire("OnEnter")
+    eq(GameTooltip.lines[1], "Ana"); eq(GameTooltip.lines[3], "Click to see what they can make")
+    parts.memberRows[1]:Click()
+    eq(parts.state.member.name, "Ana")
+    eq(parts.searchBox:GetText(), "", "her recipes, all of them")
+    eq(shownRows(ns), "Runed Copper Breastplate, Ornate Mithril Breastplate")
+    eq(parts.memberRows[1]:IsShown(), false)
+    eq(parts.backButton:IsShown(), true)
+    eq(parts.crumb:GetText(), "|cffffffffAna|r  300 Blacksmithing - Weaponsmith")
+    eq(parts.statusText:GetText(), "Ana can make 2 recipes.")
+    local summary = parts.details.summary
+    eq(summary:IsShown(), true); eq(parts.details.hint:IsShown(), false)
+    has(summary:GetText(), "Guildmate"); has(summary:GetText(), "300/300 Blacksmithing - Weaponsmith")
+    -- Her recipes searched, and one picked: its details, as in Recipes.
+    parts.searchBox:SetText("ornate")
+    eq(shownRows(ns), "Ornate Mithril Breastplate")
+    eq(parts.statusText:GetText(), "Ana can make 1 recipe that match.")
+    rowNamed(ns, "Ornate Mithril Breastplate"):Click()
+    eq(summary:IsShown(), false)
+    has(parts.details.name.text:GetText(), "Ornate Mithril Breastplate")
+    -- Back: the guildmates, as searched before.
+    parts.backButton:Click()
+    eq(parts.state.member, nil)
+    eq(parts.searchBox:GetText(), "blacksmithing")
+    eq(memberRows(ns), "Ana 300 Blacksmithing - Weaponsmith | Kael 300 Blacksmithing - Master Swordsmith | Luna (you) 120 Blacksmithing")
+    -- An herbalist makes nothing; a profession picked on the left goes back too.
+    parts.searchBox:SetText("herbalism")
+    parts.memberRows[1]:Click()
+    eq(parts.statusText:GetText(), "Nothing to make with Herbalism.")
+    has(parts.details.summary:GetText(), "300/300 Blacksmithing - Master Swordsmith")
+    has(parts.details.summary:GetText(), "225/300 Herbalism")
+    parts.sidebarButtons[2]:Click()
+    eq(parts.state.member, nil)
+    eq(parts.state.profession, "Blacksmithing")
+end)
+
+it("switches to Recipes for a search from /gadb or a shift-click, and says when you're in no guild", function()
+    local ns = loadAddon({ professionsAddon = true })
+    SlashCmdList.GADB("")
+    local parts = ns.UI.parts()
+    parts.tabs[2]:Click()
+    eq(parts.statusText:GetText(), "You're not in a guild: this tab lists your guildmates' professions.")
+    eq(memberRows(ns), "")
+    SlashCmdList.GADB("pants")
+    eq(parts.state.tab, "recipes")
+    eq(parts.searchBox:GetText(), "pants")
+    eq(shownRows(ns), "Copper Chain Pants")
+end)
+
 it("doesn't hide anything because of GuildAssistant Professions alone", function()
     local ns = loadAddon({ noSources = true, professionsAddon = true })
     SlashCmdList.GADB("")

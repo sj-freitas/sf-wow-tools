@@ -72,6 +72,14 @@ end)
 it("knows the specializations recipes need, from their plans and patterns", function()
     local all = {}
     for _, entry in ipairs(Data.professions) do all[#all + 1] = Core.load(entry) end
+    -- Each profession's, by spell (GuildAssistant Professions asks the game about them).
+    local names = {}
+    for _, entry in ipairs(Data.professions) do
+        for _, spec in ipairs(Core.specializationsOf(entry).list) do names[#names + 1] = spec.id .. " " .. spec.name end
+    end
+    check(table.concat(names, ", ") == "9787 Weaponsmith, 9788 Armorsmith, 17039 Master Swordsmith, 17040 Master Hammersmith, "
+        .. "17041 Master Axesmith, 20219 Gnomish Engineer, 20222 Goblin Engineer, 10656 Dragonscale Leatherworking, "
+        .. "10658 Elemental Leatherworking, 10660 Tribal Leatherworking", table.concat(names, ", "))
     local helm = Core.search(all, { terms = Core.terms("dark iron helm") })[1]
     check(helm and helm.specialization == "Armorsmith", "Dark Iron Helm: " .. tostring(helm and helm.specialization))
     -- Each specialization finds its own recipes, and only those (the Master *smiths' are a Weaponsmith's).

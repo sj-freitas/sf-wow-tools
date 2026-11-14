@@ -11,7 +11,9 @@ Made for WoW Forever: its data is the game's own, from Forever's data files.
 
 Type `/gadb` (or `/ga-db`), or click the clip on the minimap, to open or close the window (it keeps
 your last search); `/gadb mithril` opens it searching for "mithril", and `/gadb *` opens it with the
-search cleared. Drag the clip to move it around the minimap;
+search cleared. With GuildAssistant Professions, two tabs under the window: **Recipes** (all of what
+follows) and **Guild** (see "Your guild" below); a search from `/gadb` or a shift-click goes to
+Recipes. Drag the clip to move it around the minimap;
 `/gadb minimap` hides it (and brings it back).
 
 - **Search** (top left): words that must all be somewhere in the recipe: its name, the item it
@@ -70,6 +72,21 @@ characters whose profession link you opened (link). Without it, the window says 
 **Click a name** to whisper them: the chat box opens as the game's own "Whisper" does, with the
 whole name (WoW Forever's "Shivan Nightpath" too) and, for another realm's, the realm. Hovering a
 name says so; your own does nothing.
+
+## Your guild
+
+With GuildAssistant Professions installed, the **Guild** tab (under the window) lists your
+guildmates who use it (and your characters in the guild), each profession they have with its skill
+and specialization: "Shivan Darkwhisp  190  Blacksmithing - Weaponsmith". The professions are on
+the left, with how many guildmates have each (Herbalism, Skinning and the like too); the search
+finds guildmates by name, profession or specialization (`weaponsmith` finds Master Swordsmiths
+too). Click a guildmate for what they can make in that profession (the search then searches those
+recipes), a recipe for its details as in Recipes, and **Back** to return to the guildmates as you
+left them. Each tab keeps its own search.
+
+A specialization comes from GuildAssistant Professions 1.5.0, which records it as a spell the
+character knows; for what older versions recorded, from the recipes they know that need one. The
+level and skill limits, the Filter and Not known yet are Recipes' only.
 
 ## Performance
 

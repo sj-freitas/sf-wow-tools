@@ -98,6 +98,24 @@ it("replaces a profession's recipes with a full list, saying whether it changed"
     }, 400), true, "one more")
 end)
 
+it("keeps a specialization through a full list, and exports it apart from the recipes", function()
+    ns.Recipes = { specializations = { Blacksmithing = "9787,17039" } }
+    Core.specializationSpells = nil
+    local db = Core.newDB()
+    local luna = Core.character(db, "Luna", "Test Realm", "MAGE")
+    Core.addRecipes(luna, "Blacksmithing", 120, 150, { { kind = "spell", id = 2660 }, { kind = "spell", id = 9787 } }, 100)
+    eq(Core.isSpecialization("spell:9787"), true); eq(Core.isSpecialization("spell:2660"), false)
+    -- The window lists recipes, not specializations: it stays, and nothing changed.
+    eq(Core.setRecipes(luna, "Blacksmithing", 120, 150, { { kind = "spell", id = 2660 } }, 200), false)
+    eq(luna.professions.Blacksmithing.recipes["spell:9787"], true)
+    local json = Core.toJSON(Core.exportData(db))
+    assert(json:find('"specializations":[9787],"spells":[2660]', 1, true), "apart from the recipes: " .. json)
+    -- Shared with the guild as a spell: versions before 1.5.0 read it as a recipe and pass it on.
+    local received = Core.decodeCharacter(Core.encodeCharacter(luna))
+    eq(received.professions.Blacksmithing.recipes["spell:9787"], true)
+    ns.Recipes, Core.specializationSpells = nil, nil
+end)
+
 it("drops an unlearned profession with its recipes and says which, but not on an empty list", function()
     local luna = Core.character(Core.newDB(), "Luna", "Test Realm", "MAGE")
     Core.setProfessions(luna, {

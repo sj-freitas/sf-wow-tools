@@ -13,6 +13,9 @@
 //   item: id, name (empty when the game's tables lack it), quality, required level, inventory type,
 //     icon (file id), kind ("Chest (Plate)"), stats ("Strength, Stamina"), skill to use (recipe
 //     items), class id, subclass id
+//   specializations (a profession's field, only when it has some): the spells some recipe requires,
+//     "<spell id>=<name>[><parent's spell id>];…" ("9787=Weaponsmith;17039=Master Swordsmith>9787"):
+//     a character who knows the spell has it (GuildAssistant Professions records them).
 // Where recipes come from isn't in the game's data: sources companion addons add it (the format is
 // in Core.lua, "Sources companions").
 
@@ -77,9 +80,13 @@ export function toLua(database) {
     '    professions = {',
   ];
   for (const profession of database.professions) {
+    const specializations = (profession.specializations ?? [])
+      .map((s) => `${s.id}=${field(s.name)}${s.parent ? `>${s.parent}` : ''}`)
+      .join(';');
     lines.push(
       '        {',
       `            name = ${quote(profession.name)}, skill = ${profession.skill}, count = ${profession.recipes.length},`,
+      ...(specializations ? [`            specializations = ${quote(specializations)},`] : []),
       `            recipes = ${longString(profession.recipes.map(recipeLine).join('\n'))},`,
       `            items = ${longString(profession.items.map(itemLine).join('\n'))},`,
       '        },',
@@ -98,8 +105,9 @@ function idLines(ids, perLine = 20) {
 
 /**
  * GuildAssistantProfessions' Recipes.lua for `database`: each profession's recipes by their spell
- * id, nothing else. The addon asks the game about each (IsPlayerSpell) to record what a character
- * knows without its profession window open. Kept as text, read only when it's needed.
+ * id, and its specializations' spells. The addon asks the game about each (IsPlayerSpell) to record
+ * what a character knows without its profession window open. Kept as text, read only when it's
+ * needed.
  */
 export function toRecipesLua(database) {
   const lines = [
@@ -115,6 +123,11 @@ export function toRecipesLua(database) {
   for (const profession of database.professions) {
     const ids = profession.recipes.map((recipe) => recipe.id).sort((a, b) => a - b);
     lines.push(`        [${quote(profession.name)}] = ${longString(idLines(ids))},`);
+  }
+  lines.push('    },', '    specializations = {');
+  for (const profession of database.professions) {
+    const ids = (profession.specializations ?? []).map((s) => s.id);
+    if (ids.length > 0) lines.push(`        [${quote(profession.name)}] = ${quote(ids.join(','))},`);
   }
   lines.push('    },', '}', '');
   return lines.join('\n');

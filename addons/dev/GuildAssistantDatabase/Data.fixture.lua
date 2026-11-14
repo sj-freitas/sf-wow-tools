@@ -10,6 +10,7 @@ ns.Data = {
     professions = {
         {
             name = "Blacksmithing", skill = 164, count = 8,
+            specializations = "9787=Weaponsmith;17039=Master Swordsmith>9787",
             recipes = [[
 2662	Copper Chain Pants	15	50,70,90	2852,1,1	2840:4	0	15	
 2660	Rough Sharpening Stone	15	15,35,55	2862,1,1	2835:1	1	15	

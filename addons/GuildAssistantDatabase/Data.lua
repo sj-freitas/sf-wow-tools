@@ -629,6 +629,7 @@ ns.Data = {
         },
         {
             name = "Blacksmithing", skill = 164, count = 506,
+            specializations = "9787=Weaponsmith;9788=Armorsmith;17039=Master Swordsmith>9787;17040=Master Hammersmith>9787;17041=Master Axesmith>9787",
             recipes = [[
 2663	Copper Bracers	1	20,40,60	2853,1,1	2840:2	1	1	
 1245287	Copper Rod	1	10,12,15	6217,1,1	2840:1	1	1	
@@ -2799,6 +2800,7 @@ ns.Data = {
         },
         {
             name = "Engineering", skill = 202, count = 275,
+            specializations = "20219=Gnomish Engineer;20222=Goblin Engineer",
             recipes = [[
 3920	Crafted Light Shot	1	30,45,60	8067,200,200	4357:1;2840:1	1	1	
 3918	Rough Blasting Powder	1	20,30,40	4357,1,1	2835:1	1	1	
@@ -3660,6 +3662,7 @@ ns.Data = {
         },
         {
             name = "Leatherworking", skill = 165, count = 592,
+            specializations = "10656=Dragonscale Leatherworking;10658=Elemental Leatherworking;10660=Tribal Leatherworking",
             recipes = [[
 2149	Handstitched Leather Boots	1	40,55,70	2302,1,1	2318:2;2320:1	1	1	
 9059	Handstitched Leather Bracers	1	40,55,70	7277,1,1	2318:2;2320:3	1	1	
