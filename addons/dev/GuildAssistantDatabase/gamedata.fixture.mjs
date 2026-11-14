@@ -6,7 +6,9 @@
 // Some cases on purpose: a rank with no reagents (Blacksmithing), a recipe learned at a skill
 // (Rough Sharpening Stone) and one with the profession (Enchant Bracer), recipes taught by plans,
 // one with nothing saying how to get it (Ironforge Gauntlets), an item made that has no row in
-// ItemSparse (Ironforge Gauntlets: named after its recipe) and a reagent with none (Soul Dust).
+// ItemSparse (Ironforge Gauntlets: named after its recipe) and a reagent with none (Soul Dust), and
+// a recipe whose plans require a specialization (Stonevault Greatsword, made up like Ironforge
+// Gauntlets: Master Swordsmith, a Weaponsmith's), next to the specializations themselves (no reagents).
 
 const csv = (lines) => `${lines.join('\n')}\n`;
 
@@ -21,6 +23,9 @@ export const tables = {
     '6,164,10003,235,0,285,255',
     '7,164,9972,1,0,290,260',
     '8,164,99001,200,0,240,220',
+    '11,164,9787,1,0,0,0',
+    '12,164,17039,1,0,0,0',
+    '13,164,99003,1,0,320,300',
     '9,333,7418,1,2,110,70',
     '10,333,14807,70,0,150,110',
   ]),
@@ -34,6 +39,9 @@ export const tables = {
     '10003,The Shatterer',
     '9972,Ornate Mithril Breastplate',
     '99001,Ironforge Gauntlets',
+    '9787,Weaponsmith',
+    '17039,Master Swordsmith',
+    '99003,Stonevault Greatsword',
     '7418,Enchant Bracer - Minor Health',
     '14807,Greater Magic Wand',
   ]),
@@ -48,6 +56,7 @@ export const tables = {
     '7,99001,3860,0,0,0,10,0,0,0',
     '8,7418,10940,0,0,0,1,0,0,0',
     '9,14807,4470,11083,0,0,1,1,0,0',
+    '10,99003,11371,0,0,0,20,0,0,0',
   ]),
   SpellEffect: csv([
     'ID,Effect,EffectItemType,EffectBasePointsF,SpellID',
@@ -60,6 +69,7 @@ export const tables = {
     '7,24,99002,1,99001',
     '8,53,0,0,7418',
     '9,24,11288,1,14807',
+    '10,24,99004,1,99003',
   ]),
   Item: csv([
     'ID,ClassID,SubclassID,InventoryType,IconFileDataID',
@@ -88,32 +98,38 @@ export const tables = {
     '2881,9,4,0,134942',
     '6047,9,4,0,134942',
     '7975,9,4,0,134942',
+    '11371,7,7,0,133216',
+    '99004,2,8,17,135321',
+    '99005,9,4,0,134942',
   ]),
   ItemSparse: csv([
-    'ID,Description_lang,Display_lang,OverallQualityID,RequiredLevel,InventoryType,ItemDelay,RequiredSkillRank,StatModifier_bonusStat_0,StatModifier_bonusStat_1,StatModifier_bonusStat_2',
-    '2862,,Rough Sharpening Stone,1,0,0,0,0,-1,-1,-1',
-    '2835,,Rough Stone,1,0,0,0,0,-1,-1,-1',
-    '2852,,Copper Chain Pants,2,4,7,0,0,7,-1,-1',
-    '2840,,Copper Bar,1,0,0,0,0,-1,-1,-1',
-    '2864,,Runed Copper Breastplate,2,13,5,0,0,4,6,-1',
-    '1210,,Shadowgem,2,0,0,0,0,-1,-1,-1',
-    '3470,,Rough Grinding Stone,1,0,0,0,0,-1,-1,-1',
-    '7935,,Ornate Mithril Breastplate,2,43,5,0,0,32,13,-1',
-    '3860,,Mithril Bar,1,0,0,0,0,-1,-1,-1',
-    '6037,,Truesilver Bar,2,0,0,0,0,-1,-1,-1',
-    '7909,,Aquamarine,2,0,0,0,0,-1,-1,-1',
-    '7971,,Black Pearl,2,0,0,0,0,-1,-1,-1',
-    '7954,,The Shatterer,3,42,13,2400,0,-1,-1,-1',
-    '7075,,Core of Earth,1,0,0,0,0,-1,-1,-1',
-    '3837,,Golden Scale Coif,2,33,1,0,0,3,7,-1',
-    '3859,,Steel Bar,1,0,0,0,0,-1,-1,-1',
-    '3577,,Gold Bar,2,0,0,0,0,-1,-1,-1',
-    '10940,,Strange Dust,1,0,0,0,0,-1,-1,-1',
-    '11288,,Greater Magic Wand,2,8,26,1500,0,45,-1,-1',
-    '4470,,Simple Wood,1,0,0,0,0,-1,-1,-1',
-    '2881,"Teaches you how to make a Runed Copper Breastplate, ""for the brave"".",Plans: Runed Copper Breastplate,2,0,0,0,55,-1,-1,-1',
-    '6047,,Plans: Golden Scale Coif,2,0,0,0,190,-1,-1,-1',
-    '7975,,Plans: Ornate Mithril Breastplate,2,0,0,0,240,-1,-1,-1',
+    'ID,Description_lang,Display_lang,OverallQualityID,RequiredLevel,InventoryType,ItemDelay,RequiredSkillRank,StatModifier_bonusStat_0,StatModifier_bonusStat_1,StatModifier_bonusStat_2,RequiredAbility',
+    '2862,,Rough Sharpening Stone,1,0,0,0,0,-1,-1,-1,0',
+    '2835,,Rough Stone,1,0,0,0,0,-1,-1,-1,0',
+    '2852,,Copper Chain Pants,2,4,7,0,0,7,-1,-1,0',
+    '2840,,Copper Bar,1,0,0,0,0,-1,-1,-1,0',
+    '2864,,Runed Copper Breastplate,2,13,5,0,0,4,6,-1,0',
+    '1210,,Shadowgem,2,0,0,0,0,-1,-1,-1,0',
+    '3470,,Rough Grinding Stone,1,0,0,0,0,-1,-1,-1,0',
+    '7935,,Ornate Mithril Breastplate,2,43,5,0,0,32,13,-1,0',
+    '3860,,Mithril Bar,1,0,0,0,0,-1,-1,-1,0',
+    '6037,,Truesilver Bar,2,0,0,0,0,-1,-1,-1,0',
+    '7909,,Aquamarine,2,0,0,0,0,-1,-1,-1,0',
+    '7971,,Black Pearl,2,0,0,0,0,-1,-1,-1,0',
+    '7954,,The Shatterer,3,42,13,2400,0,-1,-1,-1,0',
+    '7075,,Core of Earth,1,0,0,0,0,-1,-1,-1,0',
+    '3837,,Golden Scale Coif,2,33,1,0,0,3,7,-1,0',
+    '3859,,Steel Bar,1,0,0,0,0,-1,-1,-1,0',
+    '3577,,Gold Bar,2,0,0,0,0,-1,-1,-1,0',
+    '10940,,Strange Dust,1,0,0,0,0,-1,-1,-1,0',
+    '11288,,Greater Magic Wand,2,8,26,1500,0,45,-1,-1,0',
+    '4470,,Simple Wood,1,0,0,0,0,-1,-1,-1,0',
+    '2881,"Teaches you how to make a Runed Copper Breastplate, ""for the brave"".",Plans: Runed Copper Breastplate,2,0,0,0,55,-1,-1,-1,0',
+    '6047,,Plans: Golden Scale Coif,2,0,0,0,190,-1,-1,-1,0',
+    '7975,,Plans: Ornate Mithril Breastplate,2,0,0,0,240,-1,-1,-1,0',
+    '11371,,Dark Iron Bar,2,0,0,0,0,-1,-1,-1,0',
+    '99004,,Stonevault Greatsword,3,55,17,3600,0,4,-1,-1,0',
+    '99005,,Plans: Stonevault Greatsword,3,0,0,0,300,-1,-1,-1,17039',
   ]),
   // 402265 ("Learning") is the plans' first effect; the second (trigger 6) teaches the recipe.
   ItemEffect: csv([
@@ -122,6 +138,7 @@ export const tables = {
     '2,6,2667',
     '3,6,3503',
     '4,6,9972',
+    '5,6,99003',
   ]),
   ItemXItemEffect: csv([
     'ID,ItemEffectID,ItemID',
@@ -129,6 +146,7 @@ export const tables = {
     '2,2,2881',
     '3,3,6047',
     '4,4,7975',
+    '5,5,99005',
   ]),
 };
 

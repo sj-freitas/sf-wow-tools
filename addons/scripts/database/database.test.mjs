@@ -46,7 +46,7 @@ test('builds each profession from the game tables: recipes, reagents, items, how
   // A rank (no reagents) isn't a recipe.
   assert.deepEqual(blacksmithing.recipes.map((r) => r.name), [
     'Copper Chain Pants', 'Rough Sharpening Stone', 'Runed Copper Breastplate', 'Golden Scale Coif',
-    'Ironforge Gauntlets', 'The Shatterer', 'Ornate Mithril Breastplate',
+    'Ironforge Gauntlets', 'The Shatterer', 'Ornate Mithril Breastplate', 'Stonevault Greatsword',
   ]);
   // Skill: the recipe item's, else the game's minimum, else when it turns yellow.
   assert.equal(byName['Runed Copper Breastplate'].skill, 55);
@@ -78,11 +78,41 @@ test('builds each profession from the game tables: recipes, reagents, items, how
   assert.match(database.warnings.join('\n'), /2 items have no row/);
 });
 
+test("names the specialization a recipe's plans require, broadest first, and only the profession's own", () => {
+  const recipe = (database, name) => database.professions[0].recipes.find((r) => r.name === name);
+  const database = buildDatabase(tables, meta);
+  // Master Swordsmith (its plans' RequiredAbility) is a Weaponsmith's.
+  assert.deepEqual(recipe(database, 'Stonevault Greatsword').specializations, ['Weaponsmith', 'Master Swordsmith']);
+  assert.deepEqual(recipe(database, 'Ornate Mithril Breastplate').specializations, [], 'plans that require nothing');
+  assert.deepEqual(recipe(database, 'The Shatterer').specializations, [], 'no plans');
+  assert.equal(database.professions[0].recipes.some((r) => r.name === 'Weaponsmith'), false, 'a specialization is no recipe');
+
+  // Weaponsmith itself: no parent.
+  const weaponsmith = buildDatabase({ ...tables, ItemSparse: tables.ItemSparse.replace(/,17039\n/, ',9787\n') }, meta);
+  assert.deepEqual(recipe(weaponsmith, 'Stonevault Greatsword').specializations, ['Weaponsmith']);
+  // Something that isn't one of the profession's (riding): nothing.
+  const riding = buildDatabase({ ...tables, ItemSparse: tables.ItemSparse.replace(/,17039\n/, ',824\n') }, meta);
+  assert.deepEqual(recipe(riding, 'Stonevault Greatsword').specializations, []);
+  // Taught by other plans too, which anyone can learn: nothing.
+  const twoPlans = buildDatabase({
+    ...tables,
+    ItemXItemEffect: `${tables.ItemXItemEffect}6,5,7975\n`,
+  }, meta);
+  assert.deepEqual(recipe(twoPlans, 'Stonevault Greatsword').recipeItems, [99005, 7975]);
+  assert.deepEqual(recipe(twoPlans, 'Stonevault Greatsword').specializations, []);
+});
+
 test('writes lines the addon reads, with nothing in a field that would break them', () => {
   assert.equal(
     recipeLine({ id: 1, name: 'A\tB;C', skill: 5, colors: [6, 7, 8], creates: null, reagents: [{ id: 2, count: 3 }],
       acquire: 0, acquireSkill: 1, recipeItems: [9] }),
     '1\tA B C\t5\t6,7,8\t\t2:3\t0\t1\t9',
+    'no specialization: the field is left out',
+  );
+  assert.equal(
+    recipeLine({ id: 1, name: 'A', skill: 5, colors: [6, 7, 8], creates: null, reagents: [], acquire: 0, acquireSkill: 1,
+      recipeItems: [9], specializations: ['Weaponsmith', 'Master;Swordsmith'] }),
+    '1\tA\t5\t6,7,8\t\t\t0\t1\t9\tWeaponsmith;Master Swordsmith',
   );
   assert.equal(
     itemLine({ id: 9, name: 'Plans: X', quality: 2, level: 0, slot: 0, icon: 134942, kind: 'Blacksmithing', stats: '',

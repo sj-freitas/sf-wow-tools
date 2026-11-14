@@ -9,7 +9,7 @@ ns.Data = {
     fetched = "2026-11-11",
     professions = {
         {
-            name = "Blacksmithing", skill = 164, count = 7,
+            name = "Blacksmithing", skill = 164, count = 8,
             recipes = [[
 2662	Copper Chain Pants	15	50,70,90	2852,1,1	2840:4	0	15	
 2660	Rough Sharpening Stone	15	15,35,55	2862,1,1	2835:1	1	15	
@@ -17,7 +17,8 @@ ns.Data = {
 3503	Golden Scale Coif	190	210,227,245	3837,1,1	3859:8;3577:2	0	1	6047
 99001	Ironforge Gauntlets	200	220,230,240	99002,1,1	3860:10	0	200	
 10003	The Shatterer	235	255,270,285	7954,1,1	3860:24;7075:4	0	235	
-9972	Ornate Mithril Breastplate	240	260,275,290	7935,1,1	3860:16;6037:6;7909:1;7971:1	0	1	7975]],
+9972	Ornate Mithril Breastplate	240	260,275,290	7935,1,1	3860:16;6037:6;7909:1;7971:1	0	1	7975
+99003	Stonevault Greatsword	300	300,310,320	99004,1,1	11371:20	0	1	99005	Weaponsmith;Master Swordsmith]],
             items = [[
 1210	Shadowgem	2			134087	Trade Goods			7	
 2835	Rough Stone	1			135232	Metal & Stone			7	7
@@ -39,7 +40,10 @@ ns.Data = {
 7954	The Shatterer	3	42	13	133055	One-Hand (One-Handed Maces)	Speed 2.40		2	4
 7971	Black Pearl	2			134124	Trade Goods			7	
 7975	Plans: Ornate Mithril Breastplate	2			134942	Blacksmithing		240	9	4
-99002	Ironforge Gauntlets	1		10	132963	Hands (Plate)			4	4]],
+11371	Dark Iron Bar	2			133216	Metal & Stone			7	7
+99002	Ironforge Gauntlets	1		10	132963	Hands (Plate)			4	4
+99004	Stonevault Greatsword	3	55	17	135321	Two-Hand (Two-Handed Swords)	Speed 3.60, Strength		2	8
+99005	Plans: Stonevault Greatsword	3			134942	Blacksmithing		300	9	4]],
         },
         {
             name = "Enchanting", skill = 333, count = 2,

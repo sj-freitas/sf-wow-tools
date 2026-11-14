@@ -69,6 +69,24 @@ it("finds well-known recipes", function()
     end
 end)
 
+it("knows the specializations recipes need, from their plans and patterns", function()
+    local all = {}
+    for _, entry in ipairs(Data.professions) do all[#all + 1] = Core.load(entry) end
+    local helm = Core.search(all, { terms = Core.terms("dark iron helm") })[1]
+    check(helm and helm.specialization == "Armorsmith", "Dark Iron Helm: " .. tostring(helm and helm.specialization))
+    -- Each specialization finds its own recipes, and only those (the Master *smiths' are a Weaponsmith's).
+    for _, name in ipairs({ "Weaponsmith", "Armorsmith", "Master Swordsmith", "Tribal Leatherworking",
+        "Dragonscale Leatherworking", "Elemental Leatherworking", "Gnomish Engineer", "Goblin Engineer" }) do
+        local found = Core.search(all, { terms = { name:lower() } })
+        check(#found > 0, "nothing for " .. name)
+        for _, recipe in ipairs(found) do
+            local needs = false
+            for _, specialization in ipairs(recipe.specializations) do needs = needs or specialization == name end
+            check(needs, ("%s: %s doesn't need it"):format(name, recipe.name))
+        end
+    end
+end)
+
 it("ships the seed of known sources, complete, and it matches the data", function()
     _G.GuildAssistantDatabaseSources = nil
     assert(loadfile("GuildAssistantDatabase/Seed.lua"))("GuildAssistantDatabase", {})

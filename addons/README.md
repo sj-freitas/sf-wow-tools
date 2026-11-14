@@ -102,8 +102,9 @@ servers know that). Two sources add it (the format is in `GuildAssistantDatabase
   (`found.mjs`; `GUILD_ASSISTANT_URL` for another site), so the Monday pull request carries new
   findings: review them before merging, they come from players' files.
 
-The professions are in `scripts/database/professions.mjs`. How the data is read (`gamedata.mjs`,
-`csv.mjs`), written (`lua.mjs`, one text line per recipe and item, read by the addon's `Core.lua` the
+The professions are in `scripts/database/professions.mjs` (with the specializations within one, the
+Master Axe-, Hammer- and Swordsmith's Weaponsmith, which the tables don't say). How the data is
+read (`gamedata.mjs`, `csv.mjs`), written (`lua.mjs`, one text line per recipe and item, read by the addon's `Core.lua` the
 first time a profession is needed) and tested (`database.test.mjs`, on a slice of the tables,
 `dev/GuildAssistantDatabase/gamedata.fixture.mjs`, which builds `Data.fixture.lua`, what the addon's
 specs load: `UPDATE_FIXTURES=1 npm test -- database` rewrites it after a format change;

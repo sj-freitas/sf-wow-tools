@@ -1,5 +1,14 @@
 # GuildAssistant Database
 
+## 1.6.0
+
+- **Specializations**: a recipe whose plans or pattern need one says so in its details, as their
+  tooltip does: Dark Iron Helm "Requires Armorsmith". 116 recipes: Armorsmith, Weaponsmith and its
+  Master Axesmith, Hammersmith and Swordsmith, Dragonscale, Elemental and Tribal Leatherworking,
+  Gnomish and Goblin Engineer.
+- **Search by specialization**: `weaponsmith` lists the Weaponsmith's recipes (the Master
+  Swordsmith's too), `armorsmith`, `tribal`, `dragonscale`, `gnomish engineer`.
+
 ## 1.5.1
 
 - **Shift-click an item** anywhere while the window is open (your bags, a link in the chat, a

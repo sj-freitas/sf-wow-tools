@@ -16,7 +16,8 @@ search cleared. Drag the clip to move it around the minimap;
 
 - **Search** (top left): words that must all be somewhere in the recipe: its name, the item it
   makes (its slot, type and stats: `plate chest`, `stamina`, `critical strike`, `maces`), its
-  reagents (`thorium bar`: what uses them), its plans or pattern, or the profession. Recipes whose
+  reagents (`thorium bar`: what uses them), its plans or pattern, the specialization it needs
+  (`armorsmith`, `weaponsmith`, `tribal`: see below), or the profession. Recipes whose
   own name matches come first. The cross at its end clears it.
 - **Shift-click an item** anywhere while the window is open (your bags, the character window, a
   link in the chat, a reagent here) with the chat box closed: its name is searched (what uses it,
@@ -43,8 +44,9 @@ search cleared. Drag the clip to move it around the minimap;
 - **Reset** clears it all, the Filter too (Only guild as well).
 - On the left, a profession shows only its recipes (with Not known yet, only yours are listed,
   with your skill).
-- Click a recipe for its details: the item (its slot, type and stats), how many it makes, the
-  skill-up colours, the reagents, how to learn it and who can craft it.
+- Click a recipe for its details: the item (its slot, type and stats), the specialization it
+  needs ("Requires Armorsmith"), how many it makes, the skill-up colours, the reagents, how to
+  learn it and who can craft it.
 - Hover a recipe, a reagent or a recipe item for the game's tooltip; **shift-click** with the chat
   box open to link it in the chat (a recipe in the list: the recipe, to craft it; the item at the top of its details: the
   item); **ctrl-click** to try it on in the dressing room (a recipe: the item it makes).
@@ -99,10 +101,20 @@ Recipes no source vouches for (unreleased, removed, or not found yet) are hidden
 plans someone found (a source says where they drop or who sells them). When nothing
 says how, the window says what it can ("From the item below", "A trainer or a quest").
 
+## Specializations
+
+A recipe whose plans or pattern require a specialization says so under its profession, as their
+tooltip does ("Requires Armorsmith"), and searching for the specialization lists its recipes:
+Armorsmith, Weaponsmith (with Master Axesmith, Master Hammersmith and Master Swordsmith, whose
+recipes a search for `weaponsmith` finds too), Dragonscale, Elemental and Tribal Leatherworking,
+and Gnomish and Goblin Engineer. It's what the game's data says of the plans and patterns. Recipes
+a specialization's trainer teaches (Goblin and Gnomish Engineering's, mostly) aren't marked: the
+game's servers know those, not its files.
+
 ## Where the data comes from
 
 The game's own data files for WoW Forever (its recipes, reagents, items, their level, slot, type
-and which stats they have), as [wago.tools](https://wago.tools) exports them for each build of the
+and which stats they have, and the specialization plans and patterns require), as [wago.tools](https://wago.tools) exports them for each build of the
 game. `npm run database` in `addons/` builds this addon's `Data.lua` from them, and a weekly GitHub
 Action does it for each new build; see "GuildAssistant Database's data" in
 [addons/README.md](../README.md). Stat values aren't in those files (the game works them out from an

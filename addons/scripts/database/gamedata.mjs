@@ -2,14 +2,15 @@
 // for each build of each game version (`wowf` is WoW Forever). Everything here is what the game
 // client itself knows: each profession's recipes (SkillLineAbility), their names (SpellName),
 // reagents (SpellReagents), the item they make (SpellEffect), the items' name, quality, level,
-// slot, type and stats (ItemSparse, Item), and which recipe item teaches which recipe (ItemEffect,
-// ItemXItemEffect). Not in it, because the game's servers keep it: where a recipe item drops or is
+// slot, type and stats (ItemSparse, Item), which recipe item teaches which recipe (ItemEffect,
+// ItemXItemEffect), and the specialization a recipe item requires (its RequiredAbility, when that's
+// one of the profession's own abilities: "Requires Armorsmith"). Not in it, because the game's servers keep it: where a recipe item drops or is
 // sold, trainers and their costs, and stat values (the client works those out from the item's
 // level). A sources companion addon can add those (Core.lua, "Sources companions").
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseCsv } from './csv.mjs';
-import { PROFESSIONS } from './professions.mjs';
+import { PROFESSIONS, SPECIALIZATION_PARENTS } from './professions.mjs';
 
 export const TABLES = [
   'SkillLineAbility', 'SpellName', 'SpellReagents', 'SpellEffect', 'Item', 'ItemSparse', 'ItemEffect',
@@ -171,6 +172,26 @@ export function buildDatabase(csv, { version, build, fetched }, professions = PR
       });
     };
 
+    // The profession's specializations ("Armorsmith", "Gnomish Engineer"): its abilities that make
+    // nothing, but its ranks (named after it).
+    const specializations = new Map();
+    for (const ability of abilities) {
+      if (num(ability.SkillLine) !== profession.skill || reagentsOf.has(ability.Spell)) continue;
+      const name = names.get(ability.Spell)?.Name_lang?.trim();
+      if (name && name !== profession.name) specializations.set(num(ability.Spell), name);
+    }
+    // What a recipe item requires, broadest first: ["Weaponsmith", "Master Swordsmith"].
+    const requiredBy = (id) => {
+      const ability = num(sparse.get(String(id))?.RequiredAbility);
+      return [SPECIALIZATION_PARENTS[ability], ability].map((spell) => specializations.get(spell)).filter(Boolean);
+    };
+    // A recipe's: what all its recipe items require (one that requires nothing teaches it to anyone).
+    const required = (recipeItems) => {
+      if (recipeItems.length === 0) return [];
+      const [first, ...others] = recipeItems.map(requiredBy);
+      return first.filter((name) => others.every((names) => names.includes(name)));
+    };
+
     const seen = new Set();
     const recipes = [];
     for (const ability of abilities) {
@@ -213,6 +234,7 @@ export function buildDatabase(csv, { version, build, fetched }, professions = PR
         acquire,
         acquireSkill: Math.max(min, 1),
         recipeItems,
+        specializations: required(recipeItems),
       });
     }
     recipes.sort((a, b) => a.skill - b.skill || a.name.localeCompare(b.name) || a.id - b.id);

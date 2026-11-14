@@ -261,7 +261,7 @@ it("asks the game once for a burst of events, a moment after the last", function
     fire("SKILL_LINES_CHANGED")
     eq(asked, 0, "not while events keep coming")
     for _, fn in ipairs(timers) do fn() end
-    eq(asked, 9, "once: Blacksmithing's 7 recipes and Enchanting's 2")
+    eq(asked, 10, "once: Blacksmithing's 8 recipes and Enchanting's 2")
     unforever()
 end)
 

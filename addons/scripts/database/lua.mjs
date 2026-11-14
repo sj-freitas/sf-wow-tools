@@ -7,7 +7,9 @@
 // Data.lua (format 2):
 //   recipe: spell id, name, skill to learn, skill-up colours ("yellow,green,grey"), item made
 //     ("id,min,max", empty for an enchant), reagents ("id:count;…"), how the game teaches it
-//     (0 trainer or recipe item, 1 at a skill, 2 with the profession), that skill, recipe items ("id;…")
+//     (0 trainer or recipe item, 1 at a skill, 2 with the profession), that skill, recipe items ("id;…"),
+//     the specializations its recipe items require, broadest first ("Weaponsmith;Master Swordsmith";
+//     the field is left out when there are none)
 //   item: id, name (empty when the game's tables lack it), quality, required level, inventory type,
 //     icon (file id), kind ("Chest (Plate)"), stats ("Strength, Stamina"), skill to use (recipe
 //     items), class id, subclass id
@@ -18,7 +20,7 @@
 const field = (text) => String(text ?? '').replace(/[\t\r\n;]+/g, ' ').replace(/ {2,}/g, ' ').trim();
 
 export function recipeLine(recipe) {
-  return [
+  const fields = [
     recipe.id,
     field(recipe.name),
     recipe.skill,
@@ -28,7 +30,10 @@ export function recipeLine(recipe) {
     recipe.acquire || 0,
     recipe.acquireSkill || '',
     recipe.recipeItems.join(';'),
-  ].join('\t');
+  ];
+  const specializations = recipe.specializations ?? [];
+  if (specializations.length > 0) fields.push(specializations.map(field).join(';'));
+  return fields.join('\t');
 }
 
 export function itemLine(item) {

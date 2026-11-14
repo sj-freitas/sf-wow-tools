@@ -326,6 +326,8 @@ local function infoLines(recipe)
     local skill = ("%s, skill %d"):format(recipe.profession, recipe.skill)
     if recipe.level > 1 then skill = skill .. (", requires level %d"):format(recipe.level) end
     lines[#lines + 1] = skill
+    -- The specialization its plans require, as their tooltip says it: "Requires Armorsmith".
+    if recipe.specialization then lines[#lines + 1] = ("Requires %s"):format(recipe.specialization) end
     local item = recipe.creates
     if item then
         -- "Chest (Plate), 463 Armor, …": slot and type, then its stats (with values when a sources

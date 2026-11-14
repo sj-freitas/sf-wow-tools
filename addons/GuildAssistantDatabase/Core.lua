@@ -213,8 +213,9 @@ end
 --- Returns { name, skill, recipes = { recipe… }, items = { [id] = item }, vouchedCount }; a recipe
 --- is { id, name, profession, skill, colors = { yellow, green, grey }, creates (item or nil),
 --- makes = { min, max }, reagents = { { item, count } }, acquire (0 trainer or recipe item, 1 at a
---- skill, 2 with the profession), acquireSkill, recipeItems = { item… }, sources = { code… } and
---- trainingCost (from companions), vouched (a companion lists it; nil without companions), level (of
+--- skill, 2 with the profession), acquireSkill, recipeItems = { item… }, specializations = { name… }
+--- (what its recipe items require, broadest first: { "Weaponsmith", "Master Swordsmith" }),
+--- specialization (the last of them, nil when none), sources = { code… } and trainingCost (from companions), vouched (a companion lists it; nil without companions), level (of
 --- the item it makes, 0 when none), search (lowercase text) }.
 function Core.load(entry, providers)
     if entry.loaded then return entry.loaded end
@@ -264,6 +265,10 @@ function Core.load(entry, providers)
             recipe.reagents[#recipe.reagents + 1] = { item = item(reagentId), count = tonumber(count) }
         end
         for itemId in (f[9] or ""):gmatch("%d+") do recipe.recipeItems[#recipe.recipeItems + 1] = item(itemId) end
+        local specializations = {}
+        for name in (f[10] or ""):gmatch("[^;]+") do specializations[#specializations + 1] = name end
+        recipe.specializations = specializations
+        recipe.specialization = specializations[#specializations]
         if sources then
             -- By its spell, by the item it makes, by its name (what a trainer window shows): all of them.
             local known = combined(sources.recipes[id], recipe.creates and sources.byItem[recipe.creates.id],
@@ -294,6 +299,8 @@ function Core.load(entry, providers)
         for _, reagent in ipairs(recipe.reagents) do words[#words + 1] = reagent.item.name end
         -- Its plans (pattern, formula…), so searching for them finds what they teach.
         for _, recipeItem in ipairs(recipe.recipeItems) do words[#words + 1] = recipeItem.name end
+        -- The specializations it needs ("weaponsmith" finds a Master Swordsmith's recipes too).
+        for _, name in ipairs(specializations) do words[#words + 1] = name end
         recipe.search = table.concat(words, " "):lower()
         recipe.nameSearch = (recipe.name .. " " .. (recipe.creates and recipe.creates.name or "")):lower()
         recipes[#recipes + 1] = recipe
@@ -356,7 +363,7 @@ function Core.filterSets(slotNames, armorNames)
 end
 
 --- Whether `recipe` matches `query`: every term somewhere in its text (name, the item it makes and
---- its stats and slot, its reagents, the profession), the level the item needs within
+--- its stats and slot, its reagents, its plans, the specialization it needs, the profession), the level the item needs within
 --- minLevel..maxLevel (an item with none counts as level 1, a recipe that makes no item too), its
 --- skill within minSkill..maxSkill (any of them nil: no limit), the item's slot in `query.slots` and
 --- its armor type in `query.armor` (sets; nil: any), not unvouched when `query.vouchedOnly` (no

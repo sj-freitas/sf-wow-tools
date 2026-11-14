@@ -14,5 +14,14 @@ export const PROFESSIONS = [
   { name: 'First Aid', skill: 129 },
 ];
 
+// Specializations within a specialization: a Master Axesmith, Hammersmith or Swordsmith is a
+// Weaponsmith first (the game's tables don't say it; by spell id). A recipe that needs one needs
+// the other too, so searching for "weaponsmith" finds it.
+export const SPECIALIZATION_PARENTS = {
+  17039: 9787, // Master Swordsmith: Weaponsmith
+  17040: 9787, // Master Hammersmith: Weaponsmith
+  17041: 9787, // Master Axesmith: Weaponsmith
+};
+
 /** The game version the data is for (its wago.tools product is in gamedata.mjs, PRODUCTS). */
 export const DEFAULT_VERSION = 'forever';
