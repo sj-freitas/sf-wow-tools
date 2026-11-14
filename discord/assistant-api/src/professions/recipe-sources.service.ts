@@ -20,8 +20,16 @@ export interface RecipeSourceEntryDto {
 export interface RecipeSourcesDto {
   /** Recipe items and where each comes from. */
   items: { id: number; entries: RecipeSourceEntryDto[] }[];
-  /** Recipes trainers teach ("item:<item made>" or "name:<recipe>"), with the cost seen. */
-  trainers: { recipe: string; cost: number | null; entries: RecipeSourceEntryDto[] }[];
+  /**
+   * Recipes trainers teach ("item:<item made>" or "name:<recipe>"), with the cost seen, and what
+   * else trainers said each requires (`entry` "Goblin Engineer").
+   */
+  trainers: {
+    recipe: string;
+    cost: number | null;
+    entries: RecipeSourceEntryDto[];
+    requires: RecipeSourceEntryDto[];
+  }[];
 }
 
 interface Row {
@@ -36,7 +44,8 @@ const rowKey = (row: Pick<Row, 'kind' | 'key' | 'entry'>) =>
 
 /**
  * How recipes are obtained, as players' GuildAssistant Professions addons saw it in game (vendors,
- * trainers and their costs, loot, quest rewards; addons/GuildAssistantProfessions/Sources.lua).
+ * trainers and their costs and what their recipes require, loot, quest rewards;
+ * addons/GuildAssistantProfessions/Sources.lua).
  * Each import adds what its export carries (merged, never replaced), and everything gathered is
  * published for GuildAssistant Database's next data build, which a person reviews before it ships.
  */
@@ -65,6 +74,14 @@ export class RecipeSourcesService {
           key: trainer.recipe,
           entry,
           cost: trainer.cost,
+        })),
+      ),
+      ...sources.trainers.flatMap((trainer) =>
+        (trainer.requires ?? []).map((entry) => ({
+          kind: 'REQUIREMENT' as const,
+          key: trainer.recipe,
+          entry,
+          cost: null,
         })),
       ),
     ];
@@ -128,10 +145,14 @@ export class RecipeSourcesService {
         items.get(id)!.entries.push(entry);
       } else {
         if (!trainers.has(row.key))
-          trainers.set(row.key, { recipe: row.key, cost: null, entries: [] });
+          trainers.set(row.key, { recipe: row.key, cost: null, entries: [], requires: [] });
         const trainer = trainers.get(row.key)!;
-        trainer.cost = row.cost ?? trainer.cost;
-        trainer.entries.push(entry);
+        if (row.kind === 'REQUIREMENT') {
+          trainer.requires.push(entry);
+        } else {
+          trainer.cost = row.cost ?? trainer.cost;
+          trainer.entries.push(entry);
+        }
       }
     }
     return {

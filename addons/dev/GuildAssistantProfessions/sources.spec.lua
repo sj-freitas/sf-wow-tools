@@ -61,6 +61,32 @@ it("records which trainer teaches a recipe and its cost", function()
     eq(ns.Core.describeSources(db), "1 recipe item's sources, 1 trainer recipe")
 end)
 
+it("records what a trainer's recipe requires, once, as a record of its own", function()
+    local ns = load()
+    local db, Core = ns.db, ns.Core
+    local new, newRequirement = Core.recordTrainer(db, "item:10577", 2800, "Tanaris", "Nixx Sprocketspring", 10,
+        { "Goblin Engineer" })
+    eq(new, true); eq(newRequirement, true)
+    eq(db.sources.recipes["item:10577"].requires["Goblin Engineer"], 10)
+    eq(db.sources.stamps["qitem:10577"], 10, "its record")
+    eq(db.sources.stamps["ritem:10577"], 10, "and the trainer's")
+    new, newRequirement = Core.recordTrainer(db, "item:10577", 2800, "Gadgetzan", "Nixx Sprocketspring", 20,
+        { "Goblin Engineer" })
+    eq(new, true); eq(newRequirement, false, "known already")
+    eq(db.sources.stamps["qitem:10577"], 10, "not restamped")
+    -- Nothing required: nothing kept, and nothing taken away.
+    Core.recordTrainer(db, "item:2852", 50, "Stormwind City", "Grimand Elmore", 10, {})
+    eq(db.sources.recipes["item:2852"].requires, nil)
+    Core.recordTrainer(db, "item:10577", 2800, "Tanaris", "Nixx Sprocketspring", 30)
+    eq(db.sources.recipes["item:10577"].requires["Goblin Engineer"], 20, "last seen at 20")
+    -- At most three, without the separators a field can't hold.
+    Core.recordTrainer(db, "item:1", 0, "Z", "T", 10, { "A;B", "C", "D", "E" })
+    local names = {}
+    for name in pairs(db.sources.recipes["item:1"].requires) do names[#names + 1] = name end
+    table.sort(names)
+    eq(table.concat(names, ","), "A B,C,D")
+end)
+
 it("records the recipe items a vendor sells, not the rest", function()
     local items = { 6047, 2840, 2881 }
     local ns = load({
@@ -88,9 +114,12 @@ it("records what a profession trainer teaches, by the item made or the name, and
         GetTrainerServiceInfo = function(i) return services[i][1], nil, services[i][2] end,
         GetTrainerServiceItemLink = function(i) return services[i][3] and link(services[i][3]) or nil end,
         GetTrainerServiceCost = function(i) return services[i][4] or 0 end,
+        GetTrainerServiceNumAbilityReq = function(i) return services[i][5] and #services[i][5] or 0 end,
+        GetTrainerServiceAbilityReq = function(i, r) return services[i][5][r], false end,
         UnitName = function(unit) return unit == "npc" and "Grimand Elmore" or nil end,
     })
     eq(ns.Sources.trainer(), 2)
+    eq(ns.db.sources.recipes["item:2852"].requires, nil, "nothing required")
     eq(ns.db.sources.recipes["item:2852"].cost, 50)
     eq(ns.db.sources.recipes["item:2852"].trainers["Stormwind City=Grimand Elmore"], 1000)
     eq(ns.db.sources.recipes["name:enchant bracer - minor health"].cost, 10)
@@ -99,6 +128,32 @@ it("records what a profession trainer teaches, by the item made or the name, and
     ns.db.sources = nil
     eq(ns.Sources.trainer(), 0, "a class trainer is left alone")
     eq(ns.db.sources, nil)
+end)
+
+it("records what a specialization's recipe requires, whether this character has it or not", function()
+    local services = {
+        { "Goblin Mortar", "unavailable", 10577, 2800, { "Goblin Engineer" } },
+        { "Goblin Rocket Fuel Recipe", "available", nil, 1000, { "Goblin Engineer", "" } },
+    }
+    local sent = {}
+    local ns = load({
+        IsTradeskillTrainer = function() return true end,
+        GetNumTrainerServices = function() return #services end,
+        GetTrainerServiceInfo = function(i) return services[i][1], nil, services[i][2] end,
+        GetTrainerServiceItemLink = function(i) return services[i][3] and link(services[i][3]) or nil end,
+        GetTrainerServiceCost = function(i) return services[i][4] end,
+        GetTrainerServiceNumAbilityReq = function(i) return #services[i][5] end,
+        GetTrainerServiceAbilityReq = function(i, r) return services[i][5][r], false end,
+        UnitName = function(unit) return unit == "npc" and "Nixx Sprocketspring" or nil end,
+    })
+    ns.Sync = { sourceChanged = function(record) sent[#sent + 1] = record end }
+    eq(ns.Sources.trainer(), 2)
+    eq(ns.db.sources.recipes["item:10577"].requires["Goblin Engineer"], 1000)
+    eq(ns.db.sources.recipes["name:goblin rocket fuel recipe"].requires["Goblin Engineer"], 1000)
+    table.sort(sent)
+    eq(table.concat(sent, " | "), "qitem:10577 | qname:goblin rocket fuel recipe | ritem:10577 | rname:goblin rocket fuel recipe",
+        "the guild is told of both")
+    eq(ns.Sources.trainer(), 0, "the second time, nothing new")
 end)
 
 it("records recipe items looted from a creature, an object, or fishing", function()
@@ -161,6 +216,7 @@ it("puts what it recorded in the export, as Guild Assistant reads it (export-sou
     Core.recordItemSource(db, 2881, "O", "Westfall", "", 10)
     Core.recordTrainer(db, "item:2852", 50, "Stormwind City", "Grimand Elmore", 10)
     Core.recordTrainer(db, "name:enchant bracer - minor health", 10, "Stormwind City", "Lucan Cordell", 10)
+    Core.recordTrainer(db, "item:10577", 2800, "Tanaris", "Nixx Sprocketspring", 10, { "Goblin Engineer" })
     -- The API's tests read the same file (profession-export.spec.ts).
     local expected = read("dev/GuildAssistantProfessions/export-sources.fixture.json"):gsub("%s+$", "")
     eq(Core.toJSON(Core.exportData(db)), expected, "export-sources.fixture.json")
@@ -171,6 +227,7 @@ it("is read by GuildAssistant Database as a source", function()
     local ns = load()
     ns.Core.recordItemSource(ns.db, 6047, "V", "Tanaris", "Krinkle Goodsteel", 10)
     ns.Core.recordTrainer(ns.db, "item:2852", 50, "Stormwind City", "Grimand Elmore", 10)
+    ns.Core.recordTrainer(ns.db, "item:10577", 2800, "Tanaris", "Nixx Sprocketspring", 10, { "Goblin Engineer" })
     local database = {}
     assert(loadfile("GuildAssistantDatabase/Core.lua"))("GuildAssistantDatabase", database)
     local provider = database.Core.professionsSources(ns.db)
@@ -180,6 +237,8 @@ it("is read by GuildAssistant Database as a source", function()
     eq(merged.items[6047].sources[1].name, "Krinkle Goodsteel")
     eq(merged.byItem[2852].cost, 50)
     eq(merged.byItem[2852].trainers[1].name, "Grimand Elmore")
+    eq(#merged.byItem[2852].requires, 0)
+    eq(merged.byItem[10577].requires[1], "Goblin Engineer")
 end)
 
 print(("%d passed, %d failed"):format(passed, failed))

@@ -427,6 +427,33 @@ it("reads where a source says an item comes from: area ids, zone names, nothing"
     eq(Core.parseSource("X1=Nope"), nil); eq(Core.parseSource("Vnope=Nope"), nil); eq(Core.parseSource("garbage"), nil)
 end)
 
+it("takes what a trainer said a recipe requires as its specialization, after its plans'", function()
+    local function loadWith(providers)
+        local ns = {}
+        assert(loadfile("GuildAssistantDatabase/Core.lua"))("GuildAssistantDatabase", ns)
+        assert(loadfile("dev/GuildAssistantDatabase/Data.fixture.lua"))("GuildAssistantDatabase", ns)
+        return ns.Core, ns.Core.load(ns.Data.professions[1], providers)
+    end
+    -- A companion's line: its 5th field (Found.lua writes it).
+    local core, blacksmithing = loadWith({ { name = "Found", recipes = "item:7954\t6\t\tIronforge=Bengus Deepforge\tWeaponsmith\n"
+        .. "99003\t6\t\t\tMaster Swordsmith;Armorsmith" } })
+    local shatterer = recipeNamed(blacksmithing, "The Shatterer")
+    eq(shatterer.specialization, "Weaponsmith")
+    eq(names(core.search({ blacksmithing }, { terms = core.terms("weaponsmith") })), "The Shatterer, Stonevault Greatsword")
+    -- Its plans' first, then what the trainer adds, once each.
+    eq(table.concat(recipeNamed(blacksmithing, "Stonevault Greatsword").specializations, ", "),
+        "Weaponsmith, Master Swordsmith, Armorsmith")
+    eq(#recipeNamed(blacksmithing, "Copper Chain Pants").specializations, 0)
+
+    -- GuildAssistant Professions' saved data (1.4.0): `requires` with each trainer recipe.
+    local provider = core.professionsSources({ sources = { recipes = {
+        ["item:7954"] = { cost = 20000, trainers = { ["Ironforge=Bengus Deepforge"] = 100 }, requires = { Weaponsmith = 100 } },
+    } } })
+    eq(provider.recipes, "item:7954\t6\t20000\tIronforge=Bengus Deepforge\tWeaponsmith")
+    core, blacksmithing = loadWith({ provider })
+    eq(recipeNamed(blacksmithing, "The Shatterer").specialization, "Weaponsmith")
+end)
+
 it("turns what GuildAssistant Professions knows into a source that only adds", function()
     local db = {
         characters = {

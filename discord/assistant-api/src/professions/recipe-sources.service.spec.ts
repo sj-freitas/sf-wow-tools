@@ -4,7 +4,7 @@ import type { PrismaService } from '../database/prisma.service';
 import { RecipeSourcesController, RecipeSourcesService } from './recipe-sources.service';
 
 interface Stored {
-  kind: 'ITEM' | 'TRAINER';
+  kind: 'ITEM' | 'TRAINER' | 'REQUIREMENT';
   key: string;
   entry: string;
   cost: number | null;
@@ -51,7 +51,9 @@ function setup() {
 
 const sources = {
   items: [{ id: 6047, entries: ['V:Tanaris=Krinkle Goodsteel'] }],
-  trainers: [{ recipe: 'item:2852', cost: 50, entries: ['Stormwind City=Grimand Elmore'] }],
+  trainers: [
+    { recipe: 'item:2852', cost: 50, entries: ['Stormwind City=Grimand Elmore'], requires: [] },
+  ],
 };
 
 describe('RecipeSourcesService', () => {
@@ -79,9 +81,43 @@ describe('RecipeSourcesService', () => {
     await service.record('u1', sources);
     await service.record('u2', {
       items: [],
-      trainers: [{ recipe: 'item:2852', cost: null, entries: ['Stormwind City=Grimand Elmore'] }],
+      trainers: [
+        {
+          recipe: 'item:2852',
+          cost: null,
+          entries: ['Stormwind City=Grimand Elmore'],
+          requires: [],
+        },
+      ],
     });
     assert.equal(rows.find((row) => row.kind === 'TRAINER')!.cost, 50);
+  });
+
+  it('keeps what a recipe requires, as rows of their own, and publishes it with its trainers', async () => {
+    const { service, rows } = setup();
+    const mortar = {
+      recipe: 'item:10577',
+      cost: 2800,
+      entries: ['Tanaris=Nixx Sprocketspring'],
+      requires: ['Goblin Engineer'],
+    };
+    assert.equal(await service.record('u1', { items: [], trainers: [mortar] }), 2);
+    assert.equal(await service.record('u2', { items: [], trainers: [mortar] }), 0);
+    const requirement = rows.find((row) => row.kind === 'REQUIREMENT')!;
+    assert.deepEqual(
+      [requirement.key, requirement.entry, requirement.cost, requirement.reporters],
+      ['item:10577', 'Goblin Engineer', null, ['u1', 'u2']],
+    );
+    const published = await service.published();
+    assert.deepEqual(
+      published.trainers.map((t) => [
+        t.recipe,
+        t.cost,
+        t.entries.map((e) => e.entry),
+        t.requires.map((e) => `${e.entry} (${e.reporters})`),
+      ]),
+      [['item:10577', 2800, ['Tanaris=Nixx Sprocketspring'], ['Goblin Engineer (2)']]],
+    );
   });
 
   it('publishes everything gathered, by item and by recipe', async () => {
@@ -106,8 +142,8 @@ describe('RecipeSourcesService', () => {
       ],
     );
     assert.deepEqual(
-      published.trainers.map((t) => [t.recipe, t.cost, t.entries.length]),
-      [['item:2852', 50, 1]],
+      published.trainers.map((t) => [t.recipe, t.cost, t.entries.length, t.requires.length]),
+      [['item:2852', 50, 1, 0]],
     );
   });
 });

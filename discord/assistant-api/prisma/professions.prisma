@@ -76,21 +76,23 @@ model WowheadEntry {
 enum RecipeSourceKind {
   ITEM
   TRAINER
+  REQUIREMENT
 
   @@map("recipe_source_kind")
 }
 
 // How recipes are obtained, as players' GuildAssistant Professions addons saw it in game (1.3.0 and
 // later): where a recipe item is sold, dropped, fished or given by a quest (ITEM, `key` its item
-// id), and which trainer teaches a recipe for how much (TRAINER, `key` "item:<item made>" or
-// "name:<recipe name>"). Gathered from every import (RecipeSourcesService) and published (GET
+// id), which trainer teaches a recipe for how much (TRAINER, `key` "item:<item made>" or
+// "name:<recipe name>"), and what else a trainer's window says that recipe requires (REQUIREMENT,
+// the same `key`, 1.4.0 and later: a specialization, "Goblin Engineer"). Gathered from every import (RecipeSourcesService) and published (GET
 // /api/recipe-sources) for GuildAssistant Database's data build. No player or guild in it, only
 // how many users reported each.
 model RecipeSource {
   kind        RecipeSourceKind
   key         String
   // As the addon writes it: "V:Tanaris=Krinkle Goodsteel" (ITEM), "Stormwind City=Grimand Elmore"
-  // (TRAINER).
+  // (TRAINER), "Goblin Engineer" (REQUIREMENT).
   entry       String
   // A trainer's cost, in copper.
   cost        Int?

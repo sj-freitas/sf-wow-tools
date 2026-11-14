@@ -23,8 +23,12 @@ export interface ProfessionExport {
 export interface ExportedSources {
   /** Recipe items, and where each comes from: "V:Tanaris=Krinkle Goodsteel" (V vendor, D drop, O object, F fishing, Q quest; the zone; who). */
   items: { id: number; entries: string[] }[];
-  /** Recipes a trainer teaches ("item:<item made>" or "name:<recipe>"), the cost, and "<zone>=<trainer>". */
-  trainers: { recipe: string; cost: number | null; entries: string[] }[];
+  /**
+   * Recipes a trainer teaches ("item:<item made>" or "name:<recipe>"), the cost, "<zone>=<trainer>",
+   * and what else the trainer's window says the recipe requires (1.4.0 and later: a specialization,
+   * "Goblin Engineer"; empty without).
+   */
+  trainers: { recipe: string; cost: number | null; entries: string[]; requires: string[] }[];
 }
 
 export interface ExportedCharacter {
@@ -111,7 +115,10 @@ const ids = (value: unknown, what: string): number[] => {
 const ITEM_ENTRY = /^[VDOFQ](\d{1,6}|:[^=;\t]{1,60})?=[^;\t]{0,60}$/;
 const TRAINER_ENTRY = /^[^=;\t]{0,60}=[^=;\t]{1,60}$/;
 const TRAINER_RECIPE = /^(item:\d{1,8}|name:[^=;\t]{1,80})$/;
+const REQUIREMENT = /^[^=;\t]{1,60}$/;
 const MAX_SOURCE_ENTRIES = 2000;
+/** What a recipe requires: one specialization in the game; a few at most. */
+const MAX_REQUIRES = 3;
 
 /**
  * The export's recipe sources, checked. Never fails the import: anything that isn't one (from
@@ -121,11 +128,11 @@ export function parseSources(value: unknown): ExportedSources | null {
   if (!value || typeof value !== 'object') return null;
   const root = value as { items?: unknown; trainers?: unknown };
   let budget = MAX_SOURCE_ENTRIES;
-  const entries = (list: unknown, pattern: RegExp): string[] => {
+  const entries = (list: unknown, pattern: RegExp, most = 12): string[] => {
     if (!Array.isArray(list)) return [];
     const good = [
       ...new Set(list.filter((e): e is string => typeof e === 'string' && pattern.test(e))),
-    ].slice(0, Math.max(0, Math.min(12, budget)));
+    ].slice(0, Math.max(0, Math.min(most, budget)));
     budget -= good.length;
     return good;
   };
@@ -142,6 +149,7 @@ export function parseSources(value: unknown): ExportedSources | null {
     : []) {
     if (typeof trainer?.recipe !== 'string' || !TRAINER_RECIPE.test(trainer.recipe)) continue;
     const list = entries(trainer.entries, TRAINER_ENTRY);
+    const requires = entries(trainer.requires, REQUIREMENT, MAX_REQUIRES);
     const cost =
       typeof trainer.cost === 'number' &&
       Number.isInteger(trainer.cost) &&
@@ -149,7 +157,9 @@ export function parseSources(value: unknown): ExportedSources | null {
       trainer.cost < 1e8
         ? trainer.cost
         : null;
-    if (list.length > 0) trainers.push({ recipe: trainer.recipe, cost, entries: list });
+    if (list.length > 0 || requires.length > 0) {
+      trainers.push({ recipe: trainer.recipe, cost, entries: list, requires });
+    }
   }
   return items.length > 0 || trainers.length > 0 ? { items, trainers } : null;
 }

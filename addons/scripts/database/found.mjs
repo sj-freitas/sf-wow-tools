@@ -8,7 +8,10 @@ import { longString } from './lua.mjs';
 /** Guild Assistant, where the findings are gathered (GUILD_ASSISTANT_URL to use another). */
 export const GUILD_ASSISTANT = process.env.GUILD_ASSISTANT_URL ?? 'https://guildassistant.app';
 
-/** Everything gathered: { items: [{ id, entries: [{ entry }] }], trainers: [{ recipe, cost, entries }] }. */
+/**
+ * Everything gathered: { items: [{ id, entries: [{ entry }] }], trainers: [{ recipe, cost, entries,
+ * requires }] } (requires: what trainers said the recipe requires, [{ entry: "Goblin Engineer" }]).
+ */
 export async function fetchFound(base = GUILD_ASSISTANT, fetcher = fetch) {
   const response = await fetcher(`${base}/api/recipe-sources`, { headers: { Accept: 'application/json' } });
   if (!response.ok) throw new Error(`${base}/api/recipe-sources: HTTP ${response.status}`);
@@ -19,6 +22,7 @@ export async function fetchFound(base = GUILD_ASSISTANT, fetcher = fetch) {
 const ITEM_ENTRY = /^[VDOFQ](\d{1,6}|:[^=;\t\n]{1,60})?=[^;\t\n]{0,60}$/;
 const TRAINER_ENTRY = /^[^=;\t\n]{0,60}=[^=;\t\n]{1,60}$/;
 const TRAINER_RECIPE = /^(item:\d{1,8}|name:[^=;\t\n]{1,80})$/;
+const REQUIREMENT = /^[^=;\t\n]{1,60}$/;
 
 const entriesOf = (list, pattern) =>
   [...new Set((Array.isArray(list) ? list : []).map((e) => e?.entry).filter((e) => typeof e === 'string' && pattern.test(e)))].sort();
@@ -31,12 +35,19 @@ export function toFoundLua(published, fetched) {
     .filter(([, entries]) => entries.length > 0)
     .sort((a, b) => a[0] - b[0])
     .map(([id, entries]) => [id, '', '', '', entries.join(';')].join('\t'));
+  // A recipe line: which, trainer (6), cost, trainers, and what it requires (left out when nothing).
   const recipes = (published?.trainers ?? [])
     .filter((trainer) => typeof trainer?.recipe === 'string' && TRAINER_RECIPE.test(trainer.recipe))
-    .map((trainer) => [trainer.recipe, Number.isInteger(trainer.cost) && trainer.cost > 0 ? trainer.cost : '', entriesOf(trainer.entries, TRAINER_ENTRY)])
-    .filter(([, , entries]) => entries.length > 0)
+    .map((trainer) => [
+      trainer.recipe,
+      Number.isInteger(trainer.cost) && trainer.cost > 0 ? trainer.cost : '',
+      entriesOf(trainer.entries, TRAINER_ENTRY),
+      entriesOf(trainer.requires, REQUIREMENT),
+    ])
+    .filter(([, , entries, requires]) => entries.length > 0 || requires.length > 0)
     .sort((a, b) => a[0].localeCompare(b[0]))
-    .map(([recipe, cost, entries]) => [recipe, '6', cost, entries.join(';')].join('\t'));
+    .map(([recipe, cost, entries, requires]) =>
+      [recipe, '6', cost, entries.join(';'), ...(requires.length > 0 ? [requires.join(';')] : [])].join('\t'));
   if (items.length === 0 && recipes.length === 0) return null;
   return [
     `-- GuildAssistant Database: how recipes are obtained, as players' GuildAssistant Professions found it in game, fetched ${fetched}.`,

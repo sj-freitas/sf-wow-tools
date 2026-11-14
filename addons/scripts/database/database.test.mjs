@@ -183,14 +183,22 @@ test("writes what players found as a source that only adds, leaving out what isn
       { id: -1, entries: [{ entry: 'V=Nobody' }] },
     ],
     trainers: [
-      { recipe: 'item:2852', cost: 50, entries: [{ entry: 'Stormwind City=Grimand Elmore' }] },
+      { recipe: 'item:2852', cost: 50, entries: [{ entry: 'Stormwind City=Grimand Elmore' }], requires: [] },
       { recipe: 'spell:1', cost: 5, entries: [{ entry: 'Zone=Trainer' }] },
+      {
+        recipe: 'item:10577',
+        cost: 2800,
+        entries: [{ entry: 'Tanaris=Nixx Sprocketspring' }],
+        requires: [{ entry: 'Goblin Engineer', reporters: 2 }, { entry: 'not=one' }],
+      },
+      { recipe: 'name:goblin rocket fuel recipe', cost: null, entries: [], requires: [{ entry: 'Goblin Engineer' }] },
     ],
   };
   const lua = toFoundLua(published, '2026-11-18');
   assert.match(lua, /name = "found by players",/);
   assert.doesNotMatch(lua, /complete/, 'it hides nothing');
-  assert.match(lua, /recipes = \[\[\nitem:2852\t6\t50\tStormwind City=Grimand Elmore\]\],/);
+  // What a recipe requires is a 5th field, left out when nothing; a requirement alone is kept.
+  assert.match(lua, /recipes = \[\[\nitem:10577\t6\t2800\tTanaris=Nixx Sprocketspring\tGoblin Engineer\nitem:2852\t6\t50\tStormwind City=Grimand Elmore\nname:goblin rocket fuel recipe\t6\t\t\tGoblin Engineer\]\],/);
   assert.match(lua, /items = \[\[\n2881\t\t\t\tD:Westfall=Defias Renegade Mage\n6047\t\t\t\tV:Booty Bay=Narkk;V:Tanaris=Krinkle Goodsteel\]\],/);
   assert.equal(toFoundLua({ items: [], trainers: [] }, '2026-11-18'), null, 'nothing found');
   assert.equal(toFoundLua(undefined, '2026-11-18'), null);

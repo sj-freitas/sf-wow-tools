@@ -378,6 +378,33 @@ it("ignores a record that isn't one", function()
     eq(core.decodeSourceRecord("i6047\t1\t\tV=" .. ("x"):rep(200)), nil, "too long")
     eq(core.decodeSourceRecord("ritem:2852\t1\t1e\tZone=Trainer").cost, 50)
     eq(core.decodeSourceRecord("i6047\t1\t\tV:Tanaris=Krinkle").entries[1], "V:Tanaris=Krinkle")
+    -- What a recipe requires: names, a few at most.
+    eq(core.decodeSourceRecord("qitem:10577\t1\t\tGoblin Engineer").entries[1], "Goblin Engineer")
+    eq(core.decodeSourceRecord("qname:goblin mortar\t1\t\tGoblin Engineer").record, "qname:goblin mortar")
+    eq(core.decodeSourceRecord("qitem:10577\t1\t\tZone=Trainer"), nil, "not a name")
+    eq(core.decodeSourceRecord("qitem:10577\t1\t\tA\tB\tC\tD"), nil, "too many")
+    eq(core.decodeSourceRecord("q6047\t1\t\tGoblin Engineer"), nil, "not a recipe")
+end)
+
+it("shares what a recipe requires, and 1.3.0 takes the trainer and leaves it", function()
+    reset()
+    local luna = player("Luna", "Relic Hunters")
+    local kael = player("Kael", "Relic Hunters")
+    run(60)
+    local new, newRequirement = luna.ns.Core.recordTrainer(luna.ns.db, "item:10577", 2800, "Tanaris",
+        "Nixx Sprocketspring", clock, { "Goblin Engineer" })
+    eq(new and newRequirement, true)
+    luna.ns.Sync.sourceChanged(luna.ns.Core.trainerRecord("item:10577"))
+    luna.ns.Sync.sourceChanged(luna.ns.Core.requiresRecord("item:10577"))
+    run(30)
+    local known = kael.ns.db.sources.recipes["item:10577"]
+    eq(known.trainers["Tanaris=Nixx Sprocketspring"] ~= nil, true)
+    eq(known.requires["Goblin Engineer"] ~= nil, true, "Kael has what it requires")
+    eq(kael.ns.Sync.stats.sourcesReceived, 2)
+    -- 1.3.0's decoder knew only "i" and "r" records: the trainer's record is one it still reads.
+    local record = luna.ns.Core.encodeSourceRecord(luna.ns.db, "ritem:10577")
+    eq(record:find("Goblin", 1, true), nil, "the trainer's record carries no requirement")
+    eq(luna.ns.Core.encodeSourceRecord(luna.ns.db, "qitem:10577"):match("\t([^\t]+)$"), "Goblin Engineer")
 end)
 
 realPrint(("%d passed, %d failed"):format(passed, failed))

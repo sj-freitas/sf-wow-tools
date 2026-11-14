@@ -56,9 +56,10 @@ the chat):
 With [GuildAssistant Database](../GuildAssistantDatabase/README.md) installed too, it shows who you
 know that can craft each recipe (from what this addon saved). This addon also records, quietly, how
 recipes are obtained, which GuildAssistant Database shows with each recipe: the recipes a vendor
-sells (when you open its window), what a profession trainer teaches and for how much, plans and
-patterns you loot (from a creature, an object, or fishing), and those a quest gives. It's kept in
-the saved data (`sources`), and `/ga-prof status` says how many it has.
+sells (when you open its window), what a profession trainer teaches, for how much and what else
+each recipe requires (a specialization: "Goblin Engineer", as the window says under "Requires"),
+plans and patterns you loot (from a creature, an object, or fishing), and those a quest gives.
+It's kept in the saved data (`sources`), and `/ga-prof status` says how many it has.
 
 What you find reaches everyone:
 
@@ -126,7 +127,8 @@ on logout. For example:
 
 `source` is `own` (one of your account's), `guild` (a guildmate's, received from the guild) or
 `link`. Once it has recorded how recipes are obtained, the export also has `sources`:
-`{"items":[{"id":6047,"entries":["V:Tanaris=Krinkle Goodsteel"]}],"trainers":[{"recipe":"item:2852","cost":50,"entries":["Stormwind City=Grimand Elmore"]}]}`
+`{"items":[{"id":6047,"entries":["V:Tanaris=Krinkle Goodsteel"]}],"trainers":[{"recipe":"item:10577","cost":2800,"entries":["Tanaris=Nixx Sprocketspring"],"requires":["Goblin Engineer"]}]}`
 (an entry is the kind, V vendor, D drop, O object, F fishing or Q quest, then the zone and who; a
-trainer's is the zone and the trainer). Guild Assistant reads it from the uploaded file, matches your characters by name to yours in
+trainer's is the zone and the trainer; `requires`, only when the trainer's window says some, is
+what else the recipe requires, 1.4.0 and later). Guild Assistant reads it from the uploaded file, matches your characters by name to yours in
 the guild and the guild's to its roster, and looks the recipe names up on Wowhead.

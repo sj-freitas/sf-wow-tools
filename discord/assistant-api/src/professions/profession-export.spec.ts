@@ -151,11 +151,18 @@ describe('parseSources', () => {
         { id: 6047, entries: ['V:Tanaris=Krinkle Goodsteel'] },
       ],
       trainers: [
-        { recipe: 'item:2852', cost: 50, entries: ['Stormwind City=Grimand Elmore'] },
+        {
+          recipe: 'item:10577',
+          cost: 2800,
+          entries: ['Tanaris=Nixx Sprocketspring'],
+          requires: ['Goblin Engineer'],
+        },
+        { recipe: 'item:2852', cost: 50, entries: ['Stormwind City=Grimand Elmore'], requires: [] },
         {
           recipe: 'name:enchant bracer - minor health',
           cost: 10,
           entries: ['Stormwind City=Lucan Cordell'],
+          requires: [],
         },
       ],
     });
@@ -176,11 +183,25 @@ describe('parseSources', () => {
         trainers: [
           { recipe: 'spell:1', cost: 5, entries: ['Zone=Trainer'] },
           { recipe: 'item:2852', cost: 'free', entries: ['=Grimand', 'no equals'] },
+          {
+            recipe: 'item:10577',
+            entries: [],
+            requires: ['Goblin Engineer', 'A=B', 'x;y', 7, 'Two', 'Three', 'Four'],
+          },
         ],
       }),
       {
         items: [{ id: 6047, entries: ['V:Tanaris=Krinkle', 'V440=By area id'] }],
-        trainers: [{ recipe: 'item:2852', cost: null, entries: ['=Grimand'] }],
+        trainers: [
+          { recipe: 'item:2852', cost: null, entries: ['=Grimand'], requires: [] },
+          // What it requires alone is kept; at most three, each a name.
+          {
+            recipe: 'item:10577',
+            cost: null,
+            entries: [],
+            requires: ['Goblin Engineer', 'Two', 'Three'],
+          },
+        ],
       },
     );
     assert.equal(parseSources('nonsense'), null);

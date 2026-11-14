@@ -210,8 +210,9 @@ function Core.exportData(db)
 end
 
 --- How recipes are obtained, as recorded (1.3.0 and later), for Guild Assistant to gather into
---- GuildAssistant Database: { items = { { id, entries } }, trainers = { { recipe, cost, entries } } }
---- (entries as kept, sorted), nil when nothing is recorded.
+--- GuildAssistant Database: { items = { { id, entries } }, trainers = { { recipe, cost, entries,
+--- requires } } } (entries as kept, sorted; requires only when the trainer said some: { "Goblin
+--- Engineer" }), nil when nothing is recorded.
 function Core.exportSources(db)
     local sources = db.sources
     if not sources then return nil end
@@ -222,8 +223,11 @@ function Core.exportSources(db)
     end
     for _, recipe in ipairs(sortedKeys(sources.recipes or {})) do
         local known = sources.recipes[recipe]
-        local entries = sortedKeys(known.trainers or {})
-        if #entries > 0 then trainers[#trainers + 1] = { recipe = recipe, cost = known.cost, entries = entries } end
+        local entries, requires = sortedKeys(known.trainers or {}), sortedKeys(known.requires or {})
+        if #entries > 0 or #requires > 0 then
+            trainers[#trainers + 1] = { recipe = recipe, cost = known.cost, entries = entries,
+                requires = #requires > 0 and requires or nil }
+        end
     end
     if #items == 0 and #trainers == 0 then return nil end
     return { items = items, trainers = trainers }
@@ -551,15 +555,20 @@ end
 -- What the game shows of how recipes are obtained, kept for GuildAssistant Database (which reads it
 -- from the saved data, Core.professionsSources there): where recipe items (plans, patterns,
 -- formulas…) are sold, dropped, fished or given by quests, and which trainers teach which recipes
--- and for how much. db.sources = { items = { [item id] = { [entry] = last seen } }, recipes = {
--- [recipe] = { cost, trainers = { ["<zone>=<trainer>"] = last seen } } } }; an entry is
--- "<kind>[:<zone>]=<who>" (V vendor, D drop, O object, F fishing, Q quest), a recipe "item:<id>"
--- (the item it makes) or "name:<recipe name>". Each recipe item's sources and each trainer recipe is
--- a record ("i<item id>", "r<recipe>"), stamped when it last changed (db.sources.stamps): the guild
--- shares records like characters (Sync.lua), and the export carries them for Guild Assistant.
+-- and for how much, and what else they require (a specialization: "Goblin Engineer", as the
+-- trainer's window says it). db.sources = { items = { [item id] = { [entry] = last seen } }, recipes
+-- = { [recipe] = { cost, trainers = { ["<zone>=<trainer>"] = last seen }, requires = { [name] = last
+-- seen } } } }; an entry is "<kind>[:<zone>]=<who>" (V vendor, D drop, O object, F fishing, Q
+-- quest), a recipe "item:<id>" (the item it makes) or "name:<recipe name>". Each recipe item's
+-- sources, each trainer recipe and what each requires is a record ("i<item id>", "r<recipe>",
+-- "q<recipe>"), stamped when it last changed (db.sources.stamps): the guild shares records like
+-- characters (Sync.lua), and the export carries them for Guild Assistant. The requirement is a record
+-- of its own so that 1.3.0's, which don't know it, take the trainers and leave it.
 
 --- At most this many places per recipe item, and trainers per recipe: enough to say where to go.
 Core.MAX_SOURCES = 12
+--- At most this many requirements per recipe (one, in the game: a specialization).
+Core.MAX_REQUIRES = 3
 
 local function clean(text) return (tostring(text or ""):gsub("[\t\n\r;=]", " ")) end
 
@@ -569,9 +578,10 @@ local function countKeys(map)
     return n
 end
 
---- The record of a recipe item's sources, and of a trainer recipe.
+--- The record of a recipe item's sources, of a trainer recipe, and of what that recipe requires.
 function Core.itemRecord(itemId) return "i" .. itemId end
 function Core.trainerRecord(recipe) return "r" .. recipe end
+function Core.requiresRecord(recipe) return "q" .. recipe end
 
 local function stamp(db, record, now)
     db.sources.stamps = db.sources.stamps or {}
@@ -596,20 +606,32 @@ function Core.recordItemSource(db, itemId, kind, zone, who, now)
 end
 
 --- Records that trainer `who` in `zone` teaches `recipe` ("item:<id>" or "name:<name>") for `cost`
---- (copper), seen `now`. Returns whether it was new.
-function Core.recordTrainer(db, recipe, cost, zone, who, now)
+--- (copper), and that it requires `requires` (names, as the window says them: { "Goblin Engineer" };
+--- nil or empty for nothing), seen `now`. Returns whether the trainer was new, and whether a
+--- requirement was.
+function Core.recordTrainer(db, recipe, cost, zone, who, now, requires)
     db.sources = db.sources or {}
     db.sources.recipes = db.sources.recipes or {}
     local known = db.sources.recipes[recipe] or { trainers = {} }
+    db.sources.recipes[recipe] = known
+    local newRequirement = false
+    for _, name in ipairs(requires or {}) do
+        name = clean(name)
+        known.requires = known.requires or {}
+        if name ~= "" and (known.requires[name] or countKeys(known.requires) < Core.MAX_REQUIRES) then
+            newRequirement = newRequirement or known.requires[name] == nil
+            known.requires[name] = now
+        end
+    end
+    if newRequirement then stamp(db, Core.requiresRecord(recipe), now) end
     local entry = clean(zone) .. "=" .. clean(who)
     local new = known.trainers[entry] == nil
-    if new and countKeys(known.trainers) >= Core.MAX_SOURCES then return false end
+    if new and countKeys(known.trainers) >= Core.MAX_SOURCES then return false, newRequirement end
     known.trainers[entry] = now
     local costChanged = cost and cost > 0 and cost ~= known.cost
     known.cost = cost and cost > 0 and cost or known.cost
-    db.sources.recipes[recipe] = known
     if new or costChanged then stamp(db, Core.trainerRecord(recipe), now) end
-    return new
+    return new, newRequirement
 end
 
 --- The summary of the records of sources this addon has, for the guild: "i6047=<stamp>;…".
@@ -639,7 +661,8 @@ function Core.sourcesNewerThan(db, theirs)
 end
 
 --- A record as text: "<record>\t<stamp>\t<cost>\t<entry>\t…" (numbers in base 36; cost only
---- for a trainer recipe; entries as kept). Nil when this addon doesn't have it.
+--- for a trainer recipe; entries as kept: a requirement's are the names). Nil when this addon
+--- doesn't have it.
 function Core.encodeSourceRecord(db, record)
     local sources = db.sources or {}
     local at = sources.stamps and sources.stamps[record]
@@ -651,8 +674,12 @@ function Core.encodeSourceRecord(db, record)
     else
         local known = sources.recipes and sources.recipes[record:sub(2)]
         if not known then return nil end
-        for entry in pairs(known.trainers) do entries[#entries + 1] = entry end
-        cost = known.cost and Core.toBase36(known.cost) or ""
+        if record:sub(1, 1) == "q" then
+            for name in pairs(known.requires or {}) do entries[#entries + 1] = name end
+        else
+            for entry in pairs(known.trainers) do entries[#entries + 1] = entry end
+            cost = known.cost and Core.toBase36(known.cost) or ""
+        end
     end
     table.sort(entries)
     local fields = { record, Core.toBase36(at), cost }
@@ -662,6 +689,13 @@ end
 
 local ITEM_ENTRY = "^[VDOFQ][^=\t;]*=[^\t;]*$"
 local TRAINER_ENTRY = "^[^=\t;]*=[^=\t;]+$"
+local REQUIREMENT = "^[^=\t;]+$"
+local RECIPE_KEY = { "^%aitem:%d+$", "^%aname:[^=;]+$" }
+
+local function isRecipeRecord(record, kind)
+    if record:sub(1, 1) ~= kind then return false end
+    return record:match(RECIPE_KEY[1]) ~= nil or record:match(RECIPE_KEY[2]) ~= nil
+end
 
 --- A record from `encodeSourceRecord`'s text, checked (anyone in the guild can send anything):
 --- { record, stamp, cost, entries }, nil when it isn't one.
@@ -671,26 +705,29 @@ function Core.decodeSourceRecord(text)
     for field in (text .. "\t"):gmatch("([^\t]*)\t") do fields[#fields + 1] = field end
     local record, at = fields[1], Core.fromBase36(fields[2])
     local isItem = record and record:match("^i%d+$") ~= nil
-    local isTrainer = record and (record:match("^ritem:%d+$") or record:match("^rname:[^=;]+$")) ~= nil
-    if not at or not (isItem or isTrainer) or #fields - 3 > Core.MAX_SOURCES or #fields < 4 then return nil end
+    local isTrainer = record and isRecipeRecord(record, "r")
+    local isRequirement = record and isRecipeRecord(record, "q")
+    local most = isRequirement and Core.MAX_REQUIRES or Core.MAX_SOURCES
+    if not at or not (isItem or isTrainer or isRequirement) or #fields - 3 > most or #fields < 4 then return nil end
     local decoded = { record = record, stamp = at, cost = Core.fromBase36(fields[3]), entries = {} }
+    local pattern = isItem and ITEM_ENTRY or isTrainer and TRAINER_ENTRY or REQUIREMENT
     for i = 4, #fields do
         local entry = fields[i]
-        if #entry > 120 or not entry:match(isItem and ITEM_ENTRY or TRAINER_ENTRY) then return nil end
+        if #entry > (isRequirement and 60 or 120) or not entry:match(pattern) then return nil end
         decoded.entries[#decoded.entries + 1] = entry
     end
     return decoded
 end
 
 --- Merges a record received from the guild into what is kept: its entries are added (at most
---- Core.MAX_SOURCES), a trainer's cost taken. Holding more than received, the record is restamped
+--- Core.MAX_SOURCES; a requirement's, Core.MAX_REQUIRES), a trainer's cost taken. Holding more than received, the record is restamped
 --- newer, so those who only have what was received ask for it. Returns whether anything changed,
 --- and whether what is kept has more than what was received (worth sending back).
 function Core.receiveSourceRecord(db, received, now)
     db.sources = db.sources or {}
     db.sources.stamps = db.sources.stamps or {}
     local itemId = tonumber(received.record:match("^i(%d+)$") or "")
-    local entries
+    local entries, most = nil, Core.MAX_SOURCES
     if itemId then
         db.sources.items = db.sources.items or {}
         entries = db.sources.items[itemId] or {}
@@ -699,15 +736,20 @@ function Core.receiveSourceRecord(db, received, now)
         db.sources.recipes = db.sources.recipes or {}
         local known = db.sources.recipes[received.record:sub(2)] or { trainers = {} }
         db.sources.recipes[received.record:sub(2)] = known
-        entries = known.trainers
-        if received.cost and received.cost > 0 and received.cost ~= known.cost then
-            known.cost = received.cost
+        if received.record:sub(1, 1) == "q" then
+            known.requires = known.requires or {}
+            entries, most = known.requires, Core.MAX_REQUIRES
+        else
+            entries = known.trainers
+            if received.cost and received.cost > 0 and received.cost ~= known.cost then
+                known.cost = received.cost
+            end
         end
     end
     local changed, incoming = false, {}
     for _, entry in ipairs(received.entries) do
         incoming[entry] = true
-        if entries[entry] == nil and countKeys(entries) < Core.MAX_SOURCES then
+        if entries[entry] == nil and countKeys(entries) < most then
             entries[entry], changed = received.stamp, true
         end
     end
@@ -751,7 +793,7 @@ local function isArray(value)
 end
 
 local ARRAY_FIELDS = { characters = true, professions = true, spells = true, items = true, trainers = true,
-    entries = true }
+    entries = true, requires = true }
 
 local function encode(value, field)
     local kind = type(value)

@@ -1,7 +1,8 @@
 -- GuildAssistant Professions: what the game shows of how recipes are obtained, recorded quietly for
 -- GuildAssistant Database (Core.recordItemSource, Core.recordTrainer): the recipe items a vendor
 -- sells (its window opens), those looted from a creature, an object or fishing, those a quest gives,
--- and what a profession trainer teaches and for how much. Nothing is said in the chat.
+-- and what a profession trainer teaches, for how much and what else it requires (a specialization).
+-- Nothing is said in the chat.
 
 local _, ns = ...
 local Core = ns.Core
@@ -47,8 +48,21 @@ function Sources.merchant()
     return new
 end
 
---- A profession trainer's window: what it teaches (by the item a recipe makes, else its name) and
---- its cost. Class trainers are left alone. Returns how many were new.
+-- What a trainer's service requires besides a skill and a level: the abilities its window lists under
+-- "Requires:", a specialization for a recipe ("Goblin Engineer"). Whether this character has them
+-- doesn't matter: the recipe needs them.
+local function requirements(i)
+    local names = {}
+    if not (GetTrainerServiceNumAbilityReq and GetTrainerServiceAbilityReq) then return names end
+    for r = 1, GetTrainerServiceNumAbilityReq(i) or 0 do
+        local name = GetTrainerServiceAbilityReq(i, r)
+        if type(name) == "string" and name ~= "" then names[#names + 1] = name end
+    end
+    return names
+end
+
+--- A profession trainer's window: what it teaches (by the item a recipe makes, else its name), its
+--- cost and what else it requires. Class trainers are left alone. Returns how many were new.
 function Sources.trainer()
     if not (GetNumTrainerServices and GetTrainerServiceInfo) then return 0 end
     if IsTradeskillTrainer and not IsTradeskillTrainer() then return 0 end
@@ -61,8 +75,9 @@ function Sources.trainer()
             local id = itemId(GetTrainerServiceItemLink and GetTrainerServiceItemLink(i))
             local recipe = id and ("item:" .. id) or ("name:" .. name:lower())
             local cost = GetTrainerServiceCost and GetTrainerServiceCost(i) or 0
-            local isNew = Core.recordTrainer(ns.db, recipe, cost, zone(), trainer, ns.now())
+            local isNew, newRequirement = Core.recordTrainer(ns.db, recipe, cost, zone(), trainer, ns.now(), requirements(i))
             if shared(isNew, Core.trainerRecord(recipe)) then new = new + 1 end
+            if shared(newRequirement, Core.requiresRecord(recipe)) and not isNew then new = new + 1 end
         end
     end
     return new

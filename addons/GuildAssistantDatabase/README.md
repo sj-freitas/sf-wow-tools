@@ -108,8 +108,10 @@ tooltip does ("Requires Armorsmith"), and searching for the specialization lists
 Armorsmith, Weaponsmith (with Master Axesmith, Master Hammersmith and Master Swordsmith, whose
 recipes a search for `weaponsmith` finds too), Dragonscale, Elemental and Tribal Leatherworking,
 and Gnomish and Goblin Engineer. It's what the game's data says of the plans and patterns. Recipes
-a specialization's trainer teaches (Goblin and Gnomish Engineering's, mostly) aren't marked: the
-game's servers know those, not its files.
+a specialization's trainer teaches (Goblin and Gnomish Engineering's, mostly) aren't in the game's
+files: the servers know them. GuildAssistant Professions (1.4.0) records them from the trainer's
+window ("Requires Goblin Engineer"), so they're marked once someone opens it: at once for them and
+their guild, and for everyone with what players found (`Found.lua`) in a later release.
 
 ## Where the data comes from
 

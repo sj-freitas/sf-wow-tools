@@ -33,6 +33,14 @@ local SOURCE_KINDS = { D = "drop", V = "vendor", Q = "quest", O = "object", F = 
 local function number(text) return tonumber(text) or 0 end
 local function text(value) return value ~= nil and value ~= "" and value or nil end
 
+-- Adds `value` to the list unless it's there already.
+local function addOnce(list, value)
+    for _, known in ipairs(list) do
+        if known == value then return end
+    end
+    list[#list + 1] = value
+end
+
 local function joined(...)
     local parts = {}
     for i = 1, select("#", ...) do
@@ -73,8 +81,9 @@ end
 -- saw) isn't complete: a recipe it lists shows, none is hidden because of it.
 --   recipe lines: which recipe (its spell id; or "item:<id>", the recipe that makes that item; or
 --     "name:<recipe name>"), source codes (SOURCE_WORDS below: 2 drop, 4 quest, 5 vendor, 6
---     trainer…), trainer's cost in copper, trainers ("<zone>=<name>;…"). Listing a recipe vouches
---     that it can be learned.
+--     trainer…), trainer's cost in copper, trainers ("<zone>=<name>;…"), and what it requires
+--     besides the profession, as a trainer's window says it ("Goblin Engineer;…"; may be left out).
+--     Listing a recipe vouches that it can be learned.
 --   item lines: id, name, quality, stats with values, where it comes from ("D40=Mob;V:Tanaris=Vendor;
 --     Q0=Quest"): a kind (D drop, V vendor, Q quest, O object, F fishing), the zone as the game's area
 --     id or ":" and its name, and who or what (empty when not known).
@@ -99,8 +108,8 @@ end
 --- What the sources say, merged: { names = { "known as of November 2026" }, complete (one of them
 --- is), recipes = { [spell id]
 --- = recipe }, byItem = { [item id] = recipe }, byName = { [lowercase name] = recipe }, items = { [id]
---- = { name, quality, stats, sources } } }, a recipe { codes, cost, trainers = { { zoneName, name } } };
---- nil without any source. Read once per list.
+--- = { name, quality, stats, sources } } }, a recipe { codes, cost, trainers = { { zoneName, name } },
+--- requires = { name… } }; nil without any source. Read once per list.
 function Core.sources(providers)
     if type(providers) ~= "table" or #providers == 0 then return nil end
     if providers.merged and providers.mergedCount == #providers then return providers.merged end
@@ -114,7 +123,7 @@ function Core.sources(providers)
             if kind == "name" then map, id = merged.byName, value:lower() end
         end
         if not id then return nil end
-        map[id] = map[id] or { codes = {}, cost = 0, trainers = {} }
+        map[id] = map[id] or { codes = {}, cost = 0, trainers = {}, requires = {} }
         return map[id]
     end
     for _, provider in ipairs(providers) do
@@ -132,6 +141,7 @@ function Core.sources(providers)
                         local zone, name = trainer:match("^([^=]*)=(.+)$")
                         if name then recipe.trainers[#recipe.trainers + 1] = { zoneName = text(zone), name = name } end
                     end
+                    for name in (f[5] or ""):gmatch("[^;]+") do addOnce(recipe.requires, name) end
                 end
             end
             for line in (type(provider.items) == "string" and provider.items or ""):gmatch("[^\n]+") do
@@ -163,10 +173,11 @@ local function combined(...)
         if known then found[#found + 1] = known end
     end
     if #found <= 1 then return found[1] end
-    local all = { codes = {}, cost = 0, trainers = {} }
+    local all = { codes = {}, cost = 0, trainers = {}, requires = {} }
     for _, known in ipairs(found) do
         for _, code in ipairs(known.codes) do all.codes[#all.codes + 1] = code end
         for _, trainer in ipairs(known.trainers) do all.trainers[#all.trainers + 1] = trainer end
+        for _, name in ipairs(known.requires) do addOnce(all.requires, name) end
         all.cost = math.max(all.cost, known.cost)
     end
     return all
@@ -175,7 +186,8 @@ end
 --- What GuildAssistant Professions knows, as a source (nil when it knows nothing): every recipe a
 --- character it knows has learned (so it can be learned: it shows even if no complete source lists
 --- it), and what it saw in game (its saved `sources`): where recipe items are sold, dropped,
---- fished or given by quests, and which trainers teach which recipes and for how much.
+--- fished or given by quests, and which trainers teach which recipes, for how much and what else
+--- those require (1.4.0: a specialization).
 function Core.professionsSources(db)
     if type(db) ~= "table" then return nil end
     local recipes, items, known = {}, {}, {}
@@ -190,10 +202,14 @@ function Core.professionsSources(db)
     for key in pairs(known) do recipes[#recipes + 1] = key .. "\t\t" end
     local seen = type(db.sources) == "table" and db.sources or {}
     for key, trainer in pairs(type(seen.recipes) == "table" and seen.recipes or {}) do
-        local where = {}
+        local where, requires = {}, {}
         for entry in pairs(type(trainer.trainers) == "table" and trainer.trainers or {}) do where[#where + 1] = entry end
+        for name in pairs(type(trainer.requires) == "table" and trainer.requires or {}) do requires[#requires + 1] = name end
         table.sort(where)
-        recipes[#recipes + 1] = table.concat({ key, "6", tostring(trainer.cost or ""), table.concat(where, ";") }, "\t")
+        table.sort(requires)
+        local fields = { key, "6", tostring(trainer.cost or ""), table.concat(where, ";") }
+        if #requires > 0 then fields[5] = table.concat(requires, ";") end
+        recipes[#recipes + 1] = table.concat(fields, "\t")
     end
     for id, entries in pairs(type(seen.items) == "table" and seen.items or {}) do
         local list = {}
@@ -214,7 +230,8 @@ end
 --- is { id, name, profession, skill, colors = { yellow, green, grey }, creates (item or nil),
 --- makes = { min, max }, reagents = { { item, count } }, acquire (0 trainer or recipe item, 1 at a
 --- skill, 2 with the profession), acquireSkill, recipeItems = { item… }, specializations = { name… }
---- (what its recipe items require, broadest first: { "Weaponsmith", "Master Swordsmith" }),
+--- (what its recipe items require, broadest first: { "Weaponsmith", "Master Swordsmith" }; then
+--- what a trainer said it requires, from the companions: { "Goblin Engineer" }),
 --- specialization (the last of them, nil when none), sources = { code… } and trainingCost (from companions), vouched (a companion lists it; nil without companions), level (of
 --- the item it makes, 0 when none), search (lowercase text) }.
 function Core.load(entry, providers)
@@ -267,8 +284,6 @@ function Core.load(entry, providers)
         for itemId in (f[9] or ""):gmatch("%d+") do recipe.recipeItems[#recipe.recipeItems + 1] = item(itemId) end
         local specializations = {}
         for name in (f[10] or ""):gmatch("[^;]+") do specializations[#specializations + 1] = name end
-        recipe.specializations = specializations
-        recipe.specialization = specializations[#specializations]
         if sources then
             -- By its spell, by the item it makes, by its name (what a trainer window shows): all of them.
             local known = combined(sources.recipes[id], recipe.creates and sources.byItem[recipe.creates.id],
@@ -284,12 +299,17 @@ function Core.load(entry, providers)
                 recipe.vouched = true
                 if known then
                     recipe.sources, recipe.trainingCost, recipe.trainers = known.codes, known.cost, known.trainers
+                    -- What a trainer said it requires (a specialization the game's files don't
+                    -- give: Goblin Engineering's recipes), after what its plans say.
+                    for _, name in ipairs(known.requires) do addOnce(specializations, name) end
                 end
                 vouched = vouched + 1
             elseif sources.complete then
                 recipe.vouched = false
             end
         end
+        recipe.specializations = specializations
+        recipe.specialization = specializations[#specializations]
 
         local words = { recipe.name, entry.name }
         if recipe.creates then
