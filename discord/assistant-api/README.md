@@ -1108,7 +1108,7 @@ on logout). Blizzard's Classic Era / SoD API has no professions, hence the addon
   what the player's addon (and their guild's) saw in game: where recipe items are sold, dropped,
   fished or given by quests, which trainers teach which recipes for how much, and what else a
   trainer's window says each recipe requires, a specialization such as "Goblin Engineer" since
-  1.4.0 (`parseSources`, which leaves out anything that isn't one and never fails an import). Every
+  1.5.0 (`parseSources`, which leaves out anything that isn't one and never fails an import). Every
   import adds them to `recipe_sources` (`RecipeSourcesService`, `prisma/professions.prisma`): merged,
   never replaced, with how many users reported each, and no player or guild. `GET
   /api/recipe-sources` (no login: game facts) publishes them for GuildAssistant Database's data

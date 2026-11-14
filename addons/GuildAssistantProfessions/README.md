@@ -130,5 +130,5 @@ on logout. For example:
 `{"items":[{"id":6047,"entries":["V:Tanaris=Krinkle Goodsteel"]}],"trainers":[{"recipe":"item:10577","cost":2800,"entries":["Tanaris=Nixx Sprocketspring"],"requires":["Goblin Engineer"]}]}`
 (an entry is the kind, V vendor, D drop, O object, F fishing or Q quest, then the zone and who; a
 trainer's is the zone and the trainer; `requires`, only when the trainer's window says some, is
-what else the recipe requires, 1.4.0 and later). Guild Assistant reads it from the uploaded file, matches your characters by name to yours in
+what else the recipe requires, 1.5.0 and later). Guild Assistant reads it from the uploaded file, matches your characters by name to yours in
 the guild and the guild's to its roster, and looks the recipe names up on Wowhead.

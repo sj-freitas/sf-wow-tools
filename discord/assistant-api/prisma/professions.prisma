@@ -85,7 +85,7 @@ enum RecipeSourceKind {
 // later): where a recipe item is sold, dropped, fished or given by a quest (ITEM, `key` its item
 // id), which trainer teaches a recipe for how much (TRAINER, `key` "item:<item made>" or
 // "name:<recipe name>"), and what else a trainer's window says that recipe requires (REQUIREMENT,
-// the same `key`, 1.4.0 and later: a specialization, "Goblin Engineer"). Gathered from every import (RecipeSourcesService) and published (GET
+// the same `key`, 1.5.0 and later: a specialization, "Goblin Engineer"). Gathered from every import (RecipeSourcesService) and published (GET
 // /api/recipe-sources) for GuildAssistant Database's data build. No player or guild in it, only
 // how many users reported each.
 model RecipeSource {

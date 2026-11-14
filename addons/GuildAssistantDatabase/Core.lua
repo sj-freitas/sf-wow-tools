@@ -187,7 +187,7 @@ end
 --- character it knows has learned (so it can be learned: it shows even if no complete source lists
 --- it), and what it saw in game (its saved `sources`): where recipe items are sold, dropped,
 --- fished or given by quests, and which trainers teach which recipes, for how much and what else
---- those require (1.4.0: a specialization).
+--- those require (1.5.0: a specialization).
 function Core.professionsSources(db)
     if type(db) ~= "table" then return nil end
     local recipes, items, known = {}, {}, {}

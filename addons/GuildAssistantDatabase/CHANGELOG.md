@@ -9,7 +9,7 @@
 - **Search by specialization**: `weaponsmith` lists the Weaponsmith's recipes (the Master
   Swordsmith's too), `armorsmith`, `tribal`, `dragonscale`, `gnomish engineer`.
 - Recipes a specialization's trainer teaches (Goblin and Gnomish Engineering's) are marked too once
-  someone has opened that trainer's window with GuildAssistant Professions 1.4.0: right away for
+  someone has opened that trainer's window with GuildAssistant Professions 1.5.0: right away for
   them and their guild, and for everyone in a later release, with what players found.
 
 ## 1.5.1

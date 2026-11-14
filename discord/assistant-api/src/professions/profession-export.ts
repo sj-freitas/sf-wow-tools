@@ -25,7 +25,7 @@ export interface ExportedSources {
   items: { id: number; entries: string[] }[];
   /**
    * Recipes a trainer teaches ("item:<item made>" or "name:<recipe>"), the cost, "<zone>=<trainer>",
-   * and what else the trainer's window says the recipe requires (1.4.0 and later: a specialization,
+   * and what else the trainer's window says the recipe requires (1.5.0 and later: a specialization,
    * "Goblin Engineer"; empty without).
    */
   trainers: { recipe: string; cost: number | null; entries: string[]; requires: string[] }[];

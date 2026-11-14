@@ -386,7 +386,7 @@ it("ignores a record that isn't one", function()
     eq(core.decodeSourceRecord("q6047\t1\t\tGoblin Engineer"), nil, "not a recipe")
 end)
 
-it("shares what a recipe requires, and 1.3.0 takes the trainer and leaves it", function()
+it("shares what a recipe requires, and 1.4.0 and earlier take the trainer and leave it", function()
     reset()
     local luna = player("Luna", "Relic Hunters")
     local kael = player("Kael", "Relic Hunters")
@@ -401,7 +401,7 @@ it("shares what a recipe requires, and 1.3.0 takes the trainer and leaves it", f
     eq(known.trainers["Tanaris=Nixx Sprocketspring"] ~= nil, true)
     eq(known.requires["Goblin Engineer"] ~= nil, true, "Kael has what it requires")
     eq(kael.ns.Sync.stats.sourcesReceived, 2)
-    -- 1.3.0's decoder knew only "i" and "r" records: the trainer's record is one it still reads.
+    -- 1.4.0's decoder knew only "i" and "r" records: the trainer's record is one it still reads.
     local record = luna.ns.Core.encodeSourceRecord(luna.ns.db, "ritem:10577")
     eq(record:find("Goblin", 1, true), nil, "the trainer's record carries no requirement")
     eq(luna.ns.Core.encodeSourceRecord(luna.ns.db, "qitem:10577"):match("\t([^\t]+)$"), "Goblin Engineer")

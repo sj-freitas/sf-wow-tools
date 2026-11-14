@@ -445,7 +445,7 @@ it("takes what a trainer said a recipe requires as its specialization, after its
         "Weaponsmith, Master Swordsmith, Armorsmith")
     eq(#recipeNamed(blacksmithing, "Copper Chain Pants").specializations, 0)
 
-    -- GuildAssistant Professions' saved data (1.4.0): `requires` with each trainer recipe.
+    -- GuildAssistant Professions' saved data (1.5.0): `requires` with each trainer recipe.
     local provider = core.professionsSources({ sources = { recipes = {
         ["item:7954"] = { cost = 20000, trainers = { ["Ironforge=Bengus Deepforge"] = 100 }, requires = { Weaponsmith = 100 } },
     } } })

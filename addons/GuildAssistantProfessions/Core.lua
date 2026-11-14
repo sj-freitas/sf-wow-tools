@@ -563,7 +563,7 @@ end
 -- sources, each trainer recipe and what each requires is a record ("i<item id>", "r<recipe>",
 -- "q<recipe>"), stamped when it last changed (db.sources.stamps): the guild shares records like
 -- characters (Sync.lua), and the export carries them for Guild Assistant. The requirement is a record
--- of its own so that 1.3.0's, which don't know it, take the trainers and leave it.
+-- of its own so that 1.4.0 and earlier, which don't know it, take the trainers and leave it.
 
 --- At most this many places per recipe item, and trainers per recipe: enough to say where to go.
 Core.MAX_SOURCES = 12

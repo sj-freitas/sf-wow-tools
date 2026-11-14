@@ -1,5 +1,12 @@
 # GuildAssistant Professions
 
+## 1.5.0
+
+- **Trainers**: what a recipe requires besides the profession is recorded too, as the trainer's
+  window says it (a specialization: "Goblin Engineer" at a Goblin Engineering trainer), whether
+  you have it or not. GuildAssistant Database shows it with the recipe, and it's shared with your
+  guild and carried by the file you upload, like the rest.
+
 ## 1.4.0
 
 - **WoW Forever: no more opening each profession's window.** Your recipes are recorded, quietly,
@@ -7,10 +14,6 @@
   (`/ga-prof status` shows them). They're shared with your guild as before. (Classic Era still
   needs the windows.)
 - At login, your character goes to the guild once, with what was just recorded.
-- A trainer's window: what a recipe requires besides the profession is recorded too (a
-  specialization, "Goblin Engineer" at a Goblin Engineering trainer), whether you have it or not.
-  GuildAssistant Database shows it with the recipe; it's shared with your guild and carried by the
-  file you upload, like the trainers.
 
 ## 1.3.0
 
