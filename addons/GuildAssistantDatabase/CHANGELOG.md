@@ -1,5 +1,19 @@
 # GuildAssistant Database
 
+## 1.8.0
+
+- **Sort the list by Skill or Level**: click a column's title above the list. The chevron beside it
+  says how the list is sorted: pointing up for the lowest first, down for the highest; clicking the
+  column it's sorted by turns it around.
+- **The two compound**: the gold chevron is the column the list is sorted by, the grey one breaks
+  its ties, and clicking a column makes it the gold one. So Skill up with Level down lists by
+  skill, and recipes of the same skill by the highest level first.
+- A search, a limit or a filter now lists what matched **by the level the item needs**, recipes of
+  the same level by skill, instead of by skill alone. A profession you're only looking at is by
+  skill as before.
+- The Guild tab's recipes (what a guildmate can make) sort the same way. **Reset** puts the order
+  back.
+
 ## 1.7.0
 
 - **Binds on pickup** in the Filter (Binding: On pickup): only the recipes whose item binds when

@@ -94,6 +94,9 @@ function Region:GetText() return self._text end
 -- 6 pixels a letter, colour codes left out.
 function Region:GetStringWidth() return #self._text:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "") * 6 end
 function Region:SetTexture(texture) self._texture = texture end
+-- A chevron's: which way it points (the arrow is flipped for lowest first) and its colour.
+function Region:SetTexCoord(_, _, top, bottom) self._flipped = top > bottom end
+function Region:SetVertexColor(r, g, b) self._color = { r, g, b } end
 -- One box has the focus at a time, as in the game: focusing one takes it from the other.
 local focused
 function Region:HasFocus() return self._focus == true end
@@ -639,7 +642,9 @@ it("lists only what your guild can craft with Only guild in the Filter, while yo
     eq(GameTooltip.lines[1], "Only guild")
     eq(GameTooltip.lines[2], "Recipes someone in Test Guild can craft.")
     only:Click()
-    eq(shownRows(ns), "Copper Chain Pants, Runed Copper Breastplate, Greater Magic Wand, Ornate Mithril Breastplate")
+    -- A filter narrows the list down, so it comes by the level the item needs (Greater Magic Wand 8,
+    -- Runed Copper Breastplate 13), not by skill.
+    eq(shownRows(ns), "Copper Chain Pants, Greater Magic Wand, Runed Copper Breastplate, Ornate Mithril Breastplate")
     eq(parts.filterButton:GetText(), "Filter (1)")
     eq(sidebar(ns), "All professions " .. GOLD .. "4|r | Blacksmithing " .. GOLD .. "3|r | Enchanting " .. GOLD .. "1|r", "it counts")
     -- With the rest: plate, then only your professions' recipes you don't know.
@@ -739,6 +744,103 @@ it("keeps the last search on /gadb, and clears it on /gadb *", function()
     SlashCmdList.GADB("*")
     eq(ns.UI.isShown(), true, "already open: stays open")
     eq(parts.searchBox:GetText(), "")
+end)
+
+-- The order the list is in ---------------------------------------------------------------------------
+
+-- A column's chevron as it reads: which way it points and whether it's the gold one (what the list
+-- is sorted by) or the grey one (what breaks its ties). "none" when the order doesn't use it.
+local function chevron(header)
+    if not header.chevron:IsShown() then return "none" end
+    local color = header.chevron._color or {}
+    return ("%s %s"):format(header.chevron._flipped and "up" or "down", color[1] == 1 and color[2] == 0.82 and "gold" or "grey")
+end
+
+local ALL_BY_SKILL = "Enchant Bracer - Minor Health, Copper Chain Pants, Rough Sharpening Stone, Runed Copper Breastplate, "
+    .. "Greater Magic Wand, Golden Scale Coif, Ironforge Gauntlets, The Shatterer, Ornate Mithril Breastplate, Stonevault Greatsword"
+
+it("shows the order the list is in above it: by skill while you're only looking", function()
+    local ns = loadAddon({ noSources = true })
+    SlashCmdList.GADB("")
+    local parts = ns.UI.parts()
+    eq(parts.columnSkill.title:GetText(), "Skill"); eq(parts.columnLevel.title:GetText(), "Level")
+    eq(chevron(parts.columnSkill), "up gold", "sorted by skill, lowest first")
+    eq(chevron(parts.columnLevel), "none", "the order doesn't use it")
+    eq(shownRows(ns), ALL_BY_SKILL)
+    parts.columnSkill:Fire("OnEnter")
+    eq(GameTooltip.lines[1], "Skill")
+    eq(GameTooltip.lines[2], "The profession skill it takes to learn the recipe.")
+    eq(GameTooltip.lines[3], "Sorted by skill, lowest first.")
+    eq(GameTooltip.lines[4], "Click to list the highest first.")
+end)
+
+it("sorts a search by the level the item needs, ties by skill, until a column is clicked", function()
+    local ns = loadAddon({ noSources = true })
+    SlashCmdList.GADB("")
+    local parts = ns.UI.parts()
+    parts.searchBox:SetText("plate")
+    -- The recipes whose own name matches first, then Ironforge Gauntlets (plate too).
+    eq(shownRows(ns), "Runed Copper Breastplate, Ornate Mithril Breastplate, Ironforge Gauntlets")
+    eq(chevron(parts.columnLevel), "up gold"); eq(chevron(parts.columnSkill), "up grey")
+    -- A click on the column it's sorted by turns it around, and sorts the whole matched list by it:
+    -- the recipes whose own name matches no longer come first.
+    parts.columnLevel:Click()
+    eq(shownRows(ns), "Ornate Mithril Breastplate, Runed Copper Breastplate, Ironforge Gauntlets")
+    eq(chevron(parts.columnLevel), "down gold"); eq(chevron(parts.columnSkill), "up grey")
+    eq(GameTooltip.lines[3], "Sorted by level, highest first, then by skill, lowest first.", "the tooltip says so after the click")
+    eq(GameTooltip.lines[4], "Click to list the lowest first.")
+    -- And again, back to the lowest first.
+    parts.columnLevel:Click()
+    eq(shownRows(ns), "Ironforge Gauntlets, Runed Copper Breastplate, Ornate Mithril Breastplate")
+    eq(chevron(parts.columnLevel), "up gold")
+    -- Skill: Runed Copper Breastplate 55, Ironforge Gauntlets 200, Ornate Mithril Breastplate 240.
+    parts.columnSkill:Click()
+    eq(shownRows(ns), "Runed Copper Breastplate, Ironforge Gauntlets, Ornate Mithril Breastplate")
+    eq(chevron(parts.columnSkill), "up gold"); eq(chevron(parts.columnLevel), "up grey")
+    -- The columns clicked stay once the search is cleared: it doesn't go back to the skill it
+    -- comes in until Reset.
+    parts.searchBox:SetText("")
+    eq(chevron(parts.columnSkill), "up gold"); eq(chevron(parts.columnLevel), "up grey")
+    -- By skill, and the same skill by the lowest level (Rough Sharpening Stone needs none), where
+    -- the order it comes in would have gone by name.
+    eq(shownRows(ns), "Enchant Bracer - Minor Health, Rough Sharpening Stone, Copper Chain Pants, Runed Copper Breastplate, "
+        .. "Greater Magic Wand, Golden Scale Coif, Ironforge Gauntlets, The Shatterer, Ornate Mithril Breastplate, Stonevault Greatsword")
+end)
+
+it("compounds the two: recipes the column can't tell apart come out the other's way", function()
+    local ns = loadAddon({ noSources = true })
+    SlashCmdList.GADB("")
+    local parts = ns.UI.parts()
+    -- Copper Chain Pants and Rough Sharpening Stone both take skill 15; the stone needs no level.
+    parts.columnLevel:Click() -- by level now, skill breaking its ties
+    parts.columnSkill:Click() -- by skill again, level breaking its ties
+    eq(chevron(parts.columnSkill), "up gold"); eq(chevron(parts.columnLevel), "up grey")
+    has(shownRows(ns), "Rough Sharpening Stone, Copper Chain Pants", "the lowest level first")
+    -- Level turned around, skill back in front: by skill, and the same skill by the highest level.
+    parts.columnLevel:Click()
+    parts.columnLevel:Click()
+    parts.columnSkill:Click()
+    eq(chevron(parts.columnSkill), "up gold"); eq(chevron(parts.columnLevel), "down grey")
+    has(shownRows(ns), "Copper Chain Pants, Rough Sharpening Stone", "the highest level first")
+    eq(GameTooltip.lines[3], "Sorted by skill, lowest first, then by level, highest first.")
+    -- Reset puts it back to the order the list comes in.
+    parts.resetButton:Click()
+    eq(chevron(parts.columnSkill), "up gold"); eq(chevron(parts.columnLevel), "none")
+    eq(shownRows(ns), ALL_BY_SKILL)
+end)
+
+it("keeps the recipe picked when the order changes, and scrolls back to the top", function()
+    local ns = loadAddon({ noSources = true })
+    SlashCmdList.GADB("")
+    local parts = ns.UI.parts()
+    rowNamed(ns, "Copper Chain Pants"):Click()
+    eq(parts.state.selected.name, "Copper Chain Pants")
+    parts.state.offset = 2
+    parts.columnLevel:Click()
+    eq(parts.state.selected.name, "Copper Chain Pants", "still picked")
+    eq(rowNamed(ns, "Copper Chain Pants").selected:IsShown(), true, "still marked in the list")
+    has(parts.details.name.text:GetText(), "Copper Chain Pants", "its details still shown")
+    eq(parts.state.offset, 0, "at the top of the new order")
 end)
 
 -- The details -------------------------------------------------------------------------------------
@@ -1331,6 +1433,36 @@ it("lists what a guildmate can make on a click, with their details, and goes bac
     parts.sidebarButtons[2]:Click()
     eq(parts.state.member, nil)
     eq(parts.state.profession, "Blacksmithing")
+end)
+
+it("sorts a guildmate's recipes the same way, the titles only above a list of recipes", function()
+    local ns = loadAddon({ professionsAddon = true, guild = "Test Guild" })
+    guildDB()
+    SlashCmdList.GADB("")
+    local parts = ns.UI.parts()
+    parts.tabs[2]:Click()
+    eq(parts.columnSkill:IsShown(), false, "the guildmates have their own titles")
+    parts.memberRows[1]:Click()
+    eq(parts.state.member.name, "Ana")
+    eq(parts.columnSkill:IsShown(), true, "her recipes have Skill and Level")
+    -- What she can make, as Recipes lists it: by skill while nothing has narrowed it down.
+    eq(shownRows(ns), "Runed Copper Breastplate, Ornate Mithril Breastplate")
+    eq(chevron(parts.columnSkill), "up gold"); eq(chevron(parts.columnLevel), "none")
+    -- By level, highest first (Ornate Mithril Breastplate 43, Runed Copper Breastplate 13).
+    parts.columnLevel:Click()
+    parts.columnLevel:Click()
+    eq(chevron(parts.columnLevel), "down gold"); eq(chevron(parts.columnSkill), "up grey")
+    eq(shownRows(ns), "Ornate Mithril Breastplate, Runed Copper Breastplate")
+    -- Back to the guildmates: their own titles again, and Reset puts the order back.
+    parts.backButton:Click()
+    eq(parts.columnLevel:IsShown(), false)
+    parts.memberRows[1]:Click()
+    eq(shownRows(ns), "Ornate Mithril Breastplate, Runed Copper Breastplate", "kept")
+    parts.resetButton:Click()
+    eq(parts.state.member, nil)
+    parts.memberRows[1]:Click()
+    eq(shownRows(ns), "Runed Copper Breastplate, Ornate Mithril Breastplate")
+    eq(chevron(parts.columnLevel), "none")
 end)
 
 it("switches to Recipes for a search from /gadb or a shift-click, and says when you're in no guild", function()

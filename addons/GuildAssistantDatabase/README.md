@@ -44,9 +44,18 @@ Recipes. Drag the clip to move it around the minimap;
   shows green when you can learn it now, red when not yet. What you know comes from
   GuildAssistant Professions (open each profession's window once so it records it); without it,
   from what the game says, which can miss some.
-- **Reset** clears it all, the Filter too (Binding and Only guild as well).
+- **Reset** clears it all, the Filter too (Binding and Only guild as well), and puts the order of
+  the list back.
 - On the left, a profession shows only its recipes (with Not known yet, only yours are listed,
   with your skill).
+- **Skill** and **Level**, above the list, sort it: click one and the list comes in that column's
+  order, click the one it's sorted by to turn it around. The chevron beside each says how: pointing
+  up for the lowest first, down for the highest, gold on the column the list is sorted by and grey
+  on the one that breaks its ties (so Skill up with Level down lists by skill, and recipes of the
+  same skill by the highest level). Hovering a title says what its number is and how the list is
+  sorted now. Without a click, a search, a limit or a filter lists what matched by the level the
+  item needs (recipes of the same level by skill), and a profession you're only looking at by the
+  skill it takes, as its recipes ladder up.
 - Click a recipe for its details: the item (its slot, type and stats), the specialization it
   needs ("Requires Armorsmith"), "Binds when picked up" when its item does, how many it makes, the skill-up colours, the reagents, how to
   learn it and who can craft it.
@@ -83,7 +92,8 @@ the left, with how many guildmates have each (Herbalism, Skinning and the like t
 finds guildmates by name, profession or specialization (`weaponsmith` finds Master Swordsmiths
 too). Click a guildmate for what they can make in that profession (the search then searches those
 recipes), a recipe for its details as in Recipes, and **Back** to return to the guildmates as you
-left them. Each tab keeps its own search.
+left them. What a guildmate can make is sorted by Skill and Level as Recipes' list is. Each tab
+keeps its own search.
 
 A specialization comes from GuildAssistant Professions 1.5.0, which records it as a spell the
 character knows; for what older versions recorded, from the recipes they know that need one. The

@@ -179,10 +179,11 @@ it("keeps to the slots and armor types picked", function()
         local slots, armor = Core.filterSets(slotNames, armorNames)
         return names(Core.search(all(), { slots = slots, armor = armor }))
     end
+    -- A filter narrows the list down, so it comes by level (see "the order the list is in" below).
     eq(filtered({ Chest = true }, {}), "Runed Copper Breastplate, Ornate Mithril Breastplate")
-    eq(filtered({}, { Plate = true }), "Runed Copper Breastplate, Ironforge Gauntlets, Ornate Mithril Breastplate")
+    eq(filtered({}, { Plate = true }), "Ironforge Gauntlets, Runed Copper Breastplate, Ornate Mithril Breastplate")
     eq(filtered({}, { Mail = true, Plate = true }),
-        "Copper Chain Pants, Runed Copper Breastplate, Golden Scale Coif, Ironforge Gauntlets, Ornate Mithril Breastplate")
+        "Ironforge Gauntlets, Copper Chain Pants, Runed Copper Breastplate, Golden Scale Coif, Ornate Mithril Breastplate")
     eq(filtered({ Head = true }, { Plate = true }), "")
     eq(filtered({ Head = true, Legs = true }, { Mail = true }), "Copper Chain Pants, Golden Scale Coif")
     -- One-Hand takes main-hand weapons too; Ranged takes wands.
@@ -219,6 +220,89 @@ it("tells a search from listing everything, and counts matches per profession", 
     -- Strange Dust; Soul Dust has no name in the game's tables (named in game).
     local counts = Core.countByProfession(Core.search(all(), { terms = Core.terms("dust") }))
     eq(counts.Enchanting, 1); eq(counts.Blacksmithing, nil)
+end)
+
+-- The order the list is in -------------------------------------------------------------------------
+-- The fixture's recipes, by the skill they take and the level their item needs (an item that needs
+-- none counts as level 1): Enchant Bracer 1/1, Copper Chain Pants 15/4, Rough Sharpening Stone
+-- 15/1, Runed Copper Breastplate 55/13, Greater Magic Wand 70/8, Golden Scale Coif 190/33,
+-- Ironforge Gauntlets 200/1, The Shatterer 235/42, Ornate Mithril Breastplate 240/43, Stonevault
+-- Greatsword 300/55.
+
+local BY_SKILL = "Enchant Bracer - Minor Health, Copper Chain Pants, Rough Sharpening Stone, Runed Copper Breastplate, "
+    .. "Greater Magic Wand, Golden Scale Coif, Ironforge Gauntlets, The Shatterer, Ornate Mithril Breastplate, Stonevault Greatsword"
+
+it("lists a profession by skill, and a search or a filter by level, ties by skill", function()
+    -- Nothing narrowed down: by skill, as it has always been.
+    eq(names(Core.search(all(), { terms = {} })), BY_SKILL)
+    eq(Core.defaultOrder(false), Core.BROWSE_ORDER); eq(Core.defaultOrder(true), Core.MATCHED_ORDER)
+    -- A filter: by the level the item needs, and items of the same level by skill. Ironforge
+    -- Gauntlets needs no level, so it comes first although it takes skill 200.
+    local slots, armor = Core.filterSets({}, { Plate = true })
+    eq(names(Core.search(all(), { slots = slots, armor = armor })),
+        "Ironforge Gauntlets, Runed Copper Breastplate, Ornate Mithril Breastplate")
+    -- A search the same way, the recipes whose own name matches still first (Ironforge Gauntlets
+    -- only matches as plate).
+    eq(names(Core.search(all(), { terms = Core.terms("plate") })),
+        "Runed Copper Breastplate, Ornate Mithril Breastplate, Ironforge Gauntlets")
+    -- A limit narrows it down too.
+    eq(names(Core.search(all(), { terms = {}, minSkill = 1 })),
+        "Enchant Bracer - Minor Health, Rough Sharpening Stone, Ironforge Gauntlets, Copper Chain Pants, "
+        .. "Greater Magic Wand, Runed Copper Breastplate, Golden Scale Coif, The Shatterer, Ornate Mithril Breastplate, Stonevault Greatsword")
+end)
+
+it("sorts the whole matched list by the column clicked, the other breaking its ties", function()
+    local function sorted(order) return names(Core.search(all(), { terms = Core.terms("plate"), order = order })) end
+    -- A column clicked sorts everything that matched: the names that match no longer come first.
+    local bySkill = Core.toggleOrder({}, "skill")
+    eq(sorted(bySkill), "Runed Copper Breastplate, Ironforge Gauntlets, Ornate Mithril Breastplate")
+    -- Clicking it again turns that column around.
+    eq(sorted(Core.toggleOrder(bySkill, "skill")), "Ornate Mithril Breastplate, Ironforge Gauntlets, Runed Copper Breastplate")
+    eq(sorted(Core.toggleOrder(bySkill, "level")), "Ironforge Gauntlets, Runed Copper Breastplate, Ornate Mithril Breastplate")
+    eq(sorted({}), "Runed Copper Breastplate, Ornate Mithril Breastplate, Ironforge Gauntlets", "no column: the order it comes in")
+    -- Recipes of the same skill come out in the other column's order: Copper Chain Pants and Rough
+    -- Sharpening Stone both take skill 15, and the stone needs no level.
+    eq(names(Core.search(all(), { terms = {}, order = bySkill })),
+        "Enchant Bracer - Minor Health, Rough Sharpening Stone, Copper Chain Pants, Runed Copper Breastplate, "
+        .. "Greater Magic Wand, Golden Scale Coif, Ironforge Gauntlets, The Shatterer, Ornate Mithril Breastplate, Stonevault Greatsword")
+end)
+
+it("compounds the two orders: the column clicked sorts, the other breaks its ties", function()
+    -- Skill highest first, then level lowest first (in the window: the chevron on Skill down, the
+    -- one on Level up).
+    local order = Core.toggleOrder(Core.toggleOrder(Core.toggleOrder({}, "level"), "skill"), "skill")
+    eq(#order, 2)
+    eq(order[1].column, "skill"); eq(order[1].descending, true)
+    eq(order[2].column, "level"); eq(order[2].descending, false)
+    eq(Core.orderWords(order), "Sorted by skill, highest first, then by level, lowest first.")
+    local direction, first = Core.orderOf(order, "skill")
+    eq(direction, "descending"); eq(first, true)
+    direction, first = Core.orderOf(order, "level")
+    eq(direction, "ascending"); eq(first, false)
+    eq(Core.orderOf({}, "level"), nil, "no order: no chevron")
+    eq(Core.orderWords({}), nil)
+    -- Clicking the column that breaks the ties makes it the one sorted by, the other as it was.
+    local swapped = Core.toggleOrder(order, "level")
+    eq(swapped[1].column, "level"); eq(swapped[1].descending, false)
+    eq(swapped[2].column, "skill"); eq(swapped[2].descending, true)
+    eq(Core.orderWords(swapped), "Sorted by level, lowest first, then by skill, highest first.")
+    eq(order[1].column, "skill", "the order given is left as it was")
+end)
+
+it("sorts a list of recipes on its own, the same way every time", function()
+    local recipes = Core.load(profession("Blacksmithing")).recipes
+    local sorted = Core.sortRecipes(recipes, Core.toggleOrder({}, "level"))
+    eq(#sorted, #recipes); eq(recipes[1].name, "Copper Chain Pants", "the list given is left as it is")
+    local out = {}
+    for _, recipe in ipairs(sorted) do out[#out + 1] = recipe.name end
+    eq(table.concat(out, ", "),
+        "Rough Sharpening Stone, Ironforge Gauntlets, Copper Chain Pants, Runed Copper Breastplate, "
+        .. "Golden Scale Coif, The Shatterer, Ornate Mithril Breastplate, Stonevault Greatsword")
+    -- The same level and the same skill: by name, so two runs never come out differently.
+    local a = { name = "B", skill = 10, level = 5, profession = "P", id = 2 }
+    local b = { name = "A", skill = 10, level = 5, profession = "P", id = 1 }
+    eq(Core.before(b, a, Core.MATCHED_ORDER), true)
+    eq(Core.before(a, b, Core.MATCHED_ORDER), false)
 end)
 
 it("leaves out what `include` says no to", function()

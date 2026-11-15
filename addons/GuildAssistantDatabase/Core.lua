@@ -434,8 +434,112 @@ function Core.countByProfession(recipes)
     return counts
 end
 
+-- The order the list is in -------------------------------------------------------------------------
+-- The list is sorted by the two numbers it shows: the skill a recipe takes to learn and the level
+-- its item requires. An order is those columns, the first the one it's sorted by and the next
+-- breaking its ties ("by level, and recipes of the same level by skill"), each lowest or highest
+-- first. The window draws that order as a chevron beside each column's title.
+
+Core.SORT_COLUMNS = { "skill", "level" }
+
+--- Each column: its title above the list, how it's said in words, and the number it sorts by (an
+--- item that needs no level counts as level 1, as the Level boxes count it).
+Core.COLUMNS = {
+    skill = { title = "Skill", words = "skill", value = function(recipe) return recipe.skill or 0 end },
+    level = { title = "Level", words = "level", value = function(recipe) return math.max(recipe.level or 0, 1) end },
+}
+
+--- The order a list is in while no column has been clicked: by skill while you're only looking at a
+--- profession (the ladder its recipes read as, as it has always been), and by level, ties by skill,
+--- once a search, a limit or a filter has narrowed it down.
+Core.BROWSE_ORDER = { { column = "skill" } }
+Core.MATCHED_ORDER = { { column = "level" }, { column = "skill" } }
+
+--- The order a list comes in with no column clicked, `matched` saying whether a search, a limit or
+--- a filter has narrowed it down.
+function Core.defaultOrder(matched)
+    return matched and Core.MATCHED_ORDER or Core.BROWSE_ORDER
+end
+
+--- Whether `a` comes before `b` in `order`, ties falling through to the recipe's name, profession
+--- and id, so the same list always comes out the same way.
+local function before(a, b, order)
+    for _, by in ipairs(order) do
+        local value = Core.COLUMNS[by.column].value
+        local va, vb = value(a), value(b)
+        if va ~= vb then
+            if by.descending then return va > vb end
+            return va < vb
+        end
+    end
+    if a.name ~= b.name then return a.name < b.name end
+    if a.profession ~= b.profession then return a.profession < b.profession end
+    return a.id < b.id
+end
+Core.before = before
+
+--- `recipes` in `order`: a new list, the one given left as it is.
+function Core.sortRecipes(recipes, order)
+    local sorted = {}
+    for i, recipe in ipairs(recipes) do sorted[i] = recipe end
+    table.sort(sorted, function(a, b) return before(a, b, order or Core.BROWSE_ORDER) end)
+    return sorted
+end
+
+--- The order after a click on `column`'s title: the column clicked is the one the list is sorted
+--- by, the other left behind it to break its ties; clicking the one it's already sorted by turns
+--- that column around (lowest first <-> highest first). Both columns are in the order a click
+--- leaves, so the two are compounded from the first click on.
+function Core.toggleOrder(order, column)
+    local columns, seen = {}, {}
+    for _, by in ipairs(order or {}) do
+        if not seen[by.column] and Core.COLUMNS[by.column] then
+            columns[#columns + 1] = { column = by.column, descending = by.descending or false }
+            seen[by.column] = true
+        end
+    end
+    -- A column the order didn't use is picked up lowest first, not turned around.
+    local sorting = seen[column]
+    for _, name in ipairs(Core.SORT_COLUMNS) do
+        if not seen[name] then columns[#columns + 1] = { column = name, descending = false } end
+    end
+    for i, by in ipairs(columns) do
+        if by.column == column then
+            if sorting and i == 1 then
+                by.descending = not by.descending
+            else
+                table.insert(columns, 1, table.remove(columns, i))
+            end
+            break
+        end
+    end
+    return columns
+end
+
+--- How `column` is sorted in `order`: "ascending" (lowest first), "descending", or nil when the
+--- order doesn't use it, and whether it's the one the list is sorted by (not just breaking ties).
+function Core.orderOf(order, column)
+    for i, by in ipairs(order or {}) do
+        if by.column == column then return by.descending and "descending" or "ascending", i == 1 end
+    end
+    return nil, false
+end
+
+--- What a list in `order` is sorted by, in words: "Sorted by level, lowest first, then by skill,
+--- highest first." Nil for no order at all.
+function Core.orderWords(order)
+    local parts = {}
+    for _, by in ipairs(order or {}) do
+        parts[#parts + 1] = ("%s, %s first"):format(Core.COLUMNS[by.column].words, by.descending and "highest" or "lowest")
+    end
+    if #parts == 0 then return nil end
+    return "Sorted by " .. table.concat(parts, ", then by ") .. "."
+end
+
 --- The recipes of `professions` (loaded ones) that match `query`, best first: those whose own
---- name (or the item's) has every term, then the others; each by skill, then name.
+--- name (or the item's) has every term, then the others; each in `query.order` (the columns
+--- clicked), or, with none, the order the list comes in (Core.BROWSE_ORDER, Core.MATCHED_ORDER).
+--- A column clicked sorts the whole list: the names that match no longer come first.
 function Core.search(professions, query)
     local results = {}
     local terms = query.terms or {}
@@ -446,13 +550,11 @@ function Core.search(professions, query)
             end
         end
     end
+    local picked = query.order and #query.order > 0 and query.order or nil
+    local order = picked or Core.defaultOrder(Core.isQuery(query))
     table.sort(results, function(a, b)
-        if a.byName ~= b.byName then return a.byName end
-        local ra, rb = a.recipe, b.recipe
-        if ra.skill ~= rb.skill then return ra.skill < rb.skill end
-        if ra.name ~= rb.name then return ra.name < rb.name end
-        if ra.profession ~= rb.profession then return ra.profession < rb.profession end
-        return ra.id < rb.id
+        if not picked and a.byName ~= b.byName then return a.byName end
+        return before(a.recipe, b.recipe, order)
     end)
     for i, result in ipairs(results) do results[i] = result.recipe end
     return results
@@ -746,18 +848,15 @@ function Core.findMembers(members, terms, profession)
 end
 
 --- What a member can make: the recipes of `loaded` (its profession, read) that `record` (their saved
---- profession) knows and that match `terms`, by skill, then name.
-function Core.memberRecipes(loaded, record, terms)
+--- profession) knows and that match `terms`, in `order` (the columns clicked) or, with none, the
+--- order the list comes in: by skill, and by level once the search has narrowed it down.
+function Core.memberRecipes(loaded, record, terms, order)
     local found = {}
     for _, recipe in ipairs(loaded and loaded.recipes or {}) do
         if Core.knows(record, recipe) and hasAll(recipe.search, terms or {}) then found[#found + 1] = recipe end
     end
-    table.sort(found, function(a, b)
-        if a.skill ~= b.skill then return a.skill < b.skill end
-        if a.name ~= b.name then return a.name < b.name end
-        return a.id < b.id
-    end)
-    return found
+    local picked = order and #order > 0 and order or nil
+    return Core.sortRecipes(found, picked or Core.defaultOrder(#(terms or {}) > 0))
 end
 
 --- How many times the recipe can be made from what you carry (`countOf(itemId)`), and the reagents
