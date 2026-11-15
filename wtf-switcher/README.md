@@ -46,8 +46,12 @@ For personal use: it's built here and run from this folder, not released.
 
   Files a UI has no copy of at all, like a character or an addon new since, stay too. The list is
   `shared` in `switcher.json`: file names, `*` for any part.
-- **Edit Mode** layouts are kept on Blizzard's servers, not in WTF, so they don't switch. Edit
-  Mode's own layouts do that.
+- **The chat and Edit Mode** are kept on Blizzard's servers (`chat-cache.txt`,
+  `edit-mode-cache-account.txt`), so they don't switch by themselves. The
+  [ChatLayout](https://github.com/sj-freitas/self-addons/tree/main/ChatLayout) addon (self-addons)
+  does it: its saved data is switched with each UI, and at login it puts back the chat windows
+  (tabs, what each shows, the dock, floating windows' places) and the Edit Mode layout that UI had,
+  which places the main chat window. Give each screen setup an Edit Mode layout of its own.
 
 ## Using it
 
