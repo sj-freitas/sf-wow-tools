@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>WTF Switcher</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <!-- Short on words: what needs explaining is in tooltips. The window takes the content's height
+       (no scrolling): main.ts sizes it to what the page reports. -->
+  <body>
+    <header class="head">
+      <img class="logo" src="../../assets/icon.png" alt="" />
+      <h1>WTF Switcher</h1>
+    </header>
+
+    <p id="status" class="status" role="status"></p>
+
+    <!-- The first step: the UI the game has now, kept as the first UI. -->
+    <form id="first" class="name-form" hidden>
+      <label for="first-name">The game’s UI now is for</label>
+      <div class="row">
+        <input
+          id="first-name"
+          type="text"
+          placeholder="4K monitor"
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <button
+          id="first-keep"
+          type="submit"
+          class="btn btn-primary"
+          title="Keeps a copy of the game’s WTF folder as this UI, in WTF Profiles next to it."
+        >
+          Keep
+        </button>
+      </div>
+      <p id="first-error" class="error" role="alert"></p>
+    </form>
+
+    <section id="screens" hidden>
+      <h2>These screens</h2>
+      <div class="row">
+        <span id="setup" class="setup"></span>
+        <select
+          id="use"
+          title="The UI the game opens with on these screens. Switched to as soon as the game is closed."
+        ></select>
+      </div>
+      <form id="new" class="name-form" hidden>
+        <div class="row">
+          <input
+            id="new-name"
+            type="text"
+            placeholder="Laptop"
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <button id="new-cancel" type="button" class="btn">Cancel</button>
+          <button
+            id="new-keep"
+            type="submit"
+            class="btn btn-primary"
+            title="A new UI for these screens: a copy of the game’s UI now, to change in game."
+          >
+            Keep
+          </button>
+        </div>
+        <p id="new-error" class="error" role="alert"></p>
+      </form>
+    </section>
+
+    <section id="uis" hidden>
+      <div class="section-head">
+        <h2 id="uis-head">UI<span class="lower">s</span></h2>
+        <button
+          id="show-uis"
+          type="button"
+          class="btn btn-sm"
+          title="Opens WTF Profiles in Finder: each UI’s folder, and History, their earlier copies."
+        >
+          Show in Finder
+        </button>
+      </div>
+      <ul id="profiles" class="profiles"></ul>
+    </section>
+
+    <section>
+      <h2>Game</h2>
+      <div class="row">
+        <span id="folder" class="folder"></span>
+        <button
+          id="choose-folder"
+          type="button"
+          class="btn btn-sm"
+          title="World of Warcraft’s folder, or a version’s in it (_forever_)."
+        >
+          Choose…
+        </button>
+      </div>
+    </section>
+
+    <section>
+      <h2>In the background</h2>
+      <div class="checks">
+        <label
+          class="check"
+          title="Closing the window keeps it running in the menu bar, switching as the screens change. Quit it from there."
+        >
+          <input id="background" type="checkbox" />
+          Run in the background
+        </label>
+        <label class="check" title="Opens hidden, in the background, when you log in.">
+          <input id="login" type="checkbox" />
+          Start at login
+        </label>
+      </div>
+    </section>
+
+    <script type="module" src="renderer.js"></script>
+  </body>
+</html>

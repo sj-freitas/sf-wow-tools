@@ -11,6 +11,7 @@ it works is in its own README; this is the map.
 | [`discord/assistant-backoffice`](discord/assistant-backoffice/README.md) | The website (React), served by the API | With the API, same deploy |
 | [`discord/assistant-uploader`](discord/assistant-uploader/README.md) | The Uploader app (Electron, Mac and Windows) | A `uploader-v<version>` tag: GitHub release |
 | [`addons/`](addons/README.md) | The WoW addons: Raidsort, GuildAssistant Professions, GuildAssistant Database | Uploaded to CurseForge, by hand |
+| [`wtf-switcher`](wtf-switcher/README.md) | WTF Switcher (Electron, Mac): a WoW UI per screen setup, for personal use | Not released: `npm run dist:mac`, copied into `/Applications` |
 
 Tasks are on the [Botlog board](https://bot-log-six.vercel.app/projects/GA), project **GA** (not in
 `TODO.md`). Addons for local use only, never published, are in another repository,
@@ -19,7 +20,7 @@ Tasks are on the [Botlog board](https://bot-log-six.vercel.app/projects/GA), pro
 ## Setting up
 
 Node 22 or later. `npm install` in each package you work on (`discord/assistant-api`,
-`discord/assistant-backoffice`, `discord/assistant-uploader`, `addons`). Running the API locally
+`discord/assistant-backoffice`, `discord/assistant-uploader`, `addons`, `wtf-switcher`). Running the API locally
 needs its `.env` (the database, Discord's keys): [its README](discord/assistant-api/README.md).
 Deploying from scratch (Render, Supabase, Discord) is in the [root README](README.md).
 
@@ -71,6 +72,13 @@ opens a pull request when something changed: review `Found.lua`, merge, publish.
 Bump its `package.json` version, push a tag `uploader-v<version>`: the `Guild Assistant Uploader`
 Action builds the Mac and Windows installers and publishes them as a GitHub release, which the
 website's Upload keys page links to. Details: [its README](discord/assistant-uploader/README.md).
+
+## WTF Switcher
+
+Specs, typecheck and format (`npm test`, `npm run typecheck`, `npm run format:check` in
+`wtf-switcher/`), then `npm run dist:mac` builds the app to copy into `/Applications`. Bump its
+`package.json` version for a change worth installing again. Details:
+[its README](wtf-switcher/README.md).
 
 ## The board
 

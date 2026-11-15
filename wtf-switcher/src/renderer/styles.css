@@ -1,0 +1,369 @@
+/* The website's look (discord/assistant-backoffice/src/index.css): its colours, light and dark. */
+:root {
+  color-scheme: light dark;
+  --accent: light-dark(#6d43c2, #9b74e3);
+  --accent-dark: light-dark(#56339e, #8560d4);
+  --gold: light-dark(#a07a2c, #d2ab5c);
+  --bg: light-dark(#f4f2f7, #15121c);
+  --surface: light-dark(#ffffff, #1e1a27);
+  --surface-2: light-dark(#f8f6fb, #262131);
+  --border: light-dark(#e2dcea, #372f45);
+  --text: light-dark(#1d1828, #ece8f3);
+  --muted: light-dark(#625a70, #a59db3);
+  --danger: #cf4444;
+  --success: #2f8a4f;
+  --radius: 10px;
+  --control-height: 2.1rem;
+  font-family:
+    'Segoe UI',
+    system-ui,
+    -apple-system,
+    sans-serif;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--bg);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* The window is as tall as this (main.ts fits it): nothing scrolls, either way. */
+html,
+body {
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+  display: flow-root;
+  padding: 1rem 1.1rem 1.1rem;
+  background: var(--bg);
+  user-select: none;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+h1 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+h2 {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+p {
+  margin: 0;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.9rem;
+}
+
+.logo {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.spacer {
+  flex: 1;
+}
+
+/* An error line is always there (empty when there's none). */
+.error {
+  min-height: 1.3em;
+  color: var(--danger);
+  font-size: 0.85rem;
+}
+
+/* ---- what it's doing: one line, its icon in its colour, the details in its tooltip ---- */
+.status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.status span,
+.file-state span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+svg {
+  flex-shrink: 0;
+}
+
+.tone-ok svg {
+  color: var(--success);
+}
+
+.tone-warn svg {
+  color: var(--gold);
+}
+
+.tone-bad svg {
+  color: var(--danger);
+}
+
+.tone-busy svg {
+  color: var(--accent);
+}
+
+/* ---- the two sections ---- */
+section + section {
+  margin-top: 1rem;
+}
+
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+}
+
+/* A long path is cut short, the whole of it in its tooltip. */
+.folder {
+  flex: 1;
+  min-width: 0;
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  direction: rtl;
+  text-align: left;
+}
+
+.files {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.file {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.45rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.file-name {
+  min-width: 0;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.file-state {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.25rem;
+  margin-top: 0.4rem;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  cursor: pointer;
+}
+
+.check input {
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+/* ---- controls ---- */
+input[type='text'] {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  height: var(--control-height);
+  padding: 0 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+  user-select: text;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  height: var(--control-height);
+  padding: 0 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.btn-sm {
+  height: 1.75rem;
+  padding: 0 0.65rem;
+  font-size: 0.85rem;
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--border);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--accent-dark);
+}
+
+/* ---- the switcher's own ---- */
+/* "UIs" in an uppercase heading. */
+.lower {
+  text-transform: none;
+}
+
+.name-form {
+  display: grid;
+  gap: 0.4rem;
+  margin-bottom: 0.4rem;
+}
+
+.name-form label {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.name-form .row {
+  margin-top: 0;
+}
+
+#screens .name-form {
+  margin-top: 0.5rem;
+}
+
+/* The screens' name, cut short when long (the whole of it in its tooltip). */
+.setup {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+select {
+  max-width: 55%;
+  height: 1.75rem;
+  padding: 0 0.4rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.85rem;
+}
+
+.profiles {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.profile {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.45rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.profile-name {
+  min-width: 0;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-state {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.profile-state span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

@@ -1,0 +1,2 @@
+# electron-builder's app and installer (npm run dist:mac)
+release/

@@ -7,5 +7,6 @@
 **/*.tsbuildinfo
 .git
 addons
-# The desktop uploader isn't part of the server's image.
+# The desktop apps aren't part of the server's image.
 discord/assistant-uploader
+wtf-switcher

@@ -8,6 +8,8 @@ is worked on (each kind of change, start to finish): [`MAINTAINING.md`](MAINTAIN
 - [`addons/`](addons/) — WoW addons, written in Lua.
 - [`discord/`](discord/) — Discord bot/API and backoffice, written in Node.js/TypeScript. See
   [`discord/README.md`](discord/README.md) for how the two services fit together.
+- [`wtf-switcher/`](wtf-switcher/) — a Mac app that keeps a WoW UI (its WTF folder) for each screen
+  setup and switches to the right one when the screens change. For personal use.
 
 ## Deployment
 
