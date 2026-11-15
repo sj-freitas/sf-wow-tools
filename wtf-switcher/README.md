@@ -28,7 +28,9 @@ For personal use: it's built here and run from this folder, not released.
   - the game ran while the app wasn't watching.
 
   The game may have been played as it opened, or rearranged for the new screens. So the app asks
-  which UI to keep it as: the one the game opened with, or the screens' one.
+  whose layout WoW saved: **<the UI it opened with>'s, as it opened**, or **<the screens' UI>'s,
+  rearranged for these screens**. The one picked gets what WoW saved (its copy goes to History); the
+  other isn't touched.
 - **The default.** Screens with no UI of their own use the laptop's: the UI of the built-in screen
   on its own. That covers an iPad by Sidecar next to the laptop, a projector, or another monitor.
   Picking a UI for them gives them their own; **Default** puts them back.

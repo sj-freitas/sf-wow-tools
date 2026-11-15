@@ -1,7 +1,7 @@
 {
   "name": "wtf-switcher",
   "productName": "WTF Switcher",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Keeps a World of Warcraft UI (its WTF folder) for each screen setup, and switches to the right one when the screens change.",
   "author": "Sérgio Freitas",
   "private": true,

@@ -146,14 +146,19 @@ class SwitcherApp {
     this.refresh();
   }
 
-  /** Which UI to keep what the game saved as, when it could be either's. */
+  /**
+   * Whose layout the game saved, when it could be either's. Asked as "whose is it", never "which
+   * to keep": the answer is the UI that gets it (its copy replaced), not the one kept safe.
+   */
   private async ask(active: string, wanted: string): Promise<string> {
     app.focus({ steal: true });
     const options: Electron.MessageBoxOptions = {
       type: 'question',
-      message: 'Keep the UI the game left as…',
-      detail: `It opened with ${active}’s UI, but these screens use ${wanted}’s.`,
-      buttons: [active, wanted],
+      message: 'Whose layout did WoW just save?',
+      detail:
+        `WoW opened with ${active}’s layout, and these screens use ${wanted}’s. ` +
+        'The one you pick gets what WoW saved when it closed; the other isn’t touched.',
+      buttons: [`${active}’s, as it opened`, `${wanted}’s, rearranged for these screens`],
       defaultId: 0,
       cancelId: 0,
       noLink: true,
