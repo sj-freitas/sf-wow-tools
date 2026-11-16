@@ -25,6 +25,15 @@ local function zone()
     return GetRealZoneText and GetRealZoneText() or ""
 end
 
+-- What the game shows an addon of a unit, or nil when it hides it. On WoW Forever a creature's GUID
+-- and name (an NPC's too) are secret values while addons are restricted (in combat, in a dungeon):
+-- they can be passed around but not compared or tested, which is an error ("attempt to compare a
+-- secret string value").
+local function shown(value)
+    if issecretvalue and issecretvalue(value) then return nil end
+    return value
+end
+
 -- Tells the guild about a new finding (Sync.lua), and says whether it was new.
 local function shared(isNew, record)
     if isNew and ns.Sync and ns.Sync.sourceChanged then ns.Sync.sourceChanged(record) end
@@ -38,8 +47,8 @@ end
 --- A vendor's window: the recipe items it sells. Returns how many sources were new.
 function Sources.merchant()
     if not (GetMerchantNumItems and GetMerchantItemLink) then return 0 end
-    local vendor = UnitName("npc")
-    if not vendor then return 0 end
+    local vendor = shown(UnitName("npc"))
+    if not vendor then return 0 end -- none, or the game hides who it is: nothing to record it under
     local new = 0
     for i = 1, GetMerchantNumItems() do
         local id = itemId(GetMerchantItemLink(i))
@@ -66,7 +75,7 @@ end
 function Sources.trainer()
     if not (GetNumTrainerServices and GetTrainerServiceInfo) then return 0 end
     if IsTradeskillTrainer and not IsTradeskillTrainer() then return 0 end
-    local trainer = UnitName("npc")
+    local trainer = shown(UnitName("npc"))
     if not trainer then return 0 end
     local new = 0
     for i = 1, GetNumTrainerServices() do
@@ -84,12 +93,14 @@ function Sources.trainer()
 end
 
 -- Who a loot slot came from: the creature targeted or under the mouse when it's the one looted.
+-- Unnamed when the game hides the creature (its GUID or its name).
 local function lootedFrom(slot)
-    local guid = GetLootSourceInfo and GetLootSourceInfo(slot)
+    local guid = shown(GetLootSourceInfo and GetLootSourceInfo(slot))
     if type(guid) ~= "string" then return "D", "" end
     local kind = guid:match("^GameObject") and "O" or "D"
+    if not UnitGUID then return kind, "" end
     for _, unit in ipairs({ "target", "mouseover" }) do
-        if UnitGUID and UnitGUID(unit) == guid then return kind, UnitName(unit) or "" end
+        if shown(UnitGUID(unit)) == guid then return kind, shown(UnitName(unit)) or "" end
     end
     return kind, ""
 end

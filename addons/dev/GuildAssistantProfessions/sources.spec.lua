@@ -177,6 +177,59 @@ it("records recipe items looted from a creature, an object, or fishing", functio
     eq(ns.db.sources.items[2881]["F:Westfall="], 1000)
 end)
 
+-- A secret value, as WoW Forever hands an addon what it hides (a creature's GUID or name, in combat
+-- or in a dungeon): it can be passed around and asked about (issecretvalue), and nothing else.
+local function secret()
+    local function refuse() error("attempt to use a secret value", 2) end
+    return setmetatable({}, { __index = refuse, __newindex = refuse, __concat = refuse, __eq = refuse,
+        __lt = refuse, __le = refuse, __len = refuse, __call = refuse })
+end
+
+it("records a looted recipe without a name when the game hides the creature", function()
+    local guid = "Creature-0-1-2-3-450-0"
+    local hidden = secret()
+    local target, name = hidden, "Defias Renegade Mage"
+    local ns = load({
+        zone = "Westfall",
+        issecretvalue = function(value) return rawequal(value, hidden) end,
+        GetNumLootItems = function() return 1 end,
+        GetLootSlotLink = function() return link(2881) end,
+        GetLootSourceInfo = function() return guid, 1 end,
+        IsFishingLoot = function() return false end,
+        UnitGUID = function(unit) return unit == "target" and target or nil end,
+        UnitName = function(unit) return unit == "target" and name or nil end,
+    })
+    eq(ns.Sources.loot(), 1, "its GUID hidden")
+    eq(ns.db.sources.items[2881]["D:Westfall="], 1000, "a drop, unnamed")
+    target, name = guid, hidden
+    ns.db = ns.Core.newDB()
+    eq(ns.Sources.loot(), 1, "its GUID shown, its name hidden")
+    eq(ns.db.sources.items[2881]["D:Westfall="], 1000, "a drop, unnamed")
+    guid = hidden
+    ns.db = ns.Core.newDB()
+    eq(ns.Sources.loot(), 1, "where the loot came from hidden")
+    eq(ns.db.sources.items[2881]["D:Westfall="], 1000, "a drop, unnamed")
+end)
+
+it("records nothing at a vendor or a trainer the game hides", function()
+    local hidden = secret()
+    local ns = load({
+        issecretvalue = function(value) return rawequal(value, hidden) end,
+        UnitName = function(unit) return unit == "npc" and hidden or nil end,
+        GetMerchantNumItems = function() return 1 end,
+        GetMerchantItemLink = function() return link(6047) end,
+        IsTradeskillTrainer = function() return true end,
+        GetNumTrainerServices = function() return 1 end,
+        GetTrainerServiceInfo = function() return "Copper Chain Pants", nil, "available" end,
+        GetTrainerServiceItemLink = function() return link(2852) end,
+        GetTrainerServiceCost = function() return 50 end,
+    })
+    eq(ns.Sources.merchant(), 0)
+    eq(ns.Sources.trainer(), 0)
+    eq(ns.db.sources, nil, "nothing recorded")
+    _G.issecretvalue = nil
+end)
+
 it("records the recipe items a quest gives", function()
     local ns = load({
         GetTitleText = function() return "Ornate Mithril Armor" end,
