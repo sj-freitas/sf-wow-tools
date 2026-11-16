@@ -2091,7 +2091,7 @@ label.btn.disabled {
   vertical-align: top;
   overflow-wrap: anywhere;
 }
-/* "ⓘ Show who reacted (live tags)": opens the help in a drawer. */
+/* "Show who reacted (live tags)" and "Try the tags": each opens a drawer over the form. */
 .syntax-help-button {
   align-self: flex-start;
   padding: 0;
@@ -2106,6 +2106,125 @@ label.btn.disabled {
 .syntax-help-button:hover {
   color: var(--text);
   text-decoration: underline;
+}
+.syntax-help-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+/* The help and the Try it button side by side; they wrap on a narrow screen. */
+.live-tags-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+}
+
+/* ---- "Try the tags": the tag preview, in a drawer ---- */
+.live-tags-try > p {
+  margin: 0.35rem 0 0.6rem;
+}
+.live-tags-text {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.85rem;
+  resize: vertical;
+}
+.live-tags-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0.5rem 0;
+}
+/* Its label stays on one line and keeps its width while the spinner is inside it. */
+.live-tags-run {
+  min-width: 12.5rem;
+  white-space: nowrap;
+}
+/* The result keeps its height whether it is empty, an error, or what the post would say. */
+.live-tags-result {
+  box-sizing: border-box;
+  min-height: 6rem;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-2);
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+.live-tags-result > p {
+  margin: 0;
+}
+.live-tags-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  margin: 0;
+}
+.live-tags-error > svg {
+  margin-top: 0.15em;
+  color: var(--danger);
+}
+/* Both lines are always shown, so neither appearing nor the counts arriving moves anything. */
+.live-tags-notes {
+  min-height: 5.5rem;
+  margin-top: 0.6rem;
+}
+.live-tags-notes > p {
+  margin: 0.25rem 0;
+}
+.live-tags-examples {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0.25rem 0;
+  padding: 0;
+  list-style: none;
+}
+.live-tags-example {
+  display: grid;
+  gap: 0.15rem;
+  width: 100%;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+.live-tags-example:hover {
+  border-color: var(--accent);
+}
+.live-tags-example > code {
+  font-size: 0.8rem;
+}
+/* Reserved while the roster is being read, so the panels below do not jump into place. */
+.live-tags-data {
+  min-height: 9rem;
+}
+.live-tags-vocab {
+  display: grid;
+  gap: 0.2rem;
+  margin: 0.4rem 0;
+}
+.live-tags-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+.live-tags-chip {
+  padding: 0.05rem 0.45rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-2);
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
 }
 
 /* ---- posts made of several messages ---- */

@@ -24,6 +24,7 @@ import type { AuthenticatedRequest } from '../auth/auth.types';
 import { GuildAccessService } from '../auth/guild-access.service';
 import { MAX_IMAGE_BYTES } from '../officer-requests/attachments';
 import { PostImagesService, type PostImageDto } from './post-images.service';
+import type { LiveTagsDataDto, LiveTagsPreviewDto } from './live-tags-preview';
 import {
   TasksService,
   type ReactionDto,
@@ -65,6 +66,27 @@ export class TasksController {
   ): Promise<ServerChannelsDto[]> {
     await this.guildAccess.assertCanConfigure(req.user.id, guildId);
     return this.tasks.listChannels(guildId);
+  }
+
+  /** What a tag's expression can use: the guild's own roster, and the sample reactions. */
+  @Get('guilds/:guildId/live-tags')
+  async liveTagsData(
+    @Req() req: AuthenticatedRequest,
+    @Param('guildId') guildId: string,
+  ): Promise<LiveTagsDataDto> {
+    await this.guildAccess.assertOfficer(req.user.id, guildId);
+    return this.tasks.liveTagsData(guildId);
+  }
+
+  /** `{ content }`: that text with its tags filled in, for the editor. Saves and posts nothing. */
+  @Post('guilds/:guildId/live-tags/preview')
+  async previewLiveTags(
+    @Req() req: AuthenticatedRequest,
+    @Param('guildId') guildId: string,
+    @Body() body: { content?: unknown },
+  ): Promise<LiveTagsPreviewDto> {
+    await this.guildAccess.assertOfficer(req.user.id, guildId);
+    return this.tasks.previewLiveTags(guildId, body.content);
   }
 
   @Post('guilds/:guildId/tasks')

@@ -25,6 +25,8 @@ import type {
   GuildDetails,
   GuildHome,
   GuildRoleKey,
+  LiveTagsData,
+  LiveTagsPreview,
   NewCharacterInput,
   NewGuildInput,
   People,
@@ -175,6 +177,14 @@ export const setRoleMapping = (
 
 export const setOfficerRole = (guildId: string, roleId: string | null): Promise<void> =>
   request('PUT', `/api/guilds/${guildId}/officer-role`, { roleId });
+
+/** What a post's `{{roster …}}` and `{{reactions …}}` tags can use, for the editor's Try it. */
+export const fetchLiveTagsData = (guildId: string): Promise<LiveTagsData> =>
+  request('GET', `/api/guilds/${guildId}/live-tags`);
+
+/** That text with its tags filled in. Saves and posts nothing. */
+export const previewLiveTags = (guildId: string, content: string): Promise<LiveTagsPreview> =>
+  request('POST', `/api/guilds/${guildId}/live-tags/preview`, { content });
 
 export const fetchPeople = (guildId: string): Promise<People> =>
   request('GET', `/api/guilds/${guildId}/people`);

@@ -580,3 +580,60 @@ export interface GuildAttribute {
   /** The roster characters that have it. */
   characterIds: string[];
 }
+
+/** One character of a tag's `reactions[i].characters[i]` or `roster[i]`, as an expression sees it. */
+export interface LiveTagsCharacter {
+  name: string;
+  firstName: string;
+  lastName: string;
+  attributes: string[];
+  class: string;
+  race: string;
+  roles: string[];
+  level: number;
+  classIcon: string;
+  roleIcons: string[];
+}
+
+/** One entry of `roster`: a character of the guild, with the Discord user who plays it. */
+export interface LiveTagsRosterEntry extends LiveTagsCharacter {
+  armoryLink: string | null;
+  discordUser: {
+    id: string;
+    tag: string;
+    name: string;
+    displayName: string;
+    roles: string[];
+  };
+}
+
+/** One entry of `reactions`: somebody who reacted (made up, for a preview). */
+export interface LiveTagsReactor {
+  id: string;
+  tag: string;
+  name: string;
+  displayName: string;
+  characters: LiveTagsCharacter[];
+}
+
+/** What a tag's expression can work with, for the editor to show beside the box. */
+export interface LiveTagsData {
+  /** The first few characters of the guild's own roster. */
+  roster: LiveTagsRosterEntry[];
+  /** How many it has in all: `roster.length` in a tag. */
+  rosterCount: number;
+  /** Every guild attribute in use on the roster, A–Z. */
+  attributes: string[];
+  /** Every Discord role the roster's players hold, A–Z. */
+  discordRoles: string[];
+  /** The made-up people a `{{reactions …}}` preview runs on. */
+  sampleReactions: LiveTagsReactor[];
+}
+
+/** What a preview came out as: the text as a post would write it, or what is wrong with the tags. */
+export interface LiveTagsPreview {
+  text: string | null;
+  error: string | null;
+  usedSampleReactions: boolean;
+  usedRoster: boolean;
+}

@@ -7,6 +7,7 @@ import { TimezoneField } from './TimezoneField';
 import type { MentionNames } from './DiscordMarkdown';
 import { Drawer } from './Drawer';
 import { LiveTagsHelp } from './LiveTagsHelp';
+import { LiveTagsPreview } from './LiveTagsPreview';
 import { FormStatus } from './OneLine';
 import { MessagePreview, PostPartEditor } from './PostPartEditor';
 import { canSwap, draftOf, inputOf, MAX_PARTS, newDraft, type PartDraft } from './postParts';
@@ -209,7 +210,15 @@ export function PostTaskForm({ guild, channels, editing, timezone, onSaved, onCa
           )}
         </div>
 
-        <LiveTagsHelp />
+        <div className="live-tags-buttons">
+          <LiveTagsHelp />
+          <LiveTagsPreview
+            guildId={guild.id}
+            texts={parts.map((part) => part.content)}
+            names={names}
+            onOpen={loadNames}
+          />
+        </div>
 
         {/* In a drawer, over the form: opening it above the messages would push them down. */}
         {sequence && parts.length > 1 && (

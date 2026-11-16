@@ -116,7 +116,14 @@ ${expression}
   }
 }
 
-const SAMPLE: ShowReactor[] = [
+/**
+ * The made-up people every reactions expression is tried on: when a post is saved (so a typo is
+ * refused), and in the backoffice's preview (real reactions are never read for a preview, because
+ * the post they belong to usually has not been sent yet). Between them they cover what expressions
+ * trip over: somebody with no character at all, somebody with a main and an alt, every role, a
+ * character with two roles, and one whose race was never collected.
+ */
+export const SAMPLE_REACTORS: ShowReactor[] = [
   {
     id: '100000000000000001',
     tag: '<@100000000000000001>',
@@ -135,6 +142,18 @@ const SAMPLE: ShowReactor[] = [
         classIcon: '<:i_warrior_92c497bf:100000000000000101>',
         roleIcons: ['<:r_tank_24531a51:100000000000000102>'],
       },
+      {
+        name: 'Anabank',
+        firstName: 'Anabank',
+        lastName: '',
+        attributes: [],
+        class: 'Mage',
+        race: 'Gnome',
+        roles: ['Ranged DPS'],
+        level: 31,
+        classIcon: '<:i_mage_1f0a7c24:100000000000000105>',
+        roleIcons: ['<:r_rangeddps_7b1d9e60:100000000000000106>'],
+      },
     ],
   },
   {
@@ -144,17 +163,102 @@ const SAMPLE: ShowReactor[] = [
     displayName: 'Bruno',
     characters: [],
   },
+  {
+    id: '100000000000000003',
+    tag: '<@100000000000000003>',
+    name: 'Cora',
+    displayName: 'Cora',
+    characters: [
+      {
+        name: 'Coraleaf Whisperwind',
+        firstName: 'Coraleaf',
+        lastName: 'Whisperwind',
+        attributes: ['Main'],
+        class: 'Druid',
+        // Added before races were collected: an expression has to cope with an empty race.
+        race: '',
+        roles: ['Healer'],
+        level: 60,
+        classIcon: '<:i_druid_3c5f8a11:100000000000000107>',
+        roleIcons: ['<:r_healer_4c342222:100000000000000104>'],
+      },
+    ],
+  },
+  {
+    id: '100000000000000004',
+    tag: '<@100000000000000004>',
+    name: 'Dilip',
+    displayName: 'Dilip (he/him)',
+    characters: [
+      {
+        name: 'Dilipstab',
+        firstName: 'Dilipstab',
+        lastName: '',
+        attributes: ['Main'],
+        class: 'Rogue',
+        race: 'Night Elf',
+        roles: ['Melee DPS'],
+        level: 60,
+        classIcon: '<:i_rogue_55b2e0d9:100000000000000108>',
+        roleIcons: ['<:r_meleedps_2a90f3c7:100000000000000109>'],
+      },
+    ],
+  },
+  {
+    id: '100000000000000005',
+    tag: '<@100000000000000005>',
+    name: 'Eve',
+    displayName: 'Eve',
+    characters: [
+      {
+        name: 'Evecaster',
+        firstName: 'Evecaster',
+        lastName: '',
+        attributes: ['Main'],
+        class: 'Mage',
+        race: 'Human',
+        roles: ['Ranged DPS'],
+        level: 58,
+        classIcon: '<:i_mage_1f0a7c24:100000000000000105>',
+        roleIcons: ['<:r_rangeddps_7b1d9e60:100000000000000106>'],
+      },
+    ],
+  },
+  {
+    id: '100000000000000006',
+    tag: '<@100000000000000006>',
+    name: 'Faruk',
+    displayName: 'Faruk',
+    characters: [
+      {
+        name: 'Farukshield',
+        firstName: 'Farukshield',
+        lastName: '',
+        attributes: ['Main'],
+        class: 'Paladin',
+        race: 'Dwarf',
+        // Two roles: roleIcons follows the same order.
+        roles: ['Tank', 'Healer'],
+        level: 60,
+        classIcon: '<:i_paladin_6d31b4a8:100000000000000110>',
+        roleIcons: [
+          '<:r_tank_24531a51:100000000000000102>',
+          '<:r_healer_4c342222:100000000000000104>',
+        ],
+      },
+    ],
+  },
 ];
 
 const SAMPLE_ROSTER: ShowRosterEntry[] = [
   {
-    ...SAMPLE[0].characters[0],
+    ...SAMPLE_REACTORS[0].characters[0],
     armoryLink: 'https://armory.example/character/eu/pve/merric',
     discordUser: {
-      id: SAMPLE[0].id,
-      tag: SAMPLE[0].tag,
-      name: SAMPLE[0].name,
-      displayName: SAMPLE[0].displayName,
+      id: SAMPLE_REACTORS[0].id,
+      tag: SAMPLE_REACTORS[0].tag,
+      name: SAMPLE_REACTORS[0].name,
+      displayName: SAMPLE_REACTORS[0].displayName,
       roles: ['Officer', 'Raider'],
     },
   },
@@ -171,10 +275,10 @@ const SAMPLE_ROSTER: ShowRosterEntry[] = [
     roleIcons: ['<:r_healer_4c342222:100000000000000104>'],
     armoryLink: 'https://armory.example/character/eu/pve/olga',
     discordUser: {
-      id: SAMPLE[1].id,
-      tag: SAMPLE[1].tag,
-      name: SAMPLE[1].name,
-      displayName: SAMPLE[1].displayName,
+      id: SAMPLE_REACTORS[1].id,
+      tag: SAMPLE_REACTORS[1].tag,
+      name: SAMPLE_REACTORS[1].name,
+      displayName: SAMPLE_REACTORS[1].displayName,
       roles: [],
     },
   },
@@ -185,5 +289,9 @@ export async function checkShowExpression(
   expression: string,
   variable: ShowVariable = 'reactions',
 ): Promise<void> {
-  await runShowExpression(expression, variable === 'roster' ? SAMPLE_ROSTER : SAMPLE, variable);
+  await runShowExpression(
+    expression,
+    variable === 'roster' ? SAMPLE_ROSTER : SAMPLE_REACTORS,
+    variable,
+  );
 }

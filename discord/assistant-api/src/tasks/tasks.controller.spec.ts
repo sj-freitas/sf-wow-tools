@@ -14,6 +14,7 @@ describe('TasksController is for Officers only', () => {
   let checkedGuilds: string[];
   let calls: string[];
   let reactionParts: number[];
+  let previewed: unknown[];
   let uploadedName: string | undefined;
   let stored: { contentType: string; fileName: string | null; data: Buffer } | null;
   let controller: TasksController;
@@ -23,6 +24,7 @@ describe('TasksController is for Officers only', () => {
     checkedGuilds = [];
     calls = [];
     reactionParts = [];
+    previewed = [];
     uploadedName = undefined;
     stored = null;
     const check = async (_user: string, guildId: string) => {
@@ -52,6 +54,11 @@ describe('TasksController is for Officers only', () => {
         calls.push('reactionUsers');
         reactionParts.push(part);
       },
+      liveTagsData: async () => void calls.push('liveTagsData'),
+      previewLiveTags: async (_guild: string, content: unknown) => {
+        calls.push('previewLiveTags');
+        previewed.push(content);
+      },
     } as unknown as TasksService;
     const images = {
       upload: async (_guild: string, _data: Buffer, name: string) => {
@@ -74,6 +81,8 @@ describe('TasksController is for Officers only', () => {
     await controller.runNow(req, 't');
     await controller.reactions(req, 't');
     await controller.reactionUsers(req, 't', '👍');
+    await controller.liveTagsData(req, 'g');
+    await controller.previewLiveTags(req, 'g', { content: 'Hi {{roster}}' });
     assert.deepEqual(calls, [
       'list',
       'channels',
@@ -85,7 +94,10 @@ describe('TasksController is for Officers only', () => {
       'runNow',
       'reactions',
       'reactionUsers',
+      'liveTagsData',
+      'previewLiveTags',
     ]);
+    assert.deepEqual(previewed, ['Hi {{roster}}']);
   });
 
   it('refuses everyone else, on every route', async () => {
@@ -101,6 +113,8 @@ describe('TasksController is for Officers only', () => {
       () => controller.runNow(req, 't'),
       () => controller.reactions(req, 't'),
       () => controller.reactionUsers(req, 't', '👍'),
+      () => controller.liveTagsData(req, 'g'),
+      () => controller.previewLiveTags(req, 'g', { content: 'Hi' }),
       () => controller.uploadImage(req, 'g', { buffer: Buffer.alloc(1), originalname: 'a.png' }),
       () => controller.image(req, 'g', 'i', {} as never),
       () => controller.describeImages(req, 'g', 'i'),

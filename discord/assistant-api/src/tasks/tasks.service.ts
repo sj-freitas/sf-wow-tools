@@ -28,12 +28,19 @@ import {
 import { PostImagesService } from './post-images.service';
 import {
   checkExpressions,
+  hasRosterTokens,
   parseAllRosterTokens,
   parseAllTokens,
   parseDynamicTokens,
   renderContent,
   type Reactor,
 } from './dynamic-content';
+import {
+  liveTagsData,
+  previewLiveTags,
+  type LiveTagsDataDto,
+  type LiveTagsPreviewDto,
+} from './live-tags-preview';
 import { TrackingService } from './tracking.service';
 import { clampPage, likePattern, PAGE_SIZE, searchTerms } from './post-search';
 import { describeSchedule, instantFromLocal } from './schedule';
@@ -665,6 +672,19 @@ export class TasksService {
   }
 
   /** The guild a task belongs to, for permission checks. */
+  /** What the editor's tag preview works with: the guild's own roster, and the made-up people. */
+  async liveTagsData(guildId: string): Promise<LiveTagsDataDto> {
+    return liveTagsData(await this.tracking.loadRoster(guildId));
+  }
+
+  /** One message's text with its tags filled in, without saving or posting anything. */
+  async previewLiveTags(guildId: string, content: unknown): Promise<LiveTagsPreviewDto> {
+    if (typeof content !== 'string') throw new BadRequestException('Send the text to preview.');
+    // The roster is only read when a roster tag asks for it.
+    const entries = hasRosterTokens(content) ? await this.tracking.loadRoster(guildId) : [];
+    return previewLiveTags(content, entries);
+  }
+
   async guildIdOf(taskId: string): Promise<string> {
     return (await this.find(taskId)).guildId;
   }

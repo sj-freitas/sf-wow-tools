@@ -40,15 +40,17 @@ authorization), the character and guild rules, token encryption and name parsing
 
 ## Endpoints
 
-| Method | Path                        | Purpose                                                        |
-| ------ | --------------------------- | -------------------------------------------------------------- |
-| GET    | `/api/guilds/:id/players`   | The guild's roster: its players only, any member of the guild  |
-| GET    | `/api/auth/login`           | Starts "Login with Discord" (OAuth2, scopes `identify guilds`) |
-| GET    | `/api/auth/callback`        | OAuth2 redirect target; creates the session cookie             |
-| GET    | `/api/auth/me`              | Current user, or 401                                           |
-| POST   | `/api/auth/logout`          | Destroys the session                                           |
-| POST   | `/api/discord/interactions` | Discord's HTTP Interactions Endpoint — see below               |
-| GET    | `/api/recipe-sources`       | How recipes are obtained, as players' addons found it (no login) — see Professions |
+| Method | Path                                | Purpose                                                                                                       |
+| ------ | ----------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| GET    | `/api/guilds/:id/players`           | The guild's roster: its players only, any member of the guild                                                 |
+| GET    | `/api/auth/login`                   | Starts "Login with Discord" (OAuth2, scopes `identify guilds`)                                                |
+| GET    | `/api/auth/callback`                | OAuth2 redirect target; creates the session cookie                                                            |
+| GET    | `/api/auth/me`                      | Current user, or 401                                                                                          |
+| POST   | `/api/auth/logout`                  | Destroys the session                                                                                          |
+| POST   | `/api/discord/interactions`         | Discord's HTTP Interactions Endpoint — see below                                                              |
+| GET    | `/api/recipe-sources`               | How recipes are obtained, as players' addons found it (no login) — see Professions                            |
+| GET    | `/api/guilds/:id/live-tags`         | What a post's tags can use: the roster's labels, roles and shape, and the sample reactions (Officers)         |
+| POST   | `/api/guilds/:id/live-tags/preview` | `{ content }` with its tags filled in, for the post form's "Try the tags" (Officers; saves and posts nothing) |
 
 Backoffice auth: Discord OAuth2 login using the **same Discord application** as the bot (add the
 redirect URI under OAuth2 → Redirects; set `DISCORD_CLIENT_SECRET` and
@@ -293,7 +295,7 @@ A post's text can show who reacted to a message:
   message's server, else `name`; `characters` their characters in the guild (an empty array if none),
   oldest first, each `{ name, firstName, lastName, attributes, class, race, roles, level, classIcon,
 roleIcons }` (`name` is "Merric Stone", `attributes` the names of the guild attributes it has, A–Z
-(a guild says what a main is with one, e.g. "Main"), `race` empty when it is unknown, `roles` a list of "Tank",
+  (a guild says what a main is with one, e.g. "Main"), `race` empty when it is unknown, `roles` a list of "Tank",
   "Healer", "Melee DPS", "Ranged DPS"; `classIcon` the class's icon as Discord emoji text, ready to
   put in the post — `<:i_druid_…:123>`, the bot's own emoji, uploaded the first time it is needed —
   and `roleIcons` each role's the same way, in the order of `roles`; '' where there is none). Left out, `show` is
@@ -323,7 +325,8 @@ roleIcons }` (`name` is "Merric Stone", `attributes` the names of the guild attr
   longer than 2000 characters is cut. Names come free with Discord's reaction list (no server nicknames,
   which would need a lookup per person).
 - **Backoffice:** clicking a reaction on a post shows who reacted. The post form has a collapsible
-  "Live tags" help with this syntax, and the preview marks the tag (it cannot show real names).
+  "Live tags" help with this syntax, a message's own Preview tab marks the tag without filling it in,
+  and **Try the tags** beside the help fills it in for real (see below).
   Tracking has no end date: remove the tag (or the post) to stop it.
 
 ### The guild roster in a post (`{{roster …}}`)
@@ -359,6 +362,25 @@ Its only option is `show` (left out: every character's name); the list is called
   no change tracking on characters is needed. Edits that show people never ping them.
 - The roster is also filled in when a message is first sent, and when a live message is saved. It is not
   limited to Officers' view: it lists every character of the guild.
+
+### Trying a tag before posting (`live-tags`)
+
+**Try the tags**, beside the live-tags help in the post form, fills a message's tags in without
+saving or posting anything (`live-tags-preview.ts`, Officers only):
+
+- `POST /api/guilds/:id/live-tags/preview` renders the text through the very same
+  `renderContent` a post goes through, so what it shows is what the post would say. A roster tag
+  runs on the guild's **own roster**; a reactions tag runs on the **made-up people** of
+  `SAMPLE_REACTORS`, the ones every expression is already checked against on save, because the post
+  whose reactions it reads has usually not been sent yet (and a preview must not depend on Discord,
+  nor on anyone having reacted). The drawer says so beside the result, with how many they are.
+- A tag written wrongly comes back as `error`, in the words saving would refuse it with; an
+  expression that _fails_ stays inside the text as `⚠️ (…)`, exactly as the post would show it.
+- `GET /api/guilds/:id/live-tags` gives the drawer what the expressions can match: every guild
+  attribute and Discord role **in use on the roster** (A–Z, each once), the first few characters as
+  an expression sees them, the roster's size, and the sample people. The names matter because a
+  filter on a label the guild does not have renders nothing and still saves cleanly: the save-time
+  check runs on sample characters, whose attributes are only `Main` and `Switcher`.
 
 ### Clearing a channel (`/clear-channel`)
 
@@ -501,7 +523,7 @@ previews the markdown with mentions shown by name. A post moves through these st
   however many people have the page open (overlapping reads share one; if Discord fails, the last
   counts are shown). While it is live it cannot be sent again or moved to a new date or channel.
 - _Tracked_ (on by default; **Track reactions and live tags** on the post, or `POST
-  /api/tasks/:id/tracked` with `{ tracked }`): the worker keeps the post's live tags (reactions,
+/api/tasks/:id/tracked` with `{ tracked }`): the worker keeps the post's live tags (reactions,
   roster) up to date and its counts are re-read. Off, both stay as they last were: worth it for an
   old post, as the worker checks every tracked post every minute.
 - _Partly posted_: a run stopped halfway (Discord refused the third message, say). What was sent is
@@ -612,11 +634,11 @@ Run inside a Discord server linked to a guild (a `DiscordServer` row). The first
 registers you as a player of that guild. A character's realm and faction are its guild's. All replies are
 ephemeral (only you see them).
 
-| Command             | Options                                                                      | Purpose                          |
-| ------------------- | ---------------------------------------------------------------------------- | -------------------------------- |
-| `/character-add`    | `name`, `class`, `role`, optional `level` (1-100)                            | Registers one of your characters |
-| `/character-list`   | —                                                                            | Lists your characters            |
-| `/character-remove` | `name`                                                                       | Removes one of your characters   |
+| Command             | Options                                           | Purpose                          |
+| ------------------- | ------------------------------------------------- | -------------------------------- |
+| `/character-add`    | `name`, `class`, `role`, optional `level` (1-100) | Registers one of your characters |
+| `/character-list`   | —                                                 | Lists your characters            |
+| `/character-remove` | `name`                                            | Removes one of your characters   |
 
 **Name format:** `Name` or `Name-Lastname`, a dash separating first and last name.
 
@@ -1104,6 +1126,7 @@ on logout). Blizzard's Classic Era / SoD API has no professions, hence the addon
     key outlives logins.
 
   Deleting a key stops it at once, and each key's page row shows when it was last used.
+
 - **How recipes are obtained** (GuildAssistant Professions 1.3.0+): an export may carry `sources`,
   what the player's addon (and their guild's) saw in game: where recipe items are sold, dropped,
   fished or given by quests, which trainers teach which recipes for how much, and what else a
@@ -1111,7 +1134,7 @@ on logout). Blizzard's Classic Era / SoD API has no professions, hence the addon
   1.5.0 (`parseSources`, which leaves out anything that isn't one and never fails an import). Every
   import adds them to `recipe_sources` (`RecipeSourcesService`, `prisma/professions.prisma`): merged,
   never replaced, with how many users reported each, and no player or guild. `GET
-  /api/recipe-sources` (no login: game facts) publishes them for GuildAssistant Database's data
+/api/recipe-sources` (no login: game facts) publishes them for GuildAssistant Database's data
   build (`addons/scripts/database/found.mjs`), which a person reviews before release.
 - **The guild's professions** (`GET /api/guilds/:guildId/professions`): anyone in the guild. Every
   recipe someone can craft and who, and each character's professions (`GuildRecipesService`, which
@@ -1158,8 +1181,8 @@ on logout). Blizzard's Classic Era / SoD API has no professions, hence the addon
   as they arrive (the guild chat) and answers a question about a crafter with who in the guild can
   craft it. Its form: the channel, the **phrases** that make a message a question (one per line;
   two words or more each; default `who can craft`, `who can make`, `LF crafter`, `looking for a
-  crafter` and the like, and the gap phrases `looking for * crafter`, `lf * crafter` and `need *
-  crafter`, `DEFAULT_PHRASES` in `crafter-question.ts`), **Send a DM** (on by default)
+crafter` and the like, and the gap phrases `looking for * crafter`, `lf * crafter` and `need *
+crafter`, `DEFAULT_PHRASES` in `crafter-question.ts`), **Send a DM** (on by default)
   and **Also post the answer in the channel** (a reply, off by default); at least one of the two.
   - **Phrases** match word for word, a word with an "s" more or less ("LF crafters"), capitals and
     punctuation ignored. A **gap phrase** has one `*` (or `…`, `...`) between words where the recipe

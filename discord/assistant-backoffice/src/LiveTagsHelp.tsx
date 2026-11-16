@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Drawer } from './Drawer';
+import { HelpCircleIcon } from './Icons';
 
 /**
  * The help about `{{reactions …}}` tags in a message's text: a link that opens it in a drawer, over
@@ -15,7 +16,7 @@ export function LiveTagsHelp() {
         title="Show who reacted to a message inside this post"
         onClick={() => setOpen(true)}
       >
-        ⓘ Show who reacted (live tags)
+        <HelpCircleIcon /> Show who reacted (live tags)
       </button>
       {open && (
         <Drawer title="Show who reacted (live tags)" onClose={() => setOpen(false)}>
@@ -338,6 +339,11 @@ function LiveTagsText() {
       <p className="muted">
         The expression runs in a safe sandbox (no files or network) and is checked when you save. If
         you need a double quote inside it, write <code>\"</code>, or use single quotes.
+      </p>
+      <p className="muted">
+        <strong>Try the tags</strong>, beside this help, fills a tag in from your own roster and
+        shows what the post would say, without saving or posting anything. It also lists the labels
+        and Discord roles your expressions can match.
       </p>
     </div>
   );
