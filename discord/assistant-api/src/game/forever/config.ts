@@ -77,8 +77,11 @@ export default defineGame({
     Hunter: {
       color: '#AAD372',
       specializations: {
+        // Survival is the melee tree on Forever (Mongoose Bite and the weapon talents), so a
+        // Survival hunter can be played either way. Ranged first: it is the common build, and the
+        // first role is what the armory assumes when it can only see the talents.
         Survival: {
-          roles: ['Ranged DPS'],
+          roles: ['Ranged DPS', 'Melee DPS'],
         },
         Marksmanship: {
           roles: ['Ranged DPS'],

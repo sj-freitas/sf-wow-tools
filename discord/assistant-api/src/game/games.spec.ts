@@ -269,6 +269,8 @@ describe('asking about a version', () => {
     ]);
     assert.deepEqual(rolesOfClass('Forever', 'Mage'), ['Ranged DPS']);
     assert.deepEqual(rolesOfClass('Forever', 'Paladin'), ['Tank', 'Healer', 'Melee DPS']);
+    // A Survival hunter can be melee, so the class offers both kinds of DPS.
+    assert.deepEqual(rolesOfClass('Forever', 'Hunter'), ['Melee DPS', 'Ranged DPS']);
     // Nothing is known about an unknown class or version: every role is allowed.
     assert.deepEqual(rolesOfClass('Forever', 'Bard'), []);
     assert.deepEqual(rolesOfClass('Retail', 'Mage'), []);
