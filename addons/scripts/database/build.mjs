@@ -7,14 +7,16 @@
 //
 //   npm run database                   the latest build (tables kept in addons/.cache)
 //   npm run database -- --build 1.60.1.70888
-//   npm run database -- --bump         when anything changed: a patch version and a CHANGELOG line
-//                                      (each addon whose files changed)
+//   npm run database -- --notes        when anything changed: a patch change note for each addon
+//                                      whose files changed (addons/changes/, scripts/release.mjs);
+//                                      the upload makes the version
 //
 // Says what it built per profession, and how much was found. What was known before (trainers,
 // drops, vendors, quests) is the seed, Seed.lua: compiled once, not rebuilt here.
-import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { root } from '../addons.mjs';
+import { notesDir } from '../release.mjs';
 import { EMPTY_FOUND, fetchFound, GUILD_ASSISTANT, toFoundLua } from './found.mjs';
 import { buildDatabase, fetchTables, latestBuild, PRODUCTS } from './gamedata.mjs';
 import { toLua, toRecipesLua } from './lua.mjs';
@@ -26,6 +28,10 @@ const FOUND = join(ADDON, 'Found.lua');
 const PROFESSIONS_ADDON = join(root, 'GuildAssistantProfessions');
 const RECIPES = join(PROFESSIONS_ADDON, 'Recipes.lua');
 const args = process.argv.slice(2);
+if (args.includes('--bump')) {
+  console.error('--bump is now --notes: the version is made when the addon is uploaded (scripts/release.mjs).');
+  process.exit(1);
+}
 const option = (name) => {
   const at = args.indexOf(name);
   return at >= 0 ? args[at + 1] : undefined;
@@ -75,26 +81,20 @@ try {
   console.log(`Found by players: not fetched (${error.message}); ${relative(root, FOUND)} left as it is.`);
 }
 
-/** A new patch version of the addon in `dir`, with CHANGELOG lines saying what changed. */
-function bump(dir, lines) {
-  const name = dir.split(/[\\/]/).pop();
-  const tocPath = join(dir, `${name}.toc`);
-  const toc = readFileSync(tocPath, 'utf8');
-  const [, major, minor, patch] = toc.match(/^## Version: (\d+)\.(\d+)\.(\d+)/m);
-  const next = `${major}.${minor}.${Number(patch) + 1}`;
-  writeFileSync(tocPath, toc.replace(/^## Version: .*$/m, `## Version: ${next}`));
-  const changelogPath = join(dir, 'CHANGELOG.md');
-  const changelog = readFileSync(changelogPath, 'utf8');
-  writeFileSync(changelogPath, changelog.replace(/^(# .*\n\n)/, `$1## ${next}\n\n${lines.join('\n')}\n\n`));
-  console.log(`${name} ${next}.`);
+/**
+ * A patch change note for the addon (scripts/release.mjs): its upload picks the version. Each kind of
+ * update has its own file, rewritten by the next run, so a week's note replaces the last one's
+ * rather than piling up while nothing is uploaded.
+ */
+function note(name, file, line) {
+  const dir = notesDir(name);
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(join(dir, file), `---\nbump: patch\n---\n\n${line}\n`);
+  console.log(`Change note: ${relative(root, join(dir, file))}.`);
 }
 
-if (args.includes('--bump')) {
-  if (dataChanged || foundChanged) {
-    bump(ADDON, [
-      ...(dataChanged ? [`- Recipe data from the game's build ${build}.`] : []),
-      ...(foundChanged ? ['- What players found of how recipes are obtained, up to date.'] : []),
-    ]);
-  }
-  if (recipesChanged) bump(PROFESSIONS_ADDON, [`- The recipes it checks at login, from the game's build ${build}.`]);
+if (args.includes('--notes')) {
+  if (dataChanged) note('GuildAssistantDatabase', 'recipe-data.md', `- Recipe data from the game's build ${build}.`);
+  if (foundChanged) note('GuildAssistantDatabase', 'what-players-found.md', '- What players found of how recipes are obtained, up to date.');
+  if (recipesChanged) note('GuildAssistantProfessions', 'recipe-list.md', `- The recipes it checks at login, from the game's build ${build}.`);
 }

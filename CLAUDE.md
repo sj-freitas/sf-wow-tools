@@ -25,8 +25,8 @@ finish. Tasks are on the Botlog board (project GA), not in TODO.md.
 
 ## Skills
 
-- Changing an addon (`addons/`): follow the **addon-change** skill (tests, version bump, CHANGELOG,
-  the publish task for Sérgio).
+- Changing an addon (`addons/`): follow the **addon-change** skill (tests, a change note in
+  `addons/changes/` rather than a version bump or CHANGELOG edit, the publish task for Sérgio).
 - Working the board ("check the board", "do GA-<n>"): follow the **board-task** skill (refined To do
   tasks only, one at a time).
 - Any backoffice UI (`discord/assistant-backoffice`), from a task or from chat: follow the

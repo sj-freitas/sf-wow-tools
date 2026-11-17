@@ -46,25 +46,30 @@ Deploying from scratch (Render, Supabase, Discord) is in the [root README](READM
 The full steps are in `.claude/skills/addon-change`; in short:
 
 1. Change it, with specs in `addons/dev/<Addon>/` (against a fake game). `npm test` in `addons/`.
-2. **Version** in its `.toc`: bump it once, past the version on CurseForge. While a version isn't
-   uploaded yet, more changes go into that same version (and its CHANGELOG section).
-3. CHANGELOG, the addon's README, and the `.toc`'s Notes when what it does changed.
-4. `npm run publish:curseforge -- <Addon> --dry-run` packs `addons/dist/<Addon>-<version>.zip`.
+2. **A change note**, `addons/changes/<Addon>/<name>.md`: patch, minor or major, and its CHANGELOG
+   lines ([addons/changes/README.md](addons/changes/README.md)). Never the `.toc`'s version or the
+   CHANGELOG by hand: the upload makes both from the notes. Several sessions change the addons at
+   once, and those two lines are where they'd collide.
+3. The addon's README, and the `.toc`'s Notes when what it does changed.
+4. `npm run publish:curseforge -- <Addon> --dry-run` says the version the notes make (from what
+   CurseForge has) and packs `addons/dist/<Addon>-<version>.zip`.
 5. Into the game to try it: unzip it into
    `~/Applications/World of Warcraft/_forever_/Interface/AddOns` (`unzip -oq` the zip there).
    `/reload` when only files changed; restart the game when one was added.
-6. Commit and push (an addon isn't deployed by the push).
-7. **Publishing**, once it works in game: `npm run publish:curseforge -- <Addon>` uploads it
-   (CurseForge reviews it before it's public). Its page's description can't be set by the API:
-   the Botlog task "Publish <Addon> <version> and update its CurseForge description" has the text
-   to paste.
+6. Commit and push (an addon isn't deployed by the push): `git pull --rebase` first.
+7. **Publishing**, once it works in game: `npm run publish:curseforge -- <Addon>`, from main up to
+   date with origin. It makes the version from the notes, uploads it (CurseForge reviews it before
+   it's public), and commits and pushes the version and CHANGELOG. It refuses a version CurseForge
+   already has. Its page's description can't be set by the API: the addon's one Botlog task,
+   "Publish <Addon> and update its CurseForge description", has the text to paste.
 
 ## GuildAssistant Database's data
 
 `npm run database` in `addons/` rebuilds `GuildAssistantDatabase/Data.lua` and
 `GuildAssistantProfessions/Recipes.lua` from the game's data tables, and `Found.lua` from what
-players found (gathered by Guild Assistant). The weekly GitHub Action (`Database`) does the same and
-opens a pull request when something changed: review `Found.lua`, merge, publish. Details:
+players found (gathered by Guild Assistant). The weekly GitHub Action (`Database`) does the same,
+with a change note for each addon it changed (`--notes`), and opens a pull request when something
+changed: review `Found.lua`, merge, publish. Details:
 [addons/README.md](addons/README.md).
 
 ## The Uploader app

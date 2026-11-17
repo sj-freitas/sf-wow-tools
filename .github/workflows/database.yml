@@ -3,10 +3,11 @@
 # (Found.lua, gathered by Guild Assistant from their GuildAssistant Professions), and GuildAssistant
 # Professions' list of every recipe's id (addons/GuildAssistantProfessions/Recipes.lua, from the same
 # tables). Every Monday, and by hand (Actions, "Database", "Run workflow"): builds them; when any
-# changed, bumps that addon's patch version (with a CHANGELOG line), runs the addons' tests, and opens
-# a pull request with it. Nothing
-# changed: no pull request. Publishing the new version stays a person's step (npm run
-# publish:curseforge). Needs "Allow GitHub Actions to create and approve pull requests" on (repo
+# changed, writes a patch change note for that addon (addons/changes/<Addon>/, see
+# addons/scripts/release.mjs), runs the addons' tests, and opens a pull request with it. It never
+# touches a version or a CHANGELOG, so it doesn't conflict with other changes; the upload
+# (npm run publish:curseforge) turns the notes into the version, a person's step. Nothing changed:
+# no pull request. Needs "Allow GitHub Actions to create and approve pull requests" on (repo
 # Settings, Actions, General).
 name: Database
 
@@ -33,11 +34,10 @@ jobs:
           cache: npm
           cache-dependency-path: addons/package-lock.json
       - run: npm ci
-      - run: npm run database -- --bump
+      - run: npm run database -- --notes
       - run: npm test
       - id: data
         run: |
-          echo "version=$(sed -n 's/^## Version: //p' GuildAssistantDatabase/GuildAssistantDatabase.toc)" >> "$GITHUB_OUTPUT"
           echo "build=$(sed -n 's/^ *build = "\(.*\)",$/\1/p' GuildAssistantDatabase/Data.lua)" >> "$GITHUB_OUTPUT"
       - uses: peter-evans/create-pull-request@v7
         with:
@@ -46,18 +46,16 @@ jobs:
           add-paths: |
             addons/GuildAssistantDatabase/Data.lua
             addons/GuildAssistantDatabase/Found.lua
-            addons/GuildAssistantDatabase/GuildAssistantDatabase.toc
-            addons/GuildAssistantDatabase/CHANGELOG.md
             addons/GuildAssistantProfessions/Recipes.lua
-            addons/GuildAssistantProfessions/GuildAssistantProfessions.toc
-            addons/GuildAssistantProfessions/CHANGELOG.md
-          commit-message: 'GuildAssistant Database ${{ steps.data.outputs.version }}: recipe data (game build ${{ steps.data.outputs.build }}) and what players found'
-          title: 'GuildAssistant Database ${{ steps.data.outputs.version }}: recipe data and what players found'
+            addons/changes/GuildAssistantDatabase
+            addons/changes/GuildAssistantProfessions
+          commit-message: 'GuildAssistant Database: recipe data (game build ${{ steps.data.outputs.build }}) and what players found'
+          title: 'GuildAssistant Database: recipe data (game build ${{ steps.data.outputs.build }}) and what players found'
           body: |
-            The game's data tables for WoW Forever (build ${{ steps.data.outputs.build }}) or what players found of how recipes are obtained changed, so `Data.lua` and `Found.lua` were rebuilt (`npm run database -- --bump`), the addon's version bumped to ${{ steps.data.outputs.version }} with a CHANGELOG line, and the addons' tests run.
+            The game's data tables for WoW Forever (build ${{ steps.data.outputs.build }}) or what players found of how recipes are obtained changed, so `Data.lua` and `Found.lua` were rebuilt (`npm run database -- --notes`), with a change note for each update (`addons/changes/GuildAssistantDatabase/`), and the addons' tests run.
 
             **Review `Found.lua`'s changes before merging**: they come from players' files (vendors, trainers, zones as their game named them).
 
-            When the game's build changed, GuildAssistant Professions' `Recipes.lua` was rebuilt too, with its own patch version.
+            When the game's build changed, GuildAssistant Professions' `Recipes.lua` was rebuilt too, with its own note (`addons/changes/GuildAssistantProfessions/recipe-list.md`).
 
-            To ship it: merge, then from `addons/`: `npm run publish:curseforge -- GuildAssistantDatabase` (and `-- GuildAssistantProfessions` when it changed).
+            No version or CHANGELOG is touched here: to ship it, merge, then from `addons/` (on main): `npm run publish:curseforge -- GuildAssistantDatabase` (and `-- GuildAssistantProfessions` when it changed), which makes the version from the notes and what CurseForge has.

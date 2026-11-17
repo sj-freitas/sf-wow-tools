@@ -7,8 +7,8 @@ GuildAssistantDatabase. `npm install` once, then:
 | ----------------------------------------- | --------------------------------------------------------- |
 | `npm test`                                | Runs the Lua tests (`dev/**/*.spec.lua`) and the scripts' (`scripts/**/*.test.mjs`) |
 | `npm run package`                         | Zips each addon to `dist/<Name>-<version>.zip`            |
-| `npm run publish:curseforge -- Raidsort`  | Packages and uploads to CurseForge (`--beta`, `--alpha`, `--dry-run`) |
-| `npm run database`                        | Builds GuildAssistantDatabase's `Data.lua` (and GuildAssistantProfessions' `Recipes.lua`) from the game's data tables (`--bump`, `--build`) |
+| `npm run publish:curseforge -- Raidsort`  | Releases it on CurseForge: the version from its change notes, then packaged, uploaded, committed and pushed (`--beta`, `--alpha`, `--dry-run`) |
+| `npm run database`                        | Builds GuildAssistantDatabase's `Data.lua` (and GuildAssistantProfessions' `Recipes.lua`) from the game's data tables (`--notes`, `--build`) |
 
 ## Trying an addon in game
 
@@ -43,8 +43,19 @@ CurseForge takes uploads through its API with a token; that's what `publish:curs
    the addon's .toc: `## X-Curse-Project-ID: 123456`.
 2. Create an API token (https://authors.curseforge.com/#/settings/api-tokens) and put it in
    `addons/.env` as `CURSEFORGE_API_TOKEN` (see `.env.example`; `.env` is never committed).
-3. Bump `## Version:` in the .toc, add a section for it to the addon's `CHANGELOG.md`, then
-   `npm run publish:curseforge -- Raidsort --dry-run`, and without `--dry-run` to upload.
+3. Each change adds a **change note**, `changes/<Addon>/<name>.md`, saying how big it is
+   (patch, minor, major) and its CHANGELOG lines ([changes/README.md](changes/README.md)). Nobody
+   edits the version or the CHANGELOG by hand, so changes made side by side don't conflict.
+4. `npm run publish:curseforge -- Raidsort --dry-run` says which version it would release: the
+   newest on CurseForge, bumped by the biggest note. It packs that zip, and writes and uploads
+   nothing. Without `--dry-run`, from main up to date with origin and with the addon committed, it
+   uploads. It then writes the version into the `.toc` and the notes into `CHANGELOG.md`, deletes
+   the notes, and commits and pushes that.
+
+It never uploads a version CurseForge already has (a beta or alpha may become a release of the same
+version). It asks CurseForge's site, which needs no token. If it can't, it stops, unless
+`--no-check`. A `.toc` version above CurseForge's, with its own CHANGELOG section (the way versions
+were bumped before change notes), counts as one more note.
 
 The game versions come from the .toc's `## Interface:` (16001 = 1.60.1). A version CurseForge doesn't
 list yet is left out with a warning; if none is listed, nothing is uploaded.
@@ -80,13 +91,14 @@ window:
 ```sh
 npm run database                         # the latest build; tables kept in addons/.cache
 npm run database -- --build 1.60.1.70888 # a given build
-npm run database -- --bump               # and, for each addon whose files changed, a patch version and CHANGELOG line
+npm run database -- --notes              # and, for each addon whose files changed, a patch change note
 ```
 
 It says what it built per profession, leaves `Data.lua` alone when nothing changed but the date,
 and counts the items the tables lack (named in game). **Every Monday a GitHub Action** (`Database`,
-`.github/workflows/database.yml`) runs it with `--bump`, runs the tests, and opens a pull request
-when the data changed (a new build of the game). Merge it, then publish the new version.
+`.github/workflows/database.yml`) runs it with `--notes`, runs the tests, and opens a pull request
+when the data changed (a new build of the game). It never touches a version or a CHANGELOG, so it
+doesn't conflict with other changes. Merge it, then publish: the upload makes the version.
 
 The game's data doesn't say where recipes drop, who sells them or what trainers charge (the
 servers know that). Two sources add it (the format is in `GuildAssistantDatabase/Core.lua`,

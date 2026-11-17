@@ -41,11 +41,19 @@ function filesOf(dir) {
     .sort();
 }
 
-/** Zips the addon into dist/<Name>-<version>.zip; returns its path and what is in it. */
-export function packageAddon(addon) {
+/**
+ * Zips the addon into dist/<Name>-<version>.zip; returns its path and what is in it. `overrides`
+ * replaces files' contents in the zip, not on disk ({ 'CHANGELOG.md': text }): what an upload is
+ * about to release.
+ */
+export function packageAddon(addon, overrides = {}) {
   const files = filesOf(addon.dir);
   const entries = Object.fromEntries(
-    files.map((path) => [`${addon.name}/${path.split('\\').join('/')}`, readFileSync(join(addon.dir, path))]),
+    files.map((path) => {
+      const name = path.split('\\').join('/');
+      const content = name in overrides ? Buffer.from(overrides[name]) : readFileSync(join(addon.dir, path));
+      return [`${addon.name}/${name}`, content];
+    }),
   );
   mkdirSync(join(root, 'dist'), { recursive: true });
   const path = join(root, 'dist', `${addon.name}-${addon.version}.zip`);
