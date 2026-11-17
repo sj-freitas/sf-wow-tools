@@ -9,10 +9,10 @@
 //   - **Sort the guildmates** by Name, Skill or Profession.
 //
 // Notes are separate files, so changes made side by side never conflict. The upload
-// (publish-curseforge.mjs) gathers them: the version is the highest one already on CurseForge,
-// bumped by the biggest note, and the notes' lines become that version's CHANGELOG section. An
-// older-style bump not uploaded yet (a .toc version above CurseForge's, with its own CHANGELOG
-// section) counts as one more note.
+// (publish-curseforge.mjs) gathers them: the version is the last upload's, bumped by the biggest
+// note, and the notes' lines become that version's CHANGELOG section. The last upload's version is
+// the .toc's, which only an upload writes (and commits): CurseForge's own list can take a while to
+// show a new file, so it's only a check that the .toc isn't behind.
 //
 // Pure functions (and reading the notes), so the upload only does the network and git around them;
 // tested in release.test.mjs.
@@ -71,13 +71,6 @@ export function bumpVersion(version, kind) {
   return `${major}.${minor}.${patch + 1}`;
 }
 
-/** What kind of bump takes `from` to `to` (null when `to` isn't newer). */
-export function kindBetween(from, to) {
-  if (compareVersions(to, from) <= 0) return null;
-  const [a, b] = [parseVersion(from), parseVersion(to)];
-  return a[0] !== b[0] ? 'major' : a[1] !== b[1] ? 'minor' : 'patch';
-}
-
 const biggest = (kinds) => kinds.reduce((a, b) => (KINDS.indexOf(b) > KINDS.indexOf(a) ? b : a));
 
 /**
@@ -108,6 +101,13 @@ export function clashes(files, version, releaseType) {
   );
 }
 
+/**
+ * Whether uploading `version` again as `releaseType` turns a beta or alpha CurseForge lists into
+ * something more final: the only reason to upload a version again.
+ */
+export const promotes = (files, version, releaseType) =>
+  files.some((file) => file.version === version && RELEASE_TYPES[file.releaseType] > RELEASE_TYPES[releaseType]);
+
 /** A CHANGELOG split into its head ("# Title") and its "## <version>" sections, newest first. */
 export function splitChangelog(text) {
   const parts = text.replace(/\r\n/g, '\n').split(/^(?=## )/m);
@@ -122,32 +122,28 @@ export function splitChangelog(text) {
 
 /**
  * What uploading the addon releases:
- * - `released`: the newest version on CurseForge (null for an addon never uploaded);
- * - `tocVersion`: its .toc's;
+ * - `released`: the newest version CurseForge lists (null for an addon never uploaded);
+ * - `tocVersion`: its .toc's, the last upload's (or, before the first, the version it starts at);
  * - `notes`: its change notes;
  * - `changelog`: its CHANGELOG.md's text.
  * Returns the version to upload, its CHANGELOG section (the release notes), the whole new
  * CHANGELOG, and whether anything new goes in it (`fresh`: false is the same version again, which
- * only a beta or alpha becoming a release may be).
+ * only a beta or alpha becoming a release may be, `promotes`).
  */
 export function planRelease({ released, tocVersion, notes, changelog }) {
   if (!parseVersion(tocVersion)) throw new Error(`the .toc's version "${tocVersion}" isn't major.minor.patch`);
   if (released && compareVersions(tocVersion, released) < 0) {
     throw new Error(`the .toc says ${tocVersion}, but CurseForge already has ${released}: this copy is behind (pull main)`);
   }
-  const pending = released ? kindBetween(released, tocVersion) : null;
-  const kinds = [...notes.map((note) => note.bump), ...(pending ? [pending] : [])];
-  const version = !released ? tocVersion : kinds.length > 0 ? bumpVersion(released, biggest(kinds)) : released;
-  const fresh = !released || kinds.length > 0;
+  const first = !released;
+  const fresh = notes.length > 0;
+  const version = !first && fresh ? bumpVersion(tocVersion, biggest(notes.map((note) => note.bump))) : tocVersion;
 
   const { head, sections } = splitChangelog(changelog);
-  // Sections of versions never uploaded (an older-style bump, or the first upload's own) go into
-  // this one.
-  const isPending = (section) =>
-    parseVersion(section.version) &&
-    (released ? compareVersions(section.version, released) > 0 : section.version === version);
-  const folded = sections.filter(isPending);
-  const kept = sections.filter((section) => !isPending(section));
+  // A section already written for this version (the first upload's own) goes into it.
+  const isOwn = (section) => section.version === version;
+  const folded = fresh ? sections.filter(isOwn) : [];
+  const kept = sections.filter((section) => !folded.includes(section));
   const ordered = [...notes].sort((a, b) => KINDS.indexOf(b.bump) - KINDS.indexOf(a.bump) || a.file.localeCompare(b.file));
   const body = [...ordered.map((note) => note.body), ...folded.map((section) => section.body)]
     .filter(Boolean)

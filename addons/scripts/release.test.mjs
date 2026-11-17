@@ -8,10 +8,10 @@ import {
   clashes,
   compareVersions,
   filesFromCurseForge,
-  kindBetween,
   newestVersion,
   parseNote,
   planRelease,
+  promotes,
   readNotes,
   tocWithVersion,
 } from './release.mjs';
@@ -47,14 +47,6 @@ describe('versions', () => {
     assert.equal(bumpVersion('1.9.3', 'major'), '2.0.0');
     assert.ok(compareVersions('1.10.0', '1.9.9') > 0);
     assert.equal(compareVersions('2.2.1', '2.2.1'), 0);
-  });
-
-  it('says what kind of bump one version is from another', () => {
-    assert.equal(kindBetween('1.5.0', '1.5.1'), 'patch');
-    assert.equal(kindBetween('1.5.0', '1.6.0'), 'minor');
-    assert.equal(kindBetween('1.5.3', '2.0.0'), 'major');
-    assert.equal(kindBetween('1.5.0', '1.5.0'), null);
-    assert.equal(kindBetween('1.5.1', '1.5.0'), null);
   });
 
   it('sets the .toc version', () => {
@@ -97,12 +89,20 @@ describe('what CurseForge has', () => {
     assert.deepEqual(clashes(files, '1.1.0', 'alpha').map((f) => f.id), [4]);
     assert.deepEqual(clashes(files, '1.2.0', 'release'), []);
   });
+
+  it('uploads a version again only to make a beta or alpha it lists more final', () => {
+    assert.equal(promotes(files, '1.1.0', 'release'), true);
+    assert.equal(promotes(files, '1.1.0', 'beta'), true);
+    assert.equal(promotes(files, '1.1.0', 'alpha'), false);
+    assert.equal(promotes(files, '1.0.2', 'release'), true);
+    assert.equal(promotes(files, '1.2.0', 'release'), false);
+  });
 });
 
 describe('planning a release', () => {
   const changelog = '# Addon\n\n## 1.9.0\n\n- Sorting.\n\n## 1.8.0\n\n- Filters.\n  Two lines.\n';
 
-  it("bumps CurseForge's newest version by the biggest note, and the notes become its section", () => {
+  it("bumps the last upload's version by the biggest note, and the notes become its section", () => {
     const plan = planRelease({
       released: '1.9.0',
       tocVersion: '1.9.0',
@@ -115,44 +115,20 @@ describe('planning a release', () => {
     assert.equal(plan.changelog, `# Addon\n\n## 1.10.0\n\n- **New** thing.\n- Fixed a thing.\n\n${changelog.slice('# Addon\n\n'.length)}`);
   });
 
-  it('a .toc version not uploaded yet (with its own section) counts as a note, and its section is folded in', () => {
-    const pendingLog = '# Addon\n\n## 1.5.1\n\n- **Fixed** an error.\n\n## 1.5.0\n\n- Specializations.\n';
-    const alone = planRelease({ released: '1.5.0', tocVersion: '1.5.1', notes: [], changelog: pendingLog });
-    assert.equal(alone.version, '1.5.1');
-    assert.equal(alone.section, '## 1.5.1\n\n- **Fixed** an error.');
-    assert.equal(alone.changelog, pendingLog);
+  it("goes by the .toc's version when CurseForge doesn't list the last upload yet", () => {
+    // 1.5.1 uploaded minutes ago: CurseForge still lists 1.5.0 as its newest.
+    const log = '# Addon\n\n## 1.5.1\n\n- **Fixed** an error.\n\n## 1.5.0\n\n- Specializations.\n';
+    const plan = planRelease({ released: '1.5.0', tocVersion: '1.5.1', notes: [note('patch', '- New recipes.')], changelog: log });
+    assert.equal(plan.version, '1.5.2');
+    assert.equal(plan.section, '## 1.5.2\n\n- New recipes.');
+    assert.equal(plan.changelog, `# Addon\n\n## 1.5.2\n\n- New recipes.\n\n${log.slice('# Addon\n\n'.length)}`);
 
-    const withNote = planRelease({
-      released: '1.5.0',
-      tocVersion: '1.5.1',
-      notes: [note('patch', '- New recipes.')],
-      changelog: pendingLog,
-    });
-    assert.equal(withNote.version, '1.5.1');
-    assert.equal(withNote.changelog, '# Addon\n\n## 1.5.1\n\n- New recipes.\n- **Fixed** an error.\n\n## 1.5.0\n\n- Specializations.\n');
-
-    const minorPending = planRelease({
-      released: '1.5.0',
-      tocVersion: '1.6.0',
-      notes: [note('patch', '- New recipes.')],
-      changelog: '# Addon\n\n## 1.6.0\n\n- A feature.\n\n## 1.5.0\n\n- Specializations.\n',
-    });
-    assert.equal(minorPending.version, '1.6.0');
-    assert.equal(minorPending.section, '## 1.6.0\n\n- New recipes.\n- A feature.');
+    const again = planRelease({ released: '1.5.0', tocVersion: '1.5.1', notes: [], changelog: log });
+    assert.equal(again.version, '1.5.1');
+    assert.equal(again.fresh, false);
   });
 
-  it('two older-style bumps never uploaded become one version', () => {
-    const plan = planRelease({
-      released: '1.5.0',
-      tocVersion: '1.5.2',
-      notes: [],
-      changelog: '# Addon\n\n## 1.5.2\n\n- Second.\n\n## 1.5.1\n\n- First.\n\n## 1.5.0\n\n- Old.\n',
-    });
-    assert.equal(plan.version, '1.5.1');
-    assert.equal(plan.changelog, '# Addon\n\n## 1.5.1\n\n- Second.\n- First.\n\n## 1.5.0\n\n- Old.\n');
-  });
-
-  it('with no notes and nothing pending, it is the same version again (only a beta becoming a release)', () => {
+  it('with no notes, it is the same version again (only a beta becoming a release)', () => {
     const plan = planRelease({ released: '1.9.0', tocVersion: '1.9.0', notes: [], changelog });
     assert.equal(plan.version, '1.9.0');
     assert.equal(plan.fresh, false);

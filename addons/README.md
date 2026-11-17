@@ -47,15 +47,16 @@ CurseForge takes uploads through its API with a token; that's what `publish:curs
    (patch, minor, major) and its CHANGELOG lines ([changes/README.md](changes/README.md)). Nobody
    edits the version or the CHANGELOG by hand, so changes made side by side don't conflict.
 4. `npm run publish:curseforge -- Raidsort --dry-run` says which version it would release: the
-   newest on CurseForge, bumped by the biggest note. It packs that zip, and writes and uploads
+   last upload's (the `.toc`'s), bumped by the biggest note. It packs that zip, and writes and uploads
    nothing. Without `--dry-run`, from main up to date with origin and with the addon committed, it
    uploads. It then writes the version into the `.toc` and the notes into `CHANGELOG.md`, deletes
    the notes, and commits and pushes that.
 
-It never uploads a version CurseForge already has (a beta or alpha may become a release of the same
-version). It asks CurseForge's site, which needs no token. If it can't, it stops, unless
-`--no-check`. A `.toc` version above CurseForge's, with its own CHANGELOG section (the way versions
-were bumped before change notes), counts as one more note.
+Without notes there's nothing to upload, except a beta or alpha becoming a release of the same
+version. The `.toc`'s version is the last upload's because only the upload writes it: CurseForge's
+own list can take a while to show a new file. The upload still asks CurseForge's site (no token
+needed), and never uploads a version it lists, nor from a `.toc` behind it. If it can't ask, it
+stops, unless `--no-check`.
 
 The game versions come from the .toc's `## Interface:` (16001 = 1.60.1). A version CurseForge doesn't
 list yet is left out with a warning; if none is listed, nothing is uploaded.

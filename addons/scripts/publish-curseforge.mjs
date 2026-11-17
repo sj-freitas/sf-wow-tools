@@ -9,11 +9,12 @@
 //   npm run publish:curseforge -- Raidsort --dry-run  say what it would release and pack it; nothing
 //                                                     uploaded or written
 //
-// The version is decided here, from what CurseForge already has and the addon's change notes
-// (addons/changes/<Name>/*.md; release.mjs explains them): the newest version on CurseForge, bumped
-// by the biggest note, the notes' lines being its CHANGELOG section and its release notes. It never
-// uploads a version CurseForge already has (a beta or alpha may become a release of the same
-// version). Asking CurseForge needs no token (its site's API); when it can't be reached, an upload
+// The version is decided here, from the addon's change notes (addons/changes/<Name>/*.md;
+// release.mjs explains them): the last upload's version (the .toc's, written by each upload), bumped
+// by the biggest note, the notes' lines being its CHANGELOG section and its release notes. Without
+// notes there's nothing to upload, but for a beta or alpha becoming a release of the same version.
+// It also asks CurseForge which versions it has, and never uploads one of them again, nor from a
+// .toc behind them. Asking needs no token (its site's API); when it can't be reached, an upload
 // stops, unless --no-check.
 //
 // An upload runs from main, up to date with origin and with the addon's files committed. Once
@@ -26,7 +27,16 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import { findAddons, interfaceToVersion, packageAddon, root } from './addons.mjs';
-import { clashes, filesFromCurseForge, newestVersion, planRelease, readNotes, tocWithVersion } from './release.mjs';
+import {
+  clashes,
+  compareVersions,
+  filesFromCurseForge,
+  newestVersion,
+  planRelease,
+  promotes,
+  readNotes,
+  tocWithVersion,
+} from './release.mjs';
 
 const API = 'https://wow.curseforge.com/api';
 const SITE_API = 'https://www.curseforge.com/api/v1';
@@ -111,16 +121,24 @@ try {
   fail(`${addon.name}: ${error.message}`);
 }
 
-const pending = released && addon.version !== released ? `, the .toc's ${addon.version} not uploaded yet` : '';
+// A file just uploaded can take a while to show in CurseForge's list; the .toc already says it.
+const unlisted =
+  released && compareVersions(addon.version, released) > 0 ? ` (it doesn't list the .toc's ${addon.version} yet)` : '';
 console.log(
-  `${addon.name}: ${released ? `${released} on CurseForge` : 'nothing on CurseForge yet'}, ` +
-    `${notes.length} change note(s)${notes.length ? ` (${notes.map((note) => note.bump).join(', ')})` : ''}${pending} -> ${plan.version}`,
+  `${addon.name}: ${released ? `${released} on CurseForge${unlisted}` : 'nothing on CurseForge yet'}, ` +
+    `${notes.length} change note(s)${notes.length ? ` (${notes.map((note) => note.bump).join(', ')})` : ''} -> ${plan.version}`,
 );
 const repeated = files ? clashes(files, plan.version, releaseType) : [];
 if (repeated.length > 0) {
   const which = repeated.map((file) => `file ${file.id}, ${file.releaseType}`).join('; ');
   fail(
     `${addon.name} ${plan.version} is already on CurseForge (${which}): nothing new to release. ` +
+      `A change adds a note in addons/changes/${addon.name}/ (see scripts/release.mjs).`,
+  );
+}
+if (!plan.fresh && released && !promotes(files ?? [], plan.version, releaseType)) {
+  fail(
+    `${addon.name} has no change notes: nothing new since ${plan.version}, its last upload. ` +
       `A change adds a note in addons/changes/${addon.name}/ (see scripts/release.mjs).`,
   );
 }

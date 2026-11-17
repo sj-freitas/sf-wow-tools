@@ -20,7 +20,7 @@ bump: minor
   More for the same change goes in its own file. Fixing a change that isn't uploaded yet edits its
   note.
 
-`npm run publish:curseforge -- <Addon>` gathers them. The version is the newest one on CurseForge,
+`npm run publish:curseforge -- <Addon>` gathers them. The version is the last upload's (the `.toc`'s),
 bumped by the biggest note, and the notes become its CHANGELOG section and release notes. Once the
 upload works, it sets the `.toc`, writes the CHANGELOG, deletes the notes, and commits and pushes
 that. `--dry-run` says which version it would be, and packs it. How it works:

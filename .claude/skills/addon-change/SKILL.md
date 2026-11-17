@@ -49,8 +49,9 @@ CurseForge project and its id is in the `.toc`.
    - One note per change (task). More for the same change, or a fix to it before it's uploaded,
      edits its note. A fix to something players never got isn't a change for them.
 
-   The upload works out the version: the newest one on CurseForge, bumped by the biggest note. So
-   "is this version released yet?" is never a question to answer from memory or a task's text.
+   The upload works out the version: the last upload's (the `.toc`'s, which only the upload writes),
+   bumped by the biggest note, and it checks CurseForge never has it already. So "is this version
+   released yet?" is never a question to answer from memory or a task's text.
 
 3. **The `.toc` `## Notes:`** (the one-line description shown in game and shipped with every
    upload): update it if what the addon does changed.

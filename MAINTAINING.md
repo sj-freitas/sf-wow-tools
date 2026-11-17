@@ -51,8 +51,8 @@ The full steps are in `.claude/skills/addon-change`; in short:
    CHANGELOG by hand: the upload makes both from the notes. Several sessions change the addons at
    once, and those two lines are where they'd collide.
 3. The addon's README, and the `.toc`'s Notes when what it does changed.
-4. `npm run publish:curseforge -- <Addon> --dry-run` says the version the notes make (from what
-   CurseForge has) and packs `addons/dist/<Addon>-<version>.zip`.
+4. `npm run publish:curseforge -- <Addon> --dry-run` says the version the notes make (from the
+   last upload's, which the `.toc` holds) and packs `addons/dist/<Addon>-<version>.zip`.
 5. Into the game to try it: unzip it into
    `~/Applications/World of Warcraft/_forever_/Interface/AddOns` (`unzip -oq` the zip there).
    `/reload` when only files changed; restart the game when one was added.
