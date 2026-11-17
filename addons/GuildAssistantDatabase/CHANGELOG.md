@@ -1,5 +1,10 @@
 # GuildAssistant Database
 
+## 1.9.1
+
+- Recipe data from the game's build 1.60.1.70938.
+- What players found of how recipes are obtained, up to date.
+
 ## 1.9.0
 
 - **The Guild tab's guildmates sort too**: **Name**, **Skill** and **Profession** above the list
