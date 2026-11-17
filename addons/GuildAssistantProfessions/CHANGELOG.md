@@ -1,5 +1,9 @@
 # GuildAssistant Professions
 
+## 1.5.2
+
+- The recipes it checks at login, from the game's build 1.60.1.70938.
+
 ## 1.5.1
 
 - **Fixed** on WoW Forever: an error ("attempt to compare a secret string value", Sources.lua) when
