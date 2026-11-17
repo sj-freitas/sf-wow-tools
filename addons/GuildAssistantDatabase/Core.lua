@@ -434,20 +434,52 @@ function Core.countByProfession(recipes)
     return counts
 end
 
--- The order the list is in -------------------------------------------------------------------------
--- The list is sorted by the two numbers it shows: the skill a recipe takes to learn and the level
--- its item requires. An order is those columns, the first the one it's sorted by and the next
--- breaking its ties ("by level, and recipes of the same level by skill"), each lowest or highest
--- first. The window draws that order as a chevron beside each column's title.
+-- The order a list is in ---------------------------------------------------------------------------
+-- Two lists are sorted by the titles above them: the recipes (Skill and Level) and the Guild tab's
+-- guildmates (Name, Skill and Profession). An order is those columns, the first the one the list is
+-- sorted by and the next breaking its ties ("by level, and recipes of the same level by skill"),
+-- each lowest or highest first (a name: A to Z or Z to A). The window draws that order as a chevron
+-- beside each column's title.
+
+--- How a column reads sorted each way: in the words of what the list is sorted by, and in what a
+--- click on its title would do. Numbers go lowest or highest first, names and professions A to Z.
+local NUMBER_WAYS = {
+    ascending = { sorted = "lowest first", click = "Click to list the lowest first." },
+    descending = { sorted = "highest first", click = "Click to list the highest first." },
+}
+local LETTER_WAYS = {
+    ascending = { sorted = "A to Z", click = "Click to list them A to Z." },
+    descending = { sorted = "Z to A", click = "Click to list them Z to A." },
+}
 
 Core.SORT_COLUMNS = { "skill", "level" }
 
---- Each column: its title above the list, how it's said in words, and the number it sorts by (an
---- item that needs no level counts as level 1, as the Level boxes count it).
+--- Each column of the recipes: its title above the list, how it's said in words, and the number it
+--- sorts by (an item that needs no level counts as level 1, as the Level boxes count it).
 Core.COLUMNS = {
-    skill = { title = "Skill", words = "skill", value = function(recipe) return recipe.skill or 0 end },
-    level = { title = "Level", words = "level", value = function(recipe) return math.max(recipe.level or 0, 1) end },
+    skill = { title = "Skill", words = "skill", ways = NUMBER_WAYS,
+        value = function(recipe) return recipe.skill or 0 end },
+    level = { title = "Level", words = "level", ways = NUMBER_WAYS,
+        value = function(recipe) return math.max(recipe.level or 0, 1) end },
 }
+
+--- Each column of the Guild tab's guildmates: the character's name (the class colour and "(you)"
+--- left out of it), their skill in the profession, and the profession itself (its specialization
+--- left out, so one profession's rows stay together whichever way the list is sorted).
+Core.MEMBER_SORT_COLUMNS = { "name", "skill", "profession" }
+Core.MEMBER_COLUMNS = {
+    name = { title = "Name", words = "name", ways = LETTER_WAYS,
+        value = function(member) return member.name or "" end },
+    skill = { title = "Skill", words = "skill", ways = NUMBER_WAYS,
+        value = function(member) return member.rank or 0 end },
+    profession = { title = "Profession", words = "profession", ways = LETTER_WAYS,
+        value = function(member) return member.profession or "" end },
+}
+
+--- A sortable list: the columns its titles sort by, and the order a click picks up the ones it
+--- isn't on. The recipes' is what the functions below take unless another is given.
+Core.RECIPE_LIST = { columns = Core.COLUMNS, sortable = Core.SORT_COLUMNS }
+Core.MEMBER_LIST = { columns = Core.MEMBER_COLUMNS, sortable = Core.MEMBER_SORT_COLUMNS }
 
 --- The order a list is in while no column has been clicked: by skill while you're only looking at a
 --- profession (the ladder its recipes read as, as it has always been), and by level, ties by skill,
@@ -455,28 +487,53 @@ Core.COLUMNS = {
 Core.BROWSE_ORDER = { { column = "skill" } }
 Core.MATCHED_ORDER = { { column = "level" }, { column = "skill" } }
 
+--- The guildmates' order while no column has been clicked: by profession, and each profession's
+--- highest skill first, as the Guild tab has always listed them.
+Core.MEMBER_ORDER = { { column = "profession" }, { column = "skill", descending = true } }
+
 --- The order a list comes in with no column clicked, `matched` saying whether a search, a limit or
 --- a filter has narrowed it down.
 function Core.defaultOrder(matched)
     return matched and Core.MATCHED_ORDER or Core.BROWSE_ORDER
 end
 
+--- Which of `a` and `b` `order` puts first (`columns`: the list's), or nil when every column it
+--- uses finds them the same.
+local function compare(a, b, order, columns)
+    for _, by in ipairs(order) do
+        local column = columns[by.column]
+        if column then
+            local va, vb = column.value(a), column.value(b)
+            if va ~= vb then
+                if by.descending then return va > vb end
+                return va < vb
+            end
+        end
+    end
+    return nil
+end
+
 --- Whether `a` comes before `b` in `order`, ties falling through to the recipe's name, profession
 --- and id, so the same list always comes out the same way.
 local function before(a, b, order)
-    for _, by in ipairs(order) do
-        local value = Core.COLUMNS[by.column].value
-        local va, vb = value(a), value(b)
-        if va ~= vb then
-            if by.descending then return va > vb end
-            return va < vb
-        end
-    end
+    local first = compare(a, b, order or Core.BROWSE_ORDER, Core.COLUMNS)
+    if first ~= nil then return first end
     if a.name ~= b.name then return a.name < b.name end
     if a.profession ~= b.profession then return a.profession < b.profession end
     return a.id < b.id
 end
 Core.before = before
+
+--- Whether guildmate `a` comes before `b` in `order`, ties falling through to the name, the realm
+--- and the profession (one character has a row per profession).
+local function beforeMember(a, b, order)
+    local first = compare(a, b, order or Core.MEMBER_ORDER, Core.MEMBER_COLUMNS)
+    if first ~= nil then return first end
+    if a.name ~= b.name then return a.name < b.name end
+    if (a.realm or "") ~= (b.realm or "") then return (a.realm or "") < (b.realm or "") end
+    return a.profession < b.profession
+end
+Core.beforeMember = beforeMember
 
 --- `recipes` in `order`: a new list, the one given left as it is.
 function Core.sortRecipes(recipes, order)
@@ -486,21 +543,31 @@ function Core.sortRecipes(recipes, order)
     return sorted
 end
 
---- The order after a click on `column`'s title: the column clicked is the one the list is sorted
---- by, the other left behind it to break its ties; clicking the one it's already sorted by turns
---- that column around (lowest first <-> highest first). Both columns are in the order a click
---- leaves, so the two are compounded from the first click on.
-function Core.toggleOrder(order, column)
+--- `members` (the Guild tab's rows) in `order`: a new list, the one given left as it is.
+function Core.sortMembers(members, order)
+    local sorted = {}
+    for i, member in ipairs(members) do sorted[i] = member end
+    table.sort(sorted, function(a, b) return beforeMember(a, b, order or Core.MEMBER_ORDER) end)
+    return sorted
+end
+
+--- The order after a click on `column`'s title (`list`: the one it sorts, the recipes' by
+--- default): the column clicked is the one the list is sorted by, the others left behind it to
+--- break its ties; clicking the one it's already sorted by turns that column around (lowest first
+--- <-> highest first). Every column is in the order a click leaves, so they compound from the
+--- first click on.
+function Core.toggleOrder(order, column, list)
+    local set = list or Core.RECIPE_LIST
     local columns, seen = {}, {}
     for _, by in ipairs(order or {}) do
-        if not seen[by.column] and Core.COLUMNS[by.column] then
+        if not seen[by.column] and set.columns[by.column] then
             columns[#columns + 1] = { column = by.column, descending = by.descending or false }
             seen[by.column] = true
         end
     end
     -- A column the order didn't use is picked up lowest first, not turned around.
     local sorting = seen[column]
-    for _, name in ipairs(Core.SORT_COLUMNS) do
+    for _, name in ipairs(set.sortable) do
         if not seen[name] then columns[#columns + 1] = { column = name, descending = false } end
     end
     for i, by in ipairs(columns) do
@@ -527,13 +594,29 @@ end
 
 --- What a list in `order` is sorted by, in words: "Sorted by level, lowest first, then by skill,
 --- highest first." Nil for no order at all.
-function Core.orderWords(order)
+function Core.orderWords(order, list)
+    local set = list or Core.RECIPE_LIST
     local parts = {}
     for _, by in ipairs(order or {}) do
-        parts[#parts + 1] = ("%s, %s first"):format(Core.COLUMNS[by.column].words, by.descending and "highest" or "lowest")
+        local column = set.columns[by.column]
+        if column then
+            local way = column.ways[by.descending and "descending" or "ascending"]
+            parts[#parts + 1] = ("%s, %s"):format(column.words, way.sorted)
+        end
     end
     if #parts == 0 then return nil end
     return "Sorted by " .. table.concat(parts, ", then by ") .. "."
+end
+
+--- What a click on `column`'s title would do, in words: turn it around while the list is sorted by
+--- it ("Click to list the highest first.", a name's "Click to list them Z to A."), else sort the
+--- list by it.
+function Core.clickWords(order, column, list)
+    local set = list or Core.RECIPE_LIST
+    local direction, sorting = Core.orderOf(order, column)
+    if not sorting or not set.columns[column] then return "Click to sort the list by it." end
+    local ways = set.columns[column].ways
+    return ways[direction == "ascending" and "descending" or "ascending"].click
 end
 
 --- The recipes of `professions` (loaded ones) that match `query`, best first: those whose own
@@ -827,24 +910,19 @@ function Core.guildMembers(db, guild, entries, you)
             end
         end
     end
-    table.sort(members, function(a, b)
-        if a.profession ~= b.profession then return a.profession < b.profession end
-        if a.rank ~= b.rank then return a.rank > b.rank end
-        if a.name ~= b.name then return a.name < b.name end
-        return (a.realm or "") < (b.realm or "")
-    end)
-    return members
+    return Core.sortMembers(members, Core.MEMBER_ORDER)
 end
 
---- The members whose text has every term (Core.terms), and of `profession` when given.
-function Core.findMembers(members, terms, profession)
+--- The members whose text has every term (Core.terms), and of `profession` when given, in `order`
+--- (the column clicked above the list) or, with none, the order the tab lists them in.
+function Core.findMembers(members, terms, profession, order)
     local found = {}
     for _, member in ipairs(members) do
         if (not profession or member.profession == profession) and hasAll(member.search, terms or {}) then
             found[#found + 1] = member
         end
     end
-    return found
+    return Core.sortMembers(found, order)
 end
 
 --- What a member can make: the recipes of `loaded` (its profession, read) that `record` (their saved

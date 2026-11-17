@@ -1465,6 +1465,91 @@ it("sorts a guildmate's recipes the same way, the titles only above a list of re
     eq(chevron(parts.columnLevel), "none")
 end)
 
+-- A Guild tab title, by the column it sorts.
+local function memberHeader(parts, column)
+    for _, header in ipairs(parts.memberHeaders) do
+        if header.column == column then return header end
+    end
+end
+
+local BY_PROFESSION = "Ana 300 Blacksmithing - Weaponsmith | Kael 300 Blacksmithing - Master Swordsmith"
+    .. " | Luna (you) 120 Blacksmithing | Di (alt) Enchanting | Kael 225 Herbalism"
+
+it("sorts the guildmates by Name, Skill or Profession, with the same chevrons", function()
+    local ns = loadAddon({ professionsAddon = true, guild = "Test Guild" })
+    guildWithSpecializations()
+    SlashCmdList.GADB("")
+    local parts = ns.UI.parts()
+    parts.tabs[2]:Click()
+    local name, skill, profession = memberHeader(parts, "name"), memberHeader(parts, "skill"),
+        memberHeader(parts, "profession")
+    eq(name.title:GetText(), "Name"); eq(skill.title:GetText(), "Skill")
+    eq(profession.title:GetText(), "Profession")
+    -- As the tab has always listed them: by profession, each profession's highest skill first.
+    eq(chevron(profession), "up gold"); eq(chevron(skill), "down grey"); eq(chevron(name), "none")
+    eq(memberRows(ns), BY_PROFESSION)
+    -- By name, A to Z: one character's rows (Kael's two professions) stay together.
+    name:Click()
+    eq(chevron(name), "up gold"); eq(chevron(profession), "up grey"); eq(chevron(skill), "down grey")
+    eq(memberRows(ns), "Ana 300 Blacksmithing - Weaponsmith | Di (alt) Enchanting"
+        .. " | Kael 300 Blacksmithing - Master Swordsmith | Kael 225 Herbalism | Luna (you) 120 Blacksmithing")
+    eq(GameTooltip.lines[1], "Name", "the tooltip says so after the click")
+    eq(GameTooltip.lines[2], "The guildmate's name, your own characters in the guild among them.")
+    eq(GameTooltip.lines[3], "Sorted by name, A to Z, then by profession, A to Z, then by skill, highest first.")
+    eq(GameTooltip.lines[4], "Click to list them Z to A.")
+    -- And again, Z to A.
+    name:Click()
+    eq(chevron(name), "down gold")
+    eq(memberRows(ns), "Luna (you) 120 Blacksmithing | Kael 300 Blacksmithing - Master Swordsmith"
+        .. " | Kael 225 Herbalism | Di (alt) Enchanting | Ana 300 Blacksmithing - Weaponsmith")
+    -- Reset puts the order back, and Skill lists the highest first (Di's Enchanting has none).
+    parts.resetButton:Click()
+    eq(chevron(profession), "up gold"); eq(chevron(name), "none")
+    eq(memberRows(ns), BY_PROFESSION)
+    skill:Click()
+    eq(chevron(skill), "down gold"); eq(chevron(profession), "up grey"); eq(chevron(name), "up grey")
+    eq(memberRows(ns), "Ana 300 Blacksmithing - Weaponsmith | Kael 300 Blacksmithing - Master Swordsmith"
+        .. " | Kael 225 Herbalism | Luna (you) 120 Blacksmithing | Di (alt) Enchanting")
+    skill:Fire("OnEnter")
+    eq(GameTooltip.lines[2], "Their skill in the profession.")
+    eq(GameTooltip.lines[4], "Click to list the lowest first.")
+    skill:Click()
+    eq(memberRows(ns), "Di (alt) Enchanting | Luna (you) 120 Blacksmithing | Kael 225 Herbalism"
+        .. " | Ana 300 Blacksmithing - Weaponsmith | Kael 300 Blacksmithing - Master Swordsmith")
+    -- Profession again, the skill it left behind now lowest first.
+    profession:Click()
+    eq(chevron(profession), "up gold"); eq(chevron(skill), "up grey")
+    eq(memberRows(ns), "Luna (you) 120 Blacksmithing | Ana 300 Blacksmithing - Weaponsmith"
+        .. " | Kael 300 Blacksmithing - Master Swordsmith | Di (alt) Enchanting | Kael 225 Herbalism")
+end)
+
+it("keeps the guildmates' order through a search, a guildmate and the other tab", function()
+    local ns = loadAddon({ professionsAddon = true, guild = "Test Guild" })
+    guildWithSpecializations()
+    SlashCmdList.GADB("")
+    local parts = ns.UI.parts()
+    parts.tabs[2]:Click()
+    memberHeader(parts, "name"):Click()
+    parts.searchBox:SetText("blacksmithing")
+    eq(memberRows(ns), "Ana 300 Blacksmithing - Weaponsmith | Kael 300 Blacksmithing - Master Swordsmith"
+        .. " | Luna (you) 120 Blacksmithing", "what matched, by name")
+    eq(parts.state.offset, 0)
+    -- A guildmate's recipes have Skill and Level above them instead; Back, and the names again.
+    parts.memberRows[1]:Click()
+    for _, header in ipairs(parts.memberHeaders) do eq(header:IsShown(), false, "the guildmates' titles") end
+    eq(parts.columnSkill:IsShown(), true)
+    parts.backButton:Click()
+    eq(memberHeader(parts, "name"):IsShown(), true); eq(parts.columnSkill:IsShown(), false)
+    eq(chevron(memberHeader(parts, "name")), "up gold", "kept")
+    -- And kept while Recipes is shown.
+    parts.tabs[1]:Click()
+    eq(memberHeader(parts, "name"):IsShown(), false)
+    parts.tabs[2]:Click()
+    eq(chevron(memberHeader(parts, "name")), "up gold")
+    eq(memberRows(ns), "Ana 300 Blacksmithing - Weaponsmith | Kael 300 Blacksmithing - Master Swordsmith"
+        .. " | Luna (you) 120 Blacksmithing")
+end)
+
 it("switches to Recipes for a search from /gadb or a shift-click, and says when you're in no guild", function()
     local ns = loadAddon({ professionsAddon = true })
     SlashCmdList.GADB("")

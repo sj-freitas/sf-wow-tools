@@ -95,6 +95,13 @@ recipes), a recipe for its details as in Recipes, and **Back** to return to the 
 left them. What a guildmate can make is sorted by Skill and Level as Recipes' list is. Each tab
 keeps its own search.
 
+**Name**, **Skill** and **Profession**, above the guildmates, sort them as Skill and Level sort the
+recipes: click one for its order, click the one it's sorted by to turn it around, and the chevron
+beside each says how (gold on the column the list is sorted by, grey on the ones breaking its ties;
+names and professions A to Z, skill lowest or highest first). Hovering a title says what it is and
+what a click does. Without a click they come by profession, each profession's highest skill first,
+and **Reset** puts that order back.
+
 A specialization comes from GuildAssistant Professions 1.5.0, which records it as a spell the
 character knows; for what older versions recorded, from the recipes they know that need one. The
 level and skill limits, the Filter and Not known yet are Recipes' only.

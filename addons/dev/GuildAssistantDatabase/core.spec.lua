@@ -464,6 +464,62 @@ it("reads a profession's specializations, and which a character has: the spell, 
     eq(#shown, 0, "a profession without recipes, nothing saved")
 end)
 
+-- A Guild tab row, as Core.guildMembers makes it (what sorting one needs of it).
+local function memberRow(name, profession, rank, realm)
+    return { name = name, realm = realm or "RP", profession = profession, rank = rank }
+end
+
+local function memberLine(list)
+    local out = {}
+    for i, member in ipairs(list) do out[i] = ("%s %d %s"):format(member.name, member.rank, member.profession) end
+    return table.concat(out, " | ")
+end
+
+it("sorts the guildmates by name, skill or profession, the other columns breaking the ties", function()
+    local members = {
+        memberRow("Luna", "Blacksmithing", 120), memberRow("Ana", "Blacksmithing", 300),
+        memberRow("Ana", "Herbalism", 225), memberRow("Bo", "Blacksmithing", 300),
+    }
+    -- No column clicked: by profession, each profession's highest skill first, as the tab has
+    -- always listed them.
+    eq(memberLine(Core.sortMembers(members)),
+        "Ana 300 Blacksmithing | Bo 300 Blacksmithing | Luna 120 Blacksmithing | Ana 225 Herbalism")
+    eq(members[1].name, "Luna", "the list given is left as it is")
+    -- Name: A to Z, one character's rows by profession, and the other columns still behind it.
+    local byName = Core.toggleOrder(Core.MEMBER_ORDER, "name", Core.MEMBER_LIST)
+    eq(#byName, 3); eq(byName[1].column, "name"); eq(byName[1].descending, false)
+    eq(Core.MEMBER_ORDER[1].column, "profession", "the order given is left as it was")
+    eq(memberLine(Core.sortMembers(members, byName)),
+        "Ana 300 Blacksmithing | Ana 225 Herbalism | Bo 300 Blacksmithing | Luna 120 Blacksmithing")
+    eq(Core.orderWords(byName, Core.MEMBER_LIST),
+        "Sorted by name, A to Z, then by profession, A to Z, then by skill, highest first.")
+    eq(Core.clickWords(byName, "name", Core.MEMBER_LIST), "Click to list them Z to A.")
+    eq(Core.clickWords(byName, "skill", Core.MEMBER_LIST), "Click to sort the list by it.")
+    -- Z to A, the names the same way, their professions still A to Z.
+    local backwards = Core.toggleOrder(byName, "name", Core.MEMBER_LIST)
+    eq(memberLine(Core.sortMembers(members, backwards)),
+        "Luna 120 Blacksmithing | Bo 300 Blacksmithing | Ana 300 Blacksmithing | Ana 225 Herbalism")
+    eq(Core.orderWords(backwards, Core.MEMBER_LIST),
+        "Sorted by name, Z to A, then by profession, A to Z, then by skill, highest first.")
+    -- Skill: the highest first, as the tab lists a profession's; clicked again, the lowest.
+    local bySkill = Core.toggleOrder(Core.MEMBER_ORDER, "skill", Core.MEMBER_LIST)
+    eq(memberLine(Core.sortMembers(members, bySkill)),
+        "Ana 300 Blacksmithing | Bo 300 Blacksmithing | Ana 225 Herbalism | Luna 120 Blacksmithing")
+    eq(Core.orderWords(bySkill, Core.MEMBER_LIST),
+        "Sorted by skill, highest first, then by profession, A to Z, then by name, A to Z.")
+    eq(Core.clickWords(bySkill, "skill", Core.MEMBER_LIST), "Click to list the lowest first.")
+    eq(memberLine(Core.sortMembers(members, Core.toggleOrder(bySkill, "skill", Core.MEMBER_LIST))),
+        "Luna 120 Blacksmithing | Ana 225 Herbalism | Ana 300 Blacksmithing | Bo 300 Blacksmithing")
+    -- Profession: clicking the one it's sorted by turns it around, the skill still highest first.
+    local byProfession = Core.toggleOrder(Core.MEMBER_ORDER, "profession", Core.MEMBER_LIST)
+    eq(memberLine(Core.sortMembers(members, byProfession)),
+        "Ana 225 Herbalism | Ana 300 Blacksmithing | Bo 300 Blacksmithing | Luna 120 Blacksmithing")
+    -- The search keeps whatever order it's in.
+    local found = Core.findMembers(
+        { memberRow("Luna", "Blacksmithing", 120), memberRow("Ana", "Blacksmithing", 300) }, {}, nil, byName)
+    eq(memberLine(found), "Ana 300 Blacksmithing | Luna 120 Blacksmithing")
+end)
+
 it("writes a profession with its specializations, without saying the profession twice", function()
     eq(Core.professionLine({ profession = "Blacksmithing", shown = { "Weaponsmith" } }), "Blacksmithing - Weaponsmith")
     eq(Core.professionLine({ profession = "Leatherworking", shown = { "Dragonscale Leatherworking" } }), "Leatherworking - Dragonscale")

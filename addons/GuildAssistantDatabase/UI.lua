@@ -9,8 +9,9 @@
 --
 -- With GuildAssistant Professions, two tabs under the window: Recipes (the above) and Guild: the
 -- professions on the left with how many guildmates have each, the guildmates in the middle ("Shivan
--- Darkwhisp  190  Blacksmithing - Weaponsmith"), and a click on one lists what they can make, whose
--- details show as Recipes' do. The search box searches whichever is listed.
+-- Darkwhisp  190  Blacksmithing - Weaponsmith"), sorted by the Name, Skill and Profession titles
+-- above them as Recipes' list is sorted by Skill and Level, and a click on one lists what they can
+-- make, whose details show as Recipes' do. The search box searches whichever is listed.
 
 local _, ns = ...
 local Core, Game = ns.Core, ns.Game
@@ -24,7 +25,9 @@ local SIDEBAR_WIDTH, LIST_WIDTH = 168, 372
 local STATUS_WIDTH = WIDTH - 32 - 80
 local ROW_HEIGHT, ROWS = 22, 18
 -- The Guild tab's rows: the name, the skill (right-aligned, ending here), the profession from here.
-local MEMBER_SKILL_RIGHT, MEMBER_PROFESSION_LEFT = 166, 176
+-- The name takes what a long one needs ("Shivan Darkwhisp (you)"), and the gap between the two
+-- holds the Skill title's chevron.
+local MEMBER_SKILL_RIGHT, MEMBER_PROFESSION_LEFT = 186, 200
 local SIDEBAR_ROWS = 14
 local MAX_REAGENTS, MAX_RECIPE_ITEMS, MAX_CRAFTERS = 8, 3, 15
 local QUESTION_MARK = "Interface\\Icons\\INV_Misc_QuestionMark"
@@ -39,13 +42,14 @@ local frame
 local searchBox, placeholder, clearButton, minLevelBox, maxLevelBox, minSkillBox, maxSkillBox, unknownCheck, resetButton
 local filterButton, filterPopup, filterChecks
 local sidebarButtons, rows, slider, statusText, statusHover, versionText, columnSkill, columnLevel
--- The Skill and Level titles above the list, which sort it: each with the chevron saying how.
-local sortHeaders
+-- The titles that sort the list they're above, each with the chevron saying how: the recipes' Skill
+-- and Level, and the Guild tab's Name, Skill and Profession.
+local sortHeaders, memberHeaders
 local details
 -- The tabs, what only Recipes shows (the limits, the Filter, Not known yet), and the Guild tab's own:
--- the guildmates' rows, their column titles, and the line above the list (Back, whose recipes).
-local tabs, recipeControls, recipeColumns, memberRows, memberColumns, backButton, crumb
-local GUILD_HINT = "Click a guildmate to see what they can make.\n\nYour guildmates who use GuildAssistant Professions, each profession with its skill and specialization. Search by name, profession or specialization (weaponsmith)."
+-- the guildmates' rows and the line above the list (Back, whose recipes).
+local tabs, recipeControls, recipeColumns, memberRows, backButton, crumb
+local GUILD_HINT = "Click a guildmate to see what they can make.\n\nYour guildmates who use GuildAssistant Professions, each profession with its skill and specialization. Search by name, profession or specialization (weaponsmith), and click Name, Skill or Profession above the list to sort it."
 local RECIPE_HINT = "Pick a recipe to see its reagents, how to learn it and who can craft it.\n\nShift-click a recipe to link it in the chat, or the item at the top of its details for the item's link; ctrl-click to try it on. Click a name under Who can craft it to whisper them.\n\nShift-click an item anywhere (your bags, a link in the chat) with the chat box closed to search for it."
 
 local state = {
@@ -65,6 +69,9 @@ local state = {
     -- The columns clicked above the list (Core.toggleOrder), empty until one is; and the order the
     -- list is in now, those columns or, with none, the order it comes in (Core.defaultOrder).
     order = {}, listOrder = Core.BROWSE_ORDER,
+    -- The same for the Guild tab's guildmates (Name, Skill and Profession): the columns clicked,
+    -- and the order they're in now (Core.MEMBER_ORDER until one is).
+    memberOrder = {}, memberListOrder = Core.MEMBER_ORDER,
     -- The Guild tab: every guildmate row (Core.guildMembers), those listed, the one whose recipes are
     -- listed instead (nil: the guildmates are), and what to go back to (the search, the place).
     allMembers = {}, members = {}, member = nil, back = nil,
@@ -391,32 +398,28 @@ local function drawRecipeRows()
     if maxOffset > 0 then slider:Show() else slider:Hide() end
 end
 
--- What hovering a column's title says: what its number is, how the list is sorted now, and what a
--- click does.
-local COLUMN_HINTS = {
-    skill = "The profession skill it takes to learn the recipe.",
-    level = "The level the item it makes requires.",
-}
+--- The order the list a title sorts is in now: the guildmates' for the Guild tab's titles, the
+--- recipes' for Skill and Level.
+local function headerOrder(header)
+    return header.list == Core.MEMBER_LIST and state.memberListOrder or state.listOrder
+end
 
+-- What hovering a column's title says: what it is (its own hint), how the list is sorted now, and
+-- what a click does.
 local function showSortTooltip(header)
-    local direction, sorting = Core.orderOf(state.listOrder, header.column)
-    local lines = { COLUMN_HINTS[header.column] }
-    local words = Core.orderWords(state.listOrder)
+    local order = headerOrder(header)
+    local lines = { header.hint }
+    local words = Core.orderWords(order, header.list)
     if words then lines[#lines + 1] = words end
-    if sorting then
-        lines[#lines + 1] = direction == "ascending" and "Click to list the highest first."
-            or "Click to list the lowest first."
-    else
-        lines[#lines + 1] = "Click to sort the list by it."
-    end
+    lines[#lines + 1] = Core.clickWords(order, header.column, header.list)
     Game.showTextTooltip(header, header.title:GetText(), lines)
 end
 
---- The chevron beside Skill and Level: how the list is sorted. The column it's sorted by in gold,
---- the one breaking its ties in grey, and none on a column the order doesn't use.
-local function drawSortHeaders()
-    for _, header in ipairs(sortHeaders or {}) do
-        local direction, sorting = Core.orderOf(state.listOrder, header.column)
+--- The chevron beside each of `headers`: how their list is sorted. The column it's sorted by in
+--- gold, the one breaking its ties in grey, and none on a column the order doesn't use.
+local function drawSortHeaders(headers)
+    for _, header in ipairs(headers or {}) do
+        local direction, sorting = Core.orderOf(headerOrder(header), header.column)
         if direction then
             local chevron = direction == "ascending" and CHEVRON_UP or CHEVRON_DOWN
             header.chevron:SetTexCoord(chevron[1], chevron[2], chevron[3], chevron[4])
@@ -435,16 +438,17 @@ end
 --- The list: guildmates, or recipes; the column titles that go with it.
 local function drawRows()
     local members = listingMembers()
-    for _, region in ipairs(memberColumns) do region:SetShown(members) end
+    for _, region in ipairs(memberHeaders) do region:SetShown(members) end
     for _, region in ipairs(recipeColumns) do region:SetShown(not members) end
     if members then
+        drawSortHeaders(memberHeaders)
         for _, row in ipairs(rows) do
             row.recipe, row.hyperlink = nil, nil
             row:Hide()
         end
         return drawMembers()
     end
-    drawSortHeaders()
+    drawSortHeaders(sortHeaders)
     for _, row in ipairs(memberRows) do
         row.member = nil
         row:Hide()
@@ -771,6 +775,7 @@ local function refreshGuild()
     end
     local terms = Core.terms(searchBox:GetText())
     state.listOrder = listOrder(#terms > 0)
+    state.memberListOrder = #state.memberOrder > 0 and state.memberOrder or Core.MEMBER_ORDER
     local found = Core.findMembers(all, state.member and {} or terms)
     state.guildCounts = {}
     for _, member in ipairs(found) do
@@ -782,7 +787,7 @@ local function refreshGuild()
         state.results = entry and entry.loaded and Core.memberRecipes(entry.loaded, state.member.record, terms, state.order) or {}
         state.members = {}
     else
-        state.members = Core.findMembers(all, terms, state.profession)
+        state.members = Core.findMembers(all, terms, state.profession, state.memberListOrder)
         state.results = {}
     end
     if state.selected then
@@ -976,7 +981,7 @@ local function buildFilters()
     resetButton:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -14, -33)
     resetButton:SetText("Reset")
     resetButton:SetScript("OnClick", function()
-        state.order = {}
+        state.order, state.memberOrder = {}, {}
         if state.tab == "guild" then
             -- The Guild tab's: its search, the profession picked, the guildmate.
             searchBox:SetText("")
@@ -1219,28 +1224,42 @@ local function buildList()
         drawRows()
     end)
 
-    -- Column titles, just above the list. Skill and Level sort it: a click sorts the list by that
-    -- column (the other left to break its ties), a click on the one it's sorted by turns it around.
-    -- The chevron sits in the same place whether it shows or not, so nothing moves.
+    -- Column titles, just above the list, which sort it: a click sorts the list by that column (the
+    -- others left to break its ties), a click on the one it's sorted by turns it around. `spec` is
+    -- the column of `list` (Core.RECIPE_LIST, Core.MEMBER_LIST), what its tooltip says it is
+    -- (`hint`), how wide the title's button is, and where it sits: `right` ends it that far from
+    -- the list's `from` corner (the chevron at its right, the title before it), `left` starts it
+    -- there (the title first, the chevron after it). The chevron sits in the same place whether it
+    -- shows or not, so nothing moves.
     local columnName = fontString(frame, "GameFontNormalSmall")
     columnName:SetPoint("BOTTOMLEFT", list, "TOPLEFT", 30, 3)
     columnName:SetText("Recipe")
-    local function sortHeader(column, right)
+    local function sortHeader(spec)
         local button = CreateFrame("Button", nil, frame)
-        button:SetSize(56, 16)
-        button:SetPoint("BOTTOMRIGHT", list, "TOPRIGHT", right, 1)
+        button:SetSize(spec.width or 56, 16)
         button:SetHighlightTexture(HIGHLIGHT, "ADD")
-        button.column = column
+        button.column, button.list, button.hint = spec.column, spec.list or Core.RECIPE_LIST, spec.hint
         button.chevron = button:CreateTexture(nil, "ARTWORK")
         button.chevron:SetSize(CHEVRON_SIZE, CHEVRON_SIZE)
-        button.chevron:SetPoint("RIGHT", button, "RIGHT", 0, 1)
         button.chevron:SetTexture(SORT_ARROW)
         button.chevron:Hide()
-        button.title = fontString(button, "GameFontNormalSmall", "RIGHT")
-        button.title:SetPoint("RIGHT", button.chevron, "LEFT", -1, -1)
-        button.title:SetText(Core.COLUMNS[column].title)
+        button.title = fontString(button, "GameFontNormalSmall", spec.left and "LEFT" or "RIGHT")
+        button.title:SetText(button.list.columns[spec.column].title)
+        if spec.left then
+            button:SetPoint("BOTTOMLEFT", list, spec.from or "TOPLEFT", spec.left, 1)
+            button.title:SetPoint("LEFT", button, "LEFT", 0, -1)
+            button.chevron:SetPoint("LEFT", button.title, "RIGHT", 1, 1)
+        else
+            button:SetPoint("BOTTOMRIGHT", list, spec.from or "TOPRIGHT", spec.right, 1)
+            button.chevron:SetPoint("RIGHT", button, "RIGHT", 0, 1)
+            button.title:SetPoint("RIGHT", button.chevron, "LEFT", -1, -1)
+        end
         button:SetScript("OnClick", function(self)
-            state.order = Core.toggleOrder(state.listOrder, self.column)
+            if self.list == Core.MEMBER_LIST then
+                state.memberOrder = Core.toggleOrder(state.memberListOrder, self.column, Core.MEMBER_LIST)
+            else
+                state.order = Core.toggleOrder(state.listOrder, self.column)
+            end
             state.offset = 0
             UI.refresh()
             showSortTooltip(self)
@@ -1249,23 +1268,23 @@ local function buildList()
         button:SetScript("OnLeave", Game.hideTooltip)
         return button
     end
-    columnLevel = sortHeader("level", -10)
-    columnSkill = sortHeader("skill", -58)
+    columnLevel = sortHeader({ column = "level", right = -10, hint = "The level the item it makes requires." })
+    columnSkill = sortHeader({ column = "skill", right = -58,
+        hint = "The profession skill it takes to learn the recipe." })
     sortHeaders = { columnSkill, columnLevel }
     recipeColumns = { columnName, columnLevel, columnSkill }
 
-    -- The Guild tab's: a guildmate's name, the profession's skill, the profession and specialization.
-    local memberName = fontString(frame, "GameFontNormalSmall")
-    memberName:SetPoint("BOTTOMLEFT", list, "TOPLEFT", 10, 3)
-    memberName:SetText("Guildmate")
-    local memberSkill = fontString(frame, "GameFontNormalSmall", "RIGHT")
-    memberSkill:SetPoint("BOTTOMRIGHT", list, "TOPLEFT", MEMBER_SKILL_RIGHT + 2, 3)
-    memberSkill:SetText("Skill")
-    local memberProfession = fontString(frame, "GameFontNormalSmall")
-    memberProfession:SetPoint("BOTTOMLEFT", list, "TOPLEFT", MEMBER_PROFESSION_LEFT + 2, 3)
-    memberProfession:SetText("Profession")
-    memberColumns = { memberName, memberSkill, memberProfession }
-    for _, region in ipairs(memberColumns) do region:Hide() end
+    -- The Guild tab's, which sort the guildmates: a guildmate's name, the profession's skill, the
+    -- profession and specialization.
+    local memberName = sortHeader({ column = "name", list = Core.MEMBER_LIST, left = 10, width = 42,
+        hint = "The guildmate's name, your own characters in the guild among them." })
+    local memberSkill = sortHeader({ column = "skill", list = Core.MEMBER_LIST, from = "TOPLEFT",
+        right = MEMBER_SKILL_RIGHT + 2, hint = "Their skill in the profession." })
+    local memberProfession = sortHeader({ column = "profession", list = Core.MEMBER_LIST,
+        left = MEMBER_PROFESSION_LEFT + 2, width = 72,
+        hint = "The profession, with the specialization they have in it." })
+    memberHeaders = { memberName, memberSkill, memberProfession }
+    for _, header in ipairs(memberHeaders) do header:Hide() end
 
     memberRows = {}
     for i = 1, ROWS do
@@ -1604,7 +1623,7 @@ function UI.parts()
         sidebarButtons = sidebarButtons, rows = rows, details = details, statusText = statusText,
         statusHover = statusHover, versionText = versionText,
         tabs = tabs, memberRows = memberRows, backButton = backButton, crumb = crumb,
-        columnSkill = columnSkill, columnLevel = columnLevel,
+        columnSkill = columnSkill, columnLevel = columnLevel, memberHeaders = memberHeaders,
         state = state,
     }
 end

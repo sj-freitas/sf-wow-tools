@@ -1,5 +1,18 @@
 # GuildAssistant Database
 
+## 1.9.0
+
+- **The Guild tab's guildmates sort too**: **Name**, **Skill** and **Profession** above the list
+  work as Skill and Level do in Recipes. Click one and the list comes in its order, click the one
+  it's sorted by to turn it around, and the chevron beside each says how: gold on the column the
+  list is sorted by, grey on the ones breaking its ties. Names and professions go A to Z, skills
+  lowest or highest first.
+- Without a click the guildmates come as they always have: by profession, and each profession's
+  highest skill first. **Reset** puts that order back.
+- **Guildmate** is now **Name**, and a name has more room, so a long one with "(you)" or "(alt)"
+  after it isn't cut short. The profession beside it gives up that room; hovering the row still
+  says it in full.
+
 ## 1.8.0
 
 - **Sort the list by Skill or Level**: click a column's title above the list. The chevron beside it
