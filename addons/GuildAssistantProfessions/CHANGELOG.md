@@ -1,5 +1,12 @@
 # GuildAssistant Professions
 
+## 1.5.1
+
+- **Fixed** on WoW Forever: an error ("attempt to compare a secret string value", Sources.lua) when
+  a recipe dropped in combat or in a dungeon. The game hides a creature's identity from addons
+  there, so the drop is now recorded without who dropped it. A vendor or a trainer the game hides
+  is skipped.
+
 ## 1.5.0
 
 - **Specializations** on WoW Forever: your character's (Weaponsmith, Goblin Engineer, Tribal
@@ -9,10 +16,6 @@
   window says it (a specialization: "Goblin Engineer" at a Goblin Engineering trainer), whether
   you have it or not. GuildAssistant Database shows it with the recipe, and it's shared with your
   guild and carried by the file you upload, like the rest.
-- **Fixed** on WoW Forever: an error ("attempt to compare a secret string value", Sources.lua) when
-  a recipe dropped in combat or in a dungeon. The game hides a creature's identity from addons
-  there, so the drop is now recorded without who dropped it. A vendor or a trainer the game hides
-  is skipped.
 
 ## 1.4.0
 
