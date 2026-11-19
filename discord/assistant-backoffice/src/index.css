@@ -2938,12 +2938,16 @@ label.btn.disabled {
   border-color: var(--text);
   opacity: 1;
 }
-/* The role pills, then the attribute pills, in one row that wraps. */
+/* The role pills, then the attribute pills, in one row that wraps. The Plugins page's search and
+   type filter use the same pieces (.roster-filters, .roster-attribute-filter, .attribute-toggle,
+   .roster-filter-summary). */
 .roster-pill-group {
   display: contents;
 }
-/* A role as a filter pill: its icon and name. */
-.role-chip {
+/* A role as a filter pill: its icon and name. A plugin type on the Plugins page's filter is the
+   same pill, its name alone. */
+.role-chip,
+.plugin-type-chip {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;

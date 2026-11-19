@@ -404,7 +404,10 @@ the API: they keep their own table and endpoints (`/api/guilds/:id/honeypots`, `
 so `plugin-kinds` and the MCP plugin tools don't include them. The backoffice adds Honeypot to the
 kinds to add (`/plugins/create/honeypot`) and its honeypots after the guild's plugins, each with
 Log / Go live (or Back to test mode) / Pause / Remove; they can't be edited. The old Honeypots tab's
-addresses (`/honeypots`, `/honeypots/create`, `/honeypot`) lead there.
+addresses (`/honeypots`, `/honeypots/create`, `/honeypot`) lead there. The list can be searched
+(name, type, channel, schedule, what it does, its mode) and filtered by type, Honeypot included,
+both kept in the address (`/plugins?q=raid&type=honeypot&type=channel_cleanup`); all in the
+backoffice, over what it already loaded.
 
 - **Channel Clean Up** (`CHANNEL_CLEANUP`): deletes a channel's messages daily, weekly (a weekday) or
   monthly (a day 1-31; a shorter month runs on its last day), at a time in the guild's timezone.

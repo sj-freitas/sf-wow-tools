@@ -2,7 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { deleteHoneypot, fetchHoneypots, updateHoneypot } from '../api';
 import { Help } from '../Help';
 import { Drawer } from '../Drawer';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
+import { fuzzyWordsScore } from '../fuzzy';
 import { guildPath } from '../guildPath';
 import { Spinner } from '../Loading';
 import { OneLine } from '../OneLine';
@@ -46,6 +47,33 @@ export function PluginsPage({ guild, timezone }: Props) {
   const channels = useChannels(guild.id);
   const { channelName } = channels;
   const { confirm, dialog } = useConfirm();
+  // The search and the type filter, kept in the address (`?q=raid&type=honeypot`) like the
+  // roster's, so a filtered list can be linked to and survives a refresh.
+  const [params, setParams] = useSearchParams();
+  const query = params.get('q') ?? '';
+  const setQuery = (value: string) => {
+    const next = new URLSearchParams(params);
+    if (value) next.set('q', value);
+    else next.delete('q');
+    setParams(next, { replace: true });
+  };
+  const toggleType = (type: string) => {
+    const current = params.getAll('type');
+    const next = new URLSearchParams(params);
+    next.delete('type');
+    for (const value of current.includes(type)
+      ? current.filter((t) => t !== type)
+      : [...current, type]) {
+      next.append('type', value);
+    }
+    setParams(next, { replace: true });
+  };
+  const clearFilters = () => {
+    const next = new URLSearchParams(params);
+    next.delete('q');
+    next.delete('type');
+    setParams(next, { replace: true });
+  };
 
   const load = useCallback(() => {
     Promise.all([fetchPlugins(guild.id), fetchHoneypots(guild.id)])
@@ -110,6 +138,49 @@ export function PluginsPage({ guild, timezone }: Props) {
               runNowDanger: true,
               remove: 'the events it already posted stay',
             };
+
+  // The types to filter by: the kinds to add (Honeypot last), then any kind a plugin has that the
+  // API no longer offers. In the address by the same name as their create page (`honeypot`).
+  const types = [
+    ...(kinds ?? []).map((kind) => ({ path: kind.kind.toLowerCase(), label: kind.label })),
+    { path: HONEYPOT_KIND.path, label: HONEYPOT_KIND.label },
+    ...(plugins ?? []).map((plugin) => ({
+      path: plugin.kind.toLowerCase(),
+      label: plugin.kindLabel,
+    })),
+  ].filter((type, index, all) => all.findIndex((t) => t.path === type.path) === index);
+  const pickedTypes = params.getAll('type').filter((path) => types.some((t) => t.path === path));
+  const filtering = query.trim() !== '' || pickedTypes.length > 0;
+  // Of the picked types (any, when none is), and every word of the search in something its card
+  // shows: its name, type, channel, schedule, what it does, its mode.
+  const matches = (type: string, texts: (string | false)[]) =>
+    (pickedTypes.length === 0 || pickedTypes.includes(type)) &&
+    (query.trim() === '' ||
+      fuzzyWordsScore(
+        query,
+        texts.filter((text): text is string => !!text),
+      ) !== null);
+  const shownPlugins = (plugins ?? []).filter((plugin) =>
+    matches(plugin.kind.toLowerCase(), [
+      plugin.name,
+      plugin.kindLabel,
+      channelOf(plugin),
+      !plugin.live && plugin.scheduleText,
+      describe(plugin).summary,
+      !plugin.enabled && 'Paused',
+    ]),
+  );
+  const shownHoneypots = (honeypots ?? []).filter((honeypot) =>
+    matches(HONEYPOT_KIND.path, [
+      honeypot.name,
+      HONEYPOT_KIND.label,
+      honeypotSummary(honeypot, channels),
+      honeypot.testMode ? 'Test mode' : 'Live',
+      !honeypot.enabled && 'Paused',
+    ]),
+  );
+  const total = (plugins?.length ?? 0) + (honeypots?.length ?? 0);
+  const shownCount = shownPlugins.length + shownHoneypots.length;
 
   return (
     <div className="tasks">
@@ -179,183 +250,229 @@ export function PluginsPage({ guild, timezone }: Props) {
       </section>
 
       <h4 className="plugin-list-title">This guild’s plugins</h4>
-      {plugins === null || honeypots === null ? (
+      {/* The kinds too: the type filter comes from them, and mustn't appear after the list. */}
+      {plugins === null || honeypots === null || kinds === null ? (
         error ? (
           <p className="status-error">{error}</p>
         ) : (
           <Spinner />
         )
-      ) : plugins.length + honeypots.length === 0 ? (
+      ) : total === 0 ? (
         <p className="empty">No plugins yet: add one above.</p>
       ) : (
-        plugins.map((plugin) => (
-          <div key={plugin.id} className="task-card">
-            <div className="card-info">
-              <div className="card-head">
-                <strong className="card-name">{plugin.name}</strong>
-                <span className="badge">{plugin.kindLabel}</span>
-                {!plugin.enabled && <span className="badge">Paused</span>}
-              </div>
-              <div className="muted card-meta">
-                {channelOf(plugin)} · {plugin.scheduleText} · {describe(plugin).summary}
-              </div>
-              {/* One line whatever it says: a long notice is cut short, a tap shows it all. */}
-              <div className="muted card-meta">
-                {!plugin.enabled ? (
-                  plugin.live ? (
-                    'Paused: it doesn’t answer until resumed.'
-                  ) : (
-                    'Paused: it won’t run until resumed.'
-                  )
-                ) : plugin.live ? (
-                  <OneLine
-                    text={liveStatus(plugin)}
-                    className={
-                      plugin.notice || plugin.lastStatus === 'FAILED' ? 'status-error' : undefined
-                    }
-                  />
-                ) : (
-                  `Next run: ${formatWhen(plugin.nextRunAt, timezone)}`
-                )}
-              </div>
+        <>
+          <div className="roster-filters">
+            <div className="search-field">
+              <input
+                className="post-search"
+                type="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search name, type, channel, schedule…"
+                aria-label="Search the plugins"
+              />
             </div>
-            {/* Its run log is behind "Log"; only a failure shows here, to be seen. */}
-            {/* A live plugin says so in its status line, which is always there. */}
-            {plugin.lastStatus === 'FAILED' && !plugin.live && (
-              <p className="status-error">Last run failed: {plugin.lastError}</p>
-            )}
-            <div className="settings-actions task-actions">
-              {/* A live plugin answers as messages arrive: there is nothing to run. */}
-              {!plugin.live && (
+            <div className="roster-attribute-filter" role="group" aria-label="Filter by type">
+              {types.map((type) => (
+                <button
+                  key={type.path}
+                  type="button"
+                  aria-pressed={pickedTypes.includes(type.path)}
+                  className={
+                    pickedTypes.includes(type.path)
+                      ? 'attribute-toggle attribute-toggle-on'
+                      : 'attribute-toggle'
+                  }
+                  onClick={() => toggleType(type.path)}
+                >
+                  <span className="plugin-type-chip">{type.label}</span>
+                </button>
+              ))}
+            </div>
+            {/* Always there, one line: searching or filtering never moves the list. */}
+            <div className="roster-filter-summary">
+              <span className="muted">
+                {filtering
+                  ? `${shownCount} of ${total} plugins`
+                  : `${total} plugin${total === 1 ? '' : 's'}`}
+              </span>
+              {filtering && (
+                <button type="button" className="btn btn-sm" onClick={clearFilters}>
+                  Clear
+                </button>
+              )}
+            </div>
+          </div>
+          {shownCount === 0 && <p className="empty">No plugins match.</p>}
+          {shownPlugins.map((plugin) => (
+            <div key={plugin.id} className="task-card">
+              <div className="card-info">
+                <div className="card-head">
+                  <strong className="card-name">{plugin.name}</strong>
+                  <span className="badge">{plugin.kindLabel}</span>
+                  {!plugin.enabled && <span className="badge">Paused</span>}
+                </div>
+                <div className="muted card-meta">
+                  {channelOf(plugin)} · {plugin.scheduleText} · {describe(plugin).summary}
+                </div>
+                {/* One line whatever it says: a long notice is cut short, a tap shows it all. */}
+                <div className="muted card-meta">
+                  {!plugin.enabled ? (
+                    plugin.live ? (
+                      'Paused: it doesn’t answer until resumed.'
+                    ) : (
+                      'Paused: it won’t run until resumed.'
+                    )
+                  ) : plugin.live ? (
+                    <OneLine
+                      text={liveStatus(plugin)}
+                      className={
+                        plugin.notice || plugin.lastStatus === 'FAILED' ? 'status-error' : undefined
+                      }
+                    />
+                  ) : (
+                    `Next run: ${formatWhen(plugin.nextRunAt, timezone)}`
+                  )}
+                </div>
+              </div>
+              {/* Its run log is behind "Log"; only a failure shows here, to be seen. */}
+              {/* A live plugin says so in its status line, which is always there. */}
+              {plugin.lastStatus === 'FAILED' && !plugin.live && (
+                <p className="status-error">Last run failed: {plugin.lastError}</p>
+              )}
+              <div className="settings-actions task-actions">
+                {/* A live plugin answers as messages arrive: there is nothing to run. */}
+                {!plugin.live && (
+                  <button
+                    type="button"
+                    className="btn btn-sm"
+                    disabled={!plugin.enabled}
+                    title={plugin.enabled ? 'Runs within a minute' : 'Resume it first'}
+                    onClick={() =>
+                      void confirm({
+                        title: 'Run now?',
+                        message: describe(plugin).runNow,
+                        confirmLabel: 'Run now',
+                        danger: describe(plugin).runNowDanger,
+                      }).then((ok) => ok && run(runPluginNow(plugin.id)))
+                    }
+                  >
+                    Run now
+                  </button>
+                )}
                 <button
                   type="button"
                   className="btn btn-sm"
-                  disabled={!plugin.enabled}
-                  title={plugin.enabled ? 'Runs within a minute' : 'Resume it first'}
+                  onClick={() => setLogOf({ honeypot: false, id: plugin.id })}
+                >
+                  Log
+                </button>
+                <Link className="btn btn-sm" to={guildPath(guild, `plugins/edit/${plugin.id}`)}>
+                  Edit
+                </Link>
+                <button
+                  type="button"
+                  className="btn btn-sm"
+                  onClick={() => run(updatePlugin(plugin.id, { enabled: !plugin.enabled }))}
+                >
+                  {plugin.enabled ? 'Pause' : 'Resume'}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-sm btn-danger"
                   onClick={() =>
                     void confirm({
-                      title: 'Run now?',
-                      message: describe(plugin).runNow,
-                      confirmLabel: 'Run now',
-                      danger: describe(plugin).runNowDanger,
-                    }).then((ok) => ok && run(runPluginNow(plugin.id)))
+                      title: 'Remove plugin',
+                      message: `Remove "${plugin.name}"? It stops running; ${describe(plugin).remove}.`,
+                      confirmLabel: 'Remove',
+                      danger: true,
+                    }).then((ok) => ok && run(deletePlugin(plugin.id)))
                   }
                 >
-                  Run now
+                  Remove
                 </button>
-              )}
-              <button
-                type="button"
-                className="btn btn-sm"
-                onClick={() => setLogOf({ honeypot: false, id: plugin.id })}
-              >
-                Log
-              </button>
-              <Link className="btn btn-sm" to={guildPath(guild, `plugins/edit/${plugin.id}`)}>
-                Edit
-              </Link>
-              <button
-                type="button"
-                className="btn btn-sm"
-                onClick={() => run(updatePlugin(plugin.id, { enabled: !plugin.enabled }))}
-              >
-                {plugin.enabled ? 'Pause' : 'Resume'}
-              </button>
-              <button
-                type="button"
-                className="btn btn-sm btn-danger"
-                onClick={() =>
-                  void confirm({
-                    title: 'Remove plugin',
-                    message: `Remove "${plugin.name}"? It stops running; ${describe(plugin).remove}.`,
-                    confirmLabel: 'Remove',
-                    danger: true,
-                  }).then((ok) => ok && run(deletePlugin(plugin.id)))
-                }
-              >
-                Remove
-              </button>
+              </div>
             </div>
-          </div>
-        ))
+          ))}
+          {shownHoneypots.map((honeypot) => (
+            <div key={honeypot.id} className="task-card">
+              <div className="card-info">
+                <div className="card-head">
+                  <strong className="card-name">{honeypot.name}</strong>
+                  <span className="badge">{HONEYPOT_KIND.label}</span>
+                  <span className={honeypot.testMode ? 'badge' : 'badge badge-live'}>
+                    {honeypot.testMode ? 'Test mode' : 'Live'}
+                  </span>
+                  {!honeypot.enabled && <span className="badge">Paused</span>}
+                </div>
+                <div className="muted card-meta">{honeypotSummary(honeypot, channels)}</div>
+                {/* One line whatever it says, like a plugin's: what it did is behind "Log". */}
+                <div className="muted card-meta">
+                  <HoneypotStatus honeypot={honeypot} />
+                </div>
+              </div>
+              <div className="settings-actions task-actions">
+                <button
+                  type="button"
+                  className="btn btn-sm"
+                  onClick={() => setLogOf({ honeypot: true, id: honeypot.id })}
+                >
+                  Log
+                </button>
+                {honeypot.testMode ? (
+                  <button
+                    type="button"
+                    className="btn btn-sm"
+                    onClick={() =>
+                      void confirm({
+                        title: 'Switch to live mode?',
+                        message: `People who post in the honeypot "${honeypot.name}" will be permanently banned, and their messages from the last hour deleted.`,
+                        confirmLabel: 'Go live',
+                        danger: true,
+                      }).then(
+                        (ok) =>
+                          ok &&
+                          run(updateHoneypot(honeypot.id, { testMode: false, confirmLive: true })),
+                      )
+                    }
+                  >
+                    Go live
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="btn btn-sm"
+                    onClick={() => run(updateHoneypot(honeypot.id, { testMode: true }))}
+                  >
+                    Back to test mode
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className="btn btn-sm"
+                  onClick={() => run(updateHoneypot(honeypot.id, { enabled: !honeypot.enabled }))}
+                >
+                  {honeypot.enabled ? 'Pause' : 'Resume'}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-sm btn-danger"
+                  onClick={() =>
+                    void confirm({
+                      title: 'Remove honeypot',
+                      message: `Remove the honeypot "${honeypot.name}"? The channel itself stays in Discord.`,
+                      confirmLabel: 'Remove',
+                      danger: true,
+                    }).then((ok) => ok && run(deleteHoneypot(honeypot.id)))
+                  }
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
+          ))}
+        </>
       )}
-      {honeypots?.map((honeypot) => (
-        <div key={honeypot.id} className="task-card">
-          <div className="card-info">
-            <div className="card-head">
-              <strong className="card-name">{honeypot.name}</strong>
-              <span className="badge">{HONEYPOT_KIND.label}</span>
-              <span className={honeypot.testMode ? 'badge' : 'badge badge-live'}>
-                {honeypot.testMode ? 'Test mode' : 'Live'}
-              </span>
-              {!honeypot.enabled && <span className="badge">Paused</span>}
-            </div>
-            <div className="muted card-meta">{honeypotSummary(honeypot, channels)}</div>
-            {/* One line whatever it says, like a plugin's: what it did is behind "Log". */}
-            <div className="muted card-meta">
-              <HoneypotStatus honeypot={honeypot} />
-            </div>
-          </div>
-          <div className="settings-actions task-actions">
-            <button
-              type="button"
-              className="btn btn-sm"
-              onClick={() => setLogOf({ honeypot: true, id: honeypot.id })}
-            >
-              Log
-            </button>
-            {honeypot.testMode ? (
-              <button
-                type="button"
-                className="btn btn-sm"
-                onClick={() =>
-                  void confirm({
-                    title: 'Switch to live mode?',
-                    message: `People who post in the honeypot "${honeypot.name}" will be permanently banned, and their messages from the last hour deleted.`,
-                    confirmLabel: 'Go live',
-                    danger: true,
-                  }).then(
-                    (ok) =>
-                      ok &&
-                      run(updateHoneypot(honeypot.id, { testMode: false, confirmLive: true })),
-                  )
-                }
-              >
-                Go live
-              </button>
-            ) : (
-              <button
-                type="button"
-                className="btn btn-sm"
-                onClick={() => run(updateHoneypot(honeypot.id, { testMode: true }))}
-              >
-                Back to test mode
-              </button>
-            )}
-            <button
-              type="button"
-              className="btn btn-sm"
-              onClick={() => run(updateHoneypot(honeypot.id, { enabled: !honeypot.enabled }))}
-            >
-              {honeypot.enabled ? 'Pause' : 'Resume'}
-            </button>
-            <button
-              type="button"
-              className="btn btn-sm btn-danger"
-              onClick={() =>
-                void confirm({
-                  title: 'Remove honeypot',
-                  message: `Remove the honeypot "${honeypot.name}"? The channel itself stays in Discord.`,
-                  confirmLabel: 'Remove',
-                  danger: true,
-                }).then((ok) => ok && run(deleteHoneypot(honeypot.id)))
-              }
-            >
-              Remove
-            </button>
-          </div>
-        </div>
-      ))}
     </div>
   );
 }
