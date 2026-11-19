@@ -14,6 +14,8 @@ import { describeSchedule, scheduleInput, scheduleOf, type ScheduleValue } from 
 import { PluginFormFrame, type PluginFormProps } from './PluginFormFrame';
 import { usePluginSave } from './usePluginSave';
 import { fetchPlugins, type Plugin } from './pluginsApi';
+import { HoneypotForm } from './HoneypotForm';
+import { HONEYPOT_KIND } from './honeypotKind';
 
 interface Props {
   guild: Guild;
@@ -23,10 +25,22 @@ interface Props {
 /**
  * `/plugins/create/:kind` and `/plugins/edit/:id`: the form of the plugin's kind (Channel Clean
  * Up here; Recurring Event, which belongs to event sign-ups, in ../signup; Professions List and
- * Guild Chat Profession Listener in ../professions).
+ * Guild Chat Profession Listener in ../professions; Honeypot, which has its own API and is only
+ * created here, never edited, in ./HoneypotForm.tsx).
  */
 export function PluginFormPage({ guild, timezone }: Props) {
   const { id, kind } = useParams();
+  if (!id && kind === HONEYPOT_KIND.path) return <HoneypotForm guild={guild} />;
+  return <KindFormPage guild={guild} timezone={timezone} id={id} kind={kind} />;
+}
+
+/** A plugin of the API's kinds: its form, with the plugin loaded first when editing. */
+function KindFormPage({
+  guild,
+  timezone,
+  id,
+  kind,
+}: Props & { id: string | undefined; kind: string | undefined }) {
   // Editing: the plugin, once loaded (null while loading, undefined when creating).
   const [editing, setEditing] = useState<Plugin | null | undefined>(id ? null : undefined);
   const [error, setError] = useState<string | null>(null);

@@ -19,6 +19,7 @@ export function PluginFormFrame({
   busy,
   error,
   editing,
+  disabled = false,
   onSubmit,
   children,
 }: {
@@ -28,6 +29,8 @@ export function PluginFormFrame({
   busy: boolean;
   error: string | null;
   editing: boolean;
+  /** The form can't be sent yet (something it needs is missing or unconfirmed). */
+  disabled?: boolean;
   onSubmit: (event: FormEvent) => void;
   children: ReactNode;
 }) {
@@ -44,7 +47,7 @@ export function PluginFormFrame({
           <Link className="btn" to={back}>
             Cancel
           </Link>
-          <button type="submit" className="btn btn-primary" disabled={busy}>
+          <button type="submit" className="btn btn-primary" disabled={busy || disabled}>
             {editing ? 'Save' : 'Add'}
           </button>
         </div>

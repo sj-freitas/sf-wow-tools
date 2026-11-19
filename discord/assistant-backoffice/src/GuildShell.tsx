@@ -46,12 +46,6 @@ const CreateGuildPage = lazy(() =>
 );
 const HomeEditPage = lazy(() => import('./HomePage').then((m) => ({ default: m.HomeEditPage })));
 const HomePage = lazy(() => import('./HomePage').then((m) => ({ default: m.HomePage })));
-const HoneypotCreatePage = lazy(() =>
-  import('./HoneypotsPage').then((m) => ({ default: m.HoneypotCreatePage })),
-);
-const HoneypotsPage = lazy(() =>
-  import('./HoneypotsPage').then((m) => ({ default: m.HoneypotsPage })),
-);
 const PluginFormPage = lazy(() =>
   import('./plugins/PluginFormPage').then((m) => ({ default: m.PluginFormPage })),
 );
@@ -132,10 +126,9 @@ interface Props {
  *       /posts                posts (?q=&page=)            Officers
  *       /posts/create         new post                     Officers
  *       /posts/edit/:id       edit a post                  Officers
- *       /honeypots            honeypot channels            Officers
- *       /honeypots/create     new honeypot                 Officers
- *       /plugins              plugins: add one, see the guild's    Officers
- *       /plugins/create/:kind new plugin (channel_cleanup, recurring_event) Officers
+ *       /plugins              plugins: add one, see the guild's (honeypots among them)   Officers
+ *       /plugins/create/:kind new plugin (channel_cleanup, recurring_event, professions_post,
+ *                             profession_listener, honeypot)          Officers
  *       /plugins/edit/:id     edit a plugin                         Officers
  *       /officer-requests     members' messages to officers           Officers
  *       /officer-requests/:conversationId   one conversation          Officers
@@ -306,18 +299,13 @@ function GuildRoutes({ guilds, setup, currentUser, onGuildsChanged }: Props) {
             path="posts/edit/:id"
             element={officersOnly(<PostEditorPage guild={guild} timezone={timezone} />)}
           />
-          <Route
-            path="honeypots"
-            element={officersOnly(<HoneypotsPage guild={guild} timezone={timezone} />)}
-          />
+          {/* Honeypots had a tab of their own: its old addresses lead to the plugins. */}
+          <Route path="honeypots" element={<Navigate to={guildPath(guild, 'plugins')} replace />} />
           <Route
             path="honeypots/create"
-            element={officersOnly(<HoneypotCreatePage guild={guild} />)}
+            element={<Navigate to={guildPath(guild, 'plugins/create/honeypot')} replace />}
           />
-          <Route
-            path="honeypot"
-            element={<Navigate to={guildPath(guild, 'honeypots')} replace />}
-          />
+          <Route path="honeypot" element={<Navigate to={guildPath(guild, 'plugins')} replace />} />
           <Route
             path="plugins"
             element={officersOnly(<PluginsPage guild={guild} timezone={timezone} />)}
@@ -382,7 +370,6 @@ function GuildFrame({
     ...(guild.isOfficer
       ? [
           { label: 'Posts', to: guildPath(guild, 'posts') },
-          { label: 'Honeypots', to: guildPath(guild, 'honeypots') },
           { label: 'Plugins', to: guildPath(guild, 'plugins') },
           {
             label: 'Officer requests',

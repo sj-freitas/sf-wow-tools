@@ -207,8 +207,7 @@ case and punctuation, and renaming a guild moves its address (the settings page 
 | `<guild>/roster/create`, `/edit/:id`                 | Add / edit a character                                   | members: their own; Officers: any |
 | `<guild>/posts?q=&page=`                             | Posts (search and page in the address)                   | Officers                          |
 | `<guild>/posts/create`, `/edit/:id`                  | New / edit post                                          | Officers                          |
-| `<guild>/honeypots`, `/create`                       | Honeypots (`/honeypot` redirects)                        | Officers                          |
-| `<guild>/plugins`, `/create/:kind`, `/edit/:id`      | Plugins: add one (Channel Clean Up), the guild's plugins | Officers                          |
+| `<guild>/plugins`, `/create/:kind`, `/edit/:id`      | Plugins: add one, the guild's plugins and honeypots      | Officers                          |
 | `<guild>/officer-requests`, `/:id`                   | Members' messages to officers; officers reply            | Officers                          |
 | `<guild>/settings`                                   | Guild settings, incl. the welcome post                   | Guild-Assistants and Officers     |
 
@@ -400,6 +399,13 @@ Officers add plugins in the backoffice's **Plugins** tab: features that run on t
 schedule (or, for a _live_ kind, as messages arrive). Each is an instance of a plugin **kind**; the tab lists the kinds to add, then the guild's
 plugins with their next run and last 5 runs, and Run now / Edit / Pause / Remove.
 
+Honeypots (below) are listed there too, as the **Honeypot** kind, though they aren't plugins in
+the API: they keep their own table and endpoints (`/api/guilds/:id/honeypots`, `/api/honeypots/:id`),
+so `plugin-kinds` and the MCP plugin tools don't include them. The backoffice adds Honeypot to the
+kinds to add (`/plugins/create/honeypot`) and its honeypots after the guild's plugins, each with
+Log / Go live (or Back to test mode) / Pause / Remove; they can't be edited. The old Honeypots tab's
+addresses (`/honeypots`, `/honeypots/create`, `/honeypot`) lead there.
+
 - **Channel Clean Up** (`CHANNEL_CLEANUP`): deletes a channel's messages daily, weekly (a weekday) or
   monthly (a day 1-31; a shorter month runs on its last day), at a time in the guild's timezone.
   Pinned messages are always kept, and by default the messages of bots and webhooks too (sign-up
@@ -486,8 +492,8 @@ Not built yet: deleting old conversations after a while, and blocking a sender.
 
 ### Background worker, posts and honeypots
 
-Officers manage these in the backoffice under the **Posts** and **Honeypots** tabs of a guild
-(Officers only); more features will get tabs of their own. The worker that runs them is internal:
+Officers manage these in the backoffice: posts under a guild's **Posts** tab, honeypots among its
+**Plugins** (Officers only). The worker that runs them is internal:
 officers never see it.
 
 **Running the worker.** `src/worker.ts` is a second entrypoint of the same codebase: a Nest
@@ -583,7 +589,7 @@ bot, other bots, the server owner and Administrators.
 
 - **Test mode** (the default): nothing is banned; the bot only writes to the log channel what it
   would have done. Going live needs an explicit confirmation. Every action is stored in
-  `honeypot_events` and the last ones show under the honeypot. Someone who is exempt (an Officer, the
+  `honeypot_events` and the last ones show in the honeypot's Log. Someone who is exempt (an Officer, the
   server owner, an Administrator) is also logged in test mode, as "would **not** be banned: they are
   an Officer", so the honeypot can be tried out with your own account (once per 5 minutes per person;
   bots stay silent). Nothing is stored for them, and once the honeypot is live exempt people are not

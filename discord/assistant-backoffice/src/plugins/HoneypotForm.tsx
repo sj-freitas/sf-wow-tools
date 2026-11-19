@@ -1,22 +1,25 @@
-import { FormStatus } from './OneLine';
 import { useState, type FormEvent } from 'react';
-import { createHoneypot } from './api';
-import { splitChannelKey } from './channelKey';
-import { ChannelSelect } from './ChannelSelect';
-import type { Guild, ServerChannels } from './types';
-import { Select } from './Select';
-
-interface Props {
-  guild: Guild;
-  channels: ServerChannels[];
-  onSaved: () => void;
-  onCancel: () => void;
-}
+import { useNavigate } from 'react-router-dom';
+import { createHoneypot } from '../api';
+import { splitChannelKey } from '../channelKey';
+import { ChannelSelect } from '../ChannelSelect';
+import { guildPath } from '../guildPath';
+import type { Guild } from '../types';
+import { useChannels } from '../useChannels';
+import { Select } from '../Select';
+import { PluginFormFrame } from './PluginFormFrame';
 
 const DEFAULT_POST =
   '⚠️ **Do not post in this channel.**\nAnyone who posts here is permanently banned.';
 
-export function HoneypotForm({ guild, channels, onSaved, onCancel }: Props) {
+/**
+ * `/plugins/create/honeypot`: a new honeypot channel, in the frame of the other plugins' forms.
+ * Honeypots can't be edited, only switched between test and live mode, paused or removed.
+ */
+export function HoneypotForm({ guild }: { guild: Guild }) {
+  const navigate = useNavigate();
+  const back = guildPath(guild, 'plugins');
+  const { channels } = useChannels(guild.id);
   const usable = channels.filter((group) => group.channels.length > 0 || !group.error);
   const [name, setName] = useState('');
   const [serverId, setServerId] = useState(
@@ -31,10 +34,12 @@ export function HoneypotForm({ guild, channels, onSaved, onCancel }: Props) {
   const [testMode, setTestMode] = useState(true);
   const [confirmLive, setConfirmLive] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
     setError(null);
+    setBusy(true);
     const log = splitChannelKey(logChannel);
     createHoneypot(guild.id, {
       name: name.trim(),
@@ -48,18 +53,22 @@ export function HoneypotForm({ guild, channels, onSaved, onCancel }: Props) {
       logServerId: log.serverId,
       logChannelId: log.channelId,
     })
-      .then(onSaved)
-      .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)));
+      .then(() => navigate(back))
+      .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)))
+      .finally(() => setBusy(false));
   };
 
   return (
-    <form className="card-body task-form" onSubmit={handleSubmit}>
-      <h3>New honeypot channel</h3>
-      <p className="muted">
-        Anyone who posts in this channel is permanently banned, and their messages from the last
-        hour are deleted. The bot, other bots, Officers, the server owner and Administrators are
-        never touched.
-      </p>
+    <PluginFormFrame
+      title="New Honeypot"
+      intro="Anyone who posts in this channel is permanently banned, and their messages from the last hour are deleted. The bot, other bots, Officers, the server owner and Administrators are never touched."
+      back={back}
+      busy={busy}
+      error={error}
+      editing={false}
+      disabled={!guild.officerRole || (!testMode && !confirmLive)}
+      onSubmit={handleSubmit}
+    >
       {!guild.officerRole && (
         <p className="status-error">
           The guild has no Officer role yet. Set it under Manage guild → Discord roles first, so
@@ -164,20 +173,6 @@ export function HoneypotForm({ guild, channels, onSaved, onCancel }: Props) {
           I understand this permanently bans people who post in the channel
         </label>
       </div>
-
-      <div className="form-actions">
-        <button
-          type="submit"
-          className="btn btn-primary"
-          disabled={!guild.officerRole || (!testMode && !confirmLive)}
-        >
-          Create honeypot
-        </button>
-        <button type="button" className="btn" onClick={onCancel}>
-          Cancel
-        </button>
-      </div>
-      <FormStatus error={error} />
-    </form>
+    </PluginFormFrame>
   );
 }

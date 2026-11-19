@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { deleteHoneypot, fetchHoneypots, updateHoneypot } from '../api';
 import { Help } from '../Help';
 import { Drawer } from '../Drawer';
 import { Link } from 'react-router-dom';
@@ -7,7 +8,7 @@ import { Spinner } from '../Loading';
 import { OneLine } from '../OneLine';
 import { formatWhen } from '../time';
 import { showToast } from '../toast';
-import type { Guild } from '../types';
+import type { Guild, Honeypot } from '../types';
 import { useChannels } from '../useChannels';
 import { useConfirm } from '../useConfirm';
 import {
@@ -20,6 +21,8 @@ import {
   type PluginKindInfo,
 } from './pluginsApi';
 import { WEEKDAYS } from './scheduleValue';
+import { HoneypotLog, HoneypotStatus } from './HoneypotPlugin';
+import { HONEYPOT_KIND, honeypotSummary } from './honeypotKind';
 
 interface Props {
   guild: Guild;
@@ -28,20 +31,27 @@ interface Props {
 
 const REFRESH_MS = 15_000;
 
-/** `/plugins`: the plugins there are to add, and the ones the guild has. */
+/**
+ * `/plugins`: the plugins there are to add, and the ones the guild has. Honeypots are among them,
+ * though they have their own data and API (./HoneypotPlugin.tsx).
+ */
 export function PluginsPage({ guild, timezone }: Props) {
-  const [kinds, setKinds] = useState<PluginKindInfo[]>([]);
+  // The API's kinds; null until read, so the catalog appears at once, Honeypot in its place.
+  const [kinds, setKinds] = useState<PluginKindInfo[] | null>(null);
   const [plugins, setPlugins] = useState<Plugin[] | null>(null);
-  // The plugin whose run log is open (a drawer), by id.
-  const [logOf, setLogOf] = useState<string | null>(null);
+  const [honeypots, setHoneypots] = useState<Honeypot[] | null>(null);
+  // The plugin or honeypot whose log is open (a drawer).
+  const [logOf, setLogOf] = useState<{ honeypot: boolean; id: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const { channelName } = useChannels(guild.id);
+  const channels = useChannels(guild.id);
+  const { channelName } = channels;
   const { confirm, dialog } = useConfirm();
 
   const load = useCallback(() => {
-    fetchPlugins(guild.id)
-      .then((loaded) => {
-        setPlugins(loaded);
+    Promise.all([fetchPlugins(guild.id), fetchHoneypots(guild.id)])
+      .then(([loadedPlugins, loadedHoneypots]) => {
+        setPlugins(loadedPlugins);
+        setHoneypots(loadedHoneypots);
         setError(null);
       })
       .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)));
@@ -105,7 +115,15 @@ export function PluginsPage({ guild, timezone }: Props) {
     <div className="tasks">
       {dialog}
       {(() => {
-        const plugin = plugins?.find((p) => p.id === logOf);
+        const honeypot = logOf?.honeypot ? honeypots?.find((h) => h.id === logOf.id) : undefined;
+        if (honeypot) {
+          return (
+            <Drawer title={`${honeypot.name}: log`} onClose={() => setLogOf(null)}>
+              <HoneypotLog honeypot={honeypot} timezone={timezone} />
+            </Drawer>
+          );
+        }
+        const plugin = logOf?.honeypot ? undefined : plugins?.find((p) => p.id === logOf?.id);
         return plugin ? (
           <Drawer title={`${plugin.name}: log`} onClose={() => setLogOf(null)}>
             {plugin.recentRuns.length === 0 ? (
@@ -141,30 +159,33 @@ export function PluginsPage({ guild, timezone }: Props) {
       </div>
 
       <section className="plugin-catalog" aria-label="Plugins to add">
-        {kinds.map((kind) => (
-          <div key={kind.kind} className="plugin-kind">
-            <div>
-              <strong>{kind.label}</strong>
-              <p className="muted">{kind.description}</p>
-            </div>
-            <Link
-              className="btn btn-sm btn-primary"
-              to={guildPath(guild, `plugins/create/${kind.kind.toLowerCase()}`)}
-            >
-              + Add
-            </Link>
-          </div>
-        ))}
+        {kinds &&
+          [...kinds.map((kind) => ({ ...kind, path: kind.kind.toLowerCase() })), HONEYPOT_KIND].map(
+            (kind) => (
+              <div key={kind.path} className="plugin-kind">
+                <div>
+                  <strong>{kind.label}</strong>
+                  <p className="muted">{kind.description}</p>
+                </div>
+                <Link
+                  className="btn btn-sm btn-primary"
+                  to={guildPath(guild, `plugins/create/${kind.path}`)}
+                >
+                  + Add
+                </Link>
+              </div>
+            ),
+          )}
       </section>
 
       <h4 className="plugin-list-title">This guild’s plugins</h4>
-      {plugins === null ? (
+      {plugins === null || honeypots === null ? (
         error ? (
           <p className="status-error">{error}</p>
         ) : (
           <Spinner />
         )
-      ) : plugins.length === 0 ? (
+      ) : plugins.length + honeypots.length === 0 ? (
         <p className="empty">No plugins yet: add one above.</p>
       ) : (
         plugins.map((plugin) => (
@@ -223,7 +244,11 @@ export function PluginsPage({ guild, timezone }: Props) {
                   Run now
                 </button>
               )}
-              <button type="button" className="btn btn-sm" onClick={() => setLogOf(plugin.id)}>
+              <button
+                type="button"
+                className="btn btn-sm"
+                onClick={() => setLogOf({ honeypot: false, id: plugin.id })}
+              >
                 Log
               </button>
               <Link className="btn btn-sm" to={guildPath(guild, `plugins/edit/${plugin.id}`)}>
@@ -254,6 +279,83 @@ export function PluginsPage({ guild, timezone }: Props) {
           </div>
         ))
       )}
+      {honeypots?.map((honeypot) => (
+        <div key={honeypot.id} className="task-card">
+          <div className="card-info">
+            <div className="card-head">
+              <strong className="card-name">{honeypot.name}</strong>
+              <span className="badge">{HONEYPOT_KIND.label}</span>
+              <span className={honeypot.testMode ? 'badge' : 'badge badge-live'}>
+                {honeypot.testMode ? 'Test mode' : 'Live'}
+              </span>
+              {!honeypot.enabled && <span className="badge">Paused</span>}
+            </div>
+            <div className="muted card-meta">{honeypotSummary(honeypot, channels)}</div>
+            {/* One line whatever it says, like a plugin's: what it did is behind "Log". */}
+            <div className="muted card-meta">
+              <HoneypotStatus honeypot={honeypot} />
+            </div>
+          </div>
+          <div className="settings-actions task-actions">
+            <button
+              type="button"
+              className="btn btn-sm"
+              onClick={() => setLogOf({ honeypot: true, id: honeypot.id })}
+            >
+              Log
+            </button>
+            {honeypot.testMode ? (
+              <button
+                type="button"
+                className="btn btn-sm"
+                onClick={() =>
+                  void confirm({
+                    title: 'Switch to live mode?',
+                    message: `People who post in the honeypot "${honeypot.name}" will be permanently banned, and their messages from the last hour deleted.`,
+                    confirmLabel: 'Go live',
+                    danger: true,
+                  }).then(
+                    (ok) =>
+                      ok &&
+                      run(updateHoneypot(honeypot.id, { testMode: false, confirmLive: true })),
+                  )
+                }
+              >
+                Go live
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="btn btn-sm"
+                onClick={() => run(updateHoneypot(honeypot.id, { testMode: true }))}
+              >
+                Back to test mode
+              </button>
+            )}
+            <button
+              type="button"
+              className="btn btn-sm"
+              onClick={() => run(updateHoneypot(honeypot.id, { enabled: !honeypot.enabled }))}
+            >
+              {honeypot.enabled ? 'Pause' : 'Resume'}
+            </button>
+            <button
+              type="button"
+              className="btn btn-sm btn-danger"
+              onClick={() =>
+                void confirm({
+                  title: 'Remove honeypot',
+                  message: `Remove the honeypot "${honeypot.name}"? The channel itself stays in Discord.`,
+                  confirmLabel: 'Remove',
+                  danger: true,
+                }).then((ok) => ok && run(deleteHoneypot(honeypot.id)))
+              }
+            >
+              Remove
+            </button>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

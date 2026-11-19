@@ -12,7 +12,7 @@ const PROBLEM_PAGE: Record<GuildProblem['source'], (id: string) => string> = {
   POST: (id) => `posts/edit/${id}`,
   PLUGIN: (id) => `plugins/edit/${id}`,
   EVENT: (id) => `signup/${id}`,
-  HONEYPOT: () => 'honeypots',
+  HONEYPOT: () => 'plugins',
 };
 
 /**
