@@ -1571,5 +1571,161 @@ it("doesn't hide anything because of GuildAssistant Professions alone", function
     eq(ns.UI.parts().filterPopup.unknownSection:IsShown(), false)
 end)
 
+-- The Attunements tab -----------------------------------------------------------------------------
+
+local TICK = "|TInterface\\Buttons\\UI-CheckBox-Check:18:18|t"
+
+-- The rows as they read: the name, then each raid's mark.
+local function attuneRows(ns)
+    local out = {}
+    for _, row in ipairs(ns.UI.parts().attuneRows) do
+        if row:IsShown() then
+            local marks = {}
+            for _, mark in ipairs(row.marks) do
+                if mark:IsShown() then marks[#marks + 1] = mark:GetText() end
+            end
+            out[#out + 1] = row.name:GetText() .. " " .. table.concat(marks, " ")
+        end
+    end
+    return table.concat(out, " | ")
+end
+
+-- Luna (you) attuned to Onyxia, Ana (a guildmate) looked at and not, Di (your alt) never looked at.
+local function attunementsDB()
+    local db = GuildAssistantProfessionsDB
+    db.characters["Luna-Test Realm"].guild = "Test Guild"
+    db.characters["Luna-Test Realm"].attunements = { ony = true }
+    db.characters["Ana-Test Realm"].guild = "Test Guild"
+    db.characters["Ana-Test Realm"].attunements = { ony = false }
+    db.characters["Di-Test Realm"] = { name = "Di", realm = "Test Realm", source = "own",
+        guild = "Test Guild", professions = {} }
+end
+
+it("lists every guildmate with a tick for each raid they are attuned to", function()
+    local ns = loadAddon({ professionsAddon = true, guild = "Test Guild" })
+    attunementsDB()
+    SlashCmdList.GADB("")
+    local parts = ns.UI.parts()
+    eq(parts.tabs[3]:GetText(), "Attunements")
+    parts.tabs[3]:Click()
+    eq(parts.state.tab, "attunements")
+    eq(parts.tabs[3]:IsEnabled(), false, "picked")
+    eq(parts.crumb:GetText(), "|cffffd100Test Guild|r: which raids each guildmate is attuned to")
+    eq(attuneRows(ns), ("|cff3fc7ebLuna|r |cff808080(you)|r %s | |cffffffffAna|r |cff808080-|r"
+        .. " | |cffffffffDi|r |cff808080(alt)|r |cff808080?|r"):format(TICK))
+    eq(parts.attuneColumns[1]:IsShown(), true)
+    eq(parts.attuneColumns[1].title:GetText(), "Onyxia")
+    eq(parts.attuneColumns[2]:IsShown(), false, "only the raids there are")
+    parts.attuneColumns[1]:Fire("OnEnter")
+    eq(GameTooltip.lines[1], "Onyxia's Lair")
+    eq(GameTooltip.lines[2], "Who in your guild is attuned to it.")
+    eq(parts.statusText:GetText(), "3 guildmates")
+    -- The raids on the left, with how many are attuned to each.
+    eq(sidebar(ns), "All guildmates 3 | Onyxia's Lair 1")
+    -- Recipes' own controls are away, as on the Guild tab.
+    for _, control in ipairs({ parts.minLevelBox, parts.filterButton, parts.unknownCheck }) do
+        eq(control:IsShown(), false, "Recipes' own")
+    end
+    eq(parts.details.hint:GetText():sub(1, 57), "Click a guildmate to see which raids they are attuned to.")
+end)
+
+it("shows a guildmate's raids one by one when you click them, and says what isn't known", function()
+    local ns = loadAddon({ professionsAddon = true, guild = "Test Guild" })
+    attunementsDB()
+    SlashCmdList.GADB("")
+    local parts = ns.UI.parts()
+    parts.tabs[3]:Click()
+    parts.attuneRows[1]:Click()
+    local summary = parts.details.summary
+    eq(summary:IsShown(), true)
+    has(summary:GetText(), "|cff3fc7ebLuna|r")
+    has(summary:GetText(), "Onyxia's Lair: |cff40ff40Attuned|r")
+    eq(parts.attuneRows[1].selected:IsShown(), true, "the row is marked")
+    parts.attuneRows[2]:Click()
+    has(parts.details.summary:GetText(), "Onyxia's Lair: |cff808080Not attuned|r")
+    parts.attuneRows[3]:Click()
+    has(parts.details.summary:GetText(), "Onyxia's Lair: |cff808080Not known|r")
+    has(parts.details.summary:GetText(), "hasn't looked")
+    -- Hovering a row says the same, shorter.
+    parts.attuneRows[1]:Fire("OnEnter")
+    eq(GameTooltip.lines[1], "Luna")
+    eq(GameTooltip.lines[2], TICK .. " Onyxia's Lair")
+    eq(GameTooltip.lines[3], "Click for their attunements")
+end)
+
+it("keeps a raid picked on the left, the search and the pick while another tab shows", function()
+    local ns = loadAddon({ professionsAddon = true, guild = "Test Guild" })
+    attunementsDB()
+    SlashCmdList.GADB("")
+    local parts = ns.UI.parts()
+    parts.tabs[3]:Click()
+    parts.sidebarButtons[2]:Click() -- Onyxia's Lair
+    eq(parts.state.raid, "ony")
+    eq(attuneRows(ns), "|cff3fc7ebLuna|r |cff808080(you)|r " .. TICK, "only those attuned")
+    parts.searchBox:SetText("di")
+    ns.UI.refresh()
+    eq(attuneRows(ns), "", "Di isn't attuned")
+    eq(parts.statusText:GetText(), "No one known is attuned to Onyxia's Lair yet.")
+    parts.sidebarButtons[1]:Click() -- all of them
+    eq(attuneRows(ns), "|cffffffffDi|r |cff808080(alt)|r |cff808080?|r")
+    eq(sidebar(ns), "All guildmates 1 | Onyxia's Lair 0", "counted among those the search keeps")
+    -- Recipes, and back: its own search, and the raid picked.
+    parts.tabs[1]:Click()
+    eq(parts.attuneRows[1]:IsShown(), false)
+    eq(parts.attuneColumns[1]:IsShown(), false)
+    eq(parts.searchBox:GetText(), "")
+    parts.tabs[3]:Click()
+    eq(parts.searchBox:GetText(), "di", "the tab's own search")
+end)
+
+it("shows a guildmate's attunements on their page in the Guild tab too", function()
+    local ns = loadAddon({ professionsAddon = true, guild = "Test Guild" })
+    attunementsDB()
+    SlashCmdList.GADB("")
+    local parts = ns.UI.parts()
+    parts.tabs[2]:Click()
+    parts.memberRows[1]:Click() -- Ana: a guildmate with Blacksmithing
+    local summary = parts.details.summary
+    has(summary:GetText(), "300/300 Blacksmithing", "her profession")
+    has(summary:GetText(), "|cffffd100Attunements|r")
+    has(summary:GetText(), "Onyxia's Lair: |cff808080Not attuned|r")
+end)
+
+it("says when you're in no guild, and shows nothing of attunements without the addon", function()
+    local ns = loadAddon({ professionsAddon = true })
+    SlashCmdList.GADB("")
+    local parts = ns.UI.parts()
+    parts.tabs[3]:Click()
+    eq(parts.statusText:GetText(), "You're not in a guild: this tab lists your guildmates' attunements.")
+    eq(attuneRows(ns), "")
+    -- Without GuildAssistant Professions there are no tabs at all.
+    ns = loadAddon({ guild = "Test Guild" })
+    SlashCmdList.GADB("")
+    eq(ns.UI.parts().tabs[3]:IsShown(), false)
+end)
+
+it("brings a raid picked on the left into view when there are more than the columns", function()
+    local ns = loadAddon({ professionsAddon = true, guild = "Test Guild" })
+    attunementsDB()
+    local attunements = GuildAssistantProfessionsDB.characters["Luna-Test Realm"].attunements
+    for i = 1, 6 do attunements["r" .. i] = i == 6 end
+    SlashCmdList.GADB("")
+    local parts = ns.UI.parts()
+    parts.tabs[3]:Click()
+    local titles = {}
+    for _, header in ipairs(parts.attuneColumns) do
+        if header:IsShown() then titles[#titles + 1] = header.title:GetText() end
+    end
+    eq(table.concat(titles, " "), "Onyxia r1 r2 r3 r4", "five columns, the sixth raid left out")
+    has(parts.statusText:GetText(), "2 more raids: click a guildmate, or pick one on the left.")
+    -- Picking the one left out brings it first.
+    for _, button in ipairs(parts.sidebarButtons) do
+        if button:IsShown() and button.text:GetText() == "r6" then button:Click() end
+    end
+    eq(parts.attuneColumns[1].title:GetText(), "r6")
+    eq(attuneRows(ns), "|cff3fc7ebLuna|r |cff808080(you)|r " .. TICK .. " " .. TICK
+        .. " |cff808080-|r |cff808080-|r |cff808080-|r")
+end)
+
 print(("%d passed, %d failed"):format(passed, failed))
 if failed > 0 then error(failed .. " failed") end

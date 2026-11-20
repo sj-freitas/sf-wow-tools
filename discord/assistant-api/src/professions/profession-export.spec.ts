@@ -2,10 +2,12 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, it } from 'node:test';
+import { attunementRows, raidName } from './attunements';
 import {
   exportFromSavedVariables,
   matchCharacter,
   nameKey,
+  parseAttunements,
   parseProfessionExport,
   parseSources,
   wowheadUrl,
@@ -240,5 +242,86 @@ describe('parseSources', () => {
       parsed.items.reduce((n, item) => n + item.entries.length, 0),
       2000,
     );
+  });
+});
+
+describe('parseAttunements', () => {
+  it('reads the raids the addon says a character is attuned to', () => {
+    assert.deepEqual(
+      parseAttunements([
+        { key: 'ony', attuned: true },
+        { key: 'mc', attuned: false },
+      ]),
+      [
+        { key: 'mc', attuned: false },
+        { key: 'ony', attuned: true },
+      ],
+    );
+  });
+
+  it('leaves out what is not one, and takes at most 20', () => {
+    assert.deepEqual(
+      parseAttunements([
+        { key: 'ONY' },
+        { key: 'a raid' },
+        { key: '' },
+        { key: 'toolongakeyhere' },
+        { attuned: true },
+        'ony',
+        { key: 'ony', attuned: 'yes' },
+        { key: 'ony', attuned: true },
+      ]),
+      [{ key: 'ony', attuned: false }],
+      'the first "ony" wins, and anything but true is not attuned',
+    );
+    const many = Array.from({ length: 30 }, (_, i) => ({ key: `r${i}`, attuned: true }));
+    assert.equal(parseAttunements(many).length, 20);
+    assert.deepEqual(parseAttunements(undefined), []);
+    assert.deepEqual(parseAttunements('ony'), []);
+  });
+
+  it("is in the addon's own export", () => {
+    const data = parseProfessionExport(FIXTURE);
+    const luna = data.characters.find((character) => character.name === 'Luna');
+    assert.deepEqual(luna?.attunements, [{ key: 'ony', attuned: true }]);
+    const bob = data.characters.find((character) => character.name === 'Bob');
+    assert.deepEqual(bob?.attunements, [{ key: 'ony', attuned: false }], 'looked at, not attuned');
+    const mira = data.characters.find((character) => character.name === 'Mira');
+    assert.deepEqual(mira?.attunements, [], 'seen through a link: never looked at');
+  });
+});
+
+describe('attunementRows', () => {
+  it('names each raid, and says which were never looked at', () => {
+    assert.deepEqual(attunementRows([]), {
+      reported: false,
+      raids: [{ key: 'ony', raid: "Onyxia's Lair", attuned: null, recordedAt: null }],
+    });
+    const recordedAt = new Date('2026-11-18T10:00:00Z');
+    assert.deepEqual(attunementRows([{ key: 'ony', attuned: true, recordedAt }]), {
+      reported: true,
+      raids: [
+        {
+          key: 'ony',
+          raid: "Onyxia's Lair",
+          attuned: true,
+          recordedAt: '2026-11-18T10:00:00.000Z',
+        },
+      ],
+    });
+  });
+
+  it('keeps a raid a newer addon knows, under its key, after the ones it does', () => {
+    const recordedAt = new Date('2026-11-18T10:00:00Z');
+    const rows = attunementRows([
+      { key: 'bwl', attuned: true, recordedAt },
+      { key: 'ony', attuned: false, recordedAt },
+    ]);
+    assert.deepEqual(
+      rows.raids.map((raid) => raid.key),
+      ['ony', 'bwl'],
+    );
+    assert.equal(rows.raids[1].raid, 'bwl', 'its key until this API knows it');
+    assert.equal(raidName('ony'), "Onyxia's Lair");
   });
 });

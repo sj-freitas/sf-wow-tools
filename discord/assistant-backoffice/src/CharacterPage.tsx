@@ -14,6 +14,7 @@ import { FormStatus } from './OneLine';
 import { showToast } from './toast';
 import { GuildIcon } from './GuildIcon';
 import { MarkdownView } from './MarkdownView';
+import { CharacterAttunements } from './professions/CharacterAttunements';
 import { CharacterProfessions } from './professions/CharacterProfessions';
 import type { CharacterProfile, Guild } from './types';
 import { useReturnTo } from './useReturnTo';
@@ -265,6 +266,12 @@ function CharacterView({
           </NavLink>
           <NavLink to={`${viewUrl}/professions`}>Professions</NavLink>
         </nav>
+      )}
+
+      {/* What the GuildAssistant Professions addon knows of it: which raids it is attuned to, then
+          what it can craft. */}
+      {(!profile.bioSupported || tab === 'professions') && (
+        <CharacterAttunements characterId={profile.characterId} />
       )}
 
       {(!profile.bioSupported || tab === 'professions') && (

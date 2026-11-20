@@ -185,12 +185,18 @@ local function sampleDB()
         professions = { Herbalism = { rank = 150, max = 225, learned = 1791000000,
             updated = 1792100000, recipes = { ["spell:2366"] = true } } },
     }, 1792200000)
+    -- The raids they are attuned to: this character's read from the game, the guildmate's received
+    -- (Attunements.lua, Core.setAttunements). Bob has been looked at and isn't attuned.
+    Core.setAttunements(luna, { ony = true })
+    Core.setAttunements(bob, { ony = false })
+    Core.setAttunements(db.characters["Kael-Test Realm"], { ony = true })
     return db
 end
 
 it("exports every character, sorted, with recipe ids sorted", function()
     local json = Core.toJSON(Core.exportData(sampleDB()))
-    eq(json:sub(1, 60), '{"addon":"GuildAssistantProfessions","characters":[{"class":', "start")
+    local prefix = '{"addon":"GuildAssistantProfessions","characters":[{'
+    eq(json:sub(1, #prefix), prefix, "start")
     assert(json:find('"name":"Bob"', 1, true) < json:find('"name":"Luna"', 1, true), "Bob before Luna")
     assert(json:find('"spells":[13890,20034]', 1, true), "spells sorted: " .. json)
     assert(json:find('"items":[14146]', 1, true), "item fallback kept")
@@ -205,6 +211,16 @@ end)
 it("matches the fixture the API's import test reads", function()
     local expected = read("dev/GuildAssistantProfessions/export.fixture.json"):gsub("%s+$", "")
     eq(Core.toJSON(Core.exportData(sampleDB())), expected, "export.fixture.json")
+end)
+
+it("exports each character's attunements, by key, leaving out those never looked at", function()
+    local json = Core.toJSON(Core.exportData(sampleDB()))
+    assert(json:find('"attunements":[{"attuned":true,"key":"ony"}],"class":"PRIEST","name":"Kael"', 1, true),
+        "a guildmate's: " .. json)
+    assert(json:find('"attunements":[{"attuned":false,"key":"ony"}]', 1, true), "Bob's, looked at: " .. json)
+    local count = 0
+    for _ in json:gmatch('"attunements"') do count = count + 1 end
+    eq(count, 3, "the three looked at; not Mira's, seen through a link")
 end)
 
 it("describes an export", function()

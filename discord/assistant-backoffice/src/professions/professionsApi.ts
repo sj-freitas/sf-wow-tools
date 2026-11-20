@@ -71,6 +71,27 @@ export const fetchCharacterProfessions = (characterId: string): Promise<Professi
   request('GET', `/api/characters/${characterId}/professions`);
 
 /**
+ * Which raids a character is attuned to, from GuildAssistant Professions 1.6.0 (API:
+ * src/professions/attunements.ts). Every raid the API knows is listed; `attuned` null means no
+ * one's addon has looked at this character for that raid, which isn't the same as not being
+ * attuned. `reported` is false when nothing at all has been imported for it.
+ */
+export interface CharacterAttunements {
+  reported: boolean;
+  raids: {
+    key: string;
+    /** The raid's name ("Onyxia's Lair"). */
+    raid: string;
+    attuned: boolean | null;
+    recordedAt: string | null;
+  }[];
+}
+
+/** A character's attunements for its own page (no guild needed). */
+export const fetchCharacterAttunements = (characterId: string): Promise<CharacterAttunements> =>
+  request('GET', `/api/characters/${characterId}/attunements`);
+
+/**
  * Drops a main profession (its recipes too): the character's player, or an Officer of a guild it
  * is in. Not Cooking, First Aid or Fishing.
  */

@@ -63,6 +63,10 @@ local function player(name, guild, last, saved, setup)
     env.time, env.date = function() return clock end, os.date
     env.GetNumSkillLines = function() return 0 end
     env.GetSkillLineInfo = function() end
+    -- The attunement quests this character has handed in (Attunements.lua asks about them).
+    me.quests = {}
+    env.UnitFactionGroup = function() return "Alliance" end
+    env.C_QuestLog = { IsQuestFlaggedCompleted = function(id) return me.quests[id] == true end }
     env.C_Timer = { After = function(seconds, fn) timers[#timers + 1] = { at = clock + seconds, fn = fn } end }
     env.C_ChatInfo = {
         RegisterAddonMessagePrefix = function(prefix) me.prefix = prefix end,
@@ -79,7 +83,7 @@ local function player(name, guild, last, saved, setup)
     }
     if setup then setup(env) end
     local ns = {}
-    for _, file in ipairs({ "Core", "Recipes", "Scan", "Sync", "Sources", "Main" }) do
+    for _, file in ipairs({ "Core", "Recipes", "Scan", "Sync", "Sources", "Attunements", "Main" }) do
         local path = file == "Recipes" and "dev/GuildAssistantProfessions/Recipes.fixture.lua"
             or "GuildAssistantProfessions/" .. file .. ".lua"
         local chunk = assert(loadfile(path, "t", env))
@@ -405,6 +409,69 @@ it("shares what a recipe requires, and 1.4.0 and earlier take the trainer and le
     local record = luna.ns.Core.encodeSourceRecord(luna.ns.db, "ritem:10577")
     eq(record:find("Goblin", 1, true), nil, "the trainer's record carries no requirement")
     eq(luna.ns.Core.encodeSourceRecord(luna.ns.db, "qitem:10577"):match("\t([^\t]+)$"), "Goblin Engineer")
+end)
+
+-- Attunements -------------------------------------------------------------------------------------
+
+local function attuned(p, name)
+    local character = p.ns.db.characters[name .. "-Test Realm"]
+    return character and character.attunements and character.attunements.ony
+end
+
+-- A player logging in with the attunement quests of `quests` handed in: the addon reads them at
+-- PLAYER_LOGIN (Attunements.lua).
+local function logIn(name, guild, quests)
+    local p = player(name, guild)
+    for _, id in ipairs(quests or {}) do p.quests[id] = true end
+    p.frame.onEvent(p.frame, "PLAYER_LOGIN")
+    return p
+end
+
+it("tells the guild when a character is attuned, and who isn't", function()
+    reset()
+    local luna = logIn("Luna", "Relic Hunters")
+    local kael = logIn("Kael", "Relic Hunters")
+    run(60)
+    eq(attuned(kael, "Luna"), false, "Kael knows Luna has been looked at and isn't attuned")
+    luna.quests[6502] = true -- Onyxia's attunement, handed in
+    luna.frame.onEvent(luna.frame, "QUEST_TURNED_IN")
+    run(30)
+    eq(attuned(luna, "Luna"), true)
+    eq(attuned(kael, "Luna"), true, "and Kael hears about it")
+    eq(kael.ns.Sync.stats.attunementsReceived > 0, true, "counted")
+    for _, line in ipairs(kael.chat) do
+        assert(not line:find("ttun", 1, true), "nothing said in Kael's chat: " .. line)
+    end
+end)
+
+it("answers a guildmate who holds less, once, and says nothing to one who holds as much", function()
+    reset()
+    local luna = logIn("Luna", "Relic Hunters", { 6502 })
+    local kael = logIn("Kael", "Relic Hunters")
+    run(60)
+    eq(attuned(kael, "Luna"), true, "shared at login")
+    -- Mira installs the addon now: her hello brings her the characters, and her own attunements
+    -- (Luna's missing from them) make whoever holds more answer.
+    local before = #sent
+    local mira = logIn("Mira", "Relic Hunters")
+    run(120)
+    eq(attuned(mira, "Luna"), true, "Mira catches up")
+    local answers = 0
+    for i = before + 1, #sent do
+        if sent[i].message:match("^B") and sent[i].from ~= "Mira" then answers = answers + 1 end
+    end
+    eq(answers, 1, "one of them answers; the other hears it and says nothing")
+end)
+
+it("doesn't take an attunement for a character it doesn't know, nor from outside the guild", function()
+    reset()
+    local luna = logIn("Luna", "Relic Hunters")
+    logIn("Brom", "Other Guild", { 6502 })
+    run(60)
+    eq(luna.ns.db.characters["Brom-Test Realm"], nil, "another guild's addon isn't heard")
+    -- A message naming a character this addon never heard of: nothing is made up.
+    luna.ns.Sync.onMessage("GAProf", "A1	1	1	Nobody-Test Realm=ony+", "GUILD", "Kael-Test Realm")
+    eq(luna.ns.db.characters["Nobody-Test Realm"], nil)
 end)
 
 realPrint(("%d passed, %d failed"):format(passed, failed))

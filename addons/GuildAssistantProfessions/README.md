@@ -1,8 +1,9 @@
 # GuildAssistant Professions
 
-Remembers what your characters can craft, shares it with your guildmates' addons, and keeps it for
-Guild Assistant, so your guild can see everyone's professions and recipes on the website. One
-guildmate's upload carries everyone the addon has heard about.
+Remembers what your characters can craft and which raids they are attuned to, shares it with your
+guildmates' addons, and keeps it for Guild Assistant, so your guild can see everyone's professions,
+recipes and attunements on the website. One guildmate's upload carries everyone the addon has heard
+about.
 
 Made for WoW Forever; works on Classic Era too.
 
@@ -51,6 +52,28 @@ the chat):
 
 `/ga-prof status` says how many guild characters your addon has and what was sent and received.
 
+## Attunements
+
+Which raids each character may walk into, recorded quietly: at login, on entering the world and
+whenever you hand a quest in, the addon asks the game whether the raid's attunement quest is
+complete (Onyxia's Lair: quest 6502 for the Alliance, 6602 for the Horde) and keeps the answer with
+the character. It tells "not attuned" from "not looked at", so a character whose player doesn't
+have the addon isn't shown as unattuned.
+
+An attunement is for good (a completed quest never uncompletes), so nothing is ever taken back:
+what the game says, what a guildmate sent and what was saved before all merge, and `true` wins.
+They are shared with the guild like professions: at login your addon offers every character's
+attunements, whoever knows more answers once, and a new attunement of yours goes out as you get it.
+`/ga-prof status` says how many of the characters looked at are attuned to each raid.
+
+[GuildAssistant Database](../GuildAssistantDatabase/README.md) shows them in game (its
+**Attunements** tab, and on each guildmate's page), and the export carries them to Guild Assistant,
+which shows them on the character's page.
+
+The next raid with an attunement is one line in `Core.lua` (`Core.ATTUNEMENTS`: the raid's name and
+its quest per faction). A guildmate on a newer version can share a raid this one doesn't know yet:
+it's kept and passed on as it came.
+
 ## For GuildAssistant Database
 
 With [GuildAssistant Database](../GuildAssistantDatabase/README.md) installed too, it shows who you
@@ -84,7 +107,7 @@ What you find reaches everyone:
 ## What it saves
 
 Per account (`GuildAssistantProfessionsDB`): each character you log in with, its professions and
-skill (read at login), and its recipes, as WoW spell ids (the crafted item's id when the game gives
+skill (read at login), which raids it is attuned to (`attunements`), and its recipes, as WoW spell ids (the crafted item's id when the game gives
 no spell). On WoW Forever they're recorded at login and whenever a recipe is learned, no window
 needed: each recipe the game's tables have of the character's professions (`Recipes.lua`, built
 with GuildAssistant Database's data, `npm run database`) is asked of the game (`IsPlayerSpell`,
@@ -131,7 +154,9 @@ on logout. For example:
 ```
 
 `source` is `own` (one of your account's), `guild` (a guildmate's, received from the guild) or
-`link`. Once it has recorded how recipes are obtained, the export also has `sources`:
+`link`. A character whose attunements have been looked at also has
+`"attunements":[{"key":"ony","attuned":true}]` (1.6.0; the key is the raid's, `ony` for Onyxia's
+Lair, and `attuned` false means looked at and not attuned). Once it has recorded how recipes are obtained, the export also has `sources`:
 `{"items":[{"id":6047,"entries":["V:Tanaris=Krinkle Goodsteel"]}],"trainers":[{"recipe":"item:10577","cost":2800,"entries":["Tanaris=Nixx Sprocketspring"],"requires":["Goblin Engineer"]}]}`
 (an entry is the kind, V vendor, D drop, O object, F fishing or Q quest, then the zone and who; a
 trainer's is the zone and the trainer; `requires`, only when the trainer's window says some, is

@@ -104,3 +104,21 @@ model RecipeSource {
   @@id([kind, key, entry])
   @@map("recipe_sources")
 }
+
+// Which raids a character is attuned to, as GuildAssistant Professions recorded it in game (1.6.0
+// and later: the raid's attunement quest flagged complete) and the import carries it
+// (ProfessionExport.attunements). `key` is the addon's for the raid ("ony" for Onyxia's Lair;
+// ATTUNEMENTS in src/professions/attunements.ts names them), and a row only ever gains: an
+// attunement is for good, so `attuned` never goes back to false. A raid with no row for a character
+// was never looked at, which is not the same as not being attuned.
+model CharacterAttunement {
+  characterId String    @map("character_id") @db.Uuid
+  character   Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  key         String
+  attuned     Boolean   @default(false)
+  // When an import last said anything about it.
+  recordedAt  DateTime  @default(now()) @map("recorded_at")
+
+  @@id([characterId, key])
+  @@map("character_attunements")
+}

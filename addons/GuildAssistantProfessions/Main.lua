@@ -4,7 +4,7 @@
 -- gets uploaded. Addons can't write files themselves.
 
 local addonName, ns = ...
-local Core, Scan, Sync, Sources = ns.Core, ns.Scan, ns.Sync, ns.Sources
+local Core, Scan, Sync, Sources, Attunements = ns.Core, ns.Scan, ns.Sync, ns.Sources, ns.Attunements
 
 -- Where the game writes the saved data, from the game's folder (the account folder's name can't be
 -- known from inside the game).
@@ -85,6 +85,7 @@ local function status()
     end
     print("  Last update: " .. when(last) .. ".")
     print("  " .. Sync.describe(db(), when))
+    print("  Attunements: " .. Core.describeAttunements(db()) .. ".")
     print("  Seen for GuildAssistant Database: " .. Core.describeSources(db()) .. ".")
     print("  File: " .. FILE .. " in the game's folder, written by /ga-prof save (or logging out).")
     print("  On Guild Assistant: Roster, Import professions, and drop it there.")
@@ -143,6 +144,17 @@ local function checkKnownSoon()
     end)
 end
 
+-- Which raids this character is attuned to, asked of the game (Attunements.lua): at login, on
+-- entering the world and after handing in a quest. A change goes in the export and to the guild.
+local function checkAttunements()
+    if Attunements.scan() then
+        -- The character too: one whose professions were never recorded is only shared once
+        -- something about it was, and the attunement is something (Core.setAttunements stamps it).
+        ownChanged()
+        Sync.attunementsChanged()
+    end
+end
+
 local function onEvent(self, event, arg, ...)
     if event == "ADDON_LOADED" and arg == addonName then
         self:UnregisterEvent("ADDON_LOADED")
@@ -170,6 +182,9 @@ local function onEvent(self, event, arg, ...)
     elseif event == "PLAYER_LOGIN" or event == "SKILL_LINES_CHANGED" then
         if Scan.skills() then ownChanged() end
         checkKnownSoon()
+        checkAttunements()
+    elseif event == "PLAYER_ENTERING_WORLD" or event == "QUEST_TURNED_IN" then
+        checkAttunements()
     elseif event == "NEW_RECIPE_LEARNED" or event == "LEARNED_SPELL_IN_TAB" or event == "SPELLS_CHANGED" then
         checkKnownSoon()
     elseif event:find("^TRADE_SKILL_") then
@@ -197,6 +212,8 @@ events.missing = {}
 for _, event in ipairs({ "ADDON_LOADED", "PLAYER_LOGIN", "PLAYER_LOGOUT", "SKILL_LINES_CHANGED", "CHAT_MSG_ADDON",
     -- A recipe learned (the modern client's event, Classic Era's, and either's spells changing).
     "NEW_RECIPE_LEARNED", "LEARNED_SPELL_IN_TAB", "SPELLS_CHANGED",
+    -- The raids this character is attuned to (Attunements.lua).
+    "PLAYER_ENTERING_WORLD", "QUEST_TURNED_IN",
     "TRADE_SKILL_SHOW", "TRADE_SKILL_UPDATE", "TRADE_SKILL_LIST_UPDATE",
     "TRADE_SKILL_DATA_SOURCE_CHANGED", "CRAFT_SHOW", "CRAFT_UPDATE",
     -- How recipes are obtained, for GuildAssistant Database (Sources.lua).

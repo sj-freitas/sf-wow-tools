@@ -3,7 +3,8 @@
 Every profession's recipes, in game: search them by name, stat, slot or reagent, keep them to a
 level and skill range, and see what each one makes, what it needs, how to learn it and, with
 [GuildAssistant Professions](../GuildAssistantProfessions/README.md), who you know that can craft
-it. It also lists your own professions' recipes you don't know yet.
+it. It also lists your own professions' recipes you don't know yet, and which raids your guildmates
+are attuned to.
 
 Made for WoW Forever: its data is the game's own, from Forever's data files.
 
@@ -11,9 +12,9 @@ Made for WoW Forever: its data is the game's own, from Forever's data files.
 
 Type `/gadb` (or `/ga-db`), or click the clip on the minimap, to open or close the window (it keeps
 your last search); `/gadb mithril` opens it searching for "mithril", and `/gadb *` opens it with the
-search cleared. With GuildAssistant Professions, two tabs under the window: **Recipes** (all of what
-follows) and **Guild** (see "Your guild" below); a search from `/gadb` or a shift-click goes to
-Recipes. Drag the clip to move it around the minimap;
+search cleared. With GuildAssistant Professions, three tabs under the window: **Recipes** (all of
+what follows), **Guild** and **Attunements** (see "Your guild" and "Attunements" below); a search
+from `/gadb` or a shift-click goes to Recipes. Drag the clip to move it around the minimap;
 `/gadb minimap` hides it (and brings it back).
 
 - **Search** (top left): words that must all be somewhere in the recipe: its name, the item it
@@ -105,6 +106,22 @@ and **Reset** puts that order back.
 A specialization comes from GuildAssistant Professions 1.5.0, which records it as a spell the
 character knows; for what older versions recorded, from the recipes they know that need one. The
 level and skill limits, the Filter and Not known yet are Recipes' only.
+
+## Attunements
+
+The **Attunements** tab lists the same guildmates with a **tick** for each raid they are attuned to,
+a **dash** where they aren't, and a **question mark** where nobody's addon has looked yet — being
+unattuned and not being known are not the same thing. The raids are on the left with how many
+guildmates are attuned to each: click one for just those, and the search finds a guildmate by name.
+Click a guildmate for their raids one by one, which also show on their page in the Guild tab.
+
+Each raid gets a column of its own, up to five beside the name; with more raids than that, picking
+one on the left brings it into view, and a guildmate's page always has them all.
+
+It comes from GuildAssistant Professions 1.6.0, which asks the game whether each raid's attunement
+quest is complete (Onyxia's Lair so far) and shares it with the guild. A guildmate on an older
+version shows a question mark. A raid that a newer GuildAssistant Professions knows and this addon
+doesn't is still listed, under its key.
 
 ## Performance
 

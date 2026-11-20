@@ -7,11 +7,14 @@
 -- only read the first time it's needed, one profession per frame, so opening the window never
 -- stalls the game.
 --
--- With GuildAssistant Professions, two tabs under the window: Recipes (the above) and Guild: the
--- professions on the left with how many guildmates have each, the guildmates in the middle ("Shivan
--- Darkwhisp  190  Blacksmithing - Weaponsmith"), sorted by the Name, Skill and Profession titles
--- above them as Recipes' list is sorted by Skill and Level, and a click on one lists what they can
--- make, whose details show as Recipes' do. The search box searches whichever is listed.
+-- With GuildAssistant Professions, three tabs under the window: Recipes (the above), Guild and
+-- Attunements. Guild: the professions on the left with how many guildmates have each, the
+-- guildmates in the middle ("Shivan Darkwhisp  190  Blacksmithing - Weaponsmith"), sorted by the
+-- Name, Skill and Profession titles above them as Recipes' list is sorted by Skill and Level, and a
+-- click on one lists what they can make, whose details show as Recipes' do. Attunements: the raids
+-- on the left with how many guildmates are attuned to each, the guildmates in the middle with a
+-- tick per raid, and a click on one shows their attunements, raid by raid, as the details. The
+-- search box searches whichever is listed.
 
 local _, ns = ...
 local Core, Game = ns.Core, ns.Game
@@ -28,6 +31,10 @@ local ROW_HEIGHT, ROWS = 22, 18
 -- The name takes what a long one needs ("Shivan Darkwhisp (you)"), and the gap between the two
 -- holds the Skill title's chevron.
 local MEMBER_SKILL_RIGHT, MEMBER_PROFESSION_LEFT = 186, 200
+-- The Attunements tab's rows: the guildmate's name, then a column per raid with its mark, the
+-- raid's short name as the column's title. This many fit beside the name; with more raids than
+-- that, the rest show on a guildmate's own page (and picking one on the left brings it into view).
+local ATTUNE_NAME_WIDTH, ATTUNE_COLUMN_WIDTH, MAX_ATTUNE_COLUMNS = 146, 40, 5
 local SIDEBAR_ROWS = 14
 local MAX_REAGENTS, MAX_RECIPE_ITEMS, MAX_CRAFTERS = 8, 3, 15
 local QUESTION_MARK = "Interface\\Icons\\INV_Misc_QuestionMark"
@@ -35,6 +42,11 @@ local GUILD_CHOICE = "Only guild"
 local HIGHLIGHT = "Interface\\QuestFrame\\UI-QuestTitleHighlight"
 -- The game's own sort arrow, as it comes pointing down (highest first) and flipped for lowest first.
 local SORT_ARROW = "Interface\\Buttons\\UI-SortArrow"
+-- The attunement marks: the game's tick, a dash for looked at and not attuned, and a question mark
+-- for a character no addon has looked at (not the same as not attuned).
+local ATTUNED_MARK = "|TInterface\\Buttons\\UI-CheckBox-Check:18:18|t"
+local NOT_ATTUNED_MARK = "|cff808080-|r"
+local UNKNOWN_MARK = "|cff808080?|r"
 local CHEVRON_DOWN, CHEVRON_UP = { 0, 0.5625, 0, 1 }, { 0, 0.5625, 1, 0 }
 local CHEVRON_SIZE = 10
 
@@ -49,6 +61,9 @@ local details
 -- The tabs, what only Recipes shows (the limits, the Filter, Not known yet), and the Guild tab's own:
 -- the guildmates' rows and the line above the list (Back, whose recipes).
 local tabs, recipeControls, recipeColumns, memberRows, backButton, crumb
+-- The Attunements tab's rows and its column titles (one per raid shown).
+local attuneRows, attuneColumns
+local ATTUNE_HINT = "Click a guildmate to see which raids they are attuned to.\n\nYour guildmates who use GuildAssistant Professions, with a tick for each raid they are attuned to, a dash where they aren't, and a question mark where no one's addon has looked yet. Pick a raid on the left for the guildmates attuned to it, or search by name."
 local GUILD_HINT = "Click a guildmate to see what they can make.\n\nYour guildmates who use GuildAssistant Professions, each profession with its skill and specialization. Search by name, profession or specialization (weaponsmith), and click Name, Skill or Profession above the list to sort it."
 local RECIPE_HINT = "Pick a recipe to see its reagents, how to learn it and who can craft it.\n\nShift-click a recipe to link it in the chat, or the item at the top of its details for the item's link; ctrl-click to try it on. Click a name under Who can craft it to whisper them.\n\nShift-click an item anywhere (your bags, a link in the chat) with the chat box closed to search for it."
 
@@ -75,9 +90,13 @@ local state = {
     -- The Guild tab: every guildmate row (Core.guildMembers), those listed, the one whose recipes are
     -- listed instead (nil: the guildmates are), and what to go back to (the search, the place).
     allMembers = {}, members = {}, member = nil, back = nil,
+    -- The Attunements tab: every guildmate (Core.guildAttunements), those listed, the raid picked
+    -- on the left, the guildmate whose attunements are shown, the raids known and those with a
+    -- column of their own.
+    allAttuned = {}, attuned = {}, raid = nil, attunedMember = nil, raids = {}, attuneColumns = {},
 }
 -- Each tab's search, profession, place in the list and pick, kept while the other is shown.
-local memory = { recipes = {}, guild = {} }
+local memory = { recipes = {}, guild = {}, attunements = {} }
 
 -- Building blocks ----------------------------------------------------------------------------------
 
@@ -279,7 +298,7 @@ local function drawGuildSidebar()
     for i, button in ipairs(sidebarButtons) do
         local item = items[i]
         if item then
-            button.profession = item.name
+            button.profession, button.raid = item.name, nil
             button.text:SetText(item.text)
             button.right:SetText(item.right or "")
             if item.name == state.profession then button.selected:Show() else button.selected:Hide() end
@@ -290,7 +309,30 @@ local function drawGuildSidebar()
     end
 end
 
+-- The Attunements tab's left column: all the guildmates, then each raid with how many of them are
+-- attuned to it (with a search, of those the search keeps).
+local function drawAttunementSidebar()
+    local items = { { raid = nil, text = "All guildmates", right = Core.thousands(state.attunedTotal or 0) } }
+    for _, raid in ipairs(state.raids) do
+        items[#items + 1] = { raid = raid.key, text = raid.raid,
+            right = Core.thousands((state.attunedCounts or {})[raid.key] or 0) }
+    end
+    for i, button in ipairs(sidebarButtons) do
+        local item = items[i]
+        if item then
+            button.profession, button.raid = nil, item.raid
+            button.text:SetText(item.text)
+            button.right:SetText(item.right or "")
+            if item.raid == state.raid then button.selected:Show() else button.selected:Hide() end
+            button:Show()
+        else
+            button:Hide()
+        end
+    end
+end
+
 local function drawSidebar()
+    if state.tab == "attunements" then return drawAttunementSidebar() end
     if state.tab == "guild" then return drawGuildSidebar() end
     local entries = listedEntries()
     local all = ""
@@ -317,7 +359,7 @@ local function drawSidebar()
     for i, button in ipairs(sidebarButtons) do
         local item = items[i]
         if item then
-            button.profession = item.name
+            button.profession, button.raid = item.name, nil
             button.text:SetText(item.text)
             button.right:SetText(item.right or "")
             if item.name == state.profession then button.selected:Show() else button.selected:Hide() end
@@ -365,6 +407,34 @@ local function drawMembers()
             row.name:SetText(("|c%s%s|r%s"):format(Game.classHex(member.class), member.name, sourceSuffix(member)))
             row.skill:SetText(member.rank > 0 and tostring(member.rank) or "")
             row.profession:SetText(Core.professionLine(member))
+            row:Show()
+        else
+            row.member = nil
+            row:Hide()
+        end
+    end
+end
+
+--- The mark for an attunement: attuned, looked at and not attuned, or never looked at.
+local function attunementMark(attuned)
+    if attuned == true then return ATTUNED_MARK end
+    return attuned == false and NOT_ATTUNED_MARK or UNKNOWN_MARK
+end
+
+local function drawAttunedRows()
+    local members = state.attuned
+    updateSlider(#members)
+    for i, row in ipairs(attuneRows) do
+        local member = members[state.offset + i]
+        if member then
+            row.member = member
+            row.name:SetText(("|c%s%s|r%s"):format(Game.classHex(member.class), member.name, sourceSuffix(member)))
+            for column, mark in ipairs(row.marks) do
+                local raid = state.attuneColumns[column]
+                mark:SetText(raid and attunementMark(member.states[raid.key]) or "")
+                mark:SetShown(raid ~= nil)
+            end
+            if member == state.attunedMember then row.selected:Show() else row.selected:Hide() end
             row:Show()
         else
             row.member = nil
@@ -435,24 +505,50 @@ local function drawSortHeaders(headers)
     end
 end
 
---- The list: guildmates, or recipes; the column titles that go with it.
+--- The list: guildmates with their attunements, guildmates with their professions, or recipes; the
+--- column titles that go with it.
 local function drawRows()
+    local attunements = state.tab == "attunements"
     local members = listingMembers()
     for _, region in ipairs(memberHeaders) do region:SetShown(members) end
-    for _, region in ipairs(recipeColumns) do region:SetShown(not members) end
-    if members then
-        drawSortHeaders(memberHeaders)
+    for _, region in ipairs(recipeColumns) do region:SetShown(not members and not attunements) end
+    for i, header in ipairs(attuneColumns) do
+        local raid = attunements and state.attuneColumns[i] or nil
+        if raid then header.title:SetText(raid.short or raid.raid) end
+        header.raid = raid
+        header:SetShown(raid ~= nil)
+    end
+    local function hideRecipes()
         for _, row in ipairs(rows) do
             row.recipe, row.hyperlink = nil, nil
             row:Hide()
         end
+    end
+    local function hideMembers()
+        for _, row in ipairs(memberRows) do
+            row.member = nil
+            row:Hide()
+        end
+    end
+    local function hideAttuned()
+        for _, row in ipairs(attuneRows) do
+            row.member = nil
+            row:Hide()
+        end
+    end
+    if attunements then
+        hideRecipes()
+        hideMembers()
+        return drawAttunedRows()
+    end
+    hideAttuned()
+    if members then
+        drawSortHeaders(memberHeaders)
+        hideRecipes()
         return drawMembers()
     end
     drawSortHeaders(sortHeaders)
-    for _, row in ipairs(memberRows) do
-        row.member = nil
-        row:Hide()
-    end
+    hideMembers()
     drawRecipeRows()
 end
 
@@ -579,19 +675,60 @@ local function craftTooltip(button)
     end
 end
 
--- A guildmate, when no recipe of theirs is picked: who they are, and each profession they have with
--- its skill and specialization.
-local function memberSummary(member)
+-- Who a guildmate is: their name in their class's colour, and whether they're you, your alt or a
+-- guildmate.
+local function whoLines(member)
     local who = member.you and "You" or member.source == "own" and "Your alt" or "Guildmate"
-    local lines = { ("|c%s%s|r"):format(Game.classHex(member.class), member.name), "|cff808080" .. who .. "|r", "" }
+    return { ("|c%s%s|r"):format(Game.classHex(member.class), member.name), "|cff808080" .. who .. "|r", "" }
+end
+
+-- A guildmate's attunements, raid by raid: attuned, not attuned, or not known (nobody with the
+-- addon has looked at that character). On their page in the Guild tab as well as the Attunements
+-- tab's details, so it is wherever they are.
+local function attunementLines(member)
+    local rows = Core.attunementRows(member, state.raids)
+    if #rows == 0 then return {} end
+    local lines = { "|cffffd100Attunements|r" }
+    local unknown = false
+    for _, row in ipairs(rows) do
+        local said = row.attuned == true and "|cff40ff40Attuned|r"
+            or row.attuned == false and "|cff808080Not attuned|r" or "|cff808080Not known|r"
+        if row.attuned == nil then unknown = true end
+        lines[#lines + 1] = ("%s: %s"):format(row.raid, said)
+    end
+    if unknown then
+        lines[#lines + 1] = "|cff808080Not known: their GuildAssistant Professions hasn't looked (or is older than 1.6.0).|r"
+    end
+    return lines
+end
+
+-- A guildmate, when no recipe of theirs is picked: who they are, each profession they have with its
+-- skill and specialization, and which raids they are attuned to.
+local function memberSummary(member)
+    local lines = whoLines(member)
     for _, other in ipairs(state.allMembers) do
         if other.key == member.key then
             local skill = other.rank > 0 and (other.max and ("%d/%d "):format(other.rank, other.max) or (other.rank .. " ")) or ""
             lines[#lines + 1] = skill .. Core.professionLine(other)
         end
     end
+    local attuned
+    for _, row in ipairs(state.allAttuned) do
+        if row.key == member.key then attuned = row end
+    end
+    if attuned then
+        lines[#lines + 1] = ""
+        for _, line in ipairs(attunementLines(attuned)) do lines[#lines + 1] = line end
+    end
     lines[#lines + 1] = ""
     lines[#lines + 1] = "|cff808080Click a recipe for its details.|r"
+    return table.concat(lines, "\n")
+end
+
+-- A guildmate on the Attunements tab: who they are, then every raid.
+local function attunementSummary(member)
+    local lines = whoLines(member)
+    for _, line in ipairs(attunementLines(member)) do lines[#lines + 1] = line end
     return table.concat(lines, "\n")
 end
 
@@ -601,14 +738,21 @@ local function drawDetails()
     if not recipe then
         for _, region in ipairs(d.regions) do region[1]:Hide() end
         d.learnHover:Hide()
+        local summary
         if state.tab == "guild" and state.member then
+            summary = memberSummary(state.member)
+        elseif state.tab == "attunements" and state.attunedMember then
+            summary = attunementSummary(state.attunedMember)
+        end
+        if summary then
             d.hint:Hide()
-            d.summary:SetText(memberSummary(state.member))
+            d.summary:SetText(summary)
             d.summary:Show()
             return
         end
         d.summary:Hide()
-        d.hint:SetText(state.tab == "guild" and GUILD_HINT or RECIPE_HINT)
+        d.hint:SetText(state.tab == "attunements" and ATTUNE_HINT
+            or state.tab == "guild" and GUILD_HINT or RECIPE_HINT)
         d.hint:Show()
         return
     end
@@ -698,23 +842,27 @@ end
 
 -- The Guild tab ----------------------------------------------------------------------------------
 
---- The line above the Guild tab's list: your guild, or Back and whose recipes are listed.
+--- The line above the Guild and Attunements tabs' lists: your guild, or Back and whose recipes are
+--- listed.
 local function drawCrumb()
     local guildTab = state.tab == "guild"
     backButton:SetShown(guildTab and state.member ~= nil)
-    crumb:SetShown(guildTab)
-    if not guildTab then return end
+    crumb:SetShown(guildTab or state.tab == "attunements")
+    if state.tab == "recipes" then return end
     crumb:ClearAllPoints()
-    local member = state.member
+    local member = guildTab and state.member or nil
     if member then
         crumb:SetPoint("LEFT", backButton, "RIGHT", 10, 0)
         crumb:SetText(("|c%s%s|r  %s%s"):format(Game.classHex(member.class), member.name,
             member.rank > 0 and (member.rank .. " ") or "", Core.professionLine(member)))
-    else
-        crumb:SetPoint("TOPLEFT", frame, "TOPLEFT", 20, -64)
-        local guild = Game.guildName()
-        crumb:SetText(guild and ("|cffffd100%s|r: guildmates who use GuildAssistant Professions"):format(guild) or "")
+        return
     end
+    crumb:SetPoint("TOPLEFT", frame, "TOPLEFT", 20, -64)
+    local guild = Game.guildName()
+    if not guild then return crumb:SetText("") end
+    crumb:SetText(guildTab
+        and ("|cffffd100%s|r: guildmates who use GuildAssistant Professions"):format(guild)
+        or ("|cffffd100%s|r: which raids each guildmate is attuned to"):format(guild))
 end
 
 local function guildStatus(pending, total, guild, byName)
@@ -764,6 +912,9 @@ local function refreshGuild()
     for _, name in ipairs(others) do professions[#professions + 1] = name end
     local pending = loadPending(wanted)
     state.allMembers, state.guildProfessions = all, professions
+    -- The attunements too: a guildmate's page shows them under their professions.
+    local db = Game.professionsDB()
+    state.allAttuned, state.raids = Core.guildAttunements(db, guild, Game.playerKey()), Core.attunementRaids(db)
     if state.member then
         -- As read now (a newer skill, a specialization its recipes tell once read); gone: back.
         local again
@@ -803,37 +954,107 @@ local function refreshGuild()
     statusHover:SetWidth(math.min(statusText:GetStringWidth(), STATUS_WIDTH))
 end
 
+local function attunementStatus(guild)
+    if not guild then return "You're not in a guild: this tab lists your guildmates' attunements." end
+    if #state.allAttuned == 0 then
+        return ("No one in %s is known yet: guildmates who use GuildAssistant Professions show here."):format(guild)
+    end
+    local count = #state.attuned
+    if count == 0 then
+        if state.raid then
+            local raid = state.raid
+            for _, entry in ipairs(state.raids) do
+                if entry.key == state.raid then raid = entry.raid end
+            end
+            return ("No one known is attuned to %s yet."):format(raid)
+        end
+        return "No guildmates match."
+    end
+    local line = ("%s guildmate%s"):format(Core.thousands(count), count == 1 and "" or "s")
+    local hidden = #state.raids - #state.attuneColumns
+    if hidden > 0 then
+        line = ("%s  |cffffd100%d more raid%s: click a guildmate, or pick one on the left.|r"):format(
+            line, hidden, hidden == 1 and "" or "s")
+    end
+    return line
+end
+
+--- The Attunements tab, up to date: every guildmate GuildAssistant Professions knows with the raids
+--- they are attuned to, those the search and the raid picked keep, and the one whose raids are shown.
+local function refreshAttunements()
+    local guild = Game.guildName()
+    local db = Game.professionsDB()
+    local all = Core.guildAttunements(db, guild, Game.playerKey())
+    state.allAttuned, state.raids = all, Core.attunementRaids(db)
+    -- A raid picked on the left that isn't there any more: all of them.
+    if state.raid then
+        local listed = false
+        for _, raid in ipairs(state.raids) do listed = listed or raid.key == state.raid end
+        if not listed then state.raid = nil end
+    end
+    state.attuneColumns = Core.attunementColumns(state.raids, state.raid, MAX_ATTUNE_COLUMNS)
+    local matched = Core.findAttuned(all, Core.terms(searchBox:GetText()), nil)
+    state.attunedCounts, state.attunedTotal = Core.attunedCounts(matched), #matched
+    state.attuned = state.raid and Core.findAttuned(matched, nil, state.raid) or matched
+    -- The guildmate whose raids are shown, as read now; gone from the guild: none.
+    if state.attunedMember then
+        local again
+        for _, member in ipairs(all) do
+            if member.key == state.attunedMember.key then again = member end
+        end
+        state.attunedMember = again
+    end
+    state.results, state.members = {}, {}
+    drawSidebar()
+    drawRows()
+    drawDetails()
+    drawCrumb()
+    statusText:SetText(attunementStatus(guild))
+    statusHover:SetWidth(math.min(statusText:GetStringWidth(), STATUS_WIDTH))
+end
+
+-- The tabs, in order, and what the search box says it searches on each.
+local TAB_KEYS = { "recipes", "guild", "attunements" }
+local SEARCH_HINTS = {
+    recipes = "Search: name, stat, slot, reagent",
+    guild = "Search: name, profession, specialization",
+    attunements = "Search: a guildmate's name",
+}
+
 -- Which tab shows: its own controls (Recipes: the limits, the Filter and Not known yet), the search
 -- box's hint, and the tabs drawn picked or not.
 local function drawTabs()
-    local guildTab = state.tab == "guild"
-    for _, control in ipairs(recipeControls) do control:SetShown(not guildTab) end
-    if guildTab then filterPopup:Hide() end
-    placeholder:SetText(guildTab and "Search: name, profession, specialization" or "Search: name, stat, slot, reagent")
+    local recipeTab = state.tab == "recipes"
+    for _, control in ipairs(recipeControls) do control:SetShown(recipeTab) end
+    if not recipeTab then filterPopup:Hide() end
+    placeholder:SetText(SEARCH_HINTS[state.tab] or SEARCH_HINTS.recipes)
     for i, tab in ipairs(tabs) do
-        local picked = (i == 2) == guildTab
+        local picked = TAB_KEYS[i] == state.tab
         if tab.panel and PanelTemplates_SelectTab and PanelTemplates_DeselectTab then
             if picked then PanelTemplates_SelectTab(tab) else PanelTemplates_DeselectTab(tab) end
         else
             tab:SetEnabled(not picked)
         end
     end
-    if not guildTab then
+    if recipeTab then
         backButton:Hide()
         crumb:Hide()
     end
 end
 
---- Shows tab `to` ("recipes", "guild") as it was left: its search, profession, place and pick.
+--- Shows tab `to` ("recipes", "guild", "attunements") as it was left: its search, what was picked
+--- on the left, its place in the list and its pick.
 local function switchTab(to)
     if state.tab == to then return end
     memory[state.tab] = { search = searchBox:GetText(), profession = state.profession, offset = state.offset,
-        selected = state.selected, member = state.member, back = state.back }
+        selected = state.selected, member = state.member, back = state.back,
+        raid = state.raid, attunedMember = state.attunedMember }
     state.tab = to
     local kept = memory[to] or {}
     state.profession, state.offset, state.selected = kept.profession, kept.offset or 0, kept.selected
     state.member, state.back = kept.member, kept.back
-    state.results, state.members = {}, {}
+    state.raid, state.attunedMember = kept.raid, kept.attunedMember
+    state.results, state.members, state.attuned = {}, {}, {}
     searchBox:SetText(kept.search or "")
     drawTabs()
 end
@@ -864,6 +1085,7 @@ function UI.refresh()
     if not hasProfessions and state.tab ~= "recipes" then switchTab("recipes") end
     drawTabs()
     placeholder:SetShown(searchBox:GetText() == "" and not searchBox:HasFocus())
+    if state.tab == "attunements" then return refreshAttunements() end
     if state.tab == "guild" then return refreshGuild() end
     state.mine = state.unknownOnly and Game.myProfessions() or {}
     -- A profession picked before that isn't listed now (switching to yours only): all of them.
@@ -1199,6 +1421,10 @@ local function buildSidebar()
         button.right = fontString(button, "GameFontDisableSmall", "RIGHT")
         button.right:SetPoint("RIGHT", button, "RIGHT", -6, 0)
         button:SetScript("OnClick", function(self)
+            if state.tab == "attunements" then
+                state.raid, state.offset = self.raid, 0
+                return UI.refresh()
+            end
             if state.tab == "guild" and state.member then
                 -- Back to the guildmates (their search), of the profession picked.
                 local back = state.back or {}
@@ -1314,6 +1540,70 @@ local function buildList()
         row:SetScript("OnLeave", Game.hideTooltip)
         row:Hide()
         memberRows[i] = row
+    end
+
+    -- The Attunements tab's column titles, one per raid shown: the raid's short name over its
+    -- column, the full name and what the marks mean on hover. They sit where the Guild tab's
+    -- titles do, and the columns are the same width as the marks under them, so nothing moves.
+    attuneColumns = {}
+    for i = 1, MAX_ATTUNE_COLUMNS do
+        local header = CreateFrame("Frame", nil, frame)
+        header:SetSize(ATTUNE_COLUMN_WIDTH, 16)
+        header:SetPoint("BOTTOMLEFT", list, "TOPLEFT", ATTUNE_NAME_WIDTH + (i - 1) * ATTUNE_COLUMN_WIDTH, 1)
+        header.title = fontString(header, "GameFontNormalSmall", "CENTER")
+        header.title:SetAllPoints(header)
+        header.title:SetWordWrap(false)
+        header:EnableMouse(true)
+        header:SetScript("OnEnter", function(self)
+            if not self.raid then return end
+            Game.showTextTooltip(self, self.raid.raid, {
+                "Who in your guild is attuned to it.",
+                "A tick is attuned, - not attuned, ? not known yet.",
+            })
+        end)
+        header:SetScript("OnLeave", Game.hideTooltip)
+        header:Hide()
+        attuneColumns[i] = header
+    end
+
+    -- The Attunements tab's rows: the guildmate, then their mark for each raid shown.
+    attuneRows = {}
+    for i = 1, ROWS do
+        local row = CreateFrame("Button", nil, list)
+        row:SetSize(LIST_WIDTH - 18, ROW_HEIGHT)
+        row:SetPoint("TOPLEFT", list, "TOPLEFT", 2, -4 - (i - 1) * (ROW_HEIGHT + 1))
+        highlightTextures(row)
+        row.name = fontString(row, "GameFontHighlight")
+        row.name:SetPoint("LEFT", row, "LEFT", 6, 0)
+        row.name:SetWidth(ATTUNE_NAME_WIDTH - 12)
+        row.name:SetWordWrap(false)
+        row.marks = {}
+        for column = 1, MAX_ATTUNE_COLUMNS do
+            local mark = fontString(row, "GameFontHighlight", "CENTER")
+            mark:SetPoint("LEFT", row, "LEFT", ATTUNE_NAME_WIDTH - 2 + (column - 1) * ATTUNE_COLUMN_WIDTH, 0)
+            mark:SetWidth(ATTUNE_COLUMN_WIDTH)
+            mark:Hide()
+            row.marks[column] = mark
+        end
+        row:SetScript("OnClick", function(self)
+            if not self.member then return end
+            state.attunedMember = self.member
+            drawRows()
+            drawDetails()
+        end)
+        row:SetScript("OnEnter", function(self)
+            local member = self.member
+            if not member then return end
+            local lines = {}
+            for _, entry in ipairs(Core.attunementRows(member, state.raids)) do
+                lines[#lines + 1] = ("%s %s"):format(attunementMark(entry.attuned), entry.raid)
+            end
+            lines[#lines + 1] = "Click for their attunements"
+            Game.showTextTooltip(self, member.name, lines)
+        end)
+        row:SetScript("OnLeave", Game.hideTooltip)
+        row:Hide()
+        attuneRows[i] = row
     end
 
     rows = {}
@@ -1488,7 +1778,7 @@ end
 -- where the client lacks it), shown only with GuildAssistant Professions.
 local function buildTabs()
     tabs = {}
-    for i, text in ipairs({ "Recipes", "Guild" }) do
+    for i, text in ipairs({ "Recipes", "Guild", "Attunements" }) do
         local name = "GuildAssistantDatabaseFrameTab" .. i
         local ok, tab = pcall(CreateFrame, "Button", name, frame, "PanelTabButtonTemplate")
         -- The template's textures: by key on newer clients, by name on older ones.
@@ -1506,7 +1796,7 @@ local function buildTabs()
             -- Older clients' tabs overlap by their transparent edges; newer ones sit side by side.
             tab:SetPoint("LEFT", tabs[i - 1], "RIGHT", (tab.panel and not rawget(tab, "LeftActive")) and -15 or 4, 0)
         end
-        local key = i == 1 and "recipes" or "guild"
+        local key = TAB_KEYS[i]
         tab:SetScript("OnClick", function()
             switchTab(key)
             UI.refresh()
@@ -1623,6 +1913,7 @@ function UI.parts()
         sidebarButtons = sidebarButtons, rows = rows, details = details, statusText = statusText,
         statusHover = statusHover, versionText = versionText,
         tabs = tabs, memberRows = memberRows, backButton = backButton, crumb = crumb,
+        attuneRows = attuneRows, attuneColumns = attuneColumns,
         columnSkill = columnSkill, columnLevel = columnLevel, memberHeaders = memberHeaders,
         state = state,
     }

@@ -12,6 +12,12 @@
 --   * How recipes are obtained (Sources.lua: vendors, trainers, loot, quests) goes the same way, as
 --     records: each new finding is sent; at login a summary of the records ("D"), answered with
 --     the records ("R") the sender lacks or has older. Records are merged, never replaced.
+--   * Which raids each character is attuned to (Attunements.lua) goes as one message holding every
+--     character's -- it is small enough to be its own summary. At login the table is offered ("A",
+--     after the hello, so characters heard of for the first time are already kept): whoever holds
+--     more answers with theirs ("B"), after a random wait, and the others then don't. An answer is
+--     never answered, so a login costs one round. This character's own change goes as a "B" too:
+--     nobody can know better than its own addon.
 -- The pure parts (the messages, what to send, what to keep) are in Core.lua.
 
 local _, ns = ...
@@ -25,8 +31,12 @@ local PREFIX = "GAProf"
 local INTERVAL, BURST = 1.0, 4
 local HELLO_DELAY = 20 -- seconds after login: the guild's roster and the chat are ready by then
 local OWN_DELAY = 10 -- seconds after a scan: a window being browsed changes several times
+-- Seconds after the hello before the attunements go: by then the characters it asked for have
+-- arrived, so they are there to be attuned.
+local ATTUNEMENTS_DELAY = 15
 
-Sync.stats = { sent = 0, received = 0, sourcesSent = 0, sourcesReceived = 0 }
+Sync.stats = { sent = 0, received = 0, sourcesSent = 0, sourcesReceived = 0,
+    attunementsSent = 0, attunementsReceived = 0 }
 
 local function now() return ns.now() end
 local function after(seconds, fn)
@@ -143,6 +153,37 @@ function Sync.sourceChanged(record)
     if guild() then sendSourceRecord(record) end
 end
 
+-- What the guild has shown of the attunements since someone last asked for them, and what this
+-- addon has sent (Core.heardAttunements): an answer needn't go once everything this addon holds is
+-- out there. A message holding less than this addon does starts it again from what that one showed:
+-- whoever answers first, the others hear it and don't.
+local attunementsHeard = {}
+local attunementsAnswering = false
+
+--- Tells the guild the attunements of every character this addon knows (Core.encodeAttunements):
+--- `kind` "A" offers them at login (whoever holds more answers), "B" only tells. Queued once:
+--- asked for again while it waits, it still goes once, as it is then.
+function Sync.sendAttunements(kind, answer)
+    if not (guild() and ns.db) then return end
+    enqueue("A", function()
+        local current = guild()
+        if not current then return nil end
+        local payload = Core.encodeAttunements(ns.db, current)
+        Sync.stats.attunementsSent = Sync.stats.attunementsSent + 1
+        -- Everyone has heard what we hold now: nothing to answer until something new turns up.
+        Core.heardAttunements(attunementsHeard, Core.parseAttunements(payload))
+        return Core.pieces(kind, nextId(), payload)
+    end, answer and function()
+        return not Core.attunementsMore(ns.db, guild(), attunementsHeard)
+    end)
+end
+
+--- This character's attunements changed (Attunements.lua): tell the guild. Nobody knows this
+--- character better, so no answer is wanted.
+function Sync.attunementsChanged()
+    Sync.sendAttunements("B")
+end
+
 --- This character's professions changed: send them to the guild (once things settle). While the
 --- login hello is still to come they wait for it: it sends this character too (what was recorded at
 --- login, with it).
@@ -176,6 +217,9 @@ function Sync.hello()
         if Core.heartbeat(character, now()) and Sync.onOwnRestamped then Sync.onOwnRestamped() end
         sendCharacter(character.name .. "-" .. character.realm)
     end
+    -- And the attunements of every character known, once the hello's answers have come in: whoever
+    -- knows more answers.
+    after(ATTUNEMENTS_DELAY, function() Sync.sendAttunements("A") end)
     Sync.stats.helloAt = now()
     return true
 end
@@ -226,6 +270,34 @@ local function onSourceRecord(sender, payload)
     if more then sendSourceRecord(received.record) end
 end
 
+--- Someone's attunements: `offered` for a login's table ("A"), which is answered when this addon
+--- holds more, against an answer ("B"), which never is.
+local function onAttunements(sender, payload, offered)
+    local g = guild()
+    if not g or not ns.db then return end
+    local shown = Core.parseAttunements(payload)
+    local changed = Core.receiveAttunements(ns.db, g, shown)
+    if changed > 0 then
+        Sync.stats.attunementsReceived = Sync.stats.attunementsReceived + changed
+        if Sync.onReceived then Sync.onReceived() end
+    end
+    if not offered or not Core.attunementsMore(ns.db, g, shown) then
+        -- They hold everything this addon does: an answer of ours waiting needn't go.
+        Core.heardAttunements(attunementsHeard, shown)
+        return
+    end
+    -- Holding what they don't: ours goes, after a random wait, from what they showed -- unless
+    -- someone else's answer carries it all first.
+    attunementsHeard = shown
+    if not attunementsAnswering then
+        attunementsAnswering = true
+        after(2 + math.random() * 8, function()
+            attunementsAnswering = false
+            Sync.sendAttunements("B", true)
+        end)
+    end
+end
+
 local function onCharacter(sender, payload)
     local g = guild()
     local received = g and Core.decodeCharacter(payload)
@@ -262,6 +334,8 @@ function Sync.onMessage(prefix, message, channel, sender)
         onSourcesDigest(sender, payload)
     elseif kind == "R" then
         onSourceRecord(sender, payload)
+    elseif kind == "A" or kind == "B" then
+        onAttunements(sender, payload, kind == "A")
     end
 end
 
@@ -291,7 +365,7 @@ function Sync.describe(db, when)
         if character.source == "guild" and character.guild == g then known = known + 1 end
     end
     local s = Sync.stats
-    return ("Guild sharing (%s): %d guild character%s received so far. This session: %d received (last %s), %d sent (last %s); recipe sources: %d received, %d sent."):format(
+    return ("Guild sharing (%s): %d guild character%s received so far. This session: %d received (last %s), %d sent (last %s); recipe sources: %d received, %d sent; attunements: %d received, %d sent."):format(
         g, known, known == 1 and "" or "s", s.received, when(s.lastReceived), s.sent, when(s.lastSent),
-        s.sourcesReceived, s.sourcesSent)
+        s.sourcesReceived, s.sourcesSent, s.attunementsReceived, s.attunementsSent)
 end

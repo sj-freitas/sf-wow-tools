@@ -22,6 +22,11 @@ function setup(member = true, officer = false) {
   const professions: Record<string, unknown>[] = [];
   const drops: { characterId: string; name: string; droppedAt: Date }[] = [];
   const snapshots = new Map<string, Date>();
+  // Which raids each character is attuned to: { "<character>:<raid key>" = row }.
+  const attunements = new Map<
+    string,
+    { characterId: string; key: string; attuned: boolean; recordedAt: Date }
+  >();
   // Luna is the user's; Kael a guildmate's (on the guild's roster, played by d2).
   const people: Record<
     string,
@@ -47,15 +52,25 @@ function setup(member = true, officer = false) {
             lastName: person.lastName,
             realm: 'Test Realm',
           })),
-      // Luna: played by d1, in guild g1.
-      findUnique: async ({ where }: { where: { id: string } }) =>
-        where.id === 'luna-id'
-          ? {
-              gameVersion: 'Forever',
-              player: { discordUserId: 'd1' },
-              guilds: [{ guildId: 'g1' }],
-            }
-          : null,
+      // Luna: played by d1, in guild g1. The others are there, in no guild of their own.
+      findUnique: async ({ where }: { where: { id: string } }) => {
+        if (where.id === 'luna-id') {
+          return {
+            id: 'luna-id',
+            gameVersion: 'Forever',
+            player: { discordUserId: 'd1' },
+            guilds: [{ guildId: 'g1' }],
+          };
+        }
+        const person = people[where.id];
+        if (!person) return null;
+        return {
+          id: where.id,
+          gameVersion: 'Forever',
+          player: { discordUserId: person.player },
+          guilds: [],
+        };
+      },
     },
     characterGuildMembership: {
       findUnique: async () => ({ guild: { gameVersion: 'Forever' } }),
@@ -161,6 +176,24 @@ function setup(member = true, officer = false) {
         }
       },
     },
+    characterAttunement: {
+      findMany: async ({ where }: { where: { characterId: string } }) =>
+        [...attunements.values()].filter((row) => row.characterId === where.characterId),
+      upsert: async ({
+        where,
+        create,
+        update,
+      }: {
+        where: { characterId_key: { characterId: string; key: string } };
+        create: { characterId: string; key: string; attuned: boolean; recordedAt: Date };
+        update: { attuned?: boolean; recordedAt: Date };
+      }) => {
+        const id = `${where.characterId_key.characterId}:${where.characterId_key.key}`;
+        const row = attunements.get(id);
+        if (row) Object.assign(row, update);
+        else attunements.set(id, { ...create });
+      },
+    },
     wowheadEntry: {
       findMany: async () => [...wowhead.values()],
       upsert: async ({ create }: { create: Record<string, unknown> }) => {
@@ -203,6 +236,7 @@ function setup(member = true, officer = false) {
     wowheadService,
     postedSoon,
     recordedSources,
+    attunements,
   };
 }
 
@@ -633,5 +667,75 @@ describe('WowheadService', () => {
     assert.deepEqual(asked.sort(), ['forever/tooltip/spell/20034', 'forever/tooltip/spell/99999']);
     assert.equal(wowhead.get('SPELL:20034')?.englishName, 'Enchant Weapon - Crusader');
     assert.equal(wowhead.get('SPELL:99999')?.missing, true);
+  });
+});
+
+describe('ProfessionsService attunements', () => {
+  /** An export of one character with the raids it was looked at for. */
+  const exportWith = (attunements: { key: string; attuned: boolean }[], updated = day(20)) =>
+    JSON.stringify({
+      addon: 'GuildAssistantProfessions',
+      format: 2,
+      characters: [
+        {
+          name: 'Luna',
+          realm: 'Test Realm',
+          source: 'own',
+          updated,
+          professions: [],
+          attunements,
+        },
+      ],
+    });
+
+  it('records which raids a character is attuned to, and never takes one back', async () => {
+    const { service, attunements } = setup();
+    await service.import(user, 'g1', exportWith([{ key: 'ony', attuned: true }]));
+    assert.deepEqual(
+      [...attunements.values()].map((row) => [row.characterId, row.key, row.attuned]),
+      [['luna-id', 'ony', true]],
+    );
+    // An older copy of the character, from before it was attuned: the row stands.
+    await service.import(user, 'g1', exportWith([{ key: 'ony', attuned: false }], day(19)));
+    assert.equal([...attunements.values()][0].attuned, true, 'an attunement is for good');
+  });
+
+  it('tells a raid looked at and not attuned from one never looked at', async () => {
+    const { service } = setup();
+    await service.import(user, 'g1', exportWith([{ key: 'ony', attuned: false }]));
+    assert.deepEqual(await service.attunementsOf('luna-id'), {
+      reported: true,
+      raids: [
+        {
+          key: 'ony',
+          raid: "Onyxia's Lair",
+          attuned: false,
+          recordedAt: '2026-10-20T12:00:00.000Z',
+        },
+      ],
+    });
+    // Nothing imported for a character: every raid is "not known".
+    assert.deepEqual(await service.attunementsOf('kael-id'), {
+      reported: false,
+      raids: [{ key: 'ony', raid: "Onyxia's Lair", attuned: null, recordedAt: null }],
+    });
+  });
+
+  it("takes the attunements of the addon's own export, for the characters it imports", async () => {
+    const { service, attunements } = setup();
+    await service.import(user, 'g1', FIXTURE);
+    assert.deepEqual(
+      [...attunements.values()].map((row) => [row.characterId, row.key, row.attuned]),
+      [
+        ['kael-id', 'ony', true],
+        ['luna-id', 'ony', true],
+      ],
+      "the guildmate's too; Bob isn't the user's character and Mira is a link",
+    );
+  });
+
+  it('is not found for a character that is not there', async () => {
+    const { service } = setup();
+    await assert.rejects(() => service.attunementsOf('nobody-id'), /No such character/);
   });
 });

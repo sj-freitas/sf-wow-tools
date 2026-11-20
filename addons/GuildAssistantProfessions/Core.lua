@@ -227,10 +227,13 @@ function Core.exportData(db)
                 specializations = #specializations > 0 and specializations or nil,
             }
         end
+        local attunements = Core.attunementsOf(character)
         characters[#characters + 1] = {
             name = character.name, realm = character.realm, class = character.class,
             source = character.source or "own", updated = character.updated,
             professions = professions,
+            -- 1.6.0: which raids it is attuned to, only when any was looked at.
+            attunements = #attunements > 0 and attunements or nil,
         }
     end
     -- Format 2 (1.0): characters and professions dated by the game server's clock, which Guild
@@ -803,6 +806,181 @@ function Core.describeSources(db)
         recipes, recipes == 1 and "" or "s")
 end
 
+-- Attunements ------------------------------------------------------------------------------------
+-- Which raids a character may walk into. Each attunement is a quest the game says is complete or
+-- not (Attunements.lua asks it), one per faction. What the game says is kept with the character,
+-- { [key] = true/false }: true attuned, false looked at and not attuned, and a key missing means no
+-- addon that knew that raid has looked at this character yet -- so GuildAssistant Database can tell
+-- "not attuned" from "not known". Attuning is for good (a completed quest never uncompletes), so
+-- everything merges the same way: keys are added, and `true` wins. The guild shares every
+-- character's at once (Sync.lua, "A"), summary and answer in one message: there is no payload
+-- bigger than the summary to ask for, as there is for characters and recipe sources.
+
+--- The factions an attunement quest can be for, as the game names them (UnitFactionGroup).
+Core.FACTIONS = { "Alliance", "Horde" }
+
+--- The raids with an attunement, and the quest each faction completes for it. The next raid is one
+--- more line here (and in GuildAssistantDatabase's own Core.ATTUNEMENTS, which names them in its
+--- window). `key` is what is saved, shared and exported, so it is never renamed: guildmates' addons
+--- and Guild Assistant hold it.
+Core.ATTUNEMENTS = {
+    { key = "ony", raid = "Onyxia's Lair", quests = { Alliance = 6502, Horde = 6602 } },
+}
+
+--- At most this many attunements per character in a message: more is someone else's doing.
+Core.MAX_ATTUNEMENTS = 20
+
+--- Whether `key` is one an attunement can have: short, lower case letters and digits. Anyone in the
+--- guild can send anything, and a key this addon doesn't know yet is still kept and passed on.
+function Core.isAttunementKey(key)
+    return type(key) == "string" and #key <= 12 and key:match("^[a-z0-9]+$") ~= nil
+end
+
+--- The quests to ask about for `attunement` on a character of `faction`: that faction's, or, when
+--- the game doesn't say which it is ("Neutral", before one is picked), every one of them -- only
+--- the character's own can be complete.
+function Core.attunementQuests(attunement, faction)
+    local quests = attunement.quests or {}
+    if faction and quests[faction] then return { quests[faction] } end
+    local ids = {}
+    for _, name in ipairs(Core.FACTIONS) do
+        if quests[name] then ids[#ids + 1] = quests[name] end
+    end
+    return ids
+end
+
+--- Records attunements of the character (`states`: { [key] = whether it is attuned }), from the
+--- game or from a guildmate. Keys are only added and only ever gain: `false` never replaces `true`.
+--- Returns whether anything changed. `now` (server time) marks the character updated when something
+--- did: the scan of this character's own passes it, so a character with no professions recorded is
+--- stamped and so shared with the guild (Core.receive leaves an unstamped one); what a guildmate
+--- sent doesn't, so their own copy stays the newer one.
+function Core.setAttunements(character, states, now)
+    local changed = false
+    for key, attuned in pairs(states) do
+        if Core.isAttunementKey(key) then
+            local known = character.attunements and character.attunements[key]
+            local merged = known == true or attuned == true
+            if known == nil or known ~= merged then
+                character.attunements = character.attunements or {}
+                character.attunements[key], changed = merged, true
+            end
+        end
+    end
+    if changed and now then character.updated = math.max(now, character.updated or 0) end
+    return changed
+end
+
+--- A character's attunements as the export and the sharing write them: { { key, attuned } }, by
+--- key. Empty when none has been looked at.
+function Core.attunementsOf(character)
+    local list = {}
+    for _, key in ipairs(sortedKeys(character.attunements or {})) do
+        list[#list + 1] = { key = key, attuned = character.attunements[key] == true }
+    end
+    return list
+end
+
+--- Every shareable character's attunements as text: "Name-Realm=ony+;Other-Realm=ony-" (+ attuned,
+--- - looked at and not). Empty when nothing is known of any of them, which is still worth sending:
+--- whoever holds more hears that this addon lacks it.
+function Core.encodeAttunements(db, guild)
+    local parts = {}
+    for _, key in ipairs(sortedKeys(db.characters)) do
+        local character = db.characters[key]
+        if Core.shareable(character, guild) then
+            local states = {}
+            for _, entry in ipairs(Core.attunementsOf(character)) do
+                states[#states + 1] = entry.key .. (entry.attuned and "+" or "-")
+            end
+            if #states > 0 then parts[#parts + 1] = key .. "=" .. table.concat(states) end
+        end
+    end
+    return table.concat(parts, ";")
+end
+
+--- The attunements from `encodeAttunements`' text, checked (anyone in the guild can send anything):
+--- { ["Name-Realm"] = { [key] = attuned } }.
+function Core.parseAttunements(text)
+    local received = {}
+    for key, states in (text or ""):gmatch("([^;=]+)=([a-z0-9%+%-]+)") do
+        -- A guildmate's 1.0.2 or earlier says the realm as the game names it.
+        local name, realm = key:match("^([^-]+)-(.+)$")
+        if name then
+            local parsed, count = {}, 0
+            for raid, mark in states:gmatch("([a-z0-9]+)([%+%-])") do
+                count = count + 1
+                if count <= Core.MAX_ATTUNEMENTS and Core.isAttunementKey(raid) then
+                    parsed[raid] = mark == "+"
+                end
+            end
+            if next(parsed) then received[name .. "-" .. Core.realmName(realm)] = parsed end
+        end
+    end
+    return received
+end
+
+--- Merges attunements received from the guild into the characters that are kept. One this addon
+--- doesn't know yet is left alone: the character itself travels on its own (the hello's answers),
+--- and the attunements come again. Returns how many characters changed.
+function Core.receiveAttunements(db, guild, received)
+    local changed = 0
+    for key, states in pairs(received) do
+        local character = db.characters[key]
+        if character and Core.shareable(character, guild) and Core.setAttunements(character, states) then
+            changed = changed + 1
+        end
+    end
+    return changed
+end
+
+--- Remembers in `heard` what a guildmate's message showed of the attunements, so this addon's own
+--- answer needn't go when someone else's already carried everything it holds (Sync.lua).
+function Core.heardAttunements(heard, shown)
+    for key, states in pairs(shown) do
+        heard[key] = heard[key] or {}
+        for raid, attuned in pairs(states) do
+            heard[key][raid] = heard[key][raid] == true or attuned == true
+        end
+    end
+    return heard
+end
+
+--- Whether this addon holds attunements that `heard` (what the guild has shown, and what this addon
+--- has already sent) doesn't: a character it doesn't list, a raid it lacks of one, or one it says
+--- isn't attuned that this addon knows is. Nothing to answer when it doesn't.
+function Core.attunementsMore(db, guild, heard)
+    for key, character in pairs(db.characters) do
+        if Core.shareable(character, guild) then
+            local theirs = heard[key] or {}
+            for raid, attuned in pairs(character.attunements or {}) do
+                local known = theirs[raid]
+                if known == nil or (attuned == true and known ~= true) then return true end
+            end
+        end
+    end
+    return false
+end
+
+--- "Onyxia's Lair: 2 of 3 characters", for /ga-prof status: of the characters looked at, how many
+--- are attuned to each raid this addon knows.
+function Core.describeAttunements(db)
+    local parts = {}
+    for _, attunement in ipairs(Core.ATTUNEMENTS) do
+        local attuned, looked = 0, 0
+        for _, character in pairs(db.characters) do
+            local state = character.attunements and character.attunements[attunement.key]
+            if state ~= nil then
+                looked = looked + 1
+                if state then attuned = attuned + 1 end
+            end
+        end
+        parts[#parts + 1] = ("%s: %d of %d character%s"):format(attunement.raid, attuned, looked,
+            looked == 1 and "" or "s")
+    end
+    return #parts > 0 and table.concat(parts, ", ") or "none known"
+end
+
 -- JSON --------------------------------------------------------------------------------------------
 
 local ESCAPES = { ['"'] = '\\"', ["\\"] = "\\\\", ["\n"] = "\\n", ["\r"] = "\\r", ["\t"] = "\\t" }
@@ -824,7 +1002,7 @@ local function isArray(value)
 end
 
 local ARRAY_FIELDS = { characters = true, professions = true, spells = true, items = true, trainers = true,
-    entries = true, requires = true, specializations = true }
+    entries = true, requires = true, specializations = true, attunements = true }
 
 local function encode(value, field)
     local kind = type(value)

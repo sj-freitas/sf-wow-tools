@@ -960,6 +960,117 @@ function Core.whisperTarget(crafter, realm)
     return crafter.name .. "-" .. (crafter.realm:gsub("[%s%-]", ""))
 end
 
+-- Attunements (GuildAssistant Professions) --------------------------------------------------------
+-- Which raids each guildmate may walk into, as GuildAssistant Professions recorded it (1.6.0 and
+-- later) and shared with the guild: on a character it saved, `attunements = { [key] = true/false }`
+-- -- true attuned, false looked at and not attuned, and a key missing means no addon has looked at
+-- that character for that raid, which is not the same as not being attuned. The keys are that
+-- addon's (its own Core.ATTUNEMENTS); this list says what each one is called here, and a raid it
+-- knows that this addon doesn't is still shown, under its key.
+
+--- The raids with an attunement. One more raid is one more line here and in GuildAssistant
+--- Professions (which asks the game about its quest): `short` is the Attunements tab's column
+--- title, `raid` the name everywhere else.
+Core.ATTUNEMENTS = {
+    { key = "ony", raid = "Onyxia's Lair", short = "Onyxia" },
+}
+
+--- The raids to show: the ones this addon knows, in its order, then any other key the data has (a
+--- newer GuildAssistant Professions), by key. `db` is that addon's saved data.
+function Core.attunementRaids(db)
+    local raids, known = {}, {}
+    for _, raid in ipairs(Core.ATTUNEMENTS) do
+        raids[#raids + 1] = raid
+        known[raid.key] = true
+    end
+    local others = {}
+    for _, character in pairs(db and db.characters or {}) do
+        for key in pairs(character.attunements or {}) do
+            if not known[key] then
+                known[key], others[#others + 1] = true, key
+            end
+        end
+    end
+    table.sort(others)
+    for _, key in ipairs(others) do raids[#raids + 1] = { key = key, raid = key, short = key } end
+    return raids
+end
+
+--- The raids a column of their own is shown for: at most `most` of them, the one picked on the left
+--- (`picked`, a key) always among them, first.
+function Core.attunementColumns(raids, picked, most)
+    local shown = {}
+    for _, raid in ipairs(raids) do
+        if picked and raid.key == picked then shown[1] = raid end
+    end
+    for _, raid in ipairs(raids) do
+        if #shown < most and raid.key ~= picked then shown[#shown + 1] = raid end
+    end
+    return shown
+end
+
+--- Your guild's characters and what each is attuned to, from GuildAssistant Professions' saved data
+--- (this account's in the guild and the guildmates it heard from, as the Guild tab counts them,
+--- whether or not they have a profession): { key, name, realm, class, source, you, states =
+--- { [raid key] = true/false }, attuned (how many), search }. This character first, then by name.
+--- `you` is Core.playerKey's.
+function Core.guildAttunements(db, guild, you)
+    local members = {}
+    if not guild then return members end
+    for key, character in pairs(db and db.characters or {}) do
+        if character.guild == guild and (character.source == "own" or character.source == "guild") then
+            local states, attuned = {}, 0
+            for raid, state in pairs(character.attunements or {}) do
+                states[raid] = state == true
+                if state == true then attuned = attuned + 1 end
+            end
+            members[#members + 1] = { key = key, name = character.name, realm = character.realm,
+                class = character.class, source = character.source, you = key == you,
+                states = states, attuned = attuned, search = (character.name or ""):lower() }
+        end
+    end
+    table.sort(members, function(a, b)
+        if a.you ~= b.you then return a.you end
+        if a.name ~= b.name then return a.name < b.name end
+        return (a.realm or "") < (b.realm or "")
+    end)
+    return members
+end
+
+--- The guildmates whose name has every term (Core.terms), and those attuned to `raid` (a key) when
+--- one is picked on the left.
+function Core.findAttuned(members, terms, raid)
+    local found = {}
+    for _, member in ipairs(members) do
+        if (not raid or member.states[raid] == true) and hasAll(member.search, terms or {}) then
+            found[#found + 1] = member
+        end
+    end
+    return found
+end
+
+--- How many of `members` are attuned to each raid: { [key] = how many }.
+function Core.attunedCounts(members)
+    local counts = {}
+    for _, member in ipairs(members) do
+        for raid, attuned in pairs(member.states) do
+            if attuned then counts[raid] = (counts[raid] or 0) + 1 end
+        end
+    end
+    return counts
+end
+
+--- A guildmate's attunements as the table shows them, one row per raid of `raids`: { { key, raid,
+--- short, attuned } }, `attuned` true, false (looked at, not attuned) or nil (nobody has looked).
+function Core.attunementRows(member, raids)
+    local rows = {}
+    for _, raid in ipairs(raids or {}) do
+        rows[#rows + 1] = { key = raid.key, raid = raid.raid, short = raid.short,
+            attuned = member.states[raid.key] }
+    end
+    return rows
+end
+
 -- The minimap button ------------------------------------------------------------------------------
 
 --- Where the minimap button sits from the minimap's centre: `angle` degrees counter-clockwise from

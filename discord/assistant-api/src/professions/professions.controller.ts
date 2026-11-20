@@ -15,6 +15,7 @@ import { AuthGuard } from '../auth/auth.guard';
 import type { AuthenticatedRequest } from '../auth/auth.types';
 import {
   ProfessionsService,
+  type CharacterAttunementsDto,
   type GuildProfessionsDto,
   type ImportResultDto,
   type ProfessionDto,
@@ -66,6 +67,14 @@ export class CharacterProfessionsController {
   @Get(':characterId/professions')
   list(@Param('characterId', ParseUUIDPipe) characterId: string): Promise<ProfessionDto[]> {
     return this.professions.forCharacter(characterId);
+  }
+
+  /** Which raids it is attuned to (GuildAssistant Professions 1.6.0), for its page. */
+  @Get(':characterId/attunements')
+  attunements(
+    @Param('characterId', ParseUUIDPipe) characterId: string,
+  ): Promise<CharacterAttunementsDto> {
+    return this.professions.attunementsOf(characterId);
   }
 
   /** "Drop this profession": its player, or an Officer of a guild it is in. Main ones only. */

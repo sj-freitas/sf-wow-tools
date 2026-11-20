@@ -7,6 +7,7 @@ import {
 import { GuildAccessService } from '../auth/guild-access.service';
 import { PrismaService } from '../database/prisma.service';
 import { getGame } from '../game/games';
+import { attunementRows, type CharacterAttunementsDto } from './attunements';
 import { matchCharacter, parseProfessionExport } from './profession-export';
 import { fuzzyWordsScore } from './fuzzy';
 import {
@@ -20,6 +21,7 @@ import { RecipeSourcesService } from './recipe-sources.service';
 import { WowheadService, type WowheadRef } from './wowhead.service';
 
 export type { GuildProfessionsDto, ProfessionDto, RecipeDto } from './guild-recipes.service';
+export type { CharacterAttunementsDto } from './attunements';
 
 /** Secondary professions: everyone can have them all, so they aren't dropped (main ones are). */
 export const SECONDARY_PROFESSIONS: readonly string[] = ['Cooking', 'First Aid', 'Fishing'];
@@ -214,6 +216,22 @@ export class ProfessionsService {
           recipes: merged.spellIds.length + merged.itemIds.length,
         });
       }
+      // Which raids it is attuned to (the addon 1.6.0 and later). Only ever gained: an attunement
+      // is for good, so an older copy saying no doesn't take one back.
+      for (const attunement of exported.attunements) {
+        await this.prisma.characterAttunement.upsert({
+          where: { characterId_key: { characterId: character.id, key: attunement.key } },
+          create: {
+            characterId: character.id,
+            key: attunement.key,
+            attuned: attunement.attuned,
+            recordedAt: this.now(),
+          },
+          update: attunement.attuned
+            ? { attuned: true, recordedAt: this.now() }
+            : { recordedAt: this.now() },
+        });
+      }
       if (newer) {
         await this.prisma.professionSnapshot.upsert({
           where: { characterId: character.id },
@@ -269,6 +287,23 @@ export class ProfessionsService {
     });
     if (!membership) throw new NotFoundException('That character is not in this guild.');
     return this.professionsOf(characterId, membership.guild.gameVersion);
+  }
+
+  /**
+   * Which raids a character is attuned to, for its page (guild-agnostic, like its professions): every
+   * raid known, each attuned, not attuned or not looked at by anyone's addon yet.
+   */
+  async attunementsOf(characterId: string): Promise<CharacterAttunementsDto> {
+    const character = await this.prisma.character.findUnique({
+      where: { id: characterId },
+      select: { id: true },
+    });
+    if (!character) throw new NotFoundException('No such character.');
+    const stored = await this.prisma.characterAttunement.findMany({
+      where: { characterId },
+      select: { key: true, attuned: true, recordedAt: true },
+    });
+    return attunementRows(stored);
   }
 
   /**

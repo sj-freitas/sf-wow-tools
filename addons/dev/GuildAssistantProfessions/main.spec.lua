@@ -5,6 +5,7 @@ local realPrint = print -- the spec's own output; the addon's goes to the fake c
 local passed, failed = 0, 0
 local function it(name, fn)
     local ok, err = pcall(fn)
+    _G.print = realPrint -- the addon's goes to the fake chat only while a test runs
     if ok then
         passed = passed + 1
     else
@@ -54,7 +55,7 @@ local function loadAddon(unknownEvents)
     _G.GetNumSkillLines = function() return 0 end
     _G.GetSkillLineInfo = function() end
     local ns = {}
-    for _, file in ipairs({ "Core", "Recipes", "Scan", "Sync", "Sources", "Main" }) do
+    for _, file in ipairs({ "Core", "Recipes", "Scan", "Sync", "Sources", "Attunements", "Main" }) do
         -- Recipes.lua: the fixture's (dev/), what the database job builds from a slice of the tables.
         local path = file == "Recipes" and "dev/GuildAssistantProfessions/Recipes.fixture.lua"
             or "GuildAssistantProfessions/" .. file .. ".lua"
@@ -302,5 +303,34 @@ it("reads a profession window once it has settled", function()
 end)
 
 _G.print = realPrint
+it("records the raids you are attuned to at login and when you hand a quest in", function()
+    loadAddon()
+    local completed = {}
+    _G.UnitFactionGroup = function() return "Alliance" end
+    _G.C_QuestLog = { IsQuestFlaggedCompleted = function(id) return completed[id] == true end }
+    fire("ADDON_LOADED", "GuildAssistantProfessions")
+    fire("PLAYER_LOGIN")
+    local db = GuildAssistantProfessionsDB
+    eq(db.characters["Luna-Test Realm"].attunements.ony, false, "looked at, not attuned")
+    assert(db.export:find('"attunements":[{"attuned":false,"key":"ony"}]', 1, true), "in the export: " .. db.export)
+    -- Onyxia's attunement handed in (6502, Alliance's).
+    completed[6502] = true
+    fire("QUEST_TURNED_IN")
+    eq(db.characters["Luna-Test Realm"].attunements.ony, true, "attuned")
+    assert(db.export:find('"attunements":[{"attuned":true,"key":"ony"}]', 1, true), "the export is rewritten")
+    SlashCmdList.GAPROF("status")
+    eq(said("Attunements: Onyxia's Lair: 1 of 1 character."), true, "the status says so")
+    _G.UnitFactionGroup, _G.C_QuestLog = nil, nil
+end)
+
+it("records nothing of attunements on a client that can't say whether a quest is complete", function()
+    loadAddon()
+    _G.UnitFactionGroup, _G.C_QuestLog, _G.IsQuestFlaggedCompleted = nil, nil, nil
+    fire("ADDON_LOADED", "GuildAssistantProfessions")
+    fire("PLAYER_LOGIN")
+    eq(said("something went wrong"), false, "no error")
+    eq(GuildAssistantProfessionsDB.characters["Luna-Test Realm"].attunements, nil, "nothing recorded")
+end)
+
 print(("%d passed, %d failed"):format(passed, failed))
 if failed > 0 then error(failed .. " failed") end

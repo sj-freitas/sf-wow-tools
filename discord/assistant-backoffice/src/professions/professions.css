@@ -280,3 +280,31 @@
     font-size: 0.85rem;
   }
 }
+
+/* A character's attunements (its page): the raid, then whether it is attuned, with the site's own
+   icon in the colour of what it means. The icon and its word are a flex row, so a word that wraps
+   doesn't run under the icon, and the cell's height is the same whichever state it is. */
+.attunements-table {
+  margin-top: 0.35rem;
+}
+.attunement-state {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+.attunement-state .attunement-icon {
+  flex-shrink: 0;
+}
+.attunement-yes {
+  color: var(--success);
+}
+.attunement-no {
+  color: var(--danger);
+}
+.attunement-unknown {
+  color: var(--accent);
+}
+.attunement-when {
+  color: var(--muted);
+  font-size: 0.85rem;
+}

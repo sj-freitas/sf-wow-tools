@@ -43,6 +43,17 @@ export interface ExportedCharacter {
   /** Its last change in game (game server time, 1.0+), else null: the newer export wins. */
   updated: Date | null;
   professions: ExportedProfession[];
+  /**
+   * Which raids it is attuned to, as the addon asked the game (1.6.0 and later): `attuned` false is
+   * looked at and not attuned, and a raid left out was never looked at. Empty for an older addon.
+   */
+  attunements: ExportedAttunement[];
+}
+
+/** A raid's attunement, keyed as the addon keys it ("ony"; src/professions/attunements.ts). */
+export interface ExportedAttunement {
+  key: string;
+  attuned: boolean;
 }
 
 export interface ExportedProfession {
@@ -70,6 +81,10 @@ const SPECIALIZATION_SPELLS = new Set([
 const MAX_CHARACTERS = 100;
 const MAX_PROFESSIONS = 20;
 const MAX_RECIPES = 3000;
+/** Raids per character, as the addon caps them (its Core.MAX_ATTUNEMENTS). */
+const MAX_ATTUNEMENTS = 20;
+/** A raid's key as the addon writes it: short, lower case letters and digits. */
+const ATTUNEMENT_KEY = /^[a-z0-9]{1,12}$/;
 
 const fail = (message: string): never => {
   throw new BadRequestException(
@@ -174,6 +189,23 @@ export function parseSources(value: unknown): ExportedSources | null {
   return items.length > 0 || trainers.length > 0 ? { items, trainers } : null;
 }
 
+/**
+ * A character's attunements from the export, checked. Never fails the import: anything that isn't
+ * one (from an edited file, or a raid key that isn't one) is left out.
+ */
+export function parseAttunements(value: unknown): ExportedAttunement[] {
+  if (!Array.isArray(value)) return [];
+  const seen = new Set<string>();
+  const attunements: ExportedAttunement[] = [];
+  for (const entry of value.slice(0, MAX_ATTUNEMENTS) as Record<string, unknown>[]) {
+    const key = entry?.key;
+    if (typeof key !== 'string' || !ATTUNEMENT_KEY.test(key) || seen.has(key)) continue;
+    seen.add(key);
+    attunements.push({ key, attuned: entry.attuned === true });
+  }
+  return attunements.sort((a, b) => a.key.localeCompare(b.key));
+}
+
 /** The uploaded saved variables file, or the export's JSON (as text or parsed), checked. */
 export function parseProfessionExport(input: unknown): ProfessionExport {
   let data: unknown = input;
@@ -212,6 +244,7 @@ export function parseProfessionExport(input: unknown): ProfessionExport {
         source:
           character.source === 'link' ? 'link' : character.source === 'guild' ? 'guild' : 'own',
         updated: time(character.updated),
+        attunements: parseAttunements(character.attunements),
         professions: (professions as Record<string, unknown>[]).map((profession) => ({
           name: text(profession.name, 'profession name', 64),
           skill: optionalInt(profession.skill),
