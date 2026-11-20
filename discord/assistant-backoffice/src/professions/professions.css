@@ -309,12 +309,21 @@
   font-size: 0.85rem;
 }
 
-/* The raid's own icon from the game, before its name. A fixed size with the space reserved, so a
-   row is the same height while the image loads or if it never does. */
+/* The raid is its own icon from the game: a button, so a tap says which raid it is (a tooltip can't
+   be read on a phone). A fixed size with its space reserved, so a row is the same height while the
+   image loads, or if it never does. */
 .attunement-raid {
   display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  line-height: 0;
+  border-radius: 4px;
+}
+.attunement-raid:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 .attunement-raid-icon {
   width: 24px;
@@ -324,9 +333,7 @@
   border: 1px solid var(--border);
   background: var(--surface-2);
 }
-/* A phone: the cards put the raid on the right of its label, so the icon goes last on the line. */
-@media (max-width: 720px) {
-  .attunement-raid {
-    flex-direction: row-reverse;
-  }
+/* A raid with no icon (one only a newer addon knows) keeps its name. */
+.attunement-raid-name {
+  overflow-wrap: break-word;
 }

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { CheckCircleIcon, HelpCircleIcon, XCircleIcon } from '../Icons';
 import { SkeletonLines } from '../Loading';
 import { timeAgo } from '../time';
+import { showToast } from '../toast';
 import { ADDON_URL } from './ImportProfessionsDrawer';
 import {
   fetchCharacterAttunements,
@@ -29,6 +30,34 @@ function State({ attuned }: { attuned: boolean | null }) {
       </span>
       <span>{said}</span>
     </span>
+  );
+}
+
+/**
+ * The raid a row is about: its own icon from the game, as in the addon's window. Hovering it says
+ * which raid it is, and a click (a tap on a phone, where a tooltip can't be read) says it at the
+ * bottom of the screen, so the name is never hover-only. A raid the API has no icon for -- one a
+ * newer addon knows -- is its name instead.
+ */
+function Raid({ raid, icon }: { raid: string; icon: number | null }) {
+  if (icon === null) return <span className="attunement-raid-name">{raid}</span>;
+  return (
+    <button
+      type="button"
+      className="attunement-raid"
+      title={raid}
+      aria-label={raid}
+      onClick={() => showToast(raid, 3000)}
+    >
+      <img
+        className="attunement-raid-icon"
+        src={raidIconUrl(icon)}
+        width={24}
+        height={24}
+        alt=""
+        loading="lazy"
+      />
+    </button>
   );
 }
 
@@ -69,22 +98,7 @@ export function CharacterAttunements({ characterId }: { characterId: string }) {
                 {attunements.raids.map((raid) => (
                   <tr key={raid.key}>
                     <td data-label="Raid">
-                      <span className="attunement-raid">
-                        {raid.icon !== null && (
-                          <img
-                            className="attunement-raid-icon"
-                            src={raidIconUrl(raid.icon)}
-                            width={24}
-                            height={24}
-                            alt=""
-                            title={raid.raid}
-                            loading="lazy"
-                          />
-                        )}
-                        {/* The name stays beside the icon: on a phone a tooltip can't be read,
-                            and the icon alone would leave the row unreadable there. */}
-                        <span>{raid.raid}</span>
-                      </span>
+                      <Raid raid={raid.raid} icon={raid.icon} />
                     </td>
                     <td data-label="Attunement">
                       <State attuned={raid.attuned} />
