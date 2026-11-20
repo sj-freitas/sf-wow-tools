@@ -969,10 +969,11 @@ end
 -- knows that this addon doesn't is still shown, under its key.
 
 --- The raids with an attunement. One more raid is one more line here and in GuildAssistant
---- Professions (which asks the game about its quest): `short` is the Attunements tab's column
---- title, `raid` the name everywhere else.
+--- Professions (which asks the game about its quest): `icon` is the game's icon for the raid (a
+--- file id), which heads its column and goes before its name, `raid` the name itself, and `short`
+--- the column's title on a client that can't show the icon.
 Core.ATTUNEMENTS = {
-    { key = "ony", raid = "Onyxia's Lair", short = "Onyxia" },
+    { key = "ony", raid = "Onyxia's Lair", short = "Onyxia", icon = 134154 },
 }
 
 --- The raids to show: the ones this addon knows, in its order, then any other key the data has (a
@@ -1061,14 +1062,22 @@ function Core.attunedCounts(members)
 end
 
 --- A guildmate's attunements as the table shows them, one row per raid of `raids`: { { key, raid,
---- short, attuned } }, `attuned` true, false (looked at, not attuned) or nil (nobody has looked).
+--- short, icon, attuned } }, `attuned` true, false (looked at, not attuned) or nil (nobody has
+--- looked).
 function Core.attunementRows(member, raids)
     local rows = {}
     for _, raid in ipairs(raids or {}) do
-        rows[#rows + 1] = { key = raid.key, raid = raid.raid, short = raid.short,
+        rows[#rows + 1] = { key = raid.key, raid = raid.raid, short = raid.short, icon = raid.icon,
             attuned = member.states[raid.key] }
     end
     return rows
+end
+
+--- A raid wherever its name is read rather than its column: its icon, then its name ("|T134154:16:16|t
+--- Onyxia's Lair"). A raid with no icon (one a newer GuildAssistant Professions knows) is its name.
+function Core.attunementLabel(raid)
+    if not raid.icon then return raid.raid end
+    return ("|T%d:16:16|t %s"):format(raid.icon, raid.raid)
 end
 
 -- The minimap button ------------------------------------------------------------------------------

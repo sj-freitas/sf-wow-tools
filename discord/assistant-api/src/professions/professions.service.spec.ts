@@ -709,6 +709,7 @@ describe('ProfessionsService attunements', () => {
         {
           key: 'ony',
           raid: "Onyxia's Lair",
+          icon: 134154,
           attuned: false,
           recordedAt: '2026-10-20T12:00:00.000Z',
         },
@@ -717,7 +718,7 @@ describe('ProfessionsService attunements', () => {
     // Nothing imported for a character: every raid is "not known".
     assert.deepEqual(await service.attunementsOf('kael-id'), {
       reported: false,
-      raids: [{ key: 'ony', raid: "Onyxia's Lair", attuned: null, recordedAt: null }],
+      raids: [{ key: 'ony', raid: "Onyxia's Lair", icon: 134154, attuned: null, recordedAt: null }],
     });
   });
 

@@ -5,6 +5,7 @@ import { timeAgo } from '../time';
 import { ADDON_URL } from './ImportProfessionsDrawer';
 import {
   fetchCharacterAttunements,
+  raidIconUrl,
   type CharacterAttunements as Attunements,
 } from './professionsApi';
 import './professions.css';
@@ -67,7 +68,24 @@ export function CharacterAttunements({ characterId }: { characterId: string }) {
               <tbody>
                 {attunements.raids.map((raid) => (
                   <tr key={raid.key}>
-                    <td data-label="Raid">{raid.raid}</td>
+                    <td data-label="Raid">
+                      <span className="attunement-raid">
+                        {raid.icon !== null && (
+                          <img
+                            className="attunement-raid-icon"
+                            src={raidIconUrl(raid.icon)}
+                            width={24}
+                            height={24}
+                            alt=""
+                            title={raid.raid}
+                            loading="lazy"
+                          />
+                        )}
+                        {/* The name stays beside the icon: on a phone a tooltip can't be read,
+                            and the icon alone would leave the row unreadable there. */}
+                        <span>{raid.raid}</span>
+                      </span>
+                    </td>
                     <td data-label="Attunement">
                       <State attuned={raid.attuned} />
                       {raid.recordedAt && (

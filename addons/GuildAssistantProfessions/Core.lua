@@ -819,12 +819,13 @@ end
 --- The factions an attunement quest can be for, as the game names them (UnitFactionGroup).
 Core.FACTIONS = { "Alliance", "Horde" }
 
---- The raids with an attunement, and the quest each faction completes for it. The next raid is one
---- more line here (and in GuildAssistantDatabase's own Core.ATTUNEMENTS, which names them in its
---- window). `key` is what is saved, shared and exported, so it is never renamed: guildmates' addons
+--- The raids with an attunement: the quest each faction completes for it, and the game's icon for
+--- the raid (a file id), which GuildAssistantDatabase shows in its window and Guild Assistant on
+--- the website -- each has its own copy of this list, and this is the one a new raid is added to
+--- first. `key` is what is saved, shared and exported, so it is never renamed: guildmates' addons
 --- and Guild Assistant hold it.
 Core.ATTUNEMENTS = {
-    { key = "ony", raid = "Onyxia's Lair", quests = { Alliance = 6502, Horde = 6602 } },
+    { key = "ony", raid = "Onyxia's Lair", icon = 134154, quests = { Alliance = 6502, Horde = 6602 } },
 }
 
 --- At most this many attunements per character in a message: more is someone else's doing.

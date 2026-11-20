@@ -308,3 +308,25 @@
   color: var(--muted);
   font-size: 0.85rem;
 }
+
+/* The raid's own icon from the game, before its name. A fixed size with the space reserved, so a
+   row is the same height while the image loads or if it never does. */
+.attunement-raid {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.attunement-raid-icon {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+}
+/* A phone: the cards put the raid on the right of its label, so the icon goes last on the line. */
+@media (max-width: 720px) {
+  .attunement-raid {
+    flex-direction: row-reverse;
+  }
+}

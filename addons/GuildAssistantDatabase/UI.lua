@@ -35,6 +35,8 @@ local MEMBER_SKILL_RIGHT, MEMBER_PROFESSION_LEFT = 186, 200
 -- raid's short name as the column's title. This many fit beside the name; with more raids than
 -- that, the rest show on a guildmate's own page (and picking one on the left brings it into view).
 local ATTUNE_NAME_WIDTH, ATTUNE_COLUMN_WIDTH, MAX_ATTUNE_COLUMNS = 146, 40, 5
+-- The raid's own icon, which heads its column (the tooltip there says which raid it is).
+local ATTUNE_ICON = 20
 local SIDEBAR_ROWS = 14
 local MAX_REAGENTS, MAX_RECIPE_ITEMS, MAX_CRAFTERS = 8, 3, 15
 local QUESTION_MARK = "Interface\\Icons\\INV_Misc_QuestionMark"
@@ -314,7 +316,7 @@ end
 local function drawAttunementSidebar()
     local items = { { raid = nil, text = "All guildmates", right = Core.thousands(state.attunedTotal or 0) } }
     for _, raid in ipairs(state.raids) do
-        items[#items + 1] = { raid = raid.key, text = raid.raid,
+        items[#items + 1] = { raid = raid.key, text = Core.attunementLabel(raid),
             right = Core.thousands((state.attunedCounts or {})[raid.key] or 0) }
     end
     for i, button in ipairs(sidebarButtons) do
@@ -514,7 +516,12 @@ local function drawRows()
     for _, region in ipairs(recipeColumns) do region:SetShown(not members and not attunements) end
     for i, header in ipairs(attuneColumns) do
         local raid = attunements and state.attuneColumns[i] or nil
-        if raid then header.title:SetText(raid.short or raid.raid) end
+        if raid then
+            -- The raid's own icon heads its column; its short name where the data has no icon.
+            header.icon:SetTexture(raid.icon)
+            header.icon:SetShown(raid.icon ~= nil)
+            header.title:SetText(raid.icon and "" or (raid.short or raid.raid))
+        end
         header.raid = raid
         header:SetShown(raid ~= nil)
     end
@@ -694,7 +701,7 @@ local function attunementLines(member)
         local said = row.attuned == true and "|cff40ff40Attuned|r"
             or row.attuned == false and "|cff808080Not attuned|r" or "|cff808080Not known|r"
         if row.attuned == nil then unknown = true end
-        lines[#lines + 1] = ("%s: %s"):format(row.raid, said)
+        lines[#lines + 1] = ("%s: %s"):format(Core.attunementLabel(row), said)
     end
     if unknown then
         lines[#lines + 1] = "|cff808080Not known: their GuildAssistant Professions hasn't looked (or is older than 1.6.0).|r"
@@ -1553,6 +1560,10 @@ local function buildList()
         header.title = fontString(header, "GameFontNormalSmall", "CENTER")
         header.title:SetAllPoints(header)
         header.title:SetWordWrap(false)
+        header.icon = header:CreateTexture(nil, "ARTWORK")
+        header.icon:SetSize(ATTUNE_ICON, ATTUNE_ICON)
+        header.icon:SetPoint("CENTER", header, "CENTER", 0, 0)
+        header.icon:Hide()
         header:EnableMouse(true)
         header:SetScript("OnEnter", function(self)
             if not self.raid then return end
@@ -1561,6 +1572,8 @@ local function buildList()
                 "A tick is attuned, - not attuned, ? not known yet.",
             })
         end)
+        -- The column's own tooltip answers "which raid is that icon?" above the list; the icon
+        -- itself is inside the header, so hovering it is hovering the header.
         header:SetScript("OnLeave", Game.hideTooltip)
         header:Hide()
         attuneColumns[i] = header
@@ -1596,7 +1609,7 @@ local function buildList()
             if not member then return end
             local lines = {}
             for _, entry in ipairs(Core.attunementRows(member, state.raids)) do
-                lines[#lines + 1] = ("%s %s"):format(attunementMark(entry.attuned), entry.raid)
+                lines[#lines + 1] = ("%s %s"):format(attunementMark(entry.attuned), Core.attunementLabel(entry))
             end
             lines[#lines + 1] = "Click for their attunements"
             Game.showTextTooltip(self, member.name, lines)

@@ -70,8 +70,8 @@ attunements, whoever knows more answers once, and a new attunement of yours goes
 **Attunements** tab, and on each guildmate's page), and the export carries them to Guild Assistant,
 which shows them on the character's page.
 
-The next raid with an attunement is one line in `Core.lua` (`Core.ATTUNEMENTS`: the raid's name and
-its quest per faction). A guildmate on a newer version can share a raid this one doesn't know yet:
+The next raid with an attunement is one line in `Core.lua` (`Core.ATTUNEMENTS`: the raid's name, its
+quest per faction and the game's icon for it, which GuildAssistant Database and the website show). A guildmate on a newer version can share a raid this one doesn't know yet:
 it's kept and passed on as it came.
 
 ## For GuildAssistant Database

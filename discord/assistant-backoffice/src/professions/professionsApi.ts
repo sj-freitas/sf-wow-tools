@@ -82,10 +82,20 @@ export interface CharacterAttunements {
     key: string;
     /** The raid's name ("Onyxia's Lair"). */
     raid: string;
+    /** The game's icon for the raid, a file id; null for one the API doesn't know. */
+    icon: number | null;
     attuned: boolean | null;
     recordedAt: string | null;
   }[];
 }
+
+/**
+ * A raid's icon from the game, by the file id the API gives: Blizzard's own CDN serves them by id
+ * (Wowhead's needs the icon's name, which the game's data doesn't carry). 56px is the only size it
+ * serves; the page shows it smaller.
+ */
+export const raidIconUrl = (icon: number) =>
+  `https://render.worldofwarcraft.com/classic-eu/icons/56/${icon}.jpg`;
 
 /** A character's attunements for its own page (no guild needed). */
 export const fetchCharacterAttunements = (characterId: string): Promise<CharacterAttunements> =>

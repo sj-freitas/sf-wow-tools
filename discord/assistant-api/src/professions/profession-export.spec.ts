@@ -295,7 +295,7 @@ describe('attunementRows', () => {
   it('names each raid, and says which were never looked at', () => {
     assert.deepEqual(attunementRows([]), {
       reported: false,
-      raids: [{ key: 'ony', raid: "Onyxia's Lair", attuned: null, recordedAt: null }],
+      raids: [{ key: 'ony', raid: "Onyxia's Lair", icon: 134154, attuned: null, recordedAt: null }],
     });
     const recordedAt = new Date('2026-11-18T10:00:00Z');
     assert.deepEqual(attunementRows([{ key: 'ony', attuned: true, recordedAt }]), {
@@ -304,6 +304,7 @@ describe('attunementRows', () => {
         {
           key: 'ony',
           raid: "Onyxia's Lair",
+          icon: 134154,
           attuned: true,
           recordedAt: '2026-11-18T10:00:00.000Z',
         },
@@ -322,6 +323,7 @@ describe('attunementRows', () => {
       ['ony', 'bwl'],
     );
     assert.equal(rows.raids[1].raid, 'bwl', 'its key until this API knows it');
+    assert.equal(rows.raids[1].icon, null, 'and no icon for it');
     assert.equal(raidName('ony'), "Onyxia's Lair");
   });
 });

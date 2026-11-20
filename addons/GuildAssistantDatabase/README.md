@@ -115,13 +115,18 @@ unattuned and not being known are not the same thing. The raids are on the left 
 guildmates are attuned to each: click one for just those, and the search finds a guildmate by name.
 Click a guildmate for their raids one by one, which also show on their page in the Guild tab.
 
+Each raid is its **own icon from the game** (Onyxia's Lair's dragon head): the icon heads the raid's
+column, and hovering it says which raid it is. Everywhere a name is read rather than a column — on
+the left, on a guildmate's page, in a row's tooltip — the icon comes before the name.
+
 Each raid gets a column of its own, up to five beside the name; with more raids than that, picking
 one on the left brings it into view, and a guildmate's page always has them all.
 
 It comes from GuildAssistant Professions 1.6.0, which asks the game whether each raid's attunement
 quest is complete (Onyxia's Lair so far) and shares it with the guild. A guildmate on an older
 version shows a question mark. A raid that a newer GuildAssistant Professions knows and this addon
-doesn't is still listed, under its key.
+doesn't is still listed, under its key and without an icon. One more raid is one line in `Core.lua`
+(`Core.ATTUNEMENTS`: the key, the name, the short name and the icon's file id).
 
 ## Performance
 
