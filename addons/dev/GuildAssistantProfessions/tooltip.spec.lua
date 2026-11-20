@@ -31,6 +31,8 @@ local function loadAddon()
     _G.ITEM_MIN_SKILL, _G.ITEM_REQ_SKILL = "Requires %s (%d)", "Requires %s"
     _G.ITEM_BIND_ON_PICKUP, _G.ITEM_SOULBOUND = "Binds when picked up", "Soulbound"
     _G.GetRealmName = function() return "Test Realm" end
+    _G.IsInGuild = function() return true end
+    _G.GetGuildInfo = function(unit) return unit == "player" and "Dark Horizon" or nil end
     item = { class = 9, profession = "Blacksmithing", spell = { "Mithril Spurs", 9972 } }
     _G.GetItemInfoInstant = function(id)
         return id, "Recipe", item.profession, "", 0, item.class, 4
@@ -119,10 +121,15 @@ it("says so when nobody it knows wants the recipe, and not twice", function()
     local tooltip = plans()
     eq(Tooltip.show(tooltip), true)
     eq(#tooltip.added, 1)
-    eq(tooltip.added[1].text, "Nobody you know can use this recipe.")
+    eq(tooltip.added[1].text, "Nobody in Dark Horizon can use this recipe.")
     eq(tooltip.added[1].r, 0.6, "grey")
     eq(Tooltip.show(tooltip), false, "already said")
     eq(#tooltip.added, 1)
+    -- Out of a guild, or before the game says which: nothing is named.
+    _G.IsInGuild = function() return false end
+    local alone = plans()
+    eq(Tooltip.show(alone), true)
+    eq(alone.added[1].text, "Nobody you know can use this recipe.")
     -- Nothing at all when it can't tell which recipe the plans teach: "nobody" would be a guess.
     item.spell = nil
     eq(Tooltip.show(showing({ "Plans: Unheard Of", "Requires Blacksmithing (250)" })), false)

@@ -19,9 +19,10 @@ local RECIPE_CLASS = 9 -- the game's item class for recipes (plans, patterns, fo
 -- The lines, as the player reads them: what they already know in green, what they could learn in
 -- the game's gold.
 local KNOW, CAN_USE = "Know this recipe:", "Can use this recipe:"
--- And when the addon could tell which recipe it is but nobody it knows wants it: said plainly, so
--- "nobody" is never mistaken for the addon not having looked.
-local NOBODY = "Nobody you know can use this recipe."
+-- And when the addon could tell which recipe it is but nobody wants it: said plainly, so "nobody"
+-- is never mistaken for the addon not having looked. Named by the guild, which is whose answer it
+-- mostly is (your own characters are in it too).
+local NOBODY_TAIL = " can use this recipe."
 local GREEN = { 0.1, 1, 0.1 }
 local GOLD = { 1, 0.82, 0 }
 local GREY = { 0.6, 0.6, 0.6 }
@@ -135,6 +136,16 @@ local function secret(value)
     return issecretvalue and issecretvalue(value) == true
 end
 
+-- "Nobody in Dark Horizon can use this recipe." -- or, until the game says which guild this
+-- character is in (at login it often hasn't) or when it is in none, who the addon knows.
+local function nobody()
+    local name = IsInGuild and IsInGuild() and GetGuildInfo and GetGuildInfo("player")
+    if secret(name) or type(name) ~= "string" or name == "" then
+        return "Nobody you know" .. NOBODY_TAIL
+    end
+    return "Nobody in " .. name .. NOBODY_TAIL
+end
+
 local function itemOf(tooltip, id)
     if not secret(id) and type(id) == "number" then return id end
     if not tooltip.GetItem then return nil end
@@ -170,7 +181,7 @@ function Tooltip.read(lines)
     local matches = requirements()
     for i, text in ipairs(lines) do
         if i > 1 and (text:find(KNOW, 1, true) == 1 or text:find(CAN_USE, 1, true) == 1
-            or text == NOBODY) then
+            or text:find(NOBODY_TAIL, 1, true)) then
             found.mine = true
         elseif text == (ITEM_BIND_ON_PICKUP or "Binds when picked up")
             or text == (ITEM_SOULBOUND or "Soulbound") then
@@ -225,7 +236,7 @@ function Tooltip.show(tooltip, id, data)
     local canUse = Core.recipeNames(interest.canUse, realm)
     if know then tooltip:AddLine(KNOW .. " " .. know, GREEN[1], GREEN[2], GREEN[3], true) end
     if canUse then tooltip:AddLine(CAN_USE .. " " .. canUse, GOLD[1], GOLD[2], GOLD[3], true) end
-    if not (know or canUse) then tooltip:AddLine(NOBODY, GREY[1], GREY[2], GREY[3], true) end
+    if not (know or canUse) then tooltip:AddLine(nobody(), GREY[1], GREY[2], GREY[3], true) end
     -- The tooltip is already up: it has to be told to make room for the lines.
     if tooltip.Show then tooltip:Show() end
     return true

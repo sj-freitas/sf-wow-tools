@@ -70,9 +70,10 @@ Armorsmith"), and don't know the recipe yet. Both lines cover your own character
 guildmates who use the addon; someone whose profession link you opened isn't listed, as their own
 addon tells their guild. At most eight names each, the rest counted ("and 3 more").
 
-When the addon knows which recipe it is but nobody it knows wants it, it says so in grey --
-**Nobody you know can use this recipe.** -- so "nobody" is never mistaken for the addon not having
-looked. One that binds when picked up gets no lines at all: nobody else can have it.
+When the addon knows which recipe it is but nobody wants it, it says so in grey -- **Nobody in
+Dark Horizon can use this recipe.**, your guild by name -- so "nobody" is never mistaken for the
+addon not having looked. Out of a guild, or before the game says which you are in, it says "Nobody
+you know" instead. One that binds when picked up gets no lines at all: nobody else can have it.
 
 It needs nothing of you: it's what the addon already records and shares. `/ga-prof tooltip off`
 stops it (and `/ga-prof tooltip on` brings it back; `/ga-prof tooltip` says which it is now), kept
