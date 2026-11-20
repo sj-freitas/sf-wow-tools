@@ -31,10 +31,13 @@ local ROW_HEIGHT, ROWS = 22, 18
 -- The name takes what a long one needs ("Shivan Darkwhisp (you)"), and the gap between the two
 -- holds the Skill title's chevron.
 local MEMBER_SKILL_RIGHT, MEMBER_PROFESSION_LEFT = 186, 200
--- The Attunements tab's rows: the guildmate's name, then a column per raid with its mark, the
--- raid's short name as the column's title. This many fit beside the name; with more raids than
--- that, the rest show on a guildmate's own page (and picking one on the left brings it into view).
-local ATTUNE_NAME_WIDTH, ATTUNE_COLUMN_WIDTH, MAX_ATTUNE_COLUMNS = 146, 40, 5
+-- The Attunements tab's rows: the guildmate's name, then a column per raid with its mark. The
+-- columns sit at the right-hand end of the row and the name takes every pixel they leave, so with
+-- one raid even a long name is read whole. This many columns fit; with more raids than that, the
+-- rest show on a guildmate's own page (and picking one on the left brings it into view).
+local ATTUNE_COLUMN_WIDTH, MAX_ATTUNE_COLUMNS = 40, 5
+-- Between the longest name and the first mark.
+local ATTUNE_NAME_GAP = 8
 -- The raid's own icon, which heads its column (the tooltip there says which raid it is).
 local ATTUNE_ICON = 20
 local SIDEBAR_ROWS = 14
@@ -417,6 +420,14 @@ local function drawMembers()
     end
 end
 
+--- `label` in bold, or back as it came: the game ships no bold face, so its own UI thickens text
+--- with an outline, and that is what this does. A client that won't take the font keeps it as it is.
+local function setBold(label, bold)
+    if not label.font or label.bold == bold then return end
+    if label:SetFont(label.font, label.size, bold and "OUTLINE" or "") == false then return end
+    label.bold = bold
+end
+
 --- The mark for an attunement: attuned, looked at and not attuned, or never looked at.
 local function attunementMark(attuned)
     if attuned == true then return ATTUNED_MARK end
@@ -430,7 +441,10 @@ local function drawAttunedRows()
         local member = members[state.offset + i]
         if member then
             row.member = member
-            row.name:SetText(("|c%s%s|r%s"):format(Game.classHex(member.class), member.name, sourceSuffix(member)))
+            -- Your own characters are in bold, with no "(you)" after them: this list is yours to
+            -- read, and the name needs the room more than the label.
+            row.name:SetText(("|c%s%s|r"):format(Game.classHex(member.class), member.name))
+            setBold(row.name, member.source == "own")
             for column, mark in ipairs(row.marks) do
                 local raid = state.attuneColumns[column]
                 mark:SetText(raid and attunementMark(member.states[raid.key]) or "")
@@ -507,11 +521,36 @@ local function drawSortHeaders(headers)
     end
 end
 
+-- How many raid columns the rows are laid out for, so they're only moved when that changes.
+local placedColumns
+
+--- Puts `count` raid columns at the right-hand end of the rows, in their order, and gives the name
+--- beside them everything they leave: one raid, and a long name is read whole. Each column's title
+--- sits above the first row, so it lines up with the marks under it however many there are.
+local function placeAttuneColumns(count)
+    if placedColumns == count then return end
+    placedColumns = count
+    for i, header in ipairs(attuneColumns) do
+        header:ClearAllPoints()
+        header:SetPoint("BOTTOMRIGHT", attuneRows[1], "TOPRIGHT", -(count - i) * ATTUNE_COLUMN_WIDTH, 5)
+    end
+    for _, row in ipairs(attuneRows) do
+        for i, mark in ipairs(row.marks) do
+            mark:ClearAllPoints()
+            mark:SetPoint("RIGHT", row, "RIGHT", -(count - i) * ATTUNE_COLUMN_WIDTH, 0)
+        end
+        row.name:ClearAllPoints()
+        row.name:SetPoint("LEFT", row, "LEFT", 6, 0)
+        row.name:SetPoint("RIGHT", row, "RIGHT", -count * ATTUNE_COLUMN_WIDTH - ATTUNE_NAME_GAP, 0)
+    end
+end
+
 --- The list: guildmates with their attunements, guildmates with their professions, or recipes; the
 --- column titles that go with it.
 local function drawRows()
     local attunements = state.tab == "attunements"
     local members = listingMembers()
+    if attunements then placeAttuneColumns(#state.attuneColumns) end
     for _, region in ipairs(memberHeaders) do region:SetShown(members) end
     for _, region in ipairs(recipeColumns) do region:SetShown(not members and not attunements) end
     for i, header in ipairs(attuneColumns) do
@@ -1549,14 +1588,13 @@ local function buildList()
         memberRows[i] = row
     end
 
-    -- The Attunements tab's column titles, one per raid shown: the raid's short name over its
-    -- column, the full name and what the marks mean on hover. They sit where the Guild tab's
-    -- titles do, and the columns are the same width as the marks under them, so nothing moves.
+    -- The Attunements tab's column titles, one per raid shown: the raid's icon over its column
+    -- (its short name where the data has none), the full name and what the marks mean on hover.
+    -- placeAttuneColumns puts them above the marks they title, however many raids there are.
     attuneColumns = {}
     for i = 1, MAX_ATTUNE_COLUMNS do
         local header = CreateFrame("Frame", nil, frame)
         header:SetSize(ATTUNE_COLUMN_WIDTH, 16)
-        header:SetPoint("BOTTOMLEFT", list, "TOPLEFT", ATTUNE_NAME_WIDTH + (i - 1) * ATTUNE_COLUMN_WIDTH, 1)
         header.title = fontString(header, "GameFontNormalSmall", "CENTER")
         header.title:SetAllPoints(header)
         header.title:SetWordWrap(false)
@@ -1587,13 +1625,12 @@ local function buildList()
         row:SetPoint("TOPLEFT", list, "TOPLEFT", 2, -4 - (i - 1) * (ROW_HEIGHT + 1))
         highlightTextures(row)
         row.name = fontString(row, "GameFontHighlight")
-        row.name:SetPoint("LEFT", row, "LEFT", 6, 0)
-        row.name:SetWidth(ATTUNE_NAME_WIDTH - 12)
         row.name:SetWordWrap(false)
+        -- The font as the game gave it, so a name of your own can be the same one in bold.
+        row.name.font, row.name.size = row.name:GetFont()
         row.marks = {}
         for column = 1, MAX_ATTUNE_COLUMNS do
             local mark = fontString(row, "GameFontHighlight", "CENTER")
-            mark:SetPoint("LEFT", row, "LEFT", ATTUNE_NAME_WIDTH - 2 + (column - 1) * ATTUNE_COLUMN_WIDTH, 0)
             mark:SetWidth(ATTUNE_COLUMN_WIDTH)
             mark:Hide()
             row.marks[column] = mark
@@ -1618,6 +1655,8 @@ local function buildList()
         row:Hide()
         attuneRows[i] = row
     end
+    -- Somewhere to start: the draw puts them where the raids shown need them.
+    placeAttuneColumns(MAX_ATTUNE_COLUMNS)
 
     rows = {}
     for i = 1, ROWS do

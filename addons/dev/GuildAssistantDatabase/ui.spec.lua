@@ -94,6 +94,9 @@ function Region:GetText() return self._text end
 -- 6 pixels a letter, colour codes left out.
 function Region:GetStringWidth() return #self._text:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "") * 6 end
 function Region:SetTexture(texture) self._texture = texture end
+-- The font every string here is given, and the flags one set in bold keeps ("OUTLINE").
+function Region:GetFont() return "Fonts\\FRIZQT__.TTF", 12, "" end
+function Region:SetFont(_, _, flags) self._fontFlags = flags end
 -- A chevron's: which way it points (the arrow is flipped for lowest first) and its colour.
 function Region:SetTexCoord(_, _, top, bottom) self._flipped = top > bottom end
 function Region:SetVertexColor(r, g, b) self._color = { r, g, b } end
@@ -1593,6 +1596,7 @@ local function attuneRows(ns)
 end
 
 -- Luna (you) attuned to Onyxia, Ana (a guildmate) looked at and not, Di (your alt) never looked at.
+-- Your own come first, so the rows are Luna, Di, Ana.
 local function attunementsDB()
     local db = GuildAssistantProfessionsDB
     db.characters["Luna-Test Realm"].guild = "Test Guild"
@@ -1613,8 +1617,8 @@ it("lists every guildmate with a tick for each raid they are attuned to", functi
     eq(parts.state.tab, "attunements")
     eq(parts.tabs[3]:IsEnabled(), false, "picked")
     eq(parts.crumb:GetText(), "|cffffd100Test Guild|r: which raids each guildmate is attuned to")
-    eq(attuneRows(ns), ("|cff3fc7ebLuna|r |cff808080(you)|r %s | |cffffffffAna|r |cff808080-|r"
-        .. " | |cffffffffDi|r |cff808080(alt)|r |cff808080?|r"):format(TICK))
+    eq(attuneRows(ns), ("|cff3fc7ebLuna|r %s | |cffffffffDi|r |cff808080?|r"
+        .. " | |cffffffffAna|r |cff808080-|r"):format(TICK), "your own first, then the guild by name")
     eq(parts.attuneColumns[1]:IsShown(), true)
     -- The raid's own icon heads its column, not its name; the tooltip says which raid it is.
     eq(parts.attuneColumns[1].icon._texture, 134154)
@@ -1634,6 +1638,30 @@ it("lists every guildmate with a tick for each raid they are attuned to", functi
     eq(parts.details.hint:GetText():sub(1, 57), "Click a guildmate to see which raids they are attuned to.")
 end)
 
+it("gives the name the room the raid columns leave, and your own characters in bold", function()
+    local ns = loadAddon({ professionsAddon = true, guild = "Test Guild" })
+    attunementsDB()
+    SlashCmdList.GADB("")
+    local parts = ns.UI.parts()
+    parts.tabs[3]:Click()
+    local rows = parts.attuneRows
+    eq(rows[1].name:GetText(), "|cff3fc7ebLuna|r", "the name alone, nothing after it")
+    eq(rows[1].name._fontFlags, "OUTLINE", "your own character's name in bold")
+    eq(rows[2].name._fontFlags, "OUTLINE", "your alt's too")
+    eq(rows[3].name._fontFlags, "", "a guildmate's as the font comes")
+    -- One raid: its mark at the right-hand end of the row, the name reaching all the way to it.
+    eq(rows[1].marks[1]._point[4], 0)
+    eq(rows[1].name._point[4], -48)
+    eq(parts.attuneColumns[1]._point[4], 0, "the raid's title above its mark")
+    -- A raid a newer addon knows takes a column of its own: they move along, the name gives it room.
+    GuildAssistantProfessionsDB.characters["Luna-Test Realm"].attunements.mc = true
+    ns.UI.refresh()
+    eq(rows[1].marks[1]._point[4], -40)
+    eq(rows[1].marks[2]._point[4], 0)
+    eq(rows[1].name._point[4], -88)
+    eq(parts.attuneColumns[1]._point[4], -40)
+end)
+
 it("shows a guildmate's raids one by one when you click them, and says what isn't known", function()
     local ns = loadAddon({ professionsAddon = true, guild = "Test Guild" })
     attunementsDB()
@@ -1646,11 +1674,11 @@ it("shows a guildmate's raids one by one when you click them, and says what isn'
     has(summary:GetText(), "|cff3fc7ebLuna|r")
     has(summary:GetText(), ONY .. ": |cff40ff40Attuned|r")
     eq(parts.attuneRows[1].selected:IsShown(), true, "the row is marked")
-    parts.attuneRows[2]:Click()
-    has(parts.details.summary:GetText(), ONY .. ": |cff808080Not attuned|r")
-    parts.attuneRows[3]:Click()
+    parts.attuneRows[2]:Click() -- Di, your alt: nobody has looked
     has(parts.details.summary:GetText(), ONY .. ": |cff808080Not known|r")
     has(parts.details.summary:GetText(), "hasn't looked")
+    parts.attuneRows[3]:Click() -- Ana, a guildmate who isn't attuned
+    has(parts.details.summary:GetText(), ONY .. ": |cff808080Not attuned|r")
     -- Hovering a row says the same, shorter.
     parts.attuneRows[1]:Fire("OnEnter")
     eq(GameTooltip.lines[1], "Luna")
@@ -1666,13 +1694,13 @@ it("keeps a raid picked on the left, the search and the pick while another tab s
     parts.tabs[3]:Click()
     parts.sidebarButtons[2]:Click() -- Onyxia's Lair
     eq(parts.state.raid, "ony")
-    eq(attuneRows(ns), "|cff3fc7ebLuna|r |cff808080(you)|r " .. TICK, "only those attuned")
+    eq(attuneRows(ns), "|cff3fc7ebLuna|r " .. TICK, "only those attuned")
     parts.searchBox:SetText("di")
     ns.UI.refresh()
     eq(attuneRows(ns), "", "Di isn't attuned")
     eq(parts.statusText:GetText(), "No one known is attuned to Onyxia's Lair yet.")
     parts.sidebarButtons[1]:Click() -- all of them
-    eq(attuneRows(ns), "|cffffffffDi|r |cff808080(alt)|r |cff808080?|r")
+    eq(attuneRows(ns), "|cffffffffDi|r |cff808080?|r")
     eq(sidebar(ns), "All guildmates 1 | " .. ONY .. " 0", "counted among those the search keeps")
     -- Recipes, and back: its own search, and the raid picked.
     parts.tabs[1]:Click()
@@ -1731,8 +1759,10 @@ it("brings a raid picked on the left into view when there are more than the colu
     end
     eq(parts.attuneColumns[1].title:GetText(), "r6", "its name: the data has no icon for it")
     eq(parts.attuneColumns[1].icon:IsShown(), false)
-    eq(attuneRows(ns), "|cff3fc7ebLuna|r |cff808080(you)|r " .. TICK .. " " .. TICK
+    eq(attuneRows(ns), "|cff3fc7ebLuna|r " .. TICK .. " " .. TICK
         .. " |cff808080-|r |cff808080-|r |cff808080-|r")
+    -- Five columns: the name still has the rest of the row.
+    eq(parts.attuneRows[1].name._point[4], -208)
 end)
 
 print(("%d passed, %d failed"):format(passed, failed))

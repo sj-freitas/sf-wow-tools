@@ -746,10 +746,12 @@ it("lists your guild's characters with what each is attuned to, yours first", fu
     local members = Core.guildAttunements(db, "Test Guild", "Luna-Test Realm")
     local names = {}
     for _, member in ipairs(members) do names[#names + 1] = member.name end
-    eq(table.concat(names, ", "), "Luna, Ana, Di", "not the link's nor another guild's")
+    eq(table.concat(names, ", "), "Luna, Di, Ana",
+        "your own first, then the guild by name; not the link's nor another guild's")
     eq(members[1].you, true); eq(members[1].states.ony, true); eq(members[1].attuned, 1)
-    eq(members[2].states.ony, false, "looked at, not attuned")
-    eq(members[3].states.ony, nil, "never looked at")
+    eq(members[2].source, "own", "your alt, above the guildmates")
+    eq(members[2].states.ony, nil, "never looked at")
+    eq(members[3].states.ony, false, "looked at, not attuned")
     eq(#Core.guildAttunements(db, nil, "Luna-Test Realm"), 0, "not in a guild")
     eq(#Core.guildAttunements(nil, "Test Guild", "Luna-Test Realm"), 0, "without the addon")
 end)
@@ -783,7 +785,7 @@ it("finds the guildmates a search or a raid keeps, and counts who is attuned", f
     local attuned = Core.findAttuned(members, nil, "ony")
     eq(#attuned, 1); eq(attuned[1].name, "Luna")
     eq(Core.attunedCounts(members).ony, 1)
-    local rows = Core.attunementRows(members[3], Core.attunementRaids(attunementsDB()))
+    local rows = Core.attunementRows(members[2], Core.attunementRaids(attunementsDB()))
     eq(#rows, 1); eq(rows[1].raid, "Onyxia's Lair"); eq(rows[1].attuned, nil, "Di: not known")
 end)
 

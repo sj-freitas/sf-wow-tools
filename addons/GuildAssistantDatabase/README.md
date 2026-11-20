@@ -119,8 +119,13 @@ Each raid is its **own icon from the game** (Onyxia's Lair's dragon head): the i
 column, and hovering it says which raid it is. Everywhere a name is read rather than a column — on
 the left, on a guildmate's page, in a row's tooltip — the icon comes before the name.
 
-Each raid gets a column of its own, up to five beside the name; with more raids than that, picking
-one on the left brings it into view, and a guildmate's page always has them all.
+Each raid gets a column of its own, up to five, at the **right-hand end of the row**: the name has
+every pixel they leave, so even a long one is read whole. With more raids than that, picking one on
+the left brings it into view, and a guildmate's page always has them all.
+
+**Your own characters come first**, their names in bold (the game has no bold face, so it's the
+outline its own UI uses): the list isn't sorted by anything else, and nothing is written after a
+name to say it's yours.
 
 It comes from GuildAssistant Professions 1.6.0, which asks the game whether each raid's attunement
 quest is complete (Onyxia's Lair so far) and shares it with the guild. A guildmate on an older

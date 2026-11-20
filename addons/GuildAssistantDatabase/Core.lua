@@ -1013,8 +1013,8 @@ end
 --- Your guild's characters and what each is attuned to, from GuildAssistant Professions' saved data
 --- (this account's in the guild and the guildmates it heard from, as the Guild tab counts them,
 --- whether or not they have a profession): { key, name, realm, class, source, you, states =
---- { [raid key] = true/false }, attuned (how many), search }. This character first, then by name.
---- `you` is Core.playerKey's.
+--- { [raid key] = true/false }, attuned (how many), search }. Your own characters first, this one
+--- at their head, then the guildmates by name. `you` is Core.playerKey's.
 function Core.guildAttunements(db, guild, you)
     local members = {}
     if not guild then return members end
@@ -1031,6 +1031,10 @@ function Core.guildAttunements(db, guild, you)
         end
     end
     table.sort(members, function(a, b)
+        -- Your own characters stay at the top, this one first: the list isn't sorted by anything
+        -- else, and they're the ones you came to look at.
+        local aOwn, bOwn = a.source == "own", b.source == "own"
+        if aOwn ~= bOwn then return aOwn end
         if a.you ~= b.you then return a.you end
         if a.name ~= b.name then return a.name < b.name end
         return (a.realm or "") < (b.realm or "")
