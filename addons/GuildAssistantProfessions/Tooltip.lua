@@ -16,15 +16,16 @@ ns.Tooltip = Tooltip
 
 local RECIPE_CLASS = 9 -- the game's item class for recipes (plans, patterns, formulas…)
 
--- The lines, as the player reads them: what they already know in green, what they could learn in
--- the game's gold.
+-- The lines, as the player reads them: what they already know in green, what they could learn in a
+-- light blue -- the gold it was first is what a tooltip's own lines (and other addons') are already
+-- full of, so it didn't stand out.
 local KNOW, CAN_USE = "Know this recipe:", "Can use this recipe:"
 -- And when the addon could tell which recipe it is but nobody wants it: said plainly, so "nobody"
 -- is never mistaken for the addon not having looked. Named by the guild, which is whose answer it
 -- mostly is (your own characters are in it too).
 local NOBODY_TAIL = " can use this recipe."
 local GREEN = { 0.1, 1, 0.1 }
-local GOLD = { 1, 0.82, 0 }
+local BLUE = { 0.4, 0.8, 1 }
 local GREY = { 0.6, 0.6, 0.6 }
 
 -- What each client calls the functions this needs.
@@ -235,7 +236,7 @@ function Tooltip.show(tooltip, id, data)
     local know = Core.recipeNames(interest.know, realm)
     local canUse = Core.recipeNames(interest.canUse, realm)
     if know then tooltip:AddLine(KNOW .. " " .. know, GREEN[1], GREEN[2], GREEN[3], true) end
-    if canUse then tooltip:AddLine(CAN_USE .. " " .. canUse, GOLD[1], GOLD[2], GOLD[3], true) end
+    if canUse then tooltip:AddLine(CAN_USE .. " " .. canUse, BLUE[1], BLUE[2], BLUE[3], true) end
     if not (know or canUse) then tooltip:AddLine(nobody(), GREY[1], GREY[2], GREY[3], true) end
     -- The tooltip is already up: it has to be told to make room for the lines.
     if tooltip.Show then tooltip:Show() end
