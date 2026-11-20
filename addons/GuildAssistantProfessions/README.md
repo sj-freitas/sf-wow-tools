@@ -70,7 +70,9 @@ Armorsmith"), and don't know the recipe yet. Both lines cover your own character
 guildmates who use the addon; someone whose profession link you opened isn't listed, as their own
 addon tells their guild. At most eight names each, the rest counted ("and 3 more").
 
-One that binds when picked up gets no lines: nobody else can have it.
+When the addon knows which recipe it is but nobody it knows wants it, it says so in grey --
+**Nobody you know can use this recipe.** -- so "nobody" is never mistaken for the addon not having
+looked. One that binds when picked up gets no lines at all: nobody else can have it.
 
 It needs nothing of you: it's what the addon already records and shares. `/ga-prof tooltip off`
 stops it (and `/ga-prof tooltip on` brings it back; `/ga-prof tooltip` says which it is now), kept
@@ -79,7 +81,9 @@ for the account.
 Which recipe a pattern teaches isn't in its tooltip, so the addon works it out from the spell the
 game says the item casts, matched against the profession's recipes (`Recipes.lua`), and from the
 name when a client gives no spell. Where none of that answers -- a recipe newer than the addon's
-tables -- it says nothing rather than the wrong names. A guildmate on a version before 1.5.0, which
+tables -- it says nothing at all rather than the wrong names. To see what it makes of one, type
+`/ga-prof tooltip` and **shift-click the recipe** after it: it says what the game calls the item,
+what its tooltip asks for, which recipe it thinks it teaches and who it would name, step by step. A guildmate on a version before 1.5.0, which
 didn't record specializations, isn't listed for plans that need one: it isn't known that they have
 it.
 
@@ -140,6 +144,7 @@ What you find reaches everyone:
 | `/ga-prof save`   | Writes what is recorded to the file (**reloads the screen**)               |
 | `/ga-prof status` | What is saved (your characters, and how many of the guild's), when, and where the file is |
 | `/ga-prof tooltip on\|off` | Whether a recipe's tooltip says who knows it and who could learn it (on by default) |
+| `/ga-prof tooltip` + a recipe | Shift-click one after the command: what the addon makes of it, step by step |
 | `/ga-prof`        | Lists the commands                                                         |
 
 `/gaprof` works too.

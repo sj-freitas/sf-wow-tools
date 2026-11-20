@@ -113,6 +113,21 @@ it("says who knows the plans and who could learn them, in green and gold", funct
     eq(#tooltip.added, 2)
 end)
 
+it("says so when nobody it knows wants the recipe, and not twice", function()
+    local db = loadAddon()
+    crafter(db, "Ana", "guild", 100) -- Blacksmithing, but nowhere near the 250 the plans ask for
+    local tooltip = plans()
+    eq(Tooltip.show(tooltip), true)
+    eq(#tooltip.added, 1)
+    eq(tooltip.added[1].text, "Nobody you know can use this recipe.")
+    eq(tooltip.added[1].r, 0.6, "grey")
+    eq(Tooltip.show(tooltip), false, "already said")
+    eq(#tooltip.added, 1)
+    -- Nothing at all when it can't tell which recipe the plans teach: "nobody" would be a guess.
+    item.spell = nil
+    eq(Tooltip.show(showing({ "Plans: Unheard Of", "Requires Blacksmithing (250)" })), false)
+end)
+
 it("says nothing about plans that bind when picked up", function()
     local db = loadAddon()
     guild(db)
@@ -189,8 +204,8 @@ it("hooks the tooltips a client without the modern callback has", function()
     local hooked
     _G.GameTooltip = { HookScript = function(_, script, handler) hooked = script == "OnTooltipSetItem" and handler end }
     _G.ItemRefTooltip = nil
-    eq(Tooltip.start(), true)
-    eq(Tooltip.start(), false, "only once")
+    eq(Tooltip.start(), 1, "one way hooked")
+    eq(Tooltip.start(), 0, "only once")
     assert(hooked, "hooked OnTooltipSetItem")
     local tooltip = plans()
     hooked(tooltip)
@@ -205,6 +220,59 @@ it("reads the lines the modern callback brings instead of the tooltip's own", fu
         { leftText = "Plans: Mithril Spurs" }, { leftText = "Requires Blacksmithing (250)" },
     } }), true)
     eq(tooltip.added[1].text, "Know this recipe: Luna")
+end)
+
+-- What /ga-prof tooltip <a shift-clicked recipe> says.
+local function described(link, lines)
+    local said = {}
+    Tooltip.describe(link, function(text) said[#said + 1] = text end, lines)
+    return table.concat(said, "\n")
+end
+
+local LINK = "|cffffffff|Hitem:11288:0:0:0|h[Plans: Mithril Spurs]|h|r"
+
+it("says what it makes of a recipe, step by step", function()
+    local db = loadAddon()
+    guild(db)
+    local text = described(LINK, { "Plans: Mithril Spurs", "Requires Blacksmithing (250)" })
+    assert(text:find("Plans: Mithril Spurs (item 11288).", 1, true), text)
+    assert(text:find("A recipe, Blacksmithing. Its tooltip: 2 lines, Blacksmithing (250).", 1, true), text)
+    assert(text:find("Mithril Spurs (9972); one of its recipes.", 1, true), text)
+    assert(text:find("The recipe it teaches: spell:9972.", 1, true), text)
+    assert(text:find("3 character(s) have Blacksmithing, the highest at 300.", 1, true), text)
+    assert(text:find("Know it: Luna", 1, true), text)
+    assert(text:find("Could learn it: Dir", 1, true), text)
+end)
+
+it("says where it stopped: not a recipe, no recipe known, nothing to read", function()
+    local db = loadAddon()
+    guild(db)
+    eq(described("have a look at this"):find("that isn't an item", 1, true), 1)
+    item.class = 4
+    assert(described(LINK, {}):find("not a recipe (9): no lines for it.", 1, true), "class")
+    item.class, item.spell = 9, nil
+    local text = described("|Hitem:11288|h[Plans: Unheard Of]|h", { "Plans: Unheard Of" })
+    assert(text:find("no skill line", 1, true), text)
+    assert(text:find("Which recipe it teaches: not known", 1, true), text)
+end)
+
+it("reads an item's tooltip with one of its own when the lines aren't to hand", function()
+    local db = loadAddon()
+    guild(db)
+    local scanner
+    _G.UIParent = {}
+    _G.CreateFrame = function()
+        scanner = showing({ "Plans: Mithril Spurs", "Requires Blacksmithing (250)" })
+        function scanner:SetOwner() self.owned = true end
+        function scanner:ClearLines() end
+        function scanner:SetHyperlink(link) self.link = link end
+        function scanner:Hide() self.hidden = true end
+        return scanner
+    end
+    local text = described(LINK)
+    eq(scanner.link, LINK, "asked the game about it")
+    eq(scanner.hidden, true, "and put its tooltip away")
+    assert(text:find("The recipe it teaches: spell:9972.", 1, true), text)
 end)
 
 print(("%d passed, %d failed"):format(passed, failed))

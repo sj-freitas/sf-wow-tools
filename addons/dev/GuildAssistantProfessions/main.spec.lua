@@ -102,7 +102,7 @@ it("turns the recipe tooltips off and on, and keeps it for the account", functio
     SlashCmdList.GAPROF("status")
     eq(said("Recipe tooltips: off."), true, "status")
     SlashCmdList.GAPROF("tooltip maybe")
-    eq(said("tooltip on, or tooltip off."), true, "anything else says how")
+    eq(said("tooltip on, tooltip off, or tooltip and shift-click a recipe"), true, "anything else says how")
     eq(db.tooltip, false, "and changes nothing")
     SlashCmdList.GAPROF("tooltip on")
     eq(db.tooltip, true, "turned on again")

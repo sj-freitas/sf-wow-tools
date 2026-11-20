@@ -96,10 +96,22 @@ local function status()
 end
 
 -- "/ga-prof tooltip on|off": whether a recipe item's tooltip says who knows that recipe and who
--- could learn it (Tooltip.lua). Without a word of its own it only says which it is.
-local function tooltips(argument)
+-- could learn it (Tooltip.lua). Without a word of its own it only says which it is, and with a
+-- recipe shift-clicked after it, what the addon makes of that one (when its tooltip says nothing
+-- and it isn't clear why).
+local function tooltips(argument, rest)
+    if rest and rest:find("Hitem:", 1, true) then
+        local first = true
+        return Tooltip.describe(rest, function(text)
+            if first then
+                first = false
+                return Scan.say("%s", text)
+            end
+            print(text)
+        end)
+    end
     if argument ~= "" and argument ~= "on" and argument ~= "off" then
-        return Scan.say("tooltip on, or tooltip off.")
+        return Scan.say("tooltip on, tooltip off, or tooltip and shift-click a recipe to see what I make of it.")
     end
     if argument ~= "" then
         db() -- it is saved there, and the commands work even without ADDON_LOADED
@@ -115,7 +127,7 @@ local function runCommand(message)
     if command == "status" then
         status()
     elseif command == "tooltip" then
-        tooltips(argument)
+        tooltips(argument, (message or ""):match("^%s*%S*%s*(.-)%s*$"))
     elseif command == "save" or command == "log" then -- "log": its name before 1.0.1, still works
         -- The game only writes saved variables on logout or a reload.
         refreshExport()

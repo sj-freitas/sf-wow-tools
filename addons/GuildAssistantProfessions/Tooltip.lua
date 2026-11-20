@@ -19,8 +19,12 @@ local RECIPE_CLASS = 9 -- the game's item class for recipes (plans, patterns, fo
 -- The lines, as the player reads them: what they already know in green, what they could learn in
 -- the game's gold.
 local KNOW, CAN_USE = "Know this recipe:", "Can use this recipe:"
+-- And when the addon could tell which recipe it is but nobody it knows wants it: said plainly, so
+-- "nobody" is never mistaken for the addon not having looked.
+local NOBODY = "Nobody you know can use this recipe."
 local GREEN = { 0.1, 1, 0.1 }
 local GOLD = { 1, 0.82, 0 }
+local GREY = { 0.6, 0.6, 0.6 }
 
 -- What each client calls the functions this needs.
 local function itemInfoInstant(id)
@@ -165,7 +169,8 @@ function Tooltip.read(lines)
     local found = { requires = {} }
     local matches = requirements()
     for i, text in ipairs(lines) do
-        if i > 1 and (text:find(KNOW, 1, true) == 1 or text:find(CAN_USE, 1, true) == 1) then
+        if i > 1 and (text:find(KNOW, 1, true) == 1 or text:find(CAN_USE, 1, true) == 1
+            or text == NOBODY) then
             found.mine = true
         elseif text == (ITEM_BIND_ON_PICKUP or "Binds when picked up")
             or text == (ITEM_SOULBOUND or "Soulbound") then
@@ -218,30 +223,108 @@ function Tooltip.show(tooltip, id, data)
     local realm = Core.realmName(GetRealmName and GetRealmName())
     local know = Core.recipeNames(interest.know, realm)
     local canUse = Core.recipeNames(interest.canUse, realm)
-    if not (know or canUse) then return false end
     if know then tooltip:AddLine(KNOW .. " " .. know, GREEN[1], GREEN[2], GREEN[3], true) end
     if canUse then tooltip:AddLine(CAN_USE .. " " .. canUse, GOLD[1], GOLD[2], GOLD[3], true) end
+    if not (know or canUse) then tooltip:AddLine(NOBODY, GREY[1], GREY[2], GREY[3], true) end
     -- The tooltip is already up: it has to be told to make room for the lines.
     if tooltip.Show then tooltip:Show() end
     return true
 end
 
---- Starts showing the lines, however this client does tooltips: the modern callback covers every
---- tooltip at once, and older clients get the script of the two that show items.
+--- Starts showing the lines, every way this client does tooltips: the modern callback, which covers
+--- every tooltip at once, and the script of the two frames that show items, which older clients use.
+--- Both where there are both -- which of them an item tooltip goes through differs between clients,
+--- and whichever comes second finds the lines already there (Tooltip.read's `mine`). Returns how
+--- many ways were hooked.
 function Tooltip.start()
-    if Tooltip.started then return false end
-    Tooltip.started = true
+    if Tooltip.started then return 0 end
+    local hooked = 0
     local processor = TooltipDataProcessor
-    if processor and processor.AddTooltipPostCall and Enum and Enum.TooltipDataType then
-        processor.AddTooltipPostCall(Enum.TooltipDataType.Item, function(tooltip, data)
+    if processor and processor.AddTooltipPostCall and Enum and Enum.TooltipDataType
+        and Enum.TooltipDataType.Item then
+        local ok = pcall(processor.AddTooltipPostCall, Enum.TooltipDataType.Item, function(tooltip, data)
             ns.safely(Tooltip.show, tooltip, data and data.id, data)
         end)
-        return true
+        hooked = hooked + (ok and 1 or 0)
     end
     for _, frame in pairs({ game = GameTooltip, ref = ItemRefTooltip }) do
-        if frame.HookScript then
-            frame:HookScript("OnTooltipSetItem", function(self) ns.safely(Tooltip.show, self) end)
+        -- A client that has done away with the script raises an error for its name.
+        if frame.HookScript and pcall(frame.HookScript, frame, "OnTooltipSetItem",
+            function(self) ns.safely(Tooltip.show, self) end) then
+            hooked = hooked + 1
         end
     end
-    return true
+    Tooltip.started = hooked
+    return hooked
+end
+
+-- Reading an item's tooltip without showing one: a tooltip of this addon's own, for the command
+-- below (what the player hovers is the game's own, already written).
+local scanner
+
+function Tooltip.scan(link)
+    if not scanner then
+        if not CreateFrame then return {} end
+        local ok, frame = pcall(CreateFrame, "GameTooltip", "GuildAssistantProfessionsScanner",
+            UIParent, "GameTooltipTemplate")
+        if not ok or not frame then return {} end
+        scanner = frame
+    end
+    scanner:SetOwner(UIParent or scanner, "ANCHOR_NONE")
+    scanner:ClearLines()
+    scanner:SetHyperlink(link)
+    local lines = Tooltip.lines(scanner)
+    scanner:Hide()
+    return lines
+end
+
+--- Says what this addon makes of a recipe item, step by step, through `say`: for
+--- "/ga-prof tooltip <a recipe>" when the lines don't come and the reason is the game's answer
+--- rather than the guild's data. `lines` is its tooltip (Tooltip.scan's, unless the caller has them).
+function Tooltip.describe(link, say, lines)
+    local id = type(link) == "string" and tonumber(link:match("item:(%d+)"))
+    if not id then return say("that isn't an item: type /ga-prof tooltip and shift-click one.") end
+    local name = link:match("%[(.-)%]") or ("item " .. id)
+    say(("%s (item %d)."):format(name, id))
+    local _, _, subType, _, _, class = itemInfoInstant(id)
+    if class ~= RECIPE_CLASS then
+        return say(("  The game calls it class %s, not a recipe (%d): no lines for it."):format(
+            tostring(class), RECIPE_CLASS))
+    end
+    lines = lines or Tooltip.scan(link)
+    local found = Tooltip.read(lines)
+    say(("  A recipe, %s. Its tooltip: %d lines, %s%s."):format(tostring(subType), #lines,
+        found.profession and ("%s (%s)"):format(found.profession, tostring(found.skill))
+            or "no skill line",
+        found.bound and ", binds when picked up -- nothing is said of those" or ""))
+    local profession = found.profession or subType
+    local spell, spellId = itemSpell(id)
+    local listed = index(profession)
+    say(("  The game's spell for it: %s (%s); %s"):format(tostring(spell), tostring(spellId),
+        not listed and ("this addon has no recipes for " .. tostring(profession) .. ".")
+            or (type(spellId) == "number" and listed.ids[spellId] and "one of its recipes." or "not one of its recipes.")))
+    local key = Tooltip.recipeKey(profession, id, lines[1] or name)
+    if not key then
+        return say("  Which recipe it teaches: not known, so nothing is said of it.")
+    end
+    say("  The recipe it teaches: " .. key .. ".")
+    local specialization
+    for _, needed in ipairs(found.requires) do
+        specialization = specialization or specializationKey(profession, needed)
+    end
+    if specialization then say("  It requires " .. specialization .. ".") end
+    local interest = Core.recipeInterest(ns.db, { profession = profession, skill = found.skill or 0,
+        key = key, specialization = specialization })
+    local realm = Core.realmName(GetRealmName and GetRealmName())
+    local have, highest = 0, 0
+    for _, character in pairs(ns.db.characters) do
+        local theirs = character.source ~= "link" and character.professions[profession]
+        if theirs then
+            have = have + 1
+            highest = math.max(highest, theirs.rank or 0)
+        end
+    end
+    say(("  %d character(s) have %s, the highest at %d."):format(have, profession, highest))
+    say("  Know it: " .. (Core.recipeNames(interest.know, realm) or "nobody"))
+    say("  Could learn it: " .. (Core.recipeNames(interest.canUse, realm) or "nobody"))
 end
