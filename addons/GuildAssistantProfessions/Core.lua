@@ -982,6 +982,61 @@ function Core.describeAttunements(db)
     return #parts > 0 and table.concat(parts, ", ") or "none known"
 end
 
+-- Who wants a recipe found in the world ------------------------------------------------------------
+-- A recipe item that doesn't bind when picked up can be handed on, and this addon already knows who
+-- has which recipes and at what skill: enough to say, in the item's own tooltip (Tooltip.lua), who
+-- already knows it and who could learn it.
+
+--- At most this many names per line, the rest counted ("and 4 more"): a tooltip is not a list.
+Core.MAX_RECIPE_NAMES = 8
+
+--- Who would want a recipe item: `know`, the characters that have the recipe already, and `canUse`,
+--- those with its profession at the skill it takes (and the specialization it requires) but not the
+--- recipe. `recipe` is { profession = "Blacksmithing", skill = 250, key = "spell:9972",
+--- specialization = "spell:9787" or nil }. Characters seen through a profession link are left out:
+--- their own player's addon shares them, and they needn't be in the guild. Your own characters come
+--- first, then by name. Each entry is { name, realm, own }.
+function Core.recipeInterest(db, recipe)
+    local know, canUse = {}, {}
+    for _, character in pairs(db.characters or {}) do
+        local profession = character.source ~= "link" and character.professions[recipe.profession]
+        if profession then
+            local entry = { name = character.name, realm = character.realm, own = character.source == "own" }
+            if recipe.key and profession.recipes[recipe.key] then
+                know[#know + 1] = entry
+            elseif (profession.rank or 0) >= (recipe.skill or 0)
+                -- A plan that requires a specialization ("Requires Armorsmith") is no use to
+                -- anyone without it. One recorded by an addon before 1.5.0, which didn't record
+                -- them, isn't listed for such a plan: it isn't known that they have it.
+                and (not recipe.specialization or profession.recipes[recipe.specialization]) then
+                canUse[#canUse + 1] = entry
+            end
+        end
+    end
+    local function first(a, b)
+        if a.own ~= b.own then return a.own end
+        if a.name ~= b.name then return a.name < b.name end
+        return a.realm < b.realm
+    end
+    table.sort(know, first)
+    table.sort(canUse, first)
+    return { know = know, canUse = canUse }
+end
+
+--- One tooltip line's names: "Felbane Dir, Svajone", another realm's with its realm ("Dir (Other
+--- Realm)"), at most Core.MAX_RECIPE_NAMES of them and "and 3 more" for the rest. Nil for nobody.
+function Core.recipeNames(entries, realm)
+    if #entries == 0 then return nil end
+    local names = {}
+    for i = 1, math.min(#entries, Core.MAX_RECIPE_NAMES) do
+        local entry = entries[i]
+        names[i] = entry.realm ~= realm and ("%s (%s)"):format(entry.name, entry.realm) or entry.name
+    end
+    local rest = #entries - #names
+    if rest > 0 then return ("%s and %d more"):format(table.concat(names, ", "), rest) end
+    return table.concat(names, ", ")
+end
+
 -- JSON --------------------------------------------------------------------------------------------
 
 local ESCAPES = { ['"'] = '\\"', ["\\"] = "\\\\", ["\n"] = "\\n", ["\r"] = "\\r", ["\t"] = "\\t" }

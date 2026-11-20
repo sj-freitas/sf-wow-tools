@@ -55,7 +55,7 @@ local function loadAddon(unknownEvents)
     _G.GetNumSkillLines = function() return 0 end
     _G.GetSkillLineInfo = function() end
     local ns = {}
-    for _, file in ipairs({ "Core", "Recipes", "Scan", "Sync", "Sources", "Attunements", "Main" }) do
+    for _, file in ipairs({ "Core", "Recipes", "Scan", "Sync", "Sources", "Attunements", "Tooltip", "Main" }) do
         -- Recipes.lua: the fixture's (dev/), what the database job builds from a slice of the tables.
         local path = file == "Recipes" and "dev/GuildAssistantProfessions/Recipes.fixture.lua"
             or "GuildAssistantProfessions/" .. file .. ".lua"
@@ -84,9 +84,30 @@ it("answers its slash commands", function()
     eq(said("/ga-prof export"), false, "no export command: the file is the export")
     SlashCmdList.GAPROF("status")
     eq(said("1 character, 0 professions, 0 recipes saved."), true, "status")
+    eq(said("Recipe tooltips: on."), true, "the tooltips are on unless turned off")
     eq(said("Luna-Test Realm: no professions. Updated never."), true, "status per character")
     eq(said("Last update: never."), true, "last update")
     eq(said("File: WTF/Account/<account>/SavedVariables/GuildAssistantProfessions.lua"), true, "file")
+end)
+
+it("turns the recipe tooltips off and on, and keeps it for the account", function()
+    loadAddon()
+    fire("ADDON_LOADED", "GuildAssistantProfessions")
+    local db = GuildAssistantProfessionsDB
+    SlashCmdList.GAPROF("tooltip")
+    eq(said("recipe tooltips are on (/ga-prof tooltip on, /ga-prof tooltip off)."), true, "says which")
+    SlashCmdList.GAPROF("tooltip OFF")
+    eq(said("recipe tooltips are off."), true, "turned off")
+    eq(db.tooltip, false, "saved for the account")
+    SlashCmdList.GAPROF("status")
+    eq(said("Recipe tooltips: off."), true, "status")
+    SlashCmdList.GAPROF("tooltip maybe")
+    eq(said("tooltip on, or tooltip off."), true, "anything else says how")
+    eq(db.tooltip, false, "and changes nothing")
+    SlashCmdList.GAPROF("tooltip on")
+    eq(db.tooltip, true, "turned on again")
+    SlashCmdList.GAPROF("")
+    eq(said("/ga-prof tooltip on|off"), true, "listed with the commands")
 end)
 
 it("keeps the export in the saved data up to date, and says when it was updated", function()

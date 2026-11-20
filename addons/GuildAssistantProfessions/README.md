@@ -52,6 +52,37 @@ the chat):
 
 `/ga-prof status` says how many guild characters your addon has and what was sent and received.
 
+## Who can use a recipe you find
+
+Hover any recipe, pattern, plans, formula or schematic that **doesn't bind when picked up** -- in
+your bags, on a vendor, in the loot window, in the auction house, a link in the chat -- and its
+tooltip says who it would be worth something to:
+
+```
+Know this recipe: Felbane Dir, Svajone Something
+Can use this recipe: Shivan Darkwhisp
+```
+
+The first line, in green, is the characters this addon knows that have the recipe already (so the
+plans are no use to them). The second, in gold, is those who could learn it: they have the
+profession at the skill the plans ask for and the specialization they require ("Requires
+Armorsmith"), and don't know the recipe yet. Both lines cover your own characters (first) and your
+guildmates who use the addon; someone whose profession link you opened isn't listed, as their own
+addon tells their guild. At most eight names each, the rest counted ("and 3 more").
+
+One that binds when picked up gets no lines: nobody else can have it.
+
+It needs nothing of you: it's what the addon already records and shares. `/ga-prof tooltip off`
+stops it (and `/ga-prof tooltip on` brings it back; `/ga-prof tooltip` says which it is now), kept
+for the account.
+
+Which recipe a pattern teaches isn't in its tooltip, so the addon works it out from the spell the
+game says the item casts, matched against the profession's recipes (`Recipes.lua`), and from the
+name when a client gives no spell. Where none of that answers -- a recipe newer than the addon's
+tables -- it says nothing rather than the wrong names. A guildmate on a version before 1.5.0, which
+didn't record specializations, isn't listed for plans that need one: it isn't known that they have
+it.
+
 ## Attunements
 
 Which raids each character may walk into, recorded quietly: at login, on entering the world, as the
@@ -108,6 +139,7 @@ What you find reaches everyone:
 | ----------------- | -------------------------------------------------------------------------- |
 | `/ga-prof save`   | Writes what is recorded to the file (**reloads the screen**)               |
 | `/ga-prof status` | What is saved (your characters, and how many of the guild's), when, and where the file is |
+| `/ga-prof tooltip on\|off` | Whether a recipe's tooltip says who knows it and who could learn it (on by default) |
 | `/ga-prof`        | Lists the commands                                                         |
 
 `/gaprof` works too.
@@ -144,6 +176,8 @@ whole realm name, is renamed at login.
 
 Guild Assistant needs 1.0's dates (format 2): a file from an older version isn't imported, and the
 website asks you to update the addon.
+
+Only whether the recipe tooltips are off is saved besides (`tooltip`); it isn't exported.
 
 Opening someone else's profession link (WoW Forever) records their recipes too, under their name,
 marked as seen through a link; those aren't shared or imported (their own addon shares them).

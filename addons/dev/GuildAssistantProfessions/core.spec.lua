@@ -644,5 +644,56 @@ it("gives up a message whose pieces stopped coming, and keeps two unfinished per
     eq((assembler.add("Spam", pieces[3])), "C", "the newest still completes")
 end)
 
+-- Who wants a recipe ---------------------------------------------------------------------------
+
+-- A character with a profession at `rank`, knowing `recipes`.
+local function crafter(db, name, source, rank, recipes)
+    local character = Core.character(db, name, "Test Realm", "WARRIOR", source)
+    Core.setProfessions(character, { { name = "Blacksmithing", rank = rank, max = 300 } }, 100)
+    for _, id in ipairs(recipes or {}) do
+        Core.addRecipes(character, "Blacksmithing", rank, 300, { { kind = "spell", id = id } }, 100)
+    end
+    return character
+end
+
+it("tells who knows a recipe found in the world from who could learn it", function()
+    local db = Core.newDB()
+    crafter(db, "Luna", "own", 300, { 9972 })
+    crafter(db, "Dir", "guild", 265)
+    crafter(db, "Svajone", "guild", 300, { 9972 })
+    crafter(db, "Ana", "guild", 100) -- not enough skill for the plans
+    crafter(db, "Kael", "link", 300) -- someone's profession link: their own addon shares them
+    Core.character(db, "Bob", "Test Realm", "MAGE", "guild") -- no Blacksmithing at all
+    local interest = Core.recipeInterest(db, { profession = "Blacksmithing", skill = 250, key = "spell:9972" })
+    -- Your own characters first, then by name.
+    eq(Core.recipeNames(interest.know, "Test Realm"), "Luna, Svajone")
+    eq(Core.recipeNames(interest.canUse, "Test Realm"), "Dir")
+    -- A recipe this addon couldn't place isn't anyone's: nothing is said of it (no key).
+    local unplaced = Core.recipeInterest(db, { profession = "Blacksmithing", skill = 250 })
+    eq(Core.recipeNames(unplaced.know, "Test Realm"), nil, "nobody knows a recipe with no key")
+    eq(Core.recipeNames(unplaced.canUse, "Test Realm"), "Luna, Dir, Svajone")
+end)
+
+it("only lists who has the specialization the plans require", function()
+    local db = Core.newDB()
+    crafter(db, "Luna", "own", 300, { 9787 }) -- a Weaponsmith
+    crafter(db, "Dir", "guild", 300, { 17039 }) -- a Master Swordsmith, not a Weaponsmith
+    crafter(db, "Ana", "guild", 300) -- nothing recorded either way
+    local interest = Core.recipeInterest(db, { profession = "Blacksmithing", skill = 250,
+        key = "spell:9972", specialization = "spell:9787" })
+    eq(Core.recipeNames(interest.canUse, "Test Realm"), "Luna")
+end)
+
+it("names at most eight, counts the rest and says another realm", function()
+    local db = Core.newDB()
+    for i = 1, 10 do crafter(db, ("Smith%02d"):format(i), "guild", 300) end
+    Core.setProfessions(Core.character(db, "Dir", "Other Realm", "WARRIOR", "guild"),
+        { { name = "Blacksmithing", rank = 300, max = 300 } }, 100)
+    local interest = Core.recipeInterest(db, { profession = "Blacksmithing", skill = 1, key = "spell:9972" })
+    eq(#interest.canUse, 11)
+    eq(Core.recipeNames(interest.canUse, "Test Realm"),
+        "Dir (Other Realm), Smith01, Smith02, Smith03, Smith04, Smith05, Smith06, Smith07 and 3 more")
+end)
+
 print(("%d passed, %d failed"):format(passed, failed))
 if failed > 0 then error(failed .. " failed") end

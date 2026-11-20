@@ -4,7 +4,8 @@
 -- gets uploaded. Addons can't write files themselves.
 
 local addonName, ns = ...
-local Core, Scan, Sync, Sources, Attunements = ns.Core, ns.Scan, ns.Sync, ns.Sources, ns.Attunements
+local Core, Scan, Sync, Sources = ns.Core, ns.Scan, ns.Sync, ns.Sources
+local Attunements, Tooltip = ns.Attunements, ns.Tooltip
 
 -- Where the game writes the saved data, from the game's folder (the account folder's name can't be
 -- known from inside the game).
@@ -21,6 +22,8 @@ local function safely(fn, ...)
         print("|cff7c5cffGuildAssistant Professions|r: |cffff5050something went wrong:|r " .. tostring(err))
     end
 end
+-- The files that hook the game themselves report through it too (Tooltip.lua).
+ns.safely = safely
 
 -- The saved data, made on first use: commands work even if ADDON_LOADED never reached us.
 local function db()
@@ -87,14 +90,32 @@ local function status()
     print("  " .. Sync.describe(db(), when))
     print("  Attunements: " .. Core.describeAttunements(db()) .. ".")
     print("  Seen for GuildAssistant Database: " .. Core.describeSources(db()) .. ".")
+    print("  Recipe tooltips: " .. (Tooltip.enabled() and "on" or "off") .. ".")
     print("  File: " .. FILE .. " in the game's folder, written by /ga-prof save (or logging out).")
     print("  On Guild Assistant: Roster, Import professions, and drop it there.")
 end
 
+-- "/ga-prof tooltip on|off": whether a recipe item's tooltip says who knows that recipe and who
+-- could learn it (Tooltip.lua). Without a word of its own it only says which it is.
+local function tooltips(argument)
+    if argument ~= "" and argument ~= "on" and argument ~= "off" then
+        return Scan.say("tooltip on, or tooltip off.")
+    end
+    if argument ~= "" then
+        db() -- it is saved there, and the commands work even without ADDON_LOADED
+        Tooltip.setEnabled(argument == "on")
+    end
+    Scan.say("recipe tooltips are %s%s.", Tooltip.enabled() and "on" or "off",
+        argument == "" and " (/ga-prof tooltip on, /ga-prof tooltip off)" or "")
+end
+
 local function runCommand(message)
-    local command = (message or ""):match("^%s*(%S*)"):lower()
+    local first, second = (message or ""):match("^%s*(%S*)%s*(%S*)")
+    local command, argument = first:lower(), second:lower()
     if command == "status" then
         status()
+    elseif command == "tooltip" then
+        tooltips(argument)
     elseif command == "save" or command == "log" then -- "log": its name before 1.0.1, still works
         -- The game only writes saved variables on logout or a reload.
         refreshExport()
@@ -103,6 +124,7 @@ local function runCommand(message)
         Scan.say("commands:")
         print("  /ga-prof save - write what is recorded to the file (reloads the screen)")
         print("  /ga-prof status - what is saved, when it was last updated, and where the file is")
+        print("  /ga-prof tooltip on|off - say in a recipe's tooltip who knows it and who could learn it")
         if Scan.knowsWithoutWindow() then
             print("  Your recipes are recorded as you log in and learn them; open someone's profession link to record theirs.")
         else
@@ -177,6 +199,7 @@ local function onEvent(self, event, arg, ...)
         }
         refreshExport()
         Sync.start()
+        Tooltip.start()
         if Scan.knowsWithoutWindow() then
             Scan.say("Loaded.") -- your recipes are recorded quietly, nothing to do
         else

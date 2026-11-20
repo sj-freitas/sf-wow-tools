@@ -1,6 +1,6 @@
 ## Interface: 16001, 11509
 ## Title: GuildAssistant Professions
-## Notes: Records your characters' professions, recipes and raid attunements for Guild Assistant, and shares them with your guild's addons. /ga-prof status
+## Notes: Records your characters' professions, recipes and raid attunements for Guild Assistant, shares them with your guild's addons, and says in a recipe's tooltip who knows it. /ga-prof status
 ## Version: 1.6.1
 ## Author: Sérgio Freitas
 ## X-License: MIT
@@ -15,4 +15,5 @@ Scan.lua
 Sync.lua
 Sources.lua
 Attunements.lua
+Tooltip.lua
 Main.lua
