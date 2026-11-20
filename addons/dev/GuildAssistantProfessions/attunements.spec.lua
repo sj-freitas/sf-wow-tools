@@ -21,7 +21,8 @@ end
 
 -- The addon's Core, Scan and Attunements with a fake game. `game`: faction (UnitFactionGroup's
 -- answer), done (the quests this character has completed), classic (Classic Era's global instead of
--- WoW Forever's C_QuestLog), noApi (a client with neither).
+-- WoW Forever's C_QuestLog), noApi (a client with neither), list (a client that can be asked for
+-- every completed quest) and loading (that list still empty, as it is until the game sends them).
 local function load(game)
     game = game or {}
     _G.UnitFactionGroup = function() return game.faction or "Alliance" end
@@ -34,6 +35,15 @@ local function load(game)
     local function completed(id) return (game.done or {})[id] == true end
     _G.C_QuestLog = (not game.classic and not game.noApi) and { IsQuestFlaggedCompleted = completed } or nil
     _G.IsQuestFlaggedCompleted = game.classic and completed or nil
+    if _G.C_QuestLog and game.list then
+        _G.C_QuestLog.GetAllCompletedQuestIDs = function()
+            local ids = {}
+            if not game.loading then
+                for id in pairs(game.done or {}) do ids[#ids + 1] = id end
+            end
+            return ids
+        end
+    end
     local ns = {}
     for _, file in ipairs({ "Core", "Scan", "Attunements" }) do
         assert(loadfile("GuildAssistantProfessions/" .. file .. ".lua"))("GuildAssistantProfessions", ns)
@@ -59,6 +69,30 @@ it("records the Onyxia attunement from the quest of this character's faction", f
     ns = load({ faction = "Horde", done = { [6602] = true } })
     ns.Attunements.scan()
     eq(ns.db.characters["Luna-Test Realm"].attunements.ony, true, "Horde")
+end)
+
+it("waits for the game to send this character's quests before recording a no", function()
+    -- At login the client has been sent nothing yet, and says "not complete" about every quest: a
+    -- character who is attuned would be recorded as not attuned, and the guild and the website
+    -- told so. Nothing is recorded instead -- "nobody has looked" until the next read.
+    local game = { list = true, loading = true, done = {} }
+    local ns = load(game)
+    eq(ns.Attunements.ready(), false, "the game hasn't sent them")
+    eq(ns.Attunements.scan(), false, "nothing recorded")
+    eq(ns.db.characters["Luna-Test Realm"], nil, "the character isn't even made")
+
+    -- They arrive (QUEST_LOG_UPDATE in game, or the read a few seconds after login).
+    game.loading = false
+    game.done[8344] = true -- another quest: the list isn't empty any more
+    eq(ns.Attunements.ready(), true)
+    eq(ns.Attunements.scan(), true, "looked")
+    eq(ns.db.characters["Luna-Test Realm"].attunements.ony, false, "looked at, not attuned")
+    game.done[6502] = true
+    eq(ns.Attunements.scan(), true)
+    eq(ns.db.characters["Luna-Test Realm"].attunements.ony, true, "attuned")
+
+    -- A client that can't be asked is taken at its word, as before.
+    eq(load({ done = {} }).Attunements.ready(), true)
 end)
 
 it("asks about every faction's quest when the game doesn't say which this character is", function()

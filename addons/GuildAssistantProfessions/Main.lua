@@ -145,7 +145,9 @@ local function checkKnownSoon()
 end
 
 -- Which raids this character is attuned to, asked of the game (Attunements.lua): at login, on
--- entering the world and after handing in a quest. A change goes in the export and to the guild.
+-- entering the world, as the quest log arrives and after handing in a quest. A change goes in the
+-- export and to the guild.
+local ATTUNEMENTS_DELAY = 10 -- seconds after login: by then the game has sent the quests
 local function checkAttunements()
     if Attunements.scan() then
         -- The character too: one whose professions were never recorded is only shared once
@@ -153,6 +155,13 @@ local function checkAttunements()
         ownChanged()
         Sync.attunementsChanged()
     end
+end
+
+--- And once more a little later. The quests this character has completed reach the client after the
+--- login events on some of them, and QUEST_LOG_UPDATE (which says they have) isn't on every client.
+local function checkAttunementsSoon()
+    if not (C_Timer and C_Timer.After) then return end
+    C_Timer.After(ATTUNEMENTS_DELAY, function() safely(checkAttunements) end)
 end
 
 local function onEvent(self, event, arg, ...)
@@ -183,7 +192,9 @@ local function onEvent(self, event, arg, ...)
         if Scan.skills() then ownChanged() end
         checkKnownSoon()
         checkAttunements()
-    elseif event == "PLAYER_ENTERING_WORLD" or event == "QUEST_TURNED_IN" then
+        checkAttunementsSoon()
+    elseif event == "PLAYER_ENTERING_WORLD" or event == "QUEST_TURNED_IN"
+        or event == "QUEST_LOG_UPDATE" then
         checkAttunements()
     elseif event == "NEW_RECIPE_LEARNED" or event == "LEARNED_SPELL_IN_TAB" or event == "SPELLS_CHANGED" then
         checkKnownSoon()
@@ -212,8 +223,9 @@ events.missing = {}
 for _, event in ipairs({ "ADDON_LOADED", "PLAYER_LOGIN", "PLAYER_LOGOUT", "SKILL_LINES_CHANGED", "CHAT_MSG_ADDON",
     -- A recipe learned (the modern client's event, Classic Era's, and either's spells changing).
     "NEW_RECIPE_LEARNED", "LEARNED_SPELL_IN_TAB", "SPELLS_CHANGED",
-    -- The raids this character is attuned to (Attunements.lua).
-    "PLAYER_ENTERING_WORLD", "QUEST_TURNED_IN",
+    -- The raids this character is attuned to (Attunements.lua). QUEST_LOG_UPDATE is how the game
+    -- says this character's quests have reached the client, which login is too early for.
+    "PLAYER_ENTERING_WORLD", "QUEST_TURNED_IN", "QUEST_LOG_UPDATE",
     "TRADE_SKILL_SHOW", "TRADE_SKILL_UPDATE", "TRADE_SKILL_LIST_UPDATE",
     "TRADE_SKILL_DATA_SOURCE_CHANGED", "CRAFT_SHOW", "CRAFT_UPDATE",
     -- How recipes are obtained, for GuildAssistant Database (Sources.lua).

@@ -54,11 +54,19 @@ the chat):
 
 ## Attunements
 
-Which raids each character may walk into, recorded quietly: at login, on entering the world and
-whenever you hand a quest in, the addon asks the game whether the raid's attunement quest is
-complete (Onyxia's Lair: quest 6502 for the Alliance, 6602 for the Horde) and keeps the answer with
-the character. It tells "not attuned" from "not looked at", so a character whose player doesn't
-have the addon isn't shown as unattuned.
+Which raids each character may walk into, recorded quietly: at login, on entering the world, as the
+quest log reaches the client, a few seconds after login and whenever you hand a quest in, the addon
+asks the game whether the raid's attunement quest is complete (Onyxia's Lair: quest 6502 for the
+Alliance, 6602 for the Horde) and keeps the answer with the character. It tells "not attuned" from
+"not looked at", so a character whose player doesn't have the addon isn't shown as unattuned.
+
+It is read that often because of what the game does at login: the quests a character has completed
+are sent to the client a moment **after** it is in the world, and until they arrive the game says
+"not complete" about every one of them. So a yes is recorded whenever the game gives one, and a no
+only once the game can be believed -- it is asked for the whole list of completed quests
+(`C_QuestLog.GetAllCompletedQuestIDs`), and an empty one means it hasn't been sent yet. Until then
+the character stays "not looked at" rather than being recorded, and told to the guild, as unattuned.
+A client without that function (Classic Era) is taken at its word, and the next read corrects it.
 
 An attunement is for good (a completed quest never uncompletes), so nothing is ever taken back:
 what the game says, what a guildmate sent and what was saved before all merge, and `true` wins.

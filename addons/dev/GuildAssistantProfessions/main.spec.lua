@@ -323,6 +323,37 @@ it("records the raids you are attuned to at login and when you hand a quest in",
     _G.UnitFactionGroup, _G.C_QuestLog = nil, nil
 end)
 
+it("reads the attunement again as the game sends the quest log, and once more after login", function()
+    loadAddon()
+    local completed, timers = {}, {}
+    _G.C_Timer = { After = function(_, fn) timers[#timers + 1] = fn end }
+    _G.UnitFactionGroup = function() return "Alliance" end
+    _G.C_QuestLog = {
+        IsQuestFlaggedCompleted = function(id) return completed[id] == true end,
+        -- Empty until the game has sent this character's completed quests, as at login.
+        GetAllCompletedQuestIDs = function()
+            local ids = {}
+            for id in pairs(completed) do ids[#ids + 1] = id end
+            return ids
+        end,
+    }
+    fire("ADDON_LOADED", "GuildAssistantProfessions")
+    fire("PLAYER_LOGIN")
+    local db = GuildAssistantProfessionsDB
+    eq(db.characters["Luna-Test Realm"].attunements, nil, "nothing recorded while the game is silent")
+    -- The quest log reaches the client: now "not attuned" is an answer.
+    completed[8344] = true
+    fire("QUEST_LOG_UPDATE")
+    eq(db.characters["Luna-Test Realm"].attunements.ony, false, "looked at, not attuned")
+    -- Onyxia's attunement arrives late: the read set at login finds it, on a client that has no
+    -- QUEST_LOG_UPDATE to say so.
+    completed[6502] = true
+    for _, fn in ipairs(timers) do fn() end
+    eq(db.characters["Luna-Test Realm"].attunements.ony, true, "attuned")
+    eq(said("something went wrong"), false, "no error")
+    _G.UnitFactionGroup, _G.C_QuestLog, _G.C_Timer = nil, nil, nil
+end)
+
 it("records nothing of attunements on a client that can't say whether a quest is complete", function()
     loadAddon()
     _G.UnitFactionGroup, _G.C_QuestLog, _G.IsQuestFlaggedCompleted = nil, nil, nil
