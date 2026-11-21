@@ -96,7 +96,7 @@ local function guild(db)
     crafter(db, "Ana", "guild", 100)
 end
 
-it("says who knows the plans and who could learn them, in green and light blue", function()
+it("says who knows the plans and who could learn them, in green and cyan", function()
     local db = loadAddon()
     guild(db)
     local tooltip = plans()
@@ -108,8 +108,8 @@ it("says who knows the plans and who could learn them, in green and light blue",
     eq(tooltip.added[1].wrap, true, "wraps: a long guild makes a long line")
     -- Ana's 100 Blacksmithing isn't the 250 the plans ask for.
     eq(tooltip.added[2].text, "Can use this recipe: Dir")
-    eq(tooltip.added[2].b, 1, "light blue")
-    eq(tooltip.added[2].r, 0.4, "light blue")
+    eq(tooltip.added[2].b, 1, "cyan")
+    eq(tooltip.added[2].r, 0.3, "cyan")
     eq(tooltip.shown, 1, "the tooltip is told to make room")
     -- The game can set the same tooltip's item again: the lines don't come twice.
     eq(Tooltip.show(tooltip), false, "already said")

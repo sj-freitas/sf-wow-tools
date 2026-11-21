@@ -64,7 +64,7 @@ Can use this recipe: Shivan Darkwhisp
 ```
 
 The first line, in green, is the characters this addon knows that have the recipe already (so the
-plans are no use to them). The second, in light blue, is those who could learn it: they have the
+plans are no use to them). The second, in cyan, is those who could learn it: they have the
 profession at the skill the plans ask for and the specialization they require ("Requires
 Armorsmith"), and don't know the recipe yet. Both lines cover your own characters (first) and your
 guildmates who use the addon; someone whose profession link you opened isn't listed, as their own
