@@ -1,5 +1,16 @@
 # GuildAssistant Professions
 
+## 1.7.0
+
+- **A recipe you find says who it's for**: hover any pattern, plans, formula or recipe that doesn't
+  bind when picked up and its tooltip lists the characters the addon knows that already know it, and
+  those who could learn it (the profession at the skill and specialization it asks for). Your own
+  characters and your guildmates who use the addon. When nobody wants it, it says that too --
+  "Nobody in <your guild> can use this recipe." -- so "nobody" isn't mistaken for the addon not
+  having looked.
+- `/ga-prof tooltip off` stops those lines (`on` brings them back); they're on to begin with. Type
+  `/ga-prof tooltip` and shift-click a recipe to see what the addon makes of that one.
+
 ## 1.6.1
 
 - **Attunements are read as soon as the game can answer**: the quests a character has completed
