@@ -1041,7 +1041,8 @@ end
 --- (this account's in the guild and the guildmates it heard from, as the Guild tab counts them,
 --- whether or not they have a profession): { key, name, realm, class, source, you, states =
 --- { [raid key] = true/false }, attuned (how many), search }. Your own characters first, this one
---- at their head, then the guildmates by name. `you` is Core.playerKey's.
+--- at their head, then the guildmates by name -- the order the tab falls back to when there is no
+--- raid to sort by at all (Core.attunementOrder). `you` is Core.playerKey's.
 function Core.guildAttunements(db, guild, you)
     local members = {}
     if not guild then return members end
@@ -1099,6 +1100,18 @@ function Core.attunementList(raids)
     return { columns = columns, sortable = sortable, single = true }
 end
 
+--- The order the tab comes in while no title has been clicked: the first raid's column, the
+--- attuned first (and, under them, the names), since who can walk into the raid is what the tab is
+--- read for. `columns` is the raids with a column of their own (Core.attunementColumns), so the
+--- chevron is always on one you can see, and the raid picked on the left is the one when there is
+--- one. No raid at all: nothing to sort by, and Core.sortAttunements leaves the guildmates as
+--- Core.guildAttunements gave them. This is what Reset goes back to.
+function Core.attunementOrder(columns)
+    local first = (columns or {})[1]
+    if not first then return {} end
+    return { { column = first.key } }
+end
+
 --- Whether guildmate `a` comes before `b` in `order` (`list`: Core.attunementList's), ties falling
 --- through to the name and the realm, so the same list always comes out the same way.
 function Core.beforeAttunement(a, b, order, list)
@@ -1109,9 +1122,9 @@ function Core.beforeAttunement(a, b, order, list)
     return (a.realm or "") < (b.realm or "")
 end
 
---- `members` (Core.guildAttunements') in `order`: a new list, the one given left as it is. With no
---- column clicked (an empty order) they stay as they came -- your own characters first, then the
---- guild by name, which is the order the tab opens in and the one Reset goes back to.
+--- `members` (Core.guildAttunements') in `order`: a new list, the one given left as it is. With an
+--- empty order they stay as they came, your own characters first and then the guild by name, which
+--- is only how they read while no raid is known.
 function Core.sortAttunements(members, order, list)
     local sorted = {}
     for i, member in ipairs(members) do sorted[i] = member end

@@ -813,13 +813,20 @@ it("sorts the guildmates by name, or by who is attuned to a raid, one title at a
     eq(list.columns.ony.title, "Onyxia", "the raid's short name, where its icon can't be shown")
     eq(list.single, true, "one column sorts this list at a time")
 
-    -- No title clicked: as the tab opens, your own characters first and then the guild by name.
+    -- No title clicked: the tab comes sorted by its first raid, the attuned first, which is what
+    -- Reset goes back to. Who can walk into the raid is what the tab is read for.
+    local opens = Core.attunementOrder(Core.attunementRaids(db))
+    eq(#opens, 1); eq(opens[1].column, "ony"); eq(opens[1].descending, nil)
+    eq(attunedLine(Core.sortAttunements(members, opens, list)), "Em tick | Luna tick | Ana - | Di ?")
+    eq(Core.orderWords(opens, list), "Sorted by Onyxia's Lair, attuned first.")
+    eq(#Core.attunementOrder({}), 0, "no raid at all: nothing to sort by")
+    -- And with no order, the guildmates stay as Core.guildAttunements gave them: your own first.
     eq(attunedLine(Core.sortAttunements(members, {}, list)), "Luna tick | Di ? | Ana - | Em tick")
     eq(members[1].name, "Luna", "the list given is left as it is")
-    eq(Core.orderWords({}, list), nil, "no chevron until a title is clicked")
+    eq(Core.orderWords({}, list), nil, "no chevron with no order at all")
 
     -- Name: A to Z, your own characters no longer held at the top; clicked again, Z to A.
-    local byName = Core.toggleOrder({}, "name", list)
+    local byName = Core.toggleOrder(opens, "name", list)
     eq(#byName, 1); eq(byName[1].column, "name"); eq(byName[1].descending, false)
     eq(attunedLine(Core.sortAttunements(members, byName, list)), "Ana - | Di ? | Em tick | Luna tick")
     eq(Core.orderWords(byName, list), "Sorted by name, A to Z.")

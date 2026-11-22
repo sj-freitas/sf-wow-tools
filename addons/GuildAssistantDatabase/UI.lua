@@ -15,7 +15,8 @@
 -- on the left with how many guildmates are attuned to each, the guildmates in the middle with a
 -- tick per raid, and a click on one shows their attunements, raid by raid, as the details. Its
 -- Name title sorts them A to Z, and a raid's icon above its column sorts by who is attuned to it,
--- one of the two at a time. The search box searches whichever is listed.
+-- one of the two at a time; it comes sorted by the first raid, the attuned first. The search box
+-- searches whichever is listed.
 
 local _, ns = ...
 local Core, Game = ns.Core, ns.Game
@@ -70,7 +71,7 @@ local details
 local tabs, recipeControls, recipeColumns, memberRows, backButton, crumb
 -- The Attunements tab's rows and its column titles (one per raid shown).
 local attuneRows, attuneColumns
-local ATTUNE_HINT = "Click a guildmate to see which raids they are attuned to.\n\nYour guildmates who use GuildAssistant Professions, with a tick for each raid they are attuned to, a dash where they aren't, and a question mark where no one's addon has looked yet. Pick a raid on the left for the guildmates attuned to it, or search by name."
+local ATTUNE_HINT = "Click a guildmate to see which raids they are attuned to.\n\nYour guildmates who use GuildAssistant Professions, with a tick for each raid they are attuned to, a dash where they aren't, and a question mark where no one's addon has looked yet. The attuned come first; click Name or a raid's icon above the list to sort it another way. Pick a raid on the left for the guildmates attuned to it, or search by name."
 local GUILD_HINT = "Click a guildmate to see what they can make.\n\nYour guildmates who use GuildAssistant Professions, each profession with its skill and specialization. Search by name, profession or specialization (weaponsmith), and click Name, Skill or Profession above the list to sort it."
 local RECIPE_HINT = "Pick a recipe to see its reagents, how to learn it and who can craft it.\n\nShift-click a recipe to link it in the chat, or the item at the top of its details for the item's link; ctrl-click to try it on. Click a name under Who can craft it to whisper them.\n\nShift-click an item anywhere (your bags, a link in the chat) with the chat box closed to search for it."
 
@@ -102,8 +103,8 @@ local state = {
     -- column of their own.
     allAttuned = {}, attuned = {}, raid = nil, attunedMember = nil, raids = {}, attuneColumns = {},
     -- The Attunements tab's sorting: the column clicked (Name or a raid's key, one at a time, empty
-    -- until one is), the order the list is in now, and the columns the raids known make
-    -- (Core.attunementList, rebuilt with them).
+    -- until one is), the order the list is in now (those, or the one the tab comes in,
+    -- Core.attunementOrder), and the columns the raids known make (Core.attunementList).
     attuneOrder = {}, attuneListOrder = {}, attuneList = Core.attunementList(nil),
 }
 -- Each tab's search, profession, place in the list and pick, kept while the other is shown.
@@ -1077,7 +1078,9 @@ local function refreshAttunements()
     state.attuneList = Core.attunementList(state.raids)
     local clicked = state.attuneOrder[1]
     if clicked and not state.attuneList.columns[clicked.column] then state.attuneOrder = {} end
-    state.attuneListOrder = state.attuneOrder
+    -- With no title clicked the tab comes sorted by its first raid, the attuned first.
+    state.attuneListOrder = #state.attuneOrder > 0 and state.attuneOrder
+        or Core.attunementOrder(state.attuneColumns)
     local matched = Core.findAttuned(all, Core.terms(searchBox:GetText()), nil)
     state.attunedCounts, state.attunedTotal = Core.attunedCounts(matched), #matched
     state.attuned = state.raid and Core.findAttuned(matched, nil, state.raid) or matched

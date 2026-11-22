@@ -1617,8 +1617,9 @@ it("lists every guildmate with a tick for each raid they are attuned to", functi
     eq(parts.state.tab, "attunements")
     eq(parts.tabs[3]:IsEnabled(), false, "picked")
     eq(parts.crumb:GetText(), "|cffffd100Test Guild|r: which raids each guildmate is attuned to")
-    eq(attuneRows(ns), ("|cff3fc7ebLuna|r %s | |cffffffffDi|r |cff808080?|r"
-        .. " | |cffffffffAna|r |cff808080-|r"):format(TICK), "your own first, then the guild by name")
+    eq(attuneRows(ns), ("|cff3fc7ebLuna|r %s | |cffffffffAna|r |cff808080-|r"
+        .. " | |cffffffffDi|r |cff808080?|r"):format(TICK),
+        "the attuned first, then those who aren't, the question marks last")
     eq(parts.attuneColumns[1]:IsShown(), true)
     -- The raid's own icon heads its column, not its name; the tooltip says which raid it is.
     eq(parts.attuneColumns[1].icon._texture, 134154)
@@ -1647,8 +1648,8 @@ it("gives the name the room the raid columns leave, and your own characters in b
     local rows = parts.attuneRows
     eq(rows[1].name:GetText(), "|cff3fc7ebLuna|r", "the name alone, nothing after it")
     eq(rows[1].name._fontFlags, "OUTLINE", "your own character's name in bold")
-    eq(rows[2].name._fontFlags, "OUTLINE", "your alt's too")
-    eq(rows[3].name._fontFlags, "", "a guildmate's as the font comes")
+    eq(rows[2].name._fontFlags, "", "a guildmate's as the font comes")
+    eq(rows[3].name._fontFlags, "OUTLINE", "your alt's too, wherever the order puts it")
     -- One raid: its mark at the right-hand end of the row, the name reaching all the way to it.
     eq(rows[1].marks[1]._point[4], 0)
     eq(rows[1].name._point[4], -48)
@@ -1674,10 +1675,10 @@ it("shows a guildmate's raids one by one when you click them, and says what isn'
     has(summary:GetText(), "|cff3fc7ebLuna|r")
     has(summary:GetText(), ONY .. ": |cff40ff40Attuned|r")
     eq(parts.attuneRows[1].selected:IsShown(), true, "the row is marked")
-    parts.attuneRows[2]:Click() -- Di, your alt: nobody has looked
+    parts.attuneRows[3]:Click() -- Di, your alt: nobody has looked
     has(parts.details.summary:GetText(), ONY .. ": |cff808080Not known|r")
     has(parts.details.summary:GetText(), "hasn't looked")
-    parts.attuneRows[3]:Click() -- Ana, a guildmate who isn't attuned
+    parts.attuneRows[2]:Click() -- Ana, a guildmate who isn't attuned
     has(parts.details.summary:GetText(), ONY .. ": |cff808080Not attuned|r")
     -- Hovering a row says the same, shorter.
     parts.attuneRows[1]:Fire("OnEnter")
@@ -1797,41 +1798,41 @@ it("sorts the guildmates by the Name title or a raid's icon, one of the two at a
     parts.tabs[3]:Click()
     local name, ony = parts.attuneName, parts.attuneColumns[1]
     eq(name:IsShown(), true); eq(name.title:GetText(), "Name")
-    -- As the tab opens: your own characters first, then the guild by name, no chevron anywhere.
-    eq(attunedOrder(ns), "Luna tick | Di ? | Ana - | Em tick")
-    eq(chevron(name), "none"); eq(chevron(ony), "none")
-
-    -- Name: A to Z, your own characters among the rest; clicked again, Z to A.
-    name:Click()
-    eq(chevron(name), "up gold"); eq(chevron(ony), "none")
-    eq(attunedOrder(ns), "Ana - | Di ? | Em tick | Luna tick")
-    eq(GameTooltip.lines[1], "Name", "the tooltip says so after the click")
-    eq(GameTooltip.lines[3], "Sorted by name, A to Z.")
-    eq(GameTooltip.lines[4], "Click to list them Z to A.")
-    name:Click()
-    eq(chevron(name), "down gold")
-    eq(attunedOrder(ns), "Luna tick | Em tick | Di ? | Ana -")
-
-    -- The raid's icon: the attuned first, those who aren't under them, and the question marks last.
-    -- It takes the Name title's chevron: one of the two sorts the list.
-    ony:Click()
+    -- As the tab opens: the raid's own column, the attuned first (ties by name), the question
+    -- marks last, and the chevron already on the raid.
+    eq(attunedOrder(ns), "Em tick | Luna tick | Ana - | Di ?")
     eq(chevron(ony), "up gold"); eq(chevron(name), "none")
-    eq(attunedOrder(ns), "Em tick | Luna tick | Ana - | Di ?", "ties by name")
+    ony:Fire("OnEnter")
     eq(GameTooltip.lines[1], "Onyxia's Lair")
     eq(GameTooltip.lines[2], "Who in your guild is attuned to it.")
     eq(GameTooltip.lines[4], "Sorted by Onyxia's Lair, attuned first.")
     eq(GameTooltip.lines[5], "Click to list the attuned last.")
-    -- Clicked again: the attuned last, the question marks still at the bottom.
+
+    -- The raid clicked: the attuned last, those who aren't on top, the question marks still at the
+    -- bottom -- nobody having looked says nothing about the raid either way.
     ony:Click()
-    eq(chevron(ony), "down gold")
+    eq(chevron(ony), "down gold"); eq(chevron(name), "none")
     eq(attunedOrder(ns), "Ana - | Em tick | Luna tick | Di ?")
-    eq(GameTooltip.lines[4], "Sorted by Onyxia's Lair, attuned last.")
+    eq(GameTooltip.lines[4], "Sorted by Onyxia's Lair, attuned last.", "the tooltip says so after the click")
     eq(GameTooltip.lines[5], "Click to list the attuned first.")
 
-    -- Reset puts the tab back the way it opened.
+    -- Name: A to Z, your own characters among the rest. It takes the raid's chevron: one of the
+    -- two sorts the list.
+    name:Click()
+    eq(chevron(name), "up gold"); eq(chevron(ony), "none")
+    eq(attunedOrder(ns), "Ana - | Di ? | Em tick | Luna tick")
+    eq(GameTooltip.lines[1], "Name")
+    eq(GameTooltip.lines[3], "Sorted by name, A to Z.")
+    eq(GameTooltip.lines[4], "Click to list them Z to A.")
+    -- And again, Z to A.
+    name:Click()
+    eq(chevron(name), "down gold")
+    eq(attunedOrder(ns), "Luna tick | Em tick | Di ? | Ana -")
+
+    -- Reset puts the tab back the way it opened: the attuned first again.
     parts.resetButton:Click()
-    eq(chevron(ony), "none"); eq(chevron(name), "none")
-    eq(attunedOrder(ns), "Luna tick | Di ? | Ana - | Em tick")
+    eq(chevron(ony), "up gold"); eq(chevron(name), "none")
+    eq(attunedOrder(ns), "Em tick | Luna tick | Ana - | Di ?")
 end)
 
 it("keeps the attunements order through a search and the other tabs", function()
@@ -1840,25 +1841,25 @@ it("keeps the attunements order through a search and the other tabs", function()
     SlashCmdList.GADB("")
     local parts = ns.UI.parts()
     parts.tabs[3]:Click()
-    parts.attuneColumns[1]:Click()
+    parts.attuneName:Click()
     -- A search keeps whatever order the list is in.
     parts.searchBox:SetText("a")
-    eq(attunedOrder(ns), "Luna tick | Ana -", "what matched, the attuned first")
+    eq(attunedOrder(ns), "Ana - | Luna tick", "what matched, by name")
     eq(parts.state.offset, 0)
     parts.searchBox:SetText("")
-    -- The Recipes tab has its own titles; coming back, the raid's chevron is where it was.
+    -- The Recipes tab has its own titles; coming back, the Name chevron is where it was.
     parts.tabs[1]:Click()
     eq(parts.attuneName:IsShown(), false)
     eq(parts.attuneColumns[1]:IsShown(), false)
     parts.tabs[3]:Click()
-    eq(chevron(parts.attuneColumns[1]), "up gold")
-    eq(attunedOrder(ns), "Em tick | Luna tick | Ana - | Di ?")
-    -- A raid picked on the left narrows the list; the order it's in is still the raid's.
+    eq(chevron(parts.attuneName), "up gold")
+    eq(attunedOrder(ns), "Ana - | Di ? | Em tick | Luna tick")
+    -- A raid picked on the left narrows the list; the order it's in is still the one clicked.
     for _, button in ipairs(parts.sidebarButtons) do
         if button:IsShown() and button.text:GetText() == ONY then button:Click() end
     end
     eq(attunedOrder(ns), "Em tick | Luna tick")
-    eq(chevron(parts.attuneColumns[1]), "up gold")
+    eq(chevron(parts.attuneName), "up gold")
 end)
 
 print(("%d passed, %d failed"):format(passed, failed))

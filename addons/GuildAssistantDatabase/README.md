@@ -125,16 +125,21 @@ lists the **attuned first**, clicked again the attuned last. The **question mark
 bottom** either way — nobody having looked says nothing about the raid — and guildmates a raid reads
 the same way fall back to their names. Only one of the two sorts the list at a time, so clicking a
 raid's icon takes the chevron off Name and the other way around; hovering either says how the list
-reads now and what a click would do. **Reset** puts it back the way the tab opens.
+reads now and what a click would do.
+
+**The tab comes sorted by its first raid, the attuned first** — who can walk into the raid is what
+it is read for, so its chevron is on that raid from the moment the tab opens. The first raid is the
+one picked on the left when one is, so the chevron is always on a column you can see. **Reset** puts
+that order back.
 
 Each raid gets a column of its own, up to five, at the **right-hand end of the row**: the name has
 every pixel they leave, so even a long one is read whole. With more raids than that, picking one on
 the left brings it into view, and a guildmate's page always has them all.
 
-**Your own characters come first** until a title is clicked, their names in bold (the game has no
-bold face, so it's the outline its own UI uses), and nothing is written after a name to say it's
-yours. That is the order the tab opens in: your characters, this one at their head, then the guild
-by name.
+**Your own characters** read in bold (the game has no bold face, so it's the outline its own UI
+uses), and nothing is written after a name to say it's yours. They sort with everyone else; only
+when no raid is known at all — nothing to sort by — do they come first, this one at their head,
+then the guild by name.
 
 It comes from GuildAssistant Professions 1.6.0, which asks the game whether each raid's attunement
 quest is complete (Onyxia's Lair so far) and shares it with the guild. A guildmate on an older
