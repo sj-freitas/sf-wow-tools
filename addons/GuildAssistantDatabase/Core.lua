@@ -435,11 +435,13 @@ function Core.countByProfession(recipes)
 end
 
 -- The order a list is in ---------------------------------------------------------------------------
--- Two lists are sorted by the titles above them: the recipes (Skill and Level) and the Guild tab's
--- guildmates (Name, Skill and Profession). An order is those columns, the first the one the list is
--- sorted by and the next breaking its ties ("by level, and recipes of the same level by skill"),
--- each lowest or highest first (a name: A to Z or Z to A). The window draws that order as a chevron
--- beside each column's title.
+-- Three lists are sorted by the titles above them: the recipes (Skill and Level), the Guild tab's
+-- guildmates (Name, Skill and Profession) and the Attunements tab's (Name and each raid's icon). An
+-- order is those columns, the first the one the list is sorted by and the next breaking its ties
+-- ("by level, and recipes of the same level by skill"), each lowest or highest first (a name: A to
+-- Z or Z to A). The window draws that order as a chevron beside each column's title. The
+-- Attunements tab's is a `single` list: one column sorts it at a time, so its order is that one
+-- column (Core.attunementList).
 
 --- How a column reads sorted each way: in the words of what the list is sorted by, and in what a
 --- click on its title would do. Numbers go lowest or highest first, names and professions A to Z.
@@ -450,6 +452,13 @@ local NUMBER_WAYS = {
 local LETTER_WAYS = {
     ascending = { sorted = "A to Z", click = "Click to list them A to Z." },
     descending = { sorted = "Z to A", click = "Click to list them Z to A." },
+}
+--- A raid's column (the Attunements tab): the attuned at the top or at the bottom. The question
+--- marks say nothing either way, so they stay at the bottom whichever way it's read -- which is why
+--- the column reads its own direction (`ownWay` below) instead of simply being turned around.
+local ATTUNED_WAYS = {
+    ascending = { sorted = "attuned first", click = "Click to list the attuned first." },
+    descending = { sorted = "attuned last", click = "Click to list the attuned last." },
 }
 
 Core.SORT_COLUMNS = { "skill", "level" }
@@ -498,14 +507,18 @@ function Core.defaultOrder(matched)
 end
 
 --- Which of `a` and `b` `order` puts first (`columns`: the list's), or nil when every column it
---- uses finds them the same.
+--- uses finds them the same. A column's value is read lowest first and turned around by
+--- `descending`, unless the column says `ownWay`: then it is given the direction and answers with
+--- the place it wants in it (a raid's question marks stay at the bottom read either way), and what
+--- it answers is always lowest first.
 local function compare(a, b, order, columns)
     for _, by in ipairs(order) do
         local column = columns[by.column]
         if column then
-            local va, vb = column.value(a), column.value(b)
+            local descending = by.descending or false
+            local va, vb = column.value(a, descending), column.value(b, descending)
             if va ~= vb then
-                if by.descending then return va > vb end
+                if descending and not column.ownWay then return va > vb end
                 return va < vb
             end
         end
@@ -555,9 +568,17 @@ end
 --- default): the column clicked is the one the list is sorted by, the others left behind it to
 --- break its ties; clicking the one it's already sorted by turns that column around (lowest first
 --- <-> highest first). Every column is in the order a click leaves, so they compound from the
---- first click on.
+--- first click on -- except on a `single` list, where the click leaves that column alone.
 function Core.toggleOrder(order, column, list)
     local set = list or Core.RECIPE_LIST
+    if set.single then
+        -- A list with one sorting column at a time (the Attunements tab): the click leaves that
+        -- column alone in the order, ties falling through to the name, and clicking the one the
+        -- list is sorted by turns it around. The other title's chevron goes out.
+        if not set.columns[column] then return order or {} end
+        local direction = Core.orderOf(order, column)
+        return { { column = column, descending = direction == "ascending" } }
+    end
     local columns, seen = {}, {}
     for _, by in ipairs(order or {}) do
         if not seen[by.column] and set.columns[by.column] then
@@ -613,10 +634,16 @@ end
 --- list by it.
 function Core.clickWords(order, column, list)
     local set = list or Core.RECIPE_LIST
+    local spec = set.columns[column]
     local direction, sorting = Core.orderOf(order, column)
-    if not sorting or not set.columns[column] then return "Click to sort the list by it." end
-    local ways = set.columns[column].ways
-    return ways[direction == "ascending" and "descending" or "ascending"].click
+    if not spec then return "Click to sort the list by it." end
+    -- A column the list isn't sorted by: where one column sorts at a time, the click lands on that
+    -- column's first way and there's a plainer word for it than "sort".
+    if not sorting then
+        if set.single then return spec.ways.ascending.click end
+        return "Click to sort the list by it."
+    end
+    return spec.ways[direction == "ascending" and "descending" or "ascending"].click
 end
 
 --- The recipes of `professions` (loaded ones) that match `query`, best first: those whose own
@@ -1040,6 +1067,58 @@ function Core.guildAttunements(db, guild, you)
         return (a.realm or "") < (b.realm or "")
     end)
     return members
+end
+
+--- Where a mark sits in a raid's column: attuned at the top, then those looked at and not attuned.
+--- A question mark is nobody having looked, which says nothing about the raid either way, so it
+--- sits at the bottom whether the attuned are listed first (`last` false) or last.
+local function attunedRank(attuned, last)
+    if attuned == nil then return 3 end
+    if last then return attuned and 2 or 1 end
+    return attuned and 1 or 2
+end
+
+--- The Attunements tab's columns: the guildmate's name, and one per raid shown, under the raid's
+--- own key -- the icon above a raid's column is its title, and a click on it sorts the guildmates
+--- by who is attuned to that raid. One column sorts this list at a time (`single`): a click on a
+--- raid takes the Name title's chevron away and the other way around, the names left only to break
+--- the ties. `raids` is Core.attunementRaids'.
+function Core.attunementList(raids)
+    local columns = {
+        name = { title = "Name", words = "name", ways = LETTER_WAYS,
+            value = function(member) return member.name or "" end },
+    }
+    local sortable = { "name" }
+    for _, raid in ipairs(raids or {}) do
+        local key = raid.key
+        columns[key] = { title = raid.short or raid.raid, words = raid.raid, ways = ATTUNED_WAYS,
+            ownWay = true,
+            value = function(member, last) return attunedRank(member.states[key], last) end }
+        sortable[#sortable + 1] = key
+    end
+    return { columns = columns, sortable = sortable, single = true }
+end
+
+--- Whether guildmate `a` comes before `b` in `order` (`list`: Core.attunementList's), ties falling
+--- through to the name and the realm, so the same list always comes out the same way.
+function Core.beforeAttunement(a, b, order, list)
+    local set = list or Core.attunementList(nil)
+    local first = compare(a, b, order or {}, set.columns)
+    if first ~= nil then return first end
+    if a.name ~= b.name then return a.name < b.name end
+    return (a.realm or "") < (b.realm or "")
+end
+
+--- `members` (Core.guildAttunements') in `order`: a new list, the one given left as it is. With no
+--- column clicked (an empty order) they stay as they came -- your own characters first, then the
+--- guild by name, which is the order the tab opens in and the one Reset goes back to.
+function Core.sortAttunements(members, order, list)
+    local sorted = {}
+    for i, member in ipairs(members) do sorted[i] = member end
+    if not order or #order == 0 then return sorted end
+    local set = list or Core.attunementList(nil)
+    table.sort(sorted, function(a, b) return Core.beforeAttunement(a, b, order, set) end)
+    return sorted
 end
 
 --- The guildmates whose name has every term (Core.terms), and those attuned to `raid` (a key) when

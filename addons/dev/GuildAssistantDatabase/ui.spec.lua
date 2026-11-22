@@ -1765,5 +1765,101 @@ it("brings a raid picked on the left into view when there are more than the colu
     eq(parts.attuneRows[1].name._point[4], -208)
 end)
 
+-- The rows as the sorting reads them: the guildmate's name and each raid's mark, no colours.
+local MARK_WORDS = { [TICK] = "tick", ["|cff808080-|r"] = "-", ["|cff808080?|r"] = "?" }
+local function attunedOrder(ns)
+    local out = {}
+    for _, row in ipairs(ns.UI.parts().attuneRows) do
+        if row:IsShown() then
+            local marks = {}
+            for _, mark in ipairs(row.marks) do
+                if mark:IsShown() then marks[#marks + 1] = MARK_WORDS[mark:GetText()] or mark:GetText() end
+            end
+            local name = row.name:GetText():gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
+            out[#out + 1] = name .. " " .. table.concat(marks, " ")
+        end
+    end
+    return table.concat(out, " | ")
+end
+
+-- Em, a guildmate attuned to Onyxia, so the ticks and the names don't sort the same way.
+local function attunementsDBWithEm()
+    attunementsDB()
+    GuildAssistantProfessionsDB.characters["Em-Test Realm"] = { name = "Em", realm = "Test Realm",
+        source = "guild", guild = "Test Guild", professions = {}, attunements = { ony = true } }
+end
+
+it("sorts the guildmates by the Name title or a raid's icon, one of the two at a time", function()
+    local ns = loadAddon({ professionsAddon = true, guild = "Test Guild" })
+    attunementsDBWithEm()
+    SlashCmdList.GADB("")
+    local parts = ns.UI.parts()
+    parts.tabs[3]:Click()
+    local name, ony = parts.attuneName, parts.attuneColumns[1]
+    eq(name:IsShown(), true); eq(name.title:GetText(), "Name")
+    -- As the tab opens: your own characters first, then the guild by name, no chevron anywhere.
+    eq(attunedOrder(ns), "Luna tick | Di ? | Ana - | Em tick")
+    eq(chevron(name), "none"); eq(chevron(ony), "none")
+
+    -- Name: A to Z, your own characters among the rest; clicked again, Z to A.
+    name:Click()
+    eq(chevron(name), "up gold"); eq(chevron(ony), "none")
+    eq(attunedOrder(ns), "Ana - | Di ? | Em tick | Luna tick")
+    eq(GameTooltip.lines[1], "Name", "the tooltip says so after the click")
+    eq(GameTooltip.lines[3], "Sorted by name, A to Z.")
+    eq(GameTooltip.lines[4], "Click to list them Z to A.")
+    name:Click()
+    eq(chevron(name), "down gold")
+    eq(attunedOrder(ns), "Luna tick | Em tick | Di ? | Ana -")
+
+    -- The raid's icon: the attuned first, those who aren't under them, and the question marks last.
+    -- It takes the Name title's chevron: one of the two sorts the list.
+    ony:Click()
+    eq(chevron(ony), "up gold"); eq(chevron(name), "none")
+    eq(attunedOrder(ns), "Em tick | Luna tick | Ana - | Di ?", "ties by name")
+    eq(GameTooltip.lines[1], "Onyxia's Lair")
+    eq(GameTooltip.lines[2], "Who in your guild is attuned to it.")
+    eq(GameTooltip.lines[4], "Sorted by Onyxia's Lair, attuned first.")
+    eq(GameTooltip.lines[5], "Click to list the attuned last.")
+    -- Clicked again: the attuned last, the question marks still at the bottom.
+    ony:Click()
+    eq(chevron(ony), "down gold")
+    eq(attunedOrder(ns), "Ana - | Em tick | Luna tick | Di ?")
+    eq(GameTooltip.lines[4], "Sorted by Onyxia's Lair, attuned last.")
+    eq(GameTooltip.lines[5], "Click to list the attuned first.")
+
+    -- Reset puts the tab back the way it opened.
+    parts.resetButton:Click()
+    eq(chevron(ony), "none"); eq(chevron(name), "none")
+    eq(attunedOrder(ns), "Luna tick | Di ? | Ana - | Em tick")
+end)
+
+it("keeps the attunements order through a search and the other tabs", function()
+    local ns = loadAddon({ professionsAddon = true, guild = "Test Guild" })
+    attunementsDBWithEm()
+    SlashCmdList.GADB("")
+    local parts = ns.UI.parts()
+    parts.tabs[3]:Click()
+    parts.attuneColumns[1]:Click()
+    -- A search keeps whatever order the list is in.
+    parts.searchBox:SetText("a")
+    eq(attunedOrder(ns), "Luna tick | Ana -", "what matched, the attuned first")
+    eq(parts.state.offset, 0)
+    parts.searchBox:SetText("")
+    -- The Recipes tab has its own titles; coming back, the raid's chevron is where it was.
+    parts.tabs[1]:Click()
+    eq(parts.attuneName:IsShown(), false)
+    eq(parts.attuneColumns[1]:IsShown(), false)
+    parts.tabs[3]:Click()
+    eq(chevron(parts.attuneColumns[1]), "up gold")
+    eq(attunedOrder(ns), "Em tick | Luna tick | Ana - | Di ?")
+    -- A raid picked on the left narrows the list; the order it's in is still the raid's.
+    for _, button in ipairs(parts.sidebarButtons) do
+        if button:IsShown() and button.text:GetText() == ONY then button:Click() end
+    end
+    eq(attunedOrder(ns), "Em tick | Luna tick")
+    eq(chevron(parts.attuneColumns[1]), "up gold")
+end)
+
 print(("%d passed, %d failed"):format(passed, failed))
 if failed > 0 then error(failed .. " failed") end

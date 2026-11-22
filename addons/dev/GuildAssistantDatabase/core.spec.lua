@@ -789,5 +789,78 @@ it("finds the guildmates a search or a raid keeps, and counts who is attuned", f
     eq(#rows, 1); eq(rows[1].raid, "Onyxia's Lair"); eq(rows[1].attuned, nil, "Di: not known")
 end)
 
+-- The guildmates as the Attunements tab reads them: the name and each raid's mark.
+local function attunedLine(members, raids)
+    local out = {}
+    for i, member in ipairs(members) do
+        local marks = {}
+        for _, raid in ipairs(raids or { "ony" }) do
+            local state = member.states[raid]
+            marks[#marks + 1] = state == true and "tick" or (state == false and "-" or "?")
+        end
+        out[i] = ("%s %s"):format(member.name, table.concat(marks, " "))
+    end
+    return table.concat(out, " | ")
+end
+
+it("sorts the guildmates by name, or by who is attuned to a raid, one title at a time", function()
+    local db = attunementsDB()
+    db.characters["Em-Test Realm"] = { name = "Em", realm = "Test Realm", source = "guild",
+        guild = "Test Guild", attunements = { ony = true } }
+    local members = Core.guildAttunements(db, "Test Guild", "Luna-Test Realm")
+    local list = Core.attunementList(Core.attunementRaids(db))
+    eq(list.columns.name.title, "Name")
+    eq(list.columns.ony.title, "Onyxia", "the raid's short name, where its icon can't be shown")
+    eq(list.single, true, "one column sorts this list at a time")
+
+    -- No title clicked: as the tab opens, your own characters first and then the guild by name.
+    eq(attunedLine(Core.sortAttunements(members, {}, list)), "Luna tick | Di ? | Ana - | Em tick")
+    eq(members[1].name, "Luna", "the list given is left as it is")
+    eq(Core.orderWords({}, list), nil, "no chevron until a title is clicked")
+
+    -- Name: A to Z, your own characters no longer held at the top; clicked again, Z to A.
+    local byName = Core.toggleOrder({}, "name", list)
+    eq(#byName, 1); eq(byName[1].column, "name"); eq(byName[1].descending, false)
+    eq(attunedLine(Core.sortAttunements(members, byName, list)), "Ana - | Di ? | Em tick | Luna tick")
+    eq(Core.orderWords(byName, list), "Sorted by name, A to Z.")
+    eq(Core.clickWords(byName, "name", list), "Click to list them Z to A.")
+    local backwards = Core.toggleOrder(byName, "name", list)
+    eq(attunedLine(Core.sortAttunements(members, backwards, list)), "Luna tick | Em tick | Di ? | Ana -")
+    eq(Core.orderWords(backwards, list), "Sorted by name, Z to A.")
+
+    -- The raid's icon: the attuned first, then those who aren't, and the question marks last;
+    -- guildmates the raid reads the same way fall back to their names.
+    local attunedFirst = Core.toggleOrder(backwards, "ony", list)
+    eq(#attunedFirst, 1, "the Name title's chevron goes out: one sorts the list at a time")
+    eq(attunedLine(Core.sortAttunements(members, attunedFirst, list)), "Em tick | Luna tick | Ana - | Di ?")
+    eq(Core.orderWords(attunedFirst, list), "Sorted by Onyxia's Lair, attuned first.")
+    eq(Core.clickWords(attunedFirst, "ony", list), "Click to list the attuned last.")
+    eq(Core.clickWords(attunedFirst, "name", list), "Click to list them A to Z.")
+
+    -- Clicked again: the attuned at the bottom, those who aren't on top, and the question marks
+    -- still last -- nobody having looked says nothing about the raid either way.
+    local attunedLast = Core.toggleOrder(attunedFirst, "ony", list)
+    eq(attunedLast[1].descending, true)
+    eq(attunedLine(Core.sortAttunements(members, attunedLast, list)), "Ana - | Em tick | Luna tick | Di ?")
+    eq(Core.orderWords(attunedLast, list), "Sorted by Onyxia's Lair, attuned last.")
+    eq(Core.clickWords(attunedLast, "ony", list), "Click to list the attuned first.")
+    -- Back to the Name title, and a raid the data no longer has is no column to sort by.
+    eq(#Core.toggleOrder(attunedLast, "name", list), 1)
+    eq(Core.toggleOrder(attunedLast, "mc", list), attunedLast, "a raid this list hasn't got")
+end)
+
+it("sorts a second raid's column on its own, the names breaking its ties", function()
+    local db = attunementsDB()
+    db.characters["Luna-Test Realm"].attunements.mc = true
+    db.characters["Ana-Test Realm"].attunements.mc = false
+    local members = Core.guildAttunements(db, "Test Guild", "Luna-Test Realm")
+    local list = Core.attunementList(Core.attunementRaids(db))
+    eq(list.columns.mc.title, "mc", "a raid only the newer addon knows: under its key")
+    local byMC = Core.toggleOrder({}, "mc", list)
+    eq(attunedLine(members, { "mc" }), "Luna tick | Di ? | Ana -", "as they come")
+    eq(attunedLine(Core.sortAttunements(members, byMC, list), { "mc" }), "Luna tick | Ana - | Di ?")
+    eq(Core.orderWords(byMC, list), "Sorted by mc, attuned first.")
+end)
+
 print(("%d passed, %d failed"):format(passed, failed))
 if failed > 0 then error(failed .. " failed") end

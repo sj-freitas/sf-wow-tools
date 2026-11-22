@@ -13,8 +13,9 @@
 -- Name, Skill and Profession titles above them as Recipes' list is sorted by Skill and Level, and a
 -- click on one lists what they can make, whose details show as Recipes' do. Attunements: the raids
 -- on the left with how many guildmates are attuned to each, the guildmates in the middle with a
--- tick per raid, and a click on one shows their attunements, raid by raid, as the details. The
--- search box searches whichever is listed.
+-- tick per raid, and a click on one shows their attunements, raid by raid, as the details. Its
+-- Name title sorts them A to Z, and a raid's icon above its column sorts by who is attuned to it,
+-- one of the two at a time. The search box searches whichever is listed.
 
 local _, ns = ...
 local Core, Game = ns.Core, ns.Game
@@ -60,8 +61,9 @@ local searchBox, placeholder, clearButton, minLevelBox, maxLevelBox, minSkillBox
 local filterButton, filterPopup, filterChecks
 local sidebarButtons, rows, slider, statusText, statusHover, versionText, columnSkill, columnLevel
 -- The titles that sort the list they're above, each with the chevron saying how: the recipes' Skill
--- and Level, and the Guild tab's Name, Skill and Profession.
-local sortHeaders, memberHeaders
+-- and Level, the Guild tab's Name, Skill and Profession, and the Attunements tab's Name (its raids'
+-- icons sort too, and are headers of the same kind).
+local sortHeaders, memberHeaders, attuneName, attuneHeaders
 local details
 -- The tabs, what only Recipes shows (the limits, the Filter, Not known yet), and the Guild tab's own:
 -- the guildmates' rows and the line above the list (Back, whose recipes).
@@ -99,6 +101,10 @@ local state = {
     -- on the left, the guildmate whose attunements are shown, the raids known and those with a
     -- column of their own.
     allAttuned = {}, attuned = {}, raid = nil, attunedMember = nil, raids = {}, attuneColumns = {},
+    -- The Attunements tab's sorting: the column clicked (Name or a raid's key, one at a time, empty
+    -- until one is), the order the list is in now, and the columns the raids known make
+    -- (Core.attunementList, rebuilt with them).
+    attuneOrder = {}, attuneListOrder = {}, attuneList = Core.attunementList(nil),
 }
 -- Each tab's search, profession, place in the list and pick, kept while the other is shown.
 local memory = { recipes = {}, guild = {}, attunements = {} }
@@ -484,21 +490,45 @@ local function drawRecipeRows()
     if maxOffset > 0 then slider:Show() else slider:Hide() end
 end
 
+--- The columns a title sorts: the Attunements tab's are the raids known right now, so its titles
+--- read them from the state rather than holding a set of their own.
+local function headerList(header)
+    if header.attunements then return state.attuneList end
+    return header.list
+end
+
 --- The order the list a title sorts is in now: the guildmates' for the Guild tab's titles, the
---- recipes' for Skill and Level.
+--- attuned guildmates' for the Attunements tab's, the recipes' for Skill and Level.
 local function headerOrder(header)
+    if header.attunements then return state.attuneListOrder end
     return header.list == Core.MEMBER_LIST and state.memberListOrder or state.listOrder
+end
+
+--- How the list a title sorts is read now and what a click would do, as tooltip lines after `first`
+--- (what the title itself is).
+local function sortLines(header, first)
+    local list, order = headerList(header), headerOrder(header)
+    local lines = first
+    local words = Core.orderWords(order, list)
+    if words then lines[#lines + 1] = words end
+    lines[#lines + 1] = Core.clickWords(order, header.column, list)
+    return lines
 end
 
 -- What hovering a column's title says: what it is (its own hint), how the list is sorted now, and
 -- what a click does.
 local function showSortTooltip(header)
-    local order = headerOrder(header)
-    local lines = { header.hint }
-    local words = Core.orderWords(order, header.list)
-    if words then lines[#lines + 1] = words end
-    lines[#lines + 1] = Core.clickWords(order, header.column, header.list)
-    Game.showTextTooltip(header, header.title:GetText(), lines)
+    Game.showTextTooltip(header, header.title:GetText(), sortLines(header, { header.hint }))
+end
+
+-- Hovering a raid's icon above its column: which raid it is, what the three marks mean, how the
+-- guildmates are sorted now and what a click would do.
+local function showRaidTooltip(header)
+    if not header.raid then return end
+    Game.showTextTooltip(header, header.raid.raid, sortLines(header, {
+        "Who in your guild is attuned to it.",
+        "A tick is attuned, - not attuned, ? not known yet.",
+    }))
 end
 
 --- The chevron beside each of `headers`: how their list is sorted. The column it's sorted by in
@@ -553,6 +583,7 @@ local function drawRows()
     if attunements then placeAttuneColumns(#state.attuneColumns) end
     for _, region in ipairs(memberHeaders) do region:SetShown(members) end
     for _, region in ipairs(recipeColumns) do region:SetShown(not members and not attunements) end
+    attuneName:SetShown(attunements)
     for i, header in ipairs(attuneColumns) do
         local raid = attunements and state.attuneColumns[i] or nil
         if raid then
@@ -561,7 +592,7 @@ local function drawRows()
             header.icon:SetShown(raid.icon ~= nil)
             header.title:SetText(raid.icon and "" or (raid.short or raid.raid))
         end
-        header.raid = raid
+        header.raid, header.column = raid, raid and raid.key or nil
         header:SetShown(raid ~= nil)
     end
     local function hideRecipes()
@@ -583,6 +614,8 @@ local function drawRows()
         end
     end
     if attunements then
+        -- The Name title and each raid's icon: both sort the guildmates, one at a time.
+        drawSortHeaders(attuneHeaders)
         hideRecipes()
         hideMembers()
         return drawAttunedRows()
@@ -1039,9 +1072,16 @@ local function refreshAttunements()
         if not listed then state.raid = nil end
     end
     state.attuneColumns = Core.attunementColumns(state.raids, state.raid, MAX_ATTUNE_COLUMNS)
+    -- The columns to sort by are the raids known now; one the data no longer has takes the list
+    -- back to the order it opens in.
+    state.attuneList = Core.attunementList(state.raids)
+    local clicked = state.attuneOrder[1]
+    if clicked and not state.attuneList.columns[clicked.column] then state.attuneOrder = {} end
+    state.attuneListOrder = state.attuneOrder
     local matched = Core.findAttuned(all, Core.terms(searchBox:GetText()), nil)
     state.attunedCounts, state.attunedTotal = Core.attunedCounts(matched), #matched
     state.attuned = state.raid and Core.findAttuned(matched, nil, state.raid) or matched
+    state.attuned = Core.sortAttunements(state.attuned, state.attuneListOrder, state.attuneList)
     -- The guildmate whose raids are shown, as read now; gone from the guild: none.
     if state.attunedMember then
         local again
@@ -1249,7 +1289,7 @@ local function buildFilters()
     resetButton:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -14, -33)
     resetButton:SetText("Reset")
     resetButton:SetScript("OnClick", function()
-        state.order, state.memberOrder = {}, {}
+        state.order, state.memberOrder, state.attuneOrder = {}, {}, {}
         if state.tab == "guild" then
             -- The Guild tab's: its search, the profession picked, the guildmate.
             searchBox:SetText("")
@@ -1511,6 +1551,9 @@ local function buildList()
         button:SetSize(spec.width or 56, 16)
         button:SetHighlightTexture(HIGHLIGHT, "ADD")
         button.column, button.list, button.hint = spec.column, spec.list or Core.RECIPE_LIST, spec.hint
+        -- The Attunements tab's titles sort the raids known right now (headerList), not this set,
+        -- which is only here for the title's own words.
+        button.attunements = spec.attunements
         button.chevron = button:CreateTexture(nil, "ARTWORK")
         button.chevron:SetSize(CHEVRON_SIZE, CHEVRON_SIZE)
         button.chevron:SetTexture(SORT_ARROW)
@@ -1527,7 +1570,9 @@ local function buildList()
             button.title:SetPoint("RIGHT", button.chevron, "LEFT", -1, -1)
         end
         button:SetScript("OnClick", function(self)
-            if self.list == Core.MEMBER_LIST then
+            if self.attunements then
+                state.attuneOrder = Core.toggleOrder(state.attuneListOrder, self.column, state.attuneList)
+            elseif self.list == Core.MEMBER_LIST then
                 state.memberOrder = Core.toggleOrder(state.memberListOrder, self.column, Core.MEMBER_LIST)
             else
                 state.order = Core.toggleOrder(state.listOrder, self.column)
@@ -1557,6 +1602,14 @@ local function buildList()
         hint = "The profession, with the specialization they have in it." })
     memberHeaders = { memberName, memberSkill, memberProfession }
     for _, header in ipairs(memberHeaders) do header:Hide() end
+
+    -- The Attunements tab's Name title, above the guildmates and in the same place as the Guild
+    -- tab's. Its list is only here for the word "Name": the raids it sorts beside are read from the
+    -- state as they come and go (headerList).
+    attuneName = sortHeader({ column = "name", list = Core.attunementList(nil), attunements = true,
+        left = 10, width = 42,
+        hint = "The guildmate's name, your own characters in the guild among them." })
+    attuneName:Hide()
 
     memberRows = {}
     for i = 1, ROWS do
@@ -1590,11 +1643,15 @@ local function buildList()
 
     -- The Attunements tab's column titles, one per raid shown: the raid's icon over its column
     -- (its short name where the data has none), the full name and what the marks mean on hover.
-    -- placeAttuneColumns puts them above the marks they title, however many raids there are.
+    -- placeAttuneColumns puts them above the marks they title, however many raids there are. The
+    -- icon is the column's title, so clicking it sorts the guildmates by who is attuned to that
+    -- raid, with the chevron at the column's right-hand edge saying which way -- the icon stays
+    -- over the middle of its marks whether the chevron shows or not, so nothing moves.
     attuneColumns = {}
     for i = 1, MAX_ATTUNE_COLUMNS do
-        local header = CreateFrame("Frame", nil, frame)
-        header:SetSize(ATTUNE_COLUMN_WIDTH, 16)
+        local header = CreateFrame("Button", nil, frame)
+        header:SetSize(ATTUNE_COLUMN_WIDTH, ATTUNE_ICON)
+        header:SetHighlightTexture(HIGHLIGHT, "ADD")
         header.title = fontString(header, "GameFontNormalSmall", "CENTER")
         header.title:SetAllPoints(header)
         header.title:SetWordWrap(false)
@@ -1602,20 +1659,30 @@ local function buildList()
         header.icon:SetSize(ATTUNE_ICON, ATTUNE_ICON)
         header.icon:SetPoint("CENTER", header, "CENTER", 0, 0)
         header.icon:Hide()
+        header.chevron = header:CreateTexture(nil, "OVERLAY")
+        header.chevron:SetSize(CHEVRON_SIZE, CHEVRON_SIZE)
+        header.chevron:SetTexture(SORT_ARROW)
+        header.chevron:SetPoint("RIGHT", header, "RIGHT", 0, 0)
+        header.chevron:Hide()
+        -- The raids it sorts are those known right now, so its order comes from the state.
+        header.attunements = true
         header:EnableMouse(true)
-        header:SetScript("OnEnter", function(self)
+        header:SetScript("OnClick", function(self)
             if not self.raid then return end
-            Game.showTextTooltip(self, self.raid.raid, {
-                "Who in your guild is attuned to it.",
-                "A tick is attuned, - not attuned, ? not known yet.",
-            })
+            state.attuneOrder = Core.toggleOrder(state.attuneListOrder, self.column, state.attuneList)
+            state.offset = 0
+            UI.refresh()
+            showRaidTooltip(self)
         end)
+        header:SetScript("OnEnter", showRaidTooltip)
         -- The column's own tooltip answers "which raid is that icon?" above the list; the icon
         -- itself is inside the header, so hovering it is hovering the header.
         header:SetScript("OnLeave", Game.hideTooltip)
         header:Hide()
         attuneColumns[i] = header
     end
+    attuneHeaders = { attuneName }
+    for _, header in ipairs(attuneColumns) do attuneHeaders[#attuneHeaders + 1] = header end
 
     -- The Attunements tab's rows: the guildmate, then their mark for each raid shown.
     attuneRows = {}
@@ -1965,7 +2032,7 @@ function UI.parts()
         sidebarButtons = sidebarButtons, rows = rows, details = details, statusText = statusText,
         statusHover = statusHover, versionText = versionText,
         tabs = tabs, memberRows = memberRows, backButton = backButton, crumb = crumb,
-        attuneRows = attuneRows, attuneColumns = attuneColumns,
+        attuneRows = attuneRows, attuneColumns = attuneColumns, attuneName = attuneName,
         columnSkill = columnSkill, columnLevel = columnLevel, memberHeaders = memberHeaders,
         state = state,
     }
