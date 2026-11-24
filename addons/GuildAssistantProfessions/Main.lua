@@ -163,18 +163,44 @@ local function scanSoon()
     end)
 end
 
--- What this character knows, asked of the game (Scan.knownRecipes, no window needed): a moment
--- after the last of a burst of events (logging in, skill-ups, a recipe learned), once.
-local knownPending = 0
-local function checkKnown()
-    if Scan.knownRecipes() then ownChanged() end
+-- What this character has, asked of the game, no window needed: its professions and their skill
+-- (Scan.skills), and the recipes it knows of each (Scan.knownRecipes, on a client that answers for
+-- them). The two together: a profession is learned as a spell is, and its recipes can only be read
+-- once the profession itself is recorded.
+local function check()
+    local changed = Scan.skills()
+    if Scan.knownRecipes() then changed = true end
+    if changed then ownChanged() end
 end
-local function checkKnownSoon()
-    if not (C_Timer and C_Timer.After) then return checkKnown() end
-    knownPending = knownPending + 1
-    local this = knownPending
-    C_Timer.After(2, function()
-        if this == knownPending then safely(checkKnown) end
+
+-- A moment after the last of a burst of events (logging in, a skill-up, a profession or a rank of
+-- recipes learned), once: a rank trains many spells at a time, each with an event of its own.
+local BURST_DELAY = 2
+local checkPending = 0
+local function checkSoon()
+    if not (C_Timer and C_Timer.After) then return check() end
+    checkPending = checkPending + 1
+    local this = checkPending
+    C_Timer.After(BURST_DELAY, function()
+        if this == checkPending then safely(check) end
+    end)
+end
+
+-- Logging in: the game hasn't the professions ready when PLAYER_LOGIN fires (GetProfessions
+-- answers with nothing until the spellbook has arrived), and on a client whose skill list addons
+-- can't read (WoW Forever's) nothing said so afterwards, so a character whose profession windows
+-- were never opened kept none of them. It is asked again, a few seconds apart, until it has them;
+-- a character that really has none stops after the last try.
+local LOGIN_TRIES = { 2, 5, 10, 20, 40 }
+local function checkAfterLogin(try)
+    local wait = LOGIN_TRIES[try]
+    if not wait or not (C_Timer and C_Timer.After) then return end
+    C_Timer.After(wait, function()
+        safely(function()
+            if Scan.hasProfessions() then return end
+            checkSoon() -- through the same debounce: the login's own burst asks the game once
+            checkAfterLogin(try + 1)
+        end)
     end)
 end
 
@@ -223,16 +249,23 @@ local function onEvent(self, event, arg, ...)
         refreshExport()
     elseif event == "CHAT_MSG_ADDON" then
         Sync.onMessage(arg, ...)
-    elseif event == "PLAYER_LOGIN" or event == "SKILL_LINES_CHANGED" then
-        if Scan.skills() then ownChanged() end
-        checkKnownSoon()
+    elseif event == "PLAYER_LOGIN" then
+        -- The character is in the saved data from login (and one saved under its first name alone
+        -- is renamed), whether or not the game has anything to say about it yet. What it has is
+        -- read a moment later, and again until the game has it: nothing to open, nothing to type.
+        Scan.current()
+        checkSoon()
+        checkAfterLogin(1)
         checkAttunements()
         checkAttunementsSoon()
     elseif event == "PLAYER_ENTERING_WORLD" or event == "QUEST_TURNED_IN"
         or event == "QUEST_LOG_UPDATE" then
         checkAttunements()
-    elseif event == "NEW_RECIPE_LEARNED" or event == "LEARNED_SPELL_IN_TAB" or event == "SPELLS_CHANGED" then
-        checkKnownSoon()
+    elseif event == "SKILL_LINES_CHANGED" or event == "NEW_RECIPE_LEARNED"
+        or event == "LEARNED_SPELL_IN_TAB" or event == "SPELLS_CHANGED" then
+        -- A profession trained, a recipe learned, a skill-up: both are read again. Which of these
+        -- a client has differs (LEARNED_SPELL_IN_TAB isn't on WoW Forever's), hence all of them.
+        checkSoon()
     elseif event:find("^TRADE_SKILL_") then
         -- Several fire while a window opens or switches profession: read once it has settled.
         scanSoon()

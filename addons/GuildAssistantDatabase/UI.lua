@@ -269,7 +269,7 @@ local function query()
         minLevel = Core.limit(minLevelBox:GetText()), maxLevel = Core.limit(maxLevelBox:GetText()),
         minSkill = Core.limit(minSkillBox:GetText()), maxSkill = Core.limit(maxSkillBox:GetText()),
         slots = slots, armor = armor, binding = binding, include = include,
-        known = guild and Core.guildRecipes(Game.professionsDB(), guild) or nil,
+        known = guild and Core.guildRecipes(Game.professionsDB(), guild, Game.realm()) or nil,
         vouchedOnly = Game.hidesUnvouched() and not state.showUnvouched,
         order = state.order,
     }
@@ -396,9 +396,10 @@ local function listingMembers()
     return state.tab == "guild" and state.member == nil
 end
 
+-- Yours or a guildmate's: every character of your account is you, the one you're playing and the
+-- rest alike, and which of them a row is the name already says.
 local function sourceSuffix(member)
-    if member.you then return " |cff808080(you)|r" end
-    return member.source == "own" and " |cff808080(alt)|r" or ""
+    return member.source == "own" and " |cff808080(you)|r" or ""
 end
 
 local function updateSlider(count)
@@ -684,7 +685,7 @@ local function infoLines(recipe)
     return table.concat(lines, "\n")
 end
 
--- Who can craft it: a line of names that wraps ("Luna (you), Ana, Brom (alt), and 3 more"), each
+-- Who can craft it: a line of names that wraps ("Luna (you), Ana, Brom (you), and 3 more"), each
 -- name a button that whispers them on a click (not yours). `d.crafters` says why there are none.
 local CRAFTER_LINE, CRAFTER_SPACE = 14, 4
 
@@ -693,7 +694,7 @@ local function drawCrafters(d, recipe)
     for _, button in ipairs(box.names) do button:Hide() end
     box.more:Hide()
     local db = Game.professionsDB()
-    local crafters = db and Core.crafters(db, recipe, Game.playerKey()) or {}
+    local crafters = db and Core.crafters(db, recipe, Game.playerKey(), Game.guildName(), Game.realm()) or {}
     if #crafters == 0 then
         d.crafters:SetText(db and "|cff808080Nobody you know of yet.|r"
             or "|cff808080Install GuildAssistant Professions to see who in your guild can craft it.|r")
@@ -711,7 +712,7 @@ local function drawCrafters(d, recipe)
     end
     for i = 1, math.min(#crafters, MAX_CRAFTERS) do
         local crafter, button = crafters[i], box.names[i]
-        local suffix = crafter.you and " (you)" or crafter.source == "own" and " (alt)"
+        local suffix = crafter.source == "own" and " (you)"
             or crafter.source == "link" and " (link)" or ""
         local comma = i < #crafters and "," or ""
         button.text:SetText(("|c%s%s|r%s%s"):format(Game.classHex(crafter.class), crafter.name, suffix, comma))
@@ -755,10 +756,10 @@ local function craftTooltip(button)
     end
 end
 
--- Who a guildmate is: their name in their class's colour, and whether they're you, your alt or a
--- guildmate.
+-- Who a guildmate is: their name in their class's colour, and whether the character is yours or a
+-- guildmate's.
 local function whoLines(member)
-    local who = member.you and "You" or member.source == "own" and "Your alt" or "Guildmate"
+    local who = member.source == "own" and "You" or "Guildmate"
     return { ("|c%s%s|r"):format(Game.classHex(member.class), member.name), "|cff808080" .. who .. "|r", "" }
 end
 
@@ -975,7 +976,7 @@ local function refreshGuild()
     local guild = Game.guildName()
     local byName = {}
     for _, entry in ipairs(ns.Data and ns.Data.professions or {}) do byName[entry.name] = entry end
-    local all = Core.guildMembers(Game.professionsDB(), guild, byName, Game.playerKey())
+    local all = Core.guildMembers(Game.professionsDB(), guild, byName, Game.playerKey(), Game.realm())
     local wanted, seen, professions, known = {}, {}, {}, {}
     for _, member in ipairs(all) do
         local entry = byName[member.profession]
@@ -994,7 +995,7 @@ local function refreshGuild()
     state.allMembers, state.guildProfessions = all, professions
     -- The attunements too: a guildmate's page shows them under their professions.
     local db = Game.professionsDB()
-    state.allAttuned, state.raids = Core.guildAttunements(db, guild, Game.playerKey()), Core.attunementRaids(db)
+    state.allAttuned, state.raids = Core.guildAttunements(db, guild, Game.playerKey(), Game.realm()), Core.attunementRaids(db)
     if state.member then
         -- As read now (a newer skill, a specialization its recipes tell once read); gone: back.
         local again
@@ -1064,7 +1065,7 @@ end
 local function refreshAttunements()
     local guild = Game.guildName()
     local db = Game.professionsDB()
-    local all = Core.guildAttunements(db, guild, Game.playerKey())
+    local all = Core.guildAttunements(db, guild, Game.playerKey(), Game.realm())
     state.allAttuned, state.raids = all, Core.attunementRaids(db)
     -- A raid picked on the left that isn't there any more: all of them.
     if state.raid then

@@ -77,18 +77,22 @@ from `/gadb` or a shift-click goes to Recipes. Drag the clip to move it around t
 ## Who can craft it
 
 With GuildAssistant Professions installed, the details list every character it knows with that
-recipe: you, your other characters (alt), your guildmates (received from their addon), and
-characters whose profession link you opened (link). Without it, the window says to install it.
+recipe: your own (you), your guildmates (received from their addon), and characters whose
+profession link you opened (link). Without it, the window says to install it.
+
+Only this realm's, and only the guild you are in: that addon gathers every character of your
+account, on every realm, and this window is of where you are.
 
 **Click a name** to whisper them: the chat box opens as the game's own "Whisper" does, with the
-whole name (WoW Forever's "Shivan Nightpath" too) and, for another realm's, the realm. Hovering a
-name says so; your own does nothing.
+whole name (WoW Forever's "Shivan Nightpath" too). Hovering a name says so; your own does nothing.
 
 ## Your guild
 
 With GuildAssistant Professions installed, the **Guild** tab (under the window) lists your
 guildmates who use it (and your characters in the guild), each profession they have with its skill
-and specialization: "Shivan Darkwhisp  190  Blacksmithing - Weaponsmith". The professions are on
+and specialization: "Shivan Darkwhisp  190  Blacksmithing - Weaponsmith". Your own characters are
+marked "(you)", whichever of them you are playing. It is the guild you are in on the realm you are
+on: another realm's characters are never listed here, even in a guild of the same name. The professions are on
 the left, with how many guildmates have each (Herbalism, Skinning and the like too); the search
 finds guildmates by name, profession or specialization (`weaponsmith` finds Master Swordsmiths
 too). Click a guildmate for what they can make in that profession (the search then searches those

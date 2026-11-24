@@ -42,6 +42,13 @@ function Game.playerKey()
     return Core.playerKey(first, last, GetRealmName and GetRealmName() or "")
 end
 
+--- The realm this character is on, as GuildAssistant Professions saves it (Core.realmName). What
+--- the Database shows is of this realm: the saved data holds the whole account, every realm's
+--- characters together.
+function Game.realm()
+    return Core.realmName(GetRealmName and GetRealmName() or nil)
+end
+
 -- The skill list's headers for professions (localized by the game; English when it has none).
 local PROFESSION_HEADERS = {
     [TRADE_SKILLS or "Professions"] = true,

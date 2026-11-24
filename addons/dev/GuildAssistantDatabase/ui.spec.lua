@@ -883,7 +883,10 @@ it("whispers someone who can craft it on a click on their name, all of it", func
     local characters = GuildAssistantProfessionsDB.characters
     local smithing = { rank = 300, max = 300, recipes = { ["spell:2667"] = true } }
     characters["Shivan Nightpath-Test Realm"] = { name = "Shivan Nightpath", realm = "Test Realm", class = "MAGE", source = "guild", professions = { Blacksmithing = smithing } }
-    characters["Bromwellington-Argent Dawn"] = { name = "Bromwellington", realm = "Argent Dawn", source = "link", professions = { Blacksmithing = smithing } }
+    characters["Bromwellington-Test Realm"] = { name = "Bromwellington", realm = "Test Realm", source = "link", professions = { Blacksmithing = smithing } }
+    -- Another realm's character, in a guild of the same name: everything here is of the realm you
+    -- are on, so it is left out (one of yours with the same name would be listed twice otherwise).
+    characters["Luna-Other Realm"] = { name = "Luna", realm = "Other Realm", source = "own", guild = "Test Guild", professions = { Blacksmithing = smithing } }
     SlashCmdList.GADB("breastplate")
     rowNamed(ns, "Runed Copper Breastplate"):Click()
     local d = ns.UI.parts().details
@@ -900,7 +903,7 @@ it("whispers someone who can craft it on a click on their name, all of it", func
     names[3]:Click()
     eq(told[2], "Shivan Nightpath", "the whole name")
     names[4]:Click()
-    eq(told[3], "Bromwellington-ArgentDawn", "another realm's, with it")
+    eq(told[3], "Bromwellington", "the one seen through a profession link")
     -- The names wrap: at 6 pixels a letter, the fourth doesn't fit in the 300 after the others.
     eq(d.crafterNames.width, 300)
     eq(names[3]._point[4], 6 * #"Luna (you)," + 4 + 6 * #"Ana," + 4)
@@ -912,7 +915,7 @@ it("whispers someone who can craft it on a click on their name, all of it", func
     SlashCmdList.GADB("breastplate")
     rowNamed(ns, "Runed Copper Breastplate"):Click()
     eq(d.crafterNames.more:IsShown(), true)
-    has(crafterLine(d), "(alt), and 9 more")
+    has(crafterLine(d), "(you), and 9 more")
 end)
 
 it("says who can craft it only with GuildAssistant Professions", function()
@@ -1377,7 +1380,7 @@ it("lists the guildmates by profession, with their skill and specialization, and
     local parts = ns.UI.parts()
     parts.tabs[2]:Click()
     eq(memberRows(ns), "Ana 300 Blacksmithing - Weaponsmith | Kael 300 Blacksmithing - Master Swordsmith"
-        .. " | Luna (you) 120 Blacksmithing | Di (alt) Enchanting | Kael 225 Herbalism")
+        .. " | Luna (you) 120 Blacksmithing | Di (you) Enchanting | Kael 225 Herbalism")
     eq(sidebar(ns), "All professions 5 | Blacksmithing 3 | Enchanting 1 | Herbalism 1")
     eq(parts.statusText:GetText(), "4 guildmates")
     -- By specialization: Kael's a Master Swordsmith, so a Weaponsmith too.
@@ -1388,7 +1391,7 @@ it("lists the guildmates by profession, with their skill and specialization, and
     eq(memberRows(ns), "Kael 300 Blacksmithing - Master Swordsmith | Kael 225 Herbalism")
     parts.searchBox:SetText("")
     parts.sidebarButtons[3]:Click()
-    eq(memberRows(ns), "Di (alt) Enchanting", "one profession")
+    eq(memberRows(ns), "Di (you) Enchanting", "one profession")
     eq(parts.statusText:GetText(), "1 guildmate")
     parts.resetButton:Click()
     eq(parts.state.profession, nil, "Reset")
@@ -1476,7 +1479,7 @@ local function memberHeader(parts, column)
 end
 
 local BY_PROFESSION = "Ana 300 Blacksmithing - Weaponsmith | Kael 300 Blacksmithing - Master Swordsmith"
-    .. " | Luna (you) 120 Blacksmithing | Di (alt) Enchanting | Kael 225 Herbalism"
+    .. " | Luna (you) 120 Blacksmithing | Di (you) Enchanting | Kael 225 Herbalism"
 
 it("sorts the guildmates by Name, Skill or Profession, with the same chevrons", function()
     local ns = loadAddon({ professionsAddon = true, guild = "Test Guild" })
@@ -1494,7 +1497,7 @@ it("sorts the guildmates by Name, Skill or Profession, with the same chevrons", 
     -- By name, A to Z: one character's rows (Kael's two professions) stay together.
     name:Click()
     eq(chevron(name), "up gold"); eq(chevron(profession), "up grey"); eq(chevron(skill), "down grey")
-    eq(memberRows(ns), "Ana 300 Blacksmithing - Weaponsmith | Di (alt) Enchanting"
+    eq(memberRows(ns), "Ana 300 Blacksmithing - Weaponsmith | Di (you) Enchanting"
         .. " | Kael 300 Blacksmithing - Master Swordsmith | Kael 225 Herbalism | Luna (you) 120 Blacksmithing")
     eq(GameTooltip.lines[1], "Name", "the tooltip says so after the click")
     eq(GameTooltip.lines[2], "The guildmate's name, your own characters in the guild among them.")
@@ -1504,7 +1507,7 @@ it("sorts the guildmates by Name, Skill or Profession, with the same chevrons", 
     name:Click()
     eq(chevron(name), "down gold")
     eq(memberRows(ns), "Luna (you) 120 Blacksmithing | Kael 300 Blacksmithing - Master Swordsmith"
-        .. " | Kael 225 Herbalism | Di (alt) Enchanting | Ana 300 Blacksmithing - Weaponsmith")
+        .. " | Kael 225 Herbalism | Di (you) Enchanting | Ana 300 Blacksmithing - Weaponsmith")
     -- Reset puts the order back, and Skill lists the highest first (Di's Enchanting has none).
     parts.resetButton:Click()
     eq(chevron(profession), "up gold"); eq(chevron(name), "none")
@@ -1512,18 +1515,18 @@ it("sorts the guildmates by Name, Skill or Profession, with the same chevrons", 
     skill:Click()
     eq(chevron(skill), "down gold"); eq(chevron(profession), "up grey"); eq(chevron(name), "up grey")
     eq(memberRows(ns), "Ana 300 Blacksmithing - Weaponsmith | Kael 300 Blacksmithing - Master Swordsmith"
-        .. " | Kael 225 Herbalism | Luna (you) 120 Blacksmithing | Di (alt) Enchanting")
+        .. " | Kael 225 Herbalism | Luna (you) 120 Blacksmithing | Di (you) Enchanting")
     skill:Fire("OnEnter")
     eq(GameTooltip.lines[2], "Their skill in the profession.")
     eq(GameTooltip.lines[4], "Click to list the lowest first.")
     skill:Click()
-    eq(memberRows(ns), "Di (alt) Enchanting | Luna (you) 120 Blacksmithing | Kael 225 Herbalism"
+    eq(memberRows(ns), "Di (you) Enchanting | Luna (you) 120 Blacksmithing | Kael 225 Herbalism"
         .. " | Ana 300 Blacksmithing - Weaponsmith | Kael 300 Blacksmithing - Master Swordsmith")
     -- Profession again, the skill it left behind now lowest first.
     profession:Click()
     eq(chevron(profession), "up gold"); eq(chevron(skill), "up grey")
     eq(memberRows(ns), "Luna (you) 120 Blacksmithing | Ana 300 Blacksmithing - Weaponsmith"
-        .. " | Kael 300 Blacksmithing - Master Swordsmith | Di (alt) Enchanting | Kael 225 Herbalism")
+        .. " | Kael 300 Blacksmithing - Master Swordsmith | Di (you) Enchanting | Kael 225 Herbalism")
 end)
 
 it("keeps the guildmates' order through a search, a guildmate and the other tab", function()

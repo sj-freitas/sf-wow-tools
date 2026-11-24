@@ -129,6 +129,13 @@ function Scan.knowsWithoutWindow()
         and C_TradeSkillUI.GetAllRecipeIDs ~= nil
 end
 
+--- Whether this character has any profession recorded. What the scan after login waits for: the
+--- game answers with none until it has them ready, and a character whose professions were never
+--- read keeps none of them.
+function Scan.hasProfessions()
+    return next(Scan.current().professions) ~= nil
+end
+
 --- Records the recipes this character knows of each of its professions, no window needed: each
 --- recipe the game's tables have of it (Recipes.lua), asked of the game (IsPlayerSpell). Only ever
 --- added, as a window's are (one the tables lack still comes from its window). Quietly: it happens

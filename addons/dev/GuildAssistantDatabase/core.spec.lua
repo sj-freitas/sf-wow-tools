@@ -555,6 +555,33 @@ it("lists the guild's members, a row per profession, best first, and what each c
     eq(names(Core.memberRecipes(loaded, members[1].record, Core.terms("pants"))), "")
 end)
 
+it("shows the realm you are on and nothing else, whatever another realm calls its guild", function()
+    local smithing = { recipes = { ["spell:2667"] = true, ["spell:9972"] = true } }
+    -- The account's saved data holds every realm's characters, and a name can be taken on each.
+    local db = { characters = {
+        ["Luna-RP"] = { name = "Luna", realm = "RP", source = "own", guild = "G",
+            professions = { Blacksmithing = { rank = 120, max = 150, recipes = { ["spell:2667"] = true } } },
+            attunements = { ony = true } },
+        ["Luna-PvP"] = { name = "Luna", realm = "PvP", source = "own", guild = "G",
+            professions = { Blacksmithing = smithing }, attunements = { ony = true } },
+        ["Ana-PvP"] = { name = "Ana", realm = "PvP", source = "guild", guild = "G",
+            professions = { Blacksmithing = smithing } },
+    } }
+    local entries = { Blacksmithing = profession("Blacksmithing") }
+    local members = Core.guildMembers(db, "G", entries, "Luna-RP", "RP")
+    eq(#members, 1, "one row, not the same name once per realm")
+    eq(members[1].realm, "RP")
+    eq(#Core.guildMembers(db, "G", entries, "Luna-RP"), 3, "a client that won't say its realm keeps them all")
+    local known = Core.guildRecipes(db, "G", "RP")
+    eq(known.Blacksmithing.recipes["spell:2667"], true, "what this realm's guild knows")
+    eq(known.Blacksmithing.recipes["spell:9972"], nil, "not what another realm's knows")
+    local breastplate = recipeNamed(Core.load(entries.Blacksmithing), "Runed Copper Breastplate")
+    local crafters = Core.crafters(db, breastplate, "Luna-RP", "G", "RP")
+    eq(#crafters, 1, "nobody to whisper on another realm")
+    eq(crafters[1].you, true)
+    eq(#Core.guildAttunements(db, "G", "Luna-RP", "RP"), 1, "and one line of attunements")
+end)
+
 it("knows what a guild can craft: its characters on this account and the guildmates heard from", function()
     local db = { characters = {
         ["Luna-RP"] = { name = "Luna", source = "own", guild = "Order",

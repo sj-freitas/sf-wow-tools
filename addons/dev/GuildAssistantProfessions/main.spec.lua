@@ -275,6 +275,85 @@ it("records the recipes you know at login on WoW Forever, quietly, no window nee
     unforever()
 end)
 
+it("asks the game again after login until it has the professions, no window opened", function()
+    loadAddon()
+    local known = { [2660] = true, [7418] = true }
+    forever(known)
+    -- The spellbook hasn't reached the client yet: GetProfessions answers with nothing, as it does
+    -- when PLAYER_LOGIN fires.
+    local ready = false
+    _G.GetProfessions = function() if ready then return 1, 2 end end
+    local timers = {}
+    _G.C_Timer = { After = function(_, fn) timers[#timers + 1] = fn end }
+    local function run()
+        local due = timers
+        timers = {}
+        for _, fn in ipairs(due) do fn() end
+    end
+    fire("ADDON_LOADED", "GuildAssistantProfessions")
+    fire("PLAYER_LOGIN")
+    run()
+    local character = GuildAssistantProfessionsDB.characters["Luna-Test Realm"]
+    eq(next(character.professions), nil, "nothing recorded while the game has none to give")
+    assert(#timers > 0, "it asks again")
+    -- The spellbook arrives. No event says so and no window is opened: the next try finds them.
+    ready = true
+    run()
+    eq(character.professions.Blacksmithing.rank, 120, "the profession and its skill")
+    eq(character.professions.Blacksmithing.recipes["spell:2660"], true, "and the recipes it knows")
+    eq(character.professions.Enchanting.rank, 50, "every profession, not only the first")
+    assert(GuildAssistantProfessionsDB.export:find('"name":"Enchanting"', 1, true), "in the export")
+    run()
+    eq(#timers, 0, "and it stops asking once the game has answered")
+    eq(said("something went wrong"), false, "no error")
+    unforever()
+end)
+
+it("records a profession trained later, and asks once for the spells it brings", function()
+    loadAddon()
+    local known = { [2660] = true }
+    forever(known)
+    -- One profession to begin with; Enchanting is trained later.
+    local slots, asked = { { "Blacksmithing", 120, 150 } }, 0
+    _G.GetProfessions = function()
+        asked = asked + 1
+        local indexes = {}
+        for i = 1, #slots do indexes[i] = i end
+        return (table.unpack or unpack)(indexes)
+    end
+    _G.GetProfessionInfo = function(index)
+        local slot = slots[index]
+        if slot then return slot[1], "icon", slot[2], slot[3] end
+    end
+    local timers = {}
+    _G.C_Timer = { After = function(_, fn) timers[#timers + 1] = fn end }
+    local function run()
+        local due = timers
+        timers = {}
+        for _, fn in ipairs(due) do fn() end
+    end
+    fire("ADDON_LOADED", "GuildAssistantProfessions")
+    fire("PLAYER_LOGIN")
+    run()
+    local character = GuildAssistantProfessionsDB.characters["Luna-Test Realm"]
+    eq(character.professions.Enchanting, nil, "not trained yet")
+    -- Trained at a trainer: the game sends an event for each spell it brings, in a burst.
+    slots[#slots + 1] = { "Enchanting", 1, 75 }
+    known[7418] = true
+    asked = 0
+    fire("SPELLS_CHANGED")
+    fire("LEARNED_SPELL_IN_TAB", 333)
+    fire("NEW_RECIPE_LEARNED", 7418)
+    eq(asked, 0, "not while the spells keep coming")
+    run()
+    eq(asked, 1, "once, a moment after the last")
+    eq(character.professions.Enchanting.rank, 1, "the new profession, without a relog")
+    eq(character.professions.Enchanting.recipes["spell:7418"], true, "and the recipe it brought")
+    assert(GuildAssistantProfessionsDB.export:find('"name":"Enchanting"', 1, true), "in the export")
+    eq(said("something went wrong"), false, "no error")
+    unforever()
+end)
+
 it("asks the game once for a burst of events, a moment after the last", function()
     loadAddon()
     local asked = 0
