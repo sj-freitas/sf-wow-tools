@@ -557,6 +557,73 @@ it("renames 1.0.2's entries: the realm to its rule set, keeping the newer of two
     eq(db.characters["Mira-RP"].updated, 9, "the newer Mira")
 end)
 
+it("folds a copy saved without a realm into the character's own entry, realm or no realm", function()
+    -- What a client that never names the realm leaves behind: the character is saved properly from
+    -- an earlier session, and 1.7.1 saved it again with nothing after the dash. Nothing names the
+    -- realm now either (no db.realm), so the entry that has one is what says where it belongs.
+    local db = Core.newDB()
+    db.characters["Shivan Darkwhisp-RP"] = { name = "Shivan Darkwhisp", realm = "RP", source = "own",
+        guild = G, updated = 5, attunements = { ony = false },
+        professions = { Mining = { rank = 10, max = 75, learned = 1, updated = 5, recipes = recipes(1) } } }
+    db.characters["Shivan Darkwhisp-"] = { name = "Shivan Darkwhisp", realm = "", source = "own",
+        guild = G, updated = 9, attunements = { ony = true },
+        professions = { Mining = { rank = 32, max = 75, learned = 1, updated = 9, recipes = recipes(2) } } }
+    eq(db.realm, nil, "no realm has ever been named")
+    eq(Core.mergeRealmless(db), 1, "folded in")
+    local keys = {}
+    for key in pairs(db.characters) do keys[#keys + 1] = key end
+    eq(table.concat(keys, ","), "Shivan Darkwhisp-RP", "one entry of the character")
+    local shivan = db.characters["Shivan Darkwhisp-RP"]
+    eq(shivan.professions.Mining.rank, 32, "the higher skill")
+    eq(shivan.professions.Mining.recipes["spell:1"], true, "what each copy knew")
+    eq(shivan.professions.Mining.recipes["spell:2"], true)
+    eq(shivan.attunements.ony, true, "attuned, as the copy that looked saw it")
+end)
+
+it("folds one in as soon as a realm is named, not only when the data is read", function()
+    local db = Core.newDB()
+    -- No other entry of this character, so there is nothing to say where it belongs yet.
+    db.characters["Luna-"] = { name = "Luna", realm = "", source = "own", updated = 9,
+        professions = { Mining = { rank = 32, max = 75, recipes = {} } } }
+    eq(Core.mergeRealmless(db), 0, "nothing to fold it into")
+    eq(db.characters["Luna-"] ~= nil, true, "kept: it is all that character has")
+    -- The client answers at last, mid-session: Core.realm folds it then and there.
+    eq(Core.realm(db, "CAMWOW EU4 Realm 10 RP"), "RP")
+    eq(db.characters["Luna-"], nil, "folded in without waiting for the next login")
+    eq(db.characters["Luna-RP"].professions.Mining.rank, 32)
+end)
+
+it("reads the realm whichever way the client names it", function()
+    -- GetRealmName gives the name with its spaces, GetNormalizedRealmName without them: the same
+    -- realm either way, so a character keeps one key whichever function answered.
+    eq(Core.realmName("CAMWOW EU4 Realm 10 RP"), "RP", "with spaces")
+    eq(Core.realmName("CAMWOWEU4Realm10RP"), "RP", "without them")
+    eq(Core.realmName("CAMWOWEU4Realm10RP-PVP"), "RP-PVP", "and a hyphenated rule set")
+    eq(Core.realmName("Nethergarde Keep"), "Nethergarde Keep", "another realm is kept as it is")
+    eq(Core.realmName("NethergardeKeep"), "NethergardeKeep")
+end)
+
+it("drops a guildmate's copy of your character under its first name alone", function()
+    local db = Core.newDB()
+    db.characters["Shivan Darkwhisp-RP"] = { name = "Shivan Darkwhisp", realm = "RP", source = "own",
+        guild = G, updated = 9, professions = {} }
+    -- A guildmate still holding 1.0.2's data goes on sharing "Shivan": the same character.
+    db.characters["Shivan-RP"] = { name = "Shivan", realm = "RP", source = "guild", guild = G,
+        updated = 5, professions = { Mining = { rank = 10, max = 75, recipes = {} } } }
+    -- Someone else of that name on another realm is nobody's business of ours.
+    db.characters["Shivan-PvP"] = { name = "Shivan", realm = "PvP", source = "guild", guild = G,
+        updated = 5, professions = {} }
+    eq(Core.oldFirstName(db, "Shivan", "RP"), true)
+    eq(Core.oldFirstName(db, "Shivan", "PvP"), false, "not on another realm")
+    eq(Core.oldFirstName(db, "Shivan Darkwhisp", "RP"), false, "nor the character itself")
+    eq(Core.dropOldFirstNames(db), 1, "one dropped")
+    eq(db.characters["Shivan-RP"], nil, "the old copy of yours is gone")
+    eq(db.characters["Shivan-PvP"] ~= nil, true, "the other realm's stays")
+    -- And it isn't taken back when that guildmate shares it again.
+    eq(Core.receive(db, G, { name = "Shivan", realm = "RP", updated = 9, professions = {} }, 9), false)
+    eq(db.characters["Shivan-RP"], nil)
+end)
+
 it("keys a WoW Forever character by its two names and its rule set, hyphen and all", function()
     -- The game names the server and its rule set; the rule set is the realm, one of PVP, RP,
     -- RP-PVP, Normal and Hardcore. A character is "<first> <last>", so the only hyphen in the key

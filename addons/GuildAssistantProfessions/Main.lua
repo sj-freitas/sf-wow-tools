@@ -68,6 +68,20 @@ local function when(seconds)
     return seconds and date("%Y-%m-%d %H:%M", seconds) or "never"
 end
 
+-- For /ga-prof status: the realm the characters are keyed by, and what the client said when
+-- asked. It doesn't always say (WoW Forever's has gone a whole session without), and the realm it
+-- last named is then used.
+local function realmLine()
+    local answers, said = Scan.realms(), {}
+    for name, value in pairs(answers) do
+        if value and value ~= "" then said[#said + 1] = ("%s = \"%s\""):format(name, value) end
+    end
+    table.sort(said)
+    local realm = Core.realm(db(), Scan.realmName())
+    return ("%s (%s)"):format(realm and realm ~= "" and realm or "not known yet",
+        #said > 0 and table.concat(said, ", ") or "the client says nothing; the one last named is used")
+end
+
 local function status()
     local data = Core.exportData(db())
     Scan.say("%s saved.", Core.describe(data))
@@ -87,6 +101,7 @@ local function status()
         end
     end
     print("  Last update: " .. when(last) .. ".")
+    print("  Realm: " .. realmLine() .. ".")
     print("  " .. Sync.describe(db(), when))
     print("  Attunements: " .. Core.describeAttunements(db()) .. ".")
     print("  Seen for GuildAssistant Database: " .. Core.describeSources(db()) .. ".")
@@ -229,7 +244,7 @@ local function onEvent(self, event, arg, ...)
         self:UnregisterEvent("ADDON_LOADED")
         -- The realm before anything is keyed by it, and kept for the logins where the client
         -- hasn't it ready (Core.realm).
-        Core.realm(db(), GetRealmName and GetRealmName())
+        Core.realm(db(), Scan.realmName())
         Core.migrate(db())
         Core.prune(db(), ns.now())
         -- What this client offers (not exported): to tell why a client records nothing.
@@ -237,6 +252,7 @@ local function onEvent(self, event, arg, ...)
             build = GetBuildInfo and select(4, GetBuildInfo()),
             functions = Scan.client(),
             missingEvents = self.missing,
+            realms = Scan.realms(),
         }
         refreshExport()
         Sync.start()
@@ -257,6 +273,9 @@ local function onEvent(self, event, arg, ...)
         -- is renamed), whether or not the game has anything to say about it yet. What it has is
         -- read a moment later, and again until the game has it: nothing to open, nothing to type.
         Scan.current()
+        -- What the realm functions answer once the login is through, which isn't what they
+        -- answered as the addon loaded (Scan.realms).
+        if db().client then db().client.realms = Scan.realms() end
         checkSoon()
         checkAfterLogin(1)
         checkAttunements()

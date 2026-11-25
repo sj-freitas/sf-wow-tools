@@ -785,12 +785,27 @@ function Core.playerKey(first, last, realm)
     return name .. "-" .. (Core.realmName(realm) or "")
 end
 
+--- The names saved with a realm. GuildAssistant Professions 1.7.0 and 1.7.1 saved a character
+--- again, keyed without one, when the client hadn't named the realm at login; that copy is the
+--- same character as the entry that has one, and only that one is listed (onRealm).
+local function withRealm(db)
+    local names = {}
+    for _, character in pairs(db and db.characters or {}) do
+        if character.realm and character.realm ~= "" then names[character.name] = true end
+    end
+    return names
+end
+
 --- Whether a saved character is on the realm you're playing on. GuildAssistant Professions gathers
 --- the whole account, every realm's characters together; the Database only ever shows the one you
 --- are on, so a guild of the same name on another realm -- or a character of yours with the same
 --- name there -- is never listed beside the ones around you. A client that won't say which realm
---- it is (`realm` nil or empty) keeps them all, as it did before.
-local function onRealm(character, realm)
+--- it is (`realm` nil or empty) keeps them all, as it did before -- but never the same character
+--- twice: one saved without a realm is left out while the character is also saved with one.
+local function onRealm(character, realm, named)
+    if not character.realm or character.realm == "" then
+        return not (named and named[character.name])
+    end
     return realm == nil or realm == "" or character.realm == realm
 end
 
@@ -809,13 +824,13 @@ local SOURCE_ORDER = { own = 1, guild = 2, link = 3 }
 --- On `realm` only, and a guildmate's character only while you're in `guild`; your own and the
 --- ones seen through a link are yours whatever guild they're in.
 function Core.crafters(db, recipe, you, guild, realm)
-    local found = {}
+    local found, named = {}, withRealm(db)
     for key, character in pairs(db and db.characters or {}) do
         local profession = character.professions and character.professions[recipe.profession]
         -- On this realm, and a guildmate's character only while you're in their guild (`guild`
         -- nil, nobody's guild: they all stay, as they did before). Your own and the ones seen
         -- through a profession link are yours whatever guild they're in.
-        local here = onRealm(character, realm)
+        local here = onRealm(character, realm, named)
             and (guild == nil or character.source ~= "guild" or character.guild == guild)
         if here and Core.knows(profession, recipe) then
             found[#found + 1] = {
@@ -840,9 +855,9 @@ end
 --- By profession, as Core.knows reads one: { [profession] = { recipes = { ["spell:<id>"] = true } } }.
 --- Empty without the data.
 function Core.guildRecipes(db, guild, realm)
-    local known = {}
+    local known, named = {}, withRealm(db)
     for _, character in pairs(db and db.characters or {}) do
-        if onRealm(character, realm) and character.guild == guild
+        if onRealm(character, realm, named) and character.guild == guild
             and (character.source == "own" or character.source == "guild") then
             for name, profession in pairs(character.professions or {}) do
                 known[name] = known[name] or { recipes = {} }
@@ -947,10 +962,10 @@ end
 --- profession and its specializations) }. `entries` = { [profession] = the data's }; `you` is
 --- Core.playerKey's. By profession, then highest skill, then name.
 function Core.guildMembers(db, guild, entries, you, realm)
-    local members = {}
+    local members, named = {}, withRealm(db)
     if not guild then return members end
     for key, character in pairs(db and db.characters or {}) do
-        if onRealm(character, realm) and character.guild == guild
+        if onRealm(character, realm, named) and character.guild == guild
             and (character.source == "own" or character.source == "guild") then
             for name, profession in pairs(character.professions or {}) do
                 local entry = entries[name]
@@ -1071,10 +1086,10 @@ end
 --- at their head, then the guildmates by name -- the order the tab falls back to when there is no
 --- raid to sort by at all (Core.attunementOrder). `you` is Core.playerKey's.
 function Core.guildAttunements(db, guild, you, realm)
-    local members = {}
+    local members, named = {}, withRealm(db)
     if not guild then return members end
     for key, character in pairs(db and db.characters or {}) do
-        if onRealm(character, realm) and character.guild == guild
+        if onRealm(character, realm, named) and character.guild == guild
             and (character.source == "own" or character.source == "guild") then
             local states, attuned = {}, 0
             for raid, state in pairs(character.attunements or {}) do

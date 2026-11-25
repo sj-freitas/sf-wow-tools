@@ -14,10 +14,12 @@ function Core.newDB()
 end
 
 --- The realm as saved: on WoW Forever the game's name also says which server of it the character
---- is on ("CAMWOW EU4 Realm 10 RP"), which can change; only its rule set ("RP") is kept, the realm
---- as Guild Assistant knows it. Any other name is kept as it is.
+--- is on ("CAMWOW EU4 Realm 10 RP"), which can change; only its rule set ("RP", "PvP", "RP-PVP",
+--- "Normal", "Hardcore") is kept, the realm as Guild Assistant knows it. The same name without its
+--- spaces, as GetNormalizedRealmName gives it ("CAMWOWEU4Realm10RP"), comes to the same rule set,
+--- so it doesn't matter which of the game's functions answered. Any other name is kept as it is.
 function Core.realmName(realm)
-    return realm and realm:match("Realm %d+ (.+)$") or realm
+    return realm and realm:match("Realm%s*%d+%s*(.+)$") or realm
 end
 
 --- The realm this character is on: what the game answers (Core.realmName) when it has an answer,
@@ -27,8 +29,11 @@ end
 --- the game has never named one (a first login on such a client).
 function Core.realm(db, named)
     local realm = Core.realmName(named)
-    if realm and realm ~= "" then
+    if realm and realm ~= "" and realm ~= db.realm then
         db.realm = realm
+        -- Known for the first time (the client answered at last, or this character is on another
+        -- realm): what was saved while it wasn't belongs to a character on one.
+        Core.mergeRealmless(db)
     end
     return db.realm
 end
@@ -53,14 +58,56 @@ function Core.migrate(db)
         end
     end
     Core.mergeRealmless(db)
+    Core.dropOldFirstNames(db)
+end
+
+--- Which realm a copy saved without one belongs to: the one the character's own entry is on,
+--- whichever that is -- the same character, saved properly before or since. The key of that entry,
+--- or nil when the character has no other.
+local function twinOf(db, name)
+    local found
+    for key, character in pairs(db.characters) do
+        if character.name == name and character.realm and character.realm ~= ""
+            and (found == nil or key < found) then
+            found = key
+        end
+    end
+    return found
+end
+
+--- One entry of this character folded into another: both are its own, and the copy saved before
+--- the client named the realm holds less rather than newer truth (one written at login, before the
+--- game said what the character has, holds nothing at all). So everything each of them has is
+--- kept: every profession and recipe, the higher skill, the later dates. A profession really
+--- unlearned goes at the next scan, which reads them all (Core.setProfessions).
+local function foldInto(into, character)
+    for name, profession in pairs(character.professions) do
+        local kept = into.professions[name]
+        if not kept then
+            into.professions[name] = profession
+        else
+            for recipe in pairs(profession.recipes) do kept.recipes[recipe] = true end
+            if (profession.rank or 0) > (kept.rank or 0) then kept.rank = profession.rank end
+            if (profession.max or 0) > (kept.max or 0) then kept.max = profession.max end
+            for _, field in ipairs({ "learned", "updated" }) do
+                if (profession[field] or 0) > (kept[field] or 0) then kept[field] = profession[field] end
+            end
+        end
+    end
+    into.class = into.class or character.class
+    into.guild = into.guild or character.guild
+    into.source = "own" -- this account's, whatever the entry it is folded into was
+    into.updated = math.max(into.updated or 0, character.updated or 0)
+    Core.setAttunements(into, character.attunements or {})
 end
 
 --- Characters keyed without a realm ("Shivan Bank-"), saved by 1.7.0 and 1.7.1 when the client
---- hadn't named the realm yet at login: each is a second copy of a character already saved. One of
---- this account's is folded into its own entry on the realm now known (its professions merged as a
---- guildmate's copy is, the newer winning, and its attunements kept), or waits where it is while
---- no realm has been named -- it is all that character has. A guildmate's goes: which character it
---- is can't be known, and it comes again from them. Returns how many were folded in or dropped.
+--- hadn't named the realm at login: each is a second copy of a character already saved. One of
+--- this account's is folded into that character's own entry (foldInto: everything either of them
+--- held is kept), or, where the character has no other entry, renamed to the realm now known. One with neither waits where it is: it is all that
+--- character has, and the fold happens as soon as some realm is named (Core.realm). A guildmate's
+--- goes: which character it is can't be known, and it comes again from them. Returns how many were
+--- folded in or dropped.
 function Core.mergeRealmless(db)
     local realmless, done = {}, 0
     for key, character in pairs(db.characters) do
@@ -69,26 +116,55 @@ function Core.mergeRealmless(db)
     table.sort(realmless)
     for _, key in ipairs(realmless) do
         local character = db.characters[key]
-        local own = character.source == "own"
-        if own and db.realm and db.realm ~= "" then
+        if character.source ~= "own" then
             db.characters[key] = nil
-            character.realm = db.realm
-            local newKey = character.name .. "-" .. db.realm
-            local other = db.characters[newKey]
-            if not other then
-                db.characters[newKey] = character
-            else
-                Core.receive(db, other.guild or character.guild, character, nil)
-                other.source = "own" -- this account's, whatever the entry it is folded into was
-                Core.setAttunements(other, character.attunements or {})
+            done = done + 1
+        else
+            local other = twinOf(db, character.name)
+            local realm = other and db.characters[other].realm or db.realm
+            if realm and realm ~= "" then
+                db.characters[key] = nil
+                character.realm = realm
+                local into = db.characters[character.name .. "-" .. realm]
+                if not into then
+                    db.characters[character.name .. "-" .. realm] = character
+                else
+                    foldInto(into, character)
+                end
+                done = done + 1
             end
-            done = done + 1
-        elseif not own then
-            db.characters[key] = nil
-            done = done + 1
         end
     end
     return done
+end
+
+--- Whether `name` is one of this account's characters under its first name alone, as 1.0.2 and
+--- earlier saved it on WoW Forever ("Shivan" where this account has "Shivan Darkwhisp" on the same
+--- realm). A guildmate whose addon still holds that copy goes on sharing it, and it would be
+--- listed and counted as another player. Classic Era's names have no second part, so nothing there
+--- can match.
+function Core.oldFirstName(db, name, realm)
+    if name:find(" ") then return false end
+    for _, character in pairs(db.characters) do
+        if character.source == "own" and character.realm == realm
+            and character.name:sub(1, #name + 1) == name .. " " then
+            return true
+        end
+    end
+    return false
+end
+
+--- Copies of this account's characters under their first name alone, received from a guildmate
+--- still holding 1.0.2's data (Core.oldFirstName). Returns how many went.
+function Core.dropOldFirstNames(db)
+    local old = {}
+    for key, character in pairs(db.characters) do
+        if character.source ~= "own" and Core.oldFirstName(db, character.name, character.realm) then
+            old[#old + 1] = key
+        end
+    end
+    for _, key in ipairs(old) do db.characters[key] = nil end
+    return #old
 end
 
 --- This player's name from UnitName("player"): WoW Forever gives the last name as its second value
@@ -475,6 +551,9 @@ function Core.receive(db, guild, received, now)
     -- Without a realm there is no telling which character it is, and keeping it would be a second
     -- entry of one already saved (Core.mergeRealmless). A guildmate on 1.7.1 still sends them.
     if not received.realm or received.realm == "" then return false end
+    -- Nor one of this account's characters under its first name alone, which a guildmate still on
+    -- 1.0.2's data goes on sharing: the same character, an old copy of it (Core.oldFirstName).
+    if Core.oldFirstName(db, received.name, received.realm) then return false end
     local key = received.name .. "-" .. received.realm
     local current = db.characters[key]
     if not current then

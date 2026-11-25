@@ -182,12 +182,21 @@ set ("RP", "PvP"; the game's realm name also says which of its servers you're on
 10 RP", and that part is left out). Data from 1.0.2 and earlier, saved under the first name and the
 whole realm name, is renamed at login.
 
-That client doesn't always have the realm ready when you log in (it answers with nothing until the
-login is through), so the last realm it did name is kept in the saved data (`realm`) and used while
-it won't say. A character is never saved without one: it would be a second entry of a character
-already there, listed, shared with the guild and uploaded as if it were somebody else. The copies
-1.7.0 and 1.7.1 saved that way are folded back into the character they belong to at login, their
-professions merged; one of a guildmate's goes, since which character it is can't be known.
+That client doesn't always have the realm ready when you log in, and has been seen saying nothing
+for a whole session, so it is asked every way it has (`GetRealmName`, `GetNormalizedRealmName`,
+your full name, the realm list, whichever answers first; `/ga-prof status` says which realm your
+characters are keyed by and what each answered, and the saved data keeps it in `client.realms`).
+The last realm named is kept in the saved data (`realm`) and used while the client won't say, and a
+character is never saved without one: it would be a second entry of a character already there,
+listed, shared with the guild and uploaded as if it were somebody else.
+
+The copies 1.7.0 and 1.7.1 saved that way are folded back into the character they belong to -- the
+entry of the same name that has a realm says which realm that is, so it works even where the client
+still names none, and everything either copy held is kept (every profession and recipe, the higher
+skill, the attunements). It happens as the saved data is read and again the moment a realm is first
+named. A guildmate's copy without a realm goes, since which character it is can't be known, and so
+does a copy of one of your own characters under its first name alone, which a guildmate whose addon
+still holds 1.0.2's data goes on sharing.
 
 Guild Assistant needs 1.0's dates (format 2): a file from an older version isn't imported, and the
 website asks you to update the addon.

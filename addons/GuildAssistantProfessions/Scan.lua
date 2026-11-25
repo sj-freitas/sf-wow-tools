@@ -27,6 +27,38 @@ function Scan.say(text, ...)
     print("|cff7c5cffGuildAssistant Professions|r: " .. text:format(...))
 end
 
+--- What each of the client's realm functions answers, for the saved data's `client` record and
+--- /ga-prof status. WoW Forever's GetRealmName has been seen empty for a whole session (build
+--- 16001), which is why there is more than one here, and why what they said is worth keeping.
+function Scan.realms()
+    local answers = {}
+    local function ask(name, fn)
+        local ok, value = pcall(fn)
+        answers[name] = ok and type(value) == "string" and value or nil
+    end
+    ask("GetRealmName", function() return GetRealmName and GetRealmName() end)
+    ask("GetNormalizedRealmName", function() return GetNormalizedRealmName and GetNormalizedRealmName() end)
+    ask("UnitFullName", function() return UnitFullName and select(2, UnitFullName("player")) end)
+    ask("GetAutoCompleteRealms", function()
+        return GetAutoCompleteRealms and (GetAutoCompleteRealms() or {})[1]
+    end)
+    return answers
+end
+
+-- The functions above, in the order to believe them: the realm's own name first, then the one
+-- without its spaces, then what this character's full name says, then the realm list's first.
+local REALM_ORDER = { "GetRealmName", "GetNormalizedRealmName", "UnitFullName", "GetAutoCompleteRealms" }
+
+--- What the game says this realm is, from whichever of its functions answers; "" when none does,
+--- and Core.realm then goes by the realm last named (kept in the saved data).
+function Scan.realmName()
+    local answers = Scan.realms()
+    for _, name in ipairs(REALM_ORDER) do
+        if answers[name] and answers[name] ~= "" then return answers[name] end
+    end
+    return ""
+end
+
 --- This character's saved entry (with its guild: only characters of the same guild are shared),
 --- under the full name. One saved under the first name alone (1.0.2 and earlier) is renamed.
 --- nil while the game hasn't named the realm and none is remembered (Core.realm): nothing is
@@ -35,7 +67,7 @@ end
 function Scan.current()
     local _, class = UnitClass("player")
     local first, last = UnitName("player")
-    local name, realm = Core.playerName(first, last), Core.realm(ns.db, GetRealmName())
+    local name, realm = Core.playerName(first, last), Core.realm(ns.db, Scan.realmName())
     if not realm or realm == "" then return nil end
     local old = ns.db.characters[first .. "-" .. realm]
     if name ~= first and old then
@@ -58,11 +90,11 @@ local function linked(fullName)
     local name, realm = fullName:match("^([^-]+)-(.+)$")
     name = name or fullName
     -- The link's realm, or this character's; nothing is saved while neither is known (Scan.current).
-    realm = realm and Core.realmName(realm) or Core.realm(ns.db, GetRealmName())
+    realm = realm and Core.realmName(realm) or Core.realm(ns.db, Scan.realmName())
     if not realm or realm == "" then return nil end
     local first, last = UnitName("player")
     local own = Core.isOwnName(name, first, last) or name:sub(1, #first + 1) == first .. " "
-    if realm == Core.realm(ns.db, GetRealmName()) and own then
+    if realm == Core.realm(ns.db, Scan.realmName()) and own then
         if name ~= Core.playerName(first, last) then
             ns.db.characters[name .. "-" .. realm] = nil -- recorded as someone else's before
         end

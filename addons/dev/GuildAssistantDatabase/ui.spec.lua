@@ -1809,6 +1809,21 @@ it("lists a guildmate once when the client won't say which realm this is", funct
     eq(attunedOrder(ns), "Em tick | Luna tick | Ana - | Di ?", "Em once, not twice")
 end)
 
+it("lists a guildmate once even when no realm has ever been named", function()
+    local ns = loadAddon({ professionsAddon = true, guild = "Test Guild" })
+    attunementsDBWithEm()
+    -- A client that has never said which realm this is: nothing to go by anywhere, so the copy
+    -- saved without a realm is left out while the character is also saved with one.
+    GuildAssistantProfessionsDB.realm = nil
+    GuildAssistantProfessionsDB.characters["Em-"] = { name = "Em", realm = "", source = "guild",
+        guild = "Test Guild", professions = {}, attunements = { ony = true } }
+    _G.GetRealmName = function() return "" end
+    SlashCmdList.GADB("")
+    local parts = ns.UI.parts()
+    parts.tabs[3]:Click()
+    eq(attunedOrder(ns), "Em tick | Luna tick | Ana - | Di ?", "Em once, not twice")
+end)
+
 it("sorts the guildmates by the Name title or a raid's icon, one of the two at a time", function()
     local ns = loadAddon({ professionsAddon = true, guild = "Test Guild" })
     attunementsDBWithEm()

@@ -305,7 +305,7 @@ local function onCharacter(sender, payload)
     received.realm = Core.realmName(received.realm) -- from a guildmate's 1.0.2 or earlier
     -- This character as a guildmate still holds it from 1.0.2 and earlier (the first name alone):
     -- it is saved under the full name now, and the old name shouldn't come back.
-    if received.realm == Core.realm(ns.db, GetRealmName()) and received.name ~= Core.playerName(UnitName("player"))
+    if received.realm == Core.realm(ns.db, ns.Scan.realmName()) and received.name ~= Core.playerName(UnitName("player"))
         and Core.isOwnName(received.name, UnitName("player")) then
         return
     end

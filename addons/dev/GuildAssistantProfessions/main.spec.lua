@@ -496,5 +496,45 @@ it("saves nothing at all until some login names the realm", function()
     eq(GuildAssistantProfessionsDB.realm, "Test Realm", "and the realm is kept for the next login")
 end)
 
+it("folds in the copies 1.7.1 left behind, even on a client that names no realm at all", function()
+    local ns = loadAddon()
+    local saved = ns.Core.newDB() -- no `realm`: nothing has ever named one
+    saved.characters["Luna-Test Realm"] = { name = "Luna", realm = "Test Realm", class = "MAGE",
+        source = "own", guild = "Relic Hunters", updated = 1,
+        professions = { Mining = { rank = 32, max = 75, recipes = {} } } }
+    saved.characters["Luna-"] = { name = "Luna", realm = "", class = "MAGE", source = "own",
+        guild = "Relic Hunters", updated = 9, attunements = { ony = true }, professions = {} }
+    -- A guildmate's copy of this character under its first name alone (1.0.2's data), and one of
+    -- theirs saved without a realm.
+    saved.characters["Kael-"] = { name = "Kael", realm = "", source = "guild",
+        guild = "Relic Hunters", updated = 9, professions = {} }
+    _G.GuildAssistantProfessionsDB = saved
+    _G.GetRealmName = function() return "" end
+    _G.GetNormalizedRealmName, _G.UnitFullName, _G.GetAutoCompleteRealms = nil, nil, nil
+    fire("ADDON_LOADED", "GuildAssistantProfessions")
+    fire("PLAYER_LOGIN")
+    local keys = {}
+    for key in pairs(GuildAssistantProfessionsDB.characters) do keys[#keys + 1] = key end
+    table.sort(keys)
+    eq(table.concat(keys, ","), "Luna-Test Realm", "one entry of Luna, the guildmate's copy gone")
+    local luna = GuildAssistantProfessionsDB.characters["Luna-Test Realm"]
+    eq(luna.professions.Mining.rank, 32, "with what it had")
+    eq(luna.attunements.ony, true, "and what the other copy had looked at")
+    eq(said("something went wrong"), false, "no error")
+end)
+
+it("takes the realm from whichever of the client's functions answers", function()
+    loadAddon()
+    _G.GetRealmName = function() return "" end
+    _G.GetNormalizedRealmName = function() return "CAMWOWEU4Realm10RP" end
+    fire("ADDON_LOADED", "GuildAssistantProfessions")
+    fire("PLAYER_LOGIN")
+    eq(GuildAssistantProfessionsDB.realm, "RP", "the normalized name, read as its rule set")
+    eq(GuildAssistantProfessionsDB.characters["Luna-RP"] ~= nil, true, "the character keyed by it")
+    eq(GuildAssistantProfessionsDB.client.realms.GetNormalizedRealmName, "CAMWOWEU4Realm10RP",
+        "and what each function said is kept, to tell which one this client answers")
+    _G.GetNormalizedRealmName = nil
+end)
+
 print(("%d passed, %d failed"):format(passed, failed))
 if failed > 0 then error(failed .. " failed") end
