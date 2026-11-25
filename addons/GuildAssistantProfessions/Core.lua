@@ -139,6 +139,18 @@ function Core.mergeRealmless(db)
     return done
 end
 
+--- The realm to key `name` by: the one the game named (Core.realm) and, where it names none and
+--- none is remembered, the realm this character is already saved on. A client that says nothing
+--- still left the entries it saved when it did, and they say where this character is -- without
+--- which the addon would record nothing at all of a player whose client has gone quiet. nil for a
+--- character nothing knows yet.
+function Core.realmOf(db, named, name)
+    local realm = Core.realm(db, named)
+    if realm and realm ~= "" then return realm end
+    local key = twinOf(db, name)
+    return key and db.characters[key].realm or nil
+end
+
 --- Whether this entry's realm is really part of its own name, which 1.7.3 saved when it asked
 --- UnitFullName for the realm and WoW Forever's client answered with the character's last name:
 --- "Shivan Darkwhisp-Darkwhisp". No realm is a character's own last name, and names on a client

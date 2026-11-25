@@ -70,7 +70,8 @@ end
 function Scan.current()
     local _, class = UnitClass("player")
     local first, last = UnitName("player")
-    local name, realm = Core.playerName(first, last), Core.realm(ns.db, Scan.realmName())
+    local name = Core.playerName(first, last)
+    local realm = Core.realmOf(ns.db, Scan.realmName(), name)
     if not realm or realm == "" then return nil end
     local old = ns.db.characters[first .. "-" .. realm]
     if name ~= first and old then
@@ -93,11 +94,13 @@ local function linked(fullName)
     local name, realm = fullName:match("^([^-]+)-(.+)$")
     name = name or fullName
     -- The link's realm, or this character's; nothing is saved while neither is known (Scan.current).
-    realm = realm and Core.realmName(realm) or Core.realm(ns.db, Scan.realmName())
-    if not realm or realm == "" then return nil end
     local first, last = UnitName("player")
+    -- The link's realm, or the one this character is on; nothing is saved while neither is known.
+    local here = Core.realmOf(ns.db, Scan.realmName(), Core.playerName(first, last))
+    realm = realm and Core.realmName(realm) or here
+    if not realm or realm == "" then return nil end
     local own = Core.isOwnName(name, first, last) or name:sub(1, #first + 1) == first .. " "
-    if realm == Core.realm(ns.db, Scan.realmName()) and own then
+    if realm == here and own then
         if name ~= Core.playerName(first, last) then
             ns.db.characters[name .. "-" .. realm] = nil -- recorded as someone else's before
         end

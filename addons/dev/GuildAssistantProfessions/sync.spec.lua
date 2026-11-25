@@ -190,6 +190,40 @@ it("answers a newcomer once, not once per guildmate", function()
     eq(sentBy("Kael", "Luna") + sentBy("Sol", "Luna"), 1, "Luna sent by one of them")
 end)
 
+it("shares and passes on just the same when the client never names the realm", function()
+    reset()
+    -- WoW Forever's client has gone whole sessions without naming the realm. The characters saved
+    -- from the days it did say where they are, and nothing else changes.
+    local quiet = function(env) env.GetRealmName = function() return "" end end
+    local function saved(name)
+        return { characters = { [name .. "-Test Realm"] = { name = name, realm = "Test Realm",
+            class = "MAGE", source = "own", guild = "Relic Hunters", updated = clock - 100,
+            professions = {} } } }
+    end
+    local ana = player("Ana", "Relic Hunters", nil, saved("Ana"), quiet)
+    local bo = player("Bo", "Relic Hunters", nil, saved("Bo"), quiet)
+    local cai = player("Cai", "Relic Hunters", nil, saved("Cai"), quiet)
+    run(60)
+    eq(cai.ns.db.realm, nil, "no realm was ever named")
+    eq(cai.ns.Scan.current().realm, "Test Realm", "the character is keyed by the realm it is on")
+
+    -- Ana is away. Cai learns something, and Bo hears it.
+    ana.online = false
+    learn(cai, "Tailoring", 2387)
+    run(30)
+    eq(knows(bo, "Cai", "Tailoring", 2387), true, "Bo has it from Cai")
+    eq(knows(ana, "Cai", "Tailoring", 2387), false, "Ana was away")
+
+    -- Cai logs out, Ana comes back: Bo passes Cai's recipe on, though Cai is nowhere to be seen.
+    cai.online = false
+    ana.online = true
+    ana.ns.Sync.hello()
+    run(120)
+    eq(knows(ana, "Cai", "Tailoring", 2387), true, "Bo passed Cai's recipe to Ana")
+    eq(sentBy("Bo", "Cai"), 1, "once")
+    eq(sentBy("Cai", "Cai") > 0, true, "and Cai did share it in the first place")
+end)
+
 it("doesn't share with another guild, or outside one", function()
     reset()
     local luna = player("Luna", "Relic Hunters")

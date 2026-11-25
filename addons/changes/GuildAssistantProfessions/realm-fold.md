@@ -7,6 +7,9 @@ bump: patch
   without a realm now goes back into the character's own entry -- the entry of the same name that
   has a realm says which realm that is, so it works whatever the client says -- and keeps every
   profession, recipe and attunement either of them had.
+- **A character is still recorded and shared when the client names no realm at all**: the realm it
+  is already saved on is the one it keeps. Without that, a client gone quiet would record nothing
+  and share nothing with the guild.
 - **`/ga-prof status` says which realm your characters are keyed by** and what the client answered
   when asked, so a client that won't say is plain to see rather than something to guess at.
 - **A guildmate's old copy of your character under its first name alone** ("Shivan" where you are

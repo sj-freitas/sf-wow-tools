@@ -233,7 +233,8 @@ function Tooltip.show(tooltip, id, data)
     local interest = Core.recipeInterest(ns.db, {
         profession = profession, skill = found.skill or 0, key = key, specialization = specialization })
     -- Scan asks the client every way it has; without it (its tests), the plain one.
-    local realm = Core.realm(ns.db, ns.Scan and ns.Scan.realmName() or (GetRealmName and GetRealmName()))
+    local realm = Core.realmOf(ns.db, ns.Scan and ns.Scan.realmName() or (GetRealmName and GetRealmName()),
+        UnitName and Core.playerName(UnitName("player")) or "")
     local know = Core.recipeNames(interest.know, realm)
     local canUse = Core.recipeNames(interest.canUse, realm)
     if know then tooltip:AddLine(KNOW .. " " .. know, GREEN[1], GREEN[2], GREEN[3], true) end
@@ -329,7 +330,8 @@ function Tooltip.describe(link, say, lines)
     local interest = Core.recipeInterest(ns.db, { profession = profession, skill = found.skill or 0,
         key = key, specialization = specialization })
     -- Scan asks the client every way it has; without it (its tests), the plain one.
-    local realm = Core.realm(ns.db, ns.Scan and ns.Scan.realmName() or (GetRealmName and GetRealmName()))
+    local realm = Core.realmOf(ns.db, ns.Scan and ns.Scan.realmName() or (GetRealmName and GetRealmName()),
+        UnitName and Core.playerName(UnitName("player")) or "")
     local have, highest = 0, 0
     for _, character in pairs(ns.db.characters) do
         local theirs = character.source ~= "link" and character.professions[profession]
