@@ -1,5 +1,13 @@
 # GuildAssistant Database
 
+## 1.11.3
+
+- **Never the same guildmate twice**, even on a client that has never said which realm you are on:
+  a character GuildAssistant Professions saved without a realm is left out while that character is
+  also saved with one.
+- **Never an empty list** because the realm was read wrongly: a remembered realm is only used while
+  some character is actually on it.
+
 ## 1.11.2
 
 - **No guildmate listed twice** while the client hasn't said which realm you're on: the realm
