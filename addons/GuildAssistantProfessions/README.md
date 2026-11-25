@@ -182,6 +182,13 @@ set ("RP", "PvP"; the game's realm name also says which of its servers you're on
 10 RP", and that part is left out). Data from 1.0.2 and earlier, saved under the first name and the
 whole realm name, is renamed at login.
 
+That client doesn't always have the realm ready when you log in (it answers with nothing until the
+login is through), so the last realm it did name is kept in the saved data (`realm`) and used while
+it won't say. A character is never saved without one: it would be a second entry of a character
+already there, listed, shared with the guild and uploaded as if it were somebody else. The copies
+1.7.0 and 1.7.1 saved that way are folded back into the character they belong to at login, their
+professions merged; one of a guildmate's goes, since which character it is can't be known.
+
 Guild Assistant needs 1.0's dates (format 2): a file from an older version isn't imported, and the
 website asks you to update the addon.
 

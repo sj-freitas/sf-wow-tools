@@ -227,6 +227,9 @@ end
 local function onEvent(self, event, arg, ...)
     if event == "ADDON_LOADED" and arg == addonName then
         self:UnregisterEvent("ADDON_LOADED")
+        -- The realm before anything is keyed by it, and kept for the logins where the client
+        -- hasn't it ready (Core.realm).
+        Core.realm(db(), GetRealmName and GetRealmName())
         Core.migrate(db())
         Core.prune(db(), ns.now())
         -- What this client offers (not exported): to tell why a client records nothing.

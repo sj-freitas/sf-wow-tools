@@ -557,6 +557,77 @@ it("renames 1.0.2's entries: the realm to its rule set, keeping the newer of two
     eq(db.characters["Mira-RP"].updated, 9, "the newer Mira")
 end)
 
+it("keeps the realm the game named, and goes by it when the game won't say", function()
+    local db = Core.newDB()
+    eq(Core.realm(db, ""), nil, "no realm, and none named yet")
+    eq(Core.realm(db, "CAMWOW EU4 Realm 10 RP"), "RP", "the game's answer, as its rule set")
+    eq(db.realm, "RP", "kept in the saved data")
+    eq(Core.realm(db, ""), "RP", "a login where the client hasn't it ready")
+    eq(Core.realm(db, nil), "RP", "nor has the function")
+    eq(Core.realm(db, "Test Realm"), "Test Realm", "and it moves with the character")
+end)
+
+it("folds in a character saved without a realm, and forgets a guildmate's", function()
+    local db = Core.newDB()
+    db.realm = "RP"
+    db.characters["Shivan Bank-RP"] = { name = "Shivan Bank", realm = "RP", source = "own", updated = 5,
+        attunements = { ony = false }, professions = { Skinning = { rank = 3, max = 75, learned = 1,
+            updated = 5, recipes = recipes(1) } } }
+    -- The same character, saved again at a login the client hadn't named the realm at (1.7.1).
+    db.characters["Shivan Bank-"] = { name = "Shivan Bank", realm = "", source = "own", updated = 9,
+        attunements = { ony = true }, professions = { Skinning = { rank = 49, max = 75, learned = 1,
+            updated = 9, recipes = recipes(2) } } }
+    db.characters["Kael-"] = { name = "Kael", realm = "", source = "guild", guild = G, updated = 9,
+        professions = {} }
+    Core.migrate(db)
+    local keys = {}
+    for key in pairs(db.characters) do keys[#keys + 1] = key end
+    table.sort(keys)
+    eq(table.concat(keys, ","), "Shivan Bank-RP", "one entry of it, on the realm now known")
+    local bank = db.characters["Shivan Bank-RP"]
+    eq(bank.source, "own")
+    eq(bank.professions.Skinning.rank, 49, "the higher skill")
+    eq(bank.professions.Skinning.recipes["spell:1"], true, "what each copy knew")
+    eq(bank.professions.Skinning.recipes["spell:2"], true)
+    eq(bank.attunements.ony, true, "attuned, as the copy that looked saw it")
+end)
+
+it("renames one saved without a realm when the character has no other entry", function()
+    local db = Core.newDB()
+    db.realm = "RP"
+    db.characters["Shivan Bank-"] = { name = "Shivan Bank", realm = "", source = "own", updated = 9,
+        professions = {} }
+    Core.migrate(db)
+    eq(db.characters["Shivan Bank-"], nil, "the realmless entry is gone")
+    eq(db.characters["Shivan Bank-RP"].realm, "RP")
+end)
+
+it("leaves one of the account's own where it is while no realm has ever been named", function()
+    local db = Core.newDB()
+    db.characters["Luna-"] = { name = "Luna", realm = "", source = "own", updated = 9,
+        professions = { Mining = { rank = 32, max = 75, recipes = {} } } }
+    db.characters["Kael-"] = { name = "Kael", realm = "", source = "guild", guild = G, updated = 9,
+        professions = {} }
+    eq(Core.mergeRealmless(db), 1, "only the guildmate's goes")
+    eq(db.characters["Luna-"] ~= nil, true, "all that character has, kept until a realm is named")
+    db.realm = "RP"
+    eq(Core.mergeRealmless(db), 1, "folded in once it is")
+    eq(db.characters["Luna-RP"].professions.Mining.rank, 32)
+end)
+
+it("a character without a realm is neither shared nor exported, and one isn't taken from the guild", function()
+    local db = Core.newDB()
+    local nameless = { name = "Shivan Bank", realm = "", source = "own", guild = G, updated = 9,
+        professions = {} }
+    db.characters["Shivan Bank-"] = nameless
+    eq(Core.shareable(nameless, G), false, "not shared with the guild")
+    eq(Core.digest(db, G), "", "not in the summary either")
+    eq(#Core.exportData(db).characters, 0, "not in the export")
+    eq(Core.receive(db, G, { name = "Kael", realm = "", updated = 9, professions = {} }, 9), false,
+        "and one from a guildmate still on 1.7.1 isn't kept")
+    eq(db.characters["Kael-"], nil)
+end)
+
 it("saves this character under its full name on WoW Forever, renaming 1.0.2's entry", function()
     _G.UnitClass = function() return "Warrior", "WARRIOR" end
     _G.UnitName = function() return "Shivan", "Darkwhisp" end

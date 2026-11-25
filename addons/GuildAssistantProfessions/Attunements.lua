@@ -77,5 +77,6 @@ function Attunements.scan()
         end
     end
     if not next(states) then return false end
-    return Core.setAttunements(ns.Scan.current(), states, ns.now())
+    local character = ns.Scan.current()
+    return character ~= nil and Core.setAttunements(character, states, ns.now())
 end

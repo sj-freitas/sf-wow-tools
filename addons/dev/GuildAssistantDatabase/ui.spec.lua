@@ -1793,6 +1793,22 @@ local function attunementsDBWithEm()
         source = "guild", guild = "Test Guild", professions = {}, attunements = { ony = true } }
 end
 
+it("lists a guildmate once when the client won't say which realm this is", function()
+    local ns = loadAddon({ professionsAddon = true, guild = "Test Guild" })
+    attunementsDBWithEm()
+    -- WoW Forever's client answers "" while a login isn't through, and GuildAssistant Professions
+    -- 1.7.1 then saved a character it already had a second time, keyed without a realm. Both are
+    -- in the saved data; the realm it last named is too, and that is the one to go by.
+    GuildAssistantProfessionsDB.realm = "Test Realm"
+    GuildAssistantProfessionsDB.characters["Em-"] = { name = "Em", realm = "", source = "guild",
+        guild = "Test Guild", professions = {}, attunements = { ony = true } }
+    _G.GetRealmName = function() return "" end
+    SlashCmdList.GADB("")
+    local parts = ns.UI.parts()
+    parts.tabs[3]:Click()
+    eq(attunedOrder(ns), "Em tick | Luna tick | Ana - | Di ?", "Em once, not twice")
+end)
+
 it("sorts the guildmates by the Name title or a raid's icon, one of the two at a time", function()
     local ns = loadAddon({ professionsAddon = true, guild = "Test Guild" })
     attunementsDBWithEm()

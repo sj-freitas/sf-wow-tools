@@ -39,14 +39,20 @@ end
 --- This character as GuildAssistant Professions keys it ("Name-Realm").
 function Game.playerKey()
     local first, last = UnitName("player")
-    return Core.playerKey(first, last, GetRealmName and GetRealmName() or "")
+    return Core.playerKey(first, last, Game.realm() or "")
 end
 
 --- The realm this character is on, as GuildAssistant Professions saves it (Core.realmName). What
 --- the Database shows is of this realm: the saved data holds the whole account, every realm's
 --- characters together.
 function Game.realm()
-    return Core.realmName(GetRealmName and GetRealmName() or nil)
+    local realm = Core.realmName(GetRealmName and GetRealmName() or nil)
+    if realm and realm ~= "" then return realm end
+    -- WoW Forever's client says "" until a login is through, and with no realm to go by the whole
+    -- account's characters would be listed, the same character twice where an older GuildAssistant
+    -- Professions saved it under both. That addon keeps the last realm the game did name.
+    local db = Game.professionsDB()
+    return db and db.realm or realm
 end
 
 -- The skill list's headers for professions (localized by the game; English when it has none).

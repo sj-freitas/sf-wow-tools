@@ -232,7 +232,7 @@ function Tooltip.show(tooltip, id, data)
     end
     local interest = Core.recipeInterest(ns.db, {
         profession = profession, skill = found.skill or 0, key = key, specialization = specialization })
-    local realm = Core.realmName(GetRealmName and GetRealmName())
+    local realm = Core.realm(ns.db, GetRealmName and GetRealmName())
     local know = Core.recipeNames(interest.know, realm)
     local canUse = Core.recipeNames(interest.canUse, realm)
     if know then tooltip:AddLine(KNOW .. " " .. know, GREEN[1], GREEN[2], GREEN[3], true) end
@@ -327,7 +327,7 @@ function Tooltip.describe(link, say, lines)
     if specialization then say("  It requires " .. specialization .. ".") end
     local interest = Core.recipeInterest(ns.db, { profession = profession, skill = found.skill or 0,
         key = key, specialization = specialization })
-    local realm = Core.realmName(GetRealmName and GetRealmName())
+    local realm = Core.realm(ns.db, GetRealmName and GetRealmName())
     local have, highest = 0, 0
     for _, character in pairs(ns.db.characters) do
         local theirs = character.source ~= "link" and character.professions[profession]

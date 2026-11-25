@@ -20,8 +20,22 @@ function Core.realmName(realm)
     return realm and realm:match("Realm %d+ (.+)$") or realm
 end
 
---- Saved data from 1.0.2 and earlier: realms as the game named them, renamed (Core.realmName).
---- Two entries that become one keep the more recently updated.
+--- The realm this character is on: what the game answers (Core.realmName) when it has an answer,
+--- and otherwise the last realm it did name, kept in the saved data. WoW Forever's client says ""
+--- until a login is through, and a character keyed without a realm ("Shivan Bank-") is a second
+--- copy of one already saved -- listed, shared and exported as if it were somebody else. nil when
+--- the game has never named one (a first login on such a client).
+function Core.realm(db, named)
+    local realm = Core.realmName(named)
+    if realm and realm ~= "" then
+        db.realm = realm
+    end
+    return db.realm
+end
+
+--- Saved data from a version that keyed characters differently: realms as the game named them
+--- (1.0.2 and earlier, renamed by Core.realmName), and entries keyed without a realm at all
+--- (Core.mergeRealmless). Two entries that become one keep the more recently updated.
 function Core.migrate(db)
     local renamed = {}
     for key, character in pairs(db.characters) do
@@ -38,6 +52,43 @@ function Core.migrate(db)
             db.characters[newKey] = character
         end
     end
+    Core.mergeRealmless(db)
+end
+
+--- Characters keyed without a realm ("Shivan Bank-"), saved by 1.7.0 and 1.7.1 when the client
+--- hadn't named the realm yet at login: each is a second copy of a character already saved. One of
+--- this account's is folded into its own entry on the realm now known (its professions merged as a
+--- guildmate's copy is, the newer winning, and its attunements kept), or waits where it is while
+--- no realm has been named -- it is all that character has. A guildmate's goes: which character it
+--- is can't be known, and it comes again from them. Returns how many were folded in or dropped.
+function Core.mergeRealmless(db)
+    local realmless, done = {}, 0
+    for key, character in pairs(db.characters) do
+        if not character.realm or character.realm == "" then realmless[#realmless + 1] = key end
+    end
+    table.sort(realmless)
+    for _, key in ipairs(realmless) do
+        local character = db.characters[key]
+        local own = character.source == "own"
+        if own and db.realm and db.realm ~= "" then
+            db.characters[key] = nil
+            character.realm = db.realm
+            local newKey = character.name .. "-" .. db.realm
+            local other = db.characters[newKey]
+            if not other then
+                db.characters[newKey] = character
+            else
+                Core.receive(db, other.guild or character.guild, character, nil)
+                other.source = "own" -- this account's, whatever the entry it is folded into was
+                Core.setAttunements(other, character.attunements or {})
+            end
+            done = done + 1
+        elseif not own then
+            db.characters[key] = nil
+            done = done + 1
+        end
+    end
+    return done
 end
 
 --- This player's name from UnitName("player"): WoW Forever gives the last name as its second value
@@ -197,10 +248,21 @@ local function sortedKeys(map)
     return keys
 end
 
+-- The characters the export carries: Guild Assistant knows a character by its name and realm, so
+-- one saved without a realm is a copy of one that has it (Core.mergeRealmless), not a character.
+local function exportable(db)
+    local keys = {}
+    for _, key in ipairs(sortedKeys(db.characters)) do
+        local character = db.characters[key]
+        if character.realm and character.realm ~= "" then keys[#keys + 1] = key end
+    end
+    return keys
+end
+
 --- What Guild Assistant imports: every character with its professions, recipe ids sorted.
 function Core.exportData(db)
     local characters = {}
-    for _, key in ipairs(sortedKeys(db.characters)) do
+    for _, key in ipairs(exportable(db)) do
         local character = db.characters[key]
         local professions = {}
         for _, name in ipairs(sortedKeys(character.professions)) do
@@ -298,9 +360,11 @@ function Core.fromBase36(text)
 end
 
 --- A character shared with the guild: one of this account's in the guild, or one received from it.
---- Others seen through a profession link aren't shared (their own player's addon shares them).
+--- Others seen through a profession link aren't shared (their own player's addon shares them), and
+--- neither is one saved without a realm: a guildmate can't tell which character that is.
 function Core.shareable(character, guild)
     return guild ~= nil and character.guild == guild
+        and character.realm ~= nil and character.realm ~= ""
         and (character.source == "own" or character.source == "guild")
 end
 
@@ -408,6 +472,9 @@ end
 --- merge that holds more than what was received, so the guildmates who only have that still ask
 --- for it. Returns whether anything changed.
 function Core.receive(db, guild, received, now)
+    -- Without a realm there is no telling which character it is, and keeping it would be a second
+    -- entry of one already saved (Core.mergeRealmless). A guildmate on 1.7.1 still sends them.
+    if not received.realm or received.realm == "" then return false end
     local key = received.name .. "-" .. received.realm
     local current = db.characters[key]
     if not current then

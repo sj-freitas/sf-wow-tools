@@ -463,5 +463,38 @@ it("records nothing of attunements on a client that can't say whether a quest is
     eq(GuildAssistantProfessionsDB.characters["Luna-Test Realm"].attunements, nil, "nothing recorded")
 end)
 
+it("saves no second character at a login the client hasn't named the realm at", function()
+    local ns = loadAddon()
+    -- This character as an earlier session saved it, with the realm the game named then.
+    local saved = ns.Core.newDB()
+    saved.realm = "Test Realm"
+    saved.characters["Luna-Test Realm"] = { name = "Luna", realm = "Test Realm", class = "MAGE",
+        source = "own", updated = 1, professions = { Mining = { rank = 32, max = 75, recipes = {} } } }
+    _G.GuildAssistantProfessionsDB = saved
+    _G.GetRealmName = function() return "" end -- WoW Forever's client, a login not yet through
+    fire("ADDON_LOADED", "GuildAssistantProfessions")
+    fire("PLAYER_LOGIN")
+    local keys = {}
+    for key in pairs(GuildAssistantProfessionsDB.characters) do keys[#keys + 1] = key end
+    eq(table.concat(keys, ","), "Luna-Test Realm", "the entry it already had, not a second one")
+    eq(GuildAssistantProfessionsDB.characters["Luna-Test Realm"].professions.Mining.rank, 32,
+        "with what it had")
+    eq(said("something went wrong"), false, "no error")
+end)
+
+it("saves nothing at all until some login names the realm", function()
+    loadAddon()
+    local realm = ""
+    _G.GetRealmName = function() return realm end
+    fire("ADDON_LOADED", "GuildAssistantProfessions")
+    fire("PLAYER_LOGIN")
+    eq(next(GuildAssistantProfessionsDB.characters), nil, "no character keyed without a realm")
+    eq(said("something went wrong"), false, "no error")
+    realm = "Test Realm"
+    fire("PLAYER_LOGIN")
+    eq(GuildAssistantProfessionsDB.characters["Luna-Test Realm"] ~= nil, true, "saved once it is named")
+    eq(GuildAssistantProfessionsDB.realm, "Test Realm", "and the realm is kept for the next login")
+end)
+
 print(("%d passed, %d failed"):format(passed, failed))
 if failed > 0 then error(failed .. " failed") end

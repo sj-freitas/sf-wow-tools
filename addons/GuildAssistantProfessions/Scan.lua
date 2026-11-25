@@ -29,10 +29,14 @@ end
 
 --- This character's saved entry (with its guild: only characters of the same guild are shared),
 --- under the full name. One saved under the first name alone (1.0.2 and earlier) is renamed.
+--- nil while the game hasn't named the realm and none is remembered (Core.realm): nothing is
+--- saved, rather than a second entry of this character keyed without one. Whatever asked comes
+--- back for it -- the login reads again a few seconds later (Main.lua), a window when it opens.
 function Scan.current()
     local _, class = UnitClass("player")
     local first, last = UnitName("player")
-    local name, realm = Core.playerName(first, last), Core.realmName(GetRealmName())
+    local name, realm = Core.playerName(first, last), Core.realm(ns.db, GetRealmName())
+    if not realm or realm == "" then return nil end
     local old = ns.db.characters[first .. "-" .. realm]
     if name ~= first and old then
         ns.db.characters[first .. "-" .. realm] = nil
@@ -52,10 +56,13 @@ end
 --- (full name, or the first name followed by any last name) is this character, not someone else.
 local function linked(fullName)
     local name, realm = fullName:match("^([^-]+)-(.+)$")
-    name, realm = name or fullName, Core.realmName(realm or GetRealmName())
+    name = name or fullName
+    -- The link's realm, or this character's; nothing is saved while neither is known (Scan.current).
+    realm = realm and Core.realmName(realm) or Core.realm(ns.db, GetRealmName())
+    if not realm or realm == "" then return nil end
     local first, last = UnitName("player")
     local own = Core.isOwnName(name, first, last) or name:sub(1, #first + 1) == first .. " "
-    if realm == Core.realmName(GetRealmName()) and own then
+    if realm == Core.realm(ns.db, GetRealmName()) and own then
         if name ~= Core.playerName(first, last) then
             ns.db.characters[name .. "-" .. realm] = nil -- recorded as someone else's before
         end
@@ -114,7 +121,9 @@ function Scan.skills()
     else
         return false
     end
-    local changed, dropped = Core.setProfessions(Scan.current(), skills, ns.now())
+    local character = Scan.current()
+    if not character then return false end
+    local changed, dropped = Core.setProfessions(character, skills, ns.now())
     for _, name in ipairs(dropped) do
         Scan.say("%s was unlearned: dropped from what is saved. Type /ga-prof save to write it to the file (it reloads the screen).", name)
     end
@@ -133,7 +142,8 @@ end
 --- game answers with none until it has them ready, and a character whose professions were never
 --- read keeps none of them.
 function Scan.hasProfessions()
-    return next(Scan.current().professions) ~= nil
+    local character = Scan.current()
+    return character ~= nil and next(character.professions) ~= nil
 end
 
 --- Records the recipes this character knows of each of its professions, no window needed: each
@@ -143,6 +153,7 @@ end
 function Scan.knownRecipes()
     if not Scan.knowsWithoutWindow() then return false end
     local character = Scan.current()
+    if not character then return false end
     local changed = false
     local specializations = ns.Recipes.specializations or {}
     for name in pairs(character.professions) do
