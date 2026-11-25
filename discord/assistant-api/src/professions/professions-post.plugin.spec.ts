@@ -37,6 +37,9 @@ const crafters: Record<string, Crafter> = {
 const crafterOf = (id: string): Crafter => crafters[id] ?? { name: id, profile: null };
 const shivan = '[Shivan Nightpath](<https://guildassistant.app/api/public/discord/users/123>)';
 
+/** When the list last changed, as the tests fix it. */
+const CHANGED = new Date('2026-11-25T01:00:00.000Z');
+
 describe('professionsMessages', () => {
   it('lists each profession with its recipes like game item links, and their crafters’ links', () => {
     const messages = professionsMessages(
@@ -46,13 +49,19 @@ describe('professionsMessages', () => {
         recipe('Cooking', 2538, null, ['b']),
       ],
       crafterOf,
-      listIntro('https://guildassistant.app/forever/eu/firemaw/guilds/relic-hunters/professions'),
+      listIntro(
+        'https://guildassistant.app/forever/eu/firemaw/guilds/relic-hunters/professions',
+        CHANGED,
+      ),
     );
     assert.deepEqual(messages, [
       [
         '# Profession Data',
         'This list updates by itself. Add your professions on [Guild Assistant](<https://guildassistant.app/forever/eu/firemaw/guilds/relic-hunters/professions>) (Import professions).',
         'Find who can craft something with `/crafter <recipe name>` anywhere on Discord, or with Discord’s search.',
+        // When it last changed, which Discord shows as "2 hours ago" in each reader's own client:
+        // the messages are edited in place, so the channel itself keeps the day it was first posted.
+        `-# Last change: <t:${CHANGED.getTime() / 1000}:R>`,
         '',
         '## Blacksmithing',
         // Escaped brackets: Discord shows "[Copper Rod]" as the link, like the game's item links.
@@ -181,7 +190,8 @@ describe('ProfessionsPostPlugin', () => {
     const plugin = new ProfessionsPostPlugin(new PluginKindRegistry(), guildRecipes, prisma, {
       get: () => undefined,
     } as unknown as ConfigService);
-    const context = { bot, guildId: 'g1', serverIds: ['s1'], clock: Date.now } as PluginContext;
+    let now = CHANGED.getTime();
+    const context = { bot, guildId: 'g1', serverIds: ['s1'], clock: () => now } as PluginContext;
     const run = (state: Record<string, unknown>) =>
       plugin.def.run(
         {
@@ -192,7 +202,7 @@ describe('ProfessionsPostPlugin', () => {
         context,
         Date.now() + 60_000,
       );
-    return { run, plugin, posted, edited, deleted, gone };
+    return { run, plugin, posted, edited, deleted, gone, later: (ms: number) => (now += ms) };
   }
 
   const rod = recipe('Blacksmithing', 1245287, 'Copper Rod', ['a']);
@@ -223,6 +233,17 @@ describe('ProfessionsPostPlugin', () => {
     assert.deepEqual(deleted, []);
   });
 
+  it('says when the list last changed, and a later check alone is not a change', async () => {
+    const { run, posted, edited, later } = setup([rod]);
+    const first = await run({});
+    assert.match(posted[0].content, /\n-# Last change: <t:\d+:R>/);
+    // An edit leaves a Discord message with the day it was first posted, so this line is the only
+    // thing in the channel saying the list is current — and it mustn't count as a change itself.
+    later(3 * 60 * 60 * 1000);
+    assert.equal((await run(first.state)).result, 'No changes.');
+    assert.deepEqual(edited, []);
+  });
+
   it('"Run now" posts the list again even when nothing changed', async () => {
     const { run, plugin, posted, deleted } = setup([rod]);
     const first = await run({});
@@ -234,7 +255,11 @@ describe('ProfessionsPostPlugin', () => {
   });
 
   it('edits its messages in place when the list changed and still fits, dropping spare ones', async () => {
-    const { run, posted, edited, deleted } = setup([rod, recipe('Cooking', 2538, 'Bread', ['b'])]);
+    const { run, posted, edited, deleted, later } = setup([
+      rod,
+      recipe('Cooking', 2538, 'Bread', ['b']),
+    ]);
+    later(60_000);
     const outcome = await run({ hash: 'old', messageIds: ['old1', 'old2'] });
     // Nothing new in the channel: the first message now holds the list, the second goes.
     assert.deepEqual(
@@ -242,6 +267,11 @@ describe('ProfessionsPostPlugin', () => {
       ['old1'],
     );
     assert.match(edited[0].content, /Bread/);
+    assert.match(
+      edited[0].content,
+      new RegExp(`-# Last change: <t:${CHANGED.getTime() / 1000 + 60}:R>`),
+      'the line moves with the change it was edited for',
+    );
     assert.deepEqual(deleted, ['old2']);
     assert.equal(posted.length, 0);
     assert.deepEqual(outcome.state.messageIds, ['old1']);

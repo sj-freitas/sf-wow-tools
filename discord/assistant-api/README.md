@@ -1189,7 +1189,13 @@ on logout). Blizzard's Classic Era / SoD API has no professions, hence the addon
   import, it hashes the messages: unchanged, nothing happens, and the run stays out of the plugin's
   history (`quiet`); changed, it edits its messages in place (their ids are in its state; spare
   ones are deleted), so the list keeps its place and nothing shows as new, or, when it needs more
-  messages than it has (or one was deleted by hand), deletes them and posts the list again. **Run now** always posts it again, changed or not (the kind's
+  messages than it has (or one was deleted by hand), deletes them and posts the list again.
+  The intro's last line says **when the list last changed** (`-# Last change: <t:…:R>`, which each
+  reader's Discord shows as "3 hours ago"): an edited message keeps the day it was first posted, so
+  without it the channel looks untouched however current the list is. That line is left out of the
+  hash — it differs at every check — and a `LAYOUT` number in the hash brings a list already posted
+  up to a new layout at the next check, rather than leaving it as it was until its professions
+  change. **Run now** always posts it again, changed or not (the kind's
   `onRunNow` marks its next run `force`). A post that fails half way is taken back, so the retry
   starts clean.
   Mentions never ping.

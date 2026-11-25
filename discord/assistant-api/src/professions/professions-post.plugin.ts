@@ -39,12 +39,24 @@ export interface Crafter {
   profile: string | null;
 }
 
-/** What the list starts with: what it is, where to add to it, and /crafter. */
-export const listIntro = (professionsUrl: string): string =>
+/**
+ * What the line saying when the list last changed starts with. It is left out of the hash below:
+ * the list is edited in place, so the channel keeps the day it was first posted whatever happens,
+ * and this line is the only thing in it that says the list is current. Counting it as part of the
+ * list would make every check a change.
+ */
+const CHANGED_AT = '-# Last change: ';
+
+/** When the list last changed, as Discord shows it: "3 hours ago" in each reader's own client. */
+const changedAtLine = (at: Date): string => `${CHANGED_AT}<t:${Math.floor(at.getTime() / 1000)}:R>`;
+
+/** What the list starts with: what it is, where to add to it, /crafter, and when it last changed. */
+export const listIntro = (professionsUrl: string, changedAt: Date): string =>
   [
     '# Profession Data',
     `This list updates by itself. Add your professions on [Guild Assistant](<${professionsUrl}>) (Import professions).`,
     'Find who can craft something with `/crafter <recipe name>` anywhere on Discord, or with Discord’s search.',
+    changedAtLine(changedAt),
   ].join('\n');
 
 /**
@@ -105,17 +117,40 @@ export function professionsMessages(
   return messages;
 }
 
-/** Identifies what was posted: the same professions give the same hash. */
+/**
+ * Bumped when the list's layout changes in a way the hash wouldn't otherwise see, so that a list
+ * already posted is brought up to it at the next check instead of staying as it was until its
+ * professions change. 2: the line saying when it last changed.
+ */
+const LAYOUT = 2;
+
+/**
+ * Identifies what was posted: the same professions give the same hash. Everything but the line
+ * saying when the list last changed counts, that one being different at every check.
+ */
 export const hashMessages = (messages: readonly string[]): string =>
-  createHash('sha256').update(messages.join('\u0000')).digest('hex');
+  createHash('sha256')
+    .update(`layout ${LAYOUT}\u0000`)
+    .update(
+      messages
+        .map((message) =>
+          message
+            .split('\n')
+            .filter((line) => !line.startsWith(CHANGED_AT))
+            .join('\n'),
+        )
+        .join('\u0000'),
+    )
+    .digest('hex');
 
 /**
  * Professions List, a plugin kind of professions: posts the guild's professions (what it can
  * craft, and who) in a channel, over as many messages as it takes. On its schedule, and soon after
  * someone imports professions, it checks whether the list changed (a hash of the messages); if it
  * did, it edits its messages in place (or, when it needs more of them, deletes them and posts
- * the list again). Registered from here, not in
- * `src/plugins`, so professions stay removable on their own.
+ * the list again) and its intro says when that was. An edit leaves a Discord message with the day
+ * it was first posted, so that line is the only thing in the channel saying the list is current.
+ * Registered from here, not in `src/plugins`, so professions stay removable on their own.
  */
 @Injectable()
 export class ProfessionsPostPlugin implements OnModuleInit {
@@ -182,7 +217,7 @@ export class ProfessionsPostPlugin implements OnModuleInit {
               : null,
           };
         },
-        listIntro(professionsUrl),
+        listIntro(professionsUrl, new Date(context.clock())),
         // A recipe's crafters on the website: /professions/<spell id>/crafters.
         (recipe) => `${professionsUrl}/${recipe.id}/crafters`,
       );
