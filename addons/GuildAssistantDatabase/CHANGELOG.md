@@ -1,5 +1,13 @@
 # GuildAssistant Database
 
+## 1.11.2
+
+- **No guildmate listed twice** while the client hasn't said which realm you're on: the realm
+  GuildAssistant Professions last recorded is used, instead of falling back to every realm's
+  characters at once.
+- Recipe data from the game's build 1.60.1.71037.
+- What players found of how recipes are obtained, up to date.
+
 ## 1.11.1
 
 - **Only the realm you are on.** The Guild and Attunements tabs, what a guildmate can make and who

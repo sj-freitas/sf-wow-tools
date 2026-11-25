@@ -1,7 +1,7 @@
 ## Interface: 16001
 ## Title: GuildAssistant Database
 ## Notes: Every profession's recipes, searchable by name, stat, slot, reagent or specialization, filtered by armor type, slot or binds on pickup and sorted by skill or level: what they need, how to learn them, and who can craft them; and your guild's professions, specializations and raid attunements (with GuildAssistant Professions). /gadb
-## Version: 1.11.1
+## Version: 1.11.2
 ## Author: Sérgio Freitas
 ## X-License: MIT
 ## X-Curse-Project-ID: 1798408
