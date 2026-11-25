@@ -557,6 +557,36 @@ it("renames 1.0.2's entries: the realm to its rule set, keeping the newer of two
     eq(db.characters["Mira-RP"].updated, 9, "the newer Mira")
 end)
 
+it("keys a WoW Forever character by its two names and its rule set, hyphen and all", function()
+    -- The game names the server and its rule set; the rule set is the realm, one of PVP, RP,
+    -- RP-PVP, Normal and Hardcore. A character is "<first> <last>", so the only hyphen in the key
+    -- is the one between the name and the realm.
+    for _, set in ipairs({ "PVP", "PvP", "RP", "RP-PVP", "Normal", "Hardcore" }) do
+        eq(Core.realmName("CAMWOW EU4 Realm 10 " .. set), set, "rule set " .. set)
+    end
+    local db = Core.newDB()
+    eq(Core.realm(db, "CAMWOW EU4 Realm 10 RP-PVP"), "RP-PVP", "the realm remembered")
+    local shivan = Core.character(db, "Shivan Darkwhisp", "RP-PVP", "WARRIOR", "own")
+    shivan.guild, shivan.updated = G, 100
+    -- The key holds together everywhere it is taken apart again: the guild summary, a character
+    -- sent to the guild, and the export.
+    eq(Core.digest(db, G), "Shivan Darkwhisp-RP-PVP=2s", "the summary")
+    eq(Core.parseDigest(Core.digest(db, G))["Shivan Darkwhisp-RP-PVP"], 100, "read back")
+    local sent = Core.decodeCharacter(Core.encodeCharacter(shivan))
+    eq(sent.name .. "|" .. sent.realm, "Shivan Darkwhisp|RP-PVP", "sent to the guild and read back")
+    local theirs = Core.newDB()
+    Core.receive(theirs, G, sent, 100)
+    eq(theirs.characters["Shivan Darkwhisp-RP-PVP"] ~= nil, true, "kept under the one key")
+    eq(Core.exportData(db).characters[1].realm, "RP-PVP", "exported as its rule set")
+    -- And a stray copy saved without a realm folds into it, not beside it.
+    db.characters["Shivan Darkwhisp-"] = { name = "Shivan Darkwhisp", realm = "", source = "own",
+        updated = 200, professions = {} }
+    Core.migrate(db)
+    local keys = {}
+    for key in pairs(db.characters) do keys[#keys + 1] = key end
+    eq(table.concat(keys, ","), "Shivan Darkwhisp-RP-PVP", "one entry of it")
+end)
+
 it("keeps the realm the game named, and goes by it when the game won't say", function()
     local db = Core.newDB()
     eq(Core.realm(db, ""), nil, "no realm, and none named yet")
