@@ -15,6 +15,8 @@ export class DiscordApiError extends UnauthorizedException {
   constructor(
     readonly discordStatus: number,
     message: string,
+    /** How long Discord asked us to wait (its `Retry-After`), when it said so. */
+    readonly retryAfterMs?: number,
   ) {
     super(message);
   }
@@ -194,11 +196,25 @@ export class DiscordOAuthService {
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });
     if (!response.ok) {
+      // Name the route and the status: every caller wraps this, so the message is all the log has
+      // to go on. On a 429 Discord also says how long to wait, which decides what we do next.
+      const retryAfterMs = readRetryAfterMs(response.headers.get('retry-after'));
       throw new DiscordApiError(
         response.status,
-        `Discord request ${path} failed (${response.status})`,
+        `Discord request ${path} failed (${response.status})` +
+          (retryAfterMs === undefined ? '' : `, retry after ${retryAfterMs}ms`),
+        retryAfterMs,
       );
     }
     return (await response.json()) as T;
   }
+}
+
+/** Discord's `Retry-After` in milliseconds; it sends seconds, fractional on a 429. */
+function readRetryAfterMs(header: string | null): number | undefined {
+  if (!header) {
+    return undefined;
+  }
+  const seconds = Number(header);
+  return Number.isFinite(seconds) && seconds >= 0 ? Math.round(seconds * 1000) : undefined;
 }

@@ -18,6 +18,23 @@ const REAUTH_MESSAGE = 'Your Discord authorization expired. Please log out and l
 
 const hashToken = (token: string): string => createHash('sha256').update(token).digest('hex');
 
+/**
+ * What actually went wrong, in one line fit for the log: the error's own name and message, then
+ * the chain of causes under it. Both layers matter here: `fetch` reports every network failure as
+ * `TypeError: fetch failed` and keeps the real reason (DNS, a reset connection, our timeout) in
+ * `cause`, and a Discord failure reaches the log wrapped in the Bad Gateway we answer with.
+ */
+export function describeError(error: unknown, depth = 3): string {
+  if (!(error instanceof Error)) {
+    return String(error);
+  }
+  const line = `${error.name}: ${error.message}`;
+  if (depth === 0 || error.cause === undefined || error.cause === null) {
+    return line;
+  }
+  return `${line} <- ${describeError(error.cause, depth - 1)}`;
+}
+
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
@@ -57,7 +74,7 @@ export class AuthService {
     } catch (error) {
       // A hiccup at Discord must not lock people out: they keep the access they had, and the
       // next request re-syncs.
-      this.logger.warn(`Could not sync Discord data at login: ${String(error)}`);
+      this.logger.warn(`Could not sync Discord data at login: ${describeError(error)}`);
     }
 
     await this.prisma.session.deleteMany({ where: { expiresAt: { lt: new Date() } } });
@@ -116,7 +133,12 @@ export class AuthService {
         await this.endSession(session.id);
         throw new UnauthorizedException(REAUTH_MESSAGE);
       }
-      throw new BadGatewayException('Could not reach Discord. Try again in a moment.');
+      // The caller logs the cause (a status from Discord, a timeout, a DNS failure); the user
+      // only ever sees the message. `description` keeps the response body as it was.
+      throw new BadGatewayException('Could not reach Discord. Try again in a moment.', {
+        cause: error,
+        description: 'Bad Gateway',
+      });
     }
     await this.prisma.session.update({
       where: { id: session.id },
@@ -136,7 +158,7 @@ export class AuthService {
       if (error instanceof UnauthorizedException) {
         throw error;
       }
-      this.logger.warn(`Discord re-sync failed: ${String(error)}`);
+      this.logger.warn(`Discord re-sync failed: ${describeError(error)}`);
       await this.prisma.session.updateMany({
         where: { tokenHash: hashToken(sessionToken) },
         data: { discordSyncedAt: new Date() },

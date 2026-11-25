@@ -1,11 +1,11 @@
 import assert from 'node:assert/strict';
-import { beforeEach, describe, it } from 'node:test';
-import { BadGatewayException, UnauthorizedException } from '@nestjs/common';
+import { beforeEach, describe, it, mock } from 'node:test';
+import { BadGatewayException, Logger, UnauthorizedException } from '@nestjs/common';
 import type { ConfigService } from '@nestjs/config';
 import { createHash } from 'node:crypto';
 import { APP_CONFIG } from '../config/app.config';
 import type { PrismaService } from '../database/prisma.service';
-import { AuthService } from './auth.service';
+import { AuthService, describeError } from './auth.service';
 import { DiscordApiError, type DiscordOAuthService } from './discord-oauth.service';
 import { TokenCrypto } from './token-crypto';
 
@@ -288,6 +288,37 @@ describe('AuthService.refresh', () => {
       assert.deepEqual(deletedSessions, []);
     });
 
+    it('answers with the same message but keeps what Discord said as the cause', async () => {
+      const discordFailure = new DiscordApiError(429, 'Discord request /users/@me/guilds failed');
+      failWith = discordFailure;
+      await assert.rejects(service.refresh(SESSION_TOKEN, { force: false }), (error: unknown) => {
+        assert.ok(error instanceof BadGatewayException);
+        assert.equal(error.message, 'Could not reach Discord. Try again in a moment.');
+        assert.deepEqual(error.getResponse(), {
+          message: 'Could not reach Discord. Try again in a moment.',
+          error: 'Bad Gateway',
+          statusCode: 502,
+        });
+        assert.equal(error.cause, discordFailure);
+        return true;
+      });
+    });
+
+    it('logs what Discord answered, not just that it was unreachable', async () => {
+      failWith = new DiscordApiError(429, 'Discord request /users/@me/guilds failed (429)');
+      const warnings: string[] = [];
+      const warn = mock.method(Logger.prototype, 'warn', (message: unknown) => {
+        warnings.push(String(message));
+      });
+      try {
+        await service.refreshIfStale(SESSION_TOKEN);
+      } finally {
+        warn.mock.restore();
+      }
+      assert.equal(warnings.length, 1);
+      assert.match(warnings[0], /Discord request \/users\/@me\/guilds failed \(429\)/);
+    });
+
     it('refreshIfStale swallows temporary Discord failures but rethrows a dead session', async () => {
       failWith = new DiscordApiError(500, 'boom');
       await service.refreshIfStale(SESSION_TOKEN);
@@ -299,5 +330,34 @@ describe('AuthService.refresh', () => {
     it('rejects sessions that do not exist', async () => {
       await assert.rejects(service.refresh('unknown', { force: false }), UnauthorizedException);
     });
+  });
+});
+
+describe('describeError', () => {
+  it('names a Discord failure by the route and status in its message', () => {
+    const error = new DiscordApiError(429, 'Discord request /users/@me/guilds failed (429)');
+    assert.equal(
+      describeError(error),
+      'DiscordApiError: Discord request /users/@me/guilds failed (429)',
+    );
+  });
+
+  it('unwraps the cause a network failure hides behind "fetch failed"', () => {
+    const error = new TypeError('fetch failed', {
+      cause: new Error('getaddrinfo EAI_AGAIN discord.com'),
+    });
+    assert.equal(
+      describeError(error),
+      'TypeError: fetch failed <- Error: getaddrinfo EAI_AGAIN discord.com',
+    );
+  });
+
+  it('names a timed-out call', () => {
+    const error = new DOMException('The operation was aborted due to timeout', 'TimeoutError');
+    assert.equal(describeError(error), 'TimeoutError: The operation was aborted due to timeout');
+  });
+
+  it('survives anything that is not an error', () => {
+    assert.equal(describeError('plain string'), 'plain string');
   });
 });
