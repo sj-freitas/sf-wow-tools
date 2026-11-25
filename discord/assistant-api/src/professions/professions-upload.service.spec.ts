@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import type { DiscordOAuthService } from '../auth/discord-oauth.service';
+import { Logger } from '@nestjs/common';
+import { DiscordApiError, type DiscordOAuthService } from '../auth/discord-oauth.service';
 import type { PrismaService } from '../database/prisma.service';
 import { ProfessionsUploadService } from './professions-upload.service';
 import type { ProfessionsService } from './professions.service';
@@ -10,9 +11,9 @@ const EXPORT = JSON.stringify({ addon: 'GuildAssistantProfessions', format: 2, c
 
 /**
  * The player can see three guilds: Zeta (still on its server), Alpha (on the second of its two)
- * and Gone (left its server since their last login).
+ * and Gone (left its server since their last login). `unreachable`: Discord answers nothing at all.
  */
-function setup() {
+function setup(unreachable = false) {
   const prisma = {
     guildAccess: {
       findMany: async ({ where }: { where: { userId: string } }) =>
@@ -33,8 +34,10 @@ function setup() {
   } as unknown as PrismaService;
   const discord = {
     fetchServerMember: async (serverId: string, userId: string) => {
+      if (unreachable) throw new Error('The operation was aborted due to timeout');
+      // What Discord answers for someone who isn't in the server.
       if (userId !== '150' || serverId === 's-gone' || serverId === 's-old') {
-        throw new Error('Unknown Member');
+        throw new DiscordApiError(404, 'Unknown Member');
       }
       return { user: { username: 'shivan' } };
     },
@@ -47,6 +50,15 @@ function setup() {
     },
   } as unknown as ProfessionsService;
   return { uploads: new ProfessionsUploadService(prisma, discord, professions), imports };
+}
+
+/** Quiet: an upload Discord couldn't be asked about warns, and the tests needn't print it. */
+function withoutWarnings<T>(run: () => Promise<T>): Promise<T> {
+  const warn = Logger.prototype.warn;
+  Logger.prototype.warn = () => undefined;
+  return run().finally(() => {
+    Logger.prototype.warn = warn;
+  });
 }
 
 describe('ProfessionsUploadService', () => {
@@ -75,6 +87,22 @@ describe('ProfessionsUploadService', () => {
         ['Alpha', 'In g-alpha'],
         ['Zeta', 'In g-zeta'],
       ],
+    );
+  });
+
+  it('still uploads when Discord says nothing about where the player is', async () => {
+    const { uploads, imports } = setup(true);
+    const result = await withoutWarnings(() => uploads.upload(USER, EXPORT));
+    // Only Discord saying plainly that they aren't in a server keeps an upload out of that guild.
+    // Dropping them all when Discord can't be reached would import into no guild at all, which the
+    // uploader is told was a successful upload.
+    assert.deepEqual(
+      imports.map((i) => i.guildId),
+      ['g-alpha', 'g-gone', 'g-zeta'],
+    );
+    assert.deepEqual(
+      result.guilds.map((g) => g.name),
+      ['Alpha', 'Gone', 'Zeta'],
     );
   });
 

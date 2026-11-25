@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { DiscordOAuthService } from '../auth/discord-oauth.service';
+import { Injectable, Logger } from '@nestjs/common';
+import { DiscordApiError, DiscordOAuthService } from '../auth/discord-oauth.service';
 import { PrismaService } from '../database/prisma.service';
 import { parseProfessionExport } from './profession-export';
 import { ProfessionsService, type ImportResultDto } from './professions.service';
@@ -28,6 +28,8 @@ export interface UploadResultDto {
  */
 @Injectable()
 export class ProfessionsUploadService {
+  private readonly logger = new Logger(ProfessionsUploadService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly discord: DiscordOAuthService,
@@ -53,9 +55,25 @@ export class ProfessionsUploadService {
             this.discord.fetchServerMember(server.discordId, user.discordId),
           ),
         );
-        return lookups.some((lookup) => lookup.status === 'fulfilled')
-          ? { id: guild.id, name: guild.name }
-          : null;
+        if (lookups.some((lookup) => lookup.status === 'fulfilled')) {
+          return { id: guild.id, name: guild.name };
+        }
+        // Discord saying plainly they aren't in any of the servers (or that it won't look) is
+        // someone who left: nothing more of theirs goes there.
+        const left = lookups.every(
+          (lookup) =>
+            lookup.status === 'rejected' &&
+            lookup.reason instanceof DiscordApiError &&
+            (lookup.reason.discordStatus === 404 || lookup.reason.discordStatus === 403),
+        );
+        if (left) return null;
+        // Discord couldn't be reached, or wouldn't answer in time. Their access here was granted at
+        // their last login, so the upload goes in rather than being quietly imported into no guild
+        // at all — which the uploader would have remembered as a successful upload.
+        this.logger.warn(
+          `Discord wouldn't say whether this player is still in ${guild.name}: uploading anyway`,
+        );
+        return { id: guild.id, name: guild.name };
       }),
     );
     return stillIn

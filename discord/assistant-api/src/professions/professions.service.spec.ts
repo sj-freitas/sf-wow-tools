@@ -40,6 +40,35 @@ function setup(member = true, officer = false) {
   const postedSoon: string[] = [];
   // What each import gave RecipeSourcesService.
   const recordedSources: unknown[] = [];
+  /** A fake query's `where`, as the service writes them. */
+  type Where = Record<string, unknown> | undefined;
+  /** Whether `where.characterId` (an id, or an `{ in: [...] }` list) covers `id`. */
+  const forCharacter = (where: Where, id: string): boolean => {
+    const value = where?.characterId;
+    if (value === undefined) return true;
+    if (typeof value === 'string') return value === id;
+    const list = (value as { in?: unknown }).in;
+    return Array.isArray(list) ? (list as string[]).includes(id) : true;
+  };
+  /**
+   * Whether a `where` hits a row: either an `OR` of `{ characterId, name | key }` pairs (how an
+   * import writes several characters at once) or one character, with or without the name.
+   */
+  const hits = (where: Where, row: Record<string, unknown>, field: 'name' | 'key'): boolean => {
+    const or = where?.OR;
+    if (Array.isArray(or)) {
+      return (or as Record<string, unknown>[]).some(
+        (pair) => pair.characterId === row.characterId && pair[field] === row[field],
+      );
+    }
+    if (!forCharacter(where, row.characterId as string)) return false;
+    const wanted = where?.[field];
+    if (wanted === undefined) return true;
+    if (typeof wanted === 'string') return wanted === row[field];
+    const list = (wanted as { in?: unknown }).in;
+    return Array.isArray(list) ? (list as string[]).includes(row[field] as string) : true;
+  };
+
   const prisma = {
     character: {
       // The user's own characters (`player`), or the guild's whole roster.
@@ -81,34 +110,31 @@ function setup(member = true, officer = false) {
         where.servers.some.discordId === 'server-1' ? { id: 'g1' } : null,
     },
     characterProfession: {
-      deleteMany: ({ where }: { where: { characterId: string; name?: string } }) => {
+      deleteMany: async ({ where }: { where: Where }) => {
         let count = 0;
         for (let i = professions.length - 1; i >= 0; i--) {
-          const row = professions[i];
-          if (row.characterId !== where.characterId) continue;
-          if (where.name !== undefined && row.name !== where.name) continue;
+          if (!hits(where, professions[i], 'name')) continue;
           professions.splice(i, 1);
           count++;
         }
-        return Promise.resolve({ count });
+        return { count };
       },
-      upsert: async ({
-        where,
-        create,
-        update,
-      }: {
-        where: { characterId_name: { characterId: string; name: string } };
-        create: Record<string, unknown>;
-        update: Record<string, unknown>;
-      }) => {
-        const { characterId, name } = where.characterId_name;
-        const row = professions.find((p) => p.characterId === characterId && p.name === name);
-        if (row) Object.assign(row, update);
-        else professions.push({ ...create });
+      createMany: async ({ data }: { data: Record<string, unknown>[] }) => {
+        professions.push(...data.map((row) => ({ ...row })));
+        return { count: data.length };
       },
-      findMany: async (args?: { where?: { characterId?: string } }) =>
+      updateMany: async ({ where, data }: { where: Where; data: Record<string, unknown> }) => {
+        let count = 0;
+        for (const row of professions) {
+          if (!hits(where, row, 'name')) continue;
+          Object.assign(row, data);
+          count++;
+        }
+        return { count };
+      },
+      findMany: async (args?: { where?: Where }) =>
         professions
-          .filter((row) => !args?.where?.characterId || row.characterId === args.where.characterId)
+          .filter((row) => forCharacter(args?.where, row.characterId as string))
           .map((row) => {
             const person = people[row.characterId as string];
             return {
@@ -124,12 +150,23 @@ function setup(member = true, officer = false) {
           }),
     },
     professionSnapshot: {
-      findUnique: async ({ where }: { where: { characterId: string } }) =>
-        snapshots.has(where.characterId)
-          ? { characterId: where.characterId, takenAt: snapshots.get(where.characterId) }
-          : null,
-      upsert: async ({ create }: { create: { characterId: string; takenAt: Date } }) =>
-        void snapshots.set(create.characterId, create.takenAt),
+      findMany: async ({ where }: { where: Where }) =>
+        [...snapshots.entries()]
+          .filter(([characterId]) => forCharacter(where, characterId))
+          .map(([characterId, takenAt]) => ({ characterId, takenAt })),
+      deleteMany: async ({ where }: { where: Where }) => {
+        let count = 0;
+        for (const characterId of [...snapshots.keys()]) {
+          if (!forCharacter(where, characterId)) continue;
+          snapshots.delete(characterId);
+          count++;
+        }
+        return { count };
+      },
+      createMany: async ({ data }: { data: { characterId: string; takenAt: Date }[] }) => {
+        for (const row of data) snapshots.set(row.characterId, row.takenAt);
+        return { count: data.length };
+      },
     },
     professionDrop: {
       findMany: async ({
@@ -137,11 +174,11 @@ function setup(member = true, officer = false) {
         orderBy,
         skip,
       }: {
-        where: { characterId: string };
+        where: Where;
         orderBy?: unknown;
         skip?: number;
       }) => {
-        const list = drops.filter((d) => d.characterId === where.characterId);
+        const list = drops.filter((d) => forCharacter(where, d.characterId));
         if (orderBy) list.sort((a, b) => b.droppedAt.getTime() - a.droppedAt.getTime());
         return list.slice(skip ?? 0);
       },
@@ -156,42 +193,52 @@ function setup(member = true, officer = false) {
         if (found) found.droppedAt = create.droppedAt;
         else drops.push({ ...create });
       },
-      delete: async ({
-        where,
+      createMany: async ({
+        data,
       }: {
-        where: { characterId_name: { characterId: string; name: string } };
+        data: { characterId: string; name: string; droppedAt: Date }[];
       }) => {
-        const { characterId, name } = where.characterId_name;
-        drops.splice(
-          drops.findIndex((d) => d.characterId === characterId && d.name === name),
-          1,
-        );
+        drops.push(...data.map((row) => ({ ...row })));
+        return { count: data.length };
       },
-      deleteMany: async ({ where }: { where: { characterId: string; name: { in: string[] } } }) => {
-        for (const name of where.name.in) {
-          drops.splice(
-            drops.findIndex((d) => d.characterId === where.characterId && d.name === name),
-            1,
-          );
+      deleteMany: async ({ where }: { where: Where }) => {
+        let count = 0;
+        for (let i = drops.length - 1; i >= 0; i--) {
+          if (!hits(where, drops[i], 'name')) continue;
+          drops.splice(i, 1);
+          count++;
         }
+        return { count };
       },
     },
     characterAttunement: {
-      findMany: async ({ where }: { where: { characterId: string } }) =>
-        [...attunements.values()].filter((row) => row.characterId === where.characterId),
-      upsert: async ({
-        where,
-        create,
-        update,
+      findMany: async ({ where }: { where: Where }) =>
+        [...attunements.values()].filter((row) => forCharacter(where, row.characterId)),
+      createMany: async ({
+        data,
       }: {
-        where: { characterId_key: { characterId: string; key: string } };
-        create: { characterId: string; key: string; attuned: boolean; recordedAt: Date };
-        update: { attuned?: boolean; recordedAt: Date };
+        data: { characterId: string; key: string; attuned: boolean; recordedAt: Date }[];
       }) => {
-        const id = `${where.characterId_key.characterId}:${where.characterId_key.key}`;
-        const row = attunements.get(id);
-        if (row) Object.assign(row, update);
-        else attunements.set(id, { ...create });
+        for (const row of data) attunements.set(`${row.characterId}:${row.key}`, { ...row });
+        return { count: data.length };
+      },
+      updateMany: async ({ where, data }: { where: Where; data: Record<string, unknown> }) => {
+        let count = 0;
+        for (const row of attunements.values()) {
+          if (!hits(where, row, 'key')) continue;
+          Object.assign(row, data);
+          count++;
+        }
+        return { count };
+      },
+      deleteMany: async ({ where }: { where: Where }) => {
+        let count = 0;
+        for (const [id, row] of [...attunements.entries()]) {
+          if (!hits(where, row, 'key')) continue;
+          attunements.delete(id);
+          count++;
+        }
+        return { count };
       },
     },
     wowheadEntry: {
@@ -202,6 +249,30 @@ function setup(member = true, officer = false) {
     },
     $transaction: async (operations: Promise<unknown>[]) => Promise.all(operations),
   } as unknown as PrismaService;
+  /**
+   * Every query the service makes, as "<model>.<method>". An import's cost is in how many it makes:
+   * one per character of an export (dozens, with a guild sharing) is what made an upload time out.
+   */
+  const queries: string[] = [];
+  const counted = Object.fromEntries(
+    Object.entries(prisma as unknown as Record<string, unknown>).map(([model, value]) => {
+      if (typeof value !== 'object' || value === null) return [model, value];
+      return [
+        model,
+        Object.fromEntries(
+          Object.entries(value as Record<string, unknown>).map(([name, method]) => [
+            name,
+            typeof method === 'function'
+              ? (...args: unknown[]) => {
+                  queries.push(`${model}.${name}`);
+                  return (method as (...a: unknown[]) => unknown)(...args);
+                }
+              : method,
+          ]),
+        ),
+      ];
+    }),
+  ) as unknown as PrismaService;
   const access = { find: async () => (member ? { isAdmin: false, isOfficer: officer } : null) };
   const names: Record<string, string> = { 'spell/20034': 'Enchant Weapon - Crusader' };
   const wowheadService = new WowheadService(prisma);
@@ -214,7 +285,7 @@ function setup(member = true, officer = false) {
       : new Response('{"error":"not found"}', { status: 404 });
   }) as typeof fetch;
   const service = new ProfessionsService(
-    prisma,
+    counted,
     access as unknown as GuildAccessService,
     wowheadService,
     new GuildRecipesService(prisma, wowheadService),
@@ -237,6 +308,7 @@ function setup(member = true, officer = false) {
     postedSoon,
     recordedSources,
     attunements,
+    queries,
   };
 }
 
@@ -333,6 +405,76 @@ describe('ProfessionsService', () => {
     const { service, postedSoon } = setup();
     await service.import(user, 'g1', FIXTURE);
     assert.deepEqual(postedSoon, ['g1']);
+  });
+
+  it('reads and writes every character of an export at once, not one at a time', async () => {
+    const { service, queries } = setup();
+    const of = (model: string) => queries.filter((q) => q.startsWith(`${model}.`));
+    await service.import(user, 'g1', FIXTURE);
+    // Two characters imported, and one statement per table either way: an export carries every
+    // character the uploader's addon knows, and a round trip each is what made an upload outlast
+    // the uploader's wait for an answer.
+    assert.deepEqual(of('characterProfession'), [
+      'characterProfession.findMany',
+      'characterProfession.createMany',
+    ]);
+    assert.deepEqual(of('professionDrop'), ['professionDrop.findMany']);
+    assert.deepEqual(of('professionSnapshot'), [
+      'professionSnapshot.findMany',
+      'professionSnapshot.deleteMany',
+      'professionSnapshot.createMany',
+    ]);
+    assert.deepEqual(of('characterAttunement'), [
+      'characterAttunement.findMany',
+      'characterAttunement.createMany',
+    ]);
+
+    // The same export again (the game saves it at every reload): nothing to write but the time it
+    // was last imported and last heard of, each in one statement.
+    queries.length = 0;
+    await service.import(user, 'g1', FIXTURE);
+    assert.deepEqual(of('characterProfession'), [
+      'characterProfession.findMany',
+      'characterProfession.updateMany',
+    ]);
+    assert.deepEqual(of('professionSnapshot'), ['professionSnapshot.findMany']);
+    assert.deepEqual(of('characterAttunement'), [
+      'characterAttunement.findMany',
+      'characterAttunement.updateMany',
+    ]);
+  });
+
+  it('merges a character the export carries twice into the one row', async () => {
+    const { service, professions } = setup();
+    // Its own entry and a guildmate's copy of it, which both match the same character here.
+    await service.import(
+      user,
+      'g1',
+      JSON.stringify({
+        addon: 'GuildAssistantProfessions',
+        format: 2,
+        characters: [
+          {
+            name: 'Luna',
+            realm: 'Test Realm',
+            source: 'own',
+            updated: day(4),
+            professions: [{ name: 'Tailoring', skill: 150, max: 300, spells: [2387], items: [] }],
+          },
+          {
+            name: 'Luna Starfall',
+            realm: 'Test Realm',
+            source: 'guild',
+            updated: day(5),
+            professions: [{ name: 'Tailoring', skill: 200, max: 300, spells: [3914], items: [] }],
+          },
+        ],
+      }),
+    );
+    assert.deepEqual(
+      professions.map((p) => [p.characterId, p.name, p.skill, p.spellIds]),
+      [['luna-id', 'Tailoring', 200, [2387, 3914]]],
+    );
   });
 
   it('merges with what was imported before: recipes are added, never removed', async () => {

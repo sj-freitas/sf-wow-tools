@@ -3,6 +3,12 @@ import { ConfigService } from '@nestjs/config';
 
 const DISCORD_API = 'https://discord.com/api/v10';
 const MAX_MEMBER_PAGES = 10;
+/**
+ * How long one Discord call may take. Without it a stuck call holds up whatever asked for it for as
+ * long as Discord leaves the connection open — an upload waiting on a membership check, say, which
+ * its uploader gives up on long before.
+ */
+const TIMEOUT_MS = 10_000;
 
 /** A failed Discord API call. Status 401 means the access token was rejected. */
 export class DiscordApiError extends UnauthorizedException {
@@ -185,6 +191,7 @@ export class DiscordOAuthService {
   private async get<T>(path: string, authorization: string): Promise<T> {
     const response = await fetch(`${DISCORD_API}${path}`, {
       headers: { Authorization: authorization },
+      signal: AbortSignal.timeout(TIMEOUT_MS),
     });
     if (!response.ok) {
       throw new DiscordApiError(

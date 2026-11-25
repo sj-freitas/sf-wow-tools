@@ -1116,7 +1116,11 @@ on logout). Blizzard's Classic Era / SoD API has no professions, hence the addon
   JSON): any member, for their own characters in that guild, matched by name (first name, or first
   and last as Forever writes them; the realm breaks ties). Each matched character's professions are
   replaced by the export's; characters that aren't the user's in the guild are skipped and listed,
-  and others' seen through a link are listed apart, not imported. In the backoffice: Roster or
+  and others' seen through a link are listed apart, not imported. Whatever the file carries, it is
+  read and written in a handful of statements: the file holds every character the addon knows
+  (dozens, with a guild sharing) and is re-sent whole each time the game saves it, so rows that
+  already hold what the import would write are left alone, marked as seen again in one go, and a
+  character is never a round trip of its own. In the backoffice: Roster or
   Professions, **Import professions** (drop the file, choose it, or paste its contents); the
   Professions page's panel has its own address, `…/guilds/<guild>/professions/import`, which a
   character's Professions tab links its own player to (one link per guild it is in).
@@ -1132,7 +1136,11 @@ on logout). Blizzard's Classic Era / SoD API has no professions, hence the addon
   - `POST /api/upload/professions` (`{ data }` = the file): imports it into each of the player's
     guilds as **Import** does (`ProfessionsUploadService`). Those are the guilds they could see at
     their last login that the bot still finds them in (one of the guild's Discord servers), since a
-    key outlives logins.
+    key outlives logins. Only Discord saying plainly that they aren't in a server (404, or 403: it
+    won't say) keeps an upload out of that guild; when Discord can't be reached at all the upload
+    goes in anyway, since importing into no guild is an upload the uploader is told succeeded.
+    The file is a few hundred kB and grows with what the guild finds, so the JSON body limit is
+    4 MB (`main.ts`).
 
   Deleting a key stops it at once, and each key's page row shows when it was last used.
 

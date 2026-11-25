@@ -16,17 +16,22 @@ interface Stored {
 /** The recipe_sources table, in memory. */
 function setup() {
   const rows: Stored[] = [];
+  /** Each query made, by name: what an import costs is how many of these it makes. */
+  const statements: string[] = [];
   const same = (
     a: Pick<Stored, 'kind' | 'key' | 'entry'>,
     b: Pick<Stored, 'kind' | 'key' | 'entry'>,
   ) => a.kind === b.kind && a.key === b.key && a.entry === b.entry;
   const prisma = {
     recipeSource: {
-      findMany: async (args?: { where?: { OR: Pick<Stored, 'kind' | 'key' | 'entry'>[] } }) =>
-        args?.where
+      findMany: async (args?: { where?: { OR: Pick<Stored, 'kind' | 'key' | 'entry'>[] } }) => {
+        statements.push('findMany');
+        return args?.where
           ? rows.filter((row) => args.where!.OR.some((wanted) => same(row, wanted)))
-          : [...rows],
+          : [...rows];
+      },
       createMany: async ({ data }: { data: Stored[] }) => {
+        statements.push('createMany');
         rows.push(...data.map((row) => ({ ...row })));
         return { count: data.length };
       },
@@ -37,16 +42,29 @@ function setup() {
         where: { kind_key_entry: Stored };
         data: Partial<Stored>;
       }) => {
+        statements.push('update');
         const row = rows.find((r) => same(r, where.kind_key_entry))!;
         Object.assign(row, data);
         return row;
+      },
+      updateMany: async ({
+        where,
+        data,
+      }: {
+        where: { OR: Pick<Stored, 'kind' | 'key' | 'entry'>[] };
+        data: Partial<Stored>;
+      }) => {
+        statements.push('updateMany');
+        const hit = rows.filter((row) => where.OR.some((wanted) => same(row, wanted)));
+        for (const row of hit) Object.assign(row, data);
+        return { count: hit.length };
       },
     },
   } as unknown as PrismaService;
   const service = new RecipeSourcesService(prisma);
   let clock = Date.parse('2026-11-11T12:00:00Z');
   service.now = () => new Date(clock);
-  return { service, rows, later: () => (clock += 60_000) };
+  return { service, rows, statements, later: () => (clock += 60_000) };
 }
 
 const sources = {
@@ -74,6 +92,24 @@ describe('RecipeSourcesService', () => {
     const krinkle = rows.find((row) => row.entry === 'V:Tanaris=Krinkle Goodsteel')!;
     assert.deepEqual(krinkle.reporters, ['u1', 'u2']);
     assert.ok(krinkle.lastSeenAt > krinkle.firstSeenAt);
+  });
+
+  it('says it has seen the sources it already knows in one statement, not one each', async () => {
+    const { service, statements } = setup();
+    const many = {
+      items: Array.from({ length: 40 }, (_, i) => ({
+        id: 1000 + i,
+        entries: [`V:Tanaris=Vendor ${i}`],
+      })),
+      trainers: [],
+    };
+    assert.equal(await service.record('u1', many), 40);
+    statements.length = 0;
+    // The same export again, as the game saves it every few minutes: nothing new in it. A guild
+    // that has played a while carries thousands of these, and a statement each outlasted the
+    // uploader's wait for an answer.
+    assert.equal(await service.record('u1', many), 0);
+    assert.deepEqual(statements, ['findMany', 'updateMany']);
   });
 
   it("keeps a trainer's cost, unless an import doesn't say it", async () => {

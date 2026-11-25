@@ -110,16 +110,34 @@ export class RecipeSourcesService {
           })
         ).count;
       }
+      // Most of an export's sources are ones we already have, unchanged: every upload would be a
+      // statement each (two thousand of them, for a guild that has played a while), which is what
+      // made an upload outlast the uploader's own timeout. Those are "seen again" and nothing more,
+      // so they go in one statement; only a new reporter or a changed cost is written on its own.
+      const seenAgain: Row[] = [];
       for (const row of chunk) {
         const known = existing.get(rowKey(row));
         if (!known) continue;
-        const reporters =
-          known.reporters.includes(userId) || known.reporters.length >= MAX_REPORTERS
-            ? known.reporters
-            : [...known.reporters, userId];
+        const addReporter =
+          !known.reporters.includes(userId) && known.reporters.length < MAX_REPORTERS;
+        const newCost = row.cost !== null && row.cost !== known.cost;
+        if (!addReporter && !newCost) {
+          seenAgain.push(row);
+          continue;
+        }
         await this.prisma.recipeSource.update({
           where: { kind_key_entry: { kind: row.kind, key: row.key, entry: row.entry } },
-          data: { lastSeenAt: now, reporters, ...(row.cost !== null ? { cost: row.cost } : {}) },
+          data: {
+            lastSeenAt: now,
+            ...(addReporter ? { reporters: [...known.reporters, userId] } : {}),
+            ...(newCost ? { cost: row.cost } : {}),
+          },
+        });
+      }
+      if (seenAgain.length > 0) {
+        await this.prisma.recipeSource.updateMany({
+          where: { OR: seenAgain.map(({ kind, key, entry }) => ({ kind, key, entry })) },
+          data: { lastSeenAt: now },
         });
       }
     }
