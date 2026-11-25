@@ -52,7 +52,9 @@ for the key again.
   since the game writes the file in bursts.
 - It reads the file and sends it to `POST /api/upload/professions` with the key. Guild Assistant
   imports it into each of the player's guilds, as **Import professions** does (see
-  `discord/assistant-api/README.md`, Professions).
+  `discord/assistant-api/README.md`, Professions). It waits up to two minutes for the answer: a
+  file is every character the addon knows, and giving up too early turns a slow answer into an
+  upload that failed.
 - **Only changed files are sent.** The game rewrites the file at every `/reload` and logout, so
   the app remembers the SHA-256 of what it last sent of each file (in its settings) and skips the
   same contents, even after a restart. **Upload now** sends them anyway.
@@ -60,10 +62,13 @@ for the key again.
   first `/ga-prof save`) or a change the file events missed, and retries a failed upload.
 - While the window is closed, it posts a notification for each upload. If uploads fail, it
   notifies once, not at every retry.
+- **Why an upload failed is kept**, for each file, in the settings file below (`failures`: when it
+  was tried and what went wrong), until one works. The window says it too, but only while the app
+  is running, so an upload that has been failing for days left nothing to read.
 - A key deleted on Guild Assistant shows as "doesn't work any more" in step 1.
 
-Settings (folder, encrypted key, the last upload of each file) are in `settings.json` in the
-app's data folder:
+Settings (folder, encrypted key, each file's last upload and last failure) are in `settings.json`
+in the app's data folder:
 - Mac: `~/Library/Application Support/Guild Assistant Uploader`;
 - Windows: `%APPDATA%\Guild Assistant Uploader`.
 

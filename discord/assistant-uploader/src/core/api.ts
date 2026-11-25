@@ -29,7 +29,12 @@ export class ApiError extends Error {
   }
 }
 
-const TIMEOUT_MS = 30_000;
+/**
+ * How long to wait for Guild Assistant to answer. Importing a file takes it a moment (it is every
+ * character the addon knows, and it goes into each of the player's guilds), and a wait too short
+ * turns a slow answer into an upload that failed — tried again, just as slowly, at every sweep.
+ */
+const TIMEOUT_MS = 120_000;
 
 /** Guild Assistant's two uploader endpoints, with an upload key (`Authorization: Bearer gak_…`). */
 export class GuildAssistantApi {

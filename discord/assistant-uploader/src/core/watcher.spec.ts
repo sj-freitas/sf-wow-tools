@@ -20,7 +20,11 @@ function setup(records: Record<string, UploadRecord> = {}) {
   let nextTimer = 1;
   const uploads: string[] = [];
   let uploadFails: string | null = null;
-  const events = { changed: 0, uploaded: [] as UploadRecord[], failed: [] as string[] };
+  const events = {
+    changed: 0,
+    uploaded: [] as UploadRecord[],
+    failed: [] as { message: string; first: boolean }[],
+  };
   const deps: WatcherDeps = {
     findFiles: async () => found,
     readFile: async (file) => {
@@ -51,7 +55,7 @@ function setup(records: Record<string, UploadRecord> = {}) {
     {
       changed: () => void events.changed++,
       uploaded: (_file, record) => void events.uploaded.push(record),
-      failed: (_file, message) => void events.failed.push(message),
+      failed: (_file, message, first) => void events.failed.push({ message, first }),
     },
     { debounceMs: 2000, sweepMs: 300_000 },
   );
@@ -138,7 +142,7 @@ describe('ProfessionsWatcher', () => {
     assert.equal(t.uploads.length, 2);
   });
 
-  it('says once when an upload fails, and tries again at the next sweep', async () => {
+  it('tells of a failed upload once, hands over every try, and tries again at the next sweep', async () => {
     t.failUploads('Guild Assistant didn’t answer.');
     await t.watcher.start('/WoW');
     assert.deepEqual(
@@ -146,7 +150,12 @@ describe('ProfessionsWatcher', () => {
       [['failed', 'Guild Assistant didn’t answer.']],
     );
     await t.elapse(300_000);
-    assert.deepEqual(t.events.failed, ['Guild Assistant didn’t answer.'], 'once, not every retry');
+    // Every try is handed over to be kept (nothing else records why an upload failed); only the
+    // first of them is the player's to be told about, the rest being its retries.
+    assert.deepEqual(t.events.failed, [
+      { message: 'Guild Assistant didn’t answer.', first: true },
+      { message: 'Guild Assistant didn’t answer.', first: false },
+    ]);
     t.failUploads(null);
     await t.elapse(300_000);
     assert.deepEqual(t.uploads, ['DB = { v1 }']);

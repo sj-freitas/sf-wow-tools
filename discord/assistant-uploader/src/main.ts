@@ -69,11 +69,18 @@ class UploaderApp {
     {
       changed: () => this.refresh(),
       uploaded: (file, record) => {
+        delete this.settings.failures[file.path];
         this.save();
         if (!this.windowVisible())
           this.notify(`Professions uploaded (${file.version})`, record.summary);
       },
-      failed: (file, message) => this.notify(`Upload failed (${file.version})`, message),
+      // Kept, every try, so what went wrong is still there to read afterwards: the window says it
+      // while the app runs, and a notification is easy to miss (or never shown, in the background).
+      failed: (file, message, first) => {
+        this.settings.failures[file.path] = { at: new Date().toISOString(), message };
+        this.save();
+        if (first) this.notify(`Upload failed (${file.version})`, message);
+      },
     },
   );
   private window: BrowserWindow | null = null;

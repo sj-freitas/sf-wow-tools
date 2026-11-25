@@ -28,6 +28,13 @@ describe('settings', () => {
           },
           '/WoW/b.lua': { hash: 3 },
         },
+        failures: {
+          '/WoW/a.lua': {
+            at: '2026-11-10T10:05:00.000Z',
+            message: 'Guild Assistant didn’t answer.',
+          },
+          '/WoW/b.lua': { message: 'no date' },
+        },
       }),
     );
     assert.equal(settings.gameFolder, '/WoW');
@@ -36,6 +43,10 @@ describe('settings', () => {
     assert.equal(settings.background, false);
     assert.equal(settings.openAtLogin, false);
     assert.deepEqual(Object.keys(settings.uploads), ['/WoW/a.lua']);
+    // Why an upload failed is kept too, so it can be read after the fact.
+    assert.deepEqual(settings.failures, {
+      '/WoW/a.lua': { at: '2026-11-10T10:05:00.000Z', message: 'Guild Assistant didn’t answer.' },
+    });
   });
 
   it('writes the whole file and reads it back', () => {

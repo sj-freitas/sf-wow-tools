@@ -38,8 +38,12 @@ export interface WatcherEvents {
   changed(): void;
   /** A file was uploaded: its record, to keep, so an unchanged file isn't sent again. */
   uploaded(file: ProfessionsFile, record: UploadRecord): void;
-  /** A file's upload failed, after working (or never tried) before: once, not at every retry. */
-  failed(file: ProfessionsFile, message: string): void;
+  /**
+   * A file's upload failed. `first` is the one after it worked (or was never tried): the one worth
+   * telling the player about, where the others are its retries. Every one of them is worth keeping,
+   * since nothing else on this computer records why an upload failed.
+   */
+  failed(file: ProfessionsFile, message: string, first: boolean): void;
 }
 
 export interface WatcherOptions {
@@ -231,7 +235,7 @@ export class ProfessionsWatcher {
   /** `state`: the file's state before this try (it was `uploading` meanwhile). */
   private fail(state: FileState, message: string): void {
     this.set(state.file.path, { status: 'failed', message, at: this.deps.now().toISOString() });
-    if (state.status !== 'failed') this.events.failed(state.file, message);
+    this.events.failed(state.file, message, state.status !== 'failed');
   }
 
   private set(file: string, change: Partial<Omit<FileState, 'file'>>): void {
