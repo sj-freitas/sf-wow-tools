@@ -397,8 +397,12 @@ export class ProfessionsService {
       });
     }
     if (fresh.length > 0) {
+      // skipDuplicates: two players' uploads can carry the same guildmate, and writing a row the
+      // other one made in the meantime would fail the whole upload. Leaving theirs standing costs
+      // nothing: the next upload merges onto it.
       await this.prisma.characterProfession.createMany({
         data: fresh.map(({ characterId, name, row }) => ({ characterId, name, ...row })),
+        skipDuplicates: true,
       });
     }
     if (seenAgain.length > 0) {
@@ -426,6 +430,7 @@ export class ProfessionsService {
           attuned,
           recordedAt: at,
         })),
+        skipDuplicates: true,
       });
     }
     const told = raids.filter(
@@ -443,7 +448,7 @@ export class ProfessionsService {
       await this.prisma.professionSnapshot.deleteMany({
         where: { characterId: { in: rows.map((row) => row.characterId) } },
       });
-      await this.prisma.professionSnapshot.createMany({ data: rows });
+      await this.prisma.professionSnapshot.createMany({ data: rows, skipDuplicates: true });
     }
 
     // A character whose drops changed has them rewritten: its last two (it has two main ones).
@@ -467,7 +472,9 @@ export class ProfessionsService {
       await this.prisma.professionDrop.deleteMany({
         where: { characterId: { in: [...dropChanged] } },
       });
-      if (rows.length > 0) await this.prisma.professionDrop.createMany({ data: rows });
+      if (rows.length > 0) {
+        await this.prisma.professionDrop.createMany({ data: rows, skipDuplicates: true });
+      }
     }
     // Names are looked up in the background: the import doesn't wait for Wowhead.
     void this.wowhead.resolve(refs, path);
