@@ -57,6 +57,7 @@ function Core.migrate(db)
             db.characters[newKey] = character
         end
     end
+    Core.dropNameAsRealm(db)
     Core.mergeRealmless(db)
     Core.dropOldFirstNames(db)
 end
@@ -136,6 +137,42 @@ function Core.mergeRealmless(db)
         end
     end
     return done
+end
+
+--- Whether this entry's realm is really part of its own name, which 1.7.3 saved when it asked
+--- UnitFullName for the realm and WoW Forever's client answered with the character's last name:
+--- "Shivan Darkwhisp-Darkwhisp". No realm is a character's own last name, and names on a client
+--- that has no second part can't be mistaken for one.
+local function nameAsRealm(character)
+    return character.name:find(" ") ~= nil and character.realm ~= nil
+        and character.realm == character.name:match("([^ ]+)$")
+end
+
+--- Characters 1.7.3 keyed by their own last name instead of a realm (nameAsRealm): this account's
+--- are made realmless again, for Core.mergeRealmless to put back where they belong, a guildmate's
+--- -- shared by someone whose addon did the same -- are dropped, and a realm remembered from that
+--- mistake is forgotten. Returns how many were put right.
+function Core.dropNameAsRealm(db)
+    local wrong = {}
+    for key, character in pairs(db.characters) do
+        if nameAsRealm(character) then wrong[#wrong + 1] = key end
+    end
+    table.sort(wrong)
+    for _, key in ipairs(wrong) do
+        local character = db.characters[key]
+        if db.realm == character.realm then db.realm = nil end
+        db.characters[key] = nil
+        if character.source == "own" then
+            character.realm = ""
+            local waiting = db.characters[character.name .. "-"]
+            if waiting then
+                foldInto(waiting, character)
+            else
+                db.characters[character.name .. "-"] = character
+            end
+        end
+    end
+    return #wrong
 end
 
 --- Whether `name` is one of this account's characters under its first name alone, as 1.0.2 and
@@ -554,6 +591,9 @@ function Core.receive(db, guild, received, now)
     -- Nor one of this account's characters under its first name alone, which a guildmate still on
     -- 1.0.2's data goes on sharing: the same character, an old copy of it (Core.oldFirstName).
     if Core.oldFirstName(db, received.name, received.realm) then return false end
+    -- Nor a character keyed by its own last name, which a guildmate on 1.7.3 shares until they
+    -- update: that realm is a name (nameAsRealm).
+    if nameAsRealm(received) then return false end
     local key = received.name .. "-" .. received.realm
     local current = db.characters[key]
     if not current then

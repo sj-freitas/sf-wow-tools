@@ -523,6 +523,25 @@ it("folds in the copies 1.7.1 left behind, even on a client that names no realm 
     eq(said("something went wrong"), false, "no error")
 end)
 
+it("never takes the character's own name for a realm, whatever UnitFullName answers", function()
+    loadAddon()
+    _G.UnitName = function() return "Shivan", "Darkwhisp" end
+    _G.GetRealmName = function() return "" end
+    -- WoW Forever's client: no realm from either realm function, and UnitFullName gives the last
+    -- name. Believing it keyed the character "Shivan Darkwhisp-Darkwhisp" (1.7.3).
+    _G.GetNormalizedRealmName = function() return "" end
+    _G.UnitFullName = function() return "Shivan", "Darkwhisp" end
+    fire("ADDON_LOADED", "GuildAssistantProfessions")
+    fire("PLAYER_LOGIN")
+    eq(GuildAssistantProfessionsDB.realm, nil, "no realm taken from a name")
+    eq(next(GuildAssistantProfessionsDB.characters), nil, "and nothing keyed by one")
+    eq(GuildAssistantProfessionsDB.client.realms.UnitFullName, "Darkwhisp",
+        "what it answered is still kept, to tell what this client does")
+    eq(said("something went wrong"), false, "no error")
+    _G.UnitName = function() return "Luna" end
+    _G.GetNormalizedRealmName, _G.UnitFullName = nil, nil
+end)
+
 it("takes the realm from whichever of the client's functions answers", function()
     loadAddon()
     _G.GetRealmName = function() return "" end

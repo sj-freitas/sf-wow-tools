@@ -48,11 +48,18 @@ end
 function Game.realm()
     local realm = Core.realmName(GetRealmName and GetRealmName() or nil)
     if realm and realm ~= "" then return realm end
-    -- WoW Forever's client says "" until a login is through, and with no realm to go by the whole
-    -- account's characters would be listed, the same character twice where an older GuildAssistant
-    -- Professions saved it under both. That addon keeps the last realm the game did name.
+    -- WoW Forever's client says "" until a login is through -- and has gone a whole session
+    -- without answering -- so GuildAssistant Professions keeps the last realm the game did name.
+    -- Only if some character is actually on it: a realm nobody is on is a realm read wrongly
+    -- (1.7.3 took the character's last name for one), and going by it would empty every list.
     local db = Game.professionsDB()
-    return db and db.realm or realm
+    local remembered = db and db.realm
+    if remembered and remembered ~= "" then
+        for _, character in pairs(db.characters) do
+            if character.realm == remembered then return remembered end
+        end
+    end
+    return realm
 end
 
 -- The skill list's headers for professions (localized by the game; English when it has none).

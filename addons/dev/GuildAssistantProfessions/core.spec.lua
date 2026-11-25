@@ -603,6 +603,38 @@ it("reads the realm whichever way the client names it", function()
     eq(Core.realmName("NethergardeKeep"), "NethergardeKeep")
 end)
 
+it("puts back a character 1.7.3 keyed by its own last name instead of a realm", function()
+    -- WoW Forever's UnitFullName answers with the last name, which 1.7.3 took for a realm.
+    local db = Core.newDB()
+    db.realm = "Darkwhisp"
+    db.characters["Shivan Darkwhisp-RP"] = { name = "Shivan Darkwhisp", realm = "RP", source = "own",
+        guild = G, updated = 5,
+        professions = { Mining = { rank = 10, max = 75, learned = 1, updated = 5, recipes = recipes(1) } } }
+    db.characters["Shivan Darkwhisp-Darkwhisp"] = { name = "Shivan Darkwhisp", realm = "Darkwhisp",
+        source = "own", guild = G, updated = 9, attunements = { ony = true },
+        professions = { Mining = { rank = 32, max = 75, learned = 1, updated = 9, recipes = recipes(2) } } }
+    -- A guildmate on 1.7.3 shares theirs the same way.
+    db.characters["Kael Stormsong-Stormsong"] = { name = "Kael Stormsong", realm = "Stormsong",
+        source = "guild", guild = G, updated = 9, professions = {} }
+    -- A guildmate whose realm really is the only word of their name can't be mistaken for one.
+    db.characters["Mira-Mira"] = { name = "Mira", realm = "Mira", source = "guild", guild = G,
+        updated = 9, professions = {} }
+    Core.migrate(db)
+    eq(db.realm, nil, "the realm read wrongly is forgotten")
+    local keys = {}
+    for key in pairs(db.characters) do keys[#keys + 1] = key end
+    table.sort(keys)
+    eq(table.concat(keys, ","), "Mira-Mira,Shivan Darkwhisp-RP", "put back, the guildmate's dropped")
+    local shivan = db.characters["Shivan Darkwhisp-RP"]
+    eq(shivan.professions.Mining.rank, 32, "with everything both entries held")
+    eq(shivan.professions.Mining.recipes["spell:1"], true)
+    eq(shivan.professions.Mining.recipes["spell:2"], true)
+    eq(shivan.attunements.ony, true)
+    -- And it isn't taken back from a guildmate still on 1.7.3.
+    eq(Core.receive(db, G, { name = "Kael Stormsong", realm = "Stormsong", updated = 9,
+        professions = {} }, 9), false, "refused")
+end)
+
 it("drops a guildmate's copy of your character under its first name alone", function()
     local db = Core.newDB()
     db.characters["Shivan Darkwhisp-RP"] = { name = "Shivan Darkwhisp", realm = "RP", source = "own",

@@ -183,12 +183,15 @@ set ("RP", "PvP"; the game's realm name also says which of its servers you're on
 whole realm name, is renamed at login.
 
 That client doesn't always have the realm ready when you log in, and has been seen saying nothing
-for a whole session, so it is asked every way it has (`GetRealmName`, `GetNormalizedRealmName`,
-your full name, the realm list, whichever answers first; `/ga-prof status` says which realm your
-characters are keyed by and what each answered, and the saved data keeps it in `client.realms`).
-The last realm named is kept in the saved data (`realm`) and used while the client won't say, and a
-character is never saved without one: it would be a second entry of a character already there,
-listed, shared with the guild and uploaded as if it were somebody else.
+for a whole session (build 16001: `GetRealmName` and `GetNormalizedRealmName` both empty). Those
+two are what a realm is read from, whichever answers first. `UnitFullName` and
+`GetAutoCompleteRealms` are asked as well, but only for the record -- on WoW Forever the first
+answers with the character's last name, and a name taken for a realm keys the character where
+nobody else is. What each said is kept in the saved data (`client.realms`) and shown by
+`/ga-prof status`, along with the realm the characters are keyed by. The last realm named is kept
+(`realm`) and used while the client won't say, and a character is never saved without one: it would
+be a second entry of a character already there, listed, shared with the guild and uploaded as if it
+were somebody else.
 
 The copies 1.7.0 and 1.7.1 saved that way are folded back into the character they belong to -- the
 entry of the same name that has a realm says which realm that is, so it works even where the client

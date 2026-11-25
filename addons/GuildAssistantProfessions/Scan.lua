@@ -45,9 +45,12 @@ function Scan.realms()
     return answers
 end
 
--- The functions above, in the order to believe them: the realm's own name first, then the one
--- without its spaces, then what this character's full name says, then the realm list's first.
-local REALM_ORDER = { "GetRealmName", "GetNormalizedRealmName", "UnitFullName", "GetAutoCompleteRealms" }
+-- The ones above that really do answer with a realm, in the order to believe them. The others are
+-- asked and kept for the record only, never believed: WoW Forever's UnitFullName answers with the
+-- character's last name ("Darkwhisp"), as UnitName does, and a name taken for a realm keys the
+-- character where no one else is (1.7.3). GetAutoCompleteRealms is a list of realms to type at,
+-- not this character's.
+local REALM_ORDER = { "GetRealmName", "GetNormalizedRealmName" }
 
 --- What the game says this realm is, from whichever of its functions answers; "" when none does,
 --- and Core.realm then goes by the realm last named (kept in the saved data).
