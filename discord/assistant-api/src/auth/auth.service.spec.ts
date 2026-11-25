@@ -33,6 +33,7 @@ describe('AuthService.refresh', () => {
   let discordCalls: number;
   let failWith: Error | null;
   let memberFailsWith: number | null;
+  let memberLookups: string[];
   let service: AuthService;
 
   beforeEach(() => {
@@ -55,6 +56,7 @@ describe('AuthService.refresh', () => {
     discordCalls = 0;
     failWith = null;
     memberFailsWith = null;
+    memberLookups = [];
 
     const prisma = {
       session: {
@@ -89,6 +91,7 @@ describe('AuthService.refresh', () => {
       },
       fetchBotGuildIds: async () => botServers,
       fetchGuildMember: async (_token: string, serverId: string) => {
+        memberLookups.push(serverId);
         if (memberFailsWith) throw new DiscordApiError(memberFailsWith, 'member lookup failed');
         return { roles: memberRoles[serverId] ?? [] };
       },
@@ -170,6 +173,18 @@ describe('AuthService.refresh', () => {
       assert.deepEqual(accessRows, [
         { userId: 'u1', guildId: 'g', isAdmin: true, isOfficer: true },
       ]);
+    });
+
+    it('reads a member record once per server, however many times a sync wants it', async () => {
+      guilds = [{ id: 'g', officerRoleId: 'officer', servers: [{ discordId: 'a', isMain: true }] }];
+      memberRoles = { a: ['ra', 'officer'], b: [] };
+      await service.refresh(SESSION_TOKEN, { force: false });
+      assert.equal(accessOf('g').isAdmin, true);
+      assert.equal(accessOf('g').isOfficer, true);
+      // Server 'a' is asked about twice over a sync (admin role, then officer role in the guild's
+      // main server). Discord allows about one such request a second, so the second one came back
+      // 429 and failed the whole sync.
+      assert.deepEqual([...memberLookups].sort(), ['a', 'b']);
     });
 
     it('treats "not a member of that server" as holding no role', async () => {
@@ -319,16 +334,73 @@ describe('AuthService.refresh', () => {
       assert.match(warnings[0], /Discord request \/users\/@me\/guilds failed \(429\)/);
     });
 
-    it('refreshIfStale swallows temporary Discord failures but rethrows a dead session', async () => {
+    it('refreshIfStale swallows a temporary Discord failure', async () => {
       failWith = new DiscordApiError(500, 'boom');
       await service.refreshIfStale(SESSION_TOKEN);
+    });
 
+    it('refreshIfStale rethrows a dead session', async () => {
       failWith = new DiscordApiError(401, 'nope');
       await assert.rejects(service.refreshIfStale(SESSION_TOKEN), UnauthorizedException);
+      assert.deepEqual(deletedSessions, ['s1']);
     });
 
     it('rejects sessions that do not exist', async () => {
       await assert.rejects(service.refresh('unknown', { force: false }), UnauthorizedException);
+    });
+  });
+
+  describe('waiting out a failure', () => {
+    beforeEach(() => {
+      failWith = new DiscordApiError(500, 'Discord request /users/@me/guilds failed (500)');
+    });
+
+    it('leaves Discord alone on the next requests instead of asking again a minute later', async () => {
+      await service.refreshIfStale(SESSION_TOKEN);
+      assert.equal(discordCalls, 1);
+
+      await service.refreshIfStale(SESSION_TOKEN);
+      await service.refreshIfStale(SESSION_TOKEN);
+      assert.equal(discordCalls, 1);
+    });
+
+    it('still runs a refresh the user asked for themselves', async () => {
+      await service.refreshIfStale(SESSION_TOKEN);
+      await assert.rejects(service.refresh(SESSION_TOKEN, { force: true }), BadGatewayException);
+      assert.equal(discordCalls, 2);
+    });
+
+    it('tries again once the wait is over, and waits twice as long when that fails too', async () => {
+      mock.timers.enable({ apis: ['Date'], now: Date.now() });
+      try {
+        await service.refreshIfStale(SESSION_TOKEN);
+        assert.equal(discordCalls, 1);
+
+        mock.timers.tick(APP_CONFIG.discordSyncRetryBaseMs + 1);
+        await service.refreshIfStale(SESSION_TOKEN);
+        assert.equal(discordCalls, 2);
+
+        mock.timers.tick(APP_CONFIG.discordSyncRetryBaseMs + 1);
+        await service.refreshIfStale(SESSION_TOKEN);
+        assert.equal(discordCalls, 2, 'the second failure doubled the wait');
+      } finally {
+        mock.timers.reset();
+      }
+    });
+
+    it('forgets the wait as soon as a sync works again', async () => {
+      mock.timers.enable({ apis: ['Date'], now: Date.now() });
+      try {
+        await service.refreshIfStale(SESSION_TOKEN);
+        mock.timers.tick(APP_CONFIG.discordSyncRetryBaseMs + 1);
+
+        failWith = null;
+        await service.refreshIfStale(SESSION_TOKEN);
+        await service.refreshIfStale(SESSION_TOKEN);
+        assert.equal(discordCalls, 3);
+      } finally {
+        mock.timers.reset();
+      }
     });
   });
 });

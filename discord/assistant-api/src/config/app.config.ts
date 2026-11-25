@@ -8,6 +8,15 @@ export const APP_CONFIG = {
   discordSyncMaxAgeMs: 60 * 1000,
   /** A user-triggered ("force") re-sync is skipped if the last one was more recent than this. */
   discordForceSyncMinIntervalMs: 30 * 1000,
+  /**
+   * After a sync fails, how long ordinary requests leave Discord alone before trying again. It
+   * doubles with each failure in a row, up to `discordSyncRetryMaxMs`. Without it every request
+   * a minute later tried again, so a failure that lasted turned into a warning a minute, for
+   * hours, and kept asking Discord the question it had just refused.
+   */
+  discordSyncRetryBaseMs: 2 * 60 * 1000,
+  /** Where the doubling stops. */
+  discordSyncRetryMaxMs: 30 * 60 * 1000,
   /** Guild ranks (from live Discord roles) are reused for this long, to spare Discord's rate limits. */
   ranksCacheMs: 60 * 1000,
 } as const;

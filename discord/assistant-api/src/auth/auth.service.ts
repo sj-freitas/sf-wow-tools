@@ -14,6 +14,9 @@ import { TokenCrypto } from './token-crypto';
 
 export const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
+/** The user's own role ids in a server, read at most once per sync (see `syncFromDiscord`). */
+type FetchMemberRoles = (discordServerId: string) => Promise<{ roles: string[] }>;
+
 const REAUTH_MESSAGE = 'Your Discord authorization expired. Please log out and log in again.';
 
 const hashToken = (token: string): string => createHash('sha256').update(token).digest('hex');
@@ -41,6 +44,12 @@ export class AuthService {
   private readonly crypto: TokenCrypto;
   /** One Discord sync per user at a time (parallel requests share it). */
   private readonly inFlightSyncs = new Map<string, Promise<void>>();
+  /**
+   * Users whose last sync failed, and when an ordinary request may try again. Only here: a
+   * restart may as well start over, and a session that has been away longer than the wait is
+   * going to sync anyway.
+   */
+  private readonly heldSyncs = new Map<string, { failures: number; retryAt: number }>();
 
   constructor(
     private readonly prisma: PrismaService,
@@ -117,6 +126,13 @@ export class AuthService {
       throw new UnauthorizedException(REAUTH_MESSAGE);
     }
 
+    const held = this.heldSyncs.get(session.userId);
+    if (!force && held && Date.now() < held.retryAt) {
+      // The last sync failed and we are waiting it out. The user keeps the servers and roles they
+      // had; a refresh they ask for themselves still goes through.
+      return;
+    }
+
     let sync = this.inFlightSyncs.get(session.userId);
     if (!sync) {
       const accessToken = this.crypto.decrypt(session.discordAccessToken);
@@ -133,13 +149,20 @@ export class AuthService {
         await this.endSession(session.id);
         throw new UnauthorizedException(REAUTH_MESSAGE);
       }
-      // The caller logs the cause (a status from Discord, a timeout, a DNS failure); the user
-      // only ever sees the message. `description` keeps the response body as it was.
+      const { failures, waitMs } = this.holdSync(session.userId);
+      this.logger.warn(
+        `Discord sync failed (${failures} in a row, next automatic try in ` +
+          `${Math.round(waitMs / 1000)}s): ` +
+          describeError(error),
+      );
+      // The cause goes with it for anyone who catches this; the user only sees the message.
+      // `description` keeps the response body as it was.
       throw new BadGatewayException('Could not reach Discord. Try again in a moment.', {
         cause: error,
         description: 'Bad Gateway',
       });
     }
+    this.heldSyncs.delete(session.userId);
     await this.prisma.session.update({
       where: { id: session.id },
       data: { discordSyncedAt: new Date() },
@@ -158,7 +181,10 @@ export class AuthService {
       if (error instanceof UnauthorizedException) {
         throw error;
       }
-      this.logger.warn(`Discord re-sync failed: ${describeError(error)}`);
+      if (!(error instanceof BadGatewayException)) {
+        // A sync failure was already logged with its cause by `refresh`; this is one of ours.
+        this.logger.warn(`Discord re-sync failed: ${describeError(error)}`);
+      }
       await this.prisma.session.updateMany({
         where: { tokenHash: hashToken(sessionToken) },
         data: { discordSyncedAt: new Date() },
@@ -170,9 +196,34 @@ export class AuthService {
     await this.prisma.session.deleteMany({ where: { id: sessionId } });
   }
 
+  /** Records a failed sync and says how long ordinary requests now leave Discord alone. */
+  private holdSync(userId: string): { failures: number; waitMs: number } {
+    const failures = (this.heldSyncs.get(userId)?.failures ?? 0) + 1;
+    const waitMs = Math.min(
+      APP_CONFIG.discordSyncRetryBaseMs * 2 ** (failures - 1),
+      APP_CONFIG.discordSyncRetryMaxMs,
+    );
+    this.heldSyncs.set(userId, { failures, retryAt: Date.now() + waitMs });
+    return { failures, waitMs };
+  }
+
   private async syncFromDiscord(userId: string, accessToken: string): Promise<void> {
+    // The user's member record in a server is wanted twice over a sync: for the admin role, and
+    // again for the officer role in the guild's main server. Discord allows about one request a
+    // second on that route, so asking twice within the same sync earned a 429 that failed the
+    // whole thing. Ask once per server and share the answer.
+    const pendingMembers = new Map<string, Promise<{ roles: string[] }>>();
+    const fetchMemberRoles: FetchMemberRoles = (discordServerId) => {
+      let pending = pendingMembers.get(discordServerId);
+      if (!pending) {
+        pending = this.discord.fetchGuildMember(accessToken, discordServerId);
+        pendingMembers.set(discordServerId, pending);
+      }
+      return pending;
+    };
+
     const discordGuilds = await this.discord.fetchGuilds(accessToken);
-    const adminServers = await this.findAdminServers(accessToken, discordGuilds);
+    const adminServers = await this.findAdminServers(fetchMemberRoles, discordGuilds);
     const adminServerIds = new Set(adminServers.map((server) => server.id));
     const userServerIds = discordGuilds.map((guild) => guild.id);
 
@@ -196,7 +247,7 @@ export class AuthService {
     );
 
     const officerGuildIds = await this.findOfficerGuildIds(
-      accessToken,
+      fetchMemberRoles,
       guilds,
       new Set(userServerIds),
     );
@@ -244,7 +295,7 @@ export class AuthService {
    * admin role. The bot must be present to read the server's role list.
    */
   private async findAdminServers(
-    accessToken: string,
+    fetchMemberRoles: FetchMemberRoles,
     userServers: DiscordPartialGuild[],
   ): Promise<DiscordPartialGuild[]> {
     // A failure here throws: better to keep the roles we already know than to wipe them all.
@@ -252,14 +303,16 @@ export class AuthService {
     const results = await Promise.all(
       userServers
         .filter((server) => botServerIds.has(server.id))
-        .map(async (server) => ((await this.hasAdminRole(accessToken, server.id)) ? server : null)),
+        .map(async (server) =>
+          (await this.hasAdminRole(fetchMemberRoles, server.id)) ? server : null,
+        ),
     );
     return results.filter((server): server is DiscordPartialGuild => server !== null);
   }
 
   /** Guilds where the user holds the guild's officer role in its main server. */
   private async findOfficerGuildIds(
-    accessToken: string,
+    fetchMemberRoles: FetchMemberRoles,
     guilds: {
       id: string;
       officerRoleId: string | null;
@@ -274,7 +327,7 @@ export class AuthService {
           return null;
         }
         try {
-          const member = await this.discord.fetchGuildMember(accessToken, main.discordId);
+          const member = await fetchMemberRoles(main.discordId);
           return member.roles.includes(guild.officerRoleId) ? guild.id : null;
         } catch (error) {
           if (isNotAMember(error)) return null;
@@ -285,10 +338,13 @@ export class AuthService {
     return new Set(results.filter((guildId): guildId is string => guildId !== null));
   }
 
-  private async hasAdminRole(accessToken: string, discordServerId: string): Promise<boolean> {
+  private async hasAdminRole(
+    fetchMemberRoles: FetchMemberRoles,
+    discordServerId: string,
+  ): Promise<boolean> {
     try {
       const [member, roles] = await Promise.all([
-        this.discord.fetchGuildMember(accessToken, discordServerId),
+        fetchMemberRoles(discordServerId),
         this.discord.fetchGuildRoles(discordServerId),
       ]);
       return holdsRoleNamed(roles, member.roles, APP_CONFIG.adminRoleName);

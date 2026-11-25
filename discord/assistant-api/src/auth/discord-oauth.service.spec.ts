@@ -21,6 +21,13 @@ function withFetch(response: () => Promise<Response>): {
   return { calls, restore: () => void (globalThis.fetch = original) };
 }
 
+/** A 429 that asks for `retryAfter` seconds, as Discord sends it. */
+const rateLimited = (retryAfter: string): Response =>
+  new Response('{"message":"You are being rate limited."}', {
+    status: 429,
+    headers: { 'retry-after': retryAfter },
+  });
+
 describe('DiscordOAuthService', () => {
   it('gives every call to Discord a time limit', async () => {
     const service = new DiscordOAuthService(config);
@@ -50,5 +57,39 @@ describe('DiscordOAuthService', () => {
     } finally {
       restore();
     }
+  });
+
+  it('waits out a rate limit and asks again, as Discord asked it to', async () => {
+    const service = new DiscordOAuthService(config);
+    let answered = 0;
+    const { calls, restore } = withFetch(async () => {
+      answered += 1;
+      return answered === 1 ? rateLimited('0.01') : new Response('[{"id":"g1","name":"G"}]');
+    });
+    try {
+      // Some of these routes allow one request a second, which a single sync can reach twice.
+      // Giving up on the first 429 cost the caller everything it was doing.
+      assert.deepEqual(await service.fetchGuilds('token'), [{ id: 'g1', name: 'G' }]);
+    } finally {
+      restore();
+    }
+    assert.equal(calls.length, 2);
+  });
+
+  it('gives up on a rate limit that outlasts the second try, saying how long Discord asked for', async () => {
+    const service = new DiscordOAuthService(config);
+    const { calls, restore } = withFetch(async () => rateLimited('0.01'));
+    try {
+      await assert.rejects(service.fetchGuilds('token'), (error: unknown) => {
+        assert.ok(error instanceof DiscordApiError);
+        assert.equal(error.discordStatus, 429);
+        assert.equal(error.retryAfterMs, 10);
+        assert.match(error.message, /\/users\/@me\/guilds failed \(429\), retry after 10ms/);
+        return true;
+      });
+    } finally {
+      restore();
+    }
+    assert.equal(calls.length, 2, 'it waits a rate limit out once, not forever');
   });
 });
